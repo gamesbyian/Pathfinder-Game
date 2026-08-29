@@ -15,7 +15,7 @@
  *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|id:1-20]
  *       [--engine=raced|sequential] [--pool-size=N] [--parallel[=N]]
  *       [--filter-mechanic=mustCross,portalPairs] [--sample=N] [--seed=<value>]
- *       [--repair-budget-fraction=<n>] [--attraction-diversity-budget-fraction=<n>]
+ *       [--repair-budget-fraction=<n>] [--goal-attraction-disabled-retry-budget-fraction=<n>]
  *
  * --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x, the repair
  * fallback's extra wall-clock allowance ON TOP of --budget-ms) via SolveOpts.
@@ -28,9 +28,10 @@
  * slow-but-eventual find becomes a permanent hint — leave this flag unset there. Omit entirely to
  * keep the default 6x (matches this tool's historical behavior exactly).
  *
- * --attraction-diversity-budget-fraction=<n> overrides GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION
+ * --goal-attraction-disabled-retry-budget-fraction=<n> (legacy alias:
+ * --attraction-diversity-budget-fraction) overrides GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION
  * (default 1.0x, the 2026-07-16 fragile-group last-resort pass's own separate extra wall-clock
- * allowance) via SolveOpts.attractionDiversityBudgetFractionOverride — a DEDICATED override, NOT
+ * allowance) via SolveOpts.goalAttractionDisabledRetryBudgetFractionOverride — a DEDICATED override, NOT
  * the same flag as --repair-budget-fraction above, specifically so a sweep can isolate one
  * extension's cost from the other's (see orchestration.ts's SolveOpts comment on why they're
  * separate). Same solver-testing-vs-hint-discovery guidance as --repair-budget-fraction: pass 0
@@ -118,7 +119,9 @@ const cfg = isMainThread
         sample: argMap.has('--sample') ? Number(argMap.get('--sample')) : null,
         seed: argMap.get('--seed') || getCommitSha(),
         repairBudgetFraction: argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined,
-        attractionDiversityBudgetFraction: argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined,
+        goalAttractionDisabledRetryBudgetFraction: argMap.has('--goal-attraction-disabled-retry-budget-fraction')
+            ? Number(argMap.get('--goal-attraction-disabled-retry-budget-fraction'))
+            : argMap.has('--attraction-diversity-budget-fraction') ? Number(argMap.get('--attraction-diversity-budget-fraction')) : undefined,
     }
     : workerData;
 
@@ -217,7 +220,7 @@ const solveSequential = (raw, level) => Solver.solveLevel(level, {
     timeBudgetMs: cfg.budgetMs,
     ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
     ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
-    ...(Number.isFinite(cfg.attractionDiversityBudgetFraction) ? { attractionDiversityBudgetFractionOverride: cfg.attractionDiversityBudgetFraction } : {}),
+    ...(Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction) ? { goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction } : {}),
 });
 
 /** Solve one corpus entry and build its report record + console line. Shared verbatim by the
@@ -334,7 +337,7 @@ async function main() {
             ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
     ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
             ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
-            ...(Number.isFinite(cfg.attractionDiversityBudgetFraction) ? { attractionDiversityBudgetFractionOverride: cfg.attractionDiversityBudgetFraction } : {}),
+            ...(Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction) ? { goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction } : {}),
         })
         : solveSequential;
 

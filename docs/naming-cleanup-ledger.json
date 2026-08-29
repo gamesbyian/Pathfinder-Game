@@ -2130,10 +2130,10 @@
       "new": "--main-search-late-reserve-fraction / --main-search-late-reserve-config-count",
       "kind": "package-alias",
       "risk": "low",
-      "persistence": "none",
+      "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
-      "notes": "Not started. scripts/level-blind-capability-sweep.mjs, scripts/portfolio-solve-sweep.mjs, and .github/workflows/solver-stress-refresh.yml still parse/emit the legacy flag spelling; they work correctly today via the SolveOpts dual-read alias above, so this is a cosmetic CLI-vocabulary migration, not a functional gap. Needs: add the canonical flag alongside the legacy one in each script (keep legacy accepted for one migration window per Section 4.6's pattern), migrate the workflow input, then drop the legacy flag."
+      "status": "done",
+      "notes": "scripts/level-blind-capability-sweep.mjs and scripts/portfolio-solve-sweep.mjs now parse the canonical flag first, falling back to the legacy spelling (accepted for one migration window). .github/workflows/solver-stress-refresh.yml's workflow_dispatch input NAMES were deliberately left as main_loop_late_reserve_fraction/main_loop_late_reserve_config_count -- GitHub Actions workflow_dispatch inputs have no alias mechanism, so renaming the input name itself would be a breaking change for any external caller (gh workflow run -f, saved dispatch bookmarks) with no compatibility window, unlike a script flag or SolveOpts field. The workflow's internal extra+=(...) lines were updated to emit the canonical --main-search-late-reserve-* flag string to the script, so the migration is live end-to-end; only the GH Actions form field label itself stays at its current name."
     },
     {
       "old": "REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE / REPAIR_PROBE_ATTEMPT_MS_CAP / REPAIR_PROBE_BIASED_NODE_BUDGET / REPAIR_PROBE_ORDINARY_NODE_BUDGET / REPAIR_PROBE_ORDINARY_SEED_SALTS / REPAIR_PROBE_PREDICTED_TIER_SHARE",
@@ -2160,10 +2160,20 @@
       "new": "--early-repair-search-adaptive-badness-gate / --early-repair-search-adaptive-min-scale",
       "kind": "package-alias",
       "risk": "low",
-      "persistence": "none",
+      "persistence": "dual-read",
       "phase": 6,
-      "status": "pending",
-      "notes": "Not started; same disposition as the mainLoop* CLI-flag pending entry above -- works today via the SolveOpts dual-read alias, cosmetic CLI-vocabulary migration remaining."
+      "status": "done",
+      "notes": "Same disposition as the main-search-late-reserve CLI-flag entry above: scripts/level-blind-capability-sweep.mjs parses the canonical flag first, falling back to the legacy spelling; .github/workflows/solver-early-repair-search-adaptive-sample-ab.yml's workflow_dispatch input names (repair_probe_adaptive_badness_gate/repair_probe_adaptive_min_scale) were deliberately kept as-is for the same no-alias-mechanism reason, but its internal extra+=(...) lines now emit the canonical --early-repair-search-adaptive-* flag string."
+    },
+    {
+      "old": "--attraction-diversity-budget-fraction (CLI flag)",
+      "new": "--goal-attraction-disabled-retry-budget-fraction",
+      "kind": "package-alias",
+      "risk": "low",
+      "persistence": "dual-read",
+      "phase": 6,
+      "status": "done",
+      "notes": "Same shape as the two CLI-flag entries above; discovered during the same follow-through pass (not previously classified). scripts/portfolio-solve-sweep.mjs and scripts/stress/benchmark.mjs now parse --goal-attraction-disabled-retry-budget-fraction first, falling back to the legacy --attraction-diversity-budget-fraction spelling. Fixing this surfaced a real latent bug: scripts/solver-parallel/race.mjs's own solveLevelRaced()/createRacePool() reimplement the SolveOpts contract independently of orchestration.ts and only read the field by its old name (levelOpts.attractionDiversityBudgetFractionOverride) -- renaming the field passed in from portfolio-solve-sweep.mjs without also dual-reading it in race.mjs would have silently broken the raced engine's goal-attraction-disabled-retry phase override. race.mjs now reads goalAttractionDisabledRetryBudgetFractionOverride first, falling back to the legacy name; parity test added in scripts/solver-parallel-unit-tests.mjs."
     },
     {
       "old": "attempt.repairProbe (per-attempt telemetry field)",

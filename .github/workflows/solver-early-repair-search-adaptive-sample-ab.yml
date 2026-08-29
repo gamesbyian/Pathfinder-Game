@@ -24,8 +24,8 @@
 #
 # Usage: dispatch twice with identical inputs except enable_flags -- once blank (control), once
 # enable_flags=STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET (treatment) -- then compare each run's
-# combined solved count/gains/losses (per-id, from each run's reports/stress/repair-probe-adaptive-
-# sample-ab.json artifact).
+# combined solved count/gains/losses (per-id, from each run's
+# reports/stress/early-repair-search-adaptive-sample-ab.json artifact).
 #
 # GATE/MIN_SCALE RECALIBRATION REUSE (2026-08-13, docs/future-work.md item 4b,
 # reports/2026-08-13-existing-solve-data-tuning-opportunities.md): the same eligible population is
@@ -202,8 +202,8 @@ jobs:
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
-          [ -n "${{ inputs.repair_probe_adaptive_badness_gate }}" ] && extra+=("--repair-probe-adaptive-badness-gate=${{ inputs.repair_probe_adaptive_badness_gate }}")
-          [ -n "${{ inputs.repair_probe_adaptive_min_scale }}" ] && extra+=("--repair-probe-adaptive-min-scale=${{ inputs.repair_probe_adaptive_min_scale }}")
+          [ -n "${{ inputs.repair_probe_adaptive_badness_gate }}" ] && extra+=("--early-repair-search-adaptive-badness-gate=${{ inputs.repair_probe_adaptive_badness_gate }}")
+          [ -n "${{ inputs.repair_probe_adaptive_min_scale }}" ] && extra+=("--early-repair-search-adaptive-min-scale=${{ inputs.repair_probe_adaptive_min_scale }}")
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
