@@ -673,8 +673,8 @@ test('goal-attraction-disabled-retry pass reruns the main ladder once more after
     // spend its own flat 2,000,000-node reserve on top of the tiny budget this test measures.
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), { timeBudgetMs: 1000, admissibleOrderBudgetFractionOverride: 0, coarseStateNearTieRetentionRetryBudgetFractionOverride: 0, admissibleOrderNonDefaultRetryBudgetFractionOverride: 0, connectivityAxisExhaustedRetryBudgetFractionOverride: 0, mcNeighborBudgetRetryBudgetFractionOverride: 0, repairLateProbeNodeBudgetOverride: 0, ablation: { STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: false } });
     assert.equal(result.ok, false);
-    const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
-    const mainLoopAttempts = result.attempts.filter(a => a.attractionDiversity !== true);
+    const diversityAttempts = result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry');
+    const mainLoopAttempts = result.attempts.filter(a => a.stageId !== 'goal-attraction-disabled-retry');
     assert.ok(diversityAttempts.length > 0, 'expected at least one goal-attraction-disabled-retry attempt');
     // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
     // regardless of budget, meaning neither run gets cut off partway through) it should run through
@@ -692,7 +692,7 @@ test('STRATEGY_ATTRACTION_DIVERSITY: false suppresses the pass', async () => {
         ablation: { STRATEGY_ATTRACTION_DIVERSITY: false },
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 });
 
 test('attractionDiversityBudgetFractionOverride: 0 suppresses the pass independently of repairBudgetFractionOverride', async () => {
@@ -705,7 +705,7 @@ test('attractionDiversityBudgetFractionOverride: 0 suppresses the pass independe
         attractionDiversityBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 });
 
 test('disableExtraBudgetPasses: true suppresses the goal-attraction-disabled-retry pass on its own', async () => {
@@ -714,7 +714,7 @@ test('disableExtraBudgetPasses: true suppresses the goal-attraction-disabled-ret
         disableExtraBudgetPasses: true,
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 });
 
 test('disableExtraBudgetPasses: true also suppresses the early repair probe', async () => {
@@ -737,7 +737,7 @@ test('an explicit attractionDiversityBudgetFractionOverride still wins over disa
         attractionDiversityBudgetFractionOverride: ATTRACTION_DIVERSITY_BUDGET_FRACTION,
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.attractionDiversity === true), true);
+    assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), true);
 });
 
 // opts.nodeBudget composition with the goal-attraction-disabled-retry pass: gated on
@@ -766,7 +766,7 @@ test('a nodeBudget exhausted by the main loop alone suppresses the diversity pas
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
     assert.equal(result.nodeBudgetReached, true);
-    assert.equal(result.attempts.some(a => a.attractionDiversity === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 });
 
 test('a nodeBudget with room left after the main loop lets the diversity pass start, but caps its tail', async () => {
@@ -801,7 +801,7 @@ test('a nodeBudget with room left after the main loop lets the diversity pass st
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
-    const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
+    const diversityAttempts = result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry');
     assert.equal(diversityAttempts.length, 16, 'expected every config to still be attempted once past the entry gate');
     assert.equal(result.nodesExpanded, 315);
 });
@@ -1302,7 +1302,7 @@ test('goal-attraction-disabled-retry reserve is inert by default (cfg=null) even
     // (`nodesExpanded < earlyTierNodeBudget`) is even checked -- it never gets a single node, whether
     // that shows up as zero attempts or all-zero-node attempts depends only on exact timing, so assert
     // the node total, which is what this flag is actually supposed to leave unchanged when off.
-    const diversityAttempts = result.attempts.filter(a => a.attractionDiversity === true);
+    const diversityAttempts = result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry');
     assert.equal(diversityAttempts.every(a => (a.nodesExpanded ?? 0) === 0), true, 'no room was withheld for diversity: the sibling reserve alone already exhausted earlyTierNodeBudget');
     assert.equal(result.nodesExpanded, 1000, 'byte-identical total to the sibling reserve running alone (this flag contributes nothing when unset)');
 });
@@ -1336,9 +1336,9 @@ test('goal-attraction-disabled-retry reserve gives the diversity pass room witho
     // flag being on/off must never change its sibling's own already-validated slice).
     // attractionDiversityNodeReserve=floor((300-150)*0.4)=60 only when ON, so mainLoopNodeBudget=
     // 850 (off) vs 790 (on); repairFallbackNodeCeiling=1000 (off) vs 940 (on).
-    const mainLoopAttempts = (result: typeof off) => result.attempts.filter(a => a.repair !== true && !a.attractionDiversity);
-    const fallbackAttempts = (result: typeof off) => result.attempts.filter(a => a.repair === true && !a.attractionDiversity);
-    const diversityAttempts = (result: typeof off) => result.attempts.filter(a => a.attractionDiversity === true);
+    const mainLoopAttempts = (result: typeof off) => result.attempts.filter(a => a.repair !== true && a.stageId !== 'goal-attraction-disabled-retry');
+    const fallbackAttempts = (result: typeof off) => result.attempts.filter(a => a.repair === true && a.stageId !== 'goal-attraction-disabled-retry');
+    const diversityAttempts = (result: typeof off) => result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry');
     assert.equal(mainLoopAttempts(off)[0].nodesExpanded, 700, 'the FIRST early-prefix attempt consumes the untouched mainLoopEarlyNodeBudget identically in both arms');
     assert.equal(mainLoopAttempts(on)[0].nodesExpanded, 700, 'byte-identical to the off arm: the probe/early-config ceiling must never depend on this flag');
     assert.equal(mainLoopAttempts(off).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0), 850, 'off: main loop spends mainLoopNodeBudget=850 (700 early + 75 + 75 late), same as the sibling reserve alone');
@@ -1382,7 +1382,7 @@ test('goal-attraction-disabled-retry reserve is a no-op when repairFallbackNodeR
         attractionDiversityNodeReserveFractionOverride: 0.5,
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
-    assert.equal(result.attempts.filter(a => a.attractionDiversity === true).length, 0, 'nothing left in mainLoopLateReserve for this reserve to withhold');
+    assert.equal(result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry').length, 0, 'nothing left in mainLoopLateReserve for this reserve to withhold');
     // mainLoopNodeBudget = 1000 - 300 (repairFallbackNodeReserve, =mainLoopLateReserve exactly at
     // fraction 1.0) - 0 (this reserve, ineligible since the remainder is 0) = 700 = mainLoopEarlyNode
     // Budget exactly, so the late suffix's two configs get no additional room and are skipped
@@ -1453,7 +1453,7 @@ test('admissible-order-fallback profile reserve gives non-default profiles room 
     // admissibleOrderProfileNodeReserve=floor(400*0.5)=200 only when ON, so admissibleOrderDefault
     // ProfileCeiling=1000 (off) vs 800 (on); every OTHER profile's own ceiling stays the full 1000
     // nodeBudget in both arms.
-    const mainLoopNodes = (result: typeof off) => result.attempts.filter(a => !a.repair && !a.attractionDiversity && !a.admissibleOrder).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0);
+    const mainLoopNodes = (result: typeof off) => result.attempts.filter(a => !a.repair && a.stageId !== 'goal-attraction-disabled-retry' && !a.admissibleOrder).reduce((n, a) => n + (a.nodesExpanded ?? 0), 0);
     const byProfile = (result: typeof off, profile: string) => result.attempts.find(a => a.admissibleOrder === true && a.scoringProfileId === profile);
     assert.equal(mainLoopNodes(off), 600, 'main loop spends the untouched earlyTierNodeBudget identically in both arms');
     assert.equal(mainLoopNodes(on), 600, 'byte-identical to the off arm: nothing before the admissible-order-fallback tier depends on this flag');
@@ -1666,7 +1666,7 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
         attemptSearchForTesting: dispatch,
     };
     const legacy = await solveLevel(makeRepairGatedInfeasibleLevel(), common);
-    assert.equal(legacy.attempts.find(attempt => attempt.repairProbe)?.allocatedWorkCeiling, null,
+    assert.equal(legacy.attempts.find(attempt => attempt.stageId === 'early-repair-search')?.allocatedWorkCeiling, null,
         'the historical repair probe runs before the main ladder installs a work cap');
 
     const strict = await solveLevel(makeRepairGatedInfeasibleLevel(), {
@@ -1675,9 +1675,9 @@ test('strictTotalWorkBudget installs one remaining-work cap across every additiv
         lifecycleTelemetry: true,
     });
     const paths = {
-        repairProbe: strict.attempts.find(attempt => attempt.repairProbe),
-        repairFallback: strict.attempts.find(attempt => attempt.repair && !attempt.repairProbe),
-        attractionDiversity: strict.attempts.find(attempt => attempt.attractionDiversity),
+        repairProbe: strict.attempts.find(attempt => attempt.stageId === 'early-repair-search'),
+        repairFallback: strict.attempts.find(attempt => attempt.repair && attempt.stageId !== 'early-repair-search'),
+        attractionDiversity: strict.attempts.find(attempt => attempt.stageId === 'goal-attraction-disabled-retry'),
         admissibleOrder: strict.attempts.find(attempt => attempt.admissibleOrder),
     };
     for (const [name, attempt] of Object.entries(paths)) {
@@ -1776,7 +1776,7 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
     // mcNeighborBudgetRetry attempt used to collapse into (it reruns mainConfigs, so attempt.repair
     // and attempt.admissibleOrder are both unset -- exactly what the old classify()'s final
     // fallback branch matched).
-    const mainLadderAttempts = result.attempts.filter(a => !a.repair && !a.admissibleOrder && !a.attractionDiversity
+    const mainLadderAttempts = result.attempts.filter(a => !a.repair && !a.admissibleOrder && a.stageId !== 'goal-attraction-disabled-retry'
         && !a.mcNeighborBudgetRetry && !a.connectivityAxisExhaustedRetry && !a.coarseStateNearTieRetentionRetry);
     assert.equal(lifecycle['main-ladder'].attempts, mainLadderAttempts.length,
         'main-ladder must not absorb attempts that belong to a newer retry tier');
@@ -1974,7 +1974,7 @@ test('shrink recovery is inert by default (cfg=null): no recovery attempt is eve
         timeBudgetMs: 50, nodeBudget: 40_000_000,
         attemptSearchForTesting: shrinkRecoveryDispatch(budgets),
     });
-    assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'repair-shrink-recovery'), false);
 });
 
 test('shrink recovery stays off under an explicit { FLAG: false }, and under a sparse unrelated ablation object', async () => {
@@ -1986,7 +1986,7 @@ test('shrink recovery stays off under an explicit { FLAG: false }, and under a s
             timeBudgetMs: 50, nodeBudget: 40_000_000, ablation,
             attemptSearchForTesting: shrinkRecoveryDispatch([]),
         });
-        assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+        assert.equal(result.attempts.some(a => a.stageId === 'repair-shrink-recovery'), false);
     }
 });
 
@@ -2002,7 +2002,7 @@ test('shrink recovery re-runs the shrunk biased config at its FULL probe budget'
     });
     const scale = Math.min(1, Math.max(REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE, REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / 100));
     const shrunk = Math.floor(REPAIR_PROBE_BIASED_NODE_BUDGET * scale);
-    const recovery = result.attempts.filter(a => a.repairProbeShrinkRecovery);
+    const recovery = result.attempts.filter(a => a.stageId === 'repair-shrink-recovery');
     assert.equal(recovery.length, 1, 'exactly one recovery attempt');
     assert.equal(recovery[0].nodesExpanded, REPAIR_PROBE_BIASED_NODE_BUDGET, 'recovered at the FULL budget, not the shrunken one');
     assert.ok((recovery[0].nodesExpanded ?? 0) > shrunk, 'strictly more than the shrunken grant');
@@ -2037,7 +2037,7 @@ test('shrink recovery does not run when the shrink never fired (promising ordina
         ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true },
         attemptSearchForTesting: dispatch,
     });
-    assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'repair-shrink-recovery'), false);
 });
 
 test('shrink recovery is inert when the shrink mechanism itself is disabled', async () => {
@@ -2046,7 +2046,7 @@ test('shrink recovery is inert when the shrink mechanism itself is disabled', as
         ablation: { STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY: true, STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET: false },
         attemptSearchForTesting: shrinkRecoveryDispatch([]),
     });
-    assert.equal(result.attempts.some(a => a.repairProbeShrinkRecovery), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'repair-shrink-recovery'), false);
 });
 
 // ── STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY ─────────────────────────────────────────────
@@ -2073,8 +2073,8 @@ test('coarse-state-near-tie-retention-disabled-retry pass reruns the main ladder
         repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(result.ok, false);
-    const retryAttempts = result.attempts.filter(a => a.coarseStateNearTieRetentionRetry === true);
-    const mainLoopAttempts = result.attempts.filter(a => a.coarseStateNearTieRetentionRetry !== true);
+    const retryAttempts = result.attempts.filter(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry');
+    const mainLoopAttempts = result.attempts.filter(a => a.stageId !== 'coarse-state-near-tie-retention-disabled-retry');
     assert.ok(retryAttempts.length > 0, 'expected at least one coarse-state-near-tie-retention-disabled-retry attempt');
     // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
     // regardless of budget, meaning neither run gets cut off partway through) it should run through
@@ -2090,7 +2090,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass is ACTIVE by default (
         admissibleOrderBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
+    assert.ok(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), 'expected the promoted default-ON tier to run with cfg=null');
 });
 
 test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
@@ -2098,7 +2098,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON pass eve
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
     });
-    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false);
 });
 
 test('coarse-state-near-tie-retention-disabled-retry pass stays off under the legacy retry alias set false', async () => {
@@ -2108,7 +2108,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass stays off under the le
         ablation: { STRATEGY_DEDUP_NEAR_TIE_RETRY: false },
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false);
 });
 
 
@@ -2119,7 +2119,7 @@ test('coarse-state-near-tie-retention-disabled-retry pass also stays off under t
         ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: false },
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false,
+    assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false,
         'legacy and canonical spellings must normalize to identical runtime behavior');
 });
 
@@ -2138,7 +2138,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON pass act
         admissibleOrderBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
+    assert.ok(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), 'expected the promoted tier to still run: only an unrelated flag was set');
 });
 
 test('coarseStateNearTieRetentionRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
@@ -2149,7 +2149,7 @@ test('coarseStateNearTieRetentionRetryBudgetFractionOverride: 0 suppresses the p
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
-    assert.equal(result.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false);
 });
 
 test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, but an explicit override still wins', async () => {
@@ -2158,7 +2158,7 @@ test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, 
         ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY: true },
         disableExtraBudgetPasses: true,
     });
-    assert.equal(suppressed.attempts.some(a => a.coarseStateNearTieRetentionRetry === true), false);
+    assert.equal(suppressed.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false);
 
     const overridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -2166,7 +2166,7 @@ test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, 
         disableExtraBudgetPasses: true,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION,
     });
-    assert.ok(overridden.attempts.some(a => a.coarseStateNearTieRetentionRetry === true));
+    assert.ok(overridden.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'));
 });
 
 test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the main loop misses, and disables retention while it runs', async () => {
@@ -2217,7 +2217,7 @@ test('coarse-state-near-tie-retention-disabled-retry work dose no longer resizes
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
-        .filter(a => a.coarseStateNearTieRetentionRetry === true)
+        .filter(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry')
         .map(a => a.allocatedWorkCeiling);
     const shortDose = dose(shortDeadline);
     assert.ok(shortDose.length > 0, 'expected at least one coarse-state-near-tie-retention-disabled-retry attempt');
@@ -2231,7 +2231,7 @@ test('coarse-state-near-tie-retention-disabled-retry now honors an explicit base
     const small = await solveWith(200_000);
     const large = await solveWith(20_000_000);
     const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
-        result.attempts.find(a => a.coarseStateNearTieRetentionRetry === true)?.allocatedWorkCeiling ?? null;
+        result.attempts.find(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry')?.allocatedWorkCeiling ?? null;
     const smallCeiling = ceiling(small);
     const largeCeiling = ceiling(large);
     assert.ok(smallCeiling != null && largeCeiling != null, 'expected a coarse-state-near-tie-retention-disabled-retry attempt in both runs');
@@ -2266,7 +2266,7 @@ test('admissible-order-alternate-tiebreak-retry pass can solve a level the admis
     });
     assert.equal(result.ok, true, 'the non-default retry wins');
     assert.equal(result.attempts.at(-1)?.admissibleOrderNonDefaultRetry, true);
-    assert.equal(result.attempts.filter(a => a.admissibleOrderNonDefaultRetry === true && a.scoringProfileId === 'default').length, 0, "'default' is never retried by this tier");
+    assert.equal(result.attempts.filter(a => a.stageId === 'admissible-order-alternate-tiebreak-retry' && a.scoringProfileId === 'default').length, 0, "'default' is never retried by this tier");
 });
 
 test('admissible-order-alternate-tiebreak-retry pass is ACTIVE by default (cfg=null) since promotion: retry attempts run without any explicit ablation override', async () => {
@@ -2277,7 +2277,7 @@ test('admissible-order-alternate-tiebreak-retry pass is ACTIVE by default (cfg=n
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
+    assert.ok(result.attempts.some(a => a.stageId === 'admissible-order-alternate-tiebreak-retry'), 'expected the promoted default-ON tier to run with cfg=null');
 });
 
 test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissible-order-alternate-tiebreak-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
@@ -2285,7 +2285,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON admissib
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
     });
-    assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'admissible-order-alternate-tiebreak-retry'), false);
 });
 
 test('admissible-order-alternate-tiebreak-retry pass stays off under an explicit { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false }', async () => {
@@ -2295,7 +2295,7 @@ test('admissible-order-alternate-tiebreak-retry pass stays off under an explicit
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: false },
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'admissible-order-alternate-tiebreak-retry'), false);
 });
 
 test('a sparse unrelated ablation object leaves the promoted default-ON admissible-order-alternate-tiebreak-retry pass active', async () => {
@@ -2310,7 +2310,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON admissib
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
+    assert.ok(result.attempts.some(a => a.stageId === 'admissible-order-alternate-tiebreak-retry'), 'expected the promoted tier to still run: only an unrelated flag was set');
 });
 
 test('admissibleOrderNonDefaultRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
@@ -2320,7 +2320,7 @@ test('admissibleOrderNonDefaultRetryBudgetFractionOverride: 0 suppresses the pas
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
-    assert.equal(result.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'admissible-order-alternate-tiebreak-retry'), false);
 });
 
 test('disableExtraBudgetPasses: true suppresses the admissible-order-alternate-tiebreak-retry pass even with the flag on, but an explicit override still wins', async () => {
@@ -2329,7 +2329,7 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-alternate-t
         ablation: { STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: true },
         disableExtraBudgetPasses: true,
     });
-    assert.equal(suppressed.attempts.some(a => a.admissibleOrderNonDefaultRetry === true), false);
+    assert.equal(suppressed.attempts.some(a => a.stageId === 'admissible-order-alternate-tiebreak-retry'), false);
 
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [config] = args;
@@ -2344,7 +2344,7 @@ test('disableExtraBudgetPasses: true suppresses the admissible-order-alternate-t
         admissibleOrderBudgetFractionOverride: 0,
         attemptSearchForTesting: dispatch,
     });
-    assert.ok(overridden.attempts.some(a => a.admissibleOrderNonDefaultRetry === true));
+    assert.ok(overridden.attempts.some(a => a.stageId === 'admissible-order-alternate-tiebreak-retry'));
 });
 
 // 2026-08-28: admissible-order-alternate-tiebreak-retry was the third tier migrated off queue #2 step 3's
@@ -2369,7 +2369,7 @@ test('admissible-order-alternate-tiebreak-retry work dose no longer resizes with
     const shortDeadline = await run(1000);
     const longDeadline = await run(600_000);
     const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
-        .filter(a => a.admissibleOrderNonDefaultRetry === true)
+        .filter(a => a.stageId === 'admissible-order-alternate-tiebreak-retry')
         .map(a => a.allocatedWorkCeiling);
     const shortDose = dose(shortDeadline);
     assert.ok(shortDose.length > 0, 'expected at least one admissible-order-alternate-tiebreak-retry attempt');
@@ -2383,7 +2383,7 @@ test('admissible-order-alternate-tiebreak-retry now honors an explicit baseWorkB
     const small = await solveWith(200_000);
     const large = await solveWith(20_000_000);
     const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
-        result.attempts.find(a => a.admissibleOrderNonDefaultRetry === true)?.allocatedWorkCeiling ?? null;
+        result.attempts.find(a => a.stageId === 'admissible-order-alternate-tiebreak-retry')?.allocatedWorkCeiling ?? null;
     const smallCeiling = ceiling(small);
     const largeCeiling = ceiling(large);
     assert.ok(smallCeiling != null && largeCeiling != null, 'expected an admissible-order-alternate-tiebreak-retry attempt in both runs');
@@ -2412,8 +2412,8 @@ test('connectivity-axis-prune-disabled-retry pass reruns the main ladder once mo
         repairLateProbeNodeBudgetOverride: 0,
     });
     assert.equal(result.ok, false);
-    const retryAttempts = result.attempts.filter(a => a.connectivityAxisExhaustedRetry === true);
-    const mainLoopAttempts = result.attempts.filter(a => a.connectivityAxisExhaustedRetry !== true);
+    const retryAttempts = result.attempts.filter(a => a.stageId === 'connectivity-axis-prune-disabled-retry');
+    const mainLoopAttempts = result.attempts.filter(a => a.stageId !== 'connectivity-axis-prune-disabled-retry');
     assert.ok(retryAttempts.length > 0, 'expected at least one connectivity-axis-prune-disabled-retry attempt');
     // The pass reruns the exact same mainConfigs ladder, so (this level being pruned near-instantly
     // regardless of budget, meaning neither run gets cut off partway through) it should run through
@@ -2431,7 +2431,7 @@ test('connectivity-axis-prune-disabled-retry pass is ACTIVE by default (cfg=null
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), 'expected the promoted default-ON tier to run with cfg=null');
+    assert.ok(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), 'expected the promoted default-ON tier to run with cfg=null');
 });
 
 test('disableExtraBudgetPasses: true suppresses the promoted default-ON connectivity-axis-prune-disabled-retry pass even with cfg=null (the two interactive solve UIs\' real production combination)', async () => {
@@ -2439,7 +2439,7 @@ test('disableExtraBudgetPasses: true suppresses the promoted default-ON connecti
         timeBudgetMs: 1000,
         disableExtraBudgetPasses: true,
     });
-    assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false);
 });
 
 test('connectivity-axis-prune-disabled-retry pass stays off under an explicit { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false }', async () => {
@@ -2449,7 +2449,7 @@ test('connectivity-axis-prune-disabled-retry pass stays off under an explicit { 
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false },
     });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false);
 });
 
 test('a sparse unrelated ablation object leaves the promoted default-ON connectivity-axis-prune-disabled-retry pass active', async () => {
@@ -2468,7 +2468,7 @@ test('a sparse unrelated ablation object leaves the promoted default-ON connecti
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), 'expected the promoted tier to still run: only an unrelated flag was set');
+    assert.ok(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), 'expected the promoted tier to still run: only an unrelated flag was set');
 });
 
 test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
@@ -2479,7 +2479,7 @@ test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pas
         connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
         mcNeighborBudgetRetryBudgetFractionOverride: 0,
     });
-    assert.equal(result.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false);
 });
 
 test('disableExtraBudgetPasses: true suppresses the connectivity-axis-prune-disabled-retry pass even with the flag on, but an explicit override still wins', async () => {
@@ -2488,7 +2488,7 @@ test('disableExtraBudgetPasses: true suppresses the connectivity-axis-prune-disa
         ablation: { STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true },
         disableExtraBudgetPasses: true,
     });
-    assert.equal(suppressed.attempts.some(a => a.connectivityAxisExhaustedRetry === true), false);
+    assert.equal(suppressed.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false);
 
     const overridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -2496,7 +2496,7 @@ test('disableExtraBudgetPasses: true suppresses the connectivity-axis-prune-disa
         disableExtraBudgetPasses: true,
         connectivityAxisExhaustedRetryBudgetFractionOverride: CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION,
     });
-    assert.ok(overridden.attempts.some(a => a.connectivityAxisExhaustedRetry === true));
+    assert.ok(overridden.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'));
 });
 
 test('connectivity-axis-prune-disabled-retry pass can solve a level the main loop misses, and disables the connectivity-axis-exhausted prune while it runs', async () => {
@@ -2551,8 +2551,8 @@ test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more afte
         attemptSearchForTesting: exhaustingDispatch,
     });
     assert.equal(result.ok, false);
-    const retryAttempts = result.attempts.filter(a => a.repairElitePrefixDfsRetry === true);
-    const ordinaryRepairAttempts = result.attempts.filter(a => a.repair === true && !a.repairProbe && a.repairElitePrefixDfsRetry !== true);
+    const retryAttempts = result.attempts.filter(a => a.stageId === 'repair-elite-prefix-dfs-retry');
+    const ordinaryRepairAttempts = result.attempts.filter(a => a.repair === true && a.stageId !== 'early-repair-search' && a.stageId !== 'repair-elite-prefix-dfs-retry');
     assert.ok(retryAttempts.length > 0, 'expected at least one repair-elite-prefix-dfs-retry attempt');
     // The pass reruns the exact same repairConfigs ladder, so (this level being genuinely
     // unsolvable, meaning neither run gets cut off early by finding a solution) it should run
@@ -2563,7 +2563,7 @@ test('repair-elite-prefix-dfs-retry pass reruns the repair ladder once more afte
 test('repair-elite-prefix-dfs-retry pass is inert by default (cfg=null): no retry attempt is ever run', async () => {
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000, attemptSearchForTesting: exhaustingDispatch });
     assert.equal(result.ok, false);
-    assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'repair-elite-prefix-dfs-retry'), false);
 });
 
 test('repair-elite-prefix-dfs-retry pass stays off under an explicit { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: false }, and under a sparse unrelated ablation object', async () => {
@@ -2573,7 +2573,7 @@ test('repair-elite-prefix-dfs-retry pass stays off under an explicit { STRATEGY_
     ]) {
         const result = await solveLevel(makeRepairGatedInfeasibleLevel(), { timeBudgetMs: 1000, ablation, attemptSearchForTesting: exhaustingDispatch });
         assert.equal(result.ok, false);
-        assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+        assert.equal(result.attempts.some(a => a.stageId === 'repair-elite-prefix-dfs-retry'), false);
     }
 });
 
@@ -2584,7 +2584,7 @@ test('repairElitePrefixDfsRetryBudgetFractionOverride: 0 suppresses the pass eve
         repairElitePrefixDfsRetryBudgetFractionOverride: 0,
         attemptSearchForTesting: exhaustingDispatch,
     });
-    assert.equal(result.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+    assert.equal(result.attempts.some(a => a.stageId === 'repair-elite-prefix-dfs-retry'), false);
 });
 
 test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit tier overrides still win', async () => {
@@ -2593,14 +2593,14 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
         ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
         disableExtraBudgetPasses: true,
     });
-    assert.equal(eliteSuppressed.attempts.some(a => a.repairElitePrefixDfsRetry === true), false);
+    assert.equal(eliteSuppressed.attempts.some(a => a.stageId === 'repair-elite-prefix-dfs-retry'), false);
 
     const mcSuppressed = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         ablation: { STRATEGY_MC_NEIGHBOR_BUDGET_RETRY: true },
         disableExtraBudgetPasses: true,
     });
-    assert.equal(mcSuppressed.attempts.some(a => a.mcNeighborBudgetRetry === true), false);
+    assert.equal(mcSuppressed.attempts.some(a => a.stageId === 'must-cross-neighbor-prune-disabled-retry'), false);
 
     const eliteOverridden = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -2608,7 +2608,7 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
         disableExtraBudgetPasses: true,
         repairElitePrefixDfsRetryBudgetFractionOverride: 1,
     });
-    assert.ok(eliteOverridden.attempts.some(a => a.repairElitePrefixDfsRetry === true));
+    assert.ok(eliteOverridden.attempts.some(a => a.stageId === 'repair-elite-prefix-dfs-retry'));
 
     const lateProbeOverridden = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
@@ -2616,7 +2616,7 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
         disableExtraBudgetPasses: true,
         repairLateProbeNodeBudgetOverride: 100,
     });
-    assert.ok(lateProbeOverridden.attempts.some(a => a.repairLateProbe === true));
+    assert.ok(lateProbeOverridden.attempts.some(a => a.stageId === 'late-repair-search'));
 });
 
 test('late-repair-search does not fire when repairConfigs is empty only because STRATEGY_REPAIR_FALLBACK was ablated off (regression, fixed 2026-08-20)', async () => {
@@ -2633,7 +2633,7 @@ test('late-repair-search does not fire when repairConfigs is empty only because 
         disableExtraBudgetPasses: true,
         repairLateProbeNodeBudgetOverride: 100,
     });
-    assert.equal(result.attempts.some(a => a.repairLateProbe === true), false,
+    assert.equal(result.attempts.some(a => a.stageId === 'late-repair-search'), false,
         'STRATEGY_REPAIR_FALLBACK: false must not be silently undone by the late-probe tier');
     assert.equal(result.attempts.some(a => a.repair === true), false,
         'no repair attempt of any kind should run when the fallback is explicitly disabled');
