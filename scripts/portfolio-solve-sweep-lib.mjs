@@ -65,8 +65,10 @@ function projectedAttemptError(error) {
         message: bounded(field('message'), 'Unknown attempt error', 500),
         gateKey: Number.isFinite(field('gateKey')) ? field('gateKey') : null,
         configKey,
-        profile: bounded(field('profile'), 'unknown', 120),
-        template: field('template') == null ? null : bounded(field('template'), 'unknown', 120),
+        scoringProfileId: bounded(field('scoringProfileId') ?? field('profile'), 'unknown', 120),
+        orderingBiasId: (field('orderingBiasId') ?? field('template')) == null
+            ? null
+            : bounded(field('orderingBiasId') ?? field('template'), 'unknown', 120),
     };
 }
 
