@@ -17,7 +17,7 @@
 // so far — never assuming saved hints exist, since the diverse search is meant to work
 // from nothing on a freshly authored level.
 import { getAttemptConfigs } from './attempts.js';
-import { TEMPLATE_CONFIG_KEYS } from './policy.js';
+import { ORDERING_BIAS_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
 import { createState, getNeighbors } from './search-state.js';
 import { deriveSolveAttemptInfo } from './hint-provenance.js';
@@ -61,7 +61,7 @@ function anyConfigSurvives(level: any, disabledKeys: Set<string>): boolean {
     const baseConfigs = getAttemptConfigs(level);
     return baseConfigs.some(c => {
         if (c.template && c.template.id) {
-            const tKey = TEMPLATE_CONFIG_KEYS[c.template.id];
+            const tKey = ORDERING_BIAS_CONFIG_KEYS[c.template.id];
             if (tKey && disabledKeys.has(tKey)) return false;
         }
         const pKey = `PROFILE_${c.profileName}`;
