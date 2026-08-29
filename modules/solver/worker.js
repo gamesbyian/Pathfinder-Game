@@ -11,8 +11,9 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 //                                                    etc. timeBudgetMs and yieldFn are NOT part of
 //                                                    it; they stay the dedicated budgetMs param and
 //                                                    this worker's own cancellation-checking yieldFn.
-//   { type: 'TRAP',      id, level, budgetMs }      — trap-spot search on a NORMALIZED level
-//                                                     (0-indexed keys; postMessage's structured
+//   { type: 'FALSE_GOAL_TRIGGER_SEARCH', id, level, budgetMs } — false-goal triggerability search on a NORMALIZED level
+//                                                     (legacy inbound alias `TRAP` is also accepted;
+//                                                      0-indexed keys; postMessage's structured
 //                                                     clone carries its Sets/Maps intact, so the
 //                                                     worker sees exactly what the editor sees)
 //   { type: 'ENUMERATE', id, levelKey, level, gateKey, rootChildren, nodeBudget }
@@ -21,7 +22,7 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 //                                                    gate's search tree — see hint-enumeration.ts's
 //                                                    rootChildren doc. `level` is a NORMALIZED level
 //                                                    (0-indexed keys; structured clone carries its
-//                                                    Sets/Maps intact, same convention as TRAP).
+//                                                    Sets/Maps intact, same convention as FALSE_GOAL_TRIGGER_SEARCH).
 //                                                    `levelKey` caches the prepped level across
 //                                                    calls with the same key (many shards of one
 //                                                    "Find all" run share a level), mirroring
@@ -36,11 +37,11 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 //                                legacyLatencyPortfolioExperiment?, cancelled? } — see buildSolveWorkerResult's own
 //                                comment (worker-result-serialization.mjs) for why this mirrors the
 //                                full on-thread SolveResult shape.
-//   { type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS',     id, newSpots: number[], gatesProcessed?, gatesCompleted?, totalGates? }
-//                                — streamed while the trap search runs: newly-found spot keys
+//   { type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS', id, newTriggerableCells: number[], gatesProcessed?, gatesCompleted?, totalGates? }
+//                                — streamed while the false-goal trigger search runs: newly-confirmed cell keys
 //                                  (flushed at most every ~100ms) and per-gate sweep progress
-//   { type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT',       id, ok, status, spots: number[], timedOut,
-//                                gatesProcessed, gatesCompleted, totalGates, elapsedMs, timeLimit }
+//   { type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT', id, status, triggerableCells: number[],
+//                                gatesProcessed, gatesCompleted, totalGates, elapsedMs, timeLimitMs }
 //   { type: 'ENUMERATE_PROGRESS', id, paths: {path: number[], nodes: number, elapsedMs: number}[] }
 //                                — batch of found candidates, each with the DFS's own real
 //                                nodesExpanded/elapsedMs at the moment it was found (same values
