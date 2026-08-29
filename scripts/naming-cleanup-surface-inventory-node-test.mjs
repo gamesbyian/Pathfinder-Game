@@ -71,6 +71,9 @@ const hintAlias = inventory.packageCommands.find(row => row.name === 'test:hint-
 assert.ok(hintAlias);
 assert.equal(hintAlias.ciCommandReachable, false);
 
+for (const row of inventory.scripts) {
+  console.log(`PHASE8_SURFACE status=${row.coverageStatus} file=${row.file} aliases=${row.packageAliases.join(',') || '-'}`);
+}
 console.log('Naming-cleanup surface inventory classification is stable for representative Phase-8 surfaces.');
 
 
