@@ -82,7 +82,7 @@ export interface FalseGoalTriggerReportDecision {
 
 /**
  * Decide the user-facing outcome of a false-goal triggerability search: message wording and severity.
- * An incomplete sweep is ALWAYS surfaced — even when spots were found — so a partial
+ * An incomplete sweep is ALWAYS surfaced — even when triggerable cells were found — so a partial
  * result is never shown as if it were complete.
  */
 export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome, foundCount: number): FalseGoalTriggerReportDecision {
@@ -103,7 +103,7 @@ export function decideFalseGoalTriggerReport(res: FalseGoalTriggerSearchOutcome,
             : { message: 'No valid trap spots — no path can end on any empty cell at these settings.', tone: 'warning', offerRetry: false };
     }
     // gatesCompleted counts gates whose DFS ran to exhaustion (fully proven), not gates
-    // attempted — so say "fully swept", or "0/2 gates" next to "Found 36 spots" reads
+    // attempted — so say "fully swept", or "0/2 gates" next to a nonzero result count reads
     // like the search never ran.
     return {
         message: foundCount > 0
