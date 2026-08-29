@@ -31,7 +31,7 @@ on:
   workflow_dispatch:
     inputs:
       routing_regimes:
-        description: 'Comma-separated classifyRoutingRegime() values the code change under test can affect, e.g. intersection-heavy,must-cross-heavy (see modules/solver/archetype.ts for the full vocabulary: sparse-low-intersection, multi-portal, must-cross-heavy, intersection-heavy, general).'
+        description: 'Comma-separated classifyRoutingRegime() values the code change under test can affect, e.g. intersection-heavy,must-cross-heavy (see modules/solver/routing-regime.ts for the full vocabulary: sparse-low-intersection, multi-portal, must-cross-heavy, intersection-heavy, general).'
         required: false
         default: ''
       archetypes:
