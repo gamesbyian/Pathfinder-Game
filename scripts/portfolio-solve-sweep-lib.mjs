@@ -38,8 +38,13 @@ export function attemptActionKey(attempt) {
     });
 }
 
+function schedulerPhaseMatches(actual, expected) {
+    if (!expected) return true;
+    if (expected === 'legacy-latency-portfolio') return actual === expected || actual === 'portfolio';
+    return actual === expected;
+}
 export function winningAttempt(result, phase = null) {
-    return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && (!phase || a.schedulerPhase === phase)) ?? null;
+    return (Array.isArray(result?.attempts) ? result.attempts : []).find(a => a?.ok && schedulerPhaseMatches(a.schedulerPhase, phase)) ?? null;
 }
 
 function projectedAttemptError(error) {
