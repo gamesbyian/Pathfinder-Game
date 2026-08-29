@@ -2,7 +2,7 @@
 /**
  * Ablative hint-discovery sweep. For each level, forces the solver through
  * every (gate × first-step direction) combination, cascading through
- * profile/template disables and independently testing strategy-flag
+ * scoring-profile/ordering-bias disables and independently testing strategy-flag
  * disables, to surface alternative valid solution paths. Novel paths
  * (not already in the level's `hints`) are appended to data/levels.json.
  *
@@ -144,7 +144,7 @@ async function main() {
         if (outcome.novel.length > 0) {
             raw.hints = [...(raw.hints || []), ...outcome.novel];
             totalNovel += outcome.novel.length;
-            // Attach real provenance (phase/profile/template from the ablation generator's own
+            // Attach real provenance (phase/scoring-profile/ordering-bias from the ablation generator's own
             // discovery tracking) rather than leaving these paths with an empty provenance list —
             // this script previously only wrote `.hints`, silently dropping provenance that
             // hint-workbench.mjs's equivalent ablation-full step already attaches.
