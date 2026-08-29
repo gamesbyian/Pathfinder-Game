@@ -1,6 +1,6 @@
 // Client-side adapter that runs the Pathfinder solver in a Web Worker.
-// Exposes solve()/findTrapSpots() methods that run the same search as
-// Solver.solve()/Solver.findTrapSpots(), but this is NOT a drop-in swap: it
+// Exposes solve()/findTriggerableFalseGoalCells() methods that run the same search as
+// Solver.solve()/Solver.findTriggerableFalseGoalCells(), but this is NOT a drop-in swap: it
 // implements only these two methods (not the full SolverApi surface), and
 // its solve() takes a differently-shaped level than Solver.solve() does —
 // see the input-format note below. A caller switching between the on-thread
@@ -23,7 +23,7 @@
 // contrast, expects an ALREADY-NORMALIZED level and does no raw normalization itself (that's a
 // separate prepareLevelForSolver() call on that facade) — so a raw level that's correct for
 // THIS client's solve() is the wrong shape for the on-thread solverApi.solve(), and vice versa.
-// findTrapSpots() here takes a NORMALIZED level either way — postMessage's structured clone
+// findTriggerableFalseGoalCells() here takes a NORMALIZED level either way — postMessage's structured clone
 // carries its Sets/Maps intact.
 //
 // solve() accepts the FULL SolveOpts the direct/on-thread solver does (fixed 2026-08-20 — it used
@@ -38,8 +38,8 @@
 
 import type { SolveOpts } from './orchestration.js';
 
-interface TrapWorkerOpts {
-    timeLimit?: number;
+interface FalseGoalTriggerWorkerOpts {
+    timeLimitMs?: number;
     onProgress?: (p: any) => void;
     shouldCancel?: () => boolean;
 }
@@ -57,7 +57,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
     worker.onmessage = ({ data }: MessageEvent) => {
         const handlers = _pending.get(data.id);
         if (!handlers) return;
-        if (data.type === 'TRAP_PROGRESS') {
+        if (data.type === 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS') {
             if (handlers.onProgress) handlers.onProgress(data);
             return;
         }
@@ -125,15 +125,15 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
             });
         },
 
-        // Trap-spot search on a normalized level. opts:
-        //   timeLimit    — search budget in ms
-        //   onProgress   — receives every TRAP_PROGRESS payload ({ newSpots, gate counters })
+        // False-goal triggerability search on a normalized level. opts:
+        //   timeLimitMs  — search budget in ms
+        //   onProgress   — receives every FALSE_GOAL_TRIGGER_SEARCH_PROGRESS payload ({ newTriggerableCells, gate counters })
         //   shouldCancel — polled every 50ms; returning true sends CANCEL (the search then
         //                  resolves normally with status 'aborted' and its partial spots)
-        // Resolves to the TRAP_RESULT payload with `spots` rebuilt as a Set<number>.
-        findTrapSpots(level: any, opts: TrapWorkerOpts = {}) {
+        // Resolves to the FALSE_GOAL_TRIGGER_SEARCH_RESULT payload with `triggerableCells` rebuilt as a Set<number>.
+        findTriggerableFalseGoalCells(level: any, opts: FalseGoalTriggerWorkerOpts = {}) {
             const id = _nextId++;
-            const budgetMs = Number(opts.timeLimit) > 0 ? Number(opts.timeLimit) : 30000;
+            const budgetMs = Number(opts.timeLimitMs) > 0 ? Number(opts.timeLimitMs) : 30000;
 
             return new Promise((resolve, reject) => {
                 let pollTimer: any = null;
@@ -148,12 +148,12 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
                 }
 
                 _pending.set(id, {
-                    resolve: (msg: any) => resolve({ ...msg, spots: new Set(msg.spots) }),
+                    resolve: (msg: any) => resolve({ ...msg, triggerableCells: new Set(msg.triggerableCells) }),
                     reject,
                     pollTimer,
                     onProgress: opts.onProgress,
                 });
-                worker.postMessage({ type: 'TRAP', id, level, budgetMs });
+                worker.postMessage({ type: 'FALSE_GOAL_TRIGGER_SEARCH', id, level, budgetMs });
             });
         },
 
@@ -163,7 +163,7 @@ export function createSolverWorkerClient(workerOrUrl: Worker | URL | string) {
 
 // ─── Enumeration pool: parallel "Find all" complete-mode enumeration ────────────────────────────
 //
-// Distinct from createSolverWorkerClient above (which wraps ONE worker for SOLVE/TRAP): this
+// Distinct from createSolverWorkerClient above (which wraps ONE worker for SOLVE/FALSE_GOAL_TRIGGER_SEARCH): this
 // spins up a POOL of workers and races them not for first-success (that's
 // scripts/solver-parallel/race.mjs's Node-only CLI job) but to ACCUMULATE every solution every
 // worker finds — the shape "Find all" needs. Profiling (docs/solve-button-variety.md) found

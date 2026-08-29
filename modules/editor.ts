@@ -4,7 +4,7 @@ import { getOccupant, removeOccupant, placeOccupant }        from './editor/edit
 import { saveEditorSnapshot, restoreEditorSnapshot }         from './editor/editor-history.js';
 import { serializeLevel }                                     from './editor/editor-export.js';
 import {
-    clearEditorValidTrapSpots,
+    clearEditorTriggerableFalseGoalCells,
     popEditorUndoStack,
     markDirty,
     setEditorDraggedFromGrid,
@@ -37,7 +37,7 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
         if (state.ENGINE.editor.isPencilMode) return null;
         saveEditorState();
         setEditorDraggedFromGrid(state, true);
-        clearEditorValidTrapSpots(state);
+        clearEditorTriggerableFalseGoalCells(state);
         const l = state.ENGINE.editor.workingLevel;
         setEditorWorkingHints(state, []);
         const result = removeOccupant(l, k, state.ENGINE.editor.pendingPortal);
@@ -75,7 +75,7 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
         if (toolType === 'portal' && pendingPortal === k) return;
 
         saveEditorState();
-        clearEditorValidTrapSpots(state);
+        clearEditorTriggerableFalseGoalCells(state);
         setEditorWorkingHints(state, []);
 
         const result = placeOccupant(l, k, toolType, pendingPortal);
@@ -216,7 +216,7 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
             ui.setSolutionOutput('');
             runtime().clearHintPaths();
             setEditorPendingPortal(state, null);
-            clearEditorValidTrapSpots(state);
+            clearEditorTriggerableFalseGoalCells(state);
             ui.setModalContent('levelTitle', '??', 'text');
             ui.setInputValue('editReqLen', 0);
             ui.setInputValue('editReqInt', 0);
@@ -228,7 +228,7 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
         },
         markEditorInputsDirty() {
             runtime().clearHintPaths();
-            clearEditorValidTrapSpots(state);
+            clearEditorTriggerableFalseGoalCells(state);
             setEditorModified(state, true);
         },
         handlePaletteToolPointerDown(toolType: any, options: any = {}) {

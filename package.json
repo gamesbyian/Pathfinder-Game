@@ -38,7 +38,7 @@
     "solver:fingerprint": "node scripts/run-bundled.mjs scripts/solver-fingerprint.mjs",
     "solver:fingerprint:compare": "node scripts/compare-solver-fingerprints.mjs",
     "solver:req-length-sweep": "node scripts/run-bundled.mjs scripts/req-length-sweep.mjs",
-    "solver:trap-audit": "tsx scripts/trap-search-audit.mjs",
+    "solver:audit-false-goal-triggerability": "tsx scripts/audit-false-goal-triggerability.mjs",
     "ablation:run": "node scripts/run-bundled.mjs scripts/run-ablation.mjs",
     "ablation:baseline": "node scripts/run-bundled.mjs scripts/run-ablation.mjs --experiment=baseline",
     "ablation:single": "node scripts/run-bundled.mjs scripts/run-ablation.mjs --experiment=single-feature",

@@ -400,7 +400,7 @@ function makeLevelFlowDeps(overrides: any = {}) {
     state.ENGINE.mode = core.PLAY;
     state.ENGINE.levelIdx = 0;
     state.ENGINE.level = { reqLen: 3, reqInt: 0 } as any;
-    state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, validTrapSpots: new Set() } as any;
+    state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, triggerableFalseGoalCells: new Set(), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'stale' } as any;
     state.ENGINE.hazards = { detonatedFalseGoals: new Set(), revealedGeese: new Set(), armedFalseGoals: new Set() } as any;
     state.ENGINE.solver = { controller: null } as any;
     state.ENGINE.review = { submissions: [], currentIdx: 0, savedPlayLevelIdx: 0 } as any;
@@ -461,7 +461,7 @@ test('switchMode to EDITOR sets editor working level from current level', () => 
     deps.state.ENGINE.level = { reqLen: 5, reqInt: 1 } as any;
     let cloned = null;
     deps.levelUtils.deepCloneLevel = (l: any) => { cloned = { ...l }; return cloned; };
-    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, validTrapSpots: new Set() } as any;
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, triggerableFalseGoalCells: new Set(), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'stale' } as any;
     const ctrl = createLevelFlowController(deps);
     ctrl.switchMode(core.EDITOR);
     // After switchMode(EDITOR), applyModeLayout should have been called with EDITOR
@@ -493,7 +493,7 @@ function instrumentEditorInit(deps: any) {
 test('switchMode(EDITOR) initializes the editor working copy from the current level', () => {
     const deps = makeLevelFlowDeps();
     deps.state.ENGINE.level = { reqLen: 5, reqInt: 2 } as any;
-    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], validTrapSpots: new Set([1]) } as any;
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], triggerableFalseGoalCells: new Set([1]), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'complete' } as any;
     const rec = instrumentEditorInit(deps);
     const ctrl = createLevelFlowController(deps);
     ctrl.switchMode(core.EDITOR);
@@ -504,7 +504,7 @@ test('switchMode(EDITOR) initializes the editor working copy from the current le
 test('loadLevel(idx) in EDITOR mode initializes the editor working copy', () => {
     const deps = makeLevelFlowDeps();
     deps.state.ENGINE.mode = core.EDITOR;
-    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], validTrapSpots: new Set([1]) } as any;
+    deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], triggerableFalseGoalCells: new Set([1]), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'complete' } as any;
     const rec = instrumentEditorInit(deps);
     const ctrl = createLevelFlowController(deps);
     ctrl.loadLevel(0);

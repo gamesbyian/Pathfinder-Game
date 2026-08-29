@@ -8,9 +8,9 @@ import { validateCandidatePath } from './domain/path-validator.js';
 import { normalizeRawLevel } from './solver/normalization.js';
 import { prepLevel } from './solver/prep.js';
 import { createVarietySearch as makeVarietySearch } from './solver/variety-search.js';
-import { getTrapSpotBudgetMs, solveLevel } from './solver/orchestration.js';
+import { getFalseGoalTriggerSearchBudgetMs, solveLevel } from './solver/orchestration.js';
 import { SOLVER_TESTING_API } from './solver/testing-api.js';
-import { findTrapSpots, classifyFalseGoals } from './solver/trap-search.js';
+import { findTriggerableFalseGoalCells, classifyFalseGoalTriggerability } from './solver/false-goal-trigger-search.js';
 import type { SolverApi } from './ports.js';
 
 // ─── Solver policy, encoding, distance, and solution primitives live in modules/solver/ ─
@@ -25,7 +25,7 @@ import type { SolverApi } from './ports.js';
 
 // ─── Connectivity/topology pruning lives in modules/solver/topology.js ─────
 
-// ─── Trap search lives in modules/solver/trap-search.js ─────────────────
+// ─── False-goal trigger search lives in modules/solver/false-goal-trigger-search.js ─────────────────
 
 // ─── Move scoring lives in modules/solver/scoring.js ─────────────────────
 
@@ -55,9 +55,9 @@ function createSolver(): SolverApi {
     return {
         prepareLevelForSolver: prepareLevelForSolver,
         solveLevel,
-        findTrapSpots: (level: any, opts: any = {}) => findTrapSpots(level, opts),
-        classifyFalseGoals: (level: any, result: any) => classifyFalseGoals(level, result),
-        getTrapSpotBudgetMs,
+        findTriggerableFalseGoalCells: (level: any, opts: any = {}) => findTriggerableFalseGoalCells(level, opts),
+        classifyFalseGoalTriggerability: (level: any, result: any) => classifyFalseGoalTriggerability(level, result),
+        getFalseGoalTriggerSearchBudgetMs,
         validateCandidatePath,
         createVarietySearch: (level: any, existingHints: number[][], config: any) =>
             makeVarietySearch(level, prepLevel(level), existingHints, config),

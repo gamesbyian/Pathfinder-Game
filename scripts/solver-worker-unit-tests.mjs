@@ -181,46 +181,44 @@ test('cancelled id is cleaned up after SOLVE completes', async () => {
     assert.ok(!cancelledIds.has(6), 'id should be removed from cancelledIds after solve');
 });
 
-// ─── handleWorkerMessage: TRAP ───────────────────────────────────────────────
-// TRAP takes a NORMALIZED level (structured clone carries Sets/Maps in a real
+// ─── handleWorkerMessage: FALSE_GOAL_TRIGGER_SEARCH ───────────────────────────────────────────────
+// FALSE_GOAL_TRIGGER_SEARCH takes a NORMALIZED level (structured clone carries Sets/Maps in a real
 // Worker; in these Node tests we pass the normalized object directly).
 
-test('TRAP posts a TRAP_RESULT whose spots match a complete sweep', async () => {
+test('FALSE_GOAL_TRIGGER_SEARCH posts a canonical result for a complete sweep', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'TRAP', id: 20, level: normalizeRawLevel(SIMPLE_RAW), budgetMs: 10000 },
+        { type: 'FALSE_GOAL_TRIGGER_SEARCH', id: 20, level: normalizeRawLevel(SIMPLE_RAW), budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     const result = posts.at(-1);
-    assert.equal(result.type, 'TRAP_RESULT');
+    assert.equal(result.type, 'FALSE_GOAL_TRIGGER_SEARCH_RESULT');
     assert.equal(result.id, 20);
-    assert.equal(result.ok, true);
-    assert.equal(result.status, 'done');
-    assert.ok(Array.isArray(result.spots) && result.spots.length > 0, 'open grid should have trap spots');
-    assert.equal(result.timedOut, false);
+    assert.equal(result.status, 'complete');
+    assert.ok(Array.isArray(result.triggerableCells) && result.triggerableCells.length > 0, 'open grid should have triggerable false-goal cells');
     assert.equal(result.gatesCompleted, result.totalGates);
 });
 
-test('TRAP streams every found spot through TRAP_PROGRESS before the result', async () => {
+test('FALSE_GOAL_TRIGGER_SEARCH streams every found spot through FALSE_GOAL_TRIGGER_SEARCH_PROGRESS before the result', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'TRAP', id: 21, level: normalizeRawLevel(SIMPLE_RAW), budgetMs: 10000 },
+        { type: 'FALSE_GOAL_TRIGGER_SEARCH', id: 21, level: normalizeRawLevel(SIMPLE_RAW), budgetMs: 10000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
-    const progress = posts.filter((m) => m.type === 'TRAP_PROGRESS');
+    const progress = posts.filter((m) => m.type === 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS');
     assert.ok(progress.length > 0, 'per-gate progress should be posted');
-    const streamed = new Set(progress.flatMap((m) => m.newSpots));
-    const final = new Set(posts.at(-1).spots);
+    const streamed = new Set(progress.flatMap((m) => m.newTriggerableCells));
+    const final = new Set(posts.at(-1).triggerableCells);
     assert.deepEqual(streamed, final, 'streamed spots must equal the final spot set');
 });
 
-test('TRAP with an invalid level posts ERROR', async () => {
+test('FALSE_GOAL_TRIGGER_SEARCH with an invalid level posts ERROR', async () => {
     const posts = [];
     const cancelledIds = new Set();
     await handleWorkerMessage(
-        { type: 'TRAP', id: 22, level: null, budgetMs: 5000 },
+        { type: 'FALSE_GOAL_TRIGGER_SEARCH', id: 22, level: null, budgetMs: 5000 },
         { postBack: (m) => posts.push(m), cancelledIds }
     );
     assert.equal(posts.length, 1);
@@ -229,7 +227,7 @@ test('TRAP with an invalid level posts ERROR', async () => {
 });
 
 // ─── handleWorkerMessage: ENUMERATE ──────────────────────────────────────────
-// ENUMERATE takes a NORMALIZED level (same convention as TRAP). Fixture: 3x3 grid, gate (0,0),
+// ENUMERATE takes a NORMALIZED level (same convention as FALSE_GOAL_TRIGGER_SEARCH). Fixture: 3x3 grid, gate (0,0),
 // goal (2,2), reqLen 4, reqInt 0 — exactly 6 monotone-lattice solutions, 2 real root neighbors
 // (right and up), matching modules/solver/hint-enumeration.test.ts's shared oracle.
 const TINY_GRID_LEVEL = normalizeRawLevel({ grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 4, reqInt: 0 }, 1);
@@ -333,7 +331,7 @@ test('createSolverWorkerClient with mock Worker returns object with solve and te
     try {
         const client = createSolverWorkerClient(new URL('file:///mock-worker.js'));
         assert.equal(typeof client.solve, 'function', 'client should have solve()');
-        assert.equal(typeof client.findTrapSpots, 'function', 'client should have findTrapSpots()');
+        assert.equal(typeof client.findTriggerableFalseGoalCells, 'function', 'client should have findTriggerableFalseGoalCells()');
         assert.equal(typeof client.terminate, 'function', 'client should have terminate()');
     } finally {
         if (origWorker === undefined) delete globalThis.Worker;
@@ -378,32 +376,32 @@ test('createSolverWorkerClient accepts an already-constructed Worker instance', 
     const sent = [];
     const fakeWorker = { onmessage: null, onerror: null, postMessage: (m) => sent.push(m), terminate() {} };
     const client = createSolverWorkerClient(fakeWorker);
-    const resultPromise = client.findTrapSpots({ fake: 'level' }, { timeLimit: 1234 });
+    const resultPromise = client.findTriggerableFalseGoalCells({ fake: 'level' }, { timeLimitMs: 1234 });
     assert.equal(sent.length, 1);
-    assert.equal(sent[0].type, 'TRAP');
+    assert.equal(sent[0].type, 'FALSE_GOAL_TRIGGER_SEARCH');
     assert.equal(sent[0].budgetMs, 1234);
 
-    // Round-trip: a TRAP_PROGRESS is routed to onProgress; TRAP_RESULT resolves with a Set.
-    fakeWorker.onmessage({ data: { type: 'TRAP_RESULT', id: sent[0].id, ok: true, status: 'done', spots: [7, 9], timedOut: false } });
+    // Round-trip: a FALSE_GOAL_TRIGGER_SEARCH_PROGRESS is routed to onProgress; FALSE_GOAL_TRIGGER_SEARCH_RESULT resolves with a Set.
+    fakeWorker.onmessage({ data: { type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT', id: sent[0].id, status: 'complete', triggerableCells: [7, 9] } });
     const res = await resultPromise;
-    assert.ok(res.spots instanceof Set);
-    assert.deepEqual([...res.spots].sort(), [7, 9]);
+    assert.ok(res.triggerableCells instanceof Set);
+    assert.deepEqual([...res.triggerableCells].sort(), [7, 9]);
 });
 
-test('client routes TRAP_PROGRESS payloads to onProgress without settling the call', async () => {
+test('client routes FALSE_GOAL_TRIGGER_SEARCH_PROGRESS payloads to onProgress without settling the call', async () => {
     const sent = [];
     const fakeWorker = { onmessage: null, onerror: null, postMessage: (m) => sent.push(m), terminate() {} };
     const client = createSolverWorkerClient(fakeWorker);
     const progress = [];
-    const resultPromise = client.findTrapSpots({ fake: 'level' }, { timeLimit: 1000, onProgress: (p) => progress.push(p) });
+    const resultPromise = client.findTriggerableFalseGoalCells({ fake: 'level' }, { timeLimitMs: 1000, onProgress: (p) => progress.push(p) });
     const id = sent[0].id;
-    fakeWorker.onmessage({ data: { type: 'TRAP_PROGRESS', id, newSpots: [3], gatesProcessed: 1, totalGates: 2 } });
-    fakeWorker.onmessage({ data: { type: 'TRAP_PROGRESS', id, newSpots: [5] } });
+    fakeWorker.onmessage({ data: { type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS', id, newTriggerableCells: [3], gatesProcessed: 1, totalGates: 2 } });
+    fakeWorker.onmessage({ data: { type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS', id, newTriggerableCells: [5] } });
     assert.equal(progress.length, 2);
-    assert.deepEqual(progress[0].newSpots, [3]);
-    fakeWorker.onmessage({ data: { type: 'TRAP_RESULT', id, ok: true, status: 'done', spots: [3, 5], timedOut: false } });
+    assert.deepEqual(progress[0].newTriggerableCells, [3]);
+    fakeWorker.onmessage({ data: { type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT', id, status: 'complete', triggerableCells: [3, 5] } });
     const res = await resultPromise;
-    assert.deepEqual([...res.spots].sort(), [3, 5]);
+    assert.deepEqual([...res.triggerableCells].sort(), [3, 5]);
 });
 
 // ─── createEnumerationPoolClient: end-to-end through the REAL ENUMERATE protocol ────────────────

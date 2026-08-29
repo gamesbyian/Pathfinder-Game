@@ -2,7 +2,7 @@ import type { RequireDeps } from '../state.js';
 // Editor toolbar controller: grid transforms, palette drag, pencil/eraser,
 // undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
 // live editor-input bindings.
-import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
+import { clearEditorTriggerableFalseGoalCells, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { planGridResize, computeTrapRetryBudget, decideTrapReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
@@ -27,7 +27,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
         engine.navigation.remapNavKeys(mapKey);
         engine.hints.clearHintPaths();
-        clearEditorValidTrapSpots(state);
+        clearEditorTriggerableFalseGoalCells(state);
         setEditorModified(state, true);
         ui.updateViewport();
     }
@@ -53,7 +53,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             if (eng.editor.pendingPortal) setEditorPendingPortal(state, shiftKey(eng.editor.pendingPortal));
             engine.navigation.remapNavKeys(shiftKey);
             engine.hints.clearHintPaths();
-            clearEditorValidTrapSpots(state);
+            clearEditorTriggerableFalseGoalCells(state);
         }
         l.grid.w = newSize;
         l.grid.h = newSize;
@@ -372,13 +372,13 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             return;
         }
         // A complete sweep of this exact level state is already on screen — restate it.
-        if (state.ENGINE.editor.trapScanState === 'done') {
-            const decision = decideTrapReport({ status: 'done', timedOut: false }, state.ENGINE.editor.validTrapSpots.size);
+        if (state.ENGINE.editor.falseGoalTriggerScanState === 'complete') {
+            const decision = decideTrapReport({ status: 'complete', timedOut: false }, state.ENGINE.editor.triggerableFalseGoalCells.size);
             ui.showMessage(decision.message, decision.tone);
             return;
         }
-        const baseBudgetMs = solverApi.getTrapSpotBudgetMs(l);
-        const budgetMs = (state.ENGINE.editor.trapScanState === 'partial' && trapScan.getLastBudgetMs() > 0)
+        const baseBudgetMs = solverApi.getFalseGoalTriggerSearchBudgetMs(l);
+        const budgetMs = (state.ENGINE.editor.falseGoalTriggerScanState === 'partial' && trapScan.getLastBudgetMs() > 0)
             ? computeTrapRetryBudget(trapScan.getLastBudgetMs(), baseBudgetMs)
             : baseBudgetMs;
 
@@ -411,7 +411,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             await overlayMinTimer;
             engine.overlays.setOverlayState(core.OVERLAY_NONE);
             if (res) {
-                const decision = decideTrapReport(res, state.ENGINE.editor.validTrapSpots.size);
+                const decision = decideTrapReport(res, state.ENGINE.editor.triggerableFalseGoalCells.size);
                 ui.showMessage(decision.message, decision.tone);
             } else if (!_cancelled) {
                 // scan() reported the failure through reportError; tell the user here.

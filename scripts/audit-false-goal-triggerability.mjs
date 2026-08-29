@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 /**
- * Trap search audit — runs findTrapSpots against every level using the same
- * budget the UI computes (getTrapSpotBudgetMs), then re-runs timed-out levels
+ * False-goal triggerability audit — runs findTriggerableFalseGoalCells against every level using the same
+ * budget the UI computes (getFalseGoalTriggerSearchBudgetMs), then re-runs timed-out levels
  * with a generous extended budget to measure how much time they actually need.
  *
- *   npm run solver:trap-audit --
- *   npm run solver:trap-audit -- --levels=pos:138,pos:140
- *   npm run solver:trap-audit -- --extended-budget=120000
+ *   npm run solver:audit-false-goal-triggerability --
+ *   npm run solver:audit-false-goal-triggerability -- --levels=pos:138,pos:140
+ *   npm run solver:audit-false-goal-triggerability -- --extended-budget=120000
  *
  * False-goal viability mode — instead of the timing passes, classify every placed
  * false goal as triggerable or not (a false goal can only ever fire if a path can
  * end on its cell). Reports levels whose false goals sit in squares no path can
  * reach. Timeouts are reported as "inconclusive", never as invalid.
  *
- *   npm run solver:trap-audit -- --check-false-goals
- *   npm run solver:trap-audit -- --check-false-goals --fg-budget=120000
- *   npm run solver:trap-audit -- --check-false-goals --levels=pos:63
+ *   npm run solver:audit-false-goal-triggerability -- --check-false-goals
+ *   npm run solver:audit-false-goal-triggerability -- --check-false-goals --fg-budget=120000
+ *   npm run solver:audit-false-goal-triggerability -- --check-false-goals --levels=pos:63
  */
 
 import { readFileSync } from 'node:fs';
@@ -93,12 +93,12 @@ if (argMap.has('--check-false-goals')) {
         levelsWithFG++;
 
         const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
-        const res = await Solver.findTrapSpots(level, { timeLimit: fgBudgetMs });
-        const classes = Solver.classifyFalseGoals(level, res);
+        const res = await Solver.findTriggerableFalseGoalCells(level, { timeLimitMs: fgBudgetMs });
+        const classes = Solver.classifyFalseGoalTriggerability(level, res);
 
         const dead = [], unknown = [];
         for (const [k, st] of classes) {
-            if (st === 'unreachable') dead.push(unpack(k));
+            if (st === 'untriggerable') dead.push(unpack(k));
             else if (st === 'unknown') unknown.push(unpack(k));
         }
 
@@ -143,22 +143,22 @@ for (let i = 0; i < rawLevels.length; i++) {
 
     const raw = rawLevels[i];
     const level = SOLVER_TESTING_API.normalizeRawLevel(raw, levelNumber);
-    const budgetMs = Solver.getTrapSpotBudgetMs(level);
+    const budgetMs = Solver.getFalseGoalTriggerSearchBudgetMs(level);
     runCount++;
 
     process.stdout.write(`  L${String(levelNumber).padStart(3)}: budget=${fmt(budgetMs).padEnd(8)} `);
 
     const t0 = Date.now();
-    const res = await Solver.findTrapSpots(level, { timeLimit: budgetMs });
+    const res = await Solver.findTriggerableFalseGoalCells(level, { timeLimitMs: budgetMs });
     const elapsed = Date.now() - t0;
 
-    if (res.timedOut) {
+    if (res .status !== 'complete') {
         timedOutCount++;
-        timedOutLevels.push({ levelNumber, budgetMs, elapsed, spots: res.spots.size, gatesProcessed: res.gatesProcessed, totalGates: level.gateKeys.length });
-        console.log(`TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.spots.size} spots so far   [${levelSummary(raw)}]`);
+        timedOutLevels.push({ levelNumber, budgetMs, elapsed, spots: res.triggerableCells.size, gatesProcessed: res.gatesProcessed, totalGates: level.gateKeys.length });
+        console.log(`TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} spots so far   [${levelSummary(raw)}]`);
     } else {
         completedCount++;
-        console.log(`ok       ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.spots.size} spots`);
+        console.log(`ok       ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} spots`);
     }
 }
 
@@ -182,15 +182,15 @@ for (const { levelNumber, budgetMs, spots: _spotsAfterTimeout, gatesProcessed: _
     process.stdout.write(`  L${String(levelNumber).padStart(3)}: `);
 
     const t0 = Date.now();
-    const res = await Solver.findTrapSpots(level, { timeLimit: extendedBudgetMs });
+    const res = await Solver.findTriggerableFalseGoalCells(level, { timeLimitMs: extendedBudgetMs });
     const elapsed = Date.now() - t0;
 
-    if (res.timedOut) {
+    if (res .status !== 'complete') {
         stillTimedOut.push({ levelNumber, budgetMs, elapsed });
-        console.log(`STILL TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.spots.size} spots`);
+        console.log(`STILL TIMEOUT  ${fmt(elapsed).padEnd(8)} ${res.gatesProcessed}/${level.gateKeys.length} gates  ${res.triggerableCells.size} spots`);
     } else {
         const ratio = (elapsed / budgetMs).toFixed(1);
-        console.log(`DONE  ${fmt(elapsed).padEnd(8)} ${res.spots.size} spots   needs ${fmt(elapsed)} vs default ${fmt(budgetMs)} (${ratio}x)`);
+        console.log(`DONE  ${fmt(elapsed).padEnd(8)} ${res.triggerableCells.size} spots   needs ${fmt(elapsed)} vs default ${fmt(budgetMs)} (${ratio}x)`);
     }
 }
 

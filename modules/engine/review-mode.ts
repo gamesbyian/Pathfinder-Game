@@ -1,5 +1,5 @@
 import type { RequireDeps } from '../state.js';
-import { clearEditorUndoStack, clearEditorValidTrapSpots, clearNavigationUndoStack,
+import { clearEditorUndoStack, clearEditorTriggerableFalseGoalCells, clearNavigationUndoStack,
          markDirty, removeReviewSubmission as removeReviewSubmissionState,
          resetHinterForLevel, setFoundHintsSinceLoad,
          setDetonatedFalseGoals, setEditorModified,
@@ -28,7 +28,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         setEditorWorkingLevel(state, null);
         clearEditorUndoStack(state);
         setEditorModified(state, false);
-        clearEditorValidTrapSpots(state);
+        clearEditorTriggerableFalseGoalCells(state);
         PathNavigator.clear(state.ENGINE);
         clearNavigationUndoStack(state);
         setRevealedGeese(state);

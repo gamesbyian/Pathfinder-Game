@@ -6,13 +6,13 @@ import type { RequireDeps } from '../state.js';
 // Trap Spots button (editor-toolbar-controller) runs its explicit, deeper scans through the
 // same scan() seam so worker use, streaming, and state updates have one owner.
 //
-// Invalidation model: every level-mutating path calls clearEditorValidTrapSpots,
-// which resets trapScanState to 'stale'. An in-flight scan observes that (or a
+// Invalidation model: every level-mutating path calls clearEditorTriggerableFalseGoalCells,
+// which resets falseGoalTriggerScanState to 'stale'. An in-flight scan observes that (or a
 // newer scan's token) and cancels, discarding its stream — so spots on screen
 // always describe the level currently on screen.
 import {
-    addEditorValidTrapSpots, markDirty, setEditorTrapParityCandidates,
-    setEditorTrapScanState, setEditorValidTrapSpots,
+    addEditorTriggerableFalseGoalCells, markDirty, setEditorFalseGoalTriggerParityCandidates,
+    setEditorFalseGoalTriggerScanState, setEditorTriggerableFalseGoalCells,
 } from '../state-actions.js';
 import { computeParityCandidates } from './trap-scan-core.js';
 import { createSolverWorkerClient } from '../solver/solver-worker-client.js';
@@ -49,7 +49,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
         const c = getClient();
         if (c) {
             try {
-                return await c.findTrapSpots(level, {
+                return await c.findTriggerableFalseGoalCells(level, {
                     timeLimit: budgetMs,
                     shouldCancel,
                     onProgress: (p: any) => {
@@ -63,7 +63,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
             }
         }
         const pending: number[] = [];
-        return solverApi.findTrapSpots(level, {
+        return solverApi.findTriggerableFalseGoalCells(level, {
             timeLimit: budgetMs,
             onSpot: (k: number) => pending.push(k),
             onProgress: (p: any) => { if (onGateProgress) onGateProgress(p); },
@@ -76,16 +76,16 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
     }
 
     // A scan's stream is valid only while state still says 'scanning' for its
-    // token; any edit resets trapScanState via clearEditorValidTrapSpots, which
+    // token; any edit resets falseGoalTriggerScanState via clearEditorTriggerableFalseGoalCells, which
     // both cancels the scan and discards whatever it already streamed.
     const scanInvalidated = (token: number) =>
-        token !== scanToken || state.ENGINE.editor.trapScanState !== 'scanning';
+        token !== scanToken || state.ENGINE.editor.falseGoalTriggerScanState !== 'scanning';
 
     async function executeScan(budgetMs: number, hooks: any) {
         const token = ++scanToken;
-        setEditorTrapScanState(state, 'scanning');
+        setEditorFalseGoalTriggerScanState(state, 'scanning');
         // Instant layer: faint outlines on every cell parity can't rule out.
-        setEditorTrapParityCandidates(state, computeParityCandidates(state.ENGINE.editor.workingLevel));
+        setEditorFalseGoalTriggerParityCandidates(state, computeParityCandidates(state.ENGINE.editor.workingLevel));
         markDirty(state);
         const searchLevel = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
         try {
@@ -93,24 +93,24 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
                 shouldCancel: () => scanInvalidated(token) || (hooks.shouldCancel?.() ?? false),
                 onSpots: (keys: number[]) => {
                     if (scanInvalidated(token)) return;
-                    addEditorValidTrapSpots(state, keys);
+                    addEditorTriggerableFalseGoalCells(state, keys);
                     markDirty(state);
                 },
                 onGateProgress: hooks.onGateProgress,
             });
             if (scanInvalidated(token)) return null;
-            setEditorValidTrapSpots(state, res.spots);
-            const complete = res.status === 'done';
-            setEditorTrapScanState(state, complete ? 'done' : 'partial');
+            setEditorTriggerableFalseGoalCells(state, res.spots);
+            const complete = res.status === 'complete';
+            setEditorFalseGoalTriggerScanState(state, complete ? 'complete' : 'partial');
             // A complete sweep resolves every candidate: only confirmed spots remain.
-            if (complete) setEditorTrapParityCandidates(state, new Set());
+            if (complete) setEditorFalseGoalTriggerParityCandidates(state, new Set());
             lastBudgetMs = budgetMs;
             markDirty(state);
             return res;
         } catch (err) {
             if (!scanInvalidated(token)) {
-                setEditorTrapScanState(state, 'failed'); // retried after the next edit, not in a loop
-                setEditorTrapParityCandidates(state, new Set());
+                setEditorFalseGoalTriggerScanState(state, 'failed'); // retried after the next edit, not in a loop
+                setEditorFalseGoalTriggerParityCandidates(state, new Set());
                 markDirty(state);
                 reportError('trap-scan.search', err);
             }
@@ -135,7 +135,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
     // --- Auto-scan watcher ---
     // Polling one cheap condition set beats hooking every invalidation call site
     // (object place/remove, grid transforms, undo, metric edits — they all funnel
-    // through clearEditorValidTrapSpots, which this observes as 'stale').
+    // through clearEditorTriggerableFalseGoalCells, which this observes as 'stale').
     const falseGoalToolActive = () => {
         const ed = state.ENGINE.editor;
         return ed.selectedTool === 'falseGoal' || ed.draggedObject?.type === 'falseGoal';
@@ -148,7 +148,7 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
             && !eng.solver.controller
             && activeScans === 0
             && !!eng.editor.workingLevel
-            && eng.editor.trapScanState === 'stale'
+            && eng.editor.falseGoalTriggerScanState === 'stale'
             && falseGoalToolActive();
     };
 
@@ -158,13 +158,13 @@ export function createTrapScanController({ core, state, ui, levelUtils, editor, 
         // stay 'stale' and re-check next tick (edits change the answer).
         const l = state.ENGINE.editor.workingLevel;
         if (!(l.reqLen > 0) || !editor.validateWorkingLevel()?.ok) return;
-        void scan(solverApi.getTrapSpotBudgetMs(l)).then((res: any) => {
+        void scan(solverApi.getFalseGoalTriggerSearchBudgetMs(l)).then((res: any) => {
             // Background completion is silent — the highlights are the signal, and the
             // lingering faint candidate layer already says "incomplete" (full enumeration
             // rarely finishes on open levels, so a toast per rescan would be constant
             // noise). Speak only when an incomplete sweep found NOTHING: a bare grid
             // would otherwise read as "no valid spots".
-            if (res && res.status !== 'done' && state.ENGINE.editor.validTrapSpots.size === 0) {
+            if (res && res.status !== 'complete' && state.ENGINE.editor.triggerableFalseGoalCells.size === 0) {
                 ui.showMessage('Trap scan incomplete — press Trap Spots for a deeper search.', 'warning');
             }
         });

@@ -537,7 +537,7 @@ function hasAttemptError(attempts: readonly Attempt[]): boolean {
     return attempts.some(attempt => attempt.outcome === 'error');
 }
 
-export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
+export function getFalseGoalTriggerSearchBudgetMs(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
     const special = (level.mustPassKeys?.length || 0) + (level.mustCrossKeys?.length || 0) +
         (level.portalMap?.size || 0) + (level.filterMap?.size || 0) +
@@ -553,6 +553,9 @@ export function getTrapSpotBudgetMs(level: NormalizedLevel): number {
     const perGateCost = area * 45 + (level.reqLen || 0) * 120 + special * 360;
     return Math.min(120000, Math.max(10000, 5000 + perGateCost * gates));
 }
+
+/** @deprecated Use getFalseGoalTriggerSearchBudgetMs(). */
+export const getTrapSpotBudgetMs = getFalseGoalTriggerSearchBudgetMs;
 
 export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
     if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;

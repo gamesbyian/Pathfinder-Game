@@ -36,10 +36,10 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 //                                legacyLatencyPortfolioExperiment?, cancelled? } — see buildSolveWorkerResult's own
 //                                comment (worker-result-serialization.mjs) for why this mirrors the
 //                                full on-thread SolveResult shape.
-//   { type: 'TRAP_PROGRESS',     id, newSpots: number[], gatesProcessed?, gatesCompleted?, totalGates? }
+//   { type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS',     id, newSpots: number[], gatesProcessed?, gatesCompleted?, totalGates? }
 //                                — streamed while the trap search runs: newly-found spot keys
 //                                  (flushed at most every ~100ms) and per-gate sweep progress
-//   { type: 'TRAP_RESULT',       id, ok, status, spots: number[], timedOut,
+//   { type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT',       id, ok, status, spots: number[], timedOut,
 //                                gatesProcessed, gatesCompleted, totalGates, elapsedMs, timeLimit }
 //   { type: 'ENUMERATE_PROGRESS', id, paths: {path: number[], nodes: number, elapsedMs: number}[] }
 //                                — batch of found candidates, each with the DFS's own real
@@ -58,7 +58,7 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 
 import { normalizeRawLevel } from './normalization.js';
 import { solveLevel } from './orchestration.js';
-import { findTrapSpots } from './trap-search.js';
+import { findTriggerableFalseGoalCells } from './false-goal-trigger-search.js';
 import { prepLevel } from './prep.js';
 import { enumerateFromGate } from './hint-enumeration.js';
 
@@ -103,7 +103,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
                 rootChildren,
                 onSolution: (path, nodes, elapsedMs) => pending.push({ path, nodes, elapsedMs }),
                 shouldStop: () => cancelledIds.has(id),
-                // Real macrotask hop so a queued CANCEL is actually processed mid-search, same as TRAP.
+                // Real macrotask hop so a queued CANCEL is actually processed mid-search, same as FALSE_GOAL_TRIGGER_SEARCH.
                 yieldFn: async () => {
                     if (pending.length > 0 && Date.now() - lastFlush >= 100) flush();
                     await new Promise((r) => setTimeout(r, 0));
@@ -119,20 +119,20 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
         return;
     }
 
-    if (type === 'TRAP') {
+    if (type === 'FALSE_GOAL_TRIGGER_SEARCH' || type === 'TRAP') {
         const { level, budgetMs = 30000 } = data;
         try {
             let pendingSpots = [];
             let lastFlush = 0;
             const flush = (progress = null) => {
                 if (pendingSpots.length === 0 && !progress) return;
-                postBack({ type: 'TRAP_PROGRESS', id, newSpots: pendingSpots, ...(progress || {}) });
+                postBack({ type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS', id, newTriggerableCells: pendingSpots, ...(progress || {}) });
                 pendingSpots = [];
                 lastFlush = Date.now();
             };
-            const result = await findTrapSpots(level, {
-                timeLimit: budgetMs,
-                onSpot: (k) => pendingSpots.push(k),
+            const result = await findTriggerableFalseGoalCells(level, {
+                timeLimitMs: budgetMs,
+                onTriggerableCell: (k) => pendingSpots.push(k),
                 onProgress: (p) => flush(p),
                 // The real macrotask hop (not just a microtask) lets queued CANCEL
                 // messages be processed while the search runs.
@@ -144,17 +144,15 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
             });
             cancelledIds.delete(id);
             postBack({
-                type: 'TRAP_RESULT',
+                type: 'FALSE_GOAL_TRIGGER_SEARCH_RESULT',
                 id,
-                ok:             result.ok,
                 status:         result.status,
-                spots:          [...result.spots],
-                timedOut:       result.timedOut,
+                triggerableCells: [...result.triggerableCells],
                 gatesProcessed: result.gatesProcessed,
                 gatesCompleted: result.gatesCompleted,
                 totalGates:     result.totalGates,
                 elapsedMs:      result.elapsedMs,
-                timeLimit:      result.timeLimit,
+                timeLimitMs:    result.timeLimitMs,
             });
         } catch (err) {
             cancelledIds.delete(id);
