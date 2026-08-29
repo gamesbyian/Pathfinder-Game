@@ -5,18 +5,18 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { deriveSolveAttemptInfo, provenanceFromSolveResult, hintsFromVarietyResult } from './hint-provenance.js';
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from './testing-fixtures.js';
+import { withSolverStage } from './stage-policy.js';
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
   'scoringProfileId', 'orderingBiasId', 'beamWidth', 'mechanicBucketRetention', 'gateKey', 'elapsedMs', 'nodesExpanded',
   'allocatedBudgetMs', 'randomSeed', 'seedSalt', 'repairMustTurnBiased', 'repairTurnBiased',
-  'attractionDiversity',
 ]);
 const TRANSIENT_FIELDS_WITH_DISTINCT_PROVENANCE_MEANING = new Set(['workSpent']);
 const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
   'stageId', 'ok', 'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'repair',
   'timedOut', 'bestBadness', 'finalBadness', 'allocatedWorkCeiling', 'allocatedNodeCeiling',
   'workSpent', 'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
-  'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery',
+  'mainLoopLateReserve', 'repairProbe', 'repairProbeShrinkRecovery', 'attractionDiversity',
   // Consulted by orchestration.ts's classifyAttemptTier to derive the single retryTier field
   // (below), not copied onto provenance 1:1 under their own attempt-field names.
   'coarseStateNearTieRetentionRetry', 'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
@@ -49,7 +49,6 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
     seedSalt: entry.search.seedSalt,
     repairMustTurnBiased: entry.solver.forcing?.repairMustTurnBiased,
     repairTurnBiased: entry.solver.forcing?.repairTurnBiased,
-    attractionDiversity: info.attractionDiversity,
   };
   for (const field of PERSISTENT_ATTEMPT_FIELDS) {
     assert.deepEqual(destinations[field], successfulAttempt[field as keyof typeof successfulAttempt], `${field} changed in provenance`);
@@ -210,17 +209,17 @@ test('deriveSolveAttemptInfo records seedSalt as explicit 0 for a repair winner 
   assert.equal(nonRepair.seedSalt, null, 'only a non-repair winner gets null');
 });
 
-test('deriveSolveAttemptInfo flags attractionDiversity independently of technique', () => {
-  const beamAd = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, attractionDiversity: true, ok: true }]);
-  assert.equal(beamAd.technique, 'beam');
-  assert.equal(beamAd.attractionDiversity, true);
+test('deriveSolveAttemptInfo recognizes canonical and historical goal-attraction-disabled retry identity', () => {
+  const canonical = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, stageId: 'goal-attraction-disabled-retry', ok: true }]);
+  assert.equal(canonical.technique, 'beam');
+  assert.equal(canonical.goalAttractionDisabledRetry, true);
 
-  const repairAd = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, attractionDiversity: true, ok: true }]);
-  assert.equal(repairAd.technique, 'repair');
-  assert.equal(repairAd.attractionDiversity, true);
+  const historical = deriveSolveAttemptInfo([{ profile: 'repair', repair: true, attractionDiversity: true, ok: true }]);
+  assert.equal(historical.technique, 'repair');
+  assert.equal(historical.goalAttractionDisabledRetry, true);
 
   const normal = deriveSolveAttemptInfo([{ scoringProfileId: 'perimeterSweep', ok: true }]);
-  assert.equal(normal.attractionDiversity, false);
+  assert.equal(normal.goalAttractionDisabledRetry, false);
 });
 
 test('provenanceFromSolveResult records beamWidth/mechanicBucketRetention/gateKey/seedSalt on the entry', () => {
@@ -234,13 +233,11 @@ test('provenanceFromSolveResult records beamWidth/mechanicBucketRetention/gateKe
   assert.equal(entry.solver.gateKey, 589833);
 });
 
-test('provenanceFromSolveResult maps an goal-attraction-disabled-retry winner onto forcing.disabledFeatures', () => {
-  const result = {
-    status: 'success',
-    attempts: [{ scoringProfileId: 'perimeterSweep', beamWidth: 2000, attractionDiversity: true, ok: true }],
-  };
-  const entry = provenanceFromSolveResult(result);
-  assert.ok(entry.solver.forcing, 'an AD-pass winner must carry forcing metadata');
+test('provenanceFromSolveResult maps the current single-written goal-attraction stage onto forcing.disabledFeatures', () => {
+  const winner = withSolverStage({ scoringProfileId: 'perimeterSweep', beamWidth: 2000, ok: true }, 'goal-attraction-disabled-retry');
+  assert.equal('attractionDiversity' in winner, false, 'current stage writer must not emit the legacy boolean');
+  const entry = provenanceFromSolveResult({ status: 'success', attempts: [winner] });
+  assert.ok(entry.solver.forcing, 'a goal-attraction-disabled-retry winner must carry forcing metadata');
   assert.deepEqual(entry.solver.forcing.disabledFeatures, ['SCORE_GOAL_ATTRACTION']);
 });
 
