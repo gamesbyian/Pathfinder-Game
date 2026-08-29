@@ -2,7 +2,7 @@
  *  recorded twice) must not accumulate, while genuinely distinct rediscoveries are kept. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { makeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, toHint } from './hint-types.js';
+import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, toHint } from './hint-types.js';
 
 test('dedupeProvenanceEntries collapses byte-identical entries, keeps distinct ones', () => {
   const e = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.609Z', hintGuided: true, usedExistingHints: true });
@@ -51,24 +51,48 @@ test('makeProvenanceEntry sets non-null forcing from repair-variant fields alone
 });
 
 test('makeProvenanceEntry leaves forcing null when no forcing* option is passed at all', () => {
-  const entry = makeProvenanceEntry('dfs', { profile: 'perimeterSweep' });
+  const entry = makeProvenanceEntry('dfs', { scoringProfileId: 'perimeterSweep' });
   assert.equal(entry.solver.forcing, null);
 });
 
-test('makeProvenanceEntry populates beamWidth/diverseBeam/gateKey and seedSalt', () => {
+test('makeProvenanceEntry populates canonical solver config fields, gateKey and seedSalt', () => {
   const entry = makeProvenanceEntry('beam', {
-    profile: 'perimeterSweep', beamWidth: 2000, diverseBeam: true, gateKey: 655370, seedSalt: 3,
+    scoringProfileId: 'perimeterSweep', orderingBiasId: 'perimeterCW', beamWidth: 2000, mechanicBucketRetention: true, gateKey: 655370, seedSalt: 3,
   });
   assert.equal(entry.solver.beamWidth, 2000);
-  assert.equal(entry.solver.diverseBeam, true);
+  assert.equal(entry.solver.scoringProfileId, 'perimeterSweep');
+  assert.equal(entry.solver.orderingBiasId, 'perimeterCW');
+  assert.equal(entry.solver.mechanicBucketRetention, true);
   assert.equal(entry.solver.gateKey, 655370);
   assert.equal(entry.search.seedSalt, 3);
 });
 
-test('makeProvenanceEntry defaults beamWidth/diverseBeam/gateKey/seedSalt to null when omitted', () => {
+test('makeProvenanceEntry defaults canonical solver config fields/gateKey/seedSalt to null when omitted', () => {
   const entry = makeProvenanceEntry('dfs', {});
   assert.equal(entry.solver.beamWidth, null);
-  assert.equal(entry.solver.diverseBeam, null);
+  assert.equal(entry.solver.scoringProfileId, null);
+  assert.equal(entry.solver.orderingBiasId, null);
+  assert.equal(entry.solver.mechanicBucketRetention, null);
   assert.equal(entry.solver.gateKey, null);
   assert.equal(entry.search.seedSalt, null);
+});
+
+
+test('upgradeProvenanceEntry dual-reads historical nested profile/template/diverseBeam and single-writes canonical fields', () => {
+  const upgraded = upgradeProvenanceEntry({
+    solver: {
+      id: 'pathfinder-solver', version: 'abc', technique: 'beam',
+      profile: 'perimeterSweep', template: 'perimeterCW', beamWidth: 2000,
+      diverseBeam: true, gateKey: 12, forcing: null, attemptIndex: 3,
+    },
+    search: { nodesExpanded: 10, elapsedMs: 1, budgetMs: 2, workSpent: null, workBudget: null, cumulativeNodesExpanded: 10, cumulativeElapsedMs: 1, cumulativeBudgetMs: 2, termination: 'solved', randomSeed: null, seedSalt: null },
+    context: { usedExistingHints: false, hintGuided: false, levelRevision: null, isolatedTechnique: false },
+    foundAt: '2026-01-01T00:00:00.000Z',
+  });
+  assert.equal(upgraded.solver.scoringProfileId, 'perimeterSweep');
+  assert.equal(upgraded.solver.orderingBiasId, 'perimeterCW');
+  assert.equal(upgraded.solver.mechanicBucketRetention, true);
+  assert.equal(Object.hasOwn(upgraded.solver, 'profile'), false);
+  assert.equal(Object.hasOwn(upgraded.solver, 'template'), false);
+  assert.equal(Object.hasOwn(upgraded.solver, 'diverseBeam'), false);
 });
