@@ -1690,7 +1690,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // cost too (see its gate's own comment for why this matters).
     // Canonical budget-policy cascade (stage-budget.ts) — every retry-tier fraction/reserve/ceiling
     // computed in one place. See computeStageBudgetPlan's own doc for why this must run before the
-    // repair probe (below): the admissible-order-fallback/dedup/etc. reserves have to shrink the ceiling
+    // repair probe (below): the admissible-order-fallback/retry-tier reserves have to shrink the ceiling
     // every EARLIER tier runs against, which only works if they're resolved up front.
     const stageBudgetPlan = computeStageBudgetPlan({
         opts, cfg, nodeBudget, timeBudgetMs,
@@ -2259,7 +2259,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // philosophy as coarseStateNearTieRetentionRetryWorkStart/coarseStateNearTieRetentionRetryWorkBudget above, applied here even though this
         // tier calls `runAttempt` directly (like the admissible-order-fallback tier's own per-profile loop)
         // rather than through runInterleavedAttempts/runGateSerialAttempts's shared-pool
-        // attemptBudgetShare machinery dedup-retry's bug came from. `prep._workCap` is still a SINGLE
+        // attemptBudgetShare machinery coarse-state near-tie retry's bug came from. `prep._workCap` is still a SINGLE
         // mutable field those two functions last wrote before this tier runs (from the main loop,
         // ordinarily) — nothing resets it fresh for a `runAttempt`-direct caller positioned this late,
         // so without this override this tier would silently inherit a stale, likely-already-exceeded
@@ -2431,7 +2431,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // That makes the work pool ~2.9e11 units, so the work-based division never bites, and the
         // FIRST config simply runs until the tier's absolute node ceiling is gone. Measured directly
         // on `R02119` (probe at `nodeBudget` 10M): per-attempt elapsed inside each ladder-rerun tier
-        // was `[10896, 0, 0, 0, 0, 0, 0, 0]` for the dedup-near-tie tier, `[21319, 0 x7]` for the
+        // was `[10896, 0, 0, 0, 0, 0, 0, 0]` for the coarse-state-near-tie-retention tier, `[21319, 0 x7]` for the
         // connectivity tier, `[685, 0 x7]` for the goal-attraction-disabled-retry pass, and `[39602, 0 x7]` for
         // this one before the fix — while the main loop, which passes the EXTERNAL (binding) work
         // budget, divided properly at `[10782, 473, 496, 482, 1561]`. Raising this tier's reserve
