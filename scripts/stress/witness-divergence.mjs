@@ -25,7 +25,7 @@
  *     validly-constructed level and is worth its own investigation if it ever fires.
  *   - finalStateIsSolution: sanity check (should always be true).
  *
- * Uses only POLICY_PROFILES.default / no structural template — a single common baseline for
+ * Uses only SCORING_PROFILES.default / no structural ordering bias — a single common baseline for
  * comparability across the whole corpus, not the exact profile/template mix a real solve
  * attempt would use for that level's features.
  *
@@ -55,7 +55,7 @@ const TOP_N = Number(args.get('--top') || 30);
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.js');
 const Solver = createSolver();
-const { prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutionState, POLICY_PROFILES, PACK } = SOLVER_TESTING_API;
+const { prepLevel, createState, getNeighbors, applyMove, scoreAndSort, isSolutionState, SCORING_PROFILES, PACK } = SOLVER_TESTING_API;
 
 /** --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
  *  levels touching ANY of the named mechanics (stressMeta.mechanicCounts), no new computation. */
@@ -74,7 +74,7 @@ function traceWitness(entry) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const prep = prepLevel(level);
     const keys = witness.map(([x, y]) => PACK(x - 1, y - 1));
-    const profile = POLICY_PROFILES.default;
+    const profile = SCORING_PROFILES.default;
 
     const state = createState(keys[0], level, prep);
     let cumulativeDiscrepancy = 0;
@@ -152,7 +152,7 @@ mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
 writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify({
     corpus: CORPUS_FILE,
     generatedAt: new Date().toISOString(),
-    profile: 'default (no structural template) — a common baseline, not each level\'s real attempt policy',
+    profile: 'default (no structural ordering bias) — a common baseline, not each level\'s real attempt policy',
     total: results.length,
     errors: errorCount,
     invalidWitnessSteps: invalidCount,
