@@ -354,11 +354,11 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
     // variety-search already tracks real nodesExpanded/elapsedMs/technique per candidate
     // (newlySavedMeta, 1:1 aligned with newlySaved) — carry it straight through instead of
     // re-deriving it, so cost/technique data reflects the actual search that found each path.
-    // savedMeta.technique/profile already carry the orderBy suffix/tie-break identity (see
+    // savedMeta.technique/scoringProfileId already carry the orderBy suffix/tie-break identity (see
     // VarietySavedMeta's own doc in variety-search.ts) -- .startsWith, not ===, below, since the
     // suffix means the string is no longer exactly 'prefix-anchored' under admissible-slack mode.
     const candidates = result.newlySaved.map((candidatePath, index) => {
-        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique, profile: null };
+        const savedMeta = result.newlySavedMeta[index] ?? { nodesExpanded: null, elapsedMs: null, technique, scoringProfileId: null };
         return {
             path: candidatePath,
             generator: technique,
@@ -378,7 +378,7 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
             },
             diagnostics: { cancelled },
             technique: savedMeta.technique,
-            profile: savedMeta.profile ?? null,
+            scoringProfileId: savedMeta.scoringProfileId ?? savedMeta.profile ?? null,
             nodesExpanded: savedMeta.nodesExpanded,
             elapsedMs: savedMeta.elapsedMs,
             budgetMs: opts.wallMs,
@@ -396,7 +396,7 @@ async function runEnumeration(level, existingHints, opts, levelNumber, mode) {
         path: entry.path,
         generator: technique,
         technique: entry.technique,
-        profile: entry.profile ?? null,
+        scoringProfileId: entry.scoringProfileId ?? entry.profile ?? null,
         nodesExpanded: entry.nodesExpanded,
         elapsedMs: entry.elapsedMs,
         budgetMs: opts.wallMs,
@@ -429,9 +429,9 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
     // checkpoint, so no `workMeter.units +` prefix here.
     const workCeiling = legacyMsToWork(opts.wallMs, 1);
     // The cascade doesn't track nodesExpanded/elapsedMs per found candidate (only wall-clock
-    // budgets per phase), but onProgress does report each find's phase/profile/template — capture
+    // budgets per phase), but onProgress does report each find's phase/scoring-profile/ordering-bias — capture
     // it here (in the same order `novel` is pushed, since consider() does both synchronously) so
-    // the accepted hint's provenance at least names which cascade phase/profile found it.
+    // the accepted hint's provenance at least names which cascade phase/scoring profile found it.
     const foundProvenance = [];
     const result = await session.runUntil(() => workCeiling, {
         maxHints: opts.maxAccepted,
@@ -455,15 +455,15 @@ async function runAblationUi(level, existingHints, opts, levelNumber) {
         },
         diagnostics: {},
         technique: ['ablation-ui', prov.phase].filter(Boolean).join(':'),
-        profile: prov.profile ?? null,
-        template: prov.template ?? null,
+        scoringProfileId: prov.scoringProfileId ?? prov.profile ?? null,
+        orderingBiasId: prov.orderingBiasId ?? prov.template ?? null,
         forcingGateKey: prov.gateKey ?? null,
         forcingDirection: prov.direction ?? null,
         forcingPortalDest: prov.portalDest ?? null,
         forcingPortalExitDirection: prov.portalExitDirection ?? null,
         forcingDisabledFeatures: prov.disabledFeatures ?? null,
         beamWidth: prov.beamWidth ?? null,
-        diverseBeam: prov.diverseBeam ?? null,
+        mechanicBucketRetention: prov.mechanicBucketRetention ?? prov.diverseBeam ?? null,
         attemptIndex: prov.attemptIndex ?? null,
         nodesExpanded: prov.nodesExpanded ?? null,
         elapsedMs: prov.elapsedMs ?? null,
@@ -589,8 +589,8 @@ async function solveGridAttempt(gridLevel, solveOpts, errors) {
     try {
         // disableExtraBudgetPasses: candidate-grid/portal-grid deliberately run many narrow, cheap
         // probes under a tight timeBudgetMs -- without this, each individual solve can silently
-        // balloon to up to (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / attraction-diversity /
-        // admissible-order-search's own extra-budget tiers; see CLAUDE.md's solver-architecture
+        // balloon to up to (1 + 6 + 1 + N) x timeBudgetMs (repair fallback / goal-attraction-disabled-retry /
+        // admissible-order-fallback's own extra-budget tiers; see CLAUDE.md's solver-architecture
         // gotcha on this), defeating the whole point of a tight per-attempt budget across a large
         // grid. Same reasoning as hint-ablation-generator.ts's runCascade/runStrategyPhase, which
         // set this for the identical reason. Caught live: an early portal-grid test against S00103
@@ -648,7 +648,7 @@ async function runCandidateGrid(level, raw, existingHints, opts, levelNumber) {
             forcingGateKey: provenance.gateKey ?? null,
             forcingDisabledFeatures: provenance.flag ? [provenance.flag] : null,
             beamWidth: attemptInfo?.beamWidth ?? null,
-            diverseBeam: attemptInfo?.diverseBeam ?? null,
+            mechanicBucketRetention: attemptInfo?.mechanicBucketRetention ?? null,
             attemptIndex: attemptInfo?.attemptIndex ?? null,
             nodesExpanded: attemptInfo?.nodesExpanded ?? null,
             elapsedMs: attemptInfo?.elapsedMs ?? null,
@@ -772,7 +772,7 @@ async function runPortalGrid(level, opts, levelNumber) {
             forcingPortalDest: provenance.portalDest ?? null,
             forcingPortalExitDirection: provenance.portalExitDirection ?? null,
             beamWidth: attemptInfo?.beamWidth ?? null,
-            diverseBeam: attemptInfo?.diverseBeam ?? null,
+            mechanicBucketRetention: attemptInfo?.mechanicBucketRetention ?? null,
             attemptIndex: attemptInfo?.attemptIndex ?? null,
             nodesExpanded: attemptInfo?.nodesExpanded ?? null,
             elapsedMs: attemptInfo?.elapsedMs ?? null,
@@ -860,10 +860,10 @@ function validFieldForStage(stage) {
 function hintProvenanceEntryForEvent(event, levelRevision = null) {
     return makeProvenanceEntry(event.technique || event.generator, {
         solverVersion: GIT_SHA,
-        profile: event.profile ?? null,
-        template: event.template ?? null,
+        scoringProfileId: event.scoringProfileId ?? event.profile ?? null,
+        orderingBiasId: event.orderingBiasId ?? event.template ?? null,
         beamWidth: event.beamWidth ?? null,
-        diverseBeam: event.diverseBeam ?? null,
+        mechanicBucketRetention: event.mechanicBucketRetention ?? event.diverseBeam ?? null,
         gateKey: event.gateKey ?? null,
         attemptIndex: event.attemptIndex ?? null,
         nodesExpanded: event.nodesExpanded ?? null,
@@ -895,8 +895,8 @@ function hintProvenanceEntryForEvent(event, levelRevision = null) {
     });
 }
 
-// Collapse rediscovery provenance to one entry per (path, DISCOVERY CONDITION) — technique/profile/
-// template/forcing/seed/context/termination, i.e. "how was it found", excluding the incidental search
+// Collapse rediscovery provenance to one entry per (path, DISCOVERY CONDITION) — technique/scoring-profile/
+// ordering-bias/forcing/seed/context/termination, i.e. "how was it found", excluding the incidental search
 // metrics (nodesExpanded/elapsedMs/foundAt). A single enumeration run re-reaches the same solution
 // from many internal anchors and fires a rediscovery event each time; those share a condition and
 // differ only in node count (measured, on P00157, at 88% redundant), which is search noise, not
@@ -910,7 +910,8 @@ function dedupeRediscoveryByCondition(items) {
         const c = it.provenance?.context || {};
         const se = it.provenance?.search || {};
         const key = JSON.stringify([
-            it.path.join(','), s.id, s.technique, s.profile, s.template, s.forcing,
+            it.path.join(','), s.id, s.technique,
+            s.scoringProfileId ?? s.profile, s.orderingBiasId ?? s.template, s.forcing,
             c.hintGuided, c.usedExistingHints, c.levelRevision, se.randomSeed, se.termination,
         ]);
         if (seen.has(key)) continue;

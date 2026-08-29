@@ -175,5 +175,5 @@ deepTest('a baseline win with admissibleOrder: true gets a distinguishing phase 
     });
     assert.ok(res.novel.length > 0);
     assert.equal(provenanceEvents[0].phase, 'baseline-admissible-order', 'the phase must reflect the admissible-order-search win, not collapse to the plain baseline label');
-    assert.equal(provenanceEvents[0].profile, 'default');
+    assert.equal(provenanceEvents[0].scoringProfileId, 'default');
 });

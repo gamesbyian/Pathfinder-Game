@@ -10,7 +10,7 @@
  * Phases (each independently toggleable via options.phases):
  * - Phase 0 (baseline): unconstrained solve — establishes what wins by default.
  * - Phase A/B (cascade): per-gate x per-first-step-direction cascade (disable the
- *   winning template/profile each round until nothing new survives) + strategy
+ *   winning ordering bias/scoring profile each round until nothing new survives) + strategy
  *   (independently disable each STRATEGY_ flag).
  * - Phase D (swap): gate/goal-swap reversal of Phase A/B — solves the REVERSED
  *   problem (goal->gate) and reverses the resulting path back before validating.
@@ -130,8 +130,15 @@ function candidateEventFromDiscovery(
         provenance: { generator: 'ablation-full', levelNumber, ...batchMeta, ...prov },
         diagnostics: {},
         technique,
-        profile: prov.profile ?? null,
-        template: prov.template ?? null,
+        scoringProfileId: prov.scoringProfileId ?? prov.profile ?? null,
+        orderingBiasId: prov.orderingBiasId ?? prov.template ?? null,
+        beamWidth: prov.beamWidth ?? null,
+        mechanicBucketRetention: prov.mechanicBucketRetention ?? prov.diverseBeam ?? null,
+        attemptIndex: prov.attemptIndex ?? null,
+        nodesExpanded: prov.nodesExpanded ?? null,
+        elapsedMs: prov.elapsedMs ?? null,
+        randomSeed: prov.randomSeed ?? null,
+        seedSalt: prov.seedSalt ?? null,
         forcingGateKey: prov.gateKey ?? null,
         forcingDirection: prov.direction ?? null,
         forcingPortalDest: prov.portalDest ?? null,
@@ -251,11 +258,11 @@ function findGatePortalTriples(level: any, hints: number[][]): GatePortalTriple[
 
 interface FoundEntry {
     path: number[];
-    profile: string | null;
-    template: string | null;
+    scoringProfileId: string | null;
+    orderingBiasId: string | null;
     disabledFeatures: string[];
     beamWidth: number | null;
-    diverseBeam: boolean | null;
+    mechanicBucketRetention: boolean | null;
     attemptIndex: number | null;
     nodesExpanded: number | null;
     elapsedMs: number | null;
@@ -289,7 +296,7 @@ interface RunCtx {
 }
 
 // Generic cascade: repeatedly solves with `solveOptsBase` plus a growing disabled-feature
-// set (seeded from the winning template/profile of the previous round) until either the
+// set (seeded from the winning ordering bias/scoring profile of the previous round) until either the
 // deadline hits, no config survives the disable set, or the solver stops returning a
 // solution. Shared by gate-direction (A/B), portal-exit (C), and combined (F) phases —
 // they differ only in which forcing options they pass and how they log errors.
@@ -308,7 +315,7 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
             // disableExtraBudgetPasses: this cascade repeatedly re-solves under a tight
             // ctx.attemptBudgetMs specifically to isolate the effect of disabling ONE MORE narrow
             // STRATEGY_/PROFILE_ flag per round -- an unrelated last-resort search tier (repair
-            // fallback / attraction-diversity / admissible-order-search) adding its own extra
+            // repair fallback / goal-attraction-disabled-retry / admissible-order-fallback) adding its own extra
             // budget on top would both blow the round's timing and muddy which flag actually
             // caused a given round's win/loss. The unconstrained baseline solve above (phase 0)
             // deliberately does NOT set this, since its whole point is the honest full-default
@@ -327,11 +334,11 @@ async function runCascade(target: any, solveOptsBase: any, label: string, ctx: R
         const attemptInfo = deriveSolveAttemptInfo(result.attempts);
         found.push({
             path: result.solution,
-            profile: winner?.scoringProfileId ?? null,
-            template: winner?.orderingBiasId ?? null,
+            scoringProfileId: winner?.scoringProfileId ?? null,
+            orderingBiasId: winner?.orderingBiasId ?? null,
             disabledFeatures: [...disabled],
             beamWidth: attemptInfo.beamWidth,
-            diverseBeam: attemptInfo.mechanicBucketRetention,
+            mechanicBucketRetention: attemptInfo.mechanicBucketRetention,
             attemptIndex: attemptInfo.attemptIndex,
             nodesExpanded: attemptInfo.nodesExpanded,
             elapsedMs: attemptInfo.elapsedMs,
@@ -370,11 +377,11 @@ async function runStrategyPhase(target: any, solveOptsBase: any, label: string, 
             const attemptInfo = deriveSolveAttemptInfo(result.attempts);
             found.push({
                 path: result.solution,
-                profile: winner?.scoringProfileId ?? null,
-                template: winner?.orderingBiasId ?? null,
+                scoringProfileId: winner?.scoringProfileId ?? null,
+                orderingBiasId: winner?.orderingBiasId ?? null,
                 disabledFeatures: [flag],
                 beamWidth: attemptInfo.beamWidth,
-                diverseBeam: attemptInfo.mechanicBucketRetention,
+                mechanicBucketRetention: attemptInfo.mechanicBucketRetention,
                 attemptIndex: attemptInfo.attemptIndex,
                 nodesExpanded: attemptInfo.nodesExpanded,
                 elapsedMs: attemptInfo.elapsedMs,
@@ -462,11 +469,11 @@ export async function createHintAblationGenerator(
             if (base?.ok && base.solution) {
                 const winner = base.attempts?.find((a: any) => a.ok);
                 baselineWinner = winner?.scoringProfileId ?? null;
-                // profile mirrors what the cascade/strategy FoundEntry already carries (see
+                // scoringProfileId mirrors what the cascade/strategy FoundEntry already carries (see
                 // runCascade/runStrategyPhase). The phase suffix below is what actually makes an
                 // admissible-order-search baseline win distinguishable from an ordinary
-                // default-profile DFS/beam win in this file's own PERSISTED provenance: both would
-                // otherwise report the identical profile: 'default' with no way to tell them apart.
+                // default scoring-profile DFS/beam win in this file's own PERSISTED provenance: both would
+                // otherwise report the identical scoringProfileId: 'default' with no way to tell them apart.
                 // (An earlier version of this fix added an `admissibleOrder` field to this object,
                 // but nothing downstream -- candidateEventFromDiscovery below -- ever read it back
                 // out, so it was silently dropped before ever reaching makeProvenanceEntry; found
@@ -481,10 +488,10 @@ export async function createHintAblationGenerator(
                     generator: 'ablation-full',
                     levelNumber,
                     phase,
-                    profile: winner?.scoringProfileId ?? null,
-                    template: winner?.orderingBiasId ?? null,
+                    scoringProfileId: winner?.scoringProfileId ?? null,
+                    orderingBiasId: winner?.orderingBiasId ?? null,
                     beamWidth: attemptInfo.beamWidth,
-                    diverseBeam: attemptInfo.mechanicBucketRetention,
+                    mechanicBucketRetention: attemptInfo.mechanicBucketRetention,
                     attemptIndex: attemptInfo.attemptIndex,
                     nodesExpanded: attemptInfo.nodesExpanded,
                     elapsedMs: attemptInfo.elapsedMs,
@@ -517,11 +524,11 @@ export async function createHintAblationGenerator(
                         phase: 'cascade',
                         gateKey,
                         direction,
-                        profile: r.profile,
-                        template: r.template,
+                        scoringProfileId: r.scoringProfileId,
+                        orderingBiasId: r.orderingBiasId,
                         disabledFeatures: r.disabledFeatures,
                         beamWidth: r.beamWidth,
-                        diverseBeam: r.diverseBeam,
+                        mechanicBucketRetention: r.mechanicBucketRetention,
                         attemptIndex: r.attemptIndex,
                         nodesExpanded: r.nodesExpanded,
                         elapsedMs: r.elapsedMs,
@@ -538,11 +545,11 @@ export async function createHintAblationGenerator(
                             phase: 'strategy',
                             gateKey,
                             direction,
-                            profile: r.profile,
-                            template: r.template,
+                            scoringProfileId: r.scoringProfileId,
+                            orderingBiasId: r.orderingBiasId,
                             disabledFeatures: r.disabledFeatures,
                             beamWidth: r.beamWidth,
-                            diverseBeam: r.diverseBeam,
+                            mechanicBucketRetention: r.mechanicBucketRetention,
                             attemptIndex: r.attemptIndex,
                             nodesExpanded: r.nodesExpanded,
                             elapsedMs: r.elapsedMs,
@@ -581,11 +588,11 @@ export async function createHintAblationGenerator(
                             gateKey,
                             direction,
                             flipFlippers,
-                            profile: r.profile,
-                            template: r.template,
+                            scoringProfileId: r.scoringProfileId,
+                            orderingBiasId: r.orderingBiasId,
                             disabledFeatures: r.disabledFeatures,
                             beamWidth: r.beamWidth,
-                            diverseBeam: r.diverseBeam,
+                            mechanicBucketRetention: r.mechanicBucketRetention,
                             attemptIndex: r.attemptIndex,
                             nodesExpanded: r.nodesExpanded,
                             elapsedMs: r.elapsedMs,
@@ -603,11 +610,11 @@ export async function createHintAblationGenerator(
                                 gateKey,
                                 direction,
                                 flipFlippers,
-                                profile: r.profile,
-                                template: r.template,
+                                scoringProfileId: r.scoringProfileId,
+                                orderingBiasId: r.orderingBiasId,
                                 disabledFeatures: r.disabledFeatures,
                                 beamWidth: r.beamWidth,
-                                diverseBeam: r.diverseBeam,
+                                mechanicBucketRetention: r.mechanicBucketRetention,
                                 attemptIndex: r.attemptIndex,
                                 nodesExpanded: r.nodesExpanded,
                                 elapsedMs: r.elapsedMs,
@@ -641,11 +648,11 @@ export async function createHintAblationGenerator(
                         phase: 'portal-cascade',
                         portalDest: destKey,
                         portalExitDirection: direction,
-                        profile: r.profile,
-                        template: r.template,
+                        scoringProfileId: r.scoringProfileId,
+                        orderingBiasId: r.orderingBiasId,
                         disabledFeatures: r.disabledFeatures,
                         beamWidth: r.beamWidth,
-                        diverseBeam: r.diverseBeam,
+                        mechanicBucketRetention: r.mechanicBucketRetention,
                         attemptIndex: r.attemptIndex,
                         nodesExpanded: r.nodesExpanded,
                         elapsedMs: r.elapsedMs,
@@ -662,11 +669,11 @@ export async function createHintAblationGenerator(
                             phase: 'portal-strategy',
                             portalDest: destKey,
                             portalExitDirection: direction,
-                            profile: r.profile,
-                            template: r.template,
+                            scoringProfileId: r.scoringProfileId,
+                            orderingBiasId: r.orderingBiasId,
                             disabledFeatures: r.disabledFeatures,
                             beamWidth: r.beamWidth,
-                            diverseBeam: r.diverseBeam,
+                            mechanicBucketRetention: r.mechanicBucketRetention,
                             attemptIndex: r.attemptIndex,
                             nodesExpanded: r.nodesExpanded,
                             elapsedMs: r.elapsedMs,
@@ -710,11 +717,11 @@ export async function createHintAblationGenerator(
                                 portalDest: destKey,
                                 portalExitDirection: direction,
                                 flipFlippers,
-                                profile: r.profile,
-                                template: r.template,
+                                scoringProfileId: r.scoringProfileId,
+                                orderingBiasId: r.orderingBiasId,
                                 disabledFeatures: r.disabledFeatures,
                                 beamWidth: r.beamWidth,
-                                diverseBeam: r.diverseBeam,
+                                mechanicBucketRetention: r.mechanicBucketRetention,
                                 attemptIndex: r.attemptIndex,
                                 nodesExpanded: r.nodesExpanded,
                                 elapsedMs: r.elapsedMs,
@@ -733,11 +740,11 @@ export async function createHintAblationGenerator(
                                     portalDest: destKey,
                                     portalExitDirection: direction,
                                     flipFlippers,
-                                    profile: r.profile,
-                                    template: r.template,
+                                    scoringProfileId: r.scoringProfileId,
+                                    orderingBiasId: r.orderingBiasId,
                                     disabledFeatures: r.disabledFeatures,
                                     beamWidth: r.beamWidth,
-                                    diverseBeam: r.diverseBeam,
+                                    mechanicBucketRetention: r.mechanicBucketRetention,
                                     attemptIndex: r.attemptIndex,
                                     nodesExpanded: r.nodesExpanded,
                                     elapsedMs: r.elapsedMs,
@@ -778,11 +785,11 @@ export async function createHintAblationGenerator(
                         direction: triDirection,
                         portalDest: triDestKey,
                         portalExitDirection: exitDir,
-                        profile: r.profile,
-                        template: r.template,
+                        scoringProfileId: r.scoringProfileId,
+                        orderingBiasId: r.orderingBiasId,
                         disabledFeatures: r.disabledFeatures,
                         beamWidth: r.beamWidth,
-                        diverseBeam: r.diverseBeam,
+                        mechanicBucketRetention: r.mechanicBucketRetention,
                         attemptIndex: r.attemptIndex,
                         nodesExpanded: r.nodesExpanded,
                         elapsedMs: r.elapsedMs,
@@ -801,11 +808,11 @@ export async function createHintAblationGenerator(
                             direction: triDirection,
                             portalDest: triDestKey,
                             portalExitDirection: exitDir,
-                            profile: r.profile,
-                            template: r.template,
+                            scoringProfileId: r.scoringProfileId,
+                            orderingBiasId: r.orderingBiasId,
                             disabledFeatures: r.disabledFeatures,
                             beamWidth: r.beamWidth,
-                            diverseBeam: r.diverseBeam,
+                            mechanicBucketRetention: r.mechanicBucketRetention,
                             attemptIndex: r.attemptIndex,
                             nodesExpanded: r.nodesExpanded,
                             elapsedMs: r.elapsedMs,
@@ -846,11 +853,11 @@ export async function createHintAblationGenerator(
                             portalDest: triDestKey,
                             portalExitDirection: exitDir,
                             flipFlippers,
-                            profile: r.profile,
-                            template: r.template,
+                            scoringProfileId: r.scoringProfileId,
+                            orderingBiasId: r.orderingBiasId,
                             disabledFeatures: r.disabledFeatures,
                             beamWidth: r.beamWidth,
-                            diverseBeam: r.diverseBeam,
+                            mechanicBucketRetention: r.mechanicBucketRetention,
                             attemptIndex: r.attemptIndex,
                             nodesExpanded: r.nodesExpanded,
                             elapsedMs: r.elapsedMs,
@@ -870,11 +877,11 @@ export async function createHintAblationGenerator(
                                 portalDest: triDestKey,
                                 portalExitDirection: exitDir,
                                 flipFlippers,
-                                profile: r.profile,
-                                template: r.template,
+                                scoringProfileId: r.scoringProfileId,
+                                orderingBiasId: r.orderingBiasId,
                                 disabledFeatures: r.disabledFeatures,
                                 beamWidth: r.beamWidth,
-                                diverseBeam: r.diverseBeam,
+                                mechanicBucketRetention: r.mechanicBucketRetention,
                                 attemptIndex: r.attemptIndex,
                                 nodesExpanded: r.nodesExpanded,
                                 elapsedMs: r.elapsedMs,
@@ -898,7 +905,7 @@ export async function createHintAblationGenerator(
     const novelSigs = new Set(novel.map(pathSignature));
     return {
         // Each novel path gets ITS OWN discovery's provenance (phase/gateKey/direction/portalDest/
-        // portalExitDirection/flipFlippers/profile/template/disabledFeatures) via
+        // portalExitDirection/flipFlippers/scoringProfileId/orderingBiasId/disabledFeatures) via
         // candidateEventFromDiscovery -- NOT one batch-level provenance object shared across every
         // candidate (makeCandidateEvents's usual shape). Every phase in this generator forces a
         // different structural choice per candidate, so collapsing them all to the same shared

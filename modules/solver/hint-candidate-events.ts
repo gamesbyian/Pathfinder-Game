@@ -26,8 +26,18 @@ export interface HintCandidateEvent {
     // the persisted HintProvenanceEntry. Optional/loosely-typed here (rather than importing the
     // domain types) since not every producer sets every field.
     technique?: string;
-    profile?: string | null;
-    template?: string | null;
+    scoringProfileId?: string | null;
+    orderingBiasId?: string | null;
+    beamWidth?: number | null;
+    mechanicBucketRetention?: boolean | null;
+    attemptIndex?: number | null;
+    nodesExpanded?: number | null;
+    elapsedMs?: number | null;
+    budgetMs?: number | null;
+    randomSeed?: number | null;
+    seedSalt?: number | null;
+    usedExistingHints?: boolean;
+    hintGuided?: boolean;
     forcingGateKey?: number | null;
     forcingDirection?: number | null;
     forcingPortalDest?: number | null;
