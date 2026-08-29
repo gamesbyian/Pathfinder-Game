@@ -19,7 +19,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { computeImportanceScore, classifyFeature,
-         TEMPLATE_CONFIG_KEY } from '../modules/solver/ablation-config.js';
+         ORDERING_BIAS_FEATURE_KEYS } from '../modules/solver/ablation-config.js';
 
 // ─── Argument parsing ─────────────────────────────────────────────────────────
 
@@ -120,15 +120,29 @@ const deltas = runs
 
 const ranked = [...deltas].sort((a, b) => b.delta.importanceScore - a.delta.importanceScore);
 
-const singleFeature = ranked.filter(d => d.delta.tags.includes('single-feature') && !d.delta.tags.includes('profile') && !d.delta.tags.includes('template'));
-const _profileRuns  = ranked.filter(d => d.delta.tags.includes('profile') && d.delta.name.startsWith('profile-off:'));
-const _templateRuns = ranked.filter(d => d.delta.tags.includes('template') && d.delta.name.startsWith('template-off:'));
+const singleFeature = ranked.filter(d => d.delta.tags.includes('single-feature')
+    && !d.delta.tags.includes('scoring-profile') && !d.delta.tags.includes('profile')
+    && !d.delta.tags.includes('ordering-bias') && !d.delta.tags.includes('template'));
+const _scoringProfileRuns = ranked.filter(d => (d.delta.tags.includes('scoring-profile') || d.delta.tags.includes('profile'))
+    && (d.delta.name.startsWith('scoring-profile-off:') || d.delta.name.startsWith('profile-off:')));
+const _orderingBiasRuns = ranked.filter(d => (d.delta.tags.includes('ordering-bias') || d.delta.tags.includes('template'))
+    && (d.delta.name.startsWith('ordering-bias-off:') || d.delta.name.startsWith('template-off:')));
 const orderRuns     = ranked.filter(d => d.delta.tags.includes('order'));
 const pairRuns      = ranked.filter(d => d.delta.tags.includes('pair') || (d.delta.tags.includes('combination') && !d.delta.tags.includes('template')));
 
-// ─── Profile win analysis ─────────────────────────────────────────────────────
+// ─── Scoring-profile win analysis ──────────────────────────────────────────────
 
-function analyseProfileWins() {
+function findScoringProfileOffDelta(scoringProfileId) {
+    return deltas.find(d => d.run.name === `scoring-profile-off:${scoringProfileId}`
+        || d.run.name === `profile-off:${scoringProfileId}`);
+}
+
+function findScoringProfileSoloDelta(scoringProfileId) {
+    return deltas.find(d => d.run.name === `scoring-profile-solo:${scoringProfileId}`
+        || d.run.name === `profile-solo:${scoringProfileId}`);
+}
+
+function analyseScoringProfileWins() {
     const profileWins = new Map();
     for (const lr of (baseline.levels ?? [])) {
         if (!lr.ok || !lr.solvedBy) continue;
@@ -139,7 +153,7 @@ function analyseProfileWins() {
 
     const profileUniqueWins = new Map();
     for (const [p, levels] of profileWins) {
-        const offRun = deltas.find(d => d.run.name === `profile-off:${p}`);
+        const offRun = findScoringProfileOffDelta(p);
         if (!offRun) { profileUniqueWins.set(p, []); continue; }
         const offFailed = new Set(offRun.delta.uniqueFailures);
         profileUniqueWins.set(p, levels.filter(l => offFailed.has(l)));
@@ -148,24 +162,30 @@ function analyseProfileWins() {
     return { profileWins, profileUniqueWins };
 }
 
-// ─── Template win analysis ────────────────────────────────────────────────────
+// ─── Structural-ordering-bias win analysis ───────────────────────────────────
 
-function analyseTemplateWins() {
+function findOrderingBiasOffDelta(orderingBiasId) {
+    const featureKey = ORDERING_BIAS_FEATURE_KEYS[orderingBiasId];
+    return deltas.find(d => d.run.name === `ordering-bias-off:${orderingBiasId}`
+        || d.run.name === `template-off:${orderingBiasId}`
+        || (featureKey && d.run.name === `disable:${featureKey}`));
+}
+
+function analyseOrderingBiasWins() {
     const templateWins = new Map();
     for (const lr of (baseline.levels ?? [])) {
         if (!lr.ok || !lr.attempts) continue;
         const winAttempt = lr.attempts.find(a => a.ok);
-        if (!winAttempt?.template) continue;
-        const t = winAttempt.template;
+        const t = winAttempt?.orderingBiasId ?? winAttempt?.template ?? null;
+        if (!t) continue;
         if (!templateWins.has(t)) templateWins.set(t, []);
         templateWins.get(t).push(lr.level);
     }
 
     const templateUniqueWins = new Map();
     for (const [t, levels] of templateWins) {
-        const tKey = TEMPLATE_CONFIG_KEY[t];
-        if (!tKey) { templateUniqueWins.set(t, []); continue; }
-        const offRun = deltas.find(d => d.run.name === `disable:${tKey}`);
+        const offRun = findOrderingBiasOffDelta(t);
+        if (!offRun) { templateUniqueWins.set(t, []); continue; }
         if (!offRun) { templateUniqueWins.set(t, []); continue; }
         const offFailed = new Set(offRun.delta.uniqueFailures);
         templateUniqueWins.set(t, levels.filter(l => offFailed.has(l)));
@@ -174,8 +194,8 @@ function analyseTemplateWins() {
     return { templateWins, templateUniqueWins };
 }
 
-const { profileWins, profileUniqueWins } = analyseProfileWins();
-const { templateWins, templateUniqueWins } = analyseTemplateWins();
+const { profileWins, profileUniqueWins } = analyseScoringProfileWins();
+const { templateWins, templateUniqueWins } = analyseOrderingBiasWins();
 
 // ─── Redundancy detection ─────────────────────────────────────────────────────
 
@@ -300,12 +320,12 @@ const analysis = {
 
     tierSummary: tierSummary(singleFeature),
 
-    profileRanking: [...profileWins.entries()]
+    scoringProfileRanking: [...profileWins.entries()]
         .map(([p, levels]) => {
-            const offDelta  = deltas.find(d => d.run.name === `profile-off:${p}`)?.delta;
-            const soloDelta = deltas.find(d => d.run.name === `profile-solo:${p}`)?.delta;
+            const offDelta  = findScoringProfileOffDelta(p)?.delta;
+            const soloDelta = findScoringProfileSoloDelta(p)?.delta;
             return {
-                profile:         p,
+                scoringProfileId: p,
                 wins:            levels.length,
                 winLevels:       levels.slice().sort((a, b) => a - b),
                 uniqueWins:      profileUniqueWins.get(p) ?? [],
@@ -317,12 +337,11 @@ const analysis = {
         })
         .sort((a, b) => (b.uniqueWins.length - a.uniqueWins.length) || (b.wins - a.wins)),
 
-    templateRanking: [...templateWins.entries()]
+    orderingBiasRanking: [...templateWins.entries()]
         .map(([t, levels]) => {
-            const tKey     = TEMPLATE_CONFIG_KEY[t];
-            const offDelta = tKey ? deltas.find(d => d.run.name === `disable:${tKey}`)?.delta : null;
+            const offDelta = findOrderingBiasOffDelta(t)?.delta ?? null;
             return {
-                template:        t,
+                orderingBiasId:  t,
                 wins:            levels.length,
                 winLevels:       levels.slice().sort((a, b) => a - b),
                 uniqueWins:      templateUniqueWins.get(t) ?? [],
@@ -375,7 +394,7 @@ const fmtMs = ms => `${ms >= 0 ? '+' : ''}${Math.round(ms / 100) / 10}s`;
 const tierIcon = { critical: '🔴', strong: '🟠', helpful: '🟡', neutral: '⚪', negative: '🟢', unknown: '❓' };
 
 console.log('\n' + hr2);
-console.log('  PATHFINDER SOLVERV2 — ABLATION LABORATORY REPORT');
+console.log('  PATHFINDER SOLVER — ABLATION LABORATORY REPORT');
 console.log(hr2);
 console.log(`  Budget: ${budgetMs}ms/level  |  Levels tested: ${levelCount}  |  Phase: ${phase}`);
 console.log(`  Baseline: ${baseline.summary.solved}/${baseline.summary.total} solved  |  ${(baseline.summary.totalMs / 1000).toFixed(1)}s total  |  ${(baseline.summary.nodesExpanded ?? 0).toLocaleString()} nodes`);
@@ -408,25 +427,25 @@ for (const [tier, names] of Object.entries(ts2)) {
     console.log(`  ${tierIcon[tier]} ${tier.toUpperCase()} (${names.length}): ${clean.join(', ')}`);
 }
 
-// ── Profile ranking ────────────────────────────────────────────────────────────
-console.log('\n\n── PROFILE IMPORTANCE RANKING\n' + hr);
-console.log(pad('Profile', 24) + rpad('Wins', 6) + rpad('Unique', 8) + rpad('Score', 8) + rpad('Tier', 11) + '  Unique win levels');
+// ── Scoring-profile ranking ───────────────────────────────────────────────────
+console.log('\n\n── SCORING PROFILE IMPORTANCE RANKING\n' + hr);
+console.log(pad('Scoring profile', 24) + rpad('Wins', 6) + rpad('Unique', 8) + rpad('Score', 8) + rpad('Tier', 11) + '  Unique win levels');
 console.log(hr);
-for (const p of analysis.profileRanking) {
+for (const p of analysis.scoringProfileRanking) {
     const icon = tierIcon[p.tier] ?? '?';
     const uniq = p.uniqueWins.length > 0 ? `L${p.uniqueWins.join(', L')}` : '—';
-    console.log(pad(p.profile, 24) + rpad(p.wins, 6) + rpad(p.uniqueWins.length, 8) +
+    console.log(pad(p.scoringProfileId, 24) + rpad(p.wins, 6) + rpad(p.uniqueWins.length, 8) +
         rpad(p.importanceScore?.toFixed(1) ?? '?', 8) + rpad(icon + ' ' + p.tier, 11) + '  ' + uniq);
 }
 
-// ── Template ranking ───────────────────────────────────────────────────────────
-console.log('\n\n── TEMPLATE IMPORTANCE RANKING\n' + hr);
-console.log(pad('Template', 20) + rpad('Wins', 6) + rpad('Unique', 8) + rpad('Score', 8) + rpad('Tier', 11) + '  Unique win levels');
+// ── Structural-ordering-bias ranking ─────────────────────────────────────────
+console.log('\n\n── STRUCTURAL ORDERING BIAS IMPORTANCE RANKING\n' + hr);
+console.log(pad('Ordering bias', 20) + rpad('Wins', 6) + rpad('Unique', 8) + rpad('Score', 8) + rpad('Tier', 11) + '  Unique win levels');
 console.log(hr);
-for (const t of analysis.templateRanking) {
+for (const t of analysis.orderingBiasRanking) {
     const icon = tierIcon[t.tier] ?? '?';
     const uniq = t.uniqueWins.length > 0 ? `L${t.uniqueWins.join(', L')}` : '—';
-    console.log(pad(t.template, 20) + rpad(t.wins, 6) + rpad(t.uniqueWins.length, 8) +
+    console.log(pad(t.orderingBiasId, 20) + rpad(t.wins, 6) + rpad(t.uniqueWins.length, 8) +
         rpad(t.importanceScore?.toFixed(1) ?? '?', 8) + rpad(icon + ' ' + t.tier, 11) + '  ' + uniq);
 }
 
