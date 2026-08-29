@@ -8,7 +8,7 @@ import type { SolverSearchState, PrepLevel, ScoringProfile, StructuralOrderingBi
 
 // Pre-compute orderingBias bonus for a candidate move.
 // Returns the bonus to add to the DFS score (higher = preferred).
-export function computeTemplateBonus(target: number, pos: number, level: NormalizedLevel, orderingBias: StructuralOrderingBias | null | undefined, rRatio: number): number {
+export function computeOrderingBiasBonus(target: number, pos: number, level: NormalizedLevel, orderingBias: StructuralOrderingBias | null | undefined, rRatio: number): number {
     if (!orderingBias) return 0;
     const { w, h } = level.grid;
     const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
@@ -646,8 +646,8 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // Revisit penalty
     if ((!cfg || cfg.SCORE_REVISIT_PENALTY) && state.visited[target] > 0) score -= wrv * 8;
 
-    // Structural orderingBias bias (overrides/supplements profile heuristics)
-    if ((!cfg || cfg.SCORE_TEMPLATE_BONUS) && orderingBias) score += computeTemplateBonus(target, pos, level, orderingBias, rRatio);
+    // Structural ordering-bias bonus (overrides/supplements profile heuristics)
+    if ((!cfg || cfg.SCORE_ORDERING_BIAS_BONUS) && orderingBias) score += computeOrderingBiasBonus(target, pos, level, orderingBias, rRatio);
 
     return score;
 }
