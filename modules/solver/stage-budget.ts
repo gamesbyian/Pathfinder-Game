@@ -319,13 +319,13 @@ export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
 // (Read as a CEILING on the reserve, not its size: the reserve is `min(actual debt, this fraction of
 // earlyTierNodeBudget)`, so it only ever withholds what a shrunk tier could really use.)
 
-/** STRATEGY_DEDUP_NEAR_TIE_RETRY (PROMOTED to default-ON, 2026-08-15 — same day as the mechanism was
+/** STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY (PROMOTED to default-ON, 2026-08-15 — same day as the mechanism was
  *  built, tested opt-in, and population-validated; see the PROMOTION note below for why same-day
  *  promotion is justified here rather than the usual cooldown).
- *  A whole extra rerun of the SAME mainConfigs ladder, with STRATEGY_DEDUP_NEAR_TIE_RETENTION
+ *  A whole extra rerun of the SAME mainConfigs ladder, with STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION
  *  disabled for its duration — same shape as ATTRACTION_DIVERSITY_BUDGET_FRACTION just above,
- *  toggling search.ts's DEDUP_NEAR_TIE_MARGIN retention instead of SCORE_GOAL_ATTRACTION. Exists
- *  because a full-corpus GHA A/B (see DEDUP_NEAR_TIE_MARGIN's own comment) found that flag's
+ *  toggling search.ts's COARSE_STATE_NEAR_TIE_RETENTION_MARGIN retention instead of SCORE_GOAL_ATTRACTION. Exists
+ *  because a full-corpus GHA A/B (see COARSE_STATE_NEAR_TIE_RETENTION_MARGIN's own comment) found that flag's
  *  default-ON retention nets -7 on Corpus 2 (27 gained / 34 lost) — not a rare edge case, so
  *  reverting it outright would give back the 27 gains for no net improvement on the loss side
  *  either. Every one of the 34 losses solves cheaply (median 6.5M nodes) WITHOUT retention, and
@@ -333,7 +333,7 @@ export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
  *  tier — so a bounded last-resort retry with retention off should recover the losses without
  *  touching the gains. Tried DEAD LAST — after the main loop, repair fallback, goal-attraction-disabled-retry,
  *  repair-shrink-recovery, AND the admissible-order-fallback tier have all already failed on every gate
- *  (REVISION 3, see dedupRetryNodeReserve's own comment at its computation site: an earlier position
+ *  (REVISION 3, see coarseStateNearTieRetentionRetryNodeReserve's own comment at its computation site: an earlier position
  *  before the admissible-order-fallback tier let this tier's own extended ceiling silently starve that tier's
  *  entry guard on every level that doesn't need this one, since node accounting is one shared
  *  cumulative counter every tier's own guard checks independently).
@@ -355,31 +355,31 @@ export const REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION = 0.5;
  *
  *  1.0, matching ATTRACTION_DIVERSITY_BUDGET_FRACTION's own reasoning: a full nominal budget's
  *  worth for the whole ladder rerun, not a small fraction of it — this technique's own known-good
- *  cost data (search.ts's DEDUP_NEAR_TIE_MARGIN comment: p50=6.5M, p90=8.2M, max=34.8M of a 50M
+ *  cost data (search.ts's COARSE_STATE_NEAR_TIE_RETENTION_MARGIN comment: p50=6.5M, p90=8.2M, max=34.8M of a 50M
  *  ceiling) needs headroom comparable to a level's own full first attempt at the ladder, not a
  *  sliver. NOT YET VALIDATED at population scale — this is a first cut sized from the loss
  *  population's own historical cost, not a calibrated A/B result. */
-export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
+export const COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION = 1.0;
 
-/** Extra node headroom given ADDITIVELY to STRATEGY_DEDUP_NEAR_TIE_RETRY's own last-resort tier, as
- *  a fraction of `nodeBudget` — `dedupRetryNodeCeiling = nodeBudget + nodeBudget * this fraction`,
- *  NOT withheld from any earlier tier. See dedupRetryNodeReserve's own comment at its computation
+/** Extra node headroom given ADDITIVELY to STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY's own last-resort tier, as
+ *  a fraction of `nodeBudget` — `coarseStateNearTieRetentionRetryNodeCeiling = nodeBudget + nodeBudget * this fraction`,
+ *  NOT withheld from any earlier tier. See coarseStateNearTieRetentionRetryNodeReserve's own comment at its computation
  *  site (REVISION 2) for the full derivation and why this differs from every sibling reserve in this
  *  file (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION included), all of which subtract from
  *  `earlyTierNodeBudget` instead.
  *
  *  REVISION 2 (2026-08-15, same day as REVISION 1): the withheld-up-front design shipped, was
- *  population-validated (full-corpus GHA, `enable_flags=STRATEGY_DEDUP_NEAR_TIE_RETRY`), and turned
+ *  population-validated (full-corpus GHA, `enable_flags=STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY`), and turned
  *  out to be a net -17 (707 vs. the 724 baseline) — it hit its target exactly (33/34 losses
  *  recovered, 0/27 gains broken) but cost 65 unrelated levels whose main-search ceiling was shrunk by
  *  this reserve even though they never needed the retry tier at all. Fixed by making the reserve
- *  ADDITIVE instead of subtractive (see dedupRetryNodeReserve's own comment for the mechanism) — safe
+ *  ADDITIVE instead of subtractive (see coarseStateNearTieRetentionRetryNodeReserve's own comment for the mechanism) — safe
  *  by construction for production, where `nodeBudget` is always `Infinity` and this fraction is
  *  already forced to 0 regardless. Full data:
  *  reports/2026-08-15-connectivity-axis-exhausted-regression.md's "retry pass at population scale"
  *  section. RE-VALIDATED the same day, combined with REVISION 3's run-last reordering below (run
  *  31902837955): **764/1700, +40 vs. the 724 baseline, ZERO levels lost** — see
- *  DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION's own PROMOTION note above for the full result. This additive
+ *  COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION's own PROMOTION note above for the full result. This additive
  *  design plus REVISION 3's positioning is what's actually shipped, so that population run IS this
  *  revision's own validation, not a still-open follow-up.
  *
@@ -397,7 +397,7 @@ export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
  *  ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION) — this genuinely gave the tier its reserved nodes, but at
  *  the population-scale cost REVISION 2 above fixes.
  *
- *  0.25: the loss population's own cost distribution (n=34, search.ts's DEDUP_NEAR_TIE_MARGIN
+ *  0.25: the loss population's own cost distribution (n=34, search.ts's COARSE_STATE_NEAR_TIE_RETENTION_MARGIN
  *  comment) has p90=8.2M of the 50M production ceiling — 12.5M (0.25 * 50M) covers 33 of 34 with
  *  room to spare, missing only one outlier (34.8M, itself an atypical perimeterSweep@beam2000
  *  winner, not this population's dominant intersectionHarvest/objectiveFirst@beam5000 shape). Under
@@ -409,16 +409,16 @@ export const DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION = 1.0;
  *  R00901 (both typical-cost losses, needing 5.1M/4.3M nodes respectively in the control arm) are
  *  recovered by this tier exactly as predicted — R02110 (the 34.8M outlier) is not, also exactly as
  *  predicted, since 12.5M < 34.8M. This also caught and fixed a SEPARATE bug (see
- *  dedupRetryWorkStart/dedupRetryWorkBudget at the tier's call site): the node reserve alone was not
+ *  coarseStateNearTieRetentionRetryWorkStart/coarseStateNearTieRetentionRetryWorkBudget at the tier's call site): the node reserve alone was not
  *  sufficient — the retry pass shares runGateSerialAttempts/runInterleavedAttempts's WORK-based
  *  attemptBudgetShare split with every earlier tier by default, and that shared pool was already ~66%
  *  spent by the time this tier ran, starving its own attempts of work even with a full node reserve
  *  genuinely available. This 3-level spot-check should still hold under REVISION 2 (the tier's own
  *  ceiling only grew), but full re-validation is population-scale-only — see REVISION 2 above. */
-export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
+export const COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION = 0.25;
 
 /** STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY (PROMOTED to default-ON, 2026-08-15 — built and
- *  population-validated the same day, directly modeled on STRATEGY_DEDUP_NEAR_TIE_RETRY).
+ *  population-validated the same day, directly modeled on STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY).
  *
  *  Applies that tier's now-validated "run dead last, additive-only budget" pattern to a SECOND
  *  known double-edged mechanism in this file: ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION
@@ -435,7 +435,7 @@ export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
  *  MECHANISM: instead of shrinking `'default'`'s ceiling in the tier's own (unreserved, unchanged)
  *  pass — so `R02644`-shaped levels keep their full, already-validated chance — this tier reruns
  *  ONLY the non-`'default'` profiles, with a FRESH additive node ceiling (`nodeBudget +
- *  ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION`, mirroring dedupRetryNodeCeiling) and a
+ *  ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION`, mirroring coarseStateNearTieRetentionRetryNodeCeiling) and a
  *  fresh, additive `prep._workCap` override (see the tier's own call-site comment for why this is
  *  necessary even though the admissible-order-fallback tier's own per-profile loop calls `runAttempt`
  *  directly rather than through the shared-pool `runInterleavedAttempts`/`runGateSerialAttempts`
@@ -446,7 +446,7 @@ export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
  *  in the tier's own earlier pass and failed, so repeating it with LESS effective room (this tier's
  *  reserve fraction, however sized) would only waste budget.
  *
- *  Positioned dead last, AFTER STRATEGY_DEDUP_NEAR_TIE_RETRY (same reasoning as that tier's own
+ *  Positioned dead last, AFTER STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY (same reasoning as that tier's own
  *  REVISION 3: nothing may run after this one that still checks an unextended `nodeBudget`/
  *  `earlyTierNodeBudget`-derived ceiling, or its own extension would starve that later tier exactly
  *  the way an earlier draft of the dedup-retry tier starved the admissible-order-fallback tier itself).
@@ -455,9 +455,9 @@ export const DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION = 0.25;
  *  (1,914,111 nodes for `'none'`, referee-valid) and `R02644` is unaffected at both a solving budget
  *  (60M, byte-identical `'default'` attempt in both arms) and a non-solving one (50M, identical
  *  failure in both arms). Population-scale GHA A/B (run 31910836458, against the `764/1700`
- *  `STRATEGY_DEDUP_NEAR_TIE_RETRY`-promoted baseline) confirmed **809/1700, +45, with ZERO levels
+ *  `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY`-promoted baseline) confirmed **809/1700, +45, with ZERO levels
  *  lost relative to baseline** — a strict superset of the baseline's solved set, the same clean shape
- *  that justified promoting `STRATEGY_DEDUP_NEAR_TIE_RETRY`. Unlike that tier, this one's reserve
+ *  that justified promoting `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY`. Unlike that tier, this one's reserve
  *  fraction held up cleanly at population scale on the FIRST population attempt (no REVISION-2/
  *  REVISION-3-style correction needed after the initial local-validation fix from 0.25 to 0.5 — see
  *  ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION's own comment). See
@@ -470,12 +470,12 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
 
 /** Extra node headroom given ADDITIVELY to STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own
  *  last-resort tier, as a fraction of `nodeBudget` — same ADDITIVE (not withheld-from-anyone) design
- *  as DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION, adopted from the start here rather than arrived at
+ *  as COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION, adopted from the start here rather than arrived at
  *  after a REVISION 2 correction, since that correction's lesson is now established practice for any
  *  NEW last-resort tier in this file.
  *
  *  CORRECTION (2026-08-15, same day, local testing before any GHA spend): an initial 0.25 (matching
- *  DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own starting fraction) was tried first and found
+ *  COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION's own starting fraction) was tried first and found
  *  useless — `R03148` still failed to recover at `nodeBudget=50M` (`+12.5M` reserve). Tracing why
  *  found real, unrelated baseline drift since `reports/2026-07-30-admissible-order-fallback-node-reserve.md`
  *  was written (16+ days, many intervening solver changes): at EVERY node-budget scale tested (20M,
@@ -494,7 +494,7 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0;
  *  data point (R03148 needed roughly 14.4M of additional room past a 50M ceiling to reach `'none'`'s
  *  turn and solve, once dedup-retry's own extension is accounted for) informs the direction (bigger
  *  than 0.25) but not a rigorous size. Population-scale validation is what determines whether 0.5 is
- *  enough, too little, or (following DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own precedent of a
+ *  enough, too little, or (following COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION's own precedent of a
  *  12.5M reserve missing exactly one 34.8M outlier) simply insufficient for some other level's own
  *  need — same asymmetric-risk caution as every other reserve fraction in this file. See
  *  `reports/2026-08-15-connectivity-axis-exhausted-regression.md`'s "Applying the pattern elsewhere"
@@ -504,7 +504,7 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
 
 /** STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY (PROMOTED to production default-ON, 2026-08-16 —
  *  built the same day as STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY and directly modeled on both
- *  that tier and STRATEGY_DEDUP_NEAR_TIE_RETRY).
+ *  that tier and STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY).
  *
  *  Applies the same "run dead last, additive-only budget" pattern to a THIRD known double-edged
  *  mechanism, and this one is the root flag this whole investigation started from:
@@ -517,18 +517,18 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  lineage. The report's own single-attempt-config comparison (`reports/2026-08-15-connectivity-
  *  axis-exhausted-regression.md`'s "This is not isolated to R02248" section) found disabling this
  *  flag entirely recovers `R02114` and `R00592` (referee-valid) — the two originally-confirmed
- *  regressions `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s own near-tie retention does NOT reach, because their
+ *  regressions `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY`'s own near-tie retention does NOT reach, because their
  *  blocking collision is a different depth/shape a single runner-up slot doesn't cover — but the SAME
  *  single-attempt test found `R03248` goes the OTHER way: it solves WITH the flag on and fails
  *  WITHOUT it. Real gain (`R02114`/`R00592`), real loss (`R03248`), same knob — exactly the double-
  *  edged shape a bounded last-resort retry is suited to, for the third time in this file.
  *
- *  MECHANISM: identical shape to STRATEGY_DEDUP_NEAR_TIE_RETRY — reruns the SAME `mainConfigs` ladder
+ *  MECHANISM: identical shape to STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY — reruns the SAME `mainConfigs` ladder
  *  (every DFS/beam attempt config) via `runInterleavedAttempts`/`runGateSerialAttempts`, with
  *  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` disabled through a Proxy override on `prep._cfg`, a fresh
  *  additive node ceiling (`nodeBudget + CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION`),
  *  and a fresh additive work allocation (own `prep._workMeter.units` mark, sized via `DEFAULT_WORK_PER_MS`
- *  from this tier's own ms allocation — the exact fix DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's
+ *  from this tier's own ms allocation — the exact fix COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION's
  *  own history needed after its first shipped design shared the depleting pool). `R03248` is
  *  structurally protected the same way `R02644` was for the admissible-order-fallback tier: it already solves
  *  via the normal, flag-ON ladder, so `result.solution` is set and this tier's own `!result.solution`
@@ -566,15 +566,15 @@ export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION = 1.0;
 
 /** Extra node headroom given ADDITIVELY to STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY's own
  *  last-resort tier, as a fraction of `nodeBudget` — same ADDITIVE (not withheld-from-anyone) design
- *  as DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION/ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_
+ *  as COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION/ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_
  *  FRACTION, adopted from the start here rather than arrived at after a correction, since that
  *  lesson is now established practice for any new last-resort tier in this file.
  *
  *  CORRECTION (2026-08-16, local testing before any GHA spend): an initial 0.25 (matching
- *  DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION's own original starting point) was tried first and
+ *  COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION's own original starting point) was tried first and
  *  found insufficient — both `R02114`/`R00592` still failed (`node-budget-reached` at the 75M
  *  ceiling). This tier is now the THIRD retry tier in the ladder, stacked after both
- *  `STRATEGY_DEDUP_NEAR_TIE_RETRY` (its own reserve up to +0.25×`nodeBudget`) and
+ *  `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY` (its own reserve up to +0.25×`nodeBudget`) and
  *  `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` (+0.5×`nodeBudget`) — in the worst case the ladder
  *  can already sit at up to `nodeBudget × 1.75` by the time this tier's own entry guard is checked,
  *  before this tier's own additive room even begins. A diagnostic run with an artificially large
@@ -602,7 +602,7 @@ export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  20-level A/B (4/20 solved vs. 5/20 with it off) — with ONE confirmed cause: `R02239` solves via
  *  ordinary repair at 14,194,203 nodes with the mechanism off, but exhausts the SAME repair call's
  *  own 15,000,000-node budget without solving when it's on. This is the identical "scarce shared
- *  node budget, zero-sum reallocation" shape `STRATEGY_DEDUP_NEAR_TIE_RETRY`/`STRATEGY_ADMISSIBLE_
+ *  node budget, zero-sum reallocation" shape `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY`/`STRATEGY_ADMISSIBLE_
  *  ORDER_NON_DEFAULT_RETRY`/`STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` were each built to fix —
  *  the report's own "what would need to change" section proposed shrinking the mechanism's own
  *  constants or narrowing its attempt grid, but never considered running it as an ADDITIVE,
@@ -622,7 +622,7 @@ export const CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  tier's own fresh additive budget, the elite-prefix-DFS sub-search still competes with ordinary
  *  repair exploration for nodes exactly as the original report described — that internal cost is
  *  accepted as this specific technique's own price of admission, the same way a whole-ladder rerun
- *  is accepted as `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s own cost; what changes is that the cost is no
+ *  is accepted as `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY`'s own cost; what changes is that the cost is no
  *  longer paid by a DIFFERENT, otherwise-successful attempt.
  *
  *  Positioned dead last — AFTER `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY`, the current true end
@@ -885,7 +885,7 @@ export interface StageBudgetPlanInput {
     opts: Pick<SolveOpts,
         | 'repairBudgetFractionOverride' | 'disableExtraBudgetPasses'
         | 'attractionDiversityBudgetFractionOverride'
-        | 'dedupNearTieRetryBudgetFractionOverride' | 'dedupNearTieRetryNodeReserveFractionOverride'
+        | 'coarseStateNearTieRetentionRetryBudgetFractionOverride' | 'coarseStateNearTieRetentionRetryNodeReserveFractionOverride'
         | 'admissibleOrderNonDefaultRetryBudgetFractionOverride' | 'admissibleOrderNonDefaultRetryNodeReserveFractionOverride'
         | 'connectivityAxisExhaustedRetryBudgetFractionOverride' | 'connectivityAxisExhaustedRetryNodeReserveFractionOverride'
         | 'repairElitePrefixDfsRetryBudgetFractionOverride' | 'repairElitePrefixDfsRetryNodeReserveFractionOverride'
@@ -936,21 +936,21 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         ? diversityFractionOverride
         : ATTRACTION_DIVERSITY_BUDGET_FRACTION;
 
-    // opts.dedupNearTieRetryBudgetFractionOverride — same shape/rationale/hoisting reason as
-    // diversityBudgetFraction just above. STRATEGY_DEDUP_NEAR_TIE_RETRY is default-ON as of the
+    // opts.coarseStateNearTieRetentionRetryBudgetFractionOverride — same shape/rationale/hoisting reason as
+    // diversityBudgetFraction just above. STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY is default-ON as of the
     // PROMOTION (see that flag's own comment) — `disableExtraBudgetPasses: true` (both interactive
     // solve UIs) still zeroes this fraction, same as every other extra-budget tier.
-    const dedupRetryFractionOverride = Number(opts.dedupNearTieRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
-    const dedupRetryBudgetFraction = Number.isFinite(dedupRetryFractionOverride) && dedupRetryFractionOverride >= 0
-        ? dedupRetryFractionOverride
-        : DEDUP_NEAR_TIE_RETRY_BUDGET_FRACTION;
-    const dedupRetryNodeReserveFractionRaw = Number(opts.dedupNearTieRetryNodeReserveFractionOverride);
-    const dedupRetryNodeReserveFraction = Number.isFinite(dedupRetryNodeReserveFractionRaw) && dedupRetryNodeReserveFractionRaw >= 0
-        ? Math.min(1, dedupRetryNodeReserveFractionRaw)
-        : DEDUP_NEAR_TIE_RETRY_NODE_RESERVE_FRACTION;
+    const coarseStateNearTieRetentionRetryFractionOverride = Number(opts.coarseStateNearTieRetentionRetryBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const coarseStateNearTieRetentionRetryBudgetFraction = Number.isFinite(coarseStateNearTieRetentionRetryFractionOverride) && coarseStateNearTieRetentionRetryFractionOverride >= 0
+        ? coarseStateNearTieRetentionRetryFractionOverride
+        : COARSE_STATE_NEAR_TIE_RETENTION_RETRY_BUDGET_FRACTION;
+    const coarseStateNearTieRetentionRetryNodeReserveFractionRaw = Number(opts.coarseStateNearTieRetentionRetryNodeReserveFractionOverride);
+    const coarseStateNearTieRetentionRetryNodeReserveFraction = Number.isFinite(coarseStateNearTieRetentionRetryNodeReserveFractionRaw) && coarseStateNearTieRetentionRetryNodeReserveFractionRaw >= 0
+        ? Math.min(1, coarseStateNearTieRetentionRetryNodeReserveFractionRaw)
+        : COARSE_STATE_NEAR_TIE_RETENTION_RETRY_NODE_RESERVE_FRACTION;
 
     // opts.admissibleOrderNonDefaultRetryBudgetFractionOverride — same shape/rationale/hoisting
-    // reason as dedupRetryBudgetFraction just above. PROMOTED to default-ON (see
+    // reason as coarseStateNearTieRetentionRetryBudgetFraction just above. PROMOTED to default-ON (see
     // ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION's own comment) — `disableExtraBudgetPasses:
     // true` (both interactive solve UIs) still zeroes this fraction, same as every other extra-budget
     // tier.
@@ -964,7 +964,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         : ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION;
 
     // opts.connectivityAxisExhaustedRetryBudgetFractionOverride — same shape/rationale/hoisting
-    // reason as dedupRetryBudgetFraction/nonDefaultRetryBudgetFraction above. PROMOTED to
+    // reason as coarseStateNearTieRetentionRetryBudgetFraction/nonDefaultRetryBudgetFraction above. PROMOTED to
     // default-ON (see CONNECTIVITY_AXIS_EXHAUSTED_RETRY_BUDGET_FRACTION's own comment), so the
     // `!cfg ||` check below is the standard promoted-default convention, matching its two promoted
     // siblings, not an opt-in check.
@@ -1032,35 +1032,35 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         ? Math.floor(nodeBudget * admissibleOrderNodeReserveFraction)
         : 0;
 
-    // STRATEGY_DEDUP_NEAR_TIE_RETRY's own node reserve.
+    // STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY's own node reserve.
     //
     // REVISION 2 (2026-08-15, same day as REVISION 1 below): the withheld-up-front design (REVISION 1)
     // shipped, was population-validated via GHA, and turned out to be a net -17 (707 vs. the 724
     // baseline), not a recovery. It hit its actual target exactly as designed — 33 of 34 losses
     // recovered, 0 of 27 gains broken — but cost 65 UNRELATED levels (solved both with and without
     // the original retention fix) that now report `node-budget-reached`. Root cause: subtracting
-    // `dedupRetryNodeReserve` from `earlyTierNodeBudget` shrinks the main loop's ceiling for EVERY
+    // `coarseStateNearTieRetentionRetryNodeReserve` from `earlyTierNodeBudget` shrinks the main loop's ceiling for EVERY
     // Corpus-2 level the instant the flag is globally on, not just the 34 that actually reach this
-    // tier — any level whose real winning solve needed more than `nodeBudget - dedupRetryNodeReserve`
+    // tier — any level whose real winning solve needed more than `nodeBudget - coarseStateNearTieRetentionRetryNodeReserve`
     // in the main loop now gets cut off before finding it. Full data:
     // reports/2026-08-15-connectivity-axis-exhausted-regression.md's "retry pass at population scale"
     // section.
     //
     // Fixed by making the reserve ADDITIVE instead of subtractive — the exact "extend, don't carve
     // from the existing pool" philosophy this tier's own WORK budget already uses (see
-    // dedupRetryWorkStart/dedupRetryWorkBudget's own comment at the call site below, fixed the same
+    // coarseStateNearTieRetentionRetryWorkStart/coarseStateNearTieRetentionRetryWorkBudget's own comment at the call site below, fixed the same
     // day for the same reason). `earlyTierNodeBudget` no longer includes this reserve at all — every
     // earlier tier (probe, main loop, repair fallback, goal-attraction-disabled-retry) keeps the FULL `nodeBudget`
     // (minus only `admissibleOrderNodeReserve`, unaffected by this change) exactly as if this tier
-    // didn't exist. This tier gets its own EXTENDED ceiling, `dedupRetryNodeCeiling = nodeBudget +
-    // dedupRetryNodeReserve`, used both for its entry guard and its call-site node-budget parameter
+    // didn't exist. This tier gets its own EXTENDED ceiling, `coarseStateNearTieRetentionRetryNodeCeiling = nodeBudget +
+    // coarseStateNearTieRetentionRetryNodeReserve`, used both for its entry guard and its call-site node-budget parameter
     // (previously plain `nodeBudget` in both places — a stale reference now that earlier tiers are no
     // longer shrunk, which would otherwise make this tier immediately skip: nodesExpanded can already
     // sit at or above the ORIGINAL nodeBudget by the time this tier is reached).
     //
     // SAFE BY CONSTRUCTION for production: `nodeBudget` is `Infinity` on every production path (Play/
-    // Editor/Review/hint-discovery), where `dedupRetryNodeReserve` is already forced to 0 regardless
-    // of this change (see below) — so `dedupRetryNodeCeiling === nodeBudget === Infinity` there,
+    // Editor/Review/hint-discovery), where `coarseStateNearTieRetentionRetryNodeReserve` is already forced to 0 regardless
+    // of this change (see below) — so `coarseStateNearTieRetentionRetryNodeCeiling === nodeBudget === Infinity` there,
     // unchanged. The cost of this fix is real total node spend ONLY on finite-nodeBudget offline batch
     // runs with the flag on — this tier's reserve is no longer "free" (redistributed from elsewhere),
     // it is a genuine addition to that run's per-level node ceiling, same tradeoff already accepted
@@ -1076,11 +1076,11 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // PROMOTED to default-ON (see the constant's own comment) — standard `(!cfg || cfg.FLAG)`
     // convention, same as admissibleOrderTierWillRun just below, not the opt-in `cfg && ... === true`
     // shape this used before promotion.
-    const dedupRetryTierWillRun = dedupRetryBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY);
-    const dedupRetryNodeReserve = (dedupRetryTierWillRun && nodeBudget !== Infinity)
-        ? Math.floor(nodeBudget * dedupRetryNodeReserveFraction)
+    const coarseStateNearTieRetentionRetryTierWillRun = coarseStateNearTieRetentionRetryBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY);
+    const coarseStateNearTieRetentionRetryNodeReserve = (coarseStateNearTieRetentionRetryTierWillRun && nodeBudget !== Infinity)
+        ? Math.floor(nodeBudget * coarseStateNearTieRetentionRetryNodeReserveFraction)
         : 0;
-    const dedupRetryNodeCeiling = nodeBudget === Infinity ? Infinity : nodeBudget + dedupRetryNodeReserve;
+    const coarseStateNearTieRetentionRetryNodeCeiling = nodeBudget === Infinity ? Infinity : nodeBudget + coarseStateNearTieRetentionRetryNodeReserve;
 
     // STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY's own node reserve — additive from the start (see
     // ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION's own comment), never subtracted from
@@ -1089,7 +1089,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // — e.g. STRATEGY_ADMISSIBLE_ORDER disabled entirely, though that already zeroes
     // admissibleOrderConfigs itself, or a hypothetical future config list containing only 'default').
     // PROMOTED to default-ON (see the constant's own comment) — standard `(!cfg || cfg.FLAG)`
-    // convention, same as dedupRetryTierWillRun above, not the opt-in `cfg && ... === true` shape
+    // convention, same as coarseStateNearTieRetentionRetryTierWillRun above, not the opt-in `cfg && ... === true` shape
     // this used before promotion.
     const nonDefaultRetryTierWillRun = nonDefaultRetryBudgetFraction > 0
         && !!(!cfg || cfg.STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY)
@@ -1122,7 +1122,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // the preceding tier's own ceiling instead guarantees genuine additive headroom regardless of what
     // fraction that tier happens to use, rather than relying on the two fractions coincidentally
     // differing (which is what let `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY`'s own 0.5 vs.
-    // `STRATEGY_DEDUP_NEAR_TIE_RETRY`'s 0.25 avoid this exact bug by accident, not by design — not
+    // `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY`'s 0.25 avoid this exact bug by accident, not by design — not
     // retroactively changed here, since both are already population-validated and shipped as-is).
     const connectivityRetryNodeCeiling = nonDefaultRetryNodeCeiling === Infinity ? Infinity : nonDefaultRetryNodeCeiling + connectivityRetryNodeReserve;
 
@@ -1541,12 +1541,12 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
 
     return {
         repairProbeTierWillRun, repairFallbackTierWillRun, diversityTierWillRun,
-        repairBudgetFraction, diversityBudgetFraction, dedupRetryBudgetFraction, dedupRetryNodeReserveFraction,
+        repairBudgetFraction, diversityBudgetFraction, coarseStateNearTieRetentionRetryBudgetFraction, coarseStateNearTieRetentionRetryNodeReserveFraction,
         nonDefaultRetryBudgetFraction, nonDefaultRetryNodeReserveFraction, connectivityRetryBudgetFraction,
         connectivityRetryNodeReserveFraction, repairElitePrefixDfsRetryBudgetFraction, repairElitePrefixDfsRetryNodeReserveFraction,
         mcNeighborBudgetRetryBudgetFraction, mcNeighborBudgetRetryNodeReserveFraction, admissibleOrderBudgetFraction,
         admissibleOrderTierWillRun, admissibleOrderNodeReserveFraction, admissibleOrderNodeReserve,
-        dedupRetryTierWillRun, dedupRetryNodeReserve, dedupRetryNodeCeiling,
+        coarseStateNearTieRetentionRetryTierWillRun, coarseStateNearTieRetentionRetryNodeReserve, coarseStateNearTieRetentionRetryNodeCeiling,
         nonDefaultRetryTierWillRun, nonDefaultRetryNodeReserve, nonDefaultRetryNodeCeiling,
         connectivityRetryTierWillRun, connectivityRetryNodeReserve, connectivityRetryNodeCeiling,
         repairElitePrefixDfsRetryTierWillRun, repairElitePrefixDfsRetryNodeReserve, repairElitePrefixDfsRetryNodeCeiling,
@@ -1623,8 +1623,8 @@ export function buildStageBudgetEnvelopes(plan: StageBudgetPlan, input: { timeBu
             plan.attractionDiversityNodeReserve > 0 ? { kind: 'withheld', amount: plan.attractionDiversityNodeReserve, sourceStageId: 'main-search' } : none),
         'admissible-order-fallback': envelope('admissible-order-fallback', Math.floor(timeBudgetMs * plan.admissibleOrderBudgetFraction), nodeBudget,
             plan.admissibleOrderNodeReserve > 0 ? { kind: 'withheld', amount: plan.admissibleOrderNodeReserve, sourceStageId: 'main-search' } : none),
-        'coarse-state-near-tie-retention-disabled-retry': envelope('coarse-state-near-tie-retention-disabled-retry', Math.floor(timeBudgetMs * plan.dedupRetryBudgetFraction), plan.dedupRetryNodeCeiling,
-            plan.dedupRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.dedupRetryNodeReserve, sourceStageId: 'admissible-order-fallback' } : none),
+        'coarse-state-near-tie-retention-disabled-retry': envelope('coarse-state-near-tie-retention-disabled-retry', Math.floor(timeBudgetMs * plan.coarseStateNearTieRetentionRetryBudgetFraction), plan.coarseStateNearTieRetentionRetryNodeCeiling,
+            plan.coarseStateNearTieRetentionRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.coarseStateNearTieRetentionRetryNodeReserve, sourceStageId: 'admissible-order-fallback' } : none),
         'admissible-order-alternate-tiebreak-retry': envelope('admissible-order-alternate-tiebreak-retry', Math.floor(timeBudgetMs * plan.nonDefaultRetryBudgetFraction), plan.nonDefaultRetryNodeCeiling,
             plan.nonDefaultRetryNodeReserve > 0 ? { kind: 'additive', amount: plan.nonDefaultRetryNodeReserve, sourceStageId: 'coarse-state-near-tie-retention-disabled-retry' } : none),
         'connectivity-axis-prune-disabled-retry': envelope('connectivity-axis-prune-disabled-retry', Math.floor(timeBudgetMs * plan.connectivityRetryBudgetFraction), plan.connectivityRetryNodeCeiling,
