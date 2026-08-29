@@ -2,22 +2,100 @@
 
 ## Rename / identity migration
 
-For any rename that crosses a module boundary, persisted identity, workflow, generated artifact, CLI, or current documentation authority:
+For any rename that crosses a module boundary, transport, persisted identity, workflow, generated artifact, CLI, application state boundary, or current documentation authority, treat the work as a **contract migration**, not a textual substitution.
 
-1. read [`naming-and-vocabulary.md`](naming-and-vocabulary.md) and the active row(s) in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json);
-2. search the old spelling, canonical spelling, abbreviations, case variants, and human-readable labels across source, tests, package scripts, workflows, current docs, schemas, telemetry/provenance, environment variables, artifact/concurrency/cache identifiers, and spawned/imported physical paths;
-3. identify the producer, canonical reader/parser, transports, generated projections, historical fixtures, and every consumer before changing a persisted string;
-4. use dual-read/single-write for persisted identities unless the owning plan row explicitly says otherwise;
-5. do not rewrite frozen reports, logs, archived snapshots, or historical workflow artifacts merely to modernize terminology;
-6. for structured identities, require parse/format round trips, uniqueness, deterministic canonical formatting, legacy-to-canonical fixtures, and a collision check proving distinct legacy behavior does not collapse;
-7. for file/workflow renames, audit exact-case `paths`/`paths-ignore`, imports/spawns, workflow display/job names, concurrency groups, artifacts, caches, package aliases, and reproduction commands;
-8. for behavior-preserving solver renames, compare representative attempt/stage order, node/work accounting, and solved outcomes before/after;
-9. update current authority links and semantic dependants, then run `npm run check:documentation-links`;
-10. mark only the implemented ledger rows `done`. Do not opportunistically choose a different canonical name.
+For the repository-wide naming cleanup, also read [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md). Phase 8 onward uses the stronger completion model defined there.
+
+### 1. Build the impact map before editing
+
+1. read [`naming-and-vocabulary.md`](naming-and-vocabulary.md), the owning plan, and active row(s) in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json);
+2. search the old spelling, canonical spelling, abbreviations, case variants, human-readable labels, physical paths, and persisted values across source, tests, package scripts, workflows, current docs, schemas, telemetry/provenance, environment variables, artifact/concurrency/cache identifiers, and spawned/imported paths;
+3. identify producers, canonical readers/normalizers, transports, writers/projections, historical fixtures, grouping/classification consumers, CLI/workflow surfaces, and application/UI consumers before changing a persisted or cross-boundary value;
+4. identify which concrete test/check actually executes or structurally validates each live consumer. A green aggregate suite is not evidence for a surface it never runs.
+
+For surfaced tooling, run `node scripts/tooling-census.mjs --compact --query=<term>` for both legacy and canonical terms when applicable. For physical file/workflow renames, separately audit exact-case paths and spawned/imported targets.
+
+### 2. Fill the contract-migration matrix
+
+Every potentially relevant row must be classified as **migrate**, **compatibility read**, **retained/frozen**, or **not applicable**. Record the evidence/test that supports the classification.
+
+| Surface | Classification | Evidence / test |
+| --- | --- | --- |
+| Definition / producer |  |  |
+| Internal direct consumers |  |  |
+| Canonical parser / normalizer |  |  |
+| Sequential transport |  |  |
+| Alternate worker/race transport |  |  |
+| Serialized writer |  |  |
+| Historical reader / fixture |  |  |
+| Report/export projection |  |  |
+| Analyzer/grouping consumers |  |  |
+| CLI / package alias |  |  |
+| Workflow command/inputs/outputs |  |  |
+| Artifact/concurrency/cache/path identifiers |  |  |
+| Hint/provenance storage |  |  |
+| Application/UI/editor consumer |  |  |
+| Current docs/examples |  |  |
+| Frozen historical evidence |  |  |
+
+Do not equate “no search hit” with “not applicable.” If the category could plausibly carry the concept, show how it was searched, traced, or tested.
+
+### 3. Preserve compatibility at an explicit boundary
+
+For persisted identities use dual-read/single-write unless the owning plan explicitly says otherwise:
+
+- accept legacy and canonical input at one owning normalization boundary;
+- normalize immediately to the canonical internal form;
+- keep internal grouping/classification on canonical values;
+- emit only the canonical form;
+- do not rewrite frozen reports, logs, archived snapshots, or historical workflow artifacts merely to modernize terminology.
 
 A compatibility alias may be removed only when live code/workflows no longer emit it, current docs no longer teach it, historical readers still accept the legacy form, and a representative historical fixture proves compatibility.
 
-Use this when a change is conceptually small but can propagate across multiple representations or execution boundaries. These are audit checklists, not instructions to edit every named surface blindly. Inspect current consumers first.
+For structured identities require parse/format round trips, uniqueness, deterministic canonical formatting, legacy-to-canonical fixtures, and a collision check proving distinct legacy behavior does not collapse.
+
+### 4. Prefer eliminating duplicated knowledge
+
+When the migration exposes the same field/identity mapping in sequential, worker, raced, report, or provenance paths, prefer one shared projection/normalizer over correcting several hand-maintained copies.
+
+If duplication must remain, add a sentinel/parity test that would fail when one path drops or renames a field independently.
+
+For TypeScript/plain-Node boundaries:
+
+- do not assume a `.mjs` tool can import a `.ts` source file merely because a newer local runtime or bundler accepts it;
+- verify plain-Node tools under the repository's minimum supported Node version when the touched boundary depends on native Node loading;
+- tighten `any`/broad port types when a wrong renamed option/result field could otherwise pass compilation.
+
+### 5. Validate the migrated contract, not just the definition
+
+Use the cheapest test that proves the boundary:
+
+- module-load/runtime smoke;
+- CLI parse/help/count/dry-run smoke;
+- worker message sentinel;
+- option/result transport parity;
+- serializer/parser round trip;
+- representative historical row through a real downstream consumer;
+- exact output-schema assertion;
+- UI/controller/render assertion where application state is involved.
+
+For behavior-preserving solver renames, compare representative attempt/stage order, node/work accounting, and solved outcomes before/after. For application/state renames, verify the relevant visible/rendered behavior. For generated/research data, verify row inclusion/grouping and provenance, not only command exit status.
+
+### 6. Close from consumers inward
+
+Before marking a cross-boundary migration complete, perform a distinct closeout pass that starts from live consumers rather than the implementation diff:
+
+- package commands and surfaced CLI tools;
+- workers/raced execution;
+- workflows and exact-case local targets;
+- generated-data readers/writers and analyzers;
+- current docs/reproduction commands;
+- application/UI/editor consumers when applicable;
+- historical compatibility paths.
+
+Update current authority links and semantic dependants, then run `npm run check:documentation-links`. Mark a ledger row `done` only after all applicable verification dimensions required by its owning plan are complete.
+
+Use this recipe when a change is conceptually small but crosses representations or execution boundaries. The point is to prevent plausible 80%-complete patches, not to make ordinary local renames ceremonial.
 
 ## Solver attempt, stage, or retry
 
