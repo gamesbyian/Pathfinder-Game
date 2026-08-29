@@ -60,11 +60,11 @@ export function hintButtonLabel(count: number): string {
 function anyConfigSurvives(level: any, disabledKeys: Set<string>): boolean {
     const baseConfigs = getAttemptConfigs(level);
     return baseConfigs.some(c => {
-        if (c.template && c.template.id) {
-            const tKey = ORDERING_BIAS_CONFIG_KEYS[c.template.id];
+        if (c.orderingBias && c.orderingBias.id) {
+            const tKey = ORDERING_BIAS_CONFIG_KEYS[c.orderingBias.id];
             if (tKey && disabledKeys.has(tKey)) return false;
         }
-        const pKey = `PROFILE_${c.profileName}`;
+        const pKey = `PROFILE_${c.scoringProfileId}`;
         if (disabledKeys.has(pKey)) return false;
         return true;
     });
