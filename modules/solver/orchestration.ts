@@ -1362,7 +1362,7 @@ async function runRepairProbe(
 // AttemptIdentityFields on its own side rather than importing this thin adapter).
 export function attemptConfigKey(config: AttemptConfig): string {
     return formatAttemptIdentityKey({
-        scoringProfileId: config.scoringProfileId, templateId: config.orderingBias?.id ?? null,
+        scoringProfileId: config.scoringProfileId, orderingBiasId: config.orderingBias?.id ?? null,
         beamWidth: config.beamWidth, mechanicBucketRetention: config.mechanicBucketRetention, repair: config.repair,
         repairMustTurnBiased: config.repairMustTurnBiased, repairTurnBiased: config.repairTurnBiased,
         admissibleOrder: config.admissibleOrder, admissibleOrderNoTieBreak: config.admissibleOrderNoTieBreak,
