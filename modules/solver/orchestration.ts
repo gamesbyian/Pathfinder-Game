@@ -1,4 +1,4 @@
-import { PORTFOLIO_EXPERIMENT } from './portfolio-experiment.js';
+import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from './legacy-latency-portfolio-experiment.js';
 import { legacyMsToWork, scaledStageWorkBudget } from './budget-units.js';
 import { withWorkCapScope } from './budget-context.js';
 import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
@@ -32,7 +32,7 @@ function isSolverCancellation(value: unknown): boolean {
 // budget-retry). repair-elite-prefix-dfs-retry still builds its own override directly (a genuinely
 // different execution shape — see stage-executors.ts's own header comment for why it wasn't
 // folded into the same adapter), importing the shared builder rather than keeping a sixth copy.
-interface PortfolioExperimentDefinition {
+interface LegacyLatencyLegacyLatencyPortfolioExperimentDefinition {
     pass1Ms: number;
     pass2Ms: number;
     pass3Ms: number;
@@ -68,7 +68,7 @@ export interface Attempt {
     outcome: 'success' | 'exhausted' | 'timed-out' | 'budget-starved' | 'error';
     /** Bounded, JSON-safe description only; arbitrary thrown values and stacks are never retained. */
     error?: { name: string; message: string; gateKey: number; configKey: string; scoringProfileId: string; orderingBiasId: string | null };
-    passNumber?: number; configKey?: string; restart?: boolean; schedulerPhase?: 'portfolio' | 'fallback';
+    passNumber?: number; configKey?: string; restart?: boolean; schedulerPhase?: 'legacy-latency-portfolio' | 'fallback';
     /** Diagnostic-only passthrough of the originating AttemptConfig's dispatch flags — not read
      *  by any solving logic, purely so external tooling (stress benchmark, audits) can tell a
      *  diverse beam / repair attempt apart from a plain one without re-deriving it from profile
@@ -234,7 +234,7 @@ export function classifyAttemptTier(attempt: AttemptTierFlags): string {
             : attempt.mcNeighborBudgetRetry ? 'must-cross-neighbor-prune-disabled-retry'
                 : attempt.connectivityAxisExhaustedRetry ? 'connectivity-axis-prune-disabled-retry'
                     : attempt.dedupNearTieRetry ? 'coarse-state-near-tie-retention-disabled-retry'
-                        : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-fallback-alternate-tiebreak-retry'
+                        : attempt.admissibleOrderNonDefaultRetry ? 'admissible-order-alternate-tiebreak-retry'
                             : attempt.admissibleOrder ? 'admissible-order-fallback'
                                 : attempt.repairProbe ? 'early-repair-search'
                                     : attempt.repair ? 'repair-fallback'
@@ -292,14 +292,16 @@ export interface SolveOpts {
     attemptBudgetTelemetry?: boolean;
     /** Opt-in per-technique lifecycle/progress summary for experiment artifacts. */
     lifecycleTelemetry?: boolean;
-    schedulerMode?: 'legacy' | 'portfolio-experiment';
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'legacy' | 'portfolio-experiment';
     /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
     attemptSearchForTesting?: AttemptSearchDispatch;
     /** Research-only isConnected() rejection observer (see ConnectivityRejectionObserver's doc in
      *  types.ts and docs/solver-optimization-workstreams.md item #0's learned-failure Stage A).
      *  Never persisted or exposed by Solver's facade; absent in every production caller. */
     connectivityRejectionObserver?: ConnectivityRejectionObserver;
-    portfolioExperiment?: PortfolioExperimentDefinition;
+    legacyLatencyPortfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
+    /** @deprecated Historical option name; read for compatibility, never emitted. */
+    portfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
     /** Overrides REPAIR_EXTRA_BUDGET_FRACTION for this solve only — offline batch tooling's cost
      *  control (see docs/solver-architecture.md's cost-gotcha note). A DEDICATED top-level option,
      *  deliberately NOT an ablation flag: every existing ablation-gated strategy toggle in this
@@ -480,7 +482,7 @@ export interface SolveOpts {
      *  solver-architecture gotchas as something "a future new batch tool needs to wire up... from
      *  the start, not just the historically-older repair one" (a warning this field's own addition
      *  for the admissible-order-fallback tier is a direct instance of — see that tier's own comment; the
-     *  coarse-state-near-tie-retention-disabled-retry, admissible-order-fallback-alternate-tiebreak-retry, and connectivity-axis-prune-disabled-retry
+     *  coarse-state-near-tie-retention-disabled-retry, admissible-order-alternate-tiebreak-retry, and connectivity-axis-prune-disabled-retry
      *  tiers are wired in here for exactly the same reason). This
      *  flag makes the common "suppress every extra-budget pass" case a single boolean instead of an
      *  N-field combo a caller has to remember and update every time a new pass is added, without
@@ -526,7 +528,7 @@ interface SolveResult { ok: boolean; status: string; solution: number[] | null; 
      *  lets external tooling inspect the exact wall/node ceiling and headroom every stage was
      *  allotted without re-deriving it. Not read by any solving logic. */
     stageBudgetEnvelopes?: Partial<Record<SolverStageId, import('./stage-policy.js').BudgetEnvelope>>;
-    schedulerMode?: 'legacy' | 'portfolio-experiment'; portfolio?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment'; legacyLatencyPortfolioExperiment?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
 
 function hasAttemptError(attempts: readonly Attempt[]): boolean {
     return attempts.some(attempt => attempt.outcome === 'error');
@@ -1365,7 +1367,7 @@ export function attemptConfigKey(config: AttemptConfig): string {
     });
 }
 
-function portfolioFeatureSummary(level: NormalizedLevel): Record<string, number> {
+function legacyLatencyPortfolioFeatureSummary(level: NormalizedLevel): Record<string, number> {
     return {
         reqInt: level.reqInt ?? 0,
         mustPass: level.mustPassKeys?.length ?? 0,
@@ -1376,8 +1378,8 @@ function portfolioFeatureSummary(level: NormalizedLevel): Record<string, number>
     };
 }
 
-function portfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<PortfolioExperimentDefinition['conditionalPasses']>[number]['when']): boolean {
-    const f = portfolioFeatureSummary(level);
+function legacyLatencyPortfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<LegacyLatencyPortfolioExperimentDefinition['conditionalPasses']>[number]['when']): boolean {
+    const f = legacyLatencyPortfolioFeatureSummary(level);
     return (gate.minReqInt == null || f.reqInt >= gate.minReqInt)
         && (gate.minMustPass == null || f.mustPass >= gate.minMustPass)
         && (gate.minMustCross == null || f.mustCross >= gate.minMustCross)
@@ -1485,14 +1487,14 @@ async function runAttemptSlice(
     const result = await runAttempt(gateKey, level, prep, attemptConfig, capMs, Date.now(), yieldFn);
     result.attempt.configKey = attemptConfigKey(attemptConfig);
     Object.assign(result.attempt, metadata);
-    if (metadata.schedulerPhase === 'portfolio') Object.assign(result.attempt, withSolverStage(result.attempt, 'legacy-latency-portfolio-pass'));
+    if (metadata.schedulerPhase === 'legacy-latency-portfolio') Object.assign(result.attempt, withSolverStage(result.attempt, 'legacy-latency-portfolio-pass'));
     return result;
 }
 
-async function runPortfolioExperiment(
+async function runLegacyLatencyPortfolioExperiment(
     level: NormalizedLevel, opts: SolveOpts, timeBudgetMs: number, yieldFn: YieldFn,
 ): Promise<SolveResult> {
-    const experiment = opts.portfolioExperiment ?? PORTFOLIO_EXPERIMENT;
+    const experiment = opts.legacyLatencyPortfolioExperiment ?? opts.portfolioExperiment ?? LEGACY_LATENCY_PORTFOLIO_EXPERIMENT;
     const portfolioStart = Date.now();
     const prepStart = Date.now();
     const prep = prepLevel(level);
@@ -1522,7 +1524,7 @@ async function runPortfolioExperiment(
                 const result = await runAttemptSlice(gateKey, level, prep, attemptConfig, capMs, yieldFn, {
                     passNumber,
                     restart: !!previous,
-                    schedulerPhase: 'portfolio',
+                    schedulerPhase: 'legacy-latency-portfolio',
                 });
                 if (previous) {
                     repeatedAttemptElapsedMs += previous.elapsedMs;
@@ -1541,7 +1543,7 @@ async function runPortfolioExperiment(
     if (!solution) solution = await runPass(3, experiment.pass3Ms, key => experiment.pass3Configs.has(key));
     if (!solution && experiment.conditionalPasses) {
         for (const conditionalPass of experiment.conditionalPasses) {
-            if (!portfolioFeatureGateMatches(level, conditionalPass.when)) continue;
+            if (!legacyLatencyPortfolioFeatureGateMatches(level, conditionalPass.when)) continue;
             solution = await runPass(conditionalPass.passNumber, conditionalPass.capMs, key => conditionalPass.configs.has(key));
             if (solution) break;
         }
@@ -1566,12 +1568,12 @@ async function runPortfolioExperiment(
             attempts,
             totalMs,
             nodesExpanded: prep._metrics.nodesExpanded,
-            schedulerMode: 'portfolio-experiment',
-            portfolio: { solvedBeforeFallback: true, fallbackAttemptCount: 0, repeatedAttemptElapsedMs, repeatedPrefixNodeUpperBound, runtimeBreakdown: portfolioRuntimeBreakdown(totalMs) },
+            schedulerMode: 'legacy-latency-portfolio-experiment',
+            legacyLatencyPortfolioExperiment: { solvedBeforeFallback: true, fallbackAttemptCount: 0, repeatedAttemptElapsedMs, repeatedPrefixNodeUpperBound, runtimeBreakdown: portfolioRuntimeBreakdown(totalMs) },
         };
     }
 
-    const fallback = await solveLevel(level, { ...opts, schedulerMode: 'legacy', timeBudgetMs });
+    const fallback = await solveLevel(level, { ...opts, schedulerMode: 'production', timeBudgetMs });
     const fallbackAttempts = fallback.attempts.map(attempt => ({ ...attempt, schedulerPhase: 'fallback' as const }));
     const combinedAttempts = [...attempts, ...fallbackAttempts];
     const totalMs = Date.now() - portfolioStart;
@@ -1583,8 +1585,8 @@ async function runPortfolioExperiment(
         attempts: combinedAttempts,
         totalMs,
         nodesExpanded: prep._metrics.nodesExpanded + fallback.nodesExpanded,
-        schedulerMode: 'portfolio-experiment',
-        portfolio: {
+        schedulerMode: 'legacy-latency-portfolio-experiment',
+        legacyLatencyPortfolioExperiment: {
             solvedBeforeFallback: false,
             fallbackAttemptCount: fallback.attempts.length,
             repeatedAttemptElapsedMs,
@@ -1607,8 +1609,13 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
     const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
     const yieldFn = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
-    if (opts.schedulerMode === 'portfolio-experiment') {
-        return runPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
+    const schedulerMode = opts.schedulerMode === 'portfolio-experiment'
+        ? 'legacy-latency-portfolio-experiment'
+        : opts.schedulerMode === 'legacy' || opts.schedulerMode === undefined
+            ? 'production'
+            : opts.schedulerMode;
+    if (schedulerMode === 'legacy-latency-portfolio-experiment') {
+        return runLegacyLatencyPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
     }
     const levelStartTime = Date.now();
     const prep = prepLevel(level);
@@ -1770,7 +1777,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             ['goal-attraction-disabled-retry', hasMainConfig],
             ['admissible-order-fallback', baseConfigs.some(config => config.admissibleOrder)],
             ['coarse-state-near-tie-retention-disabled-retry', hasMainConfig],
-            ['admissible-order-fallback-alternate-tiebreak-retry', hasNonDefaultAdmissibleOrderConfig],
+            ['admissible-order-alternate-tiebreak-retry', hasNonDefaultAdmissibleOrderConfig],
             ['connectivity-axis-prune-disabled-retry', hasMainConfig],
             ['repair-elite-prefix-dfs-retry', hasRepairConfig],
             ['must-cross-neighbor-prune-disabled-retry', hasMainConfig],
@@ -2280,7 +2287,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                         ? Infinity
                         : Math.max(0, nonDefaultRetryNodeCeiling - prep._metrics!.nodesExpanded);
                     const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
-                    result.attempts.push(withSolverStage(r.attempt, 'admissible-order-fallback-alternate-tiebreak-retry'));
+                    result.attempts.push(withSolverStage(r.attempt, 'admissible-order-alternate-tiebreak-retry'));
                     if (r.path) { result.solution = r.path; break; }
                 }
             }
@@ -2296,7 +2303,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // check below (`!cfg ||` ...) is the promoted-default convention, matching its two sibling tiers;
     // an explicit `{STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: false}` still disables it.
     //
-    // Positioned dead last — AFTER the admissible-order-fallback-alternate-tiebreak-retry tier above, the current
+    // Positioned dead last — AFTER the admissible-order-alternate-tiebreak-retry tier above, the current
     // true end of the ladder — for the identical reason both prior retry tiers were placed there:
     // nothing may run after this one that still checks an unextended `nodeBudget`/
     // `earlyTierNodeBudget`-derived ceiling, or this tier's own additive extension would starve it.
@@ -2327,7 +2334,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // FRACTION, STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY) — see that flag's own comment in
     // ablation-config.ts and the constant's own comment above for the full rationale. Unlike the
     // three tiers above (which rerun `mainConfigs` via runInterleavedAttempts/runGateSerialAttempts,
-    // or the admissible-order-fallback-alternate-tiebreak-retry tier's own per-profile loop over admissible-order-fallback
+    // or the admissible-order-alternate-tiebreak-retry tier's own per-profile loop over admissible-order-fallback
     // configs), this reruns `repairConfigs` via the SAME per-config/per-gate manual loop shape as
     // the ordinary repair fallback loop above, with `prep._cfg` Proxy-overridden to force
     // `STRATEGY_REPAIR_ELITE_PREFIX_DFS: true` — the OPPOSITE polarity from every tier above (each
@@ -2517,10 +2524,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         });
     }
 
-    // Last-resort SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE retry pass (GOAL_ATTRACTION_LEGACY_
+    // Last-resort SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE retry pass (GOAL_ATTRACTION_LEGACY_
     // DISTANCE_RETRY_BUDGET_FRACTION, STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY) — see that
     // constant's own comment in stage-budget.ts and docs/solver-optimization-workstreams.md
-    // Priority 7 for the full rationale. The plain global SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE
+    // Priority 7 for the full rationale. The plain global SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE
     // flag (attempts.ts/scoring.ts) was measured net -5 across three populations (73-level loss
     // population +9/-3; 90-level gain population 0/-11; published corpus unchanged) because it
     // forces the legacy (pre-6f00baf) distance map even on levels the corrected map already solves
@@ -2544,7 +2551,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     if (!result.solution && goalAttractionLegacyDistanceRetryTierWillRun && prep._metrics.nodesExpanded < goalAttractionLegacyDistanceRetryNodeCeiling) {
         const goalAttractionLegacyDistanceRetryTotalBudget = Math.floor(timeBudgetMs * goalAttractionLegacyDistanceRetryBudgetFraction);
         const goalAttractionLegacyDistanceRetryResult = await runWholeLadderRetryTier({
-            stageId: 'guidance-goal-distance-retry', proxyOverrides: { SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE: true },
+            stageId: 'guidance-goal-distance-retry', proxyOverrides: { SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE: true },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: goalAttractionLegacyDistanceRetryTotalBudget, nodeCeiling: goalAttractionLegacyDistanceRetryNodeCeiling,
