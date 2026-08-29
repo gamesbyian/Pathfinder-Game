@@ -154,7 +154,7 @@ async function* cascadeSteps(solverApi: any, target: any, solveOptsBase: any, la
             randomSeed: attemptInfo.randomSeed,
             seedSalt: attemptInfo.seedSalt,
         };
-        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.template] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
+        const disableKey = winner?.orderingBiasId ? TEMPLATE_CONFIG_KEY[winner.orderingBiasId] : PROFILE_CONFIG_KEY[winner?.scoringProfileId];
         if (!disableKey || disabled.has(disableKey)) return; // safety: can't make further progress
         disabled.add(disableKey);
     }
