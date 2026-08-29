@@ -43,7 +43,7 @@ import type { PrepLevel, ScoringProfile, UndoToken } from './types.js';
 // fixed constant: measured 2026-07-24 that which profile breaks ties matters (see
 // reports/2026-07-24-admissible-order-search-corpus2-validation.md's tuning-round history) —
 // different weight balances thread different additional levels through the same admissible-slack
-// primary ordering. scripts/method-probe.mjs's `ida:<scoringProfileId>` key format selects it directly.
+// primary ordering. scripts/method-probe.mjs's canonical `admissible-order|tieBreak=<scoringProfileId>|lds=off` identity selects it directly.
 
 type YieldFn = (() => Promise<void>) | null;
 // disc: cumulative discrepancy to REACH this node (sum of chosen child-indices along the path) —
@@ -284,7 +284,7 @@ export async function admissibleOrderSearch(
 //
 // Kept in the codebase as a fully opt-in, zero-default-risk, tested negative result (never invoked
 // by any AttemptConfig getAttemptConfigs/ADMISSIBLE_ORDER_PROFILES produces — reachable only via
-// scripts/method-probe.mjs's `ida:<profile>(lds)` for anyone who wants to re-verify or build on this
+// scripts/method-probe.mjs's canonical `admissible-order|tieBreak=<profile>|lds=on` identity for anyone who wants to re-verify or build on this
 // finding) rather than deleted, so the next person considering "what if we add discrepancy limiting"
 // doesn't have to re-derive this from scratch. Do not wire this into production without NEW evidence
 // (e.g. a differently-calibrated probe ladder measured to actually help) — the data above is a clean
