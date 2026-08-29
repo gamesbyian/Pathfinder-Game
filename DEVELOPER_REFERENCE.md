@@ -89,10 +89,10 @@ AXIS_H = 1; AXIS_V = 2; AXIS_NONE = 0
 - Gates cannot be re-entered.
 - Turning on a must-cross first pass consumes both axis bits and blocks its required second crossing.
 - Flipper axis depends on global `flipperUsedMask` parity; never precompute statically.
-- For `navDensity >= DENSE_LEVEL_NAV_DENSITY`, `mustMaskForDFS = 0`; correctness still uses `mpVisitedMask`.
+- For `requiredPathCoverageRatio >= DENSE_LEVEL_COVERAGE_THRESHOLD`, `mustMaskForDFS = 0`; correctness still uses `mpVisitedMask`.
 - `validateLevelDetailed()` is heuristic; use the solver for solvability.
 - Memo keys need every future dependency. `mustCrossLowerBound` depends on `crossCounts` and first-visit axis plus position/mask; undersized MST scratch once made the bound unsound. See [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md).
-- Outcome regression does not prove cost. One repair-probe retry preserved solves but made published corpus ~14% slower. `hint-cost-drift.mjs` (2026-07-29) found 949 same-config/same-solution cross-commit pairs: 800 byte-identical, 149 drifted.
+- Outcome regression does not prove cost. One early-repair-search retry preserved solves but made published corpus ~14% slower. `hint-cost-drift.mjs` (2026-07-29) found 949 same-config/same-solution cross-commit pairs: 800 byte-identical, 149 drifted.
 - A shared prune refactor dropped repair's near-miss/elite trigger; extending bookkeeping to `deadend` recovered ~20% corpus performance. Audit consumers when falling-through cases become rejected. See [`reports/2026-07-16-repair-search-elite-splice-regression.md`](reports/2026-07-16-repair-search-elite-splice-regression.md).
 - Dense high-`reqInt` scoring can be orientation-sensitive; treat this as search/representation weakness, not a production rotate/mirror retry policy.
 - Timed-out DFS/beam once reported `nodesExpanded = 0`; preserve timeout accounting on new exits.
@@ -130,10 +130,10 @@ Hint and level provenance are independent append-only schemas and do not affect 
 - After dedupe, differing fields included `nodesExpanded` (11,061), `solver.forcing` (2,290), `solver.version` (287). Non-redundant ≠ useful.
 - Coverage is measured, not assumed. 2026-08-12: 253,491 hints / 477,925 entries; both stress corpora 100%; published 89.5%, with 6,093/58,179 uncovered. Regenerate via `npm run stress:provenance-coverage`.
 - Cold evidence is stricter than `hintGuided === false`. Snapshot: prefix-anchored touched 28.6% corpus1, 7.6% corpus2, 2.8% published; strict-cold shares 63.0%, 88.0%, 86.8%. Another 36,381 entries set `usedExistingHints`; checking only `hintGuided` overstated corpus1 cold share by 13 points. Use `isColdCapabilityEvidence`.
-- Valid hint corpus ≠ cold capability. Witness/human/prefix/guided paths may be valid without being cold `Solver.solve()` results. `check:level-data-validity` proves PLAY validity only.
+- Valid hint corpus ≠ cold capability. Witness/human/prefix/guided paths may be valid without being cold `solveLevel()` results. `check:level-data-validity` proves PLAY validity only.
 - Path-only `.hints`/`.foundHintsSinceLoad` coexist with canonical `.hintRecords`/`foundHintsSinceLoadRecords`; reconcile only via `reconcileHints`/`mergeHints`.
 - All corpora use schemaVersion 3 through `scripts/level-data-io.mjs`: `data/hints/<id>.json`, `data/stress/hints/<id>.json`, `data/stress/hints-random/<id>.json`.
-- Attempt provenance may include `beamWidth`, `diverseBeam`, winner `gateKey`, `seedSalt`, `repairMustTurnBiased`/`repairTurnBiased`; old hints may lack later fields.
+- Attempt provenance may include `beamWidth`, `mechanicBucketRetention`, winner `gateKey`, `seedSalt`, `repairMustTurnBiased`/`repairTurnBiased`; historical hints may still use legacy `diverseBeam` or lack later fields.
 - Provenance can be lost before persistence. A 2026-07-25 admissible-order bug did so. Trace additions through `makeProvenanceEntry`/`hintProvenanceEntryForEvent`; technique suffixes mean consumers may need prefix matching.
 - Published supplemental hints also live in Firestore and merge through `data.getHints`; see [`docs/security.md#supplemental-published-level-hints`](docs/security.md#supplemental-published-level-hints).
 
