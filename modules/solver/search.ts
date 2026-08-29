@@ -439,7 +439,7 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 
 // ─── Beam search ─────────────────────────────────────────────────────────────
 
-// Diverse beam selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
+// Mechanic-bucket retention selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
 // retains at least floor(beamWidth/numBuckets) candidates. The remaining slots
 // are filled from the global top of the score-sorted list.
 // `sorted` must already be sorted descending by score; bucketed by a numeric stateKey
@@ -491,7 +491,7 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number, flipperBase: numb
 // search state `ws` is not reset to the gate between nodes — it is diffed against each
 // node's reconstructed path and moved there incrementally (see `_liveUndo` below), since a
 // full reset+replay per frontier node per phase is O(beamWidth × depth²) over a search.
-// diverseBeam: if true, use _diverseSelect to maintain candidate diversity across
+// mechanicBucketRetention: if true, use _diverseSelect to maintain candidate diversity across
 // flipper and must-cross constraint states (prevents beam collapse to one structural mode).
 // out (optional, last param): timedOut=true for the two budget-check returns, false for the
 // (functionally identical) maxPhases-reached / frontier-collapsed returns — external tooling
@@ -500,7 +500,7 @@ function _diverseSelect(sorted: BeamNode[], beamWidth: number, flipperBase: numb
 // search state — at that instant; `ws` always reflects a real reached position (whichever
 // frontier node it was last replayed to), never garbage, but is not a tracked best-ever minimum
 // the way repair-search's bestBadness is.
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, diverseBeam?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, template: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
@@ -513,7 +513,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // Ablation: STRATEGY_STATE_DEDUP can disable this optimisation independently.
     const useStateDedup = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_STATE_DEDUP);
     // Ablation: STRATEGY_DIVERSE_BEAM can disable diverse selection even when the config requests it.
-    const effectiveDiverseBeam = diverseBeam && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
+    const effectiveMechanicBucketRetention = mechanicBucketRetention && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
     // Fast numeric dedup/diversity keys, computed once per call (not per candidate/phase) from
     // this level's OWN mechanic cardinalities — never a fixed-width assumption, which is exactly
     // what made the old bit-packed signature silently unsound (see beamStateKey's comment). Each
@@ -878,14 +878,14 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             if (_BEAM_DEBUG) { _dbgSortNs += _hrtNow() - _t3; }
             await yieldIfNeeded();
             const widthSelected = pool.slice(0, beamWidth);
-            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth, _flipperBase) : widthSelected;
+            frontier = effectiveMechanicBucketRetention ? _diverseSelect(pool, beamWidth, _flipperBase) : widthSelected;
             // Diverse selection is the production retention decision, not a score-width cull
             // followed by a second chance. Report only candidates absent from the actual result;
             // otherwise support would falsely disappear at the provisional slice and reappear.
-            const retained = research && effectiveDiverseBeam ? new Set(frontier) : null;
+            const retained = research && effectiveMechanicBucketRetention ? new Set(frontier) : null;
             const actuallyCulled = research && pool.length > beamWidth
                 ? (retained ? pool.filter(c => !retained.has(c)) : pool.slice(beamWidth)) : null;
-            if (actuallyCulled) emit(effectiveDiverseBeam ? 'diversity-culled' : 'score-width-culled', actuallyCulled, {
+            if (actuallyCulled) emit(effectiveMechanicBucketRetention ? 'diversity-culled' : 'score-width-culled', actuallyCulled, {
                 beamWidth, cutoffScore: pool[beamWidth - 1]?.score ?? null,
                 firstCulledScore: pool[beamWidth]?.score ?? null,
                 equalScoreAtCutoff: pool.filter(c => c.score === pool[beamWidth - 1]?.score).length,
@@ -897,7 +897,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
                     score: c.score, scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
             });
-            if (research) emit(effectiveDiverseBeam ? 'post-diversity-selection' : 'post-score-width-cull', frontier);
+            if (research) emit(effectiveMechanicBucketRetention ? 'post-diversity-selection' : 'post-score-width-cull', frontier);
         } else {
             frontier = cands;
             if (research) {
