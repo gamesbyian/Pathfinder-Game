@@ -390,8 +390,8 @@ Gate status by subsection:
 - **3.4 compatibility-normalization quarantine: COMPLETE FOR ENTRY READINESS.** The remaining 22 Phase-8-14 `dual-read` ledger rows have been separated into command aliases versus real data/value boundaries. Package aliases are owned only by `package.json` compatibility entries and must not create internal dual-name knowledge. The real boundary families and their owners are recorded below; implementation remains in the relevant future phase, but the ownership/normalization location is fixed before renaming.
 - **3.5 runtime/type seams: COMPLETE FOR PHASE ENTRY.** The doctor and consolidated Phase-8 CLI smoke exercise real native-Node and bundler boundaries. `check:plain-node-import-boundaries` prevents the known plain-Node-to-TypeScript import failure class; literal workflow paths are exact-case/existence checked. The public `SolverApi.solveLevel` option boundary consumes the owning `SolveOpts` type, and false-goal search/classification ports use owning result types instead of `any`. Broader legacy dynamic bags remain technical debt, but no remaining-phase high-risk solver option/result boundary is allowed to rely on the formerly untyped public port.
 - **3.6 rename-impact/census tooling: COMPLETE FOR PHASE ENTRY.** Exact tool/package/workflow/doc/module/symbol matching, CI exposure, transport categories, report producer/consumer roles, and phase-range reconciliation are available. Reconciliation excludes the naming authority documents themselves so canonical names written in the plan cannot masquerade as live implementation. Old-name and canonical-name references are reported separately per ledger row; compatibility semantics are then interpreted against the explicit ownership table below rather than inferred from text alone.
-- **3.7 current-main reconciliation of Phases 8-14: NOT YET COMPLETED by this pass.**
-- **3.8 Phase-8 readiness record: NOT READY.**
+- **3.7 current-main reconciliation of Phases 8-14: COMPLETE.** All 107 remaining ledger rows were re-censused against current `main` at `5db2769282d690ce7c12bdcd6aebf064ca467476` using the phase-range inventory, then the 16 non-straightforward machine classifications were manually inspected. The reconciliation is recorded below.
+- **3.8 Phase-8 readiness record: READY.** The readiness record below fixes the remaining structural-only surfaces, compatibility owners, higher-risk phases, and exact census commit. Phase 8 may begin only after this hardening work is accepted/merged; this pass itself performs no Phase-8 canonical rename.
 
 Useful commands for the next pass:
 
@@ -425,3 +425,83 @@ The real value/data boundaries are:
 Current compatibility infrastructure relevant to these migrations is deliberately centralized: solver stage IDs use `stage-id-normalization.mjs`, scheduler modes use `scheduler-mode-normalization.mjs`, routing regimes use `routing-regime-normalization.mjs`, and hint/provenance persistence uses `hint-runtime.mjs`. Future phases must extend the owning boundary above rather than introducing a second legacy-to-canonical map in workers, reports, or UI code.
 
 This audit also changes the interpretation of the Phase-10 budget-policy ledger row: its canonical definition has already landed before Phase 10, while historical compatibility remains unproven. Treat it as a partially superseded contract migration, not a fresh definition rename.
+
+
+## 11. Phase 8-14 current-main reconciliation
+
+Refreshed against `main` commit `5db2769282d690ce7c12bdcd6aebf064ca467476`.
+
+The mechanically generated phase-range census contains 107 Phase-8-14 ledger rows. After excluding the naming authority documents themselves from implementation-state evidence, the initial classification was:
+
+- 82 **old-live** rows: the planned old/current surface is still live and the future rename remains required;
+- 9 **frozen-history-only/no-current-reference** rows: no current implementation surface needs recreation; the ledger's frozen-history preservation rule remains the migration constraint;
+- 7 **canonical-live** textual matches;
+- 3 **mixed old/canonical** textual matches;
+- 6 **no-current-live-reference-review** rows.
+
+The last 16 rows were manually reconciled because their ledger spelling is conceptual, generic, architectural, or intentionally retained rather than a literal source token. Results:
+
+| Phase | Row / machine state | Current-main reconciliation |
+| --- | --- | --- |
+| 8 | CP-SAT workflow/job oracle display -> reference / canonical-live | **Still live for Phase 8.** Generic uses of “reference” caused the canonical hit; the named CP-SAT workflow remains the old oracle-named workflow and is separately inventoried as old-live. |
+| 9 | `run-solverv2-direct.mjs` -> `run-solver-direct.mjs` / mixed | **Still live for Phase 9.** The physical old file exists; the canonical file does not. Canonical text elsewhere is not implementation. |
+| 10 | `additive-fraction` -> `additive-wall-multiplier` / canonical-live | **Partially superseded.** `StageBudgetPolicyId` is already canonical on current main. Phase 10 must not recreate/rename that definition; it retains only the historical-reader/compatibility audit implied by the dual-read ledger row. |
+| 11 | runtime variant -> orientation / canonical-live | **Still live for Phase 11.** The row is conceptual. Runtime state still exposes `EngineState.variant`; the concrete `eng.variant` and `setVariant` rows are old-live. Generic “orientation” usage is not migration completion. |
+| 11 | geometry argument variant -> orientation / canonical-live | **Still live for Phase 11.** Geometry/LevelUtils APIs still carry `variant` arguments. |
+| 12 | ActionType command members -> GameCommandType / no-reference | **Still live for Phase 12.** `modules/runtime/actions.ts` still has one mixed `ActionType` object containing command members `MOVE/UNDO/RESET/LEVEL_*`. The ledger phrase is descriptive rather than literal. |
+| 12 | ActionType event members -> GameEventType / no-reference | **Still live for Phase 12.** The same `ActionType` object still contains outcome/event members `BACKTRACK/PORTAL_TRAVERSE/GOOSE_TRIGGERED/FALSE_GOAL_DETONATED/WIN/LOGIC_STATE_CHANGE`. |
+| 12 | event variable carrying command -> command / canonical-live | **Still live for Phase 12 where applicable.** “command” is generic current vocabulary and cannot prove the variable audit complete; the phase must follow the ActionType consumer graph. |
+| 12 | command variable carrying event -> event / canonical-live | **Still live for Phase 12 where applicable.** Same generic-word limitation as above. |
+| 13 | normalized reqLen -> requiredLength / no-reference | **Still live for Phase 13.** `NormalizedLevel.reqLen` is literal current code; the ledger prefix “normalized” is explanatory. Raw wire `reqLen` remains intentionally retained. |
+| 13 | normalized reqInt -> requiredIntersections / no-reference | **Still live for Phase 13.** `NormalizedLevel.reqInt` is literal current code; raw wire `reqInt` remains intentionally retained. |
+| 14 | `modules/core.ts` -> specific dependencies / mixed | **Still live for Phase 14.** `modules/core.ts`, `createCore`, and `SOUND_BUS` remain live. Individual specific dependencies existing elsewhere do not mean facade extraction is complete. |
+| 14 | `modules/level-utils.ts` -> direct domain imports / no-reference | **Still live for Phase 14.** The physical facade exists and `createLevelUtils` remains live; the target is an architectural action, not a literal destination filename. |
+| 14 | mutable `ENGINE` property -> `engineState` / canonical-live | **Still live for Phase 14.** `ENGINE` remains the live mutable state property. Generic local variables named `engineState` are not proof of the facade/state-property migration. |
+| 14 | qualified `*-core.ts` retained term / no-reference | **Retained no-op.** This ledger row exists to protect ADR-0006-qualified core modules from blind deletion/renaming. No implementation rename is required. |
+| 14 | `state/actions/core-actions.ts` -> same / mixed | **Retained no-op.** The qualified file is intentionally retained; its same-name row is a guardrail, not a migration. |
+
+No new Phase-8-14 canonical rename mapping was discovered that is absent from the plan/ledger. The one already-absorbed definition change is the Phase-10 stage-budget policy spelling above. The previously planned Phase-8 diagnostics-workflow case fix was completed by this hardening PR and is explicitly marked superseded in the plan rather than left as duplicate future work.
+
+The ledger's `surfaceInventory` verification dimension is therefore complete for every Phase-8-14 row. This does **not** mark any implementation, targeted validation, consumer audit, behavioral parity, or closeout audit complete.
+
+## 12. Phase-8 readiness record
+
+### New durable controls added before Phase 8
+
+- prospective Phase-8+ ledger completion contract, including enforced migration classes and six verification dimensions;
+- phase/range-aware execution-surface inventory covering package commands, scripts, workflows, modules, exported symbols, current docs, report paths, CI reachability, transport categories, and old-vs-canonical references;
+- report-path role classification distinguishing likely producers, consumers, publishers, and neutral references;
+- Phase-8 inventory regression coverage plus a consolidated cheap CLI/runtime smoke suite;
+- plain-Node import-boundary guard preventing native-Node roots from importing TypeScript-only runtime targets;
+- literal workflow path-filter existence/exact-case validation;
+- typed public solver option/result boundaries using the owning `SolveOpts` and false-goal result contracts;
+- existing SolveOpts dual-read transport-parity guard retained as a permanent check;
+- shared plain-JS hint/provenance runtime for native-Node and TypeScript consumers.
+
+### Phase-8 surfaces not behaviorally executed in ordinary PR CI
+
+These are intentionally recorded rather than silently treated as covered:
+
+- `scripts/repair-direct-probe-worker.mjs`: child-process worker. The parent CLI is runtime-smoked; worker path/import integrity is structurally checked. Phase 8 must preserve the parent/worker protocol when renaming both files.
+- `scripts/stress/symmetry-repair-seed-pilot.mjs`: requires a matched historical parent level, generated variant, manifest, and recorded result. CI performs structural coverage; Phase 8 should use a targeted historical fixture/run if the rename touches command wiring beyond the filename.
+- workflow-heavy CP-SAT, atlas/prune-gap, variant-family dataset, diagnostics-export, and offline-replay surfaces: workflow-local paths are structurally checked in PR CI. Their Phase-8 implementation must validate workflow inputs/outputs, job/display/concurrency/artifact identities, and representative command invocation without launching expensive research campaigns.
+
+### Compatibility and duplicated mapping status
+
+- Remaining package-command aliases are compatibility at `package.json` only. Internal scripts/modules must not carry dual command-name knowledge.
+- The real Phase-8 compatibility boundaries are the diagnostics generated schema (`knownHardCluster` / `recommendedGating`) and the external dataset-root environment variable. Their owning boundaries are fixed in Section 10.
+- Solver option transport duplication has a parity guard and the public solver port now uses `SolveOpts`; no Phase-8 solver-option rename is planned.
+- Existing stage, scheduler, routing-regime, and hint/provenance compatibility maps remain centralized and must not be copied into Phase-8 tools.
+
+### Higher-risk remaining phases
+
+- **Phase 8:** high-risk external env-var compatibility plus medium-risk generated-report fields, tool/workflow identities, and the live research-lineage module/type family.
+- **Phase 11:** high-risk application-wide runtime orientation migration crossing engine state, transforms, rendering, pointer inverse transforms, editor operations, and tests.
+- **Phase 13:** high-risk normalized-level field expansion. Raw wire `reqLen`/`reqInt` remain compatibility spellings while normalized/runtime consumers migrate atomically.
+- **Phase 10:** medium-risk budget vocabulary because part of the concept is already canonical while the live repair option/local names remain old; implementation must reconcile rather than mechanically rename the whole original row set.
+
+### Readiness result
+
+**READY FOR PHASE 8 AFTER THIS HARDENING PR IS ACCEPTED.**
+
+The refreshed census commit is `5db2769282d690ce7c12bdcd6aebf064ca467476`. Every remaining ledger row has a migration class and completed pre-implementation surface inventory. Phase 8 implementation, targeted validation, adversarial consumer audit, behavioral/evidence parity, and closeout audit all remain pending. This hardening pass stops at the gate and does not perform any Phase-8 canonical rename.
