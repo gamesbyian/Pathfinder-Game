@@ -51,10 +51,10 @@ if (!Number.isSafeInteger(GATE_INDEX) || GATE_INDEX < 0) throw new Error('--gate
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
-const { TEMPLATES, POLICY_PROFILES } = await import('../modules/solver/policy.js');
+const { STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES } = await import('../modules/solver/policy.js');
 const Solver = createSolver();
 const { prepLevel, runAttempt, attemptConfigKey } = SOLVER_TESTING_API;
-const parseAttemptConfigKey = makeAttemptConfigKeyParser({ TEMPLATES, POLICY_PROFILES, attemptConfigKey });
+const parseAttemptConfigKey = makeAttemptConfigKeyParser({ STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES, attemptConfigKey });
 
 function parseDeterministicConfig(key) {
     const config = parseAttemptConfigKey(key);
@@ -78,9 +78,9 @@ function serializableNumber(value) {
 
 function activePolicyFor(config) {
     if (config.admissibleOrderNoTieBreak) return { id: 'active', profile: null };
-    const profile = POLICY_PROFILES[config.profileName];
-    if (!profile) throw new Error(`No scoring profile for ${config.profileName}`);
-    return { id: 'active', profile, template: config.template ?? null };
+    const profile = SCORING_PROFILES[config.scoringProfileId];
+    if (!profile) throw new Error(`No scoring profile for ${config.scoringProfileId}`);
+    return { id: 'active', profile, orderingBias: config.orderingBias ?? null };
 }
 
 async function runArm(label, key, config) {
