@@ -2171,12 +2171,12 @@ test('disableExtraBudgetPasses: true suppresses the pass even with the flag on, 
 
 test('coarse-state-near-tie-retention-disabled-retry pass can solve a level the main loop misses, and disables retention while it runs', async () => {
     // Simulates the real mechanism's shape without depending on search.ts's actual beam internals:
-    // succeeds only once prep._cfg reflects STRATEGY_DEDUP_NEAR_TIE_RETENTION explicitly disabled —
+    // succeeds only once prep._cfg reflects STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION explicitly disabled —
     // exactly what the retry pass's own Proxy override produces, and exactly what the ordinary main
     // loop's cfg (retention left at its normalized-default true) never does.
     const dispatch = (async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep] = args;
-        if (prep._cfg && prep._cfg.STRATEGY_DEDUP_NEAR_TIE_RETENTION === false) return [0, 1];
+        if (prep._cfg && prep._cfg.STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION === false) return [0, 1];
         return null;
     }) as typeof runAttemptSearch;
     const result = await solveLevel(makeAttractionDiversityGatedInfeasibleLevel(), {
