@@ -67,10 +67,10 @@ test('maximal Attempt has an explicit, complete provenance projection contract',
   assert.equal(entry.search.workSpent, null, 'attempt workSpent is not whole-solve provenance workSpent');
   assert.equal(entry.solver.technique, 'repair');
   // Every retry-tier flag is true on this fixture, so classifyAttemptTier's precedence chain
-  // (orchestration.ts) resolves to its most-specific category, 'repair-late-probe' — proving the
+  // (orchestration.ts) resolves to its most-specific category, 'late-repair-search' — proving the
   // derived retryTier field (not a raw copied attempt field, hence not in either Set above) is
   // actually wired through to provenance.
-  assert.equal(entry.solver.forcing?.retryTier, 'repair-late-probe');
+  assert.equal(entry.solver.forcing?.retryTier, 'late-repair-search');
 });
 import { repairPrimarySeed } from './repair-search.js';
 
@@ -191,9 +191,9 @@ test('deriveSolveAttemptInfo leaves diverseBeam null (not false) for a dfs winne
   assert.equal(info.gateKey, 12, 'gateKey is tracked regardless of technique');
 });
 
-test('deriveSolveAttemptInfo labels an admissible-order winner distinctly, not folded into dfs', () => {
+test('deriveSolveAttemptInfo labels an admissible-order-fallback winner distinctly, not folded into dfs', () => {
   const info = deriveSolveAttemptInfo([{ profile: 'mustCrossFirst', admissibleOrder: true, ok: true, elapsedMs: 7 }]);
-  assert.equal(info.technique, 'admissible-order', 'previously fell through to "dfs" -- an admissibleOrder winner has no beamWidth/repair flag, so the technique ternary needs its own check for this field or it silently mislabels');
+  assert.equal(info.technique, 'admissible-order-fallback', 'previously fell through to "dfs" -- an admissibleOrder winner has no beamWidth/repair flag, so the technique ternary needs its own check for this field or it silently mislabels');
   assert.equal(info.profile, 'mustCrossFirst', 'profile carries the tie-break profile for this technique');
   assert.equal(info.beamWidth, null);
   assert.equal(info.diverseBeam, null);
@@ -234,7 +234,7 @@ test('provenanceFromSolveResult records beamWidth/diverseBeam/gateKey/seedSalt o
   assert.equal(entry.solver.gateKey, 589833);
 });
 
-test('provenanceFromSolveResult maps an attraction-diversity winner onto forcing.disabledFeatures', () => {
+test('provenanceFromSolveResult maps an goal-attraction-disabled-retry winner onto forcing.disabledFeatures', () => {
   const result = {
     status: 'success',
     attempts: [{ profile: 'perimeterSweep', beamWidth: 2000, attractionDiversity: true, ok: true }],
@@ -250,12 +250,12 @@ test('provenanceFromSolveResult maps an attraction-diversity winner onto forcing
 // main-ladder/repair-fallback win, with no way to tell them apart from the stored hint alone.
 test('deriveSolveAttemptInfo records which force-enabled retry tier won, distinct from an ordinary win', () => {
   const dedupRetry = deriveSolveAttemptInfo([{ profile: 'objectiveFirst', beamWidth: 5000, dedupNearTieRetry: true, ok: true }]);
-  assert.equal(dedupRetry.retryTier, 'dedup-near-tie-retry');
+  assert.equal(dedupRetry.retryTier, 'coarse-state-near-tie-retention-disabled-retry');
 
   const admissibleRetry = deriveSolveAttemptInfo([{ profile: 'none', admissibleOrder: true, admissibleOrderNonDefaultRetry: true, ok: true }]);
-  assert.equal(admissibleRetry.retryTier, 'admissible-order-non-default-retry');
+  assert.equal(admissibleRetry.retryTier, 'admissible-order-alternate-tiebreak-retry');
 
-  // An ORDINARY admissible-order win (no retry flag) is not a retry tier at all.
+  // An ORDINARY admissible-order-fallback win (no retry flag) is not a retry tier at all.
   const ordinaryAdmissible = deriveSolveAttemptInfo([{ profile: 'default', admissibleOrder: true, ok: true }]);
   assert.equal(ordinaryAdmissible.retryTier, null);
 
@@ -278,7 +278,7 @@ test('provenanceFromSolveResult records retryTier in forcing, and leaves forcing
   };
   const retryEntry = provenanceFromSolveResult(retryResult);
   assert.ok(retryEntry.solver.forcing, 'a retry-tier winner must carry forcing metadata');
-  assert.equal(retryEntry.solver.forcing.retryTier, 'connectivity-axis-exhausted-retry');
+  assert.equal(retryEntry.solver.forcing.retryTier, 'connectivity-axis-prune-disabled-retry');
 
   const ordinaryResult = { status: 'success', attempts: [{ profile: 'perimeterSweep', beamWidth: 5000, ok: true }] };
   const ordinaryEntry = provenanceFromSolveResult(ordinaryResult);
