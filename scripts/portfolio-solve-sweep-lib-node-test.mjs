@@ -15,7 +15,7 @@ import { buildSolveWorkerResult } from '../modules/solver/worker-result-serializ
 
 const PERSISTENT_ATTEMPT_FIELDS = new Set([
     'stageId', 'gateKey', 'scoringProfileId', 'orderingBiasId', 'beamWidth', 'ok', 'elapsedMs', 'allocatedBudgetMs',
-    'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'diverseBeam',
+    'outcome', 'error', 'passNumber', 'configKey', 'restart', 'schedulerPhase', 'mechanicBucketRetention',
     'repair', 'repairMustTurnBiased', 'repairTurnBiased', 'seedSalt', 'randomSeed',
     'nodesExpanded', 'timedOut', 'bestBadness', 'finalBadness', 'attractionDiversity',
     'admissibleOrder', 'admissibleOrderNoTieBreak', 'admissibleOrderLds',
