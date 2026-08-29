@@ -126,7 +126,7 @@ test('orderBy: "admissible-slack" in targeted mode does not hang or error despit
     assert.equal(res.curatedCount, 6);
 });
 
-// --- newlySavedMeta.technique/profile: does a caller building persisted provenance (e.g.
+// --- newlySavedMeta.technique/scoringProfileId: does a caller building persisted provenance (e.g.
 // hint-workbench.mjs's runEnumeration) actually get "which ordering strategy found this", or does
 // it silently collapse to the same string as plain random ordering? Found and fixed 2026-07-25 as
 // a real gap — a hint found via admissible-slack ordering was byte-identical, in its PERSISTED
@@ -150,17 +150,17 @@ test('newlySavedMeta.technique has NO suffix under default (random/omitted) orde
     assert.ok(res.newlySaved.length > 0);
     for (const meta of res.newlySavedMeta) {
         assert.equal(meta.technique, 'enumerate-complete', 'default ordering must leave the technique string exactly as before this feature existed');
-        assert.equal(meta.profile, null);
+        assert.equal(meta.scoringProfileId, null);
     }
 });
 
-test('newlySavedMeta.profile reflects the tie-break setting under admissible-slack ordering', async () => {
+test('newlySavedMeta.scoringProfileId reflects the tie-break setting under admissible-slack ordering', async () => {
     const { level, prep } = tiny();
     const withoutTieBreak = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack' });
     const r1 = await withoutTieBreak.run({ mode: 'complete' });
-    assert.ok(r1.newlySavedMeta.every(m => m.profile === null), 'no tie-break requested -> profile null');
+    assert.ok(r1.newlySavedMeta.every(m => m.scoringProfileId === null), 'no tie-break requested -> profile null');
 
     const withTieBreak = createVarietySearch(level, prep, [], { rng, orderBy: 'admissible-slack', tieBreakProfile: {} });
     const r2 = await withTieBreak.run({ mode: 'complete' });
-    assert.ok(r2.newlySavedMeta.every(m => m.profile === 'flat'), 'a real (if flatly-weighted) tie-break profile was applied -> profile "flat", not a POLICY_PROFILES name');
+    assert.ok(r2.newlySavedMeta.every(m => m.scoringProfileId === 'flat'), 'a real (if flatly-weighted) tie-break profile was applied -> profile "flat", not a POLICY_PROFILES name');
 });
