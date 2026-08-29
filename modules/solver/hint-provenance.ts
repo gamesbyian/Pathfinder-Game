@@ -52,16 +52,16 @@ interface SolveAttemptInfo {
     /** Repair variant, or null for non-repair winners. */
     repairMustTurnBiased: boolean | null;
     repairTurnBiased: boolean | null;
-    /** Winner came from the attraction-diversity forced-flag rerun. */
+    /** Winner came from the goal-attraction-disabled-retry forced-flag rerun. */
     attractionDiversity: boolean;
     /** Force-enabled last-resort retry tier, else null. */
     retryTier: string | null;
 }
 
-/** Retry categories that change normal ladder rules; ordinary tiers and attraction-diversity are excluded. */
+/** Retry categories that change normal ladder rules; ordinary tiers and goal-attraction-disabled-retry are excluded. */
 const RETRY_TIER_LABELS = new Set([
-    'repair-late-probe', 'repair-elite-prefix-dfs-retry', 'mc-neighbor-budget-retry',
-    'connectivity-axis-exhausted-retry', 'dedup-near-tie-retry', 'admissible-order-non-default-retry',
+    'late-repair-search', 'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry',
+    'connectivity-axis-prune-disabled-retry', 'coarse-state-near-tie-retention-disabled-retry', 'admissible-order-alternate-tiebreak-retry',
 ]);
 
 /** Extract canonical winning-attempt metadata; returns solve-unknown if no winner is recorded. */
@@ -76,7 +76,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
             retryTier: null,
         };
     }
-    const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : (winner.admissibleOrder ? 'admissible-order' : 'dfs'));
+    const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : (winner.admissibleOrder ? 'admissible-order-fallback' : 'dfs'));
     const attemptTierLabel = classifyAttemptTier(winner);
     const attemptIndex = list.indexOf(winner);
     return {
