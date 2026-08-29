@@ -7,7 +7,7 @@ import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
 import { repairPrimarySeed } from './repair-search.js';
-import { withSolverStage } from './stage-policy.js';
+import { normalizeSolverStageId, withSolverStage } from './stage-policy.js';
 import type { SolverStageId } from './stage-policy.js';
 import { buildSolverStagePlan } from './stage-plan.js';
 import { formatAttemptIdentityKey } from './attempt-identity.mjs';
@@ -185,7 +185,7 @@ export interface Attempt {
  *  a COMPATIBILITY-ONLY fallback for an attempt object that predates `stageId` (historical/
  *  persisted records, or a duck-typed test fixture) — see classifyAttemptTier's own doc. */
 export interface AttemptTierFlags {
-    stageId?: SolverStageId;
+    stageId?: SolverStageId | string;
     repairLateProbe?: boolean;
     repairElitePrefixDfsRetry?: boolean;
     mcNeighborBudgetRetry?: boolean;
@@ -227,7 +227,10 @@ const STAGE_ID_TO_TIER_LABEL: Partial<Record<SolverStageId, string>> = {
  *  persisted hint can be told apart from an ordinary main-ladder/repair-fallback/admissible-order-fallback
  *  find — see docs/solver-optimization-workstreams.md's Priority 0). */
 export function classifyAttemptTier(attempt: AttemptTierFlags): string {
-    if (attempt.stageId) return STAGE_ID_TO_TIER_LABEL[attempt.stageId] ?? attempt.stageId;
+    if (attempt.stageId) {
+        const stageId = normalizeSolverStageId(attempt.stageId);
+        return STAGE_ID_TO_TIER_LABEL[stageId] ?? stageId;
+    }
     // Compatibility-only fallback — see this function's own doc comment.
     return attempt.repairLateProbe ? 'late-repair-search'
         : attempt.repairElitePrefixDfsRetry ? 'repair-elite-prefix-dfs-retry'
