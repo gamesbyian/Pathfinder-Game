@@ -31,7 +31,7 @@ import { legacyMsToWork } from './budget-units.js';
 import { createState, getNeighbors } from './search-state.js';
 import { AXIS_H, AXIS_V } from './encoding.js';
 import { getAttemptConfigs } from './attempts.js';
-import { TEMPLATE_CONFIG_KEYS } from './policy.js';
+import { ORDERING_BIAS_CONFIG_KEYS } from './policy.js';
 import { prepLevel } from './prep.js';
 import { deriveSolveAttemptInfo } from './hint-provenance.js';
 import {
@@ -160,7 +160,7 @@ function anyConfigSurvives(level: any, disabledKeys: Set<string>): boolean {
     const baseConfigs = getAttemptConfigs(level);
     return baseConfigs.some(c => {
         if (c.template) {
-            const tKey = (TEMPLATE_CONFIG_KEYS as Record<string, string>)[(c.template as any).id];
+            const tKey = (ORDERING_BIAS_CONFIG_KEYS as Record<string, string>)[(c.template as any).id];
             if (tKey && disabledKeys.has(tKey)) return false;
         }
         const pKey = `PROFILE_${c.profileName}`;
