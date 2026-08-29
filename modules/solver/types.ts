@@ -90,7 +90,7 @@ export interface AttemptConfig {
      *  ordering), not a DFS/beam scoring profile in the usual sense. Routed by
      *  attempts.ts's getAttemptConfigs (see ADMISSIBLE_ORDER_PROFILES) as a last-resort tier run in
      *  its own dedicated budget slice by orchestration.ts's solveLevel, after the main ladder,
-     *  repair fallback, and attraction-diversity pass have all failed — mirroring the repair
+     *  repair fallback, and goal-attraction-disabled-retry stage have all failed — mirroring the repair
      *  fallback's own separate-tier pattern. Also reachable standalone via scripts/method-probe.mjs's
      *  canonical `admissible-order|tieBreak=<profile>|lds=off` identities for isolated per-level testing. Mutually exclusive with beamWidth/repair.
      *  See admissible-order-search.ts's own doc for what the technique is and isn't. */
@@ -110,7 +110,7 @@ export interface AttemptConfig {
      *  search-corpus2-validation.md): measured against all 117 of this technique's validated solves,
      *  LDS used MORE nodes on every level that solved within the standard budget and regressed 9 of
      *  117 into outright timeout — kept only as an opt-in, zero-default-risk, documented negative
-     *  result, reachable via scripts/method-probe.mjs's `ida:<profile>(lds)`; never produced by
+     *  result, reachable via scripts/method-probe.mjs's canonical `admissible-order|tieBreak=<profile>|lds=on` identity; never produced by
      *  attempts.ts/ADMISSIBLE_ORDER_PROFILES and not a candidate for production wiring without new
      *  evidence. */
     admissibleOrderLds?: boolean;
