@@ -41,7 +41,7 @@ export const FEATURES: Record<string, string> = {
     SCORE_MUST_TURN_URGENCY:    'Distance-to-cell reward toward unsatisfied must-turn landmark cells',
     SCORE_MUST_TURN_EXIT_GUIDANCE: 'Reward for choosing the specific exit that satisfies a pending must-turn direction (independent of distance urgency toward the cell itself)',
     SCORE_PORTAL_PARITY_GUIDANCE: 'Guidance toward a mismatched-parity portal when reqLen parity requires one',
-    SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE: 'Production default-OFF; NEW unvalidated experiment (2026-08-23): makes SCORE_GOAL_ATTRACTION read prep.guidanceGoalDistArr (pre-6f00baf routing: geese/gates/false-goals treated as ordinary passable cells) instead of the corrected prep.goalDistArr, for move-ordering guidance only — pruning/admissible bounds are unaffected. See distance.ts\'s DistMapOpts.legacyGuidanceRouting and docs/solver-optimization-current-queue.md\'s "Distance-guidance/pruning split" entry. Do not promote without matched-work evidence that it recovers solves without new losses.',
+    SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE: 'Production default-OFF; NEW unvalidated experiment (2026-08-23): makes SCORE_GOAL_ATTRACTION read prep.guidanceGoalDistArr (pre-6f00baf routing: geese/gates/false-goals treated as ordinary passable cells) instead of the corrected prep.goalDistArr, for move-ordering guidance only — pruning/admissible bounds are unaffected. See distance.ts\'s DistMapOpts.legacyGuidanceRouting and docs/solver-optimization-current-queue.md\'s "Distance-guidance/pruning split" entry. Do not promote without matched-work evidence that it recovers solves without new losses.',
 
     // ── Pruning rules (dfsFromGate + beamSearchFromGate) ─────────────────────
     PRUNE_MC_CEILING:           'Intersection ceiling: ints + pending-MC-crossings > reqInt',
@@ -73,7 +73,7 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY: 'Production default-ON: dead-last additive retry of non-default admissible-order profiles, without shrinking the normal default-profile pass. See orchestration.ts and the opt-in ledger.',
     STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: 'Production default-ON: dead-last additive whole-ladder retry with PRUNE_CONNECTIVITY_AXIS_EXHAUSTED disabled. Runs only after the ordinary flag-on ladder fails.',
     STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: 'Production default-OFF; closed retained opt-in: dead-last additive repair retry with elite-prefix DFS enabled. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
-    STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: 'Production default-ON: dead-last additive whole-ladder retry forcing SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE on, after every earlier tier (including repair-late-probe) has failed. The plain global form of that flag measured net -5 across three test populations because it also breaks levels the corrected distance map already solves early; this retry-tier placement can never touch those, since a level solving earlier never reaches it. Promoted 2026-08-23 after a population-scale A/B (solver-level-blind-targeted-sweep.yml): 73-level loss population +3/-0, 90-level gain population 0/-0, published corpus unchanged. See docs/solver-opt-in-experiment-ledger.md.',
+    STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY: 'Production default-ON: dead-last additive whole-ladder retry forcing SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE on, after every earlier tier (including repair-late-probe) has failed. The plain global form of that flag measured net -5 across three test populations because it also breaks levels the corrected distance map already solves early; this retry-tier placement can never touch those, since a level solving earlier never reaches it. Promoted 2026-08-23 after a population-scale A/B (solver-level-blind-targeted-sweep.yml): 73-level loss population +3/-0, 90-level gain population 0/-0, published corpus unchanged. See docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_RETRY_TIER_NODE_STAIRCASE: "Production default-OFF; retained experiment: divide a ladder-rerun tier's node reserve into cumulative per-config steps so its first non-terminating config cannot starve later configs. Current disposition: docs/solver-opt-in-experiment-ledger.md.",
     STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY: 'Production default-ON: dead-last additive extension of STRATEGY_REPAIR_LATE_PROBE that retries the SAME repairConfigsCount===0 population across several more PRNG seeds (repair-late-probe itself always uses seed salt 0), each seed getting its own full REPAIR_LATE_PROBE_NODE_BUDGET reserve, positioned after goal-attraction-legacy-distance-retry. Motivated by the early ordinary repair probe\'s own calibrated seed diversity (real if modest rescues) and the 2026-08-12 CP-SAT repair-retreat finding that repair elites have zero rollback slack once diverged, so the fix has to change the commitment itself, which a different seed does. Promoted 2026-08-23 after a population-scale A/B (solver-level-blind-targeted-sweep.yml): 73-level loss population 18→23 (+5/-0, control solved set a strict subset of treatment\'s), 90-level gain population 90/90 unaffected, published corpus 160/160 unaffected. See docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_MC_NEIGHBOR_BUDGET_RETRY: 'Production default-ON: dead-last additive whole-ladder retry with PRUNE_MC_NEIGHBOR_BUDGET disabled, eligible only for levels with must-cross mechanics. Runs after the ordinary flag-on ladder fails.',
@@ -145,7 +145,7 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
     'STRATEGY_REPAIR_FALLBACK_GATE_WIDEN',
-    'SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE',
+    'SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE',
     'STRATEGY_REPAIR_FALLBACK_NODE_RESERVE',
     'STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE',
     'STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE',
@@ -166,6 +166,7 @@ export const LEGACY_FEATURE_ALIASES: Readonly<Record<string, string>> = Object.f
 
 /** Normalize one historical feature name to the canonical registry key. */
 export function canonicalAblationFeatureName(featureName: string): string {
+    if (name === 'SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE') return 'SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE';
     return LEGACY_FEATURE_ALIASES[featureName] ?? featureName;
 }
 
