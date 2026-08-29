@@ -116,7 +116,7 @@ test('attempt exceptions are recorded and the ladder continues to a later succes
         name: 'TypeError', message: 'deterministic dispatch failure',
         gateKey: result.attempts[0].gateKey,
         configKey: attemptConfigKey(getConfiguredAttemptConfigs(makeLineLevel(), null)[0]),
-        profile: result.attempts[0].scoringProfileId, orderingBiasId: result.attempts[0].orderingBiasId,
+        scoringProfileId: result.attempts[0].scoringProfileId, orderingBiasId: result.attempts[0].orderingBiasId,
     });
     assert.equal(result.attempts.some(a => a.outcome === 'success'), true);
 });
