@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// A/B for PRUNE_PORTAL_PARITY_ENVELOPE (prune-gauntlet.ts). Full Solver.solve() ladder (not an
+// A/B for PRUNE_PORTAL_PARITY_ENVELOPE (prune-gauntlet.ts). Full Solver.solveLevel() ladder (not an
 // isolated attempt config) since this is a general search prune used by both dfsFromGate and
 // repair's takePly, not a repair-only mechanism. Node-budget-pinned, non-binding wall clock.
 //
@@ -50,8 +50,8 @@ for (const entry of levels) {
         continue;
     }
     const NEUTRAL = { STRATEGY_REPAIR_TURN_BIAS: false, STRATEGY_REPAIR_ELITE_PREFIX_DFS: false };
-    const onResult = await Solver.solve(level, { ablation: { ...NEUTRAL, PRUNE_PORTAL_PARITY_ENVELOPE: true }, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS, disableExtraBudgetPasses: true });
-    const offResult = await Solver.solve(level, { ablation: { ...NEUTRAL, PRUNE_PORTAL_PARITY_ENVELOPE: false }, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS, disableExtraBudgetPasses: true });
+    const onResult = await Solver.solveLevel(level, { ablation: { ...NEUTRAL, PRUNE_PORTAL_PARITY_ENVELOPE: true }, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS, disableExtraBudgetPasses: true });
+    const offResult = await Solver.solveLevel(level, { ablation: { ...NEUTRAL, PRUNE_PORTAL_PARITY_ENVELOPE: false }, nodeBudget: NODE_BUDGET, timeBudgetMs: WALL_MS, disableExtraBudgetPasses: true });
     const nodesOn = onResult.attempts?.reduce((a, b) => a + (b.nodesExpanded || 0), 0) ?? 0;
     const nodesOff = offResult.attempts?.reduce((a, b) => a + (b.nodesExpanded || 0), 0) ?? 0;
     totalNodesOn += nodesOn;
