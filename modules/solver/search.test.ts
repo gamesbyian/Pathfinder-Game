@@ -323,7 +323,7 @@ test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop 
 // point) on an open grid wide enough to blow past a small beamWidth every phase, forcing the
 // dedup/near-tie-retention/diverse-select machinery to run repeatedly. Runs the identical search
 // twice -- once through the default numeric path, once forced onto the delimited-string fallback
-// via prep._forceBeamDedupStringKeyForTests -- and asserts byte-identical nodesExpanded and an
+// via prep._forceBeamCoarseStateStringKeyForTests -- and asserts byte-identical nodesExpanded and an
 // identical solved path, proving the numeric encoding reproduces the string encoding's dedup/
 // diversity decisions exactly, not just "solves the same level." See beamNumericDedupKey's own
 // comment in search.ts and reports/2026-08-23-beam-dedup-numeric-key-arena.md.
@@ -339,7 +339,7 @@ test('beamSearchFromGate numeric dedup key reproduces the string-key fallback ex
   const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
 
   const stringKey = prepLevel(level); stringKey._cfg = null; stringKey._metrics = { nodesExpanded: 0 };
-  stringKey._forceBeamDedupStringKeyForTests = true;
+  stringKey._forceBeamCoarseStateStringKeyForTests = true;
   const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
 
   assert.ok(numericPath, 'expected the beam to solve within the generous budget');
@@ -362,7 +362,7 @@ test('beamSearchFromGate numeric dedup key reproduces the string-key fallback ex
   const numericPath = await beamSearchFromGate(PACK(0, 0), level, numeric, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
 
   const stringKey = prepLevel(level); stringKey._cfg = null; stringKey._metrics = { nodesExpanded: 0 };
-  stringKey._forceBeamDedupStringKeyForTests = true;
+  stringKey._forceBeamCoarseStateStringKeyForTests = true;
   const stringPath = await beamSearchFromGate(PACK(0, 0), level, stringKey, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, true);
 
   assert.ok(numericPath, 'expected the beam to solve within the generous budget');
