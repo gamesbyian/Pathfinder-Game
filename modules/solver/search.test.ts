@@ -290,7 +290,7 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
 });
 
 // nodeBudget threading (2026-07-23): beam/DFS gained a cumulative-remaining node cap so a finite
-// SolveOpts.nodeBudget (offline batch tooling) stops a single main-loop attempt mid-search instead
+// SolveOpts.nodeBudget (offline batch tooling) stops a single main-search attempt mid-search instead
 // of only being caught between attempts after it has run its full time slice. Two contracts per
 // primitive: (1) a cap below the solve cost stops the search near the cap without solving, and
 // (2) a cap comfortably above the solve cost is inert (identical solve, identical node count) --
