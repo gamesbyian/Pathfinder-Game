@@ -44,7 +44,7 @@
  * repair-elite-path-dump.mjs's exact elite-selection convention (dedupe by path, sort by badness
  * asc / path length desc; top --elites-per-level, default 3 — not just the single global best, so
  * one weak run doesn't stand in for the level) so results are directly comparable to that tool's
- * own output, and `select-repair-probe-adaptive-sample.mjs`'s `looksRepairGated` approximation for
+ * own output, and `select-early-repair-search-adaptive-sample.mjs`'s `looksRepairGated` approximation for
  * sampling the currently-unsolved population (sample-selection-only heuristic, not a solver input).
  * Elites here are NOT guaranteed to match any specific elite id from an earlier report (a different
  * node budget/run naturally surfaces different near-misses). The --sample-* population-sampling
@@ -98,7 +98,7 @@ const elitesPerLevel = Number(args.get('--elites-per-level') ?? 3);
 const outFile = args.get('--out') || 'reports/stress/repair-plateau-rollout-classifier.json';
 
 // ─── Deterministic sampling (same FNV-1a -> mulberry32 -> Fisher-Yates convention as
-//     scripts/stress/benchmark.mjs / select-repair-probe-adaptive-sample.mjs) ───
+//     scripts/stress/benchmark.mjs / select-early-repair-search-adaptive-sample.mjs) ───
 function hashSeed(str) {
     let h = 0x811c9dc5;
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
@@ -124,7 +124,7 @@ function sampleDeterministic(items, n, seed) {
 }
 
 // Sample-selection-only approximation of attempts.ts's needsRepairFallback — see
-// select-repair-probe-adaptive-sample.mjs's own identical comment. Not a solver input.
+// select-early-repair-search-adaptive-sample.mjs's own identical comment. Not a solver input.
 function looksRepairGated(mc, reqInt) {
     return (mc && ((mc.mustCross >= 2 && mc.mustPass >= 3) || false)) || reqInt >= 7;
 }
