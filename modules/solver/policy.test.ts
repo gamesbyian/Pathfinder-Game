@@ -27,7 +27,7 @@ test('policy profiles include every ordered profile and required weights', () =>
 
 test('orderingBias config key map covers all structural templates', () => {
   for (const orderingBias of Object.values(STRUCTURAL_ORDERING_BIASES)) {
-    assert.equal(ORDERING_BIAS_CONFIG_KEYS[orderingBias.id!]?.startsWith('TEMPLATE_'), true, `missing orderingBias config key for ${orderingBias.id}`);
+    assert.equal(ORDERING_BIAS_CONFIG_KEYS[orderingBias.id!]?.startsWith('ORDERING_BIAS_'), true, `missing orderingBias config key for ${orderingBias.id}`);
   }
 });
 
