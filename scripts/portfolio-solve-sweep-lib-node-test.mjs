@@ -204,7 +204,7 @@ test('attempt errors and their aggregate signal survive report projection', () =
     assert.equal(row.attempts[0].outcome, 'error');
     assert.deepEqual(row.attempts[0].error, {
         name: 'TypeError', message: 'dispatch failed', gateKey: 9,
-        configKey: 'dfs|score=x|bias=none', profile: 'x', template: null,
+        configKey: 'dfs|score=x|bias=none', scoringProfileId: 'x', orderingBiasId: null,
     });
 });
 
