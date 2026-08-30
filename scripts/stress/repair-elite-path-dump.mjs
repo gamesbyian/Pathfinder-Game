@@ -26,7 +26,7 @@ const outFile = args.get('--out') ?? '/tmp/elite-paths.json';
 const onlyIds = args.has('--only') ? new Set(args.get('--only').split(',').map(s => s.trim()).filter(Boolean)) : null;
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
 const hintBearing = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0);

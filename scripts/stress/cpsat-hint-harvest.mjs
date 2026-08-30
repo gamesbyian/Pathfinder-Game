@@ -63,7 +63,7 @@ import { validateCandidatePath } from '../../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.ts';
 import { EXTERNAL_SOLVER_ID, hintPathSignature, makeProvenanceEntry, toHint } from '../../modules/domain/hint-types.ts';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { createSolver, SOLVER_TESTING_API } from '../../modules/Solver.ts';
+import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { UNPACK } from '../../modules/domain/cell-key.ts';
 
 installBrowserStubs();

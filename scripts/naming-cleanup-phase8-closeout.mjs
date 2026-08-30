@@ -9,6 +9,20 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
+
+const ledgerArg = process.argv.find(arg => arg.startsWith('--ledger='));
+const scanRootArg = process.argv.find(arg => arg.startsWith('--scan-root='));
+const originalCwd = process.cwd();
+const ledgerPath = path.resolve(originalCwd, ledgerArg?.slice('--ledger='.length) ?? 'docs/naming-cleanup-ledger.json');
+if (scanRootArg) process.chdir(path.resolve(originalCwd, scanRootArg.slice('--scan-root='.length)));
+const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8'));
+const phase8Rows = ledger.entries.filter(entry => entry.phase === 8);
+const phase8Coverage = ledger.phaseCloseoutCoverage?.['8'] ?? {};
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
 
 const ROOTS = ['modules', 'scripts', 'docs', '.github'];
 const TOP_LEVEL = ['package.json', 'AGENTS.md', 'README.md', 'DEVELOPER_REFERENCE.md'];
@@ -67,104 +81,80 @@ const files = [
   .sort();
 
 const legacyChecks = [
-  ['hint-path-oracle filename', /hint-path-oracle\.mjs/gu],
-  ['hint-path-oracle package alias', /test:hint-path-oracle\b/gu],
-  ['CP-SAT full-probe filename', /cpsat-full-probe\.py/gu],
-  ['CP-SAT explicit-prefix oracle filename', /cpsat-explicit-prefix-oracle\.mjs/gu],
-  ['research-lineage module', /research-lineage\.ts/gu],
-  ['WinningPrefixIndex type', /\bWinningPrefixIndex\b/gu],
-  ['WinningLineageObserver type', /\bWinningLineageObserver\b/gu],
-  ['LineageStageSummary type', /\bLineageStageSummary\b/gu],
-  ['winning-lineage collector', /winning-lineage-pilot/gu],
-  ['winning-prefix-atlas collector', /winning-prefix-atlas-pilot/gu],
-  ['winning lineage phrase', /\bwinning lineage\b/giu],
-  ['atlas sweep filename/workflow', /\batlas-sweep(?:\.mjs|\.ya?ml)?\b/gu],
-  ['branch atlas phrase', /\bbranch atlas\b/giu],
-  ['family-wide trove manifest', /family-wide-trove-manifest\.mjs/gu],
-  ['family-wide trove shard runner', /family-wide-trove-shard-run\.mjs/gu],
-  ['family-wide trove shard planner', /family-wide-trove-shard-slice\.mjs/gu],
-  ['family-wide trove combiner', /family-wide-trove-combine\.mjs/gu],
-  ['family trove doctor', /family-trove-doctor\.mjs/gu],
-  ['family trove package alias', /family:trove:doctor\b/gu],
-  ['TROVE_BRANCH local', /\bTROVE_BRANCH\b/gu],
-  ['technique-census second-order tool', /technique-census-second-order\.mjs/gu],
-  ['technique-census second-order doc', /technique-census-second-order-analysis\.md/gu],
-  ['equal-work census pilot', /analyze-equal-work-census-pilot\.mjs/gu],
-  ['audit-export tool', /run-audit-export\.mjs/gu],
-  ['audit-export workflow', /(?:^|[/"'])audit-export\.ya?ml\b/gmu],
-  ['audit:newhint:full package alias', /audit:newhint:full\b/gu],
-  ['repair-direct probe', /repair-direct-probe(?:-worker)?\.mjs/gu],
-  ['producer-population pilot', /producer-population-pilot/gu],
-  ['residual-interface pilot', /residual-interface-(?:mining-)?pilot/gu],
-  ['repair-rollback pilot', /repair-rollback-(?:census-)?pilot/gu],
-  ['symmetry-repair-seed pilot', /symmetry-repair-seed-pilot/gu],
-  ['restart-continuation pilot', /restart-continuation-population-pilot/gu],
-  ['candidate archetype audit filename', /confirm-residual-001-archetype-audit\.mjs/gu],
-  ['portfolio scheduler report', /portfolio-scheduler-report\.mjs/gu],
-  ['portfolio report alias', /solver:portfolio-report\b/gu],
-  ['portfolio historical replay', /portfolio-historical-replay\.mjs/gu],
-  ['portfolio replay alias', /solver:portfolio-replay\b/gu],
-  ['gha-result filename', /(?<!fetch-)(?:scripts\/)?gha-result\.mjs/gu],
-  ['gha:result alias', /\bgha:result\b/gu],
-  ['shadow-eval harness doc', /solver-shadow-eval-harness\.md/gu],
-  ['interface-probe harness', /interface-probe-harness\.mjs/gu],
   ['receptor terminology', /\breceptor(?:s| limitation| can rediscover)?\b/giu],
-  ['winning-path archaeology phrase', /\bwinning-path archaeology\b/giu],
-  ['winning-path archaeology filename', /winning-path-archaeology\.mjs/gu],
-  ['trove terminology', /\btrove\b/giu],
-  ['Audit Export display', /\bAudit Export\b/gu],
 ];
+const phase8RetainedSurfaces = ledger.phaseRetainedSurfaces?.['8'] ?? [];
+const intentionalLegacyByLabel = new Map();
+for (const retained of phase8RetainedSurfaces) {
+  for (const match of retained.matches ?? []) {
+    const label = `${retained.id} retained surface: ${match.term}`;
+    legacyChecks.push([label, new RegExp(`(?<![\\w])${escapeRegExp(match.term)}(?![\\w])`, 'iu')]);
+    intentionalLegacyByLabel.set(label, new Set(match.files ?? []));
+  }
+}
 
-
-const intentionalLegacyByLabel = new Map([
-  ['trove terminology', new Set([
-    'scripts/family-paths.mjs',
-    'scripts/family-parent-hint-replay-batch.mjs',
-    'scripts/experiment-manifest-lib.mjs',
-    'scripts/family-index-lib.mjs',
-    'scripts/family-index-lib-check.mjs',
-    'scripts/experiment-manifest-lib-check.mjs',
-    'scripts/family-run-manifest-producer-node-test.mjs',
-    'scripts/collect-variant-family-dataset-shard.mjs',
-    'scripts/family-index.mjs',
-    'scripts/merge-variant-family-dataset-shards.mjs',
-    '.github/workflows/collect-variant-family-dataset.yml',
-    'docs/tooling-catalog.md',
-    'docs/variant-level-research.md',
-  ])],
-  ['winning-prefix-atlas collector', new Set([
-    '.github/workflows/cpsat-explicit-prefix-reference.yml',
-  ])],
-  ['producer-population pilot', new Set([
-    'modules/solver/repair-search.ts',
-    'scripts/stress/compare-search-producer-populations.mjs',
-  ])],
-  ['repair-rollback pilot', new Set([
-    'scripts/stress/census-repair-rollback-windows.mjs',
-  ])],
-]);
-
-const compatibilityAllowlist = new Map([
-  ['PATHFINDER_VARIANT_TROVE', new Set([
-    'scripts/validate-variant-family-dataset-worktree.mjs',
-    'scripts/validate-variant-family-dataset-worktree-node-test.mjs',
-  ])],
-  ['knownHardCluster', new Set([
-    'scripts/analyze-solver-diagnostics.mjs',
-  ])],
-  ['recommendedGating', new Set([
-    'scripts/analyze-solver-diagnostics.mjs',
-  ])],
-]);
-
-const compatibilityChecks = [
-  ['PATHFINDER_VARIANT_TROVE', /\bPATHFINDER_VARIANT_TROVE\b/gu],
-  ['knownHardCluster', /\bknownHardCluster\b/gu],
-  ['recommendedGating', /\brecommendedGating\b/gu],
-];
+// Exact legacy identities come from the ledger. This closes the former coverage hole where a
+// completed row (for example the old lineage analyzer/doc or CP-SAT workflow) could simply be
+// absent from this checker's hand-written patterns.
+for (const row of phase8Rows) {
+  const coverage = phase8Coverage[row.id];
+  if (coverage?.kind === 'literal-legacy-surface') {
+    legacyChecks.push([`${row.id} ledger legacy surface`, new RegExp(escapeRegExp(coverage.legacy), 'iu')]);
+  }
+}
+const compatibilityCoverages = Object.values(phase8Coverage)
+  .filter(coverage => coverage.kind === 'compatibility-exemption');
+const compatibilityAllowlist = new Map(compatibilityCoverages.map(coverage =>
+  [coverage.legacy, new Set(coverage.files ?? [])]));
+const compatibilityChecks = compatibilityCoverages.map(coverage =>
+  [coverage.legacy, new RegExp(`\\b${escapeRegExp(coverage.legacy)}\\b`, 'u')]);
 
 const failures = [];
 const compatibilityHits = [];
+
+const coverageContractRows = new Map([
+  ['typed-scoring-profile-shorthand', new Set(['NC-P08-007'])],
+  ['persisted-level-fingerprint-cluster', new Set(['NC-P08-008'])],
+  ['solution-path-family-concept', new Set(['NC-P08-009'])],
+  ['domain-qualified-residual-exports', new Set(['NC-P08-011'])],
+  ['trove-compatibility-and-persisted-identities', new Set(['NC-P08-019'])],
+  ['solver-diagnostics-historical-reader', new Set(['NC-P08-024', 'NC-P08-025'])],
+  ['prune-gap-workflow-identity', new Set(['NC-P08-044'])],
+  ['cpsat-reference-display', new Set(['NC-P08-046'])],
+  ['variant-family-dataset-root-resolver', new Set(['NC-P08-053'])],
+  ['producer-consumer-terminology', new Set(['NC-P08-066'])],
+]);
+
+const coverageIds = new Set(Object.keys(phase8Coverage));
+for (const row of phase8Rows) {
+  const coverage = phase8Coverage[row.id];
+  if (!coverage) failures.push({ label: 'Phase-8 ledger row lacks closeout coverage', file: 'docs/naming-cleanup-ledger.json', line: 0, text: row.id });
+  else if (coverage.legacy !== row.old) failures.push({ label: 'Phase-8 closeout coverage drift', file: 'docs/naming-cleanup-ledger.json', line: 0, text: row.id });
+  else if (coverage.kind !== 'literal-legacy-surface' && !coverageContractRows.get(coverage.contract)?.has(row.id)) failures.push({ label: 'unsupported or misassigned Phase-8 semantic contract/exemption', file: 'docs/naming-cleanup-ledger.json', line: 0, text: `${row.id}: ${coverage.contract}` });
+}
+for (const id of coverageIds) {
+  if (!phase8Rows.some(row => row.id === id)) failures.push({ label: 'unknown Phase-8 closeout coverage row', file: 'docs/naming-cleanup-ledger.json', line: 0, text: id });
+}
+const retainedSurfaceIds = new Set(phase8RetainedSurfaces.map(retained => retained.id));
+const referencedRetainedSurfaceIds = new Set();
+const ledgerRowIds = new Set(ledger.entries.map(entry => entry.id));
+for (const retained of phase8RetainedSurfaces) {
+  if (!Array.isArray(retained.ownerRowIds) || retained.ownerRowIds.length === 0 ||
+      retained.ownerRowIds.some(id => !ledgerRowIds.has(id)) ||
+      !retained.ownerRowIds.some(id => id.startsWith('NC-P08-')) ||
+      typeof retained.ownerClass !== 'string' || !retained.ownerClass) {
+    failures.push({ label: 'invalid retained-surface structured owner', file: 'docs/naming-cleanup-ledger.json', line: 0, text: retained.id });
+  }
+}
+for (const [rowId, coverage] of Object.entries(phase8Coverage)) {
+  for (const id of coverage.retainedSurfaceIds ?? []) {
+    if (!retainedSurfaceIds.has(id)) failures.push({ label: 'unknown retained-surface reference', file: 'docs/naming-cleanup-ledger.json', line: 0, text: `${rowId}: ${id}` });
+    referencedRetainedSurfaceIds.add(id);
+  }
+}
+for (const id of retainedSurfaceIds) {
+  if (!referencedRetainedSurfaceIds.has(id)) failures.push({ label: 'unowned Phase-8 retained surface', file: 'docs/naming-cleanup-ledger.json', line: 0, text: id });
+}
 
 for (const file of files) {
   const source = readFileSync(file, 'utf8');
@@ -192,6 +182,44 @@ for (const file of files) {
       }
     }
   }
+
+  if (/modules\/Solver\.ts/u.test(source)) {
+    failures.push({ label: 'stale case-sensitive solver module path', file, line: 0, text: 'use the live modules/solver.ts path' });
+  }
+}
+
+// Semantic qualification guards. These deliberately inspect declaration/boundary shapes rather
+// than banning common English words. Expanding one of these retained boundaries requires updating
+// the ledger/vocabulary authority, not merely adding another file to a loose allowlist.
+const expectedApplicationFingerprintCluster = new Set(phase8Coverage['NC-P08-008']?.files ?? []);
+const applicationFingerprintCluster = new Set(files.filter(file =>
+  (file === 'modules/data.ts' || file === 'modules/dev-corpus.ts' || file === 'modules/ports.ts' ||
+   file === 'modules/state-slices.ts' || /^modules\/(?:input|persistence|state\/actions)\//u.test(file)) &&
+  /\bfingerprint\b/u.test(readFileSync(file, 'utf8'))));
+for (const file of applicationFingerprintCluster) {
+  if (!expectedApplicationFingerprintCluster.has(file)) failures.push({ label: 'application fingerprint outside retained cluster', file, line: 0, text: 'amend NC-P15-004 inventory before expanding this boundary' });
+}
+for (const file of expectedApplicationFingerprintCluster) {
+  if (!applicationFingerprintCluster.has(file)) failures.push({ label: 'stale application fingerprint retained-cluster contract', file, line: 0, text: 'remove/reclassify this boundary entry explicitly' });
+}
+
+for (const file of files.filter(file => file.startsWith('modules/') && file.endsWith('.ts') && !file.endsWith('.test.ts'))) {
+  const source = readFileSync(file, 'utf8');
+  const profileDeclarations = source.match(/\bprofile\??:\s*(?:string|ScoringProfile)\b/gu) ?? [];
+  for (const declaration of profileDeclarations) {
+    if (/ScoringProfile/u.test(declaration)) continue;
+    if (file === 'modules/solver/hint-provenance.ts' && /profile\?:\s*string/u.test(declaration)) continue;
+    failures.push({ label: 'unclassified naked profile declaration', file, line: 0, text: declaration });
+  }
+  const familyDeclarations = source.match(/\b(?:family|families|familyIds)\??:\s*(?:string|string\[\]|number)\b/gu) ?? [];
+  for (const declaration of familyDeclarations) {
+    if (file === 'modules/solver/known-solution-prefix-survival.ts') continue;
+    failures.push({ label: 'unclassified naked family declaration', file, line: 0, text: declaration });
+  }
+  const residualDeclarations = source.match(/\bresidual\??:\s*[A-Za-z_$][\w$<>\[\]| ]*/gu) ?? [];
+  for (const declaration of residualDeclarations) {
+    failures.push({ label: 'unclassified naked residual declaration', file, line: 0, text: declaration });
+  }
 }
 
 // Targeted semantic checks for the broad 8H "naked" rows. These pin the concrete exported/tooling
@@ -217,6 +245,41 @@ const targetedContracts = [
     file: 'scripts/stress/solution-profile-lib.mjs',
     forbidden: [/\{\s*id\s*,\s*profile\s*\}/gu],
     required: [/solutionProfile/gu],
+  },
+  {
+    file: 'modules/solver/known-solution-prefix-survival.ts',
+    forbidden: [],
+    required: [/KnownSolutionLabel[^\n]+family\?: string/gu, /familyIds: string\[\]/gu],
+  },
+  {
+    file: 'modules/state-slices.ts',
+    forbidden: [],
+    required: [/fingerprint: string \| null/gu],
+  },
+  {
+    file: 'modules/persistence/level-rating-repository.ts',
+    forbidden: [],
+    required: [/doc\(ratings\(\), fingerprint\)/gu],
+  },
+  {
+    file: 'scripts/experiment-manifest-lib.mjs',
+    forbidden: [],
+    required: [/\btrove\b/gu],
+  },
+  {
+    file: 'scripts/stress/cpsat-explicit-prefix-reference.mjs',
+    forbidden: [],
+    required: [/oracleLabel/gu, /oracleReason/gu],
+  },
+  {
+    file: '.github/workflows/collect-prune-gap-labels.yml',
+    forbidden: [/\batlas-sweep\b/gu],
+    required: [/^name: collect-prune-gap-labels\b/gmu, /^  group: collect-prune-gap-labels$/gmu],
+  },
+  {
+    file: '.github/workflows/cpsat-explicit-prefix-reference.yml',
+    forbidden: [/^name:.*oracle/gimu, /^run-name:.*oracle/gimu, /^\s+name:.*oracle/gimu],
+    required: [/^name: cpsat-explicit-prefix-reference$/gmu, /^run-name: "CP-SAT prefix reference/gmu, /oracle-shards/gu],
   },
 ];
 

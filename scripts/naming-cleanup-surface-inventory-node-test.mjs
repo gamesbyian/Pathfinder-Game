@@ -82,30 +82,36 @@ console.log('Naming-cleanup surface inventory classification is stable for repre
 const rangeRaw = execFileSync(process.execPath, [
   path.join(root, 'scripts', 'naming-cleanup-surface-inventory.mjs'),
   '--json',
-  '--phase=8-14',
+  '--phase=8-15',
 ], {
   cwd: root,
   encoding: 'utf8',
   maxBuffer: 32 * 1024 * 1024,
 });
 const rangeInventory = JSON.parse(rangeRaw);
-assert.deepEqual(rangeInventory.phaseRange, [8, 14]);
-assert.equal(rangeInventory.ledgerEntries.length, 107);
+assert.deepEqual(rangeInventory.phaseRange, [8, 15]);
+assert.equal(rangeInventory.ledgerEntries.length, 114);
 assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.reconciliationState === 'string'));
 assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.id === 'string' && /^NC-P\d{2}-\d{3}$/u.test(row.id)));
 assert.ok(rangeInventory.ledgerEntries.filter(row => row.persistence === 'dual-read').every(row => row.compatibility && row.compatibility.owner));
 assert.ok(rangeInventory.ledgerEntries.every(row => Array.isArray(row.oldReferenceCategories)));
 assert.ok(rangeInventory.ledgerEntries.some(row => row.reconciliationState === 'old-live'));
+const phase15Rows = rangeInventory.ledgerEntries.filter(row => row.phase === 15);
+assert.equal(phase15Rows.length, 7);
+assert.ok(phase15Rows.every(row => row.reconciliationState === 'old-live'));
+assert.ok(phase15Rows.every(row => row.oldReferenceFiles.length > 0));
+assert.ok(phase15Rows.find(row => row.id === 'NC-P15-003').oldReferenceCategories.includes('workflow'));
+assert.ok(phase15Rows.find(row => row.id === 'NC-P15-004').oldReferenceCategories.includes('application'));
 const reconciliationCounts = Object.fromEntries(
   [...new Set(rangeInventory.ledgerEntries.map(row => row.reconciliationState))]
     .sort()
     .map(state => [state, rangeInventory.ledgerEntries.filter(row => row.reconciliationState === state).length]),
 );
-console.log(`Naming-cleanup Phase 8-14 reconciliation states: ${JSON.stringify(reconciliationCounts)}`);
+console.log(`Naming-cleanup Phase 8-15 reconciliation states: ${JSON.stringify(reconciliationCounts)}`);
 for (const row of rangeInventory.ledgerEntries.filter(row =>
   row.reconciliationState === 'no-current-live-reference-review' ||
   row.reconciliationState === 'mixed-old-and-canonical' ||
   row.reconciliationState === 'canonical-live')) {
   console.log(`RECONCILE phase=${row.phase} state=${row.reconciliationState} kind=${row.kind} old=${row.old} new=${row.new}`);
 }
-console.log('Naming-cleanup Phase 8-14 range reconciliation inventory is available.');
+console.log('Naming-cleanup Phase 8-15 range reconciliation inventory is available.');
