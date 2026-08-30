@@ -1,4 +1,4 @@
-# Technique census: second-order analysis
+# Technique census analysis
 
 > **Status:** rebuildable existing-census instrument; not production policy or a priority list.
 > **Current scheduler use:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution priority; [`solver-scheduling-policy.md`](solver-scheduling-policy.md) owns allocation policy.
@@ -10,7 +10,7 @@ The committed census under `reports/stress/technique-census/32240161854/` is hea
 Rebuild/check with:
 
 ```bash
-node scripts/technique-census-second-order.mjs reports/stress/technique-census/32240161854 --check
+node scripts/analyze-technique-census.mjs reports/stress/technique-census/32240161854 --check
 ```
 
 Start at [`tooling-catalog.md`](tooling-catalog.md) for current invocation options and related probes.

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { analyzeTechniqueCensus, binaryMutualInformation,
     exactDiscordancePValue, renderTechniqueCensusSecondOrder,
-    validateTechniqueBudgetCurves } from './technique-census-second-order.mjs';
+    validateTechniqueBudgetCurves } from './analyze-technique-census.mjs';
 
 const result = analyzeTechniqueCensus({ results: [
     { tier: 'T1', corpus: 'corpus2', levelId: 'a', levelPos: 1, techniqueKeys: ['beam|score=a|bias=none|width=2000|retention=plain'], ok: true, status: 'success', nodesExpanded: 90 },
@@ -174,4 +174,4 @@ assert.doesNotMatch(renderedReverse, /still need exact winning-attempt isolated 
 // Frozen census outputs remain research evidence. This harness owns the analyzer/math/rendering
 // contracts using synthetic inputs; byte-for-byte regeneration of a dated run is an on-demand
 // reproducibility operation, not an ordinary software-CI requirement.
-console.log('technique-census second-order analyzer tests passed');
+console.log('analyze-technique-census tests passed');

@@ -81,7 +81,7 @@ GitHub code search is not indexed for this repository, so the refreshed live-sur
 | `techniqueLifecycle` result/telemetry field | rename | Its keys are solver stages, not techniques. Rename to `stageLifecycle` in PR 6 with dual-read for retained generated JSON. |
 | `scripts/stress/current-missing-exposure-audit.mjs` | rename | Rename to `scripts/stress/analyze-current-missing-attempt-exposure.mjs`; PR 3 migrates routing-regime vocabulary and PR 4 migrates attempt-config identity fields. |
 | `scripts/stress/select-attempt-exposure-sample.mjs` | retain file, rename interface fields | The filename accurately describes mechanics-only sampling. PR 4 changes `--technique` to `--attempt-config` and generated `technique` to `attemptConfigIdentity`. |
-| `scripts/stress/analyze-equal-work-census-pilot.mjs` | rename | It is now surfaced durable tooling. Rename to `scripts/stress/analyze-equal-work-census.mjs` in PR 8. |
+| former `scripts/stress/analyze-equal-work-census-pilot.mjs` | rename | It is now surfaced durable tooling. Renamed to `scripts/stress/analyze-equal-work-census.mjs` by batch 8D. |
 | `technique-census-cell.mjs` and its new equal-work test/helper surfaces | covered existing taxonomy cleanup | Keep live until PR 8; migrate the whole technique-census tool family together so equal-work additions do not preserve split vocabulary. |
 | `portfolio-sweep-reports-to-benchmark.mjs` / `solver:combine-corpus2-batches` | rename | The helper now combines generic solver-sweep reports and is used outside Corpus 2. Rename to `combine-solver-sweep-reports.mjs` / **solver:combine-sweep-reports** in PR 9. |
 | current generated outputs `reports/stress/benchmark-parallel.json` and `reports/stress/benchmark-latest-random.json` | rename live output paths | New workflow output paths become `reports/stress/solver-corpus1-latest.json` and `reports/stress/solver-corpus2-latest.json`; retained historical files are not rewritten. |
@@ -838,8 +838,8 @@ Do not rename historical report filenames containing atlas/trove/archaeology/lin
 
 ### 5.6 Technique census second-order analysis
 
-- `technique-census-second-order.mjs` -> `analyze-technique-census.mjs`;
-- `technique-census-second-order-analysis.md` -> `technique-census-analysis.md`;
+- former technique-census-second-order.mjs -> `analyze-technique-census.mjs`;
+- former technique-census-second-order-analysis.md -> `technique-census-analysis.md`;
 - update tooling catalog and docs index;
 - current explanatory text names the actual analyses: outcome similarity, phenotype/multiplicity, cover/oracle frontier, substitution, budget tranche/cap economics, censoring, and production joins.
 
@@ -883,7 +883,7 @@ The following commands are already surfaced and therefore are no longer unnamed/
 | former `stress/repair-rollback-census-pilot.mjs` / solver:repair-rollback-pilot | `stress/census-repair-rollback-windows.mjs` / `solver:census-repair-rollback-windows` |
 | former `stress/symmetry-repair-seed-pilot.mjs` / solver:symmetry-repair-seed-pilot | `stress/compare-symmetry-repair-seed.mjs` / `solver:compare-symmetry-repair-seed` |
 | former `stress/restart-continuation-population-pilot.mjs` | `stress/compare-repair-restart-continuation-population.mjs` |
-| `stress/analyze-equal-work-census-pilot.mjs` | `stress/analyze-equal-work-census.mjs` |
+| former `stress/analyze-equal-work-census-pilot.mjs` | `stress/analyze-equal-work-census.mjs` |
 
 The restart/continuation tool is not currently a package alias, but it is active durable research machinery referenced by current decision documents, so its lifecycle label is still inappropriate. Historical report filenames containing `pilot` remain frozen.
 

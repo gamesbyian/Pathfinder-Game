@@ -101,7 +101,7 @@ expectFastFailure(
   true,
 );
 expectFastFailure(
-  'scripts/stress/analyze-equal-work-census-pilot.mjs',
+  'scripts/stress/analyze-equal-work-census.mjs',
   [],
   /--equal-work=.*required/u,
   false,

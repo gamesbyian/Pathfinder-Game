@@ -80,7 +80,7 @@ Dated reports, campaign directories, run-ID snapshots, and derived research tabl
 
 Current analyzer/parser/math behavior belongs in synthetic software-contract tests. Historical reproducibility belongs to the artifact's recorded source commit/protocol and is checked on demand when auditing or intentionally regenerating that evidence. A derived artifact that is explicitly designated as a current repository authority may have a freshness check, but that status must be documented; age alone does not make a snapshot a CI fixture.
 
-For example, `test:technique-campaign-analysis` and `test:technique-census-second-order` test their analyzers with synthetic inputs. The dated August campaign and census run remain evidence, not permanent backward-compatibility test vectors. `node scripts/technique-census-second-order.mjs --check` remains available for an intentional census re-derivation audit.
+For example, `test:technique-campaign-analysis` and `test:analyze-technique-census` test their analyzers with synthetic inputs. The dated August campaign and census run remain evidence, not permanent backward-compatibility test vectors. `node scripts/analyze-technique-census.mjs --check` remains available for an intentional census re-derivation audit.
 
 ## Timing instrumentation
 
