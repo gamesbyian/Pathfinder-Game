@@ -91,7 +91,7 @@ If the live result is null, do not keep tuning thresholds indefinitely on the sa
 
 - Need current priority? Use [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 - Need a level/family boundary? Use [`variant-level-research.md`](variant-level-research.md) and family tools.
-- Need actual beam retention/extinction? Use [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md).
+- Need actual beam retention/extinction? Use [`solver-known-solution-prefix-survival.md`](solver-known-solution-prefix-survival.md).
 - Need a causal before/after search divergence? Use family pair-divergence / witness-divergence tooling.
 - Need a production decision? A replay result nominates a narrow live experiment; it is not the promotion verdict.
 

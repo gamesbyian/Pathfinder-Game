@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Regression coverage for winning-lineage-pilot.mjs's fresh-output field naming: it wrote the
- * scoring-profile dimension under the legacy `profile` key (both per-row and document-level) even
- * though Phase 5's field migration renamed this solver dimension to `scoringProfileId` everywhere
- * else. Runs the real tool against a synthetic hint-bearing fixture level (a 1x5 corridor with its
- * one possible gate-to-goal path stored as the hint) so this exercises the actual solve/observer
- * path, not an empty-corpus smoke pass. Uses a synthetic fixture rather than the real Corpus-1
- * stress data on disk because the node-tests CI job's checkout deliberately excludes
- * data/stress/ (see .github/workflows/ci.yml) -- that corpus is frozen research/stress data, not
- * a test fixture.
+ * Regression coverage for collect-known-solution-prefix-survival.mjs's fresh-output field naming:
+ * it wrote the scoring-profile dimension under the legacy `profile` key (both per-row and
+ * document-level) even though Phase 5's field migration renamed this solver dimension to
+ * `scoringProfileId` everywhere else. Runs the real tool against a synthetic hint-bearing fixture
+ * level (a 1x5 corridor with its one possible gate-to-goal path stored as the hint) so this
+ * exercises the actual solve/observer path, not an empty-corpus smoke pass. Uses a synthetic
+ * fixture rather than the real Corpus-1 stress data on disk because the node-tests CI job's
+ * checkout deliberately excludes data/stress/ (see .github/workflows/ci.yml) -- that corpus is
+ * frozen research/stress data, not a test fixture.
  */
 import assert from 'node:assert/strict';
 import { execFile as execFileCallback } from 'node:child_process';
@@ -25,8 +25,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 // runs under plain node, so it inlines the one-line formula instead of importing that .ts module).
 const PACK = (x, y) => (y << 16) | x;
 
-const dir = await mkdtemp(path.join(os.tmpdir(), 'winning-lineage-pilot-cli-'));
-const outFile = path.join(dir, 'lineage-pilot.json');
+const dir = await mkdtemp(path.join(os.tmpdir(), 'collect-known-solution-prefix-survival-cli-'));
+const outFile = path.join(dir, 'known-solution-prefix-survival.json');
 const levelsFile = path.join(dir, 'levels.json');
 
 // A 1x5 corridor has exactly one possible gate-to-goal path (see hint-workbench-node-test.mjs's
@@ -40,7 +40,7 @@ const fixtureLevel = {
 await writeFile(levelsFile, `${JSON.stringify([fixtureLevel], null, 2)}\n`);
 
 await execFile(process.execPath, [
-    'scripts/run-bundled.mjs', 'scripts/stress/winning-lineage-pilot.mjs',
+    'scripts/run-bundled.mjs', 'scripts/stress/collect-known-solution-prefix-survival.mjs',
     `--levels=${levelsFile}`, '--level-ids=FIX1',
     '--beam-width=50', '--node-budget=50000', `--out=${outFile}`,
 ], { cwd: ROOT, timeout: 60000 });
@@ -54,4 +54,4 @@ assert.equal(result.levels[0].scoringProfileId, 'default',
     'per-row scoring-profile field must be scoringProfileId, not the legacy profile key');
 assert.equal('profile' in result.levels[0], false, 'the legacy profile key must not appear in fresh per-row output');
 
-console.log('winning-lineage-pilot CLI: all tests passed');
+console.log('collect-known-solution-prefix-survival CLI: all tests passed');

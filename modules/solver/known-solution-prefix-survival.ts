@@ -7,7 +7,7 @@ interface PrefixMatch extends PrefixSupport { solutionIds: number[]; familyIds: 
 const keyOf = (path: readonly number[]): string => path.join(',');
 
 /** Compact immutable prefix index. Labels are observation-only and never exposed to search. */
-export class WinningPrefixIndex {
+export class KnownSolutionPrefixIndex {
     private readonly prefixes = new Map<string, { paths: Set<number>; families: Set<string>; provenances: Set<string> }>();
     readonly solutions: KnownSolutionLabel[];
 
@@ -51,7 +51,7 @@ export class WinningPrefixIndex {
     }
 }
 
-export interface LineageStageSummary {
+export interface KnownSolutionPrefixStageSummary {
     stage: string; depth: number; work: number; candidateCount: number;
     supportedCandidates: number; supportedPaths: number; supportedFamilies: number;
     details?: Record<string, unknown>;
@@ -60,9 +60,9 @@ export interface LineageStageSummary {
 }
 
 /** Observer used by the real beam. It only consumes copied records after decisions are made. */
-export class WinningLineageObserver implements BeamResearchObserver {
-    readonly stages: LineageStageSummary[] = [];
-    constructor(readonly index: WinningPrefixIndex, readonly options: {
+export class KnownSolutionPrefixSurvivalObserver implements BeamResearchObserver {
+    readonly stages: KnownSolutionPrefixStageSummary[] = [];
+    constructor(readonly index: KnownSolutionPrefixIndex, readonly options: {
         retainAllRemovalDetails?: boolean;
         retainRankedPoolDetails?: boolean;
     } = {}) {}

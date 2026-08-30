@@ -1,9 +1,9 @@
-# Winning-lineage survival analysis
+# Known-solution-prefix survival analysis
 
 > **Status:** current beam-observation instrument contract. Current scoring/retention rank lives in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Capability rule:** known solutions are offline labels only and never guide search.
 
-Winning-lineage observation asks a finite-frontier question:
+Known-solution-prefix survival observation asks a finite-frontier question:
 
 > During unchanged beam search, does any generated/retained prefix still belong to a known-valid solution family, and at which ordinary search boundary is the final known support lost?
 
@@ -20,11 +20,11 @@ Observation OFF/ON parity is mandatory. Enabling it must not change solution, ca
 Known hints/solutions are incomplete, so:
 
 - known-support extinction is not proof that all true solutions are extinct;
-- a solved control may lose every known labelled lineage and later find an unknown valid route;
+- a solved control may lose every known labelled solution prefix and later find an unknown valid route;
 - score/width extinction nominates exact/contrastive follow-up, not infeasibility;
 - exact-prefix reference labels can strengthen a sibling comparison; unsupported/timeout remains abstention;
 - a labelled eventual winner does not prove each prefix was uniquely/best viable;
-- a selected interesting lineage is discovery evidence, not prevalence evidence.
+- a selected interesting known-solution-prefix survival case is discovery evidence, not prevalence evidence.
 
 Same-parent siblings around one extinction event give useful geometric/history control but remain one family for generalization.
 
@@ -48,8 +48,8 @@ Family/statistical rules: [`variant-level-research.md`](variant-level-research.m
 
 ## Promotion boundary
 
-A lineage finding earns a live counterfactual only after a recurring generic distinction is identified. Receptors may include score terms, retention reserves/quotas, diversity descriptors, or typed failure artifacts.
+A known-solution-prefix survival finding earns a live counterfactual only after a recurring generic distinction is identified. Consumers may include score terms, retention reserves/quotas, diversity descriptors, or typed failure artifacts.
 
 Promotion requires actual cold solve/work improvement, competition inside the relevant aggregate work envelope, gains/losses on the population reaching the decision, independent confirmation for selected/tuned descriptors, and no runtime use of level/family identity or known-path compatibility.
 
-Do not jump from “known path was culled” to copying it, global beam widening, or exact-level special treatment. Known-lineage survival is a diagnostic, not the production objective.
+Do not jump from “known path was culled” to copying it, global beam widening, or exact-level special treatment. Known-solution-prefix survival is a diagnostic, not the production objective.

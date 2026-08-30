@@ -6,16 +6,16 @@ const args = new Map(process.argv.slice(2).filter(arg => arg.startsWith('--')).m
     const [key, ...value] = arg.split('=');
     return [key, value.join('=')];
 }));
-const lineageFile = args.get('--lineage');
+const survivalFile = args.get('--survival');
 const levelsFile = args.get('--levels');
 const out = args.get('--out');
-if (!lineageFile || !levelsFile || !out) {
-    throw new Error('usage: --lineage=<json> --levels=<json> --out=<json>');
+if (!survivalFile || !levelsFile || !out) {
+    throw new Error('usage: --survival=<json> --levels=<json> --out=<json>');
 }
 
-const lineageBytes = readFileSync(lineageFile);
+const survivalBytes = readFileSync(survivalFile);
 const levelBytes = readFileSync(levelsFile);
-const lineage = JSON.parse(lineageBytes);
+const survival = JSON.parse(survivalBytes);
 const levelDocument = JSON.parse(levelBytes);
 const levels = Array.isArray(levelDocument) ? levelDocument : levelDocument.levels;
 const byId = new Map(levels.map(level => [String(level.id), level]));
@@ -38,7 +38,7 @@ const featureOf = level => ({
     requiredPathCoverageRatio: Number(level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? NaN),
     predictedChallenge: Number(level.stressMeta?.predictedSolverChallenge ?? NaN),
 });
-const rows = lineage.scoreWidthForensics.map(row => {
+const rows = survival.scoreWidthForensics.map(row => {
     const level = byId.get(String(row.levelId));
     if (!level) throw new Error(`missing level ${row.levelId}`);
     return {
@@ -89,8 +89,8 @@ const result = {
     schemaVersion: 1,
     evidenceClass: 'offline-observational',
     inputs: {
-        lineageFile,
-        lineageSha256: createHash('sha256').update(lineageBytes).digest('hex'),
+        survivalFile,
+        survivalSha256: createHash('sha256').update(survivalBytes).digest('hex'),
         levelsFile,
         levelsSha256: createHash('sha256').update(levelBytes).digest('hex'),
     },
@@ -104,7 +104,7 @@ const result = {
     nominatedTags: tags.filter(tag => tag.nominated).map(tag => tag.tag),
     limitations: [
         'Stored winning labels are survivorship-biased and incomplete.',
-        'No parent-family identity is present in the lineage artifact, so rows cannot be family-clustered.',
+        'No parent-family identity is present in the known-solution-prefix survival artifact, so rows cannot be family-clustered.',
         'Association cannot establish a production routing rule or a causal score defect.',
     ],
     rows,

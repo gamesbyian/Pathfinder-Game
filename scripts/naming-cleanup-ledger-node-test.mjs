@@ -45,11 +45,29 @@ try {
     });
     if (status.status !== 0) throw new Error(`naming status failed:\n${status.stdout}\n${status.stderr}`);
     const parsed = JSON.parse(status.stdout);
-    if (parsed.nextPhase !== 8 || parsed.nextBatch !== '8A') {
-      throw new Error(`naming status expected next Phase 8 / 8A, got ${parsed.nextPhase} / ${parsed.nextBatch}`);
+    // This asserts the live invariants of naming:status's --json shape rather than a specific
+    // batch, so it keeps passing as serial Phase-8 batches complete instead of going stale at
+    // every batch boundary (see docs/naming-cleanup-phase-records/phase-08-batch-8b.md).
+    const phase8BatchOrder = ['8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H'];
+    if (parsed.nextPhase !== 8 || !phase8BatchOrder.includes(parsed.nextBatch)) {
+      throw new Error(`naming status expected next Phase 8 / one of ${phase8BatchOrder.join(',')}, got ${parsed.nextPhase} / ${parsed.nextBatch}`);
     }
-    if (parsed.nextAction !== 'merge-or-record-batch-completion' || parsed.batchCompletion?.status !== 'pending') {
-      throw new Error(`naming status expected pending 8A merge-or-record-batch-completion, got ${parsed.nextAction} / ${parsed.batchCompletion?.status}`);
+    if (parsed.nextAction === 'start-batch') {
+      if (parsed.batchCompletion?.status !== 'pending') {
+        throw new Error(`start-batch action expects a pending batchCompletion, got ${parsed.batchCompletion?.status}`);
+      }
+      if (parsed.nextScope.counts.done !== 0) {
+        throw new Error(`start-batch action expects zero done rows in next-scope, got ${parsed.nextScope.counts.done}`);
+      }
+    } else if (parsed.nextAction === 'merge-or-record-batch-completion') {
+      if (parsed.batchCompletion?.status !== 'pending') {
+        throw new Error(`merge-or-record-batch-completion expects a pending batchCompletion, got ${parsed.batchCompletion?.status}`);
+      }
+      if (parsed.nextScope.counts.pending !== 0 || parsed.nextScope.counts['in-progress'] !== 0) {
+        throw new Error('merge-or-record-batch-completion expects every next-scope row done');
+      }
+    } else {
+      throw new Error(`naming status returned unexpected nextAction ${JSON.stringify(parsed.nextAction)}`);
     }
     if (!parsed.nextScope.rows.every(row => typeof row.id === 'string' && row.id.startsWith('NC-P08-'))) {
       throw new Error('naming status did not expose stable Phase-8 row IDs');
@@ -70,6 +88,10 @@ try {
 
   {
     const ledger = clone(source);
+    // Force this batch's own merge barrier back to unmerged/pending regardless of the real
+    // ledger's current batchCompletions state, so this negative case stays meaningful once 8A
+    // (or any predecessor batch) has actually merged on `main`.
+    ledger.batchCompletions['8A'] = { status: 'pending', pr: null, mergeCommit: null };
     for (const row of ledger.entries.filter(entry => entry.phase === 8 && entry.batch === '8A')) {
       row.status = 'done';
       row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-08.md';
@@ -124,6 +146,9 @@ try {
 
   {
     const ledger = clone(source);
+    // As above: force the predecessor merge barrier back to unmerged so this negative case is
+    // meaningful regardless of whether 8A (or any predecessor batch) has actually merged.
+    ledger.batchCompletions['8A'] = { status: 'pending', pr: null, mergeCommit: null };
     const row = ledger.entries.find(entry => entry.phase === 8 && entry.batch === '8B');
     row.status = 'in-progress';
     row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-08.md';

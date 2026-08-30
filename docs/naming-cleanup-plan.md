@@ -729,11 +729,11 @@ Required canonical forms in new/current text and exported APIs:
 - `knownSolutionPrefixSurvival` for the current beam "winning lineage" concept;
 - `residualLevelSet`, `residualSearchState`, or another explicit qualifier instead of naked `residual` in APIs.
 
-Rename current instrument and implementation names:
+Rename current instrument and implementation names (implemented by batch 8B):
 
-- `solver-winning-lineage-survival-analysis.md` -> `solver-known-solution-prefix-survival.md`;
-- `analyze-lineage-mechanics.mjs` -> `analyze-known-solution-prefix-survival.mjs`;
-- `modules/solver/research-lineage.ts` -> **modules/solver/known-solution-prefix-survival.ts**;
+- former `solver-winning-lineage-survival-analysis.md` -> `docs/solver-known-solution-prefix-survival.md`;
+- former `analyze-lineage-mechanics.mjs` -> `scripts/analyze-known-solution-prefix-survival.mjs`;
+- former research-lineage.ts -> `modules/solver/known-solution-prefix-survival.ts`;
 - `WinningPrefixIndex` -> `KnownSolutionPrefixIndex`;
 - `WinningLineageObserver` -> `KnownSolutionPrefixSurvivalObserver`;
 - `LineageStageSummary` -> `KnownSolutionPrefixStageSummary`.
@@ -876,8 +876,8 @@ The following commands are already surfaced and therefore are no longer unnamed/
 
 | Current file / alias | Canonical file / alias |
 |---|---|
-| `stress/winning-lineage-pilot.mjs` / `solver:winning-lineage-pilot` | `stress/collect-known-solution-prefix-survival.mjs` / **solver:collect-known-solution-prefix-survival** |
-| `stress/winning-prefix-atlas-pilot.mjs` / `solver:winning-prefix-atlas-pilot` | `stress/collect-known-solution-prefix-branches.mjs` / **solver:collect-known-solution-prefix-branches** |
+| former `stress/winning-lineage-pilot.mjs` / solver:winning-lineage-pilot | `stress/collect-known-solution-prefix-survival.mjs` / `solver:collect-known-solution-prefix-survival` |
+| former `stress/winning-prefix-atlas-pilot.mjs` / solver:winning-prefix-atlas-pilot | `stress/collect-known-solution-prefix-branches.mjs` / `solver:collect-known-solution-prefix-branches` |
 | `stress/producer-population-pilot.mjs` / `solver:producer-population-pilot` | `stress/compare-search-producer-populations.mjs` / **solver:compare-search-producer-populations** |
 | `stress/residual-interface-mining-pilot.mjs` / `solver:residual-interface-pilot` | `stress/analyze-residual-interfaces.mjs` / **solver:analyze-residual-interfaces** |
 | `stress/repair-rollback-census-pilot.mjs` / `solver:repair-rollback-pilot` | `stress/census-repair-rollback-windows.mjs` / **solver:census-repair-rollback-windows** |

@@ -9,7 +9,7 @@ import { isSolutionState } from './solution.js';
 import { SCORING_PROFILES } from './policy.js';
 import { PACK } from './encoding.js';
 import { runAttempt, attemptConfigKey, normalizeAblationConfig } from './orchestration.js';
-import { WinningLineageObserver, WinningPrefixIndex } from './research-lineage.js';
+import { KnownSolutionPrefixSurvivalObserver, KnownSolutionPrefixIndex } from './known-solution-prefix-survival.js';
 import { beamSearchFromGate } from './search.js';
 import { evaluatePrunedMove } from './prune-gauntlet.js';
 import { getRealLengthFromState } from './solution.js';
@@ -51,8 +51,8 @@ export function createSolverTestingApi() {
         // earlier version of hint-divergence.mjs did, complete only for the flags its own call
         // path happened to read).
         normalizeAblationConfig,
-        WinningPrefixIndex,
-        WinningLineageObserver,
+        KnownSolutionPrefixIndex,
+        KnownSolutionPrefixSurvivalObserver,
         beamSearchFromGate,
         evaluatePrunedMove,
         getRealLengthFromState,

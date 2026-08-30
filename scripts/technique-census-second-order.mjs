@@ -911,7 +911,7 @@ ${rows(result.failureFingerprints, row => `| \`${row.fingerprint}\` | ${row.leve
 
 ## Dedup-near-tie outcome pathology
 
-The flag-off variants both gain and lose deterministic isolated solves. Existing structural descriptors provide only nominations; causal retention claims still require early-search and winning-lineage telemetry.
+The flag-off variants both gain and lose deterministic isolated solves. Existing structural descriptors provide only nominations; causal retention claims still require early-search and known-solution-prefix survival telemetry.
 
 | baseline | transition | levels | mean reqLen | mean reqInt | mean area | mean object density | must-cross prevalence | portal prevalence |
 |---|---|---:|---:|---:|---:|---:|---:|---:|

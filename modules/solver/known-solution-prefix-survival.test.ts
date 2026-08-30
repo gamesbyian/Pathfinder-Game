@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { WinningLineageObserver, WinningPrefixIndex } from './research-lineage.js';
+import { KnownSolutionPrefixSurvivalObserver, KnownSolutionPrefixIndex } from './known-solution-prefix-survival.js';
 import { structuralSolutionFamilySignature } from '../domain/path-features.js';
 import { PACK } from './encoding.js';
 
-describe('winning lineage research instrumentation', () => {
+describe('known-solution-prefix survival research instrumentation', () => {
     test('deduplicates labels and retains family support', () => {
-        const index = new WinningPrefixIndex([
+        const index = new KnownSolutionPrefixIndex([
             { path: [1, 2, 3], provenance: 'canonical', family: 'a' },
             { path: [1, 2, 3], provenance: 'variant-replay', family: 'a' },
             { path: [1, 2, 3], provenance: 'other-family', family: 'c' },
@@ -28,7 +28,7 @@ describe('winning lineage research instrumentation', () => {
         const familyC = structuralSolutionFamilySignature(differentCrossing, [mc]);
         expect(familyA).toBe(familyB);
         expect(familyC).not.toBe(familyA);
-        const index = new WinningPrefixIndex([
+        const index = new KnownSolutionPrefixIndex([
             { path: localDetourA, provenance: 'solver-a', family: familyA },
             { path: localDetourA, provenance: 'solver-b', family: familyA },
             { path: localDetourB, provenance: 'solver-c', family: familyB },
@@ -40,7 +40,7 @@ describe('winning lineage research instrumentation', () => {
     });
 
     test('accounts for support loss and canonical work after loss', () => {
-        const observer = new WinningLineageObserver(new WinningPrefixIndex([{ path: [1, 2, 3], provenance: 'fixture' }]));
+        const observer = new KnownSolutionPrefixSurvivalObserver(new KnownSolutionPrefixIndex([{ path: [1, 2, 3], provenance: 'fixture' }]));
         observer.observe({ stage: 'incoming-frontier', depth: 1, work: 2, paths: [[1, 2]] });
         observer.observe({ stage: 'post-hard-prune', depth: 2, work: 3, paths: [[1, 9]] });
         observer.observe({ stage: 'post-score-width-cull', depth: 3, work: 10, paths: [[1, 9, 8]] });
@@ -50,7 +50,7 @@ describe('winning lineage research instrumentation', () => {
     });
 
     test('unions support across candidates and raises a hard-prune correctness alarm', () => {
-        const observer = new WinningLineageObserver(new WinningPrefixIndex([
+        const observer = new KnownSolutionPrefixSurvivalObserver(new KnownSolutionPrefixIndex([
             { path: [1, 2, 3], provenance: 'a', family: 'one' },
             { path: [1, 4, 5], provenance: 'b', family: 'two' },
         ]));
@@ -61,7 +61,7 @@ describe('winning lineage research instrumentation', () => {
     });
 
     test('attributes extinction to the supported removal event at that depth', () => {
-        const observer = new WinningLineageObserver(new WinningPrefixIndex([{ path: [1, 2], provenance: 'x' }]));
+        const observer = new KnownSolutionPrefixSurvivalObserver(new KnownSolutionPrefixIndex([{ path: [1, 2], provenance: 'x' }]));
         observer.observe({ stage: 'incoming-frontier', depth: 0, work: 0, paths: [[1]] });
         observer.observe({ stage: 'hard-pruned', depth: 1, work: 1, paths: [[1, 2]], details: { rejections: [{ cause: 'PRUNE_DISTANCE_BOUND' }] } });
         observer.observe({ stage: 'post-hard-prune', depth: 1, work: 1, paths: [[1, 3]] });
@@ -69,14 +69,14 @@ describe('winning lineage research instrumentation', () => {
     });
 
     test('retains only known-supported removal context by default', () => {
-        const observer = new WinningLineageObserver(new WinningPrefixIndex([{ path: [1, 2], provenance: 'x' }]));
+        const observer = new KnownSolutionPrefixSurvivalObserver(new KnownSolutionPrefixIndex([{ path: [1, 2], provenance: 'x' }]));
         observer.observe({ stage: 'score-width-culled', depth: 1, work: 2, paths: [[1, 2], [1, 9]],
             details: { culled: [{ path: [1, 2], rank: 3 }, { path: [1, 9], rank: 4 }], beamWidth: 2 } });
         expect(observer.stages[0].details).toEqual({ culled: [{ path: [1, 2], rank: 3 }], beamWidth: 2 });
     });
 
     test('summarizes ranked pools by default but can retain the full pool explicitly', () => {
-        const index = new WinningPrefixIndex([{ path: [1, 2, 3], provenance: 'x', family: 'a' }]);
+        const index = new KnownSolutionPrefixIndex([{ path: [1, 2, 3], provenance: 'x', family: 'a' }]);
         const rankedPool = [
             { path: [1, 9], rank: 1, score: 10, insertionOrder: 0 },
             { path: [1, 2], rank: 2, score: 9, insertionOrder: 1 },
@@ -85,7 +85,7 @@ describe('winning lineage research instrumentation', () => {
         const record = { stage: 'score-width-culled' as const, depth: 1, work: 3, paths: [[1, 2]],
             details: { rankedPool, beamWidth: 1 } };
 
-        const compact = new WinningLineageObserver(index);
+        const compact = new KnownSolutionPrefixSurvivalObserver(index);
         compact.observe(record);
         expect(compact.stages[0].details).not.toHaveProperty('rankedPool');
         expect(compact.stages[0].details).toMatchObject({
@@ -95,7 +95,7 @@ describe('winning lineage research instrumentation', () => {
             supportedPool: [{ rank: 2, score: 9, insertionOrder: 1, paths: 1, families: ['a'] }],
         });
 
-        const fullPool = new WinningLineageObserver(index, { retainRankedPoolDetails: true });
+        const fullPool = new KnownSolutionPrefixSurvivalObserver(index, { retainRankedPoolDetails: true });
         fullPool.observe(record);
         expect(fullPool.stages[0].details?.rankedPool).toEqual(rankedPool);
         expect(fullPool.stages[0].details).toMatchObject({ poolCandidateCount: 3, supportedPoolCandidates: 1 });

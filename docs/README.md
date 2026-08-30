@@ -64,7 +64,7 @@ These docs describe reusable instruments, not current priority or promotion auth
 |---|---|
 | [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) | Rebuildable census/portfolio diagnostics |
 | [`solver-offline-replay-harness.md`](solver-offline-replay-harness.md) | Read-only exact/reference-labelled probes |
-| [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md) | Beam lineage observation |
+| [`solver-known-solution-prefix-survival.md`](solver-known-solution-prefix-survival.md) | Beam known-solution-prefix survival observation |
 | [`solver-ablation.md`](solver-ablation.md) | Exploratory ablation lab |
 | [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Within-level required-length sensitivity |
 

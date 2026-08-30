@@ -100,7 +100,7 @@ Row count does not remove dependence; a large selected cohort is still selected.
 
 ## Experimental substrate and shadow-first rule
 
-Prefer existing deterministic work accounting, manifests/run identity, stress/lifecycle telemetry, family/provenance tools, shadow probes, winning lineage, explicit-prefix/reference labels, reducers/replay, census/method probes, and operational-similarity observers. Start at [`tooling-catalog.md`](tooling-catalog.md).
+Prefer existing deterministic work accounting, manifests/run identity, stress/lifecycle telemetry, family/provenance tools, shadow probes, known-solution-prefix survival, explicit-prefix/reference labels, reducers/replay, census/method probes, and operational-similarity observers. Start at [`tooling-catalog.md`](tooling-catalog.md).
 
 For scoring, retention, routing, scheduling, or information-sharing hypotheses, observe before changing search where practical. Unless parity itself is the experiment, instrumentation must preserve solution, work, ordering, randomness, and cache/memo lifetime. A shadow-positive selected candidate still needs a live solve/work verdict and independent confirmation.
 
