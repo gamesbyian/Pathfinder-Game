@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Per-shard driver for family-wide-trove.yml. For each (level, mode) task in this shard's slice
- * (from family-wide-trove-shard-slice.mjs): family-generate -> portfolio-solve-sweep --save-hints
+ * Per-shard driver for collect-variant-family-dataset.yml. For each (level, mode) task in this
+ * shard's slice (from plan-variant-family-dataset-shard.mjs): family-generate -> portfolio-solve-sweep --save-hints
  * -> hint-workbench --write-levels (extra solution-diversity pass beyond the first solve). Persists
  * progress after every task (never only at the end -- CLAUDE.md's batch-tool policy) via the same
  * shard-NN.log / shard-NN-summary.jsonl shape family-census-parse-shard-logs.mjs already parses,
@@ -14,11 +14,11 @@
  * starting each new task and stopping early leaves time for staging/upload to run normally instead
  * of depending entirely on the job timeout's post-cancellation grace period.
  *
- * Usage: node scripts/family-wide-trove-shard-run.mjs --shard-file=<path to shard JSON slice>
+ * Usage: node scripts/collect-variant-family-dataset-shard.mjs --shard-file=<path to shard JSON slice>
  *   --nn=<01-60> --progress=<log file> --summary=<jsonl file>
  *   [--budget-ms=86400000] [--node-budget=36000000] [--workers=4] [--seed=20260807]
  *   [--variant-count=10] [--max-wall-ms=20400000] [--run-id=<id>] [--shard-count=60]
- *   [--workflow=family-wide-trove.yml]
+ *   [--workflow=collect-variant-family-dataset.yml]
  *
  * MANIFEST EMISSION (experiment-manifest-lib.mjs's validateFamilyEvaluationRunManifest): on
  * completion this writes a validator-compliant family evaluation run manifest to
@@ -26,11 +26,11 @@
  * as `outputArtifacts` and every family-*.json it generated as `sourceGenerationArtifacts` --
  * family-index-lib.mjs's buildFamilyIndex discovers it by filename (any `manifest.json` under
  * logs/family-census/) and joins it back to the matching evidence rows via outputArtifacts, giving
- * every solve in the trove its solver commit/budgets/seed provenance instead of leaving it
+ * every solve in the dataset its solver commit/budgets/seed provenance instead of leaving it
  * evidence with no recorded producer. `--run-id` should be the SAME value across every shard of one
  * dispatch (e.g. the GitHub Actions run id) so family-index-lib.mjs's per-run shard-agreement check
  * groups them as one run; omitting it skips manifest emission entirely (a local ad hoc rerun that
- * doesn't care about trove provenance), it is never defaulted to something synthetic that would
+ * doesn't care about dataset provenance), it is never defaulted to something synthetic that would
  * silently fabricate run identity. `--shard-count` must match the workflow's own total shard count
  * (its own `inputs.shards`) -- a mismatched count fails validateFamilyEvaluationRunManifest's
  * one-based-index-within-count check rather than writing a manifest that under/overstates the run's
@@ -75,7 +75,7 @@ const MAX_WALL_MS = Number(args.get('--max-wall-ms') || 20_400_000); // 340 min 
 // never a synthetic/fabricated run identity -- see this file's own header comment.
 const RUN_ID = args.get('--run-id') || null;
 const SHARD_COUNT = Number(args.get('--shard-count') || 60);
-const WORKFLOW = args.get('--workflow') || 'family-wide-trove.yml';
+const WORKFLOW = args.get('--workflow') || 'collect-variant-family-dataset.yml';
 const MANIFEST_OUT = `logs/family-census/wide-shard-${NN}/manifest.json`;
 
 mkdirSync(path.dirname(PROGRESS), { recursive: true });
@@ -218,9 +218,9 @@ console.log(`Shard ${NN} finished${stoppedEarly ? ' EARLY (budget)' : ''}: ${sha
 // record that this run/shard contributed no new evidence, not a reason to omit provenance.
 if (RUN_ID) {
     const manifest = buildFamilyEvaluationRunManifest({
-        runId: RUN_ID, tool: 'family-wide-trove-shard-run.mjs', workflow: WORKFLOW,
+        runId: RUN_ID, tool: 'collect-variant-family-dataset-shard.mjs', workflow: WORKFLOW,
         corpora: [...corporaSeen].sort(), families: [...familiesSeen].sort(),
-        trove: { manifest: 'data/families/wide-trove-manifest.json', shardFile: SHARD_FILE },
+        trove: { manifest: 'data/families/variant-family-dataset-manifest.json', shardFile: SHARD_FILE },
         solverPolicy: { mode: 'production', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
         budgets: { workUnits: Number(WORK_BUDGET), nodeCeiling: Number(NODE_BUDGET), wallDeadlineMs: Number(BUDGET_MS) },
         seeds: [Number(SEED)], shardCount: SHARD_COUNT, shardIndex: Number(NN),

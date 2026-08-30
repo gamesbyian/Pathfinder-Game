@@ -30,7 +30,7 @@ Solver execution ref and durable evidence destination are separate concerns. A r
 
 The harvester downloads artifacts with `gh run download`. Do not replace that with the cross-run `actions/download-artifact` path without revalidating pagination: this repo has observed that path truncate runs with more than 100 artifacts. It also supports manual `workflow_dispatch` with an existing source run id, so old runs or failed harvest attempts can be backfilled without rerunning the solver.
 
-This retention layer is a safety net. Individual workflows may still save hints immediately when convenient, but branch-local persistence is no longer the only durable copy. Variant-family hints under `data/families` are intentionally outside this canonical-level harvester because they belong to generated variant levels and are retained by the family research trove instead.
+This retention layer is a safety net. Individual workflows may still save hints immediately when convenient, but branch-local persistence is no longer the only durable copy. Variant-family hints under `data/families` are intentionally outside this canonical-level harvester because they belong to generated variant levels and are retained by the variant-family dataset instead.
 
 ## Agent result retrieval
 
@@ -99,7 +99,7 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 
 ## Other batch research
 
-- `family-wide-trove.yml` — native solver work already defaults to 4 workers per runner; its hints belong to generated variants under `data/families`, not canonical levels.
+- `collect-variant-family-dataset.yml` — native solver work already defaults to 4 workers per runner; its hints belong to generated variants under `data/families`, not canonical levels.
 - `solver-elite-prefix-dfs-retry-validate.yml` — targeted elite-prefix validation; valid paths are serialized for the isolated-evidence harvester.
 
 ## Repository / diagnostic workflows

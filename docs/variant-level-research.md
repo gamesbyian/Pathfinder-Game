@@ -4,17 +4,17 @@ Canonical reference for controlled level-family/variant research.
 
 > **Current role:** family data supports scheduler/configuration discovery, causal search diagnosis, invariance/equivariance testing, and held-out generalization. It is **not** a reason to generate more variants by default and is never a runtime lookup table.
 
-## Existing trove
+## Existing variant-family dataset
 
 The bulk dataset is off `main` on branch `claude/variant-levels-solver-insights-tpk4qg`, roughly 2.5 GB under `data/families/`, `logs/family-census/`, and `reports/families/`. One audited artifact contains 1,962 parents, 72,965 variants, 36,622 cold solves, and 78,429 attempt records; other campaigns bring the collection to roughly 96,000 variants.
 
-That is already enough data that **new bulk generation has a presumption against it**. Before generating another large campaign, query the existing trove and state the unanswered question, why current families cannot answer it, the planned analysis, and the pilot size. Prefer small pilot -> analysis -> targeted expansion.
+That is already enough data that **new bulk generation has a presumption against it**. Before generating another large campaign, query the existing variant-family dataset and state the unanswered question, why current families cannot answer it, the planned analysis, and the pilot size. Prefer small pilot -> analysis -> targeted expansion.
 
 Historical solver outcomes are nomination evidence until rechecked on current code. Cite the specific campaign/artifact rather than treating all variants as one homogeneous table.
 
 ## Access
 
-Use current `main` code/instructions and the trove branch as read-only historical data, preferably through a separate worktree:
+Use current `main` code/instructions and the variant-family dataset branch as read-only historical data, preferably through a separate worktree:
 
 ```bash
 git fetch origin claude/variant-levels-solver-insights-tpk4qg
@@ -156,7 +156,7 @@ See [`../reports/heuristic-symmetry-deep-research-report.md`](../reports/heurist
 Before a new family campaign larger than a small pilot, record:
 
 1. the precise unanswered question;
-2. existing trove queries showing the gap;
+2. existing variant-family dataset queries showing the gap;
 3. transformation/operator needed;
 4. independent unit and intended number of **parents** as well as rows;
 5. analysis to be run before expansion;
@@ -169,7 +169,7 @@ Do not generate tens of thousands of variants merely to “have more data.” Do
 
 ## Evaluation-run provenance
 
-Decision-bearing family solver runs use the shared experiment-manifest system and record solver commit/ref/dirty state, tool/workflow, corpus/family selection, trove identity, solver config/flags, work/node/wall budgets, strict-total-work mode, seeds, shard identity, timestamps, outputs, and source-generation artifacts.
+Decision-bearing family solver runs use the shared experiment-manifest system and record solver commit/ref/dirty state, tool/workflow, corpus/family selection, variant-family dataset identity, solver config/flags, work/node/wall budgets, strict-total-work mode, seeds, shard identity, timestamps, outputs, and source-generation artifacts.
 
 The family index checks shard completeness and attaches provenance to evidence. Historical artifacts remain readable but missing fields remain unknown; do not infer a uniform invocation contract retroactively.
 
@@ -189,13 +189,13 @@ Generation provenance does not make old solver results current. A current re-eva
 | Family-conditioned winners | `npm run solver:winning-attempts` |
 | Technique probe | `scripts/method-probe.mjs` / `method-probe-sweep.yml` |
 | Reduce a pathological level | `npm run stress:reduce-level` |
-| Historical large campaign | `.github/workflows/family-wide-trove.yml` — **not a default next step** |
+| Historical large campaign | `.github/workflows/collect-variant-family-dataset.yml` — **not a default next step** |
 
-Start with [`tooling-catalog.md`](tooling-catalog.md) and the existing trove before adding tooling or data.
+Start with [`tooling-catalog.md`](tooling-catalog.md) and the existing variant-family dataset before adding tooling or data.
 
 ## Research priority
 
-The trove is **evidence, not backlog**. Current family work should support ranked questions from [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md), especially:
+The variant-family dataset is **evidence, not backlog**. Current family work should support ranked questions from [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md), especially:
 
 1. held-out validation for scheduler/configuration rules;
 2. beam extinction/retention boundaries;
@@ -203,4 +203,4 @@ The trove is **evidence, not backlog**. Current family work should support ranke
 4. exact/reference labels around causal boundaries;
 5. repair/restart/operator behavior across controlled relatives.
 
-Bulk census-generation for its own sake is deprioritized. If family analysis is no longer changing a ranked decision, stop mining it merely because the trove is large.
+Bulk census-generation for its own sake is deprioritized. If family analysis is no longer changing a ranked decision, stop mining it merely because the variant-family dataset is large.

@@ -844,8 +844,8 @@ Current docs must say explicitly: solved-set regression is not a speed benchmark
 
 - former atlas-sweep.mjs -> `collect-prune-gap-labels.mjs` (implemented by batch 8E);
 - "branch atlas" -> "labelled branch set" (implemented by batch 8E);
-- `family-wide-trove-manifest.mjs` -> `build-variant-family-dataset-manifest.mjs`;
-- "trove" -> "variant-family dataset" in current docs and tool output;
+- former `family-wide-trove-manifest.mjs` -> `build-variant-family-dataset-manifest.mjs` (implemented by batch 8F);
+- "trove" -> "variant-family dataset" in current docs and tool output (implemented by batch 8F);
 - "winning-path archaeology" -> "winning-path analysis";
 - "winning lineage" -> "known-solution-prefix survival" as specified above.
 
@@ -914,15 +914,15 @@ Canonical live mappings:
 | former workflow display/concurrency "atlas-sweep" | "collect-prune-gap-labels" |
 | former `.github/workflows/cpsat-explicit-prefix-oracle.yml` | `.github/workflows/cpsat-explicit-prefix-reference.yml` |
 | former workflow/job display "oracle" for that CP-SAT model | "reference" |
-| `.github/workflows/family-wide-trove.yml` | `.github/workflows/collect-variant-family-dataset.yml` |
-| `family-wide-trove-manifest.mjs` | `build-variant-family-dataset-manifest.mjs` |
-| `family-wide-trove-shard-run.mjs` | `collect-variant-family-dataset-shard.mjs` |
-| `family-wide-trove-shard-slice.mjs` | `plan-variant-family-dataset-shard.mjs` |
-| `family-wide-trove-combine.mjs` | `merge-variant-family-dataset-shards.mjs` |
-| `family-trove-doctor.mjs` | `validate-variant-family-dataset-worktree.mjs` |
-| npm `family:trove:doctor` | **family:validate-dataset-worktree** |
-| env `PATHFINDER_VARIANT_TROVE` | `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` |
-| local `TROVE_BRANCH` | `VARIANT_FAMILY_DATASET_BRANCH` |
+| former `.github/workflows/family-wide-trove.yml` | `.github/workflows/collect-variant-family-dataset.yml` |
+| former `family-wide-trove-manifest.mjs` | `build-variant-family-dataset-manifest.mjs` |
+| former `family-wide-trove-shard-run.mjs` | `collect-variant-family-dataset-shard.mjs` |
+| former `family-wide-trove-shard-slice.mjs` | `plan-variant-family-dataset-shard.mjs` |
+| former `family-wide-trove-combine.mjs` | `merge-variant-family-dataset-shards.mjs` |
+| former `family-trove-doctor.mjs` | `validate-variant-family-dataset-worktree.mjs` |
+| former npm family:trove:doctor | `family:validate-dataset-worktree` |
+| legacy env `PATHFINDER_VARIANT_TROVE` (dual-read, retire at phase-15 review) | `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` |
+| former local `TROVE_BRANCH` | `VARIANT_FAMILY_DATASET_BRANCH` |
 | `.github/workflows/audit-export.yml` | `.github/workflows/solver-diagnostics.yml` |
 | workflow display "Audit Export" | "Solver diagnostics and hint capture" |
 | former `stress/confirm-residual-001-archetype-audit.mjs` | `stress/audit-candidate-eligibility-and-participation.mjs` |
@@ -1256,7 +1256,7 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 #### Batch 8F: Variant-family dataset
 
 - family-wide trove workflow and manifest/shard/plan/merge/doctor tools -> variant-family dataset terminology;
-- package alias `family:trove:doctor` -> **family:validate-dataset-worktree**;
+- package alias family:trove:doctor -> **family:validate-dataset-worktree**;
 - `PATHFINDER_VARIANT_TROVE` -> `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` at the owning root resolver with dual-read/prefer-new compatibility;
 - `TROVE_BRANCH` -> `VARIANT_FAMILY_DATASET_BRANCH`;
 - this is the highest-risk Phase-8 compatibility batch because the environment variable may exist outside git.

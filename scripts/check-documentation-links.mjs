@@ -193,9 +193,9 @@ for (const required of [
   'data/families/',
   'logs/family-census/',
   'reports/families/',
-  'family-wide-trove.yml',
+  'collect-variant-family-dataset.yml',
 ]) {
-  if (!variantReference.includes(required)) failures.push(`docs/variant-level-research.md: missing variant-trove locator ${required}`);
+  if (!variantReference.includes(required)) failures.push(`docs/variant-level-research.md: missing variant-family dataset locator ${required}`);
 }
 
 // OPT_IN_FEATURES is a polarity registry, not a backlog, but the disposition ledger must cover

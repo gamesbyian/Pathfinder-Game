@@ -1,14 +1,14 @@
-# Wide solver-research trove: generates + solves + hint-enumerates structural variants across
-# EVERY level in all 3 real corpora (published 160, corpus-1 102, corpus-2 1700 = 1962 total),
-# using 5 of family-generate.mjs's generation modes (symmetry, local-mutant, swap,
+# Variant-family dataset collection: generates + solves + hint-enumerates structural variants
+# across EVERY level in all 3 real corpora (published 160, corpus-1 102, corpus-2 1700 = 1962
+# total), using 5 of family-generate.mjs's generation modes (symmetry, local-mutant, swap,
 # group-reshuffle, constrained-shuffle -- re-embed excluded, see
-# scripts/family-wide-trove-manifest.mjs's own comment for why). Corpus-2 levels already covered
-# by the 2026-08-06 fragile-robust census (symmetry + local-mutant already collected) get only the
-# 3 modes not yet run against them.
+# scripts/build-variant-family-dataset-manifest.mjs's own comment for why). Corpus-2 levels
+# already covered by the 2026-08-06 fragile-robust census (symmetry + local-mutant already
+# collected) get only the 3 modes not yet run against them.
 #
 # Unlike family-fragile-robust-census.yml (which tested one specific hypothesis -- turn-load vs.
 # robustness -- on the unsolved corpus-2 population), this workflow's purpose is building a
-# general-purpose, reusable research trove: as much validated level/hint/telemetry data as
+# general-purpose, reusable research dataset: as much validated level/hint/telemetry data as
 # reasonably fits in one run, for whatever future solver-research question needs it. Every solve
 # also gets an extra hint-workbench.mjs enumeration pass (--preset=enumerate-targeted
 # --write-levels) beyond the single portfolio-solve-sweep pass, to find multiple distinct
@@ -17,9 +17,9 @@
 # 60 shards (vs. the census's 20): smaller per-shard slices reduce the blast radius of a single
 # hung/slow shard (the census's shard 1 sat hung for hours, losing ~1/20 of that run's data; a
 # hang here loses ~1/60). Each shard also self-throttles against a wall-clock budget
-# (family-wide-trove-shard-run.mjs's --max-wall-ms) rather than relying solely on the job-level
-# timeout-minutes backstop, since that hang's root cause was never fully diagnosed (GitHub doesn't
-# serve full log content for a still-running job via the API).
+# (collect-variant-family-dataset-shard.mjs's --max-wall-ms) rather than relying solely on the
+# job-level timeout-minutes backstop, since that hang's root cause was never fully diagnosed
+# (GitHub doesn't serve full log content for a still-running job via the API).
 #
 # Solve budget (2026-08-07): node_budget=36,000,000 with a non-binding (24h) budget_ms, matching
 # the CURRENT production corpus-2 routine baseline exactly (solver-stress-refresh.yml) -- not the
@@ -28,15 +28,15 @@
 # solves short). Every task's every (level,mode) solve is therefore directly comparable to the
 # rest of the corpus's own current baseline, not an under-resourced approximation of it. Each
 # shard job runs up to 355min (just under GitHub Actions' hard 6h-per-job ceiling, which cannot be
-# raised); tasks are idempotent (family-wide-trove-shard-run.mjs skips a (level,mode) pair whose
-# family file and solve result both already exist), so whatever a shard doesn't finish in one job
-# is safe to pick up in a later re-dispatch rather than needing to fit in a single run.
+# raised); tasks are idempotent (collect-variant-family-dataset-shard.mjs skips a (level,mode) pair
+# whose family file and solve result both already exist), so whatever a shard doesn't finish in one
+# job is safe to pick up in a later re-dispatch rather than needing to fit in a single run.
 # Same isolation as the census workflow: always checks out and commits back to the research
 # branch, never main. Registered here (a minimal presence on main) purely so workflow_dispatch can
 # target it at all -- GitHub requires a workflow file to exist on the default branch before it's
 # dispatchable, even against a different ref's own copy of the file.
-name: Family wide research trove (research branch only)
-run-name: "Family trove · ${{ inputs.recover_run_id && format('recover {0}', inputs.recover_run_id) || 'fresh' }} · shards=${{ inputs.shards }} · variants=${{ inputs.variant_count }}"
+name: Variant-family dataset collection (research branch only)
+run-name: "Variant-family dataset · ${{ inputs.recover_run_id && format('recover {0}', inputs.recover_run_id) || 'fresh' }} · shards=${{ inputs.shards }} · variants=${{ inputs.variant_count }}"
 
 on:
   workflow_dispatch:
@@ -46,7 +46,7 @@ on:
         required: false
         default: '86400000'
       node_budget:
-        description: 'Per-variant node-count ceiling -- the real stopping point. 36000000 matches the current production corpus-2 routine baseline exactly (for direct comparability); the high-budget-sweep tier used for stubborn unsolved levels specifically goes to 120000000+, deliberately not matched here since this trove is breadth-oriented, not a maximum-effort push.'
+        description: 'Per-variant node-count ceiling -- the real stopping point. 36000000 matches the current production corpus-2 routine baseline exactly (for direct comparability); the high-budget-sweep tier used for stubborn unsolved levels specifically goes to 120000000+, deliberately not matched here since this dataset collection is breadth-oriented, not a maximum-effort push.'
         required: false
         default: '36000000'
       workers:
@@ -66,12 +66,12 @@ on:
         required: false
         default: '20400000'
       recover_run_id:
-        description: 'Recovery mode: skip enrich-existing + the shard matrix entirely and re-run ONLY the combine step, downloading trove-shard-* artifacts from this specific prior run id instead of this run''s own. For recombining/repushing after a combine failure (e.g. the 2026-08-07 100MB-file push rejection) without re-running already-successful shards. Leave blank for a normal full run.'
+        description: 'Recovery mode: skip enrich-existing + the shard matrix entirely and re-run ONLY the combine step, downloading dataset-shard-* artifacts from this specific prior run id instead of this run''s own. For recombining/repushing after a combine failure (e.g. the 2026-08-07 100MB-file push rejection) without re-running already-successful shards. Leave blank for a normal full run.'
         required: false
         default: ''
 
 concurrency:
-  group: family-wide-trove
+  group: collect-variant-family-dataset
   cancel-in-progress: false
 
 env:
@@ -143,8 +143,8 @@ jobs:
           echo "All push attempts failed."
           exit 1
 
-  trove-shards:
-    name: Trove shard ${{ matrix.shard }}/${{ inputs.shards || '60' }}
+  dataset-shards:
+    name: Dataset shard ${{ matrix.shard }}/${{ inputs.shards || '60' }}
     if: ${{ inputs.recover_run_id == '' }}
     runs-on: ubuntu-latest
     # 355min: just under GitHub Actions' hard 360min (6h) per-job ceiling for standard runners --
@@ -181,14 +181,14 @@ jobs:
           nn=$(printf '%02d' "${{ matrix.shard }}")
           echo "nn=${nn}" >> "$GITHUB_OUTPUT"
           mkdir -p logs/family-census
-          node scripts/family-wide-trove-shard-slice.mjs --shard="${{ matrix.shard }}" --shards="${{ env.SHARDS }}" \
+          node scripts/plan-variant-family-dataset-shard.mjs --shard="${{ matrix.shard }}" --shards="${{ env.SHARDS }}" \
             > "logs/family-census/wide-shard-${nn}-slice.json"
 
       - name: Generate + solve + hint-extract this shard's tasks (persists after every task)
         shell: bash
         run: |
           nn="${{ steps.ids.outputs.nn }}"
-          node scripts/family-wide-trove-shard-run.mjs \
+          node scripts/collect-variant-family-dataset-shard.mjs \
             --shard-file="logs/family-census/wide-shard-${nn}-slice.json" \
             --nn="${nn}" \
             --progress="logs/family-census/wide-shard-${nn}.log" \
@@ -197,14 +197,14 @@ jobs:
             --workers="${{ env.WORKERS }}" --variant-count="${{ env.VARIANT_COUNT }}" \
             --max-wall-ms="${{ env.MAX_WALL_MS }}" \
             --run-id="${{ github.run_id }}" --shard-count="${{ env.SHARDS }}" \
-            --workflow=family-wide-trove.yml || true
+            --workflow=collect-variant-family-dataset.yml || true
 
       - name: Stage this shard's outputs for upload
         if: always()
         shell: bash
         run: |
           nn="${{ steps.ids.outputs.nn }}"
-          stage="artifact-staging/trove-shard-${nn}"
+          stage="artifact-staging/dataset-shard-${nn}"
           mkdir -p "${stage}/logs/family-census"
           cp "logs/family-census/wide-shard-${nn}"*.* "${stage}/logs/family-census/" 2>/dev/null || true
           # --untracked-files=all: without it, a brand-new untracked directory (e.g. a
@@ -212,22 +212,22 @@ jobs:
           # collapses to a single line and a plain `cp` on it aborts the step under `set -e` --
           # exactly what broke family-fragile-robust-census.yml's shard 6 (2026-08-07).
           git status --porcelain --untracked-files=all -- data/families/ logs/family-census/ | awk '{print $2}' | while read -r f; do
-            mkdir -p "artifact-staging/trove-shard-${nn}/$(dirname "$f")"
-            cp "$f" "artifact-staging/trove-shard-${nn}/${f}"
+            mkdir -p "artifact-staging/dataset-shard-${nn}/$(dirname "$f")"
+            cp "$f" "artifact-staging/dataset-shard-${nn}/${f}"
           done
 
       - name: Upload this shard's staged results as an artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: trove-shard-${{ steps.ids.outputs.nn }}
-          path: artifact-staging/trove-shard-${{ steps.ids.outputs.nn }}
+          name: dataset-shard-${{ steps.ids.outputs.nn }}
+          path: artifact-staging/dataset-shard-${{ steps.ids.outputs.nn }}
           if-no-files-found: warn
           retention-days: 90
 
   combine:
-    name: Combine trove results and commit to research branch
-    needs: [trove-shards]
+    name: Combine variant-family dataset results and commit to research branch
+    needs: [dataset-shards]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -253,11 +253,11 @@ jobs:
       - name: Download every shard's artifact
         uses: actions/download-artifact@v8
         with:
-          pattern: 'trove-shard-*'
+          pattern: 'dataset-shard-*'
           path: artifact-staging/downloaded
           merge-multiple: true
           # In recovery mode (recover_run_id set) this pulls shard artifacts from a DIFFERENT,
-          # already-completed run instead of this run's own trove-shards jobs (which are skipped
+          # already-completed run instead of this run's own dataset-shards jobs (which are skipped
           # entirely -- see the recover_run_id input) -- avoids re-running hours of already-
           # successful shard work just to fix/retry the commit step.
           run-id: ${{ inputs.recover_run_id || github.run_id }}
@@ -271,17 +271,17 @@ jobs:
         shell: bash
         run: |
           mkdir -p reports/families
-          node scripts/family-wide-trove-combine.mjs --in-dir=logs/family-census
+          node scripts/merge-variant-family-dataset-shards.mjs --in-dir=logs/family-census
 
       - name: Print headline numbers
         shell: bash
         run: head -30 reports/families/2026-08-07-wide-trove-summary.md
 
-      - name: Upload the combined trove as an artifact
+      - name: Upload the combined variant-family dataset as an artifact
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: family-wide-trove-combined
+          name: variant-family-dataset-combined
           path: |
             reports/families/2026-08-07-wide-trove-summary.md
             reports/families/2026-08-07-wide-trove-attempts-*.json
@@ -299,7 +299,7 @@ jobs:
             --shards-basis="${{ inputs.recover_run_id && 'recovery source expected count unavailable; observed source artifacts used as denominator' || 'dispatch shard count' }}" \
             --shards-observed="$(find logs/family-census -maxdepth 1 -name 'wide-shard-*-summary.jsonl' | wc -l | tr -d ' ')" \
             --provenance-out="reports/families/2026-08-07-wide-trove-source-run.json" \
-            --source-artifact="family-wide-trove-combined"
+            --source-artifact="variant-family-dataset-combined"
 
       - name: Upload standard solver sweep result
         if: always()
@@ -310,7 +310,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Commit and push the combined trove to the research branch
+      - name: Commit and push the combined variant-family dataset to the research branch
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
@@ -322,7 +322,7 @@ jobs:
             echo "Nothing changed -- not creating an empty commit."
             exit 0
           fi
-          git commit -m "Family wide trove: combined shard results ($(date -u +%FT%TZ))"
+          git commit -m "Variant-family dataset: combined shard results ($(date -u +%FT%TZ))"
           for attempt in 1 2 3 4; do
             if git push origin HEAD:${{ env.RESEARCH_BRANCH }}; then exit 0; fi
             echo "Push attempt ${attempt} failed; retrying after a short wait..."

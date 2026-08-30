@@ -1,6 +1,6 @@
 # Family data on `main`
 
-This directory contains a small retained set of family/variant artifacts used as examples, fixtures, or compact research evidence. It is **not** the large canonical variant trove.
+This directory contains a small retained set of family/variant artifacts used as examples, fixtures, or compact research evidence. It is **not** the large canonical variant-family dataset.
 
 The large generated resource remains on branch `claude/variant-levels-solver-insights-tpk4qg` and should be mounted separately while current `main` supplies the code and instructions. See [`../../docs/variant-level-research.md`](../../docs/variant-level-research.md).
 

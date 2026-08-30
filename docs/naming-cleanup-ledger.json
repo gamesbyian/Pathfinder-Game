@@ -2467,18 +2467,18 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Variant-family dataset terminology.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -2489,18 +2489,18 @@
       "risk": "low",
       "persistence": "frozen-history",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Current docs/tool output.",
       "migrationClass": "current-surface-rename-preserve-frozen-history",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -3150,18 +3150,18 @@
       "risk": "medium",
       "persistence": "frozen-history",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Dataset collection terminology.",
       "migrationClass": "current-surface-rename-preserve-frozen-history",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -3172,18 +3172,18 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Dataset shard execution.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -3194,18 +3194,18 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Dataset shard planning.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -3216,18 +3216,18 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Dataset merge.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -3238,18 +3238,18 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Validation tool.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -3260,18 +3260,18 @@
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Update docs/workflows.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F",
       "compatibility": {
         "mode": "temporary-command-alias",
@@ -3287,18 +3287,18 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "External developer/CI env compatibility window.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F",
       "compatibility": {
         "mode": "external-config-transition",
@@ -3314,18 +3314,18 @@
       "risk": "low",
       "persistence": "none",
       "phase": 8,
-      "status": "pending",
+      "status": "done",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "notes": "Local script variable.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
     },
     {
@@ -4222,7 +4222,7 @@
     "pr": null,
     "baseMainSha": null,
     "recordPath": null,
-    "notes": "Batch 8E implementation, validation, and closeout complete on branch claude/naming-cleanup-plan-nzv395; activeExecution reset to idle before merge per Section 0.3 rule 9. batchCompletions[\"8E\"] remains pending until the batch PR actually merges."
+    "notes": "Batch 8F (variant-family dataset) implementation, validation, and closeout complete on branch claude/naming-cleanup-plan-nzv395; activeExecution reset to idle before merge per Section 0.3 rule 9. batchCompletions[\"8F\"] remains pending until the batch PR actually merges."
   },
   "specificationNotes": "Completion contract v4 adds stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate.",
   "phaseBatches": {
@@ -4259,9 +4259,9 @@
       "mergeCommit": "00640674ad1013c871456e5c94991045a8baef2f"
     },
     "8E": {
-      "status": "pending",
-      "pr": null,
-      "mergeCommit": null
+      "status": "merged",
+      "pr": 1590,
+      "mergeCommit": "30cff381a969b6c6ce4d77c8e04691825381d3af"
     },
     "8F": {
       "status": "pending",

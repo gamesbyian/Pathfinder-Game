@@ -70,7 +70,7 @@ Use this short preflight before choosing a command:
 | Hint generation/diversification | `npm run hints:workbench`; [`hint-workbench.md`](hint-workbench.md) |
 | Hint/provenance evidence for one level | `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; offline/forensic; exact paths/provenance only with `--full` |
 | Family/variant research | [`variant-level-research.md`](variant-level-research.md); `family:index` then `family:show`, `family:query`, or `family:coverage`; siblings are not independent |
-| Existing variant trove | worktree branch `claude/variant-levels-solver-insights-tpk4qg`; verify with `family-trove-doctor.mjs`; query before generating more |
+| Existing variant-family dataset | worktree branch `claude/variant-levels-solver-insights-tpk4qg`; verify with `validate-variant-family-dataset-worktree.mjs`; query before generating more |
 | Prior experiment evidence | `node scripts/research-status-index.mjs --compact --query=<term>` before opening reports; historical evidence nominates current work only after comparability check |
 | Machine-readable investigation status | `npm run research:index`; compact/filter with `research-status-index.mjs`; status metadata does not replace reading the decisive evidence for a promotion |
 | Corpus shape / matching levels | `node scripts/corpus-query.mjs --corpus=stress2`; compact discovery; if filters are tuned after outcome inspection, resulting cohort is selected development data |
@@ -115,7 +115,7 @@ Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`
 - Batch tools persist progress incrementally.
 - Use shared explicit level selectors (`pos:` / `id:`) where required.
 - Treat parent families, not siblings, as independent evaluation units.
-- Check the existing trove before generating another family set; new bulk generation requires question, analysis, pilot, and stop condition.
+- Check the existing variant-family dataset before generating another family set; new bulk generation requires question, analysis, pilot, and stop condition.
 - Use current `main` code/instructions with off-main historical data; do not run historical branch code as current authority.
 - Stored valid hints/solutions are broader than cold-solver evidence; keep provenance classes distinct.
 - If a tool's proxy metric improves but cold solve/work/correctness does not, do not keep optimizing the proxy.

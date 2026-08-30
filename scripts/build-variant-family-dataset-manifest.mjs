@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Builds the wide-trove manifest: every level across all 3 real corpora (published, corpus-1,
- * corpus-2), tagged with which family-generate.mjs modes to run for it.
+ * Builds the variant-family dataset manifest: every level across all 3 real corpora (published,
+ * corpus-1, corpus-2), tagged with which family-generate.mjs modes to run for it.
  *
  * Corpus-2 levels already covered by the 2026-08-06 fragile-robust census (symmetry + local-mutant
  * data already collected against data/families/fragile-robust-census-manifest.json's 959 ids, plus
@@ -9,7 +9,7 @@
  * (swap, group-reshuffle, constrained-shuffle) -- avoids regenerating/re-solving data already on
  * the branch. Every other level (corpus-2 solved, all of corpus-1, all of published) gets the full
  * five-mode set (symmetry, local-mutant, swap, group-reshuffle, constrained-shuffle). re-embed is
- * deliberately excluded from this general trove -- it needs a per-level grid-size decision that
+ * deliberately excluded from this general dataset -- it needs a per-level grid-size decision that
  * doesn't automate uniformly across thousands of differently-sized levels; it's a better fit for a
  * focused follow-up targeting the space-as-a-variable question specifically (see
  * docs/sibling-cousin-system.md's "space is a puzzle variable" section).
@@ -20,7 +20,7 @@
  * (reports/families/2026-07-15-dose-response-mutation-intensity.md). A level with zero eligible
  * objects of any type has group-reshuffle dropped from its mode list (nothing to reshuffle).
  *
- * Usage: node scripts/family-wide-trove-manifest.mjs --out=data/families/wide-trove-manifest.json
+ * Usage: node scripts/build-variant-family-dataset-manifest.mjs --out=data/families/variant-family-dataset-manifest.json
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -30,7 +30,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     const [k, ...v] = a.split('=');
     return [k, v.join('=')];
 }));
-const OUT = args.get('--out') || 'data/families/wide-trove-manifest.json';
+const OUT = args.get('--out') || 'data/families/variant-family-dataset-manifest.json';
 const ROOT = process.cwd();
 const readJson = (p) => JSON.parse(readFileSync(path.resolve(ROOT, p), 'utf8'));
 
