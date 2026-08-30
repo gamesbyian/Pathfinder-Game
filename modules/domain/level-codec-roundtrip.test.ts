@@ -4,6 +4,7 @@
  * independent, correctly-scoped copies; parseRawLevelDetailed must reject bad wire data.
  */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'vitest';
 import { PACK } from './cell-key.js';
 import {
@@ -11,6 +12,7 @@ import {
     canonicalCloneLevel, deepCloneLevel, cloneLevelWithReq, assertLevelShape,
     normalizeMetadata,
 } from './level-codec.js';
+import { getLevelFingerprintSource } from './level-fingerprint.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1);
 
@@ -154,6 +156,36 @@ test('challenge metrics survive raw parse, canonical clone, and wire serializati
         ['reqInt', 'reqLen'],
         'wire output has exactly the two established challenge-metric keys',
     );
+});
+
+test('fingerprint semantics are identical across raw, runtime clone, and wire boundaries', () => {
+    const parsed = parseRawLevel(FULL_RAW)!;
+    const clone = canonicalCloneLevel(parsed, { includeHints: true });
+    const wire = buildWireLevelData(clone);
+    const expected = getLevelFingerprintSource(FULL_RAW);
+
+    assert.equal(getLevelFingerprintSource(buildWireLevelData(parsed)), expected);
+    assert.equal(getLevelFingerprintSource(buildWireLevelData(clone)), expected);
+    assert.equal(getLevelFingerprintSource(wire), expected);
+});
+
+test('published, corpus1, and corpus2 samples preserve challenge metrics through codec boundaries', () => {
+    const fixtures = [
+        ['published', '../../data/levels.json'],
+        ['corpus1', '../../data/stress/stress-levels.json'],
+        ['corpus2', '../../data/stress/stress-levels-random.json'],
+    ] as const;
+
+    for (const [name, relativePath] of fixtures) {
+        const document = JSON.parse(readFileSync(new URL(relativePath, import.meta.url), 'utf8'));
+        const raw = Array.isArray(document) ? document[0] : document.levels[0];
+        const parsed = parseRawLevel(raw);
+        assert.ok(parsed, `${name} representative parses`);
+        const wire = buildWireLevelData(canonicalCloneLevel(parsed));
+        assert.equal(wire.reqLen, raw.reqLen, `${name} length metric`);
+        assert.equal(wire.reqInt, raw.reqInt, `${name} intersection metric`);
+        assert.equal(getLevelFingerprintSource(wire), getLevelFingerprintSource(raw), `${name} fingerprint`);
+    }
 });
 
 test('assertLevelShape throws on structurally unusable levels', () => {

@@ -29,6 +29,24 @@ function parityPreservingInfeasibleRawLevel() {
     };
 }
 
+function repairEligibleInfeasibleRawLevel() {
+    return {
+        grid: { w: 6, h: 6 }, gates: [{ x: 1, y: 1 }], goal: { x: 6, y: 6 }, reqLen: 1, reqInt: 0,
+        blocks: [], geese: [], falseGoals: [], filters: [], flippingFilters: [], portals: [], landmarks: [],
+        mustPass: [{ x: 2, y: 2 }, { x: 4, y: 2 }, { x: 2, y: 4 }],
+        mustCross: [{ x: 3, y: 3 }, { x: 5, y: 5 }],
+        designerName: '', description: '', difficulty: null, hints: [],
+    };
+}
+
+function adjacentGoalRawLevel(reqLen, reqInt) {
+    return {
+        grid: { w: 4, h: 4 }, gates: [{ x: 1, y: 1 }], goal: { x: 2, y: 1 }, reqLen, reqInt,
+        blocks: [], geese: [], falseGoals: [], filters: [], flippingFilters: [], portals: [], landmarks: [],
+        mustPass: [], mustCross: [], designerName: '', description: '', difficulty: null, hints: [],
+    };
+}
+
 const dir = mkdtempSync(path.join(tmpdir(), 'portfolio-solve-sweep-worker-test-'));
 const corpusPath = path.join(dir, 'corpus.json');
 writeFileSync(corpusPath, JSON.stringify([parityPreservingInfeasibleRawLevel()]));
@@ -77,6 +95,37 @@ await test('the repair budget override is preserved at both raced portfolio reco
     assert.match(raceSource,
         /Number\(levelOpts\.repairBudgetFractionOverride\)/,
         'the race pool must consume the same override field forwarded by the parent and worker');
+});
+
+await test('an explicit repair override controls the real worker-race repair allocation without sibling substitution', async () => {
+    writeFileSync(corpusPath, JSON.stringify([repairEligibleInfeasibleRawLevel()]));
+    const solveOpts = { timeBudgetMs: 1000, repairBudgetFractionOverride: 3 };
+    assert.equal('repairBudgetFraction' in solveOpts, false);
+    assert.equal('legacyRepairBudgetFractionOverride' in solveOpts, false);
+
+    const result = await raceLevel(solveOpts);
+    assert.equal(result.ok, false);
+    const repairAttempts = (result.attempts || []).filter(a => a.stageId === 'repair-fallback');
+    assert.ok(repairAttempts.length > 0, 'repair-eligible fixture must reach the raced repair solver');
+    for (const attempt of repairAttempts) {
+        assert.ok(attempt.allocatedBudgetMs >= 1500 && attempt.allocatedBudgetMs <= 3000,
+            `expected the supplied 3 × 1000ms repair allocation (minus dispatch elapsed time), got ${attempt.allocatedBudgetMs}`);
+    }
+});
+
+await test('raw challenge metrics survive the real parent-worker-race transport and constrain the solve', async () => {
+    writeFileSync(corpusPath, JSON.stringify([adjacentGoalRawLevel(1, 0)]));
+    const control = await raceLevel({ timeBudgetMs: 500 });
+    assert.equal(control.ok, true, 'adjacent goal is solvable with its transported length/intersection metrics');
+    assert.equal(control.solution.length, 2, 'returned path includes gate plus the transported one-cell requirement');
+
+    writeFileSync(corpusPath, JSON.stringify([adjacentGoalRawLevel(2, 0)]));
+    const impossibleLength = await raceLevel({ timeBudgetMs: 500 });
+    assert.equal(impossibleLength.ok, false, 'changing only transported reqLen changes the worker solve result');
+
+    writeFileSync(corpusPath, JSON.stringify([adjacentGoalRawLevel(1, 1)]));
+    const impossibleIntersection = await raceLevel({ timeBudgetMs: 500 });
+    assert.equal(impossibleIntersection.ok, false, 'changing only transported reqInt changes the worker solve result');
 });
 
 console.log(`\nportfolio-solve-sweep-worker tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

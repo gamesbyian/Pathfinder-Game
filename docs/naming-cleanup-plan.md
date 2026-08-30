@@ -742,14 +742,29 @@ Update the research-observer type references, tests, testing API, beam instrumen
 
 ### 4.12 Runtime action vocabulary
 
-The current `ActionType` mixes requested commands and emitted outcomes. Do not preserve that ambiguity.
+The current `ActionType` mixes command-shaped retained vocabulary and emitted outcomes. Do not
+preserve that ambiguity, but do not infer a transport from the names: current production input and
+level-flow controllers call engine/state ports directly. There is intentionally no gameplay command
+bus or universal reducer.
 
 Split it into:
 
-- `GameCommandType`: `MOVE`, `UNDO`, `RESET`, `LEVEL_LOAD`, `LEVEL_ADVANCE`, `LEVEL_PREV`, `LEVEL_RESTART`;
-- `GameEventType`: `BACKTRACK`, `PORTAL_TRAVERSE`, `GOOSE_TRIGGERED`, `FALSE_GOAL_DETONATED`, `WIN`, `LOGIC_STATE_CHANGE`.
+- `GameCommandType`: retain `MOVE`, `UNDO`, `RESET`, `LEVEL_LOAD`, `LEVEL_ADVANCE`, `LEVEL_PREV`,
+  `LEVEL_RESTART` as stable API vocabulary only if the Phase-12 current-main census finds a real
+  external owner; otherwise remove these superseded, definition/test-only members rather than
+  manufacturing producers or consumers;
+- `GameEventType`: migrate the live `WIN` and `LOGIC_STATE_CHANGE` step events atomically across
+  `step-processor` and `step-dispatcher`. `BACKTRACK`, `PORTAL_TRAVERSE`, `GOOSE_TRIGGERED`, and
+  `FALSE_GOAL_DETONATED` are also definition/test-only on the 2026-08-30 base (the live equivalents
+  are outcomes or `EffectType` effects); retain them only if the Phase-12 census identifies an API
+  owner, otherwise remove them as superseded vocabulary.
 
-Update step-processor/dispatcher types so a variable named "event" carries `GameEventType` and a variable named "command" carries `GameCommandType`. Keep state mutation helpers under `state/actions/` described as **state actions**. Update `docs/command-glossary.md` to distinguish all three meanings.
+Update step-processor/dispatcher types so a variable named "event" carries the live
+`GameEventType`. Rename a command-carrying variable only where a real command-typed transport exists
+on implementation-time `main`; NC-P12-003 is a conditional consumer audit, not authority to add one.
+Keep state mutation helpers under `state/actions/` described as **state actions**. Update
+`docs/command-glossary.md` to distinguish controller requests, emitted gameplay events, effects, and
+state actions.
 
 This is a type/vocabulary split only. Event ordering and dispatch behavior must remain unchanged.
 

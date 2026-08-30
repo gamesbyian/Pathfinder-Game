@@ -61,4 +61,30 @@ test.describe('Debug-surface security', () => {
         );
         expect(hasAppFacade).toBe(true);
     });
+
+    test('?debug facade keeps the live ENGINE identity across a real reset', async ({ page }) => {
+        await page.goto('/?debug=1');
+        await waitForBoot(page);
+        const result = await page.evaluate(() => {
+            const before = window.APP.State.ENGINE;
+            const beforeLevel = before.level;
+            const beforeVariant = before.variant;
+            const beforeStreak = before.resetStreak;
+            window.APP.Engine.handleResetAction();
+            return {
+                sameEngine: window.APP.State.ENGINE === before,
+                levelReloaded: window.APP.State.ENGINE.level !== beforeLevel,
+                variantPreserved: window.APP.State.ENGINE.variant === beforeVariant,
+                streakAdvanced: window.APP.State.ENGINE.resetStreak === beforeStreak + 1,
+                pathLength: window.APP.State.ENGINE.nav.path.length,
+            };
+        });
+        expect(result).toEqual({
+            sameEngine: true,
+            levelReloaded: true,
+            variantPreserved: true,
+            streakAdvanced: true,
+            pathLength: 0,
+        });
+    });
 });
