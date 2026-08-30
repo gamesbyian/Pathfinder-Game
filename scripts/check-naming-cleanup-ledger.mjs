@@ -29,8 +29,11 @@ const allowedMigrationClasses = new Set([
   'compatibility-boundary-migration',
   'current-surface-rename-preserve-frozen-history',
 ]);
-const phase8Batches = ['8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H'];
-const phase8BatchSet = new Set(phase8Batches);
+const phase8Batches = ledger.phaseBatches?.['8'];
+if (!Array.isArray(phase8Batches) || !phase8Batches.length || new Set(phase8Batches).size !== phase8Batches.length) {
+  failures.push('phaseBatches["8"] must be a non-empty unique ordered batch list');
+}
+const phase8BatchSet = new Set(Array.isArray(phase8Batches) ? phase8Batches : []);
 const verificationKeys = [
   'surfaceInventory',
   'implementation',
@@ -318,7 +321,7 @@ if (failures.length) {
 }
 
 const phase8Counts = Object.fromEntries(
-  phase8Batches.map(batch => [batch, phase8Entries.filter(entry => entry.batch === batch).length]),
+  (Array.isArray(phase8Batches) ? phase8Batches : []).map(batch => [batch, phase8Entries.filter(entry => entry.batch === batch).length]),
 );
 console.log(
   `Naming-cleanup ledger contract valid: schema=v4; gate=${gate.status}; active=${active.status}; ` +
