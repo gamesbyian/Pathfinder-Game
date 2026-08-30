@@ -136,7 +136,7 @@ For each dual-read row, copy its ledger compatibility policy into the record and
 
 Do not duplicate legacy maps in sibling consumers.
 
-For `temporary-command-alias`, the old alias must be gone by owning phase closeout. `phase-15-review` is a decision gate, not automatic deletion. `wire-format-retained` means the raw writer intentionally keeps the historical wire spelling while normalized/runtime code uses canonical names.
+For `temporary-command-alias`, the old alias must be gone by the owning batch closeout when the row is batched, otherwise by owning phase closeout. `phase-15-review` is a decision gate, not automatic deletion. `wire-format-retained` means the raw writer intentionally keeps the historical wire spelling while normalized/runtime code uses canonical names.
 
 ### 4.1 High-risk rollback plan
 
