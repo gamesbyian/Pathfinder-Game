@@ -121,12 +121,15 @@ Before editing any implementation batch:
 2. search open naming-cleanup PRs and similarly named branches;
 3. compare every plausible predecessor/sibling branch against current `main` before deciding it contains work worth recovering;
 4. recover unique relevant commits explicitly or mark the branch superseded; branch existence alone is never evidence that work remains;
-5. create exactly one active implementation batch branch and its checked-in execution record before changing canonical names;
-6. do **not** stack the next batch on an unmerged predecessor. Merge and verify one batch on `main` before branching the next;
-7. before merge, compare the PR head against current `main`. If the intended patch is already present or the diff is empty, close/supersede the PR instead of creating a duplicate/no-op merge;
-8. after merge, do not keep using the merged branch as an informal queue. The next batch starts from the new current `main`.
+5. for a batched phase, record the predecessor batch's merged PR/commit in ledger `batchCompletions` before claiming the next batch;
+6. create exactly one active implementation batch branch and its checked-in execution record before changing canonical names;
+7. set branch-local `activeExecution` while rows are `in-progress`; it is an internal consistency descriptor, **not** a distributed/global lock;
+8. do **not** stack the next batch on an unmerged predecessor. Row completion alone does not satisfy this rule: predecessor `batchCompletions` must say `merged`;
+9. when implementation/validation/closeout are complete, mark the batch rows done and return `activeExecution` to `idle` **in the same PR before merge**; the current batch's `batchCompletions` remains pending because its merge commit does not exist yet;
+10. before merge, compare the PR head against current `main`. If the intended patch is already present or the diff is empty, close/supersede the PR instead of creating a duplicate/no-op merge;
+11. after merge, do not keep using the merged branch as an informal queue. The next branch starts from new current `main`, records the predecessor's merged PR/commit, then may claim the next batch.
 
-The active batch record is the durable handoff. A chat transcript, branch name, PR title, or ledger status is not sufficient authority by itself.
+The active batch record is the durable handoff. A chat transcript, branch name, PR title, or ledger status is not sufficient authority by itself. `batchCompletions`, not row status alone, is the machine merge barrier between serial batches.
 
 ### 0.4 Specification amendment protocol
 
@@ -1076,7 +1079,7 @@ For Phase 8 onward, completion contract v4 adds durable execution evidence and e
 
 `batch` is mandatory for Phase 8 and is fixed to 8A-8H by [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md). The ordered list is mirrored once in ledger `phaseBatches` as the machine projection consumed by status/checker tooling; scripts must derive it from there rather than hard-code the sequence. Later phases add batch identifiers when the plan serializes them. `verificationRecord` is `null` while a row is merely pending; as soon as a Phase-8+ row becomes `in-progress`, it must point at the checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md), and the pointer remains after the row becomes `done`. The example `compatibility` object applies only to `persistence: "dual-read"` rows; other rows omit it. Every future dual-read row carries a `mode`, `retireWhen`, and `owner` following Section 3.4.
 
-A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable` and the checked-in `verificationRecord` exists. `not-applicable` requires an explicit rationale in the entry notes or record. The top-level `activeExecution` object identifies the one phase/batch/branch/record allowed to have `in-progress` rows. The ledger checker rejects duplicate/unstable IDs, missing compatibility policy, idle-with-in-progress state, skipped phases or Phase-8 predecessor batches, multiple/mismatched active batches, missing records, unassigned Phase-8 rows, and `lastCompletedPhase` values that outrun incomplete future rows.
+A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable` and the checked-in `verificationRecord` exists. `not-applicable` requires an explicit rationale in the entry notes or record. The top-level `activeExecution` object describes the one branch-local phase/batch/record allowed to have `in-progress` rows and must return to `idle` before that batch PR merges. For serial Phase-8 execution, top-level `batchCompletions` separately records whether each finished batch has actually merged, including its PR number and merge commit. A later batch cannot begin merely because predecessor rows are `done`. The ledger checker rejects duplicate/unstable IDs, missing compatibility policy, idle-with-in-progress state, skipped phases, unmerged Phase-8 predecessor batches, multiple/mismatched active batches, missing records, unassigned Phase-8 rows, and `lastCompletedPhase` values that outrun incomplete/unmerged future work.
 
 This model is prospective: do not manufacture retroactive verification claims for Phases 1-7; their later audit history remains recorded in the ledger closeout notes, the process-hardening document, and the retrospective.
 
@@ -1464,6 +1467,8 @@ The cleanup is complete only when all of the following are true.
 44. `npm run naming:status` reports no active execution, no incomplete phase before the completion phase, and no unexpected high-risk/compatibility residue.
 45. The ledger checker negative-case self-test remains in the maintained Node test graph and passes, so the completion contract is tested to reject bad states as well as accept the final good state.
 46. Any specification amendments made during Phases 8-14 were landed explicitly in the plan/ledger/phase authorities rather than hidden inside implementation PRs.
+47. Every serial batch has a durable merged PR/commit record in `batchCompletions`; no later batch used predecessor row completion as a substitute for an actual merge barrier.
+48. `activeExecution` is idle on merged `main` between batches; no implementation PR leaves a stale branch-local active claim behind.
 
 ## 14. Stop conditions
 
