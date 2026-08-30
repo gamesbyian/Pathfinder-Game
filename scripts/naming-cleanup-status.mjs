@@ -33,6 +33,7 @@ if (phaseFilter !== null && (!Number.isInteger(phaseFilter) || phaseFilter < 1))
 const rows = ledger.entries ?? [];
 const future = rows.filter(row => row.phase >= 8);
 const phase8BatchOrder = ledger.phaseBatches?.['8'] ?? [];
+const batchCompletions = ledger.batchCompletions ?? {};
 
 function rowSummary(row) {
   return {
@@ -60,10 +61,24 @@ function statusCounts(selected) {
 
 const nextPhase = Number(ledger.lastCompletedPhase) + 1;
 let nextBatch = null;
+let nextAction = 'start-phase';
 if (nextPhase === 8) {
-  nextBatch = phase8BatchOrder.find(batch =>
-    future.some(row => row.phase === 8 && row.batch === batch && row.status !== 'done'),
-  ) ?? null;
+  nextBatch = phase8BatchOrder.find(batch => batchCompletions?.[batch]?.status !== 'merged') ?? null;
+  if (nextBatch) {
+    const rows = future.filter(row => row.phase === 8 && row.batch === nextBatch);
+    const counts = statusCounts(rows);
+    if (ledger.activeExecution?.status === 'active' && ledger.activeExecution.batch === nextBatch) {
+      nextAction = 'continue-active-batch';
+    } else if (counts['in-progress'] > 0) {
+      nextAction = 'repair-active-execution-state';
+    } else if (counts.done === rows.length && rows.length > 0) {
+      nextAction = 'merge-or-record-batch-completion';
+    } else {
+      nextAction = 'start-batch';
+    }
+  } else {
+    nextAction = 'phase-closeout';
+  }
 }
 if (ledger.activeExecution?.status === 'active') {
   nextBatch = ledger.activeExecution.batch ?? nextBatch;
@@ -88,6 +103,8 @@ const result = {
   lastCompletedPhase: ledger.lastCompletedPhase,
   nextPhase,
   nextBatch,
+  nextAction,
+  batchCompletion: nextBatch ? (batchCompletions[nextBatch] ?? null) : null,
   phase8Gate: ledger.phase8Gate?.status ?? null,
   activeExecution: ledger.activeExecution ?? null,
   selected: {
@@ -117,6 +134,8 @@ console.log('Naming cleanup status');
 console.log(`  contract: schema v${result.schemaVersion}, completion v${result.completionContractVersion}`);
 console.log(`  completed through: Phase ${result.lastCompletedPhase}`);
 console.log(`  next: Phase ${result.nextPhase}${result.nextBatch ? ` / batch ${result.nextBatch}` : ''}`);
+console.log(`  next action: ${result.nextAction}`);
+if (result.batchCompletion) console.log(`  batch merge record: ${result.batchCompletion.status}`);
 console.log(`  Phase-8 gate: ${result.phase8Gate}`);
 console.log(`  active execution: ${result.activeExecution?.status ?? 'missing'}`);
 
