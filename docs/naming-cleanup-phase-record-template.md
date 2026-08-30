@@ -14,7 +14,10 @@ Do not use a chat transcript, private scratchpad, or PR body as the only copy of
 | Base `main` SHA | |
 | Branch | |
 | PR | |
-| Selected ledger rows | |
+| Selected ledger row IDs | |
+| Reconciliation mode | delta / full |
+| Highest risk in batch | low / medium / high |
+| Primary compatibility owner | none / boundary name |
 | Canonical mappings | |
 | Implementation agent/session | |
 | Closeout auditor | fresh agent/session preferred; record if same |
@@ -34,11 +37,30 @@ Record relevant branches/PRs and disposition here:
 | --- | --- | --- |
 | | | |
 
-## 1. Scope and stop conditions
+## 1. Scope, change envelope, and stop conditions
 
 State what this batch changes and what it deliberately does not change.
 
-List the ledger rows selected for this batch. If a newly discovered live surface changes the migration contract, update the plan/ledger/record before expanding implementation.
+List selected rows by immutable ledger ID, not only by old/new prose. Confirm the ledger risk class using the plan's rubric; raise it before implementation if the impact map exposes a stronger boundary.
+
+### Change envelope
+
+**Intended observable deltas**
+
+- names/paths/labels/schema keys/deprecation text explicitly authorized for this batch:
+-
+
+**Invariant observables**
+
+- behavior/data/resource/workflow/UI properties that must not change:
+-
+
+**Out of scope / separate authorization**
+
+- findings that would require behavior/schema/resource-policy or specification changes:
+-
+
+If a newly discovered surface is merely another consumer of an existing fixed mapping, extend this record/impact map. If it changes the canonical target, compatibility owner/lifetime, risk, batch assignment, or allowed change envelope, stop and follow the specification-amendment protocol before implementation continues.
 
 Explicit stop conditions for this batch:
 
@@ -56,11 +78,20 @@ Run the phase-aware inventory and relevant tooling census before editing. Record
 Suggested entry commands:
 
 ```sh
+npm run naming:status -- --batch=<batch>
 npm run naming:surface-inventory -- --compact --phase=<phase>
 npm run naming:surface-inventory -- --compact --phase=<phase> --uncovered
 node scripts/tooling-census.mjs --compact --query=<legacy-term>
 node scripts/tooling-census.mjs --compact --query=<canonical-term>
 ```
+
+### Target occupancy / collision check
+
+| Canonical target | Existing live use? | Same concept / unrelated / collision / already migrated | Disposition |
+| --- | --- | --- | --- |
+| | | | |
+
+A materially different existing use of the target name is a specification blocker.
 
 ### Contract-migration matrix
 
@@ -97,7 +128,19 @@ A test that reaches a native-Node tool only through a bundler does not prove the
 
 ## 4. Compatibility and frozen-history ownership
 
-For each dual-read or frozen-history row:
+For each dual-read row, copy its ledger compatibility policy into the record and verify that implementation keeps legacy knowledge at that owner only. For frozen-history-only rows, identify what remains intentionally untouched.
+
+| Row ID | Legacy form | Canonical form | Mode / retireWhen | Owning boundary | Legacy read test | Canonical write/runtime rule | Frozen artifacts unchanged |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| | | | | | | | |
+
+Do not duplicate legacy maps in sibling consumers.
+
+For `temporary-command-alias`, the old alias must be gone by owning phase closeout. `phase-15-review` is a decision gate, not automatic deletion. `wire-format-retained` means the raw writer intentionally keeps the historical wire spelling while normalized/runtime code uses canonical names.
+
+### 4.1 High-risk rollback plan
+
+For a high-risk batch, state the rollback unit before implementation. Prefer reverting the whole atomic batch over partial restoration of old/new names. Identify any compatibility reader or raw-wire invariant that must survive a revert.
 
 | Legacy form | Canonical form | Owning boundary | Legacy read test | Canonical single-write test | Frozen artifacts intentionally unchanged |
 | --- | --- | --- | --- | --- | --- |
@@ -107,7 +150,7 @@ Do not duplicate legacy maps in sibling consumers.
 
 ## 5. Before-change baseline
 
-For medium/high-risk behavior-preserving work, capture the smallest useful pre-change observable baseline before editing.
+For medium/high-risk behavior-preserving work, capture the smallest useful pre-change observable baseline before editing. The baseline must exercise an invariant from the Section 1 change envelope, not merely preserve the old spelling.
 
 Examples:
 
@@ -171,6 +214,9 @@ Any unexplained behavior/evidence change blocks completion.
 
 Record:
 
+- reconciliation mode used (delta/full), base/reconciliation SHA, and why that level was sufficient;
+- target-occupancy result for every canonical target;
+
 - legacy-term/residue searches;
 - canonical-term searches;
 - phase-aware surface inventory after implementation;
@@ -188,7 +234,9 @@ No unclassified live hit may remain in the batch scope.
 - [ ] no unrelated next-batch implementation is stacked in this PR;
 - [ ] targeted validation green;
 - [ ] required aggregate CI green;
-- [ ] ledger fields match the evidence in this record;
+- [ ] ledger IDs, risk, compatibility policy, and verification fields match the evidence in this record;
+- [ ] all predecessor phases/batches required by the ledger are complete;
+- [ ] no specification amendment is being smuggled inside this implementation PR;
 - [ ] PR description links this record and summarizes its unresolved risks;
 - [ ] no unexplained solved-set, report-completeness, UI, or workflow behavior change.
 
