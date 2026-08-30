@@ -571,7 +571,8 @@ These are intentionally recorded rather than silently treated as covered:
 - **Phase 8:** high-risk external env-var compatibility plus medium-risk generated-report fields, tool/workflow identities, and the live research-lineage module/type family.
 - **Phase 11:** high-risk application-wide runtime orientation migration crossing engine state, transforms, rendering, pointer inverse transforms, editor operations, and tests.
 - **Phase 13:** high-risk normalized-level field expansion. Raw wire `reqLen`/`reqInt` remain compatibility spellings while normalized/runtime consumers migrate atomically.
-- **Phase 10:** medium-risk budget vocabulary because part of the concept is already canonical while the live repair option/local names remain old; implementation must reconcile rather than mechanically rename the whole original row set.
+- **Phase 14:** includes a high-risk rename of the top-level mutable engine-state property across state/controller/render-facing consumers, alongside medium-risk facade extraction work.
+- **Phase 10:** includes a high-risk repair-budget override rename because a transport miss can silently alter solver resource allocation. Part of the budget-policy concept is already canonical, so implementation must reconcile rather than mechanically rename the original row set.
 
 ### Readiness result
 
