@@ -30,10 +30,10 @@ const allowedMigrationClasses = new Set([
   'current-surface-rename-preserve-frozen-history',
 ]);
 const phase8Batches = ledger.phaseBatches?.['8'];
-if (!Array.isArray(phase8Batches) || !phase8BatchOrder.length || new Set(phase8Batches).size !== phase8BatchOrder.length) {
+const phase8BatchOrder = Array.isArray(phase8Batches) ? phase8Batches : [];
+if (!phase8BatchOrder.length || new Set(phase8BatchOrder).size !== phase8BatchOrder.length) {
   failures.push('phaseBatches["8"] must be a non-empty unique ordered batch list');
 }
-const phase8BatchOrder = Array.isArray(phase8Batches) ? phase8Batches : [];
 const phase8BatchSet = new Set(phase8BatchOrder);
 const batchCompletions = ledger.batchCompletions;
 if (!batchCompletions || typeof batchCompletions !== 'object' || Array.isArray(batchCompletions)) {
