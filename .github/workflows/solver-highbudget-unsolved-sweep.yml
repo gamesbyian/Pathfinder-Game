@@ -1,6 +1,6 @@
 # High-budget exploratory sweep over ONLY the levels neither corpus's solver has ever cold-solved,
-# using the real production solving path (portfolio-solve-sweep.mjs --scheduler-mode=legacy, the
-# same tool + scheduler mode solver-stress-refresh.yml uses). Built 2026-07-24; reworked 2026-07-26
+# using the real production solving path (portfolio-solve-sweep.mjs --scheduler-mode=production).
+# Built 2026-07-24; reworked 2026-07-26
 # to fix a tail-latency problem discovered running it twice: the original fixed 20-shard even-COUNT
 # split let a shard's wall time vary hugely by chance (round 2: ideal perfectly-balanced wall time
 # was ~152min, actual observed was ~220min -- a ~45% loss purely from some of the 20 fixed lanes
@@ -190,7 +190,7 @@ jobs:
           timeout -k 30s --preserve-status "${{ matrix.shard.c1TimeoutMinutes }}m" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
             --levels="${{ matrix.shard.c1Levels }}" \
-            --scheduler-mode=legacy \
+            --scheduler-mode=production \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
             --workers=1 \
@@ -212,7 +212,7 @@ jobs:
           timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --levels="${{ matrix.shard.levels }}" \
-            --scheduler-mode=legacy \
+            --scheduler-mode=production \
             --budget-ms="${{ inputs.budget_ms }}" \
             --node-budget="${{ inputs.node_budget }}" \
             --workers="${{ inputs.workers }}" \

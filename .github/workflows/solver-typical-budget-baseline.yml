@@ -220,7 +220,7 @@ jobs:
           timeout -k 30s --preserve-status 40m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels.json \
             --levels="pos:${{ matrix.c1start }}-${{ matrix.c1end }}" \
-            --scheduler-mode=legacy \
+            --scheduler-mode=production \
             --work-budget="${{ inputs.corpus1_work_budget }}" \
             --node-budget="${{ inputs.corpus1_node_budget }}" \
             --budget-ms="${DEADLINE_C1}" \
@@ -254,7 +254,7 @@ jobs:
           timeout -k 30s --preserve-status 100m node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs \
             --corpus=data/stress/stress-levels-random.json \
             --levels="pos:${{ matrix.c2start }}-${{ matrix.c2end }}" \
-            --scheduler-mode=legacy \
+            --scheduler-mode=production \
             --work-budget="${{ inputs.corpus2_work_budget }}" \
             --node-budget="${{ inputs.corpus2_node_budget }}" \
             --budget-ms="${DEADLINE_C2}" \

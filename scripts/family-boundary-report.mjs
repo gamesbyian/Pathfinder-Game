@@ -21,9 +21,13 @@ const required = ['--manifests', '--canonical', '--variants'];
 if (required.some(key => !args.get(key))) {
     console.error('Usage: family-boundary-report.mjs --manifests=<json[,json]> --canonical=<baseline.json> ' +
         '--variants=<json[,json]> [--parent-levels=<json[,json]>] [--profile-joins=<json>] ' +
-        '[--relation=<mode>] [--parent=<id>] [--routing-regime=<regime>] [--out=<json>] [--markdown=<md>] [--severe-work-ratio=10]\n' +
+        '[--relation=<mode>] [--parent=<id>] [--routing-regime=<regime>] ' +
+        '[--required-path-coverage-ratio-min=N] [--required-path-coverage-ratio-max=N] ' +
+        '[--out=<json>] [--markdown=<md>] [--severe-work-ratio=10]\n' +
         '  --routing-regime=<regime> filters on the canonical routing-regime classification (--archetype ' +
-        'accepted as a legacy alias for one migration window).');
+        'accepted as a legacy alias for one migration window).\n' +
+        '  --required-path-coverage-ratio-min/max filters on the canonical coverage-ratio field ' +
+        '(--nav-density-min/max accepted as a legacy alias for one migration window).');
     process.exit(2);
 }
 
@@ -51,7 +55,7 @@ manifests = manifests.map(manifest => {
         ...manifest,
         parentFeatures: {
             reqInt: level.reqInt ?? manifest.selectedWitnessIntersectionCount ?? null,
-            navDensity: level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? manifest.parentNavDensity ?? null,
+            requiredPathCoverageRatio: level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? manifest.parentRequiredPathCoverageRatio ?? manifest.parentNavDensity ?? null,
             turnLoad: level.stressMeta?.turnLoad ?? null,
             routingRegime: safeNormalizeRoutingRegime(level.stressMeta?.routingRegime ?? level.stressMeta?.archetype ?? null),
             portalCount: Array.isArray(level.portals) ? level.portals.length : 0,
@@ -66,8 +70,12 @@ if (args.get('--parent')) manifests = manifests.filter(manifest => String(manife
 const numericFilters = [
     ['--req-int-min', 'reqInt', (value, threshold) => value >= threshold],
     ['--req-int-max', 'reqInt', (value, threshold) => value <= threshold],
-    ['--nav-density-min', 'navDensity', (value, threshold) => value >= threshold],
-    ['--nav-density-max', 'navDensity', (value, threshold) => value <= threshold],
+    // --required-path-coverage-ratio-min/max is canonical; --nav-density-min/max is accepted as a
+    // legacy alias for one migration window and filters the same field.
+    ['--required-path-coverage-ratio-min', 'requiredPathCoverageRatio', (value, threshold) => value >= threshold],
+    ['--required-path-coverage-ratio-max', 'requiredPathCoverageRatio', (value, threshold) => value <= threshold],
+    ['--nav-density-min', 'requiredPathCoverageRatio', (value, threshold) => value >= threshold],
+    ['--nav-density-max', 'requiredPathCoverageRatio', (value, threshold) => value <= threshold],
     ['--portal-count-min', 'portalCount', (value, threshold) => value >= threshold],
     ['--portal-count-max', 'portalCount', (value, threshold) => value <= threshold],
     ['--turn-load-min', 'turnLoad', (value, threshold) => value >= threshold],
@@ -84,8 +92,11 @@ for (const [flag, field, accept] of numericFilters) {
 }
 // --archetype remains a documented legacy input alias for one migration window; both write to the
 // canonical parentFeatures.routingRegime filter. Fail loudly rather than silently pick one if a
-// caller somehow supplies both with different values.
-if (args.has('--routing-regime') && args.has('--archetype') && args.get('--routing-regime') !== args.get('--archetype')) {
+// caller somehow supplies both with different values -- compare NORMALIZED values, not raw
+// strings, so an equivalent pair like canonical intersection-heavy and legacy
+// high-intersection-burden is not wrongly rejected as conflicting.
+if (args.has('--routing-regime') && args.has('--archetype') &&
+    safeNormalizeRoutingRegime(args.get('--routing-regime')) !== safeNormalizeRoutingRegime(args.get('--archetype'))) {
     throw new Error(`--routing-regime and --archetype disagree ("${args.get('--routing-regime')}" vs "${args.get('--archetype')}"); pass only one`);
 }
 const routingRegimeArg = args.get('--routing-regime') ?? args.get('--archetype');

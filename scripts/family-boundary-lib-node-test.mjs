@@ -93,4 +93,21 @@ assert.throws(() => buildBoundaryReport({
  ],
  canonicalResults:[{id:'shared',ok:true}],
 }), /ambiguous bare parent id/);
+// A canonical (schemaVersion 2) family-generate.mjs manifest single-writes
+// parentRequiredPathCoverageRatio only, never the legacy parentNavDensity -- the default features
+// fallback must read the canonical field, not just the legacy one, or a manifest passed to
+// buildBoundaryReport() without --parent-levels enrichment silently loses its coverage value.
+const canonicalManifest = buildBoundaryReport({
+    manifests: [{ familyId: 'cov', parentLevelId: 'COV1', familyMode: 'swap',
+        parentRequiredPathCoverageRatio: 0.42, selectedWitnessIntersectionCount: 3, variants: [] }],
+});
+assert.equal(canonicalManifest.families[0].features.requiredPathCoverageRatio, 0.42,
+    'a canonical manifest\'s parentRequiredPathCoverageRatio must survive into features.requiredPathCoverageRatio without --parent-levels enrichment');
+const legacyManifest = buildBoundaryReport({
+    manifests: [{ familyId: 'cov2', parentLevelId: 'COV2', familyMode: 'swap',
+        parentNavDensity: 0.24, variants: [] }],
+});
+assert.equal(legacyManifest.families[0].features.requiredPathCoverageRatio, 0.24,
+    'a historical manifest\'s legacy parentNavDensity must still be read as a fallback');
+
 console.log('family-boundary-lib: all tests passed');

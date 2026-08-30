@@ -197,7 +197,7 @@ export function buildBoundaryReport({ manifests = [], canonicalResults = [], var
             winningConfigs: configs, configConcentrationEvidence: concentrationEvidence(parent, solvedRows, configs),
             variants: variantEvidence,
             provenance: { parentCorpus: manifest.parentCorpus ?? null, parentContentHash: manifest.parentContentHash ?? null, generatorVersion: manifest.generatorVersion ?? null, randomSeed: manifest.randomSeed ?? null },
-            features: manifest.features ?? manifest.parentFeatures ?? { reqInt: manifest.selectedWitnessIntersectionCount ?? null, navDensity: manifest.parentNavDensity ?? null } };
+            features: manifest.features ?? manifest.parentFeatures ?? { reqInt: manifest.selectedWitnessIntersectionCount ?? null, requiredPathCoverageRatio: manifest.parentRequiredPathCoverageRatio ?? manifest.parentNavDensity ?? null } };
         for (const v of observed) {
             const mode=v.manifest.mutationManifest?.operation??relation??'unknown', objectType=v.manifest.mutationManifest?.objectType??null, childSolved=solved(v.result), childWork=workOf(v.result);
             mutationRows.push({relation,mode,objectType,parentSolved:parent ? parentSolved : null,variantSolved:childSolved,rescue:parent ? !parentSolved&&childSolved : null,flip:parent?parentSolved!==childSolved:null,
