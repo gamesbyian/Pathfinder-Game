@@ -319,7 +319,7 @@ test('enableRecombination=false (default) is byte-identical to omitting it', asy
     assert.deepEqual(pathA, pathB);
 }, 25000);
 
-// ── Counterfactual receptor experiment: beam-survivor elite seeding ──────────────────────────────
+// ── Counterfactual consumer experiment: beam-survivor elite seeding ──────────────────────────────
 // Motivated by the 2026-08-13 stratified beam/repair producer-population pilot (zero exact-prefix /
 // zero metric-projection overlap across 25 levels — see BEAM_SEED_WIDTH's own comment). Positional
 // args through enableElitePrefixDfs=false, then enableBeamSeed=true (18th arg).

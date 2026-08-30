@@ -854,7 +854,7 @@ const EPSILON_LADDER = [0.15, 0.35, 0.6];
  *  structural family that path belongs to. A small pool of the K best-but-DISTINCT near-misses
  *  found so far gives each restart a genuinely different structural jumping-off point instead. */
 const ELITE_POOL_SIZE = 8;
-/** Counterfactual receptor experiment (see enableBeamSeed below): a small, cheap beam search run
+/** Counterfactual consumer experiment (see enableBeamSeed below): a small, cheap beam search run
  *  once before the restart loop begins, whose surviving frontier is validated through the real
  *  state transition machinery (replayToPrefix -> applyMove, the exact primitives every legal move
  *  in this file already goes through) and seeded into the initial elite pool via the SAME
@@ -1043,7 +1043,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
     let lastYield = startTime;
     let nodesExpandedLocal = 0;
 
-    // Counterfactual receptor experiment (see enableBeamSeed / BEAM_SEED_WIDTH's own comment) —
+    // Counterfactual consumer experiment (see enableBeamSeed / BEAM_SEED_WIDTH's own comment) —
     // inert (zero cost, zero behavior change) when the flag is off, the default and only production
     // path. Runs ONCE, before any restart, and only ever adds candidates to the elite pool through
     // the exact same considerElite() every organically-discovered elite already goes through.

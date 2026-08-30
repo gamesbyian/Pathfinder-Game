@@ -16,7 +16,7 @@
  * cross two facts:
  *   1. does OUR gauntlet prune it?  -> modules/solver/prune-gauntlet.ts's evaluatePrunedMove, the
  *      real function dfsFromGate calls, not a reimplementation of it.
- *   2. is it ACTUALLY dead?         -> cpsat-full-probe.py --prefix=<path+alt>, asking whether any
+ *   2. is it ACTUALLY dead?         -> cpsat-reference-probe.py --prefix=<path+alt>, asking whether any
  *      valid completion exists from that partial path.
  * which gives a 2x2:
  *   dead + pruned    our prunes are doing their job
@@ -57,7 +57,7 @@ const root = (() => {
     return d;
 })();
 const CORPUS = path.join(root, 'data/stress/stress-levels-random.json');
-const PROBE = path.join(root, 'scripts/stress/cpsat-full-probe.py');
+const PROBE = path.join(root, 'scripts/stress/cpsat-reference-probe.py');
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
@@ -162,7 +162,7 @@ function features(pos, st) {
     };
 }
 
-/** cpsat-full-probe.py as a prefix-feasibility oracle. Returns 'dead' | 'alive' | 'unknown'. */
+/** cpsat-reference-probe.py as a prefix-feasibility oracle. Returns 'dead' | 'alive' | 'unknown'. */
 function oracle(prefixKeys) {
     try {
         const out = execFileSync('python3',

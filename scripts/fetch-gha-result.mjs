@@ -18,7 +18,7 @@ function runGh(argv, { capture = true } = {}) {
     stdio: capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
   });
   if (result.error) {
-    console.error('gha-result: failed to execute gh:', result.error.message);
+    console.error('fetch-gha-result: failed to execute gh:', result.error.message);
     process.exit(2);
   }
   if (result.status !== 0) {
@@ -39,20 +39,20 @@ if (!runId && workflow) {
   if (branch) argv.push('--branch', branch);
   const rows = JSON.parse(runGh(argv) || '[]');
   if (!rows.length) {
-    console.error(`gha-result: no runs found for workflow ${workflow}${branch ? ` on branch ${branch}` : ''}`);
+    console.error(`fetch-gha-result: no runs found for workflow ${workflow}${branch ? ` on branch ${branch}` : ''}`);
     process.exit(1);
   }
   runId = String(rows[0].databaseId);
 }
 
 if (!runId) {
-  console.error('Usage: node scripts/gha-result.mjs --run=<run-id>');
-  console.error('   or: node scripts/gha-result.mjs --workflow=<workflow-file-or-name> [--branch=<branch>]');
+  console.error('Usage: node scripts/fetch-gha-result.mjs --run=<run-id>');
+  console.error('   or: node scripts/fetch-gha-result.mjs --workflow=<workflow-file-or-name> [--branch=<branch>]');
   process.exit(2);
 }
 
 const keepDir = opts.get('out');
-const tempRoot = keepDir ? path.resolve(keepDir) : fs.mkdtempSync(path.join(os.tmpdir(), 'pathfinder-gha-result-'));
+const tempRoot = keepDir ? path.resolve(keepDir) : fs.mkdtempSync(path.join(os.tmpdir(), 'pathfinder-gha-fetch-result-'));
 if (keepDir) {
   fs.rmSync(tempRoot, { recursive: true, force: true });
   fs.mkdirSync(tempRoot, { recursive: true });
@@ -64,7 +64,7 @@ try {
   const summaryPath = path.join(tempRoot, 'summary.md');
   const manifestPath = path.join(tempRoot, 'manifest.json');
   if (!fs.existsSync(summaryPath) || !fs.existsSync(manifestPath)) {
-    console.error('gha-result: solver-sweep-result is missing summary.md or manifest.json');
+    console.error('fetch-gha-result: solver-sweep-result is missing summary.md or manifest.json');
     process.exit(1);
   }
 
@@ -74,7 +74,7 @@ try {
     process.stdout.write(fs.readFileSync(manifestPath, 'utf8'));
   }
   if (keepDir) {
-    console.error(`gha-result: downloaded standard result to ${tempRoot}`);
+    console.error(`fetch-gha-result: downloaded standard result to ${tempRoot}`);
   }
 } finally {
   if (!keepDir) fs.rmSync(tempRoot, { recursive: true, force: true });

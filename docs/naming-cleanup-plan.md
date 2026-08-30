@@ -75,7 +75,7 @@ GitHub code search is not indexed for this repository, so the refreshed live-sur
 | `gha-source-run` / `pathfinder-gha-source-run` | intentional retained provenance name | Retain. It describes GHA source-run provenance rather than an implementation-history label. |
 | `publish-solver-sweep-result.mjs` | intentional retained tool | Retain: operation-first and behavior-descriptive. |
 | `check-solver-sweep-result-contract.mjs` / `check:solver-sweep-results` | intentional retained tool/alias | Retain: deterministic contract validation with an honest `check` verb. |
-| `gha:result` / `scripts/gha-result.mjs` | rename | Rename to **gha:fetch-result** / `scripts/fetch-gha-result.mjs`; it actively resolves/downloads a completed run artifact. |
+| former gha:result / `scripts/gha-result.mjs` | rename | Renamed to `gha:fetch-result` / `scripts/fetch-gha-result.mjs` by batch 8A; it actively resolves/downloads a completed run artifact. |
 | new `run-name`/artifact/provenance surfaces across maintained evidence workflows | covered live surface | Treat as propagation targets for any workflow/tool terminology renamed later; do not rewrite historical run artifacts. |
 | `solver-archetype-sample-ab.yml`, `select-archetype-sample.mjs`, workflow input/output `archetype*`, and `STRATEGY_ARCHETYPE_ROUTING` | rename | PR 3 migrates these atomically to routing-regime terminology; exact mappings are fixed in Section 4.1. |
 | `techniqueLifecycle` result/telemetry field | rename | Its keys are solver stages, not techniques. Rename to `stageLifecycle` in PR 6 with dual-read for retained generated JSON. |
@@ -815,7 +815,7 @@ Current docs must say explicitly: solved-set regression is not a speed benchmark
 ### 5.3 Hint validation
 
 - `hint-path-oracle.mjs` -> `validate-hint-paths.mjs`;
-- corresponding npm/test alias -> **test:hint-path-validation**;
+- corresponding npm/test alias -> `test:hint-path-validation`;
 - documentation must state that it uses the canonical production referee/validator and is not independent.
 
 ### 5.4 CP-SAT
@@ -943,7 +943,7 @@ Rename only the noun-only retrieval command:
 | Current | Canonical |
 |---|---|
 | `scripts/gha-result.mjs` | `scripts/fetch-gha-result.mjs` |
-| package alias `gha:result` | **gha:fetch-result** |
+| package alias gha:result | `gha:fetch-result` |
 
 Update `AGENTS.md`, `scripts/README.md`, `docs/tooling-catalog.md`, `.github/workflows/README.md`, the contract checker, package aliases, and current workflow/tooling documentation together. The artifact/provenance protocol strings themselves do not change.
 
@@ -1007,7 +1007,7 @@ The current execution order at the time this plan is written remains owned by th
 
 The umbrella workstream currently called "Automatic configuration / portfolio construction" becomes **Automatic solver action selection**. "Portfolio" remains only when describing a measured set/combination of actions or the legacy latency portfolio experiment.
 
-## 8. Shadow, oracle, referee, producer/receptor vocabulary
+## 8. Shadow, oracle, referee, producer/consumer vocabulary
 
 ### 8.1 Shadow
 
@@ -1027,9 +1027,9 @@ Use:
 - **CP-SAT reference model** for CP-SAT tooling;
 - **validator** for tools that call the referee.
 
-### 8.3 Producer/receptor
+### 8.3 Producer/consumer
 
-Replace the `producer -> receptor` vocabulary in `solver-future-work.md` and current scheduler docs with **producer -> consumer**. Replace "receptor limitation" with **consumer limitation** and "receptor can rediscover" with **consumer can rediscover**.
+Batch 8A replaced the former `producer -> receptor` vocabulary in `solver-future-work.md` and current scheduler docs with `producer -> consumer`. "Receptor limitation" became `consumer limitation` and "receptor can rediscover" became `consumer can rediscover`.
 
 ## 9. Machine-readable rename ledger
 
@@ -1205,7 +1205,7 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 
 - hint oracle -> hint-path validator names;
 - CP-SAT reference tool/workflow/display names;
-- completed-run retrieval `gha:result` / `gha-result.mjs` -> **gha:fetch-result** / `fetch-gha-result.mjs`;
+- completed-run retrieval gha:result / `gha-result.mjs` -> `gha:fetch-result` / `fetch-gha-result.mjs`;
 - shadow/interface probe harness -> offline replay harness;
 - producer/receptor -> producer/consumer terminology within that harness;
 - preserve genuinely independent solver-oracle terminology and frozen old workflow runs.

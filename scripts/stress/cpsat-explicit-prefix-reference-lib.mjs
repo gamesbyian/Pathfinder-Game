@@ -1,5 +1,5 @@
 /** Convert an internal packed solver key (0-based x/y) to raw level coordinates (1-based x/y).
- * cpsat-full-probe.py's --prefix explicitly consumes the raw/witness convention. */
+ * cpsat-reference-probe.py's --prefix explicitly consumes the raw/witness convention. */
 export function unpackPackedCell(key) {
     if (!Number.isInteger(key) || key < 0) throw new Error(`packed cell must be a non-negative integer: ${key}`);
     return [(key & 0xffff) + 1, (key >>> 16) + 1];
@@ -29,7 +29,7 @@ const stableCaseId = ({ levelId, depth, prefix, child }, index) => {
 /** Accept either the committed winning-prefix atlas or a generic explicit case document:
  * { corpus, cases: [{ id?, levelId, prefix, child? }] }. Prefix/child cells may be packed solver
  * keys (0-based internally), raw [x,y] coordinate pairs, or raw {x,y}; emitted prefixes are always
- * 1-based [x,y] pairs as expected by cpsat-full-probe.py's --prefix argument. */
+ * 1-based [x,y] pairs as expected by cpsat-reference-probe.py's --prefix argument. */
 export function extractExplicitPrefixCases(document, { format = 'cases', corpus = null } = {}) {
     const defaultCorpus = corpus ?? document.corpus ?? document.levelsFile ?? 'data/stress/stress-levels-random.json';
     let rawCases;

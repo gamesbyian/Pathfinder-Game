@@ -369,6 +369,6 @@ async function main() {
     };
     await atomicWriteJson(resolveFromRoot(output), report);
     console.log(`\nDone: ${totalNovel} novel hint(s) across ${levelReports.length} level(s). Report -> ${output}`);
-    if (writeLevels && totalNovel > 0) console.log(`Updated -> ${levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-oracle`);
+    if (writeLevels && totalNovel > 0) console.log(`Updated -> ${levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-validation`);
     if (haltedByWallClock) console.log('Halted early: wall-clock cap reached. Re-run with the same --checkpoint to resume.');
 }

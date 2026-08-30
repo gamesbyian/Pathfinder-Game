@@ -1,7 +1,7 @@
 %-----------------------------------------------------------------------------
 % Pathfinder level as a constraint model — solver-independent.
 %
-% WHY THIS EXISTS. scripts/stress/cpsat-full-probe.py answered "can an exact solver crack the
+% WHY THIS EXISTS. scripts/stress/cpsat-reference-probe.py answered "can an exact solver crack the
 % levels ours cannot" with ONE hand-rolled encoding on ONE solver, and got a timeout. That result
 % is confounded: "these instances are intrinsically hard" and "this particular model encodes
 % must-cross badly" predict exactly the same observation. This file is the same problem written
@@ -15,7 +15,7 @@
 % independent model of the rules at all.
 %
 % SCOPE. Portals, filters and flipping filters are NOT modelled; the driver refuses such levels
-% rather than silently solving an easier problem. This matches cpsat-full-probe.py's own scope, so
+% rather than silently solving an easier problem. This matches cpsat-reference-probe.py's own scope, so
 % the backend comparison stays apples-to-apples with the result it is re-testing. Flipping filters
 % in particular are path-history-dependent (axis flips on parity of use), which a time-indexed
 % model can express only with per-step filter state — real work, not an oversight.
@@ -84,7 +84,7 @@ array[MOVE] of var 1..4: dir;
 % global_cardinality for the visit counts and reified integer equalities for the axis rule, passed
 % the witness check on all three backends in ~1s — and then timed out at 90s on levels our own DFS
 % solver solves in seconds, while the hand-rolled boolean CP-SAT model
-% (scripts/stress/cpsat-full-probe.py) solved the same levels in 7-19s. The lesson is recorded in
+% (scripts/stress/cpsat-reference-probe.py) solved the same levels in 7-19s. The lesson is recorded in
 % the report: a witness check proves soundness, NOT propagation quality, so a model needs a
 % positive control (a level it ought to crack easily) before any timeout from it means anything.
 % With the channelling below, visit counts become plain linear sums over booleans and the axis rule
@@ -129,7 +129,7 @@ constraint visits[goalCell] = 1;                      % reaching the goal ends t
 % and move-rules.ts then rejects both `invalid-edge-reuse-target` and `invalid-edge-reuse-origin`.
 % So a cell's horizontal slot is consumed by ANY horizontal move touching it, in or out.
 %
-% Encoding this as entries-only (which is what scripts/stress/cpsat-full-probe.py does) makes the
+% Encoding this as entries-only (which is what scripts/stress/cpsat-reference-probe.py does) makes the
 % model strictly MORE PERMISSIVE than the game: it admits an immediate bounce back along the same
 % edge, e.g. (5,2)->(6,2)->(5,2), which the referee rejects. That is not a hypothetical — it is how
 % the first paths harvested from the Python probe were caught by validateCandidatePath. A witness
@@ -142,7 +142,7 @@ constraint visits[goalCell] = 1;                      % reaching the goal ends t
 % touching A is what it rejects, as `invalid-edge-reuse-target` / `invalid-edge-reuse-origin`.
 %
 % Getting this wrong in either direction is silent, and both directions were hit here:
-%   * entries only (what scripts/stress/cpsat-full-probe.py encodes) is too WEAK — it admits an
+%   * entries only (what scripts/stress/cpsat-reference-probe.py encodes) is too WEAK — it admits an
 %     immediate bounce back down the same edge, (5,2)->(6,2)->(5,2), which the referee rejects.
 %     Caught only by refereeing an emitted path; a witness check cannot see an under-constraint.
 %   * "at most one A-move touching c" is too STRONG — it forbids the ordinary straight-through pass

@@ -3,7 +3,7 @@
  * Runs scripts/stress/minizinc/pathfinder.mzn across multiple constraint-solver backends.
  *
  * WHY THIS EXISTS. reports/2026-07-30-solvability-plateau-diagnosis.md concluded from
- * cpsat-full-probe.py that the levels our solver fails are intrinsically hard, because CP-SAT also
+ * cpsat-reference-probe.py that the levels our solver fails are intrinsically hard, because CP-SAT also
  * timed out on them. That is ONE model on ONE solver, and "the instances are hard" and "this
  * encoding propagates badly" predict the same timeout. This runs a single solver-independent model
  * across CP-SAT, Chuffed (lazy clause generation) and Gecode so the two can be told apart.
@@ -27,7 +27,7 @@
  * witness and hint-guided entries.
  *
  * SCOPE. Portals / filters / flipping filters are not modelled; such levels are refused, not
- * silently solved as an easier problem. Same scope as cpsat-full-probe.py, which keeps this
+ * silently solved as an easier problem. Same scope as cpsat-reference-probe.py, which keeps this
  * comparable to the result it re-tests.
  *
  * Usage:

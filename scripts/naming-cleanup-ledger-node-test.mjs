@@ -48,8 +48,8 @@ try {
     if (parsed.nextPhase !== 8 || parsed.nextBatch !== '8A') {
       throw new Error(`naming status expected next Phase 8 / 8A, got ${parsed.nextPhase} / ${parsed.nextBatch}`);
     }
-    if (parsed.nextAction !== 'start-batch' || parsed.batchCompletion?.status !== 'pending') {
-      throw new Error(`naming status expected pending 8A start-batch, got ${parsed.nextAction} / ${parsed.batchCompletion?.status}`);
+    if (parsed.nextAction !== 'merge-or-record-batch-completion' || parsed.batchCompletion?.status !== 'pending') {
+      throw new Error(`naming status expected pending 8A merge-or-record-batch-completion, got ${parsed.nextAction} / ${parsed.batchCompletion?.status}`);
     }
     if (!parsed.nextScope.rows.every(row => typeof row.id === 'string' && row.id.startsWith('NC-P08-'))) {
       throw new Error('naming status did not expose stable Phase-8 row IDs');

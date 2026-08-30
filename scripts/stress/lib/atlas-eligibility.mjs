@@ -16,10 +16,10 @@ export function selectShardByRoundRobin(eligibleLevels, shardIndex, shardCount) 
     return eligibleLevels.filter((_, i) => (i % shardCount) + 1 === shardIndex);
 }
 
-/** True when provenance already records a `cpsat-full-probe` find for this level. */
+/** True when provenance already records a `cpsat-reference-probe` find for this level. */
 export function isHarvestedByCpsat(rawLevel) {
     return (rawLevel.hintRecords || []).some(h =>
-        (h.provenance || []).some(p => p.solver?.technique === 'cpsat-full-probe'));
+        (h.provenance || []).some(p => p.solver?.technique === 'cpsat-reference-probe'));
 }
 
 export function selectUnharvestedCpsatLevels(corpusLevels) {

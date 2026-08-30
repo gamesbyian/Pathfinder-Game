@@ -47,12 +47,12 @@ The publisher also appends `summary.md` to `$GITHUB_STEP_SUMMARY`, so the final 
 
 **Retrieval order for agents:**
 
-1. Prefer the repo helper: `npm run gha:result -- --run=<run-id>`. If the run id is not known, use `npm run gha:result -- --workflow=<workflow-file-or-name>` (optionally `--branch=<branch>`); it resolves the latest matching run, downloads only `solver-sweep-result`, and prints `summary.md`.
+1. Prefer the repo helper: `npm run gha:fetch-result -- --run=<run-id>`. If the run id is not known, use `npm run gha:fetch-result -- --workflow=<workflow-file-or-name>` (optionally `--branch=<branch>`); it resolves the latest matching run, downloads only `solver-sweep-result`, and prints `summary.md`.
 2. Read `summary.md`, then `manifest.json`, then the referenced result file(s). Add `--json` to print the manifest too, or `--out=<dir>` to retain the downloaded standard artifact.
 3. The manifest includes the exact dispatch inputs in addition to workflow/run/SHA/ref provenance. When the workflow exposes reliable shard identity, the summary also reports observed/expected shard completeness.
 4. Only enumerate final jobs, legacy artifacts, or shard artifacts when the standard artifact reports missing/incomplete output or when debugging a failed/cancelled run.
 
-The raw GitHub CLI equivalent remains `gh run download <run-id> -n solver-sweep-result`, but agents should normally use `gha:result` so pagination and artifact naming are not repeatedly rediscovered.
+The raw GitHub CLI equivalent remains `gh run download <run-id> -n solver-sweep-result`, but agents should normally use `gha:fetch-result` so pagination and artifact naming are not repeatedly rediscovered.
 
 Do not begin a successful-run analysis by listing every shard job or artifact. GitHub and connector listings are paginated, and large sweeps can place the combine job or decision-bearing artifact beyond the first page. The standard artifact exists specifically to make shard count irrelevant to ordinary result retrieval.
 
@@ -91,7 +91,7 @@ All three share `scripts/plan-ab-corpus-shards.mjs` for the mandatory Corpus 1 +
 
 - `cpsat-hint-harvest-sweep.yml` — 60 shards / 20 lanes for highly variable per-level runtime.
 - `cpsat-hint-harvest-sweep-published.yml` — smaller published-level matrix.
-- `cpsat-explicit-prefix-oracle.yml` — independent prefix cases sharded across 20 runners, then coverage-checked and combined.
+- `cpsat-explicit-prefix-reference.yml` — independent prefix cases sharded across 20 runners, then coverage-checked and combined.
 - `atlas-sweep.yml` — 60 fixed interleaved buckets behind 20 lanes; smaller trials select a literal subset rather than repartitioning.
 - `mitm-frontier-sweep.yml` — curated per-level MITM frontier experiments.
 

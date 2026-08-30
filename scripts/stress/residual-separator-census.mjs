@@ -10,7 +10,7 @@
  * sampled steps, measure chambers from TWO vantage points and report them separately:
  *   - "on-solution": the position the known solution actually occupies at that step;
  *   - "off-solution": every SIBLING move available there that the solution did NOT take (the same
- *     population interface-probe-harness.mjs scores probes against).
+ *     population offline-replay-harness.mjs scores probes against).
  * These are not expected to agree — an early local run of this tool found ~0% on-solution
  * (unsurprising: a solved path doesn't usually walk itself next to a dead-end pocket it has no
  * plan to enter) vs. a real, nonzero rate off-solution — so reporting only the on-solution rate

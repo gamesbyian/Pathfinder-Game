@@ -104,9 +104,9 @@ Prefer existing deterministic work accounting, manifests/run identity, stress/li
 
 For scoring, retention, routing, scheduling, or information-sharing hypotheses, observe before changing search where practical. Unless parity itself is the experiment, instrumentation must preserve solution, work, ordering, randomness, and cache/memo lifetime. A shadow-positive selected candidate still needs a live solve/work verdict and independent confirmation.
 
-## Producer → receptor cooperation
+## Producer → consumer cooperation
 
-A live handoff needs measured receptor limitation, producer information the receptor cannot cheaply rediscover, timely arrival, bounded production/storage/replay/branching cost, an independent receptor control, positive shadow evidence, and a level-blind matched-work verdict. One useful handoff does not justify a general blackboard.
+A live handoff needs measured consumer limitation, producer information the consumer cannot cheaply rediscover, timely arrival, bounded production/storage/replay/branching cost, an independent consumer control, positive shadow evidence, and a level-blind matched-work verdict. One useful handoff does not justify a general blackboard.
 
 ## Family and accepted-path evidence
 

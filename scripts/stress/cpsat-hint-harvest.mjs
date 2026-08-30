@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Harvests referee-validated hints from scripts/stress/cpsat-full-probe.py.
+ * Harvests referee-validated hints from scripts/stress/cpsat-reference-probe.py.
  *
  * WHY THIS AND NOT THE MINIZINC PROBE. minizinc-probe.mjs was built to compare CP-SAT / Chuffed /
  * Gecode on one solver-independent model. That model passes the witness check on all three backends
@@ -11,7 +11,7 @@
  *
  * WHAT IS AND IS NOT CLAIMED. A path stored by this script is a genuine, referee-validated hint. It
  * is NOT evidence our solver can find anything: nothing in modules/solver/ participated. That is
- * exactly why it is stored under EXTERNAL_SOLVER_ID with technique 'cpsat-full-probe', so every
+ * exactly why it is stored under EXTERNAL_SOLVER_ID with technique 'cpsat-reference-probe', so every
  * "what can the solver find cold?" query can exclude it the same way it must already exclude
  * witness and hint-guided entries (CLAUDE.md's provenance section).
  *
@@ -20,12 +20,12 @@
  * corrupt hint. A path already in the corpus is a REDISCOVERY — it appends a provenance entry to the
  * existing hint rather than creating a duplicate (CLAUDE.md's one-entry-per-discovery-event rule).
  *
- * FORCED-GRID MODE (2026-08-05, --forced-grid). A single unforced cpsat-full-probe.py call finds AT
+ * FORCED-GRID MODE (2026-08-05, --forced-grid). A single unforced cpsat-reference-probe.py call finds AT
  * MOST one path per level (CP-SAT stops at the first feasible solution). The real solver's own
  * hint-discovery tooling (scripts/hint-workbench.mjs) gets breadth instead by forcing structural
  * choices the solver would otherwise make freely — which gate, which first step, which portal and
  * which side of it, which cell it exits to — and treating each forced combination as an independent
- * search. `--forced-grid` does the analogous thing for CP-SAT via `cpsat-full-probe.py --prefix=`
+ * search. `--forced-grid` does the analogous thing for CP-SAT via `cpsat-reference-probe.py --prefix=`
  * (already built for prune-gap-probe.mjs's prefix-feasibility queries — no probe changes needed):
  *
  *   Tier 1 — gate x first-step direction. Every (gate, legal first neighbor) pair, enumerated via
@@ -75,7 +75,7 @@ const root = (() => {
     while (!existsSync(path.join(dir, 'package.json')) && path.dirname(dir) !== dir) dir = path.dirname(dir);
     return dir;
 })();
-const PROBE = path.join(root, 'scripts/stress/cpsat-full-probe.py');
+const PROBE = path.join(root, 'scripts/stress/cpsat-reference-probe.py');
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
@@ -258,7 +258,7 @@ if (saveHints && pending.size > 0) {
         const records = [...(lv.hintRecords || [])];
         const bySig = new Map(records.map((h, i) => [hintPathSignature(h.path), i]));
         for (const e of entries) {
-            const entry = makeProvenanceEntry('cpsat-full-probe', {
+            const entry = makeProvenanceEntry('cpsat-reference-probe', {
                 solverId: EXTERNAL_SOLVER_ID,
                 elapsedMs: e.elapsedMs,
                 budgetMs: e.budgetMs,

@@ -44,7 +44,7 @@ Preferred sequence:
 
 Candidate descriptors may use future interfaces, residual topology/volume, crossing/resource commitments, or mechanic state. If several are tried on one cohort, disclose selection; the best separator from that cohort is not independent confirmation.
 
-Family/statistical rules: [`variant-level-research.md`](variant-level-research.md). Shadow/oracle rules: [`solver-shadow-eval-harness.md`](solver-shadow-eval-harness.md), [`solver-research-operating-model.md`](solver-research-operating-model.md).
+Family/statistical rules: [`variant-level-research.md`](variant-level-research.md). Shadow/oracle rules: [`solver-offline-replay-harness.md`](solver-offline-replay-harness.md), [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Promotion boundary
 
