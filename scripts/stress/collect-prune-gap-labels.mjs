@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
- * Multi-level driver for prune-gap-probe.mjs — the CP-SAT-oracle-labelled-branch atlas that
+ * Multi-level driver for prune-gap-probe.mjs — the CP-SAT-oracle-labelled branch set that
  * offline-replay-harness.mjs scores probes against currently covers only 16 levels (~623
  * branches, all produced by hand-run single-level invocations). Growing it to a meaningful slice
  * of the ~2000-level corpus is exactly the kind of job CLAUDE.md says to shard on GitHub Actions
  * (each level's CP-SAT calls can run tens of seconds, and a real sweep needs many levels) — see
- * .github/workflows/atlas-sweep.yml, which shards this the same way method-probe-sweep.yml shards
- * scripts/method-probe.mjs.
+ * .github/workflows/collect-prune-gap-labels.yml, which shards this the same way
+ * method-probe-sweep.yml shards scripts/method-probe.mjs.
  *
  * DELIBERATELY A THIN WRAPPER, NOT A REFACTOR: prune-gap-probe.mjs stays completely untouched and
  * independently runnable exactly as before (minimal-diff — no reason to risk a working, already-
  * validated CP-SAT comparison script for the sake of code reuse here). This driver just spawns it
  * once per level via child_process and lets IT write its own `reports/stress/prune-gap-<id>.json`
- * — so running this against a new slice of the corpus grows the SAME atlas
+ * — so running this against a new slice of the corpus grows the SAME labelled branch set
  * offline-replay-harness.mjs already reads (no new format, no separate merge step needed).
  *
  * Requires python3 + ortools (cpsat-reference-probe.py's dependency) on PATH.
@@ -29,13 +29,13 @@
  *                              range) -- so every shard gets an even share of levels that can
  *                              actually produce signal, and any positional clustering in the
  *                              corpus can't concentrate all the "good" or all the "dud" levels
- *                              onto one shard. This is the mode .github/workflows/atlas-sweep.yml
- *                              uses.
+ *                              onto one shard. This is the mode
+ *                              .github/workflows/collect-prune-gap-labels.yml uses.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/stress/atlas-sweep.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/collect-prune-gap-labels.mjs -- \
  *     --corpus=data/stress/stress-levels-random.json --shard-index=1 --shard-count=20 --every=6 \
- *     --oracle-limit=45 --out-dir=reports/stress --summary-out=logs/atlas-sweep/shard-01-summary.md
+ *     --oracle-limit=45 --out-dir=reports/stress --summary-out=logs/collect-prune-gap-labels/shard-01-summary.md
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -76,18 +76,18 @@ let levels;
 if (SHARD_INDEX !== null) {
     const eligible = selectEligibleAtlasLevels(corpusLevels);
     levels = selectShardByRoundRobin(eligible, Number(SHARD_INDEX), Number(SHARD_COUNT));
-    console.log(`atlas-sweep: ${eligible.length}/${corpusLevels.length} corpus level(s) are CP-SAT-eligible (hint-bearing, no portals/filters/flippers); shard ${SHARD_INDEX}/${SHARD_COUNT} gets ${levels.length} of them.`);
+    console.log(`collect-prune-gap-labels: ${eligible.length}/${corpusLevels.length} corpus level(s) are CP-SAT-eligible (hint-bearing, no portals/filters/flippers); shard ${SHARD_INDEX}/${SHARD_COUNT} gets ${levels.length} of them.`);
 } else {
     levels = LEVEL_SPEC ? selectLevelsBySpec(corpusLevels, LEVEL_SPEC) : corpusLevels;
 }
-console.log(`atlas-sweep: ${levels.length} level(s), corpus=${CORPUS_FILE}, every=${EVERY}, oracle-limit=${ORACLE_LIMIT}s`);
+console.log(`collect-prune-gap-labels: ${levels.length} level(s), corpus=${CORPUS_FILE}, every=${EVERY}, oracle-limit=${ORACLE_LIMIT}s`);
 
 const results = [];
 function writeSummary() {
     if (!SUMMARY_OUT_FILE) return;
     const abs = path.resolve(root, SUMMARY_OUT_FILE);
     mkdirSync(path.dirname(abs), { recursive: true });
-    const lines = ['# atlas-sweep shard summary', ''];
+    const lines = ['# collect-prune-gap-labels shard summary', ''];
     for (const r of results) lines.push(`- ${r.id}: ${r.status}${r.tally ? ` (dead ${r.tally.deadPruned + r.tally.deadPassed}, gap ${r.tally.deadPassed}, unsound ${r.tally.alivePruned})` : ''}`);
     writeFileSync(abs, lines.join('\n') + '\n');
 }
@@ -115,4 +115,4 @@ for (let i = 0; i < levels.length; i++) {
     writeSummary();
 }
 
-console.log(`\natlas-sweep done: ${results.filter(r => r.status === 'ok').length}/${levels.length} level(s) produced an atlas file under ${OUT_DIR}.`);
+console.log(`\ncollect-prune-gap-labels done: ${results.filter(r => r.status === 'ok').length}/${levels.length} level(s) produced a labelled branch file under ${OUT_DIR}.`);

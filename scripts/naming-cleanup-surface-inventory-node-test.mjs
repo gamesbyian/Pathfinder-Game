@@ -66,8 +66,8 @@ assert.equal(survivalSymbol.id, 'NC-P08-005');
 assert.equal(survivalSymbol.batch, '8B');
 assert.ok(survivalSymbol.surfaces.symbolOwners.includes('modules/solver/known-solution-prefix-survival.ts'));
 
-const atlasWorkflow = inventory.workflows.find(row => row.file === '.github/workflows/atlas-sweep.yml');
-assert.ok(atlasWorkflow, 'Phase-8 inventory should map atlas-sweep workflow');
+const atlasWorkflow = inventory.workflows.find(row => row.file === '.github/workflows/collect-prune-gap-labels.yml');
+assert.ok(atlasWorkflow, 'Phase-8 inventory should map the collect-prune-gap-labels workflow');
 
 const hintAlias = inventory.packageCommands.find(row => row.name === 'test:hint-path-validation');
 assert.ok(hintAlias);

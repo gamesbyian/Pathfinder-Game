@@ -28,7 +28,7 @@
 # resident, roughly linear). Standard GitHub-hosted runners have ~7GB; 1,500,000 keeps total
 # resident (current depth + previous, ~1.65x the per-depth cap empirically) to roughly 4GB, leaving
 # real headroom for Node/OS overhead rather than tuning to the edge of another OOM. Commit
-# mechanics mirror atlas-sweep.yml (commit directly from the runner's own network, not via artifact
+# mechanics mirror collect-prune-gap-labels.yml (commit directly from the runner's own network, not via artifact
 # download into a sandboxed dispatching session -- see that workflow's own header for why).
 name: mitm-frontier-sweep (settle the MITM frontier-size question)
 run-name: "MITM frontier · cap=${{ inputs.cap }} · levels=${{ inputs.levels }}"

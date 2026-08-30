@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
  * Multi-level driver for cpsat-hint-harvest.mjs's --forced-grid mode — sharding the harvest of
- * additional CP-SAT-found hints across the eligible pool CLAUDE.md's shadow-eval-harness work grew
+ * additional CP-SAT-found hints across the eligible pool CLAUDE.md's offline-replay-harness work grew
  * to 397 levels, minus whichever ones cpsat-hint-harvest.mjs has already been run against
  * (atlas-eligibility.mjs's selectUnharvestedCpsatLevels, checked by provenance, not hint presence).
  *
- * DELIBERATELY A THIN WRAPPER, NOT A REFACTOR — same rationale as atlas-sweep.mjs for
+ * DELIBERATELY A THIN WRAPPER, NOT A REFACTOR — same rationale as collect-prune-gap-labels.mjs for
  * prune-gap-probe.mjs: cpsat-hint-harvest.mjs stays independently runnable and untouched by this
  * file's existence. This driver just spawns it once PER LEVEL (not once per shard with a
  * comma-joined level list) so a hang or crash on one level can't erase an entire shard's progress,
  * and so results persist between levels rather than only at the end (CLAUDE.md's batch-tool rule).
  *
- * Round-robin sharding matches atlas-sweep.mjs's own reasoning: level i (0-indexed within the
+ * Round-robin sharding matches collect-prune-gap-labels.mjs's own reasoning: level i (0-indexed within the
  * filtered, unharvested-eligible list) goes to shard (i % shardCount) + 1, guarding against any
  * positional clustering of slow (portal-heavy) vs. fast levels concentrating onto one shard.
  *

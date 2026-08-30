@@ -8,7 +8,7 @@ The full pre-consolidation document, including the first prototype campaigns and
 
 ## Entry point
 
-`scripts/stress/offline-replay-harness.mjs` consumes the existing CP-SAT-labelled branch atlas under `reports/stress/` and replays each branch through the real solver-state primitives. It does not call CP-SAT itself.
+`scripts/stress/offline-replay-harness.mjs` consumes the existing CP-SAT-labelled branch set under `reports/stress/` and replays each branch through the real solver-state primitives. It does not call CP-SAT itself.
 
 Example:
 

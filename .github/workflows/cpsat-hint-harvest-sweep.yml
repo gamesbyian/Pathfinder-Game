@@ -3,15 +3,15 @@
 # CP-SAT hasn't been run against yet (atlas-eligibility.mjs's selectUnharvestedCpsatLevels).
 #
 # Sharded wide (60 shards) with only 20 running at a time (`max-parallel`), not because there are
-# 60x more levels than atlas-sweep.yml's 20-shard runs -- CP-SAT's own per-level duration is highly
+# 60x more levels than collect-prune-gap-labels.yml's 20-shard runs -- CP-SAT's own per-level duration is highly
 # variable (a fast INFEASIBLE/timeout in seconds vs. a portal-heavy padded-horizon model that can
-# run to its full time budget on every combo), which is exactly what caused atlas-sweep's original
+# run to its full time budget on every combo), which is exactly what caused collect-prune-gap-labels's original
 # 1-to-23-minute shard spread. Rather than accept that spread, over-shard relative to the 20-way
 # concurrency limit: as a fast shard's small slice finishes, GitHub Actions pulls the next queued
 # matrix entry onto the freed runner, so slow shards' slack gets naturally backfilled by the queue
 # instead of sitting idle while the last slow shard finishes alone.
 #
-# Commit mechanics mirror atlas-sweep.yml: the combine job commits new/changed
+# Commit mechanics mirror collect-prune-gap-labels.yml: the combine job commits new/changed
 # data/stress/hints-random/*.json straight back to the dispatched branch from GitHub's own runner
 # network, not via an artifact download into a sandboxed dispatching session (see that workflow's
 # header for the proxy-block history this avoids). writeLevelsWithHints (scripts/level-data-io.mjs)
@@ -63,7 +63,7 @@ jobs:
         shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
                 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60]
-    # job-level `if:` cannot reference `matrix` (see atlas-sweep.yml's own comment on this) -- the
+    # job-level `if:` cannot reference `matrix` (see collect-prune-gap-labels.yml's own comment on this) -- the
     # shard_count trial-slice gate is applied per-step below instead.
     steps:
       - name: Check out the dispatched ref
