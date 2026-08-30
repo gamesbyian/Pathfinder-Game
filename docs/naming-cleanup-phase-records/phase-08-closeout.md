@@ -152,3 +152,13 @@ The Phase-8 completion conditions are satisfied subject to the final closeout PR
 
 Accordingly this PR advances `lastCompletedPhase` to **8**. Phase 9 becomes the next incomplete
 phase after #1596 merges.
+
+## 7. Specification-accounting amendment after PR #1596
+
+A later review correctly found that this record's prose classifications were not all projected back
+into the plan/ledger. The durable correction is
+[`phase-08-specification-accounting-amendment.md`](phase-08-specification-accounting-amendment.md).
+This is an amendment to the completion interpretation, not a rewrite of the evidence above. In
+particular, the retained trove, application fingerprint, solution-path-family, typed scoring-profile,
+and CP-SAT oracle interfaces are now machine-visible classifications, and the closeout checker is
+ledger-complete rather than dependent only on the literal patterns originally remembered here.

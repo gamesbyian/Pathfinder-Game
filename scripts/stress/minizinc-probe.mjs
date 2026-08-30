@@ -45,7 +45,7 @@ import { validateCandidatePath } from '../../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.ts';
 import { EXTERNAL_SOLVER_ID, hintPathSignature, makeProvenanceEntry, toHint } from '../../modules/domain/hint-types.ts';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { createSolver } from '../../modules/Solver.ts';
+import { createSolver } from '../../modules/solver.ts';
 
 installBrowserStubs();
 const Solver = createSolver();

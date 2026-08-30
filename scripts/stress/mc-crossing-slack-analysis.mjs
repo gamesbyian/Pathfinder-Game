@@ -39,7 +39,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints } from '../level-data-io.mjs';
-import { createSolver, SOLVER_TESTING_API } from '../../modules/Solver.ts';
+import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { computeMcNeighborBudget } from './lib/mc-neighbor-budget.mjs';
 

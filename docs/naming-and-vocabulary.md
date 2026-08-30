@@ -101,6 +101,33 @@ Prefer explicit qualifiers:
 - `knownSolutionPrefixSurvival`
 - `residualLevelSet`, `residualSearchState`, or another domain-qualified residual term
 
+Qualification is required at surfaced or ambiguous boundaries, not as a ban on contextually
+unambiguous locals. A positional/local identifier `profile` is acceptable when its declaration is
+typed `ScoringProfile`; generated fields, exported object properties, and prose still use
+`scoringProfile`. The read-only `AttemptLike.profile?: string` adapter in `hint-provenance.ts` is a
+permanent historical-attempt compatibility read, not a canonical output field. **Solution-path
+family** is the canonical concept for groups of structurally
+similar complete solution paths. Within the bounded
+`known-solution-prefix-survival.ts` contract, `family`, `families`, and `familyIds` are accepted
+short member names for that concept; they do not mean level, attempt, or search family.
+
+The following legacy spellings are compatibility identities, not vocabulary templates for new
+surfaces:
+
+- naked `fingerprint` inside the existing application level-identity cluster may remain where it
+  is a Firestore document ID, persisted field/shape, or a local/positional value flowing directly
+  through that boundary. New unrelated APIs use `levelFingerprint`; NC-P15-004 owns any migration.
+- `--trove-root`, the family-run manifest `trove` key, and dated `wide-trove-*` discovery paths
+  remain live compatibility contracts. Current explanatory prose calls the resource the
+  **variant-family dataset**. NC-P15-001 through NC-P15-003 own their possible migration.
+- CP-SAT explicit-prefix `oracle-shards`, `oracleLabel`, `oracleReason`, and the historical label
+  values remain result/workflow compatibility identities. The tool and workflow are the **CP-SAT
+  reference**; NC-P15-005 owns any schema/job migration. Independent solver-oracle terminology
+  remains valid under the general oracle rule.
+- `atlas-eligibility.mjs` and the shared `--atlas-dir` CLI/report fields remain Batch-8E-discovered
+  compatibility interfaces, not canonical vocabulary for new surfaces. NC-P15-006 and NC-P15-007
+  own their consumer-inward migrations.
+
 ## Corpora
 
 Canonical corpus names are:

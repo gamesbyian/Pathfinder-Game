@@ -731,6 +731,8 @@ Required canonical forms in new/current text and exported APIs:
 
 Batch 8H qualified the naked exported research/tooling surface it found: `OrderingResearchPolicy.profile`/`OrderingResearchRecord.family` -> `scoringProfile`/`searchFamily` (`modules/solver/operational-research-types.d.ts` and its 6 consumers); `scripts/import-published-levels.mjs`'s naked `fingerprint` export -> `levelFingerprint`; `scripts/stress/elite-prefix-dfs-ab.mjs`'s generated `profile` field -> `scoringProfile`; `scripts/stress/solution-profile-lib.mjs`'s `nearestProfiles` pool contract -> `{ id, solutionProfile }`. A full-repo consumer-inward search found no naked `residual` in any exported API surface (already adequately qualified everywhere it appears). Explicitly left out of scope, with rationale recorded in batch 8H's execution record: the ~10 core solver functions' `profile: ScoringProfile` positional parameter names (type-annotated, high-blast-radius hot-path code, not a "low risk" fit); the application/Firestore-persistence `fingerprint` cluster spanning `modules/input`, `modules/state-slices.ts`, `modules/persistence/*`, `modules/ports.ts`, `modules/data.ts`, `modules/dev-corpus.ts` (~25 files, a genuine Section 3.2 persisted-identity concern needing its own dedicated migration); and `KnownSolutionLabel`/`PrefixSupport`'s `family`/`families` fields on `modules/solver/known-solution-prefix-survival.ts`'s `KnownSolutionPrefixIndex` (a distinct "structural solution family" concept that does not cleanly fit `levelFamily`/`attemptFamily`/`searchFamily` — needs a specification amendment adding a new canonical form, not an ad-hoc name).
 
+Phase-8 specification-accounting amendment (2026-08-30): the broad rule above applies to surfaced or ambiguous APIs, not every lexically naked local. A `profile: ScoringProfile` positional/local identifier is explicitly type-disambiguated and retained. **Solution-path family** is now the canonical concept for the structural grouping used by known-solution-prefix survival; its bounded module contract may use short `family`/`families`/`familyIds` members. The application fingerprint cluster is not declared complete by NC-P08-008: it is a persisted level-identity boundary deferred to NC-P15-004. These classifications amend the specification; they do not rewrite batch 8H's historical evidence or authorize a solver/application rename.
+
 Rename current instrument and implementation names (implemented by batch 8B):
 
 - former `solver-winning-lineage-survival-analysis.md` -> `docs/solver-known-solution-prefix-survival.md`;
@@ -847,7 +849,7 @@ Current docs must say explicitly: solved-set regression is not a speed benchmark
 - former atlas-sweep.mjs -> `collect-prune-gap-labels.mjs` (implemented by batch 8E);
 - "branch atlas" -> "labelled branch set" (implemented by batch 8E);
 - former `family-wide-trove-manifest.mjs` -> `build-variant-family-dataset-manifest.mjs` (implemented by batch 8F);
-- "trove" -> "variant-family dataset" in current docs and tool output (implemented by batch 8F);
+- "trove" -> "variant-family dataset" in current explanatory docs and newly named tool/workflow identities (implemented by batch 8F), except the explicitly retained shared `--trove-root` CLI, family-run manifest `trove` field, dated `wide-trove-*` artifact/discovery paths, and the `PATHFINDER_VARIANT_TROVE` compatibility read. NC-P15-001 through NC-P15-003 and NC-P08-053 own those boundaries and their retirement/review rules;
 - former "winning-path archaeology" -> "winning-path analysis" (implemented by batch 8H: `scripts/stress/winning-path-archaeology.mjs` -> `scripts/stress/winning-path-analysis.mjs`);
 - "winning lineage" -> "known-solution-prefix survival" as specified above.
 
@@ -1333,6 +1335,18 @@ Do not combine all facade/state cleanup into one PR. Use serial batches with arc
 - **14C state/UI names:** `HinterState`, mutable `ENGINE`, renderer orientation helper, and `pendingConfirmationAction` renames with state/controller/render/browser coverage;
 - **14D merged-tree closeout:** architecture checks, browser tests, consumer-inward audit, and final Phase-14 residue census.
 
+### Phase 15 milestone: Compatibility-boundary review
+
+Phase 15 owns evidence-based retain/migrate decisions for compatibility spellings intentionally
+left live by earlier phases. NC-P15-001 through NC-P15-003 cover the shared trove CLI, generated
+manifest schema, and dated artifact discovery; NC-P15-004 covers the application/Firestore level
+fingerprint cluster; NC-P15-005 covers CP-SAT explicit-prefix result fields, values, and workflow job
+identity; NC-P15-006 covers the shared CP-SAT branch-labelling eligibility library; and NC-P15-007
+covers the shared atlas-directory CLI/generated-report boundary. These rows are not advance authorization for direct renames. Each must inventory current
+writers, external/persisted identities, historical fixtures, and all readers, then design dual-read
+normalization before any canonical single-write change. A no-migration retain decision must amend
+the row and permanent vocabulary authority with evidence rather than silently marking it done.
+
 ### PR 15: Cleanup completion
 
 - run repository-wide legacy-term audit;
@@ -1443,11 +1457,11 @@ The cleanup is complete only when all of the following are true.
 1. `ida:` appears only in frozen history, historical fixtures, or explicit legacy-parser documentation.
 2. Current code/docs do not call coarse beam state merging "dedup".
 3. Current code/docs do not call mechanic-bucket retention "diverse beam".
-4. Current code/docs qualify scoring profiles and do not present them as distinct algorithms by name alone.
+4. Current surfaced code/docs qualify scoring profiles and do not present them as distinct algorithms by name alone; typed `profile: ScoringProfile` locals are an explicit exception.
 5. Current routing code/docs say "routing regime", not "archetype".
 6. Current runtime orientation code does not use `variant`.
 7. False-goal internals use triggerability terminology.
-8. Only independent reference implementations use "oracle".
+8. Only independent reference implementations introduce new "oracle" terminology; the CP-SAT explicit-prefix historical result/job identities owned by NC-P15-005 remain compatible exceptions.
 9. Solved-set regression tooling does not use "benchmark".
 10. Current stage IDs use the Section 4.6 names, and historical IDs are accepted by one centralized normalizer.
 11. Current attempt identities use the Section 4.2 grammar, and historical identities are accepted by one centralized parser.
@@ -1458,7 +1472,7 @@ The cleanup is complete only when all of the following are true.
 16. Every live surfaced tool/package/workflow name is either canonical under Section 2.6 or has an explicit retained-term ledger entry; no surfaced `pilot` remains.
 17. Current scheduler mode is `production`; the historical wall-clock experiment is explicitly `legacy-latency-portfolio-experiment`; generic `legacy` is not a live scheduler identity.
 18. False-goal internal code, worker protocol, editor state/actions, telemetry, and developer tools use triggerability terminology; only deliberate player-facing copy may say "Trap".
-19. Live variant-family dataset tooling/workflows/env vars do not use `trove`; historical branch/report/artifact names may.
+19. Live variant-family dataset identities use canonical terminology except the ledger-owned `--trove-root`, manifest-field, dated-path, and legacy-env compatibility boundaries.
 20. Workflow names, path filters, concurrency identifiers, and newly emitted artifact names have been audited; no current workflow references a stale case-sensitive source path such as **modules/Solver.ts**.
 21. Attempt/action identity formatters pass round-trip, injectivity/collision, legacy-normalization, and deterministic-format tests.
 22. `npm run check:documentation-links` passes.

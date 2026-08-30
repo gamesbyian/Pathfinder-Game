@@ -2,7 +2,7 @@
   "schemaVersion": 4,
   "authority": "docs/naming-cleanup-plan.md",
   "permanentVocabularyAuthority": "docs/naming-and-vocabulary.md",
-  "generatedForPlanRevision": "2026-08-29-forward-spec-hardening",
+  "generatedForPlanRevision": "2026-08-30-phase8-specification-accounting-amendment",
   "status": "active",
   "entries": [
     {
@@ -4156,10 +4156,226 @@
       "phase": 6,
       "status": "done",
       "notes": "Newly classified during the 2026-08-30 third regression-audit round, which correctly flagged this as an unclassified live hit against the Phase 6 main-loop -> main-search stage rename. Retained (not renamed): scripts/tooling-lifecycle.json tags this tool 'cold-research' -- it reproduces a single dated 2026-08-08 investigation (reports/2026-08-08-main-loop-profile-order-starvation.md, itself frozen historical evidence) over already-committed baseline/hint provenance, is not invoked by any workflow/npm alias/current doc, and its own lifecycle note says newer techniqueLifecycle/stageLifecycle telemetry is the current default allocation diagnostic. 'main-loop' appears in this file only as its own filename/usage banner and in that frozen report title -- never as a functional stageId comparison or live identifier. Section 5.8's 'do not perform blind filename replacement across cold historical scripts' applies; a permanent main-search-starvation-census.mjs rename, if ever wanted, belongs to a future Phase-8+-style batch with its own impact map, not a retroactive Phase-6 completeness fix."
+    },
+    {
+      "id": "NC-P15-001",
+      "old": "shared --trove-root CLI and troveRootArg API",
+      "new": "--variant-family-dataset-root with an explicitly designed legacy alias",
+      "kind": "interface",
+      "risk": "medium",
+      "persistence": "dual-read",
+      "phase": 15,
+      "status": "pending",
+      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "migrationClass": "compatibility-boundary-migration",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "compatibility": {
+        "mode": "runtime-compatibility-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "shared family-path root parser and all family CLI callers"
+      },
+      "inventoryTerms": [
+        "--trove-root",
+        "troveRootArg",
+        "familyArtifactRoots"
+      ]
+    },
+    {
+      "id": "NC-P15-002",
+      "old": "family-run manifest trove field",
+      "new": "variantFamilyDataset field with permanent historical-read normalization",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 15,
+      "status": "pending",
+      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "migrationClass": "compatibility-boundary-migration",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "compatibility": {
+        "mode": "runtime-compatibility-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "family-run manifest writer/normalizer and family-index readers"
+      },
+      "inventoryTerms": [
+        "buildFamilyEvaluationRunManifest",
+        "FAMILY_RUN_REQUIRED",
+        "invariantFields"
+      ]
+    },
+    {
+      "id": "NC-P15-003",
+      "old": "live dated wide-trove report/artifact path convention",
+      "new": "canonical new-run variant-family-dataset paths while retaining historical paths",
+      "kind": "artifact",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 15,
+      "status": "pending",
+      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "migrationClass": "compatibility-boundary-migration",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "compatibility": {
+        "mode": "runtime-compatibility-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "variant-family dataset workflow, merger, and family-index discovery"
+      },
+      "inventoryTerms": [
+        "wide-trove-attempts-",
+        "2026-08-07-wide-trove"
+      ]
+    },
+    {
+      "id": "NC-P15-004",
+      "old": "application/Firestore naked fingerprint contract cluster",
+      "new": "levelFingerprint application names while preserving stored document IDs and serialized compatibility",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 15,
+      "status": "pending",
+      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "migrationClass": "compatibility-boundary-migration",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "compatibility": {
+        "mode": "runtime-compatibility-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "application state/actions, submission ports, and persistence repositories"
+      },
+      "inventoryTerms": [
+        "LevelRatingState",
+        "rating.fingerprint",
+        "loadLevelRating",
+        "getLocalLevelHints"
+      ]
+    },
+    {
+      "id": "NC-P15-005",
+      "old": "CP-SAT explicit-prefix oracle result/job identities",
+      "new": "reference-prefixed new result/job identities with historical-schema normalization",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 15,
+      "status": "pending",
+      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "migrationClass": "compatibility-boundary-migration",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "compatibility": {
+        "mode": "runtime-compatibility-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "CP-SAT explicit-prefix workflow, result writer, analyzer, and historical artifact readers"
+      },
+      "inventoryTerms": [
+        "oracleLabel",
+        "oracleReason",
+        "oracle-shards",
+        "oracle-abstain",
+        "oracle-unknown",
+        "atlas-abstain"
+      ]
+    },
+    {
+      "id": "NC-P15-006",
+      "old": "atlas-eligibility.mjs / selectEligibleAtlasLevels",
+      "new": "cpsat-branch-label-eligibility.mjs / selectEligibleCpsatBranchLevels",
+      "kind": "tool",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 15,
+      "status": "pending",
+      "notes": "Created by the Phase-8 specification-accounting analogous-exclusion audit from batch 8E. Shared by prune-gap collection and CP-SAT hint harvest; implementation requires a consumer-inward shared-library rename. No implementation is authorized by the Phase-8 closeout amendment. Surface inventory: docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md.",
+      "migrationClass": "direct-current-surface-rename",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "inventoryTerms": [
+        "atlas-eligibility.mjs",
+        "selectEligibleAtlasLevels",
+        "isEligibleForCpsatAtlas"
+      ]
+    },
+    {
+      "id": "NC-P15-007",
+      "old": "--atlas-dir / ATLAS_DIR / atlasDir / atlasFiles",
+      "new": "--prune-gap-dir / PRUNE_GAP_DIR / pruneGapDir / pruneGapFiles",
+      "kind": "interface",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 15,
+      "status": "pending",
+      "notes": "Created by the Phase-8 specification-accounting analogous-exclusion audit from batch 8E. Shared CLI and generated-report boundary across offline replay and must-crossing analysis; design dual-read CLI/schema normalization before canonical writes. No implementation is authorized by the Phase-8 closeout amendment. Surface inventory: docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md.",
+      "migrationClass": "compatibility-boundary-migration",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "compatibility": {
+        "mode": "runtime-compatibility-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "offline replay and must-crossing analysis CLI/report normalizer"
+      },
+      "inventoryTerms": [
+        "--atlas-dir",
+        "ATLAS_DIR",
+        "atlasDir",
+        "atlasFiles"
+      ]
     }
   ],
   "lastCompletedPhase": 8,
-  "lastUpdated": "2026-08-29",
+  "lastUpdated": "2026-08-30",
   "closeoutSessionNotes": "2026-08-29 closeout session (docs/naming-cleanup-plan.md P0-P4 punch list, plus a user-authorized follow-up to finish the two items it left pending): fixed two functional regressions from incomplete phase-7 propagation (dead editor trap-spot overlays; submission-time false-goal budget field name); added missing dual-reads across research tooling for phases 3/5/6 field renames; completed the phase-6 derived-vocabulary rename (mainLoop*/repairProbe*/attractionDiversity* families and STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY) across modules/solver/'s full definition+test surface and every live consumer this session located; fixed assorted stale doc/comment vocabulary drift; restored and broadened the naming-consumer-residue guard deleted in ad60c19c (scripts/check-naming-consumer-residue.mjs, wired into npm run check, now covers every phase 1-7 ledger entry with persistence 'none' instead of 5 hand-picked patterns) and corrected 3 ledger entries this guard's build surfaced as misclassified (navDensity, validTrapSpots, trapParityCandidates). Follow-up (same session): completed the two items left pending by the original punch list -- the --main-loop-late-reserve-*/--repair-probe-adaptive-* CLI flag dual-read renames, and the STRATEGY_REPAIR_PROBE*/STRATEGY_MAIN_LOOP_LATE_RESERVE/STRATEGY_ATTRACTION_DIVERSITY* ablation-flag rename that naming-cleanup-plan.md Section 4.6 had fixed no canonical name for -- by deriving canonical spellings consistent with this phase's stage-id families and wiring them into ablation-config.ts's existing dual-read seam (see that ledger entry's own notes for the full writeup, including a real bug this surfaced and fixed in scripts/solver-parallel/race.mjs, which built its ablationCfg from raw, uncanonicalized keys). Phase 6 is now fully clean: zero pending entries. Phase 7 remains clean too. Everything renamed this session keeps existing callers working via @deprecated dual-read aliases with parity tests; nothing here changes solver behavior, scoring, budgets, or pruning. 2026-08-29 regression-audit closeout session (separate, later session on the same date; three independent read-only audits had each verified real, concrete regressions in the Phase 1-7 'done' work, not naming residue -- actual functional bugs, a broken-under-supported-Node-20 tool surface, and process/documentation gaps). Fixed all of the following before Phase 8 may start:\nPRIORITY 1 (solver behavior/config bugs): (1) scripts/portfolio-solve-sweep-worker.mjs forwarded only the legacy attractionDiversityBudgetFractionOverride into the raced solver's options object, silently dropping a canonical-only goalAttractionDisabledRetryBudgetFractionOverride even though race.mjs itself dual-reads correctly -- fixed to forward both; see that ledger entry's own notes. (2) scripts/level-blind-capability-sweep.mjs hardcoded the removed 'legacy' scheduler-mode label into every report despite always actually running in production mode (it sets no schedulerMode at all) -- fixed to set/report 'production' explicitly. (3) scripts/stress/elite-prefix-dfs-ab.mjs read the fully-removed AttemptConfig field profileName with no fallback, silently printing profile: undefined in every flip row it ever recorded -- fixed to read scoringProfileId. All three now have regression tests (test:portfolio-solve-sweep-worker, test:level-blind-capability-sweep-cli, test:elite-prefix-dfs-ab) that fail against the pre-fix code and pass against the fix.\nPRIORITY 2 (broke the repo's own supported/CI Node 20): five .mjs research scripts imported modules/solver/*.ts directly, which throws ERR_UNKNOWN_FILE_EXTENSION under real Node 20 (confirmed against an actual v20.19.0 binary via nvm, not just the sandbox's newer default, which silently masks this class of bug with its own type-stripping) -- scripts/corpus-query-lib.mjs, scripts/family-boundary-report.mjs, scripts/family-census-combine.mjs, scripts/portfolio-solve-sweep-lib.mjs (all four via modules/solver/routing-regime.ts or stage-policy.ts), plus scripts/analyze-technique-campaign.mjs (importing a stage-policy.js that does not exist at all, silently working only because its one test routed it through scripts/run-bundled.mjs's bundler instead of plain node, an undocumented, unintentional contract change). Fixed by extracting the single-source normalizer + legacy-alias map each needs into new plain-JS sibling modules -- modules/solver/routing-regime-normalization.mjs and modules/solver/stage-id-normalization.mjs (each JSDoc-typed so npm run check:types still enforces the literal-union return type) -- with routing-regime.ts/stage-policy.ts now importing and re-exporting from them rather than duplicating the maps. All five scripts, plus scripts/hint-query-lib.mjs (defense-in-depth) and the two Priority-3 scripts below, now import the plain-.mjs sibling directly; analyze-technique-campaign.mjs is plain-node-runnable again and its test now invokes it directly instead of through run-bundled.mjs. All seven previously-failing npm test targets (test:corpus-query, test:research-index, test:family-boundary, test:family-boundary-cli, test:family-census-combine, test:technique-census-second-order, test:winning-attempt-family) were re-verified green against the real v20.19.0 binary, including the nested `execFile('node', ...)` subprocess spawns inside the two CLI tests (which need PATH itself pointed at the v20 bin dir, not just the outer test-runner process, to actually exercise the bug -- an easy way to accidentally re-verify nothing). Separately audited scripts/portfolio-solve-sweep.mjs's --scheduler-mode-must-be-explicit behavior (a genuine, intentional behavior correction bundled into the original Phase-6 PR, not a regression): every live workflow already passes it explicitly; found and fixed the one doc caller that didn't (reports/portfolio/README.md's historical reproduction command).\nPRIORITY 3 (silent data-completeness gaps): scripts/stress/early-repair-search-badness-report.mjs and scripts/stress/restart-continuation-population-pilot.mjs did raw stageId string equality instead of routing through normalizeSolverStageId(), so a historical row carrying the literal legacy stageId 'repair-probe' (not null, but the old string) matched neither branch and was silently excluded -- fixed, with a repair-probe fixture row proving recognition in each tool's own new test. scripts/family-boundary-report.mjs already read/normalized routing-regime values correctly but wrote the canonical VALUE out under the legacy FIELD NAME (parentFeatures.archetype) and exposed only --archetype as its CLI flag -- an actively-run report generator, not a frozen artifact -- fixed to parentFeatures.routingRegime / --routing-regime, keeping --archetype as a documented legacy input alias.\nPRIORITY 4 (stale doc/comment vocabulary): fixed docs/solver-architecture.md's attractionDiversityBudgetFractionOverride example, a stale 'attraction-diversity' workflow comment, ADR 0003's archetype/trap-search/solve/findTrapSpots/modules-Solver.ts references, tooling-catalog.md's --technique= example, a mangled docstring path (literal space) in confirm-residual-001-archetype-audit.mjs, a stale vocabulary array in run-audit-export.mjs, hint-query.mjs's stale repair-late-probe usage example (plus added defense-in-depth normalizeSolverStageId() routing to hint-query-lib.mjs's retryTier filtering, even though no legacy value is currently persisted in data/hints/), and a stale 'unreachable' vs. 'untriggerable' comment in submission-controller.ts.\nPRIORITY 5 (process/ledger hygiene): extracted a single normalizeSchedulerMode() helper (modules/solver/scheduler-mode-normalization.mjs, mirroring normalizeSolverStageId()'s pattern) shared by scripts/req-length-sweep.mjs and scripts/portfolio-solve-sweep.mjs, which had independently reimplemented the same legacy/canonical scheduler-mode alias mapping -- each script keeps its own distinct omission policy (default-to-legacy vs. throw) layered on top of the shared normalizer. Added scripts/check-solveopts-transport-parity.mjs (check:solveopts-transport-parity, wired into npm run check), a narrow mechanical check that would have caught the Priority-1 worker bug: for every ledger-recorded dual-read SolveOpts override-field pair, if a scripts/modules source file mentions the legacy field name it must also mention the canonical name somewhere in the same file. check-naming-consumer-residue.mjs cannot catch this class of bug by design (it explicitly excludes dual-read entries, and only flags a fully-removed old name) -- left an explicit KNOWN SCOPE GAP comment in that file's own header documenting this, since the new check only covers the SolveOpts-override-field shape of the bug, not the AttemptConfig-field-with-no-fallback-at-all shape (elite-prefix-dfs-ab.mjs) or the correct-value-under-legacy-field-name shape (family-boundary-report.mjs) -- a green run of either guard is not proof of completeness for those.\nVALIDATION: npm run check, npm run test:node, and npm run test:coverage (i.e. everything npm run ci runs) are all green under the sandbox's default Node, AND npm run check / npm run test:node were separately re-run fully green under a real Node v20.19.0 binary (via nvm, PATH pointed at its bin dir so nested subprocess spawns also use it). lastCompletedPhase advanced to 7 only after this full verification. Nothing in this session changes solver behavior, scoring, budgets, pruning, or attempt order -- every fix either restores the INTENDED already-canonical behavior a bug had silently defeated, or corrects tooling/doc vocabulary drift. No Phase 8 work (routing-regime sample tools, atlas/trove renames, technique-census-second-order rename) was started. 2026-08-30 second regression-audit round (three more independent audits ran against main after the 2026-08-29 closeout merged as PR #1578, on top of an unrelated process-hardening PR #1584 that landed in between and was rebased onto cleanly -- no overlap with the files this round touches). Findings and fixes, in the order reported:\n(1) scripts/portfolio-scheduler-report.mjs's separate portfolioWinner lookup (used for winningConfig/gateKey) only checked the legacy schedulerPhase 'portfolio', missing the canonical 'legacy-latency-portfolio' the same file's own passForPortfolioWin/summarizeRuntime already handle correctly -- so a normal (pre-fallback) portfolio-scheduler win reported winningConfig: null despite solving. See NC-P06-027's notes for the full writeup and test:portfolio-scheduler-report-cli.\n(2) family-boundary-report.mjs/family-boundary-lib.mjs and analyze-lineage-mechanics.mjs were all still writing fresh output under the legacy navDensity key despite correctly dual-reading the canonical value on input; family-boundary-report.mjs also exposed only --nav-density-min/max as its filter flags. See NC-P03-003's notes for the full writeup, test:family-boundary-cli, and test:analyze-lineage-mechanics-cli.\n(3) scripts/family-wide-trove-shard-run.mjs (an active producer) and two maintained workflows (solver-highbudget-unsolved-sweep.yml, solver-typical-budget-baseline.yml) still invoked/wrote the retired scheduler-mode spelling 'legacy' instead of 'production' -- compatibility-alias-correct but kept manufacturing/teaching retired vocabulary in current automation. See NC-P06-022's notes for the full writeup.\n(4) scripts/stress/select-routing-regime-sample.mjs's --routing-regimes/--archetypes conflict check compared raw strings before normalization, so an equivalent canonical/legacy pair (e.g. intersection-heavy vs. high-intersection-burden) was wrongly rejected as conflicting; .github/workflows/solver-routing-regime-sample-ab.yml independently duplicated the same raw-string check in bash. See NC-P03-008's notes for the full writeup and test:select-routing-regime-sample-cli.\n(5) scripts/stress/winning-lineage-pilot.mjs still wrote profile: 'default' instead of scoringProfileId in its fresh output (Phase 5 field migration, lower severity than (1)/(2)). See NC-P05-003's notes for the full writeup and test:winning-lineage-pilot-cli.\n(6) modules/solver.ts's own top-of-file comment still said \"Solver.ts\" despite the lowercase physical filename -- fixed, no ledger entry (a stray comment, not a tracked rename).\nDeliberately NOT chased in this round: the current-source vocabulary residue the second and third audits also listed (modules/solver/attempts.ts's 'templates'/'non-diverse' language, distance.ts's/feature-matrix.test.ts's 'trap search' comments, hint-provenance.ts's legacy template/diverseBeam/dedupNearTieRetry dual-read input fields, level-blindness.test.ts's attempt.template reference) and the third audit's broader process-liability findings (no durable before/after behavior-preservation oracle artifact; the ledger's own prose-shaped entries being agent-judgment rather than schema-verified). Both audits explicitly classified this residue as low-to-medium severity naming/maintenance debt rather than confirmed functional breakage, distinct from the six items above which were genuine bugs (a corrupted live report, single-write violations manufacturing fresh legacy-schema evidence, a real usability bug, and incomplete field migrations). All six were independently confirmed by writing a regression test that fails against the pre-fix code and passes against the fix, matching this repo's own standard. lastCompletedPhase remains 7 -- none of these are new-phase work, all are bug fixes within already-'done' phases 3/5/6. npm run check, npm run test:node, and npm run test:coverage are all green under both the sandbox's default Node and a real Node v20.19.0 binary (via nvm) for every newly-touched/added file. Nothing in this round changes solver behavior, scoring, budgets, pruning, or attempt order. 2026-08-30 third regression-audit round (against the same fc9294aa main, reviewing the still-unmerged second-round commit b6e2730b rather than trusting its own description). Found and fixed two additional real defects the second round's fix did not fully cover, plus explicitly classified one previously-unclassified live hit:\n(1) Producer/consumer coverage-field mismatch: family-generate.mjs's schemaVersion-2 manifests single-write parentRequiredPathCoverageRatio only (its own tests assert parentNavDensity is absent), but family-boundary-lib.mjs's default features fallback and family-boundary-report.mjs's own --parent-levels enrichment fallback chain both still read only the legacy manifest.parentNavDensity -- so a normal freshly-generated canonical manifest silently lost its coverage value whenever features weren't independently supplied. See NC-P03-003's notes for the full writeup and the new family-boundary-lib-node-test.mjs/family-boundary-cli-node-test.mjs coverage.\n(2) family-boundary-report.mjs independently had the identical raw-string --routing-regime/--archetype conflict-check bug already fixed in select-routing-regime-sample.mjs (compared before normalization, so equivalent canonical/legacy pairs were wrongly rejected as conflicting) -- the same bug shape shipped in two places. See NC-P03-008's notes.\n(3) scripts/stress/main-loop-starvation-census.mjs was flagged as an unclassified live hit against the Phase 6 main-loop -> main-search stage rename. Investigated and classified rather than renamed: scripts/tooling-lifecycle.json already tags this tool 'cold-research' (a single dated reproduction of frozen historical evidence, not invoked by any workflow/alias/current doc, explicitly superseded by newer techniqueLifecycle/stageLifecycle telemetry per its own lifecycle note), and 'main-loop' appears in it only as its own filename/banner and a frozen report title, never as a functional identifier. New ledger entry NC-P06-051 (old===new retained-term pattern) records this classification so the hit is no longer unclassified; a permanent rename, if ever wanted, belongs to a future scoped batch, not a retroactive Phase-6 fix.\nAll fixes independently re-verified by writing a regression test that fails against the pre-fix code and passes against the fix (matching this repo's own standard), not by trusting either the prior commit's or this audit's own description. npm run check, test:node, and test:coverage are green under both the sandbox Node and a real Node v20.19.0 binary. lastCompletedPhase remains 7.",
   "processHardeningAuthority": "docs/naming-cleanup-process-hardening.md",
   "completionContractVersion": 4,
@@ -4224,7 +4440,7 @@
     "recordPath": null,
     "notes": "Phase 8 complete after batches 8A-8H merged and the separate post-merge consumer-inward closeout audit was recorded in docs/naming-cleanup-phase-records/phase-08-closeout.md (PR #1596). Next incomplete phase is Phase 9."
   },
-  "specificationNotes": "Completion contract v4 adds stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate.",
+  "specificationNotes": "Completion contract v4 adds stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior.",
   "phaseBatches": {
     "8": [
       "8A",
@@ -4278,5 +4494,642 @@
       "pr": 1595,
       "mergeCommit": "d41204e42cbc99d779dd6fbc60483ea36a84a562"
     }
+  },
+  "phaseCloseoutCoverage": {
+    "8": {
+      "NC-P08-001": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver-winning-lineage-survival-analysis.md"
+      },
+      "NC-P08-002": {
+        "kind": "literal-legacy-surface",
+        "legacy": "analyze-lineage-mechanics.mjs"
+      },
+      "NC-P08-003": {
+        "kind": "literal-legacy-surface",
+        "legacy": "modules/solver/research-lineage.ts"
+      },
+      "NC-P08-004": {
+        "kind": "literal-legacy-surface",
+        "legacy": "WinningPrefixIndex"
+      },
+      "NC-P08-005": {
+        "kind": "literal-legacy-surface",
+        "legacy": "WinningLineageObserver"
+      },
+      "NC-P08-006": {
+        "kind": "literal-legacy-surface",
+        "legacy": "LineageStageSummary"
+      },
+      "NC-P08-007": {
+        "kind": "semantic-contract",
+        "legacy": "naked profile",
+        "contract": "typed-scoring-profile-shorthand"
+      },
+      "NC-P08-008": {
+        "kind": "retained-boundary",
+        "legacy": "naked fingerprint",
+        "contract": "persisted-level-fingerprint-cluster",
+        "files": [
+          "modules/data.ts",
+          "modules/dev-corpus.ts",
+          "modules/input/review-controller.ts",
+          "modules/input/solver-controller.ts",
+          "modules/input/submission-controller.test.ts",
+          "modules/input/submission-controller.ts",
+          "modules/input/submission-core.test.ts",
+          "modules/input/submission-core.ts",
+          "modules/persistence/level-rating-repository.ts",
+          "modules/persistence/level-submission-repository.ts",
+          "modules/persistence/local-level-hints-repository.ts",
+          "modules/persistence/review-repository.ts",
+          "modules/ports.ts",
+          "modules/state-slices.ts",
+          "modules/state/actions/rating-actions.test.ts",
+          "modules/state/actions/rating-actions.ts"
+        ]
+      },
+      "NC-P08-009": {
+        "kind": "retained-boundary",
+        "legacy": "naked family",
+        "contract": "solution-path-family-concept",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-006"
+        ]
+      },
+      "NC-P08-010": {
+        "kind": "literal-legacy-surface",
+        "legacy": "winning lineage"
+      },
+      "NC-P08-011": {
+        "kind": "semantic-contract",
+        "legacy": "naked residual API term",
+        "contract": "domain-qualified-residual-exports"
+      },
+      "NC-P08-012": {
+        "kind": "literal-legacy-surface",
+        "legacy": "hint-path-oracle.mjs"
+      },
+      "NC-P08-013": {
+        "kind": "literal-legacy-surface",
+        "legacy": "test:hint-path-oracle"
+      },
+      "NC-P08-014": {
+        "kind": "literal-legacy-surface",
+        "legacy": "cpsat-full-probe.py"
+      },
+      "NC-P08-015": {
+        "kind": "literal-legacy-surface",
+        "legacy": "cpsat-explicit-prefix-oracle.mjs"
+      },
+      "NC-P08-016": {
+        "kind": "literal-legacy-surface",
+        "legacy": "atlas-sweep.mjs"
+      },
+      "NC-P08-017": {
+        "kind": "literal-legacy-surface",
+        "legacy": "branch atlas",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-008",
+          "NC-RET-P08-009",
+          "NC-RET-P08-010"
+        ]
+      },
+      "NC-P08-018": {
+        "kind": "literal-legacy-surface",
+        "legacy": "family-wide-trove-manifest.mjs"
+      },
+      "NC-P08-019": {
+        "kind": "retained-boundary",
+        "legacy": "trove",
+        "contract": "trove-compatibility-and-persisted-identities",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-001"
+        ]
+      },
+      "NC-P08-020": {
+        "kind": "literal-legacy-surface",
+        "legacy": "winning-path archaeology"
+      },
+      "NC-P08-021": {
+        "kind": "literal-legacy-surface",
+        "legacy": "technique-census-second-order.mjs",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-005"
+        ]
+      },
+      "NC-P08-022": {
+        "kind": "literal-legacy-surface",
+        "legacy": "technique-census-second-order-analysis.md",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-005"
+        ]
+      },
+      "NC-P08-023": {
+        "kind": "literal-legacy-surface",
+        "legacy": "run-audit-export.mjs"
+      },
+      "NC-P08-024": {
+        "kind": "compatibility-exemption",
+        "legacy": "knownHardCluster",
+        "contract": "solver-diagnostics-historical-reader",
+        "files": [
+          "scripts/analyze-solver-diagnostics.mjs"
+        ]
+      },
+      "NC-P08-025": {
+        "kind": "compatibility-exemption",
+        "legacy": "recommendedGating",
+        "contract": "solver-diagnostics-historical-reader",
+        "files": [
+          "scripts/analyze-solver-diagnostics.mjs"
+        ]
+      },
+      "NC-P08-026": {
+        "kind": "literal-legacy-surface",
+        "legacy": "audit:newhint:full"
+      },
+      "NC-P08-027": {
+        "kind": "literal-legacy-surface",
+        "legacy": "repair-direct-probe.mjs"
+      },
+      "NC-P08-028": {
+        "kind": "literal-legacy-surface",
+        "legacy": "repair-direct-probe-worker.mjs"
+      },
+      "NC-P08-029": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/winning-lineage-pilot.mjs"
+      },
+      "NC-P08-030": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:winning-lineage-pilot"
+      },
+      "NC-P08-031": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/winning-prefix-atlas-pilot.mjs",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-002",
+          "NC-RET-P08-008"
+        ]
+      },
+      "NC-P08-032": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:winning-prefix-atlas-pilot"
+      },
+      "NC-P08-033": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/producer-population-pilot.mjs",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-003"
+        ]
+      },
+      "NC-P08-034": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:producer-population-pilot"
+      },
+      "NC-P08-035": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/residual-interface-mining-pilot.mjs"
+      },
+      "NC-P08-036": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:residual-interface-pilot"
+      },
+      "NC-P08-037": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/repair-rollback-census-pilot.mjs",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-004"
+        ]
+      },
+      "NC-P08-038": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:repair-rollback-pilot"
+      },
+      "NC-P08-039": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/symmetry-repair-seed-pilot.mjs"
+      },
+      "NC-P08-040": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:symmetry-repair-seed-pilot"
+      },
+      "NC-P08-041": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/restart-continuation-population-pilot.mjs"
+      },
+      "NC-P08-042": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/analyze-equal-work-census-pilot.mjs"
+      },
+      "NC-P08-043": {
+        "kind": "literal-legacy-surface",
+        "legacy": ".github/workflows/atlas-sweep.yml"
+      },
+      "NC-P08-044": {
+        "kind": "semantic-contract",
+        "legacy": "workflow atlas-sweep display/concurrency",
+        "contract": "prune-gap-workflow-identity",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-009",
+          "NC-RET-P08-010"
+        ]
+      },
+      "NC-P08-045": {
+        "kind": "literal-legacy-surface",
+        "legacy": ".github/workflows/cpsat-explicit-prefix-oracle.yml"
+      },
+      "NC-P08-046": {
+        "kind": "semantic-contract",
+        "legacy": "CP-SAT workflow/job oracle display",
+        "contract": "cpsat-reference-display",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-007"
+        ]
+      },
+      "NC-P08-047": {
+        "kind": "literal-legacy-surface",
+        "legacy": ".github/workflows/family-wide-trove.yml"
+      },
+      "NC-P08-048": {
+        "kind": "literal-legacy-surface",
+        "legacy": "family-wide-trove-shard-run.mjs"
+      },
+      "NC-P08-049": {
+        "kind": "literal-legacy-surface",
+        "legacy": "family-wide-trove-shard-slice.mjs"
+      },
+      "NC-P08-050": {
+        "kind": "literal-legacy-surface",
+        "legacy": "family-wide-trove-combine.mjs"
+      },
+      "NC-P08-051": {
+        "kind": "literal-legacy-surface",
+        "legacy": "family-trove-doctor.mjs"
+      },
+      "NC-P08-052": {
+        "kind": "literal-legacy-surface",
+        "legacy": "family:trove:doctor"
+      },
+      "NC-P08-053": {
+        "kind": "compatibility-exemption",
+        "legacy": "PATHFINDER_VARIANT_TROVE",
+        "contract": "variant-family-dataset-root-resolver",
+        "files": [
+          "scripts/validate-variant-family-dataset-worktree.mjs",
+          "scripts/validate-variant-family-dataset-worktree-node-test.mjs"
+        ],
+        "retainedSurfaceIds": [
+          "NC-RET-P08-001"
+        ]
+      },
+      "NC-P08-054": {
+        "kind": "literal-legacy-surface",
+        "legacy": "TROVE_BRANCH"
+      },
+      "NC-P08-055": {
+        "kind": "literal-legacy-surface",
+        "legacy": ".github/workflows/audit-export.yml"
+      },
+      "NC-P08-056": {
+        "kind": "literal-legacy-surface",
+        "legacy": "Audit Export"
+      },
+      "NC-P08-057": {
+        "kind": "literal-legacy-surface",
+        "legacy": "stress/confirm-residual-001-archetype-audit.mjs"
+      },
+      "NC-P08-058": {
+        "kind": "literal-legacy-surface",
+        "legacy": "portfolio-scheduler-report.mjs"
+      },
+      "NC-P08-059": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:portfolio-report"
+      },
+      "NC-P08-060": {
+        "kind": "literal-legacy-surface",
+        "legacy": "portfolio-historical-replay.mjs"
+      },
+      "NC-P08-061": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver:portfolio-replay"
+      },
+      "NC-P08-062": {
+        "kind": "literal-legacy-surface",
+        "legacy": "scripts/gha-result.mjs"
+      },
+      "NC-P08-063": {
+        "kind": "literal-legacy-surface",
+        "legacy": "gha:result"
+      },
+      "NC-P08-064": {
+        "kind": "literal-legacy-surface",
+        "legacy": "solver-shadow-eval-harness.md"
+      },
+      "NC-P08-065": {
+        "kind": "literal-legacy-surface",
+        "legacy": "interface-probe-harness.mjs"
+      },
+      "NC-P08-066": {
+        "kind": "semantic-contract",
+        "legacy": "producer -> receptor",
+        "contract": "producer-consumer-terminology"
+      },
+      "NC-P08-067": {
+        "kind": "literal-legacy-surface",
+        "legacy": "receptor limitation"
+      },
+      "NC-P08-068": {
+        "kind": "literal-legacy-surface",
+        "legacy": "receptor can rediscover"
+      }
+    }
+  },
+  "phaseRetainedSurfaces": {
+    "8": [
+      {
+        "id": "NC-RET-P08-001",
+        "owner": "NC-P08-053 and NC-P15-001 through NC-P15-003",
+        "lifecycle": "phase-15-review; historical dated paths remain readable",
+        "matches": [
+          {
+            "term": "trove",
+            "files": [
+              "scripts/family-paths.mjs",
+              "scripts/family-parent-hint-replay-batch.mjs",
+              "scripts/experiment-manifest-lib.mjs",
+              "scripts/family-index-lib.mjs",
+              "scripts/family-index-lib-check.mjs",
+              "scripts/experiment-manifest-lib-check.mjs",
+              "scripts/family-run-manifest-producer-node-test.mjs",
+              "scripts/collect-variant-family-dataset-shard.mjs",
+              "scripts/family-index.mjs",
+              "scripts/merge-variant-family-dataset-shards.mjs",
+              ".github/workflows/collect-variant-family-dataset.yml",
+              "docs/tooling-catalog.md",
+              "docs/variant-level-research.md"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-053",
+          "NC-P15-001",
+          "NC-P15-002",
+          "NC-P15-003"
+        ],
+        "ownerClass": "compatibility-or-deferred"
+      },
+      {
+        "id": "NC-RET-P08-002",
+        "owner": "frozen dated input artifact",
+        "lifecycle": "never rename historical artifact",
+        "matches": [
+          {
+            "term": "winning-prefix-atlas-pilot",
+            "files": [
+              ".github/workflows/cpsat-explicit-prefix-reference.yml"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-031"
+        ],
+        "ownerClass": "frozen-history"
+      },
+      {
+        "id": "NC-RET-P08-003",
+        "owner": "deterministic sample seed and historical explanation",
+        "lifecycle": "never rename behavior-sensitive seed",
+        "matches": [
+          {
+            "term": "producer-population-pilot",
+            "files": [
+              "modules/solver/repair-search.ts",
+              "scripts/stress/compare-search-producer-populations.mjs"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-033"
+        ],
+        "ownerClass": "behavior-sensitive"
+      },
+      {
+        "id": "NC-RET-P08-004",
+        "owner": "deterministic sample seed",
+        "lifecycle": "never rename behavior-sensitive seed",
+        "matches": [
+          {
+            "term": "repair-rollback-census-pilot",
+            "files": [
+              "scripts/stress/census-repair-rollback-windows.mjs"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-037"
+        ],
+        "ownerClass": "behavior-sensitive"
+      },
+      {
+        "id": "NC-RET-P08-005",
+        "owner": "persisted technique-census report identity and methodological term",
+        "lifecycle": "never rename historical report identity without a separate migration",
+        "matches": [
+          {
+            "term": "second-order-analysis",
+            "files": [
+              "scripts/analyze-technique-census.mjs",
+              "scripts/technique-operational-similarity.mjs",
+              "docs/technique-census-analysis.md"
+            ]
+          },
+          {
+            "term": "renderTechniqueCensusSecondOrder",
+            "files": [
+              "scripts/analyze-technique-census.mjs",
+              "scripts/analyze-technique-census-node-test.mjs"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-021",
+          "NC-P08-022"
+        ],
+        "ownerClass": "persisted-methodological"
+      },
+      {
+        "id": "NC-RET-P08-006",
+        "owner": "known-solution-prefix generated report schema",
+        "lifecycle": "retained distinct structural-family fields",
+        "matches": [
+          {
+            "term": "structuralWinningFamilies",
+            "files": [
+              "scripts/stress/collect-known-solution-prefix-survival.mjs"
+            ]
+          },
+          {
+            "term": "structuralFamiliesAroundCutoff",
+            "files": [
+              "scripts/stress/collect-known-solution-prefix-survival.mjs"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-009",
+          "NC-P08-010"
+        ],
+        "ownerClass": "distinct-semantic-contract"
+      },
+      {
+        "id": "NC-RET-P08-007",
+        "owner": "NC-P15-005 CP-SAT result/job compatibility boundary",
+        "lifecycle": "phase-15-review with historical reads preserved",
+        "matches": [
+          {
+            "term": "oracleLabel",
+            "files": [
+              "scripts/stress/repair-retreat-binary-search.mjs",
+              "scripts/stress/cpsat-explicit-prefix-reference.mjs",
+              ".github/workflows/cpsat-explicit-prefix-reference.yml"
+            ]
+          },
+          {
+            "term": "oracleReason",
+            "files": [
+              "scripts/stress/repair-retreat-binary-search.mjs",
+              "scripts/stress/cpsat-explicit-prefix-reference.mjs"
+            ]
+          },
+          {
+            "term": "oracle-abstain",
+            "files": [
+              "scripts/stress/research-analysis-lib.mjs",
+              "scripts/stress/research-analysis-lib-check.mjs",
+              "scripts/stress/cpsat-explicit-prefix-reference-lib.mjs",
+              "scripts/stress/collect-known-solution-prefix-branches.mjs"
+            ]
+          },
+          {
+            "term": "oracle-unknown",
+            "files": [
+              "scripts/stress/cpsat-explicit-prefix-reference-lib.mjs"
+            ]
+          },
+          {
+            "term": "oracle-shards",
+            "files": [
+              ".github/workflows/cpsat-explicit-prefix-reference.yml"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-046",
+          "NC-P15-005"
+        ],
+        "ownerClass": "compatibility-or-deferred"
+      },
+      {
+        "id": "NC-RET-P08-008",
+        "owner": "NC-P15-005 workflow input enum compatibility boundary",
+        "lifecycle": "phase-15-review with historical input accepted",
+        "matches": [
+          {
+            "term": "atlas-abstain",
+            "files": [
+              "scripts/stress/cpsat-explicit-prefix-reference-lib.mjs",
+              "scripts/stress/research-analysis-lib-check.mjs",
+              ".github/workflows/cpsat-explicit-prefix-reference.yml"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-017",
+          "NC-P08-031",
+          "NC-P15-005"
+        ],
+        "ownerClass": "compatibility-or-deferred"
+      },
+      {
+        "id": "NC-RET-P08-009",
+        "owner": "Batch 8E shared CP-SAT eligibility library deferred to NC-P15-006",
+        "lifecycle": "phase-15-review; retain until all shared consumers migrate",
+        "ownerRowIds": [
+          "NC-P08-017",
+          "NC-P08-044",
+          "NC-P15-006"
+        ],
+        "ownerClass": "compatibility-or-deferred",
+        "matches": [
+          {
+            "term": "atlas-eligibility.mjs",
+            "files": [
+              "scripts/stress/lib/atlas-eligibility.mjs",
+              "scripts/stress/collect-prune-gap-labels.mjs",
+              "scripts/stress/cpsat-hint-harvest-sweep.mjs",
+              ".github/workflows/cpsat-hint-harvest-sweep.yml"
+            ]
+          },
+          {
+            "term": "selectEligibleAtlasLevels",
+            "files": [
+              "scripts/stress/lib/atlas-eligibility.mjs",
+              "scripts/stress/collect-prune-gap-labels.mjs"
+            ]
+          },
+          {
+            "term": "isEligibleForCpsatAtlas",
+            "files": [
+              "scripts/stress/lib/atlas-eligibility.mjs"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "NC-RET-P08-010",
+        "owner": "Batch 8E shared atlas directory CLI/report boundary deferred to NC-P15-007",
+        "lifecycle": "phase-15-review with dual-read design before new writes",
+        "ownerRowIds": [
+          "NC-P08-017",
+          "NC-P08-044",
+          "NC-P15-007"
+        ],
+        "ownerClass": "compatibility-or-deferred",
+        "matches": [
+          {
+            "term": "--atlas-dir",
+            "files": [
+              "scripts/stress/mc-crossing-slack-analysis.mjs",
+              "scripts/stress/offline-replay-harness.mjs",
+              "docs/solver-offline-replay-harness.md"
+            ]
+          },
+          {
+            "term": "ATLAS_DIR",
+            "files": [
+              "scripts/stress/mc-crossing-slack-analysis.mjs",
+              "scripts/stress/offline-replay-harness.mjs"
+            ]
+          },
+          {
+            "term": "atlasDir",
+            "files": [
+              "scripts/stress/mc-crossing-slack-analysis.mjs",
+              "scripts/stress/offline-replay-harness.mjs"
+            ]
+          },
+          {
+            "term": "atlasFiles",
+            "files": [
+              "scripts/stress/mc-crossing-slack-analysis.mjs",
+              "scripts/stress/offline-replay-harness.mjs"
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

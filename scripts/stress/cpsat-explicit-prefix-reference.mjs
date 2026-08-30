@@ -38,7 +38,7 @@ const cases = selectedCases.filter((_, index) => index % shardCount === shardInd
 console.log(`Explicit-prefix reference shard ${shardIndex}/${shardCount}: ${cases.length}/${selectedCases.length} selected case(s).`);
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/Solver.ts');
+const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const Solver = createSolver();
 const probePath = 'scripts/stress/cpsat-reference-probe.py';
 const git = (...gitArgs) => execFileSync('git', gitArgs, { encoding: 'utf8' }).trim();

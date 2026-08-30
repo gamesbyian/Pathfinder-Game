@@ -58,3 +58,14 @@ Final post-merge closeout evidence: [`phase-08-closeout.md`](phase-08-closeout.m
 - `npm run naming:surface-inventory -- --compact --phase=8` shows no unclassified live legacy surface;
 - current docs/tooling/workflow authorities use canonical Phase-8 terminology;
 - frozen historical evidence remains unchanged except for explicit compatibility readers.
+
+## Post-completion specification-accounting amendment (2026-08-30)
+
+The completion marker is qualified by
+[`phase-08-specification-accounting-amendment.md`](phase-08-specification-accounting-amendment.md).
+That amendment does not change the historical 8A-8H assignments or claim that their implementations
+renamed more than their records show. It reconciles retained live vocabulary into the permanent
+vocabulary authority and NC-P15-001 through NC-P15-005, and makes `phaseCloseoutCoverage["8"]` in
+the ledger a mandatory one-to-one machine projection for all 68 rows. Phase 8 remains complete
+because every surviving interface is now either a bounded semantic exemption, an owned
+compatibility boundary, or deferred work with an immutable ledger ID.

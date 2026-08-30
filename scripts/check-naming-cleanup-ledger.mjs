@@ -59,6 +59,19 @@ const compatibilityPolicies = new Map([
   ['wire-format-retained', 'never'],
   ['runtime-compatibility-transition', 'phase-15-review'],
 ]);
+const allowedCloseoutCoverageKinds = new Set([
+  'literal-legacy-surface',
+  'semantic-contract',
+  'retained-boundary',
+  'compatibility-exemption',
+]);
+const allowedRetainedOwnerClasses = new Set([
+  'behavior-sensitive',
+  'compatibility-or-deferred',
+  'distinct-semantic-contract',
+  'frozen-history',
+  'persisted-methodological',
+]);
 
 function expectedCompatibilityRetirement(entry) {
   if (entry.compatibility?.mode === 'temporary-command-alias') {
@@ -147,6 +160,14 @@ for (const [index, entry] of (ledger.entries ?? []).entries()) {
     fail(`${label}: Phase-8+ row is missing/has invalid migrationClass ${JSON.stringify(entry.migrationClass)}`);
   }
 
+  if (Object.prototype.hasOwnProperty.call(entry, 'inventoryTerms')) {
+    if (!Array.isArray(entry.inventoryTerms) || entry.inventoryTerms.length === 0 ||
+        entry.inventoryTerms.some(term => typeof term !== 'string' || term.length < 3) ||
+        new Set(entry.inventoryTerms).size !== entry.inventoryTerms.length) {
+      fail(`${label}: inventoryTerms must be a non-empty unique array of strings at least 3 characters long`);
+    }
+  }
+
   if (!Object.prototype.hasOwnProperty.call(entry, 'verificationRecord')) {
     fail(`${label}: Phase-8+ row must carry verificationRecord (null while pending, checked-in path while active/complete)`);
   } else if (entry.verificationRecord !== null && typeof entry.verificationRecord !== 'string') {
@@ -212,6 +233,108 @@ for (const [index, entry] of (ledger.entries ?? []).entries()) {
 
   if (gate?.status === 'blocked' && entry.status !== 'pending') {
     fail(`${label}: Phase-8 gate is blocked, so Phase-8+ implementation rows must remain pending`);
+  }
+}
+
+// Phase completion must not rely on a second hand-maintained list that can silently omit a row.
+// The closeout checker consumes this ledger-indexed projection directly.
+const phase8CoverageEntries = (ledger.entries ?? []).filter(entry => entry.phase === 8);
+const phase8Coverage = ledger.phaseCloseoutCoverage?.['8'];
+if (!phase8Coverage || typeof phase8Coverage !== 'object' || Array.isArray(phase8Coverage)) {
+  fail('phaseCloseoutCoverage["8"] must be an object keyed by every Phase-8 ledger row');
+} else {
+  const expected = new Set(phase8CoverageEntries.map(entry => entry.id));
+  for (const entry of phase8CoverageEntries) {
+    const coverage = phase8Coverage[entry.id];
+    if (!coverage || typeof coverage !== 'object' || Array.isArray(coverage)) {
+      fail(`${entry.id}: missing Phase-8 closeout coverage classification`);
+      continue;
+    }
+    if (!allowedCloseoutCoverageKinds.has(coverage.kind)) {
+      fail(`${entry.id}: invalid closeout coverage kind ${JSON.stringify(coverage.kind)}`);
+    }
+    if (coverage.legacy !== entry.old) {
+      fail(`${entry.id}: closeout coverage legacy must equal ledger old; found ${JSON.stringify(coverage.legacy)}`);
+    }
+    if (coverage.kind !== 'literal-legacy-surface' && (typeof coverage.contract !== 'string' || !coverage.contract.trim())) {
+      fail(`${entry.id}: ${coverage.kind} coverage must name its semantic contract/exemption`);
+    }
+    if (Object.prototype.hasOwnProperty.call(coverage, 'files')) {
+      if (!['retained-boundary', 'compatibility-exemption'].includes(coverage.kind) || !Array.isArray(coverage.files) || coverage.files.length === 0 ||
+          coverage.files.some(file => typeof file !== 'string' || !repoPathExists(file)) ||
+          new Set(coverage.files).size !== coverage.files.length) {
+        fail(`${entry.id}: closeout coverage files must be a non-empty unique list of existing paths on a retained/compatibility boundary`);
+      }
+    }
+    if (coverage.kind === 'compatibility-exemption' && !Object.prototype.hasOwnProperty.call(coverage, 'files')) {
+      fail(`${entry.id}: compatibility-exemption coverage must enumerate its owning files`);
+    }
+  }
+  for (const id of Object.keys(phase8Coverage)) {
+    if (!expected.has(id)) fail(`phaseCloseoutCoverage["8"] contains unknown row ${id}`);
+  }
+}
+
+const phase8RetainedSurfaces = ledger.phaseRetainedSurfaces?.['8'];
+if (!Array.isArray(phase8RetainedSurfaces) || phase8RetainedSurfaces.length === 0) {
+  fail('phaseRetainedSurfaces["8"] must be a non-empty retained-interface registry');
+} else {
+  const retainedIds = new Set();
+  const retainedTermFiles = new Set();
+  for (const retained of phase8RetainedSurfaces) {
+    if (typeof retained.id !== 'string' || !/^NC-RET-P08-\d{3}$/u.test(retained.id) || retainedIds.has(retained.id)) {
+      fail(`invalid or duplicate Phase-8 retained-surface id ${JSON.stringify(retained.id)}`);
+    }
+    retainedIds.add(retained.id);
+    if (!Array.isArray(retained.matches) || retained.matches.length === 0) {
+      fail(`${retained.id}: matches must be a non-empty term/file registry`);
+    }
+    if (typeof retained.owner !== 'string' || !retained.owner.trim() ||
+        typeof retained.lifecycle !== 'string' || !retained.lifecycle.trim()) {
+      fail(`${retained.id}: owner and lifecycle are required`);
+    }
+    if (!allowedRetainedOwnerClasses.has(retained.ownerClass)) {
+      fail(`${retained.id}: invalid ownerClass ${JSON.stringify(retained.ownerClass)}`);
+    }
+    if (!Array.isArray(retained.ownerRowIds) || retained.ownerRowIds.length === 0 ||
+        retained.ownerRowIds.some(id => typeof id !== 'string' || !ids.has(id)) ||
+        new Set(retained.ownerRowIds).size !== retained.ownerRowIds.length ||
+        !retained.ownerRowIds.some(id => id.startsWith('NC-P08-'))) {
+      fail(`${retained.id}: ownerRowIds must be a non-empty unique list of existing rows including a Phase-8 owner`);
+    }
+    const matchTerms = new Set();
+    for (const match of retained.matches ?? []) {
+      if (!match || typeof match !== 'object' || typeof match.term !== 'string' || match.term.length < 3 || matchTerms.has(match.term)) {
+        fail(`${retained.id}: every retained match must have a unique term of at least 3 characters`);
+        continue;
+      }
+      matchTerms.add(match.term);
+      if (!Array.isArray(match.files) || match.files.length === 0 ||
+          match.files.some(file => typeof file !== 'string' || !repoPathExists(file)) ||
+          new Set(match.files).size !== match.files.length) {
+        fail(`${retained.id} ${match.term}: files must be a non-empty unique list of existing paths`);
+      }
+      for (const file of match.files ?? []) {
+        const key = `${match.term}\0${file}`;
+        if (retainedTermFiles.has(key)) fail(`${retained.id}: duplicate retained term/file ownership for ${match.term} @ ${file}`);
+        retainedTermFiles.add(key);
+      }
+    }
+  }
+  const referencedRetainedIds = new Set();
+  for (const entry of phase8CoverageEntries) {
+    const references = phase8Coverage?.[entry.id]?.retainedSurfaceIds;
+    if (references === undefined) continue;
+    if (!Array.isArray(references) || references.length === 0 ||
+        references.some(id => typeof id !== 'string' || !retainedIds.has(id)) ||
+        new Set(references).size !== references.length) {
+      fail(`${entry.id}: retainedSurfaceIds must be a non-empty unique list of registered Phase-8 retained surfaces`);
+      continue;
+    }
+    for (const id of references) referencedRetainedIds.add(id);
+  }
+  for (const id of retainedIds) {
+    if (!referencedRetainedIds.has(id)) fail(`${id}: retained surface must be referenced by at least one Phase-8 closeout coverage row`);
   }
 }
 

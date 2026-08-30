@@ -383,6 +383,7 @@ function referenceMatches(entry) {
   return [...new Set([
     ...referenceFilesForValue(entry.old),
     ...referenceFilesForValue(entry.new),
+    ...(entry.inventoryTerms ?? []).flatMap(referenceFilesForValue),
   ])].sort();
 }
 
@@ -395,6 +396,13 @@ const reconciliationAuthorityFiles = new Set([
 
 function reconciliationReferenceFilesForValue(value) {
   return referenceFilesForValue(value).filter(file => !reconciliationAuthorityFiles.has(file));
+}
+
+function reconciliationReferenceMatches(entry, side) {
+  const values = side === 'old'
+    ? [entry.old, ...(entry.inventoryTerms ?? [])]
+    : [entry.new];
+  return [...new Set(values.flatMap(reconciliationReferenceFilesForValue))].sort();
 }
 
 function reconciliationState(entry, oldRefs, newRefs) {
@@ -426,8 +434,8 @@ function referenceCategories(files) {
 const selectedLedgerEntries = (ledger.entries ?? [])
   .filter(entry => PHASE_MIN == null || (entry.phase >= PHASE_MIN && entry.phase <= PHASE_MAX))
   .map(entry => {
-    const oldReferenceFiles = reconciliationReferenceFilesForValue(entry.old);
-    const newReferenceFiles = reconciliationReferenceFilesForValue(entry.new);
+    const oldReferenceFiles = reconciliationReferenceMatches(entry, 'old');
+    const newReferenceFiles = reconciliationReferenceMatches(entry, 'new');
     return {
       id: entry.id,
       old: entry.old,
@@ -497,7 +505,7 @@ const result = {
 };
 
 if (JSON_MODE) {
-  // Large Phase 8-14 inventories can exceed stdout's synchronous write window. Await the pipe
+  // Large multi-phase inventories can exceed stdout's synchronous write window. Await the pipe
   // callback before exiting or Node can truncate otherwise-valid JSON mid-string.
   await new Promise(resolve => process.stdout.write(`${JSON.stringify(result, null, 2)}\n`, resolve));
   process.exit(0);
