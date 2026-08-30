@@ -111,10 +111,24 @@ const legacyChecks = [
   ['receptor terminology', /\breceptor(?:s| limitation| can rediscover)?\b/giu],
   ['winning-path archaeology phrase', /\bwinning-path archaeology\b/giu],
   ['winning-path archaeology filename', /winning-path-archaeology\.mjs/gu],
+  ['trove terminology', /\btrove\b/giu],
+  ['Audit Export display', /\bAudit Export\b/gu],
 ];
 
 
 const intentionalLegacyByLabel = new Map([
+  ['trove terminology', new Set([
+    'scripts/family-paths.mjs',
+    'scripts/family-parent-hint-replay-batch.mjs',
+    'scripts/experiment-manifest-lib.mjs',
+    'scripts/family-index-lib.mjs',
+    'scripts/family-index-lib-check.mjs',
+    'scripts/experiment-manifest-lib-check.mjs',
+    'scripts/family-run-manifest-producer-node-test.mjs',
+    'scripts/merge-variant-family-dataset-shards.mjs',
+    '.github/workflows/collect-variant-family-dataset.yml',
+    'docs/variant-level-research.md',
+  ])],
   ['winning-prefix-atlas collector', new Set([
     '.github/workflows/cpsat-explicit-prefix-reference.yml',
   ])],
