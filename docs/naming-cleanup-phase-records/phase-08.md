@@ -8,7 +8,7 @@ Use [`naming-cleanup-phase-record-template.md`](../naming-cleanup-phase-record-t
 
 ## Immutable ledger assignment
 
-Batch order is a dependency chain: **8A -> 8B -> 8C -> 8D -> 8E -> 8F -> 8G -> 8H**. The ledger checker rejects starting a later batch while any predecessor row is incomplete.
+Batch order is a dependency chain: **8A -> 8B -> 8C -> 8D -> 8E -> 8F -> 8G -> 8H**. The ledger checker rejects starting a later batch while any predecessor row is incomplete. This document is the human structural authority; the same ordered list is mirrored in ledger `phaseBatches["8"]` as the machine projection used by checker/status tooling.
 
 - **8A:** NC-P08-012, NC-P08-013, NC-P08-014, NC-P08-015, NC-P08-045, NC-P08-046, NC-P08-062, NC-P08-063, NC-P08-064, NC-P08-065, NC-P08-066, NC-P08-067, NC-P08-068
 - **8B:** NC-P08-001, NC-P08-002, NC-P08-003, NC-P08-004, NC-P08-005, NC-P08-006, NC-P08-010, NC-P08-029, NC-P08-030, NC-P08-031, NC-P08-032
