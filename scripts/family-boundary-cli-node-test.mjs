@@ -44,13 +44,21 @@ try {
     assert.equal(report.families[0].features.routingRegime, 'turns',
         'parentFeatures must be written under the canonical routingRegime key, not the legacy archetype key');
     assert.equal('archetype' in report.families[0].features, false, 'the legacy archetype key must not appear in fresh output');
+    assert.equal(report.families[0].features.requiredPathCoverageRatio, 0.8,
+        'parentFeatures must be written under the canonical requiredPathCoverageRatio key, not the legacy navDensity key');
+    assert.equal('navDensity' in report.families[0].features, false, 'the legacy navDensity key must not appear in fresh output');
     assert.equal(report.metadata.inputs.canonical[0].commit, 'abc');
     assert.match(await readFile(markdown, 'utf8'), /Status:.*diagnostic artifact/);
 
     await execFile('node', [...baseArgs, '--mechanic=mustCross:2', '--req-int-min=3', '--nav-density-max=.8'], { cwd: ROOT });
-    assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 1, 'matching structural filters retain the family');
+    assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 1, '--nav-density-max remains accepted as a legacy alias filtering the canonical requiredPathCoverageRatio field');
     await execFile('node', [...baseArgs, '--req-int-min=4'], { cwd: ROOT });
     assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 0, 'non-matching structural filters exclude the family');
+
+    await execFile('node', [...baseArgs, '--required-path-coverage-ratio-max=.8'], { cwd: ROOT });
+    assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 1, '--required-path-coverage-ratio-max filters on the canonical field');
+    await execFile('node', [...baseArgs, '--required-path-coverage-ratio-max=.5'], { cwd: ROOT });
+    assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 0, '--required-path-coverage-ratio-max excludes a non-matching family');
 
     await execFile('node', [...baseArgs, '--routing-regime=turns'], { cwd: ROOT });
     assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 1, '--routing-regime filters on the canonical parentFeatures.routingRegime field');

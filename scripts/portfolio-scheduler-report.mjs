@@ -220,7 +220,7 @@ for (const [i, levelNumber] of targets.entries()) {
     const solvedBeforeFallback = !!portfolio?.legacyLatencyPortfolioExperiment?.solvedBeforeFallback;
     const solvedByFallback = !!portfolio?.ok && !solvedBeforeFallback;
     const legacyWinner = winningAttempt(legacy);
-    const portfolioWinner = winningAttempt(portfolio, 'portfolio') ?? winningAttempt(portfolio, 'fallback');
+    const portfolioWinner = winningAttempt(portfolio, 'legacy-latency-portfolio') ?? winningAttempt(portfolio, 'portfolio') ?? winningAttempt(portfolio, 'fallback');
     const portfolioAttempts = (portfolio.attempts ?? []).filter(a => a?.schedulerPhase === 'legacy-latency-portfolio' || a?.schedulerPhase === 'portfolio');
     const repeatedAttempts = portfolioAttempts.filter(a => a?.restart);
     for (const attempt of repeatedAttempts) {

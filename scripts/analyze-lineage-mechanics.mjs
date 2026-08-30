@@ -35,7 +35,7 @@ const featureOf = level => ({
     blockCount: level.blocks?.length ?? 0,
     gooseCount: level.geese?.length ?? 0,
     falseGoalCount: level.falseGoals?.length ?? 0,
-    navDensity: Number(level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? NaN),
+    requiredPathCoverageRatio: Number(level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? NaN),
     predictedChallenge: Number(level.stressMeta?.predictedSolverChallenge ?? NaN),
 });
 const rows = lineage.scoreWidthForensics.map(row => {

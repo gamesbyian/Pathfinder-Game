@@ -88,7 +88,7 @@ for (const raw of selected) {
     const lineage = observer.summary(level.reqLen);
     rows.push({ runId, solverRef, levelId: raw.id, coldSolved: metadataColdById?.get(String(raw.id)) ?? null,
         gateKey, validLabels: labels.length, reqLen: level.reqLen, beamWidth, nodeBudget,
-        producer: 'beam', profile: 'default', seed: null, controlTreatment: 'observation-on',
+        producer: 'beam', scoringProfileId: 'default', seed: null, controlTreatment: 'observation-on',
         solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded, behaviorIdentical, lineage });
     console.error(`${raw.id}: labels=${labels.length} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded}`);
 }
@@ -127,7 +127,7 @@ for (const row of rows) if (!includeStages && row.lineage.stages) delete row.lin
 const document = { schemaVersion: 4, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
     corpus: levelsFile, selection, retainAllRemovalDetails, retainRankedPoolDetails,
     familyDefinition: 'portal usage + crossing placement + must-cross first-entry/completion order; local edge detours ignored',
-    familyDefinitionVersion, technique: 'beam winning-lineage observation', profile: 'default', seed: null,
+    familyDefinitionVersion, technique: 'beam winning-lineage observation', scoringProfileId: 'default', seed: null,
     workBudget: nodeBudget, limitLevels: limit, beamWidth, nodeBudget, levels: rows, scoreWidthForensics: forensic,
     summary: { levels: rows.length, solved: rows.filter(x => x.solved).length,
         behaviorIdentical: rows.filter(x => x.behaviorIdentical).length,

@@ -1,4 +1,4 @@
-// Solver.ts — the Pathfinder hint solver (thin public facade; the search lives in modules/solver/).
+// solver.ts — the Pathfinder hint solver (thin public facade; the search lives in modules/solver/).
 // A flat attempt loop: per gate × config, run DFS or beam (see solver/attempts.ts for the
 // feature-keyed policy and solver/orchestration.ts for budget allocation). Supports all level
 // mechanics: portals (forced), regular + flipping filters, geese, false goals, must-pass,

@@ -184,7 +184,7 @@ for (const entry of shard) {
         // still a genuine finite backstop -- execFileSync's own timeout+SIGKILL, not an external
         // `timeout` wrapper (the mechanism behind the census's still-undiagnosed shard-1 hang).
         const solve = run('node', ['scripts/run-bundled.mjs', 'scripts/portfolio-solve-sweep.mjs', '--',
-            `--corpus=${familyFile}`, '--scheduler-mode=legacy', `--budget-ms=${BUDGET_MS}`,
+            `--corpus=${familyFile}`, '--scheduler-mode=production', `--budget-ms=${BUDGET_MS}`,
             `--node-budget=${NODE_BUDGET}`, `--work-budget=${WORK_BUDGET}`, `--workers=${WORKERS}`,
             '--save-hints', `--out=${solveOut}`], 10_800_000);
         if (!solve.ok) log(`    solve failed/timed out: ${solve.error}`);
@@ -221,7 +221,7 @@ if (RUN_ID) {
         runId: RUN_ID, tool: 'family-wide-trove-shard-run.mjs', workflow: WORKFLOW,
         corpora: [...corporaSeen].sort(), families: [...familiesSeen].sort(),
         trove: { manifest: 'data/families/wide-trove-manifest.json', shardFile: SHARD_FILE },
-        solverPolicy: { mode: 'legacy', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
+        solverPolicy: { mode: 'production', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
         budgets: { workUnits: Number(WORK_BUDGET), nodeCeiling: Number(NODE_BUDGET), wallDeadlineMs: Number(BUDGET_MS) },
         seeds: [Number(SEED)], shardCount: SHARD_COUNT, shardIndex: Number(NN),
         startedAt: manifestStartedAt, completedAt: new Date().toISOString(),

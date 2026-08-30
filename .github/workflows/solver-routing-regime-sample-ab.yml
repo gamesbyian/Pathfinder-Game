@@ -136,14 +136,16 @@ jobs:
             echo "routing_regimes is required (deprecated alias: archetypes)" >&2
             exit 2
           fi
-          if [ -n "$routing_regimes" ] && [ -n "$legacy_archetypes" ] && [ "$routing_regimes" != "$legacy_archetypes" ]; then
-            echo "conflicting routing_regimes/archetypes inputs" >&2
-            exit 2
-          fi
-          resolved_regimes="${routing_regimes:-$legacy_archetypes}"
+          # Pass both raw inputs through (when set) rather than pre-resolving/conflict-checking
+          # them here in bash against RAW strings: an equivalent pair like canonical
+          # intersection-heavy and legacy high-intersection-burden would be rejected as
+          # "conflicting" by a raw-string comparison despite normalizing to the same value.
+          # select-routing-regime-sample.mjs's own normalizeRoutingRegime()-based conflict check is
+          # the single source of truth for this comparison.
           node scripts/run-bundled.mjs scripts/stress/select-routing-regime-sample.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
-            --routing-regimes="$resolved_regimes" \
+            ${routing_regimes:+--routing-regimes="$routing_regimes"} \
+            ${legacy_archetypes:+--archetypes="$legacy_archetypes"} \
             --eligible-sample="${{ inputs.eligible_sample }}" \
             --control-sample="${{ inputs.control_sample }}" \
             --seed="${{ inputs.seed }}" \

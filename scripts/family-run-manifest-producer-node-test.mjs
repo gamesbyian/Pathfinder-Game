@@ -24,7 +24,7 @@ const baseInput = {
     runId: 'run-wide-9001', tool: 'family-wide-trove-shard-run.mjs', workflow: 'family-wide-trove.yml',
     corpora: ['corpus1'], families: ['corpus1:S00001'],
     trove: { manifest: 'data/families/wide-trove-manifest.json', shardFile: 'logs/family-census/wide-shard-01-slice.json' },
-    solverPolicy: { mode: 'legacy', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
+    solverPolicy: { mode: 'production', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
     budgets: { workUnits: 48_240_000, nodeCeiling: 36_000_000, wallDeadlineMs: 86_400_000 },
     seeds: [20260807], shardCount: 2, shardIndex: 1,
     startedAt: '2026-08-21T00:00:00Z', completedAt: '2026-08-21T00:05:00Z',

@@ -61,10 +61,6 @@ for (const arg of process.argv.slice(2)) {
 const corpusFile = argMap.get('--corpus') || 'data/stress/stress-levels-random.json';
 const canonicalRoutingRegimesArg = argMap.get('--routing-regimes');
 const legacyArchetypesArg = argMap.get('--archetypes');
-if (canonicalRoutingRegimesArg && legacyArchetypesArg && canonicalRoutingRegimesArg !== legacyArchetypesArg) {
-    console.error('Conflicting --routing-regimes and deprecated --archetypes values.');
-    process.exit(2);
-}
 const routingRegimesArg = canonicalRoutingRegimesArg || legacyArchetypesArg;
 if (!routingRegimesArg) {
     console.error('--routing-regimes is required (deprecated compatibility alias: --archetypes).');
@@ -112,6 +108,20 @@ function sampleDeterministic(items, n, seed) {
 installBrowserStubs();
 const { SOLVER_TESTING_API } = await import('../../modules/solver.js');
 const { normalizeRawLevel, classifyRoutingRegime, normalizeRoutingRegime } = SOLVER_TESTING_API;
+
+// Compare normalized values, not raw strings: an equivalent pair like canonical
+// `intersection-heavy` and legacy `high-intersection-burden` must NOT be rejected as conflicting
+// just because their raw spellings differ.
+if (canonicalRoutingRegimesArg && legacyArchetypesArg) {
+    const normalizedSet = arg => new Set(arg.split(',').map(s => normalizeRoutingRegime(s.trim())).filter(Boolean));
+    const canonicalSet = normalizedSet(canonicalRoutingRegimesArg);
+    const legacySet = normalizedSet(legacyArchetypesArg);
+    const sameSet = canonicalSet.size === legacySet.size && [...canonicalSet].every(regime => legacySet.has(regime));
+    if (!sameSet) {
+        console.error('Conflicting --routing-regimes and deprecated --archetypes values.');
+        process.exit(2);
+    }
+}
 routingRegimes = new Set(routingRegimesArg.split(',').map(s => normalizeRoutingRegime(s.trim())).filter(Boolean));
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, corpusFile), 'utf8'));
