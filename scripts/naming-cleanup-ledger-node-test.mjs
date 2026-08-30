@@ -45,32 +45,58 @@ try {
     });
     if (status.status !== 0) throw new Error(`naming status failed:\n${status.stdout}\n${status.stderr}`);
     const parsed = JSON.parse(status.stdout);
-    // This asserts the live invariants of naming:status's --json shape rather than a specific
-    // batch, so it keeps passing as serial Phase-8 batches complete instead of going stale at
-    // every batch boundary (see docs/naming-cleanup-phase-records/phase-08-batch-8b.md).
-    const phase8BatchOrder = ['8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H'];
-    if (parsed.nextPhase !== 8 || !phase8BatchOrder.includes(parsed.nextBatch)) {
-      throw new Error(`naming status expected next Phase 8 / one of ${phase8BatchOrder.join(',')}, got ${parsed.nextPhase} / ${parsed.nextBatch}`);
+    // Assert the live invariants of naming:status's --json shape without hardcoding a
+    // transient batch. This covers normal Phase-8 batch work, the post-8H phase-closeout state,
+    // and later phases after lastCompletedPhase advances.
+    const expectedNextPhase = Number(source.lastCompletedPhase) + 1;
+    if (parsed.nextPhase !== expectedNextPhase) {
+      throw new Error(`naming status expected next Phase ${expectedNextPhase}, got ${parsed.nextPhase}`);
     }
-    if (parsed.nextAction === 'start-batch') {
-      if (parsed.batchCompletion?.status !== 'pending') {
-        throw new Error(`start-batch action expects a pending batchCompletion, got ${parsed.batchCompletion?.status}`);
-      }
-      if (parsed.nextScope.counts.done !== 0) {
-        throw new Error(`start-batch action expects zero done rows in next-scope, got ${parsed.nextScope.counts.done}`);
-      }
-    } else if (parsed.nextAction === 'merge-or-record-batch-completion') {
-      if (parsed.batchCompletion?.status !== 'pending') {
-        throw new Error(`merge-or-record-batch-completion expects a pending batchCompletion, got ${parsed.batchCompletion?.status}`);
-      }
-      if (parsed.nextScope.counts.pending !== 0 || parsed.nextScope.counts['in-progress'] !== 0) {
-        throw new Error('merge-or-record-batch-completion expects every next-scope row done');
+
+    if (parsed.nextPhase === 8) {
+      const phase8BatchOrder = source.phaseBatches?.['8'] ?? [];
+      if (parsed.nextBatch === null) {
+        if (parsed.nextAction !== 'phase-closeout') {
+          throw new Error(`all Phase-8 batches merged expects phase-closeout, got ${JSON.stringify(parsed.nextAction)}`);
+        }
+        if (!phase8BatchOrder.every(batch => source.batchCompletions?.[batch]?.status === 'merged')) {
+          throw new Error('phase-closeout requires every Phase-8 batchCompletion to be merged');
+        }
+        if (parsed.nextScope.count !== 0) {
+          throw new Error(`phase-closeout expects an empty batch-scoped nextScope, got ${parsed.nextScope.count}`);
+        }
+      } else {
+        if (!phase8BatchOrder.includes(parsed.nextBatch)) {
+          throw new Error(`naming status returned unknown Phase-8 batch ${parsed.nextBatch}`);
+        }
+        if (parsed.nextAction === 'start-batch') {
+          if (parsed.batchCompletion?.status !== 'pending') {
+            throw new Error(`start-batch action expects a pending batchCompletion, got ${parsed.batchCompletion?.status}`);
+          }
+          if (parsed.nextScope.counts.done !== 0) {
+            throw new Error(`start-batch action expects zero done rows in next-scope, got ${parsed.nextScope.counts.done}`);
+          }
+        } else if (parsed.nextAction === 'merge-or-record-batch-completion') {
+          if (parsed.batchCompletion?.status !== 'pending') {
+            throw new Error(`merge-or-record-batch-completion expects a pending batchCompletion, got ${parsed.batchCompletion?.status}`);
+          }
+          if (parsed.nextScope.counts.pending !== 0 || parsed.nextScope.counts['in-progress'] !== 0) {
+            throw new Error('merge-or-record-batch-completion expects every next-scope row done');
+          }
+        } else if (!['continue-active-batch', 'repair-active-execution-state'].includes(parsed.nextAction)) {
+          throw new Error(`naming status returned unexpected Phase-8 nextAction ${JSON.stringify(parsed.nextAction)}`);
+        }
+        if (!parsed.nextScope.rows.every(row => typeof row.id === 'string' && row.id.startsWith('NC-P08-'))) {
+          throw new Error('naming status did not expose stable Phase-8 row IDs');
+        }
       }
     } else {
-      throw new Error(`naming status returned unexpected nextAction ${JSON.stringify(parsed.nextAction)}`);
-    }
-    if (!parsed.nextScope.rows.every(row => typeof row.id === 'string' && row.id.startsWith('NC-P08-'))) {
-      throw new Error('naming status did not expose stable Phase-8 row IDs');
+      if (parsed.nextBatch !== null) {
+        throw new Error(`non-Phase-8 status must not expose a Phase-8 batch, got ${parsed.nextBatch}`);
+      }
+      if (!parsed.nextScope.rows.every(row => row.phase === parsed.nextPhase && typeof row.id === 'string')) {
+        throw new Error('naming status nextScope does not match the next incomplete phase');
+      }
     }
   }
 
@@ -128,20 +154,23 @@ try {
 
   {
     const ledger = clone(source);
-    const row = ledger.entries.find(entry => entry.phase === 9);
+    const nextIncompletePhase = Number(source.lastCompletedPhase) + 1;
+    const skippedPhase = nextIncompletePhase + 1;
+    const row = ledger.entries.find(entry => entry.phase === skippedPhase);
+    if (!row) throw new Error(`skip-phase fixture needs a row after Phase ${nextIncompletePhase}`);
     row.status = 'in-progress';
     row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-08.md';
     ledger.activeExecution = {
       status: 'active',
-      phase: 9,
+      phase: skippedPhase,
       batch: null,
-      branch: 'test/phase9-skip',
+      branch: `test/phase${skippedPhase}-skip`,
       pr: null,
       baseMainSha: 'a2cb5162c551a700672e2edd7756af5785bc8aff',
       recordPath: 'docs/naming-cleanup-phase-records/phase-08.md',
       notes: 'fixture',
     };
-    expectFail('cannot skip incomplete phase', ledger, /ahead of next incomplete Phase 8|must equal next incomplete Phase 8/u);
+    expectFail('cannot skip incomplete phase', ledger, /ahead of next incomplete Phase|must equal next incomplete Phase/u);
   }
 
   {

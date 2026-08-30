@@ -47,6 +47,8 @@ Do not stack 8B on an unmerged 8A branch, and so on. A batch may be split furthe
 
 ## Phase 8 completion
 
+Final post-merge closeout evidence: [`phase-08-closeout.md`](phase-08-closeout.md).
+
 `lastCompletedPhase` may advance to 8 only after:
 
 - all eight batches are merged or explicitly superseded with evidence;
