@@ -48,6 +48,9 @@ try {
     if (parsed.nextPhase !== 8 || parsed.nextBatch !== '8A') {
       throw new Error(`naming status expected next Phase 8 / 8A, got ${parsed.nextPhase} / ${parsed.nextBatch}`);
     }
+    if (parsed.nextAction !== 'start-batch' || parsed.batchCompletion?.status !== 'pending') {
+      throw new Error(`naming status expected pending 8A start-batch, got ${parsed.nextAction} / ${parsed.batchCompletion?.status}`);
+    }
     if (!parsed.nextScope.rows.every(row => typeof row.id === 'string' && row.id.startsWith('NC-P08-'))) {
       throw new Error('naming status did not expose stable Phase-8 row IDs');
     }
@@ -57,6 +60,35 @@ try {
     const ledger = clone(source);
     ledger.phaseBatches['8'] = ['8A', '8A'];
     expectFail('batch order must be unique', ledger, /phaseBatches\["8"\] must be a non-empty unique ordered batch list/u);
+  }
+
+  {
+    const ledger = clone(source);
+    delete ledger.batchCompletions['8A'];
+    expectFail('batch completion record required', ledger, /batchCompletions keys must exactly match Phase-8 batches/u);
+  }
+
+  {
+    const ledger = clone(source);
+    for (const row of ledger.entries.filter(entry => entry.phase === 8 && entry.batch === '8A')) {
+      row.status = 'done';
+      row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-08.md';
+      for (const key of Object.keys(row.verification)) row.verification[key] = 'done';
+    }
+    const row = ledger.entries.find(entry => entry.phase === 8 && entry.batch === '8B');
+    row.status = 'in-progress';
+    row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-08.md';
+    ledger.activeExecution = {
+      status: 'active',
+      phase: 8,
+      batch: '8B',
+      branch: 'test/same-branch-stack',
+      pr: null,
+      baseMainSha: 'a2cb5162c551a700672e2edd7756af5785bc8aff',
+      recordPath: 'docs/naming-cleanup-phase-records/phase-08.md',
+      notes: 'fixture',
+    };
+    expectFail('done rows do not satisfy merge barrier', ledger, /8B has started before predecessor 8A is recorded merged/u);
   }
 
   {
