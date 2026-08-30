@@ -1001,7 +1001,7 @@ PR 1 must also create `docs/naming-and-vocabulary.md` containing:
 
 `docs/README.md` and `AGENTS.md` must route naming/rename work to that file and this implementation plan while cleanup remains active. After completion, they route only to `naming-and-vocabulary.md`; this plan moves to `docs/archive/snapshots/`.
 
-## 11. Required PR sequence
+## 11. Required implementation sequence
 
 Do not reorder these phases unless a prerequisite change on `main` makes an entry already obsolete. If that happens, mark the ledger entry `done` with the superseding commit and continue.
 
@@ -1096,11 +1096,11 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 - initialize/resolve the Phase-8+ ledger verification dimensions and mark the top-level Phase-8 gate `ready` only when the documented readiness record is complete;
 - do not perform any canonical PR-8 rename in this hardening PR.
 
-### PR 8 milestone: Reference/referee/tool/workflow semantics
+### Phase 8 milestone: Reference/referee/tool/workflow semantics
 
 **Phase 8 is not one implementation PR.** It contains 68 ledger rows across several independent compatibility owners and execution domains. Implement it as the serial batches recorded in `docs/naming-cleanup-phase-records/phase-08.md`. Each batch starts from current `main`, creates its own evidence record, merges before the next batch branches, and closes only its assigned ledger rows.
 
-#### PR 8A: Reference/validation, result retrieval, and offline replay
+#### Batch 8A: Reference/validation, result retrieval, and offline replay
 
 - hint oracle -> hint-path validator names;
 - CP-SAT reference tool/workflow/display names;
@@ -1109,35 +1109,35 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 - producer/receptor -> producer/consumer terminology within that harness;
 - preserve genuinely independent solver-oracle terminology and frozen old workflow runs.
 
-#### PR 8B: Known-solution-prefix survival family
+#### Batch 8B: Known-solution-prefix survival family
 
 - rename the current lineage doc/module/types/analyzer to known-solution-prefix survival terminology;
 - migrate the winning-lineage and winning-prefix-atlas surfaced collectors/package aliases;
 - update beam/research observer imports, tests, testing API, tooling catalog, and current docs together;
 - preserve historical lineage report/artifact spellings.
 
-#### PR 8C: Durable research command lifecycle names
+#### Batch 8C: Durable research command lifecycle names
 
 - repair-direct probe/worker -> run-repair-search;
 - producer-population, residual-interface, rollback-census, symmetry-repair-seed, and restart/continuation pilot names -> behavior names;
 - durable candidate eligibility/participation audit rename;
 - verify parent/worker and real CLI runtime wiring rather than relying on file existence.
 
-#### PR 8D: Technique-census analysis
+#### Batch 8D: Technique-census analysis
 
 - `technique-census-second-order.mjs` -> `analyze-technique-census.mjs`;
 - `technique-census-second-order-analysis.md` -> `technique-census-analysis.md`;
 - `analyze-equal-work-census-pilot.mjs` -> `analyze-equal-work-census.mjs`;
 - migrate current census tooling/docs/consumers while preserving frozen census artifacts.
 
-#### PR 8E: Prune-gap labelled-branch collection
+#### Batch 8E: Prune-gap labelled-branch collection
 
 - atlas sweep tool/workflow -> collect-prune-gap-labels;
 - branch atlas -> labelled branch set in current outputs/docs;
 - migrate workflow filename, display/job names, concurrency groups, current artifact names, and current documentation together;
 - old workflow runs/artifacts remain historical.
 
-#### PR 8F: Variant-family dataset
+#### Batch 8F: Variant-family dataset
 
 - family-wide trove workflow and manifest/shard/plan/merge/doctor tools -> variant-family dataset terminology;
 - package alias `family:trove:doctor` -> **family:validate-dataset-worktree**;
@@ -1145,14 +1145,14 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 - `TROVE_BRANCH` -> `VARIANT_FAMILY_DATASET_BRANCH`;
 - this is the highest-risk Phase-8 compatibility batch because the environment variable may exist outside git.
 
-#### PR 8G: Solver diagnostics and legacy-latency portfolio tools
+#### Batch 8G: Solver diagnostics and legacy-latency portfolio tools
 
 - audit-export tool/workflow/package identity -> solver diagnostics;
 - generated fields `knownHardCluster` / `recommendedGating` -> `hardClusterHeuristicMatch` / `derivedGatingCandidate` with explicit dual-read/single-write ownership;
 - legacy-latency portfolio report/replay tool and package names;
 - prove representative historical diagnostics rows still reach real downstream consumers.
 
-#### PR 8H: Semantic qualification and Phase-8 closeout
+#### Batch 8H: Semantic qualification and Phase-8 closeout
 
 - qualify remaining naked profile/fingerprint/family/residual terminology in current text/exported APIs;
 - winning-path archaeology -> winning-path analysis in current surfaces;
@@ -1173,7 +1173,7 @@ The former mixed-case solver-facade workflow path-filter defect was already corr
 - remove deprecated aliases after all live references are migrated;
 - update `AGENTS.md`, testing docs, tooling catalog, scripts/workflows READMEs, package scripts.
 
-### PR 10 milestone: Repair/prune/budget terminology
+### Phase 10 milestone: Repair/prune/budget terminology
 
 Use two serial batches if both families remain live at Phase-10 entry:
 
@@ -1182,7 +1182,7 @@ Use two serial batches if both families remain live at Phase-10 entry:
 
 Do not combine a newly discovered resource-policy correction with the naming batch. Coordinate with the active budget-model workstream so a symbol already removed by budget rationalization is marked superseded rather than recreated.
 
-### PR 11 milestone: Orientation vs variant
+### Phase 11 milestone: Orientation vs variant
 
 This migration is application-wide and high risk. Use a prep/switch/closeout sequence rather than a giant blind substitution:
 
@@ -1198,7 +1198,7 @@ Research level-variant terminology remains unchanged.
 - update types, processor/dispatcher, glossary, tests;
 - no dispatch behavior change.
 
-### PR 13 milestone: Expanded normalized level field names
+### Phase 13 milestone: Expanded normalized level field names
 
 Use a prep/switch/closeout sequence because the same historical wire spelling must remain valid while normalized runtime code changes atomically:
 
@@ -1206,7 +1206,7 @@ Use a prep/switch/closeout sequence because the same historical wire spelling mu
 - **13B atomic normalized migration:** raw `reqLen`/`reqInt` remain wire compatibility while normalized/runtime fields become `requiredLength`/`requiredIntersections`; migrate parser, domain types, solver, UI, editor, tests, and generators that consume normalized levels together;
 - **13C merged-tree closeout:** verify no normalized consumer still depends on raw names, old wire fixtures still parse/write identically, fingerprints are unchanged, and full CI/corpus parsing checks pass.
 
-### PR 14 milestone: Application facade cleanup
+### Phase 14 milestone: Application facade cleanup
 
 Do not combine all facade/state cleanup into one PR. Use serial batches with architecture/browser validation after each merge:
 
