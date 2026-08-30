@@ -6,16 +6,50 @@ This is a **behavior-preserving naming and vocabulary migration** unless a secti
 
 Use `docs/change-recipes.md` for every cross-boundary rename. The mandatory pre-Phase-8 table-setting work in `docs/naming-cleanup-process-hardening.md` is complete; that document records the failure classes discovered during the Phase-1-7 implementation/audit cycle and the stronger verification model required for the remaining phases. Read `docs/naming-cleanup-history-and-lessons.md` once at entry so the safeguards are understood in the context of the failures that motivated them. Every Phase-8+ implementation batch must create a checked-in record from `docs/naming-cleanup-phase-record-template.md`; the ledger's verification state is a summary of that evidence, not a substitute for it. Historical reports, archived snapshots, frozen logs, immutable workflow artifacts, and committed evidence files remain unchanged unless a parser must be taught to read their legacy identifiers.
 
+## Operator quickstart and authority precedence
+
+Do not infer current execution state from prose in this plan. Start with:
+
+```sh
+npm run naming:status
+npm run check:naming-cleanup-ledger
+```
+
+`naming:status` derives the next incomplete phase/batch, active execution claim, high-risk rows, and compatibility boundaries from the ledger. Use `--phase=<n>`, `--batch=<id>`, or `--json` for a narrower view.
+
+Authority is intentionally split by question:
+
+| Question | Authority | May not override |
+| --- | --- | --- |
+| What terminology is semantically canonical? | `docs/naming-and-vocabulary.md` | batch record, PR prose |
+| What exact old -> new mappings and sequence are authorized? | this plan | batch record, implementation convenience |
+| What stable migration row is this? | ledger `id` | row wording or array position |
+| What is the current machine-readable execution state? | `docs/naming-cleanup-ledger.json` | stale plan/history prose |
+| How is a phase partitioned and ordered? | phase execution record under `docs/naming-cleanup-phase-records/` | ad-hoc branch structure |
+| What evidence proves a batch/row complete? | checked-in batch verification record | ledger checkbox alone |
+| What does current code actually do? | current `main` implementation | older plan assumptions |
+| Why do these controls exist? | `docs/naming-cleanup-history-and-lessons.md` | current execution state |
+
+When authorities disagree, **do not silently choose one**. Current implementation may supersede a planned architecture, but that requires reconciliation/amendment of the plan and ledger before implementation continues. A batch record may discover scope; it may not invent a different canonical target.
+
 ## 0. Latest-main reconciliation and scope closure
 
-This gate is mandatory before PR 1 and again at the start of every implementation PR that follows a merge of unrelated solver/application work.
+Reconciliation has two levels so safety does not turn into pointless ceremony:
+
+- **delta reconciliation** is required at the start of every implementation batch. Update from current `main`, inspect changes since the batch's recorded base/reconciliation SHA that touch the selected concepts or their consumers, rerun the phase/batch surface inventory, and recheck canonical target occupancy;
+- **full reconciliation** repeats the repository-wide remaining-plan census. It is required before a high-risk phase, after a specification amendment that changes mappings/compatibility/phase structure, after substantial unrelated architecture work touching remaining concepts, and before final cleanup/archival.
+
+Every reconciliation must:
 
 1. update the implementation branch from the current `main`;
-2. compare the naming-plan branch point with current `main` and inspect every newer change touching a listed concept;
+2. compare the relevant recorded reconciliation point with current `main` and inspect newer changes touching selected concepts, owners, or consumers;
 3. rerun the live-surface naming census over code, package aliases, workflows, current docs, generated-schema readers/writers, telemetry/provenance, environment-variable contracts, and workflow artifact/concurrency identifiers;
-4. classify every live confusing-name hit as **rename**, **intentional retained term**, **frozen history**, or **superseded by newer architecture**;
-5. add any newly discovered live rename to this document and `docs/naming-cleanup-ledger.json` before changing code;
-6. never infer that an omitted surface is safe merely because the original audit predated it.
+4. search the **canonical target** as well as the legacy term and classify any existing target use as same concept, unrelated use, collision, or already-implemented migration;
+5. classify every live confusing-name hit as **rename**, **intentional retained term**, **frozen history**, or **superseded by newer architecture**;
+6. add any newly discovered live rename to this document and `docs/naming-cleanup-ledger.json` before changing code;
+7. never infer that an omitted surface is safe merely because the original audit predated it.
+
+A target-name collision is a specification issue, not an invitation to overwrite/reuse the name locally.
 
 A current-`main` change that makes a planned mapping obsolete is not a reason to recreate the old concept. Record the superseding commit in the ledger and use the newer architecture's vocabulary.
 
@@ -94,6 +128,17 @@ Before editing any implementation batch:
 
 The active batch record is the durable handoff. A chat transcript, branch name, PR title, or ledger status is not sufficient authority by itself.
 
+### 0.4 Specification amendment protocol
+
+Distinguish **scope discovery** from **specification change**:
+
+- discovering another consumer, test, workflow, or current doc for an already-fixed mapping expands the impact map and may be handled in the owning implementation batch;
+- changing a canonical target name, compatibility lifetime/owner, risk class, phase/batch assignment, migration semantics, or allowed behavior envelope is a specification amendment.
+
+For a specification amendment, stop canonical implementation. Either convert the branch into an amendment-only PR or land a separate amendment PR first. The amendment must update every affected authority together: plan, ledger, phase execution record, permanent vocabulary authority when semantic rules change, and any checker/schema rule that encoded the old contract. Then restart implementation from the amended current `main`.
+
+Do not bury a specification change inside a large implementation diff because the code made the old plan inconvenient.
+
 ## 1. Goals and non-goals
 
 The cleanup has four goals:
@@ -104,6 +149,16 @@ The cleanup has four goals:
 4. preserve the ability to read and interpret all historical evidence.
 
 The cleanup is not an excuse to redesign algorithms. A rename may expose architectural debt, but implementation behavior stays fixed. If a rename cannot be completed without changing solve behavior, stop that PR and split the behavioral change into a separately authorized task.
+
+### 1.1 What “behavior-preserving” means
+
+`Behavior-preserving` does **not** mean byte-identical text everywhere; names are the intended observable delta. Every batch record must define a **change envelope** with three parts:
+
+1. **intended deltas**: canonical identifiers, paths, command names, workflow/display labels, schema field names, and explicitly authorized deprecation messages that are supposed to change;
+2. **invariants**: algorithm choice, solver ordering, work/resource accounting, inclusion/grouping semantics, data values apart from renamed keys, UI behavior apart from renamed developer-facing labels, workflow trigger semantics apart from explicitly corrected stale paths, and persistent fingerprints/wire bytes unless the plan explicitly retains a legacy wire spelling;
+3. **out-of-scope findings**: behavior/resource/schema changes that require a prerequisite or separate authorization.
+
+A test that changes only because its expected spelling changed is evidence for the intended delta, not evidence for the invariants. Medium/high-risk batches must select at least one observable that exercises the invariant side of the envelope before and after migration.
 
 ## 2. Repository naming contract
 
@@ -185,6 +240,24 @@ Phase closure has five stages: impact map, implementation, targeted contract val
 
 Every Phase-8+ batch must create a checked-in execution record from `docs/naming-cleanup-phase-record-template.md` before implementation. The record must contain the base-main SHA, selected ledger rows, pre-edit impact map, validation topology, compatibility ownership, before-change baseline where applicable, exact targeted validation, consumer-inward closeout, parity evidence, residue census, and pre-merge comparison. A ledger verification field may move to `done` only when the corresponding record identifies the concrete evidence supporting it.
 
+### 3.0 Risk, batch atomicity, and evidence minimums
+
+The ledger's `risk` field is not a vibe score. Use this rubric and raise risk when the impact map reveals a stronger condition:
+
+- **low**: current prose/local terminology or a direct internal rename with no persistence, surfaced command/workflow, generated schema, runtime-state, or external-config boundary;
+- **medium**: cross-module/file/API propagation; surfaced CLI/package/workflow identity; generated-report schema with an owned reader; or a migration spanning multiple maintained consumers but not app/wire/external configuration;
+- **high**: persisted/wire-format identity, external configuration outside git, application-wide state/geometry/input/render coupling, or any migration where a wrong spelling can silently change solver behavior/resource policy/evidence membership.
+
+Minimum evidence:
+
+| Risk | Minimum completion evidence |
+| --- | --- |
+| low | target/legacy census, owning compile/static/docs check, consumer closeout; behavioral parity may be `not-applicable` with rationale |
+| medium | low-risk evidence plus real runtime or representative synthetic contract execution, explicit change-envelope baseline/after comparison where observable, and current command/workflow/schema verification |
+| high | medium-risk evidence plus representative legacy compatibility fixture when applicable, canonical single-write/wire rule proof, real execution path across every applicable transport/domain, rollback plan, and full relevant finish-line CI |
+
+Batch boundaries follow **atomicity**, not arbitrary row counts. Keep together rows that must switch simultaneously to avoid a broken intermediate contract. Split a batch when it contains multiple independent compatibility owners or execution domains that can safely merge separately. A batch should normally have one primary compatibility owner and at most one high-risk boundary; document why when atomicity forces more.
+
 ### 3.1 Search the complete live surface
 
 Search for both the old symbol/string and any common textual variants across:
@@ -238,14 +311,29 @@ Do not rename:
 
 Current docs may say, for example, "`ida:default` (legacy; canonical form `admissible-order|tieBreak=baseline|lds=off`)".
 
-### 3.4 Compatibility removal rule
+### 3.4 Compatibility ownership and retirement
 
-A legacy alias may be removed only when:
+`dual-read` is incomplete without saying **where** legacy input is accepted and **when/if** that compatibility may disappear. Every Phase-8+ dual-read ledger row carries a `compatibility` object with an owning boundary and one of these policies:
+
+| Mode | Retirement | Meaning |
+| --- | --- | --- |
+| `temporary-command-alias` | `owning-phase-closeout` | old package/CLI spelling exists only while live repo callers/docs/workflows migrate; it must not survive phase closeout |
+| `permanent-historical-read` | `never` | frozen artifacts may contain the old value indefinitely; current internal form/writers remain canonical |
+| `external-config-transition` | `phase-15-review` | old environment/config spelling may exist outside git; current docs/workflows prefer canonical immediately, final cleanup decides whether evidence supports removal |
+| `wire-format-retained` | `never` | old spelling is intentionally still the raw serialized wire contract while normalized/runtime code uses canonical expanded names |
+| `runtime-compatibility-transition` | `phase-15-review` | migration may require an interim runtime/state compatibility read; final cleanup removes it unless a real persisted/external consumer justifies retention |
+
+Compatibility knowledge belongs only at the ledger-named `owner`. Do not copy the legacy/canonical mapping into downstream consumers.
+
+A temporary legacy alias may be removed only when:
 
 - no live code or workflow emits it;
 - no current doc instructs users/agents to use it;
-- the canonical historical readers accept it without the alias being exposed publicly;
-- tests include at least one representative historical fixture proving old data remains readable.
+- the owning canonical historical reader, if any, still accepts required old data;
+- tests include a representative legacy fixture where historical compatibility is promised;
+- its ledger retirement condition is satisfied.
+
+`phase-15-review` is a review gate, not an automatic deletion order: retain compatibility if evidence shows a real external/persisted dependency.
 
 ### 3.5 Validation floor
 
@@ -942,18 +1030,21 @@ Replace the `producer -> receptor` vocabulary in `solver-future-work.md` and cur
 
 ## 9. Machine-readable rename ledger
 
-PR 1 must create `docs/naming-cleanup-ledger.json` beside this plan. It is a temporary execution ledger, not a runtime schema.
+PR 1 created `docs/naming-cleanup-ledger.json` beside this plan. It is a temporary execution ledger, not a runtime schema. Completion contract v4 gives every row an immutable machine identity so later wording changes do not change what the row *is*.
 
-Each entry must contain:
+Ledger IDs use `NC-P##-###` and are never renumbered or reused. New rows receive the next unused sequence number for their phase; moving/rewording a row does not change its ID. PR descriptions and batch records should cite IDs rather than relying on old/new prose as identity.
+
+Each entry contains:
 
 ```json
 {
+  "id": "NC-P08-001",
   "old": "string",
   "new": "string",
   "kind": "symbol|stage-id|attempt-id|tool|file|doc|field|term|workflow|package-alias|env|protocol|status-value",
   "risk": "low|medium|high",
   "persistence": "none|dual-read|frozen-history",
-  "phase": 1,
+  "phase": 8,
   "status": "pending|in-progress|done",
   "notes": "short fixed migration note"
 }
@@ -961,7 +1052,7 @@ Each entry must contain:
 
 Populate it with every explicit mapping in Sections 4-8 before implementing code renames, including workflow/package/env/protocol mappings. Also add an entry for each potentially confusing live term that the final census intentionally retains; for retained terms, set `old` and `new` to the same canonical spelling and explain the contextual justification in `notes` (for example the ADR-0006 `*-core` convention or genuine bounded `method-probe`). The ledger is the checklist of record. A rename PR marks only its own entries `done`.
 
-For Phase 8 onward, completion contract v3 adds durable execution evidence:
+For Phase 8 onward, completion contract v4 adds durable execution evidence and explicit compatibility policy:
 
 ```json
 {
@@ -978,9 +1069,9 @@ For Phase 8 onward, completion contract v3 adds durable execution evidence:
 }
 ```
 
-`batch` is mandatory for Phase 8 and is fixed to 8A-8H by [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md). Later phases add batch identifiers when the plan serializes them. `verificationRecord` is `null` while a row is merely pending; as soon as a Phase-8+ row becomes `in-progress`, it must point at the checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md), and the pointer remains after the row becomes `done`.
+`batch` is mandatory for Phase 8 and is fixed to 8A-8H by [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md). Later phases add batch identifiers when the plan serializes them. `verificationRecord` is `null` while a row is merely pending; as soon as a Phase-8+ row becomes `in-progress`, it must point at the checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md), and the pointer remains after the row becomes `done`. Every future row with `persistence: "dual-read"` also carries a `compatibility` object whose `mode`, `retireWhen`, and `owner` follow Section 3.4.
 
-A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable` and the checked-in `verificationRecord` exists. `not-applicable` requires an explicit rationale in the entry notes or record. The top-level `activeExecution` object identifies the one phase/batch/branch/record allowed to have `in-progress` rows. The ledger checker rejects idle-with-in-progress state, multiple/mismatched active batches, missing records, unassigned Phase-8 rows, and `lastCompletedPhase` values that outrun incomplete future rows.
+A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable` and the checked-in `verificationRecord` exists. `not-applicable` requires an explicit rationale in the entry notes or record. The top-level `activeExecution` object identifies the one phase/batch/branch/record allowed to have `in-progress` rows. The ledger checker rejects duplicate/unstable IDs, missing compatibility policy, idle-with-in-progress state, skipped phases or Phase-8 predecessor batches, multiple/mismatched active batches, missing records, unassigned Phase-8 rows, and `lastCompletedPhase` values that outrun incomplete future rows.
 
 This model is prospective: do not manufacture retroactive verification claims for Phases 1-7; their later audit history remains recorded in the ledger closeout notes, the process-hardening document, and the retrospective.
 
@@ -1373,6 +1464,8 @@ Stop an individual rename PR and report the conflict instead of improvising if:
 - a supposedly local name is part of a persisted schema not covered by this plan;
 - current `main` has already replaced the concept with a different architecture;
 - a newly discovered live surface would require inventing a canonical name not fixed by this plan;
+- the canonical target is already occupied by a materially different live concept or filesystem/package identity;
+- the impact map raises the row above its recorded risk class or reveals a different compatibility owner/lifetime; amend the specification before continuing;
 - a workflow/file rename reveals a stale path or trigger whose correction could change when automation runs.
 - a high-risk cross-boundary rename has no credible way to identify or validate a live consumer/transport surface; first improve the inventory/checking substrate or record the blocker rather than declaring the row complete;
 - another naming-cleanup implementation batch is already active or an apparently relevant historical branch has not yet been compared against current `main`;
