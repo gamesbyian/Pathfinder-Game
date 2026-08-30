@@ -1458,6 +1458,12 @@ The cleanup is complete only when all of the following are true.
 38. Every Phase-8+ PR was compared against current `main` before merge and was not merged as an empty/already-applied duplicate patch.
 39. Medium/high-risk behavior-preserving batches have recorded before/after observable parity, or an explicit evidence-backed explanation that behavioral parity is not applicable.
 40. The final phase-wide closeout for each multi-batch phase runs on merged current `main`, not solely on the last implementation branch.
+41. Every ledger row still has its original immutable `NC-P##-###` identity; IDs were never reused or renumbered to make reports look tidy.
+42. Every future `dual-read` row's compatibility policy is resolved according to its ledger retirement rule: temporary command aliases are gone, permanent historical readers still parse frozen evidence, raw wire-retained spellings remain intentional, and `phase-15-review` compatibility has an explicit retain/remove decision backed by evidence.
+43. Canonical-target occupancy has been checked during final reconciliation; no canonical name/path/package alias accidentally denotes two materially different live concepts.
+44. `npm run naming:status` reports no active execution, no incomplete phase before the completion phase, and no unexpected high-risk/compatibility residue.
+45. The ledger checker negative-case self-test remains in the maintained Node test graph and passes, so the completion contract is tested to reject bad states as well as accept the final good state.
+46. Any specification amendments made during Phases 8-14 were landed explicitly in the plan/ledger/phase authorities rather than hidden inside implementation PRs.
 
 ## 14. Stop conditions
 
@@ -1471,7 +1477,7 @@ Stop an individual rename PR and report the conflict instead of improvising if:
 - a newly discovered live surface would require inventing a canonical name not fixed by this plan;
 - the canonical target is already occupied by a materially different live concept or filesystem/package identity;
 - the impact map raises the row above its recorded risk class or reveals a different compatibility owner/lifetime; amend the specification before continuing;
-- a workflow/file rename reveals a stale path or trigger whose correction could change when automation runs.
+- a workflow/file rename reveals a stale path or trigger whose correction could change when automation runs;
 - a high-risk cross-boundary rename has no credible way to identify or validate a live consumer/transport surface; first improve the inventory/checking substrate or record the blocker rather than declaring the row complete;
 - another naming-cleanup implementation batch is already active or an apparently relevant historical branch has not yet been compared against current `main`;
 - the proposed PR is stacked on an unmerged predecessor without an explicit plan exception;
