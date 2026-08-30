@@ -55,6 +55,12 @@ try {
 
   {
     const ledger = clone(source);
+    ledger.phaseBatches['8'] = ['8A', '8A'];
+    expectFail('batch order must be unique', ledger, /phaseBatches\["8"\] must be a non-empty unique ordered batch list/u);
+  }
+
+  {
+    const ledger = clone(source);
     ledger.entries[1].id = ledger.entries[0].id;
     expectFail('duplicate row id', ledger, /duplicate id/u);
   }
