@@ -1336,7 +1336,7 @@
       "old": "repairBudgetFractionOverride",
       "new": "repairAdditiveBudgetMultiplierOverride",
       "kind": "field",
-      "risk": "medium",
+      "risk": "high",
       "persistence": "none",
       "phase": 10,
       "status": "pending",
@@ -1348,7 +1348,7 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Quantity can exceed 1.",
+      "notes": "Quantity can exceed 1. Forward-spec rubric review raised this to high risk because a missed/incorrect override transport can silently change solver resource allocation.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },
@@ -1945,7 +1945,7 @@
       "old": "ENGINE (mutable state property)",
       "new": "engineState",
       "kind": "field",
-      "risk": "medium",
+      "risk": "high",
       "persistence": "none",
       "phase": 14,
       "status": "pending",
@@ -1957,7 +1957,7 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Avoid constant-looking mutable state.",
+      "notes": "Avoid constant-looking mutable state. Forward-spec rubric review raised this to high risk because this is the top-level mutable application state property and the rename crosses state/controller/render-facing consumers.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },
