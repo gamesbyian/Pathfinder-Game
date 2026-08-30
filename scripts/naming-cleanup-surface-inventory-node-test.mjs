@@ -62,6 +62,8 @@ assert.ok(lineageModule.importOrTextRefs.some(file => file.startsWith('scripts/'
 
 const lineageSymbol = inventory.ledgerEntries.find(row => row.old === 'WinningLineageObserver');
 assert.ok(lineageSymbol);
+assert.equal(lineageSymbol.id, 'NC-P08-005');
+assert.equal(lineageSymbol.batch, '8B');
 assert.ok(lineageSymbol.surfaces.symbolOwners.includes('modules/solver/research-lineage.ts'));
 
 const atlasWorkflow = inventory.workflows.find(row => row.file === '.github/workflows/atlas-sweep.yml');
@@ -90,6 +92,8 @@ const rangeInventory = JSON.parse(rangeRaw);
 assert.deepEqual(rangeInventory.phaseRange, [8, 14]);
 assert.equal(rangeInventory.ledgerEntries.length, 107);
 assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.reconciliationState === 'string'));
+assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.id === 'string' && /^NC-P\d{2}-\d{3}$/u.test(row.id)));
+assert.ok(rangeInventory.ledgerEntries.filter(row => row.persistence === 'dual-read').every(row => row.compatibility && row.compatibility.owner));
 assert.ok(rangeInventory.ledgerEntries.every(row => Array.isArray(row.oldReferenceCategories)));
 assert.ok(rangeInventory.ledgerEntries.some(row => row.reconciliationState === 'old-live'));
 const reconciliationCounts = Object.fromEntries(

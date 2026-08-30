@@ -1,11 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "authority": "docs/naming-cleanup-plan.md",
   "permanentVocabularyAuthority": "docs/naming-and-vocabulary.md",
-  "generatedForPlanRevision": "2026-08-29-history-and-serialization-hardening",
+  "generatedForPlanRevision": "2026-08-29-forward-spec-hardening",
   "status": "active",
   "entries": [
     {
+      "id": "NC-P03-001",
       "old": "getNavigableArea",
       "new": "getNonGateWinningPathCellCount",
       "kind": "symbol",
@@ -16,6 +17,7 @@
       "notes": "Behavior-preserving denominator helper rename. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-002",
       "old": "getNavigableDensity",
       "new": "getRequiredPathCoverageRatio",
       "kind": "symbol",
@@ -26,6 +28,7 @@
       "notes": "Preserve exact formula and thresholds. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-003",
       "old": "navDensity",
       "new": "requiredPathCoverageRatio",
       "kind": "field",
@@ -36,6 +39,7 @@
       "notes": "Internal feature field. Implemented in naming-cleanup PR 3. Additional persisted family-manifest propagation found during PR 4: legacy navDensity/parentNavDensity remain dual-read; new writes use requiredPathCoverageRatio/parentRequiredPathCoverageRatio. Corrected persistence from 'none' to 'dual-read' during the closeout session to match this note: stressMeta.navDensity is a persisted corpus-JSON field, and corpus-query-lib.mjs/family-boundary-report.mjs/analyze-lineage-mechanics.mjs/family-census-combine.mjs all dual-read it alongside requiredPathCoverageRatio (P1 of the closeout session)."
     },
     {
+      "id": "NC-P03-004",
       "old": "NEAR_HAMILTONIAN_DENSITY",
       "new": "NEAR_HAMILTONIAN_COVERAGE_THRESHOLD",
       "kind": "symbol",
@@ -46,6 +50,7 @@
       "notes": "Threshold value unchanged. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-005",
       "old": "DENSE_LEVEL_NAV_DENSITY",
       "new": "DENSE_LEVEL_COVERAGE_THRESHOLD",
       "kind": "symbol",
@@ -56,6 +61,7 @@
       "notes": "Threshold value unchanged. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-006",
       "old": "detectArchetype",
       "new": "classifyRoutingRegime",
       "kind": "symbol",
@@ -66,6 +72,7 @@
       "notes": "Classifier behavior unchanged. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-007",
       "old": "STRATEGY_ARCHETYPE_ROUTING",
       "new": "STRATEGY_ROUTING_REGIME_SELECTION",
       "kind": "field",
@@ -76,6 +83,7 @@
       "notes": "Legacy flag/config metadata remains readable. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-008",
       "old": "scripts/stress/select-archetype-sample.mjs",
       "new": "scripts/stress/select-routing-regime-sample.mjs",
       "kind": "tool",
@@ -86,6 +94,7 @@
       "notes": "Update workflow/docs/spawns. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-009",
       "old": ".github/workflows/solver-archetype-sample-ab.yml",
       "new": ".github/workflows/solver-routing-regime-sample-ab.yml",
       "kind": "workflow",
@@ -96,6 +105,7 @@
       "notes": "Historical workflow runs retain old identity. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-010",
       "old": "workflow archetype/archetypes",
       "new": "routingRegime/routing_regimes",
       "kind": "field",
@@ -106,6 +116,7 @@
       "notes": "Live sampler/workflow schema. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-011",
       "old": "archetype (routing classifier)",
       "new": "routing regime",
       "kind": "term",
@@ -116,6 +127,7 @@
       "notes": "Current docs/telemetry only. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-012",
       "old": "default (routing value)",
       "new": "general",
       "kind": "field",
@@ -126,6 +138,7 @@
       "notes": "Normalize persisted routing values. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-013",
       "old": "near-closure",
       "new": "sparse-low-intersection",
       "kind": "field",
@@ -136,6 +149,7 @@
       "notes": "Routing value only. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-014",
       "old": "high-intersection-burden",
       "new": "intersection-heavy",
       "kind": "field",
@@ -146,6 +160,7 @@
       "notes": "Routing value only. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-015",
       "old": "portal-heavy",
       "new": "multi-portal",
       "kind": "field",
@@ -156,6 +171,7 @@
       "notes": "Routing value only. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-016",
       "old": "must-cross-heavy",
       "new": "must-cross-heavy",
       "kind": "term",
@@ -166,6 +182,7 @@
       "notes": "Intentional retained routing value. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-017",
       "old": "scripts/stress/current-missing-exposure-audit.mjs",
       "new": "scripts/stress/analyze-current-missing-attempt-exposure.mjs",
       "kind": "tool",
@@ -176,6 +193,7 @@
       "notes": "Routing half in PR3; attempt identity fields in PR4. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-018",
       "old": "tmp/current-missing-exposure-audit.json",
       "new": "tmp/current-missing-attempt-exposure.json",
       "kind": "file",
@@ -186,6 +204,7 @@
       "notes": "Temporary default output only. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P03-019",
       "old": "archetype (missing-exposure result)",
       "new": "routingRegime",
       "kind": "field",
@@ -196,6 +215,7 @@
       "notes": "Analyzer result/local field. Implemented in naming-cleanup PR 3."
     },
     {
+      "id": "NC-P04-001",
       "old": "ida:*",
       "new": "admissible-order|tieBreak=<profile-or-none>|lds=<on|off>",
       "kind": "attempt-id",
@@ -206,6 +226,7 @@
       "notes": "Legacy parser input; canonical writer uses structured grammar. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-002",
       "old": "dfs:*",
       "new": "dfs|score=<profile>|bias=<bias-or-none>",
       "kind": "attempt-id",
@@ -216,6 +237,7 @@
       "notes": "Legacy parser input. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-003",
       "old": "beam:*@beam*",
       "new": "beam|score=<profile>|bias=<bias-or-none>|width=<n>|retention=<plain|mechanic-buckets>",
       "kind": "attempt-id",
@@ -226,6 +248,7 @@
       "notes": "Legacy parser input. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-004",
       "old": ":repair legacy attempt form",
       "new": "repair|score=repair|guidance=<standard|turn-biased|must-turn-biased>",
       "kind": "attempt-id",
@@ -236,6 +259,7 @@
       "notes": "Legacy parser input. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-005",
       "old": "--technique=<attemptConfigKey>",
       "new": "--attempt-config=<attemptConfigIdentity>",
       "kind": "field",
@@ -246,6 +270,7 @@
       "notes": "select-attempt-exposure compatibility window. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-006",
       "old": "TECHNIQUE (select-attempt-exposure)",
       "new": "ATTEMPT_CONFIG_IDENTITY",
       "kind": "symbol",
@@ -256,6 +281,7 @@
       "notes": "Local CLI variable. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-007",
       "old": "technique (select-attempt-exposure result)",
       "new": "attemptConfigIdentity",
       "kind": "field",
@@ -266,6 +292,7 @@
       "notes": "New JSON writes canonical field. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-008",
       "old": "rankedTechniqueArchetypeCandidates",
       "new": "rankedAttemptConfigRoutingRegimeCandidates",
       "kind": "field",
@@ -276,6 +303,7 @@
       "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-009",
       "old": "rankedBeamTechniqueArchetypeCandidates",
       "new": "rankedBeamAttemptConfigRoutingRegimeCandidates",
       "kind": "field",
@@ -286,6 +314,7 @@
       "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-010",
       "old": "overallTechniqueCandidates",
       "new": "overallAttemptConfigCandidates",
       "kind": "field",
@@ -296,6 +325,7 @@
       "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-011",
       "old": "technique (exact attemptConfigKey result)",
       "new": "attemptConfigIdentity",
       "kind": "field",
@@ -306,6 +336,7 @@
       "notes": "Missing-exposure analyzer. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-012",
       "old": "censusByLevelTechnique",
       "new": "censusByLevelAttemptConfig",
       "kind": "symbol",
@@ -316,6 +347,7 @@
       "notes": "Internal analyzer map. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-013",
       "old": "universalSolveLevel",
       "new": "solveLevel",
       "kind": "symbol",
@@ -326,6 +358,7 @@
       "notes": "Remove alias after repository consumers migrate. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P04-014",
       "old": "solve (solver facade alias)",
       "new": "solveLevel",
       "kind": "symbol",
@@ -336,6 +369,7 @@
       "notes": "Remove redundant solver alias. Implemented in naming-cleanup PR 4."
     },
     {
+      "id": "NC-P05-001",
       "old": "POLICY_PROFILES",
       "new": "SCORING_PROFILES",
       "kind": "symbol",
@@ -346,6 +380,7 @@
       "notes": "Weight configurations, not techniques. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-002",
       "old": "PROFILE_ORDER",
       "new": "SCORING_PROFILE_ORDER",
       "kind": "symbol",
@@ -356,6 +391,7 @@
       "notes": "Ordering of scoring profile IDs. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-003",
       "old": "profileName (solver action/config)",
       "new": "scoringProfileId",
       "kind": "field",
@@ -366,6 +402,7 @@
       "notes": "Persisted/generated readers require compatibility where applicable. Implemented by naming-cleanup PR 5 (#1551). GAP FOUND (2026-08-29 closeout): scripts/stress/elite-prefix-dfs-ab.mjs (a Phase-5-era diagnostic with no dual-read fallback of its own -- repairConfig here is an in-memory AttemptConfig, not a persisted reader) still read the removed profileName field with no fallback at all, silently printing profile: undefined in every flip row it ever recorded. Fixed to read scoringProfileId; regression test added in scripts/stress/elite-prefix-dfs-ab-node-test.mjs (test:elite-prefix-dfs-ab), which required extracting the flip-record projection into an importable buildFlipRecord() helper guarded behind an import.meta CLI check."
     },
     {
+      "id": "NC-P05-004",
       "old": "TEMPLATES",
       "new": "STRUCTURAL_ORDERING_BIASES",
       "kind": "symbol",
@@ -376,6 +413,7 @@
       "notes": "Geometry/order biases. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-005",
       "old": "StructuralTemplate",
       "new": "StructuralOrderingBias",
       "kind": "symbol",
@@ -386,6 +424,7 @@
       "notes": "Type rename. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-006",
       "old": "template (attempt config)",
       "new": "orderingBias",
       "kind": "field",
@@ -396,6 +435,7 @@
       "notes": "Migrate telemetry/provenance readers. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-007",
       "old": "templateId",
       "new": "orderingBiasId",
       "kind": "field",
@@ -406,6 +446,7 @@
       "notes": "Migrate generated readers where persisted. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-008",
       "old": "TEMPLATE_CONFIG_KEYS",
       "new": "ORDERING_BIAS_CONFIG_KEYS",
       "kind": "symbol",
@@ -416,6 +457,7 @@
       "notes": "Config-key mapping. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-009",
       "old": "SCORE_TEMPLATE_BONUS",
       "new": "SCORE_ORDERING_BIAS_BONUS",
       "kind": "symbol",
@@ -426,6 +468,7 @@
       "notes": "Missed from the original Phase 5 ledger scope. Canonical ablation/config writes use ordering-bias vocabulary; the historical key remains accepted on read."
     },
     {
+      "id": "NC-P05-010",
       "old": "computeTemplateBonus",
       "new": "computeOrderingBiasBonus",
       "kind": "symbol",
@@ -436,6 +479,7 @@
       "notes": "Missed from the original Phase 5 ledger scope. Internal scoring helper rename completed in the consumer-regression follow-up."
     },
     {
+      "id": "NC-P05-011",
       "old": "TEMPLATE_* ablation feature keys",
       "new": "ORDERING_BIAS_* ablation feature keys",
       "kind": "symbol",
@@ -446,6 +490,7 @@
       "notes": "Missed from the original Phase 5 ledger scope. Current ablation surfaces write ORDERING_BIAS_* keys while the canonical config reader accepts historical TEMPLATE_* aliases."
     },
     {
+      "id": "NC-P05-012",
       "old": "diverse beam",
       "new": "mechanic-bucket retention",
       "kind": "term",
@@ -456,6 +501,7 @@
       "notes": "Current docs/display terminology. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-013",
       "old": "diverseBeam",
       "new": "mechanicBucketRetention",
       "kind": "field",
@@ -466,6 +512,7 @@
       "notes": "Attempt/config telemetry compatibility. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-014",
       "old": "(diverse) attempt-key suffix",
       "new": "retention=mechanic-buckets",
       "kind": "attempt-id",
@@ -476,6 +523,7 @@
       "notes": "Handled by canonical attempt parser. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-015",
       "old": "beam dedup coarse key",
       "new": "coarse state key",
       "kind": "term",
@@ -486,6 +534,7 @@
       "notes": "Do not imply exact equivalence. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-016",
       "old": "beam dedup coarse merge",
       "new": "coarse state merge",
       "kind": "term",
@@ -496,6 +545,7 @@
       "notes": "Do not imply exact equivalence. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P05-017",
       "old": "DEDUP_NEAR_TIE_*",
       "new": "COARSE_STATE_NEAR_TIE_RETENTION_*",
       "kind": "symbol",
@@ -506,6 +556,7 @@
       "notes": "Feature/config aliases accepted through migration. Implemented by naming-cleanup PR 5 (#1551)."
     },
     {
+      "id": "NC-P06-001",
       "old": "prime",
       "new": "explicit-prime",
       "kind": "stage-id",
@@ -516,6 +567,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-002",
       "old": "repair-probe",
       "new": "early-repair-search",
       "kind": "stage-id",
@@ -526,6 +578,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553). GAP FOUND (2026-08-29 closeout): scripts/stress/early-repair-search-badness-report.mjs and scripts/stress/restart-continuation-population-pilot.mjs did raw stageId string comparison (=== 'early-repair-search', with only a null-stageId legacy-boolean fallback) instead of routing through normalizeSolverStageId(), so a historical row carrying the literal legacy stageId string 'repair-probe' (not null, but the old string) matched neither branch and was silently excluded from both tools' analysis/selection populations. Both now route every non-null stageId through the central normalizer; regression tests with a repair-probe fixture row added in scripts/stress/early-repair-search-badness-report-node-test.mjs (test:early-repair-search-badness-report) and scripts/stress/restart-continuation-population-pilot-cli-node-test.mjs (test:restart-continuation-population-pilot-cli). Separately, Priority 2 of the same closeout pass found scripts/portfolio-solve-sweep-lib.mjs importing normalizeSolverStageId from modules/solver/stage-policy.ts directly, and scripts/analyze-technique-campaign.mjs importing it from a stage-policy.js that does not exist at all (silently working only because that tool's sole test invoked it through scripts/run-bundled.mjs's bundler rather than plain node) -- both fail under the repo's supported Node 20. The canonical stage-id list and normalizer were relocated to a new plain-JS sibling, modules/solver/stage-id-normalization.mjs (JSDoc-typed so npm run check:types still enforces the SolverStageId literal union); stage-policy.ts now imports and re-exports from it rather than duplicating the list/map. Both scripts, plus scripts/stress/early-repair-search-badness-report.mjs and scripts/stress/restart-continuation-population-pilot.mjs above and scripts/hint-query-lib.mjs (defense-in-depth retryTier normalization), now import the plain-.mjs sibling directly; analyze-technique-campaign.mjs is plain-node-runnable again and its test (scripts/analyze-technique-campaign-node-test.mjs) now invokes it directly rather than through run-bundled.mjs. Verified against a real Node 20.19.0 binary."
     },
     {
+      "id": "NC-P06-003",
       "old": "main-loop",
       "new": "main-search",
       "kind": "stage-id",
@@ -536,6 +589,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-004",
       "old": "repair-fallback",
       "new": "repair-fallback",
       "kind": "stage-id",
@@ -546,6 +600,7 @@
       "notes": "Intentional retained stage ID. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-005",
       "old": "attraction-diversity",
       "new": "goal-attraction-disabled-retry",
       "kind": "stage-id",
@@ -556,6 +611,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-006",
       "old": "repair-probe-shrink-recovery",
       "new": "repair-shrink-recovery",
       "kind": "stage-id",
@@ -566,6 +622,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-007",
       "old": "admissible-order",
       "new": "admissible-order-fallback",
       "kind": "stage-id",
@@ -576,6 +633,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-008",
       "old": "dedup-near-tie-retry",
       "new": "coarse-state-near-tie-retention-disabled-retry",
       "kind": "stage-id",
@@ -586,6 +644,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-009",
       "old": "admissible-order-non-default-retry",
       "new": "admissible-order-alternate-tiebreak-retry",
       "kind": "stage-id",
@@ -596,6 +655,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-010",
       "old": "connectivity-axis-exhausted-retry",
       "new": "connectivity-axis-prune-disabled-retry",
       "kind": "stage-id",
@@ -606,6 +666,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-011",
       "old": "repair-elite-prefix-dfs-retry",
       "new": "repair-elite-prefix-dfs-retry",
       "kind": "stage-id",
@@ -616,6 +677,7 @@
       "notes": "Intentional retained stage ID. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-012",
       "old": "mc-neighbor-budget-retry",
       "new": "must-cross-neighbor-prune-disabled-retry",
       "kind": "stage-id",
@@ -626,6 +688,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-013",
       "old": "repair-late-probe",
       "new": "late-repair-search",
       "kind": "stage-id",
@@ -636,6 +699,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-014",
       "old": "goal-attraction-legacy-distance-retry",
       "new": "guidance-goal-distance-retry",
       "kind": "stage-id",
@@ -646,6 +710,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-015",
       "old": "repair-late-probe-multi-seed-retry",
       "new": "late-repair-multiseed-retry",
       "kind": "stage-id",
@@ -656,6 +721,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-016",
       "old": "portfolio-pass",
       "new": "legacy-latency-portfolio-pass",
       "kind": "stage-id",
@@ -666,6 +732,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-017",
       "old": "portfolio-fallback",
       "new": "legacy-latency-portfolio-fallback",
       "kind": "stage-id",
@@ -676,6 +743,7 @@
       "notes": "Central normalizeSolverStageId compatibility. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-018",
       "old": "SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE",
       "new": "SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE",
       "kind": "symbol",
@@ -686,6 +754,7 @@
       "notes": "Behavior is guidance-distance selection. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-019",
       "old": "portfolio-experiment.ts",
       "new": "legacy-latency-portfolio-experiment.ts",
       "kind": "file",
@@ -696,6 +765,7 @@
       "notes": "Historical latency scheduler identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-020",
       "old": "PORTFOLIO_EXPERIMENT",
       "new": "LEGACY_LATENCY_PORTFOLIO_EXPERIMENT",
       "kind": "symbol",
@@ -706,6 +776,7 @@
       "notes": "Historical latency scheduler identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-021",
       "old": "techniqueLifecycle",
       "new": "stageLifecycle",
       "kind": "field",
@@ -716,6 +787,7 @@
       "notes": "Keys are solver stages. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-022",
       "old": "scheduler mode legacy",
       "new": "production",
       "kind": "status-value",
@@ -726,6 +798,7 @@
       "notes": "Generic legacy mode removed after migration. Implemented in naming-cleanup PR 6 (#1553). GAP FOUND (2026-08-29 closeout): scripts/level-blind-capability-sweep.mjs never set SolveOpts.schedulerMode at all (no --scheduler-mode flag exists on this tool), so it always actually solved in production mode via solveLevel()'s own undefined-defaults-to-production resolution -- yet hardcoded schedulerMode: 'legacy' into every generated report's summary and into buildRow()'s scheduler-mode label. Fixed by explicitly setting schedulerMode: 'production' in its solveOpts and reporting that resolved value; regression test added in scripts/level-blind-capability-sweep-cli-node-test.mjs (test:level-blind-capability-sweep-cli)."
     },
     {
+      "id": "NC-P06-023",
       "old": "scheduler mode portfolio-experiment",
       "new": "legacy-latency-portfolio-experiment",
       "kind": "status-value",
@@ -736,6 +809,7 @@
       "notes": "Persisted scheduler mode. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-024",
       "old": "PortfolioExperimentDefinition",
       "new": "LegacyLatencyPortfolioExperimentDefinition",
       "kind": "symbol",
@@ -746,6 +820,7 @@
       "notes": "Type rename. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-025",
       "old": "portfolioExperiment option",
       "new": "legacyLatencyPortfolioExperiment",
       "kind": "field",
@@ -756,6 +831,7 @@
       "notes": "Dual-read only where external/generated configs persist. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-026",
       "old": "portfolio result field",
       "new": "legacyLatencyPortfolioExperiment",
       "kind": "field",
@@ -766,6 +842,7 @@
       "notes": "Generated JSON single-write canonical. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-027",
       "old": "schedulerPhase: portfolio",
       "new": "schedulerPhase: legacy-latency-portfolio",
       "kind": "status-value",
@@ -776,6 +853,7 @@
       "notes": "Attempt telemetry. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-028",
       "old": "StageBudgetPolicyId: additive-fraction",
       "new": "StageBudgetPolicyId: additive-wall-multiplier",
       "kind": "status-value",
@@ -786,6 +864,7 @@
       "notes": "Wall multiplier, not [0,1] fraction. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-029",
       "old": "SolverStageDisposition",
       "new": "SolverStagePolicyStatus",
       "kind": "symbol",
@@ -796,6 +875,7 @@
       "notes": "Runtime policy status, not history. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-030",
       "old": "SolverStagePolicyStatus: promoted",
       "new": "SolverStagePolicyStatus: production-default",
       "kind": "status-value",
@@ -806,6 +886,7 @@
       "notes": "Promotion history belongs in evidence ledger. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P07-001",
       "old": "findTrapSpots",
       "new": "findTriggerableFalseGoalCells",
       "kind": "symbol",
@@ -816,6 +897,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-002",
       "old": "TrapSearchResult",
       "new": "FalseGoalTriggerSearchResult",
       "kind": "symbol",
@@ -826,6 +908,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-003",
       "old": "TrapProgress",
       "new": "FalseGoalTriggerSearchProgress",
       "kind": "symbol",
@@ -836,6 +919,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-004",
       "old": "TrapOpts",
       "new": "FalseGoalTriggerSearchOptions",
       "kind": "symbol",
@@ -846,6 +930,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-005",
       "old": "spots",
       "new": "triggerableCells",
       "kind": "field",
@@ -856,6 +941,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-006",
       "old": "FalseGoalStatus",
       "new": "FalseGoalTriggerability",
       "kind": "symbol",
@@ -866,6 +952,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-007",
       "old": "reachable",
       "new": "triggerable",
       "kind": "status-value",
@@ -876,6 +963,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-008",
       "old": "unreachable",
       "new": "untriggerable",
       "kind": "status-value",
@@ -886,6 +974,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-009",
       "old": "classifyFalseGoals",
       "new": "classifyFalseGoalTriggerability",
       "kind": "symbol",
@@ -896,6 +985,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-010",
       "old": "isParityReachableEndpoint",
       "new": "isParityCompatibleEndpoint",
       "kind": "symbol",
@@ -906,6 +996,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-011",
       "old": "getTrapSpotBudgetMs",
       "new": "getFalseGoalTriggerSearchBudgetMs",
       "kind": "symbol",
@@ -916,6 +1007,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-012",
       "old": "timeLimit",
       "new": "timeLimitMs",
       "kind": "field",
@@ -926,6 +1018,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-013",
       "old": "trap-search.ts",
       "new": "false-goal-trigger-search.ts",
       "kind": "file",
@@ -936,6 +1029,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-014",
       "old": "TRAP",
       "new": "FALSE_GOAL_TRIGGER_SEARCH",
       "kind": "protocol",
@@ -946,6 +1040,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-015",
       "old": "TRAP_PROGRESS",
       "new": "FALSE_GOAL_TRIGGER_SEARCH_PROGRESS",
       "kind": "protocol",
@@ -956,6 +1051,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-016",
       "old": "TRAP_RESULT",
       "new": "FALSE_GOAL_TRIGGER_SEARCH_RESULT",
       "kind": "protocol",
@@ -966,6 +1062,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-017",
       "old": "trap-scan-controller.ts",
       "new": "false-goal-trigger-scan-controller.ts",
       "kind": "file",
@@ -976,6 +1073,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-018",
       "old": "trap-scan-core.ts",
       "new": "false-goal-trigger-scan-core.ts",
       "kind": "file",
@@ -986,6 +1084,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-019",
       "old": "createTrapScanController",
       "new": "createFalseGoalTriggerScanController",
       "kind": "symbol",
@@ -996,6 +1095,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-020",
       "old": "runTrapSearch",
       "new": "runFalseGoalTriggerSearch",
       "kind": "symbol",
@@ -1006,6 +1106,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-021",
       "old": "trapScanState",
       "new": "falseGoalTriggerScanState",
       "kind": "field",
@@ -1016,6 +1117,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-022",
       "old": "validTrapSpots",
       "new": "triggerableFalseGoalCells",
       "kind": "field",
@@ -1026,6 +1128,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561. Corrected persistence from 'dual-read' to 'none' during the closeout session: EditorState is pure runtime state, never serialized, so no dual-read was ever implemented or needed -- create-render-model.ts was found reading this exact non-existent legacy field name (both editor trap-spot overlays silently rendered empty) and fixed to read the canonical triggerableFalseGoalCells directly (P0 of the closeout session)."
     },
     {
+      "id": "NC-P07-023",
       "old": "trapParityCandidates",
       "new": "falseGoalTriggerParityCandidates",
       "kind": "field",
@@ -1036,6 +1139,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561. Corrected persistence from 'dual-read' to 'none' during the closeout session: EditorState is pure runtime state, never serialized, so no dual-read was ever implemented or needed -- create-render-model.ts was found reading this exact non-existent legacy field name (both editor trap-spot overlays silently rendered empty) and fixed to read the canonical falseGoalTriggerParityCandidates directly (P0 of the closeout session)."
     },
     {
+      "id": "NC-P07-024",
       "old": "*TrapSpots state actions",
       "new": "*TriggerableFalseGoalCells state actions",
       "kind": "symbol",
@@ -1046,6 +1150,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-025",
       "old": "*TrapParityCandidates state actions",
       "new": "*FalseGoalTriggerParityCandidates state actions",
       "kind": "symbol",
@@ -1056,6 +1161,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-026",
       "old": "trap-search-audit.mjs",
       "new": "audit-false-goal-triggerability.mjs",
       "kind": "tool",
@@ -1066,6 +1172,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-027",
       "old": "solver:trap-audit",
       "new": "solver:audit-false-goal-triggerability",
       "kind": "package-alias",
@@ -1076,6 +1183,7 @@
       "notes": "False-goal triggerability migration. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-028",
       "old": "trap result status done",
       "new": "complete",
       "kind": "status-value",
@@ -1086,6 +1194,7 @@
       "notes": "Legacy generated payloads may contain done. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-029",
       "old": "trap result status timeout",
       "new": "partial",
       "kind": "status-value",
@@ -1096,6 +1205,7 @@
       "notes": "Timeout means incomplete result. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-030",
       "old": "TrapSearchResult.ok",
       "new": "status only",
       "kind": "field",
@@ -1106,6 +1216,7 @@
       "notes": "Remove misleading ok from canonical result. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P07-031",
       "old": "TrapSearchResult.timedOut",
       "new": "status !== complete",
       "kind": "field",
@@ -1116,6 +1227,7 @@
       "notes": "Derive incompleteness from status. Completed across naming-cleanup PR 7 (#1554) and corrective follow-ups #1558/#1561."
     },
     {
+      "id": "NC-P10-001",
       "old": "closeLengthGap",
       "new": "searchCompletionFromPartialPath",
       "kind": "symbol",
@@ -1136,6 +1248,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P10-002",
       "old": "solved by closeLengthGap",
       "new": "solved by partial-path completion search",
       "kind": "term",
@@ -1156,6 +1269,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P10-003",
       "old": "prune-gauntlet.ts",
       "new": "hard-prune-pipeline.ts",
       "kind": "file",
@@ -1176,6 +1290,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P10-004",
       "old": "prune gauntlet",
       "new": "hard-prune pipeline",
       "kind": "term",
@@ -1196,6 +1311,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P10-005",
       "old": "REPAIR_EXTRA_BUDGET_FRACTION",
       "new": "REPAIR_ADDITIVE_BUDGET_MULTIPLIER",
       "kind": "symbol",
@@ -1216,10 +1332,11 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P10-006",
       "old": "repairBudgetFractionOverride",
       "new": "repairAdditiveBudgetMultiplierOverride",
       "kind": "field",
-      "risk": "medium",
+      "risk": "high",
       "persistence": "none",
       "phase": 10,
       "status": "pending",
@@ -1231,11 +1348,12 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Quantity can exceed 1.",
+      "notes": "Quantity can exceed 1. Forward-spec rubric review raised this to high risk because a missed/incorrect override transport can silently change solver resource allocation.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },
     {
+      "id": "NC-P10-007",
       "old": "repairBudgetFraction",
       "new": "repairAdditiveBudgetMultiplier",
       "kind": "symbol",
@@ -1256,6 +1374,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P10-008",
       "old": "additive-fraction",
       "new": "additive-wall-multiplier",
       "kind": "status-value",
@@ -1273,9 +1392,15 @@
       },
       "notes": "Stage budget policy spelling. Pre-Phase-8 current-main reconciliation: the StageBudgetPolicyId definition is already canonical on main; Phase 10 must not recreate this definition rename and only needs to verify/migrate any retained historical-reader compatibility.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null
+      "verificationRecord": null,
+      "compatibility": {
+        "mode": "permanent-historical-read",
+        "retireWhen": "never",
+        "owner": "stage-policy/report historical reader"
+      }
     },
     {
+      "id": "NC-P11-001",
       "old": "runtime variant",
       "new": "orientation",
       "kind": "field",
@@ -1293,9 +1418,15 @@
       },
       "notes": "Runtime rotation/reflection only; research level variant retained.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null
+      "verificationRecord": null,
+      "compatibility": {
+        "mode": "runtime-compatibility-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "engine-state and level-transform compatibility boundary"
+      }
     },
     {
+      "id": "NC-P11-002",
       "old": "setVariant",
       "new": "setOrientation",
       "kind": "symbol",
@@ -1316,6 +1447,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P11-003",
       "old": "eng.variant",
       "new": "eng.orientation",
       "kind": "field",
@@ -1336,6 +1468,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P11-004",
       "old": "geometry argument variant",
       "new": "orientation",
       "kind": "symbol",
@@ -1356,6 +1489,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P11-005",
       "old": "8 transform variants",
       "new": "8 orientations",
       "kind": "term",
@@ -1376,6 +1510,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P08-001",
       "old": "solver-winning-lineage-survival-analysis.md",
       "new": "solver-known-solution-prefix-survival.md",
       "kind": "doc",
@@ -1397,6 +1532,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-002",
       "old": "analyze-lineage-mechanics.mjs",
       "new": "analyze-known-solution-prefix-survival.mjs",
       "kind": "tool",
@@ -1418,6 +1554,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-003",
       "old": "modules/solver/research-lineage.ts",
       "new": "modules/solver/known-solution-prefix-survival.ts",
       "kind": "file",
@@ -1439,6 +1576,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-004",
       "old": "WinningPrefixIndex",
       "new": "KnownSolutionPrefixIndex",
       "kind": "symbol",
@@ -1460,6 +1598,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-005",
       "old": "WinningLineageObserver",
       "new": "KnownSolutionPrefixSurvivalObserver",
       "kind": "symbol",
@@ -1481,6 +1620,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-006",
       "old": "LineageStageSummary",
       "new": "KnownSolutionPrefixStageSummary",
       "kind": "symbol",
@@ -1502,6 +1642,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-007",
       "old": "naked profile",
       "new": "qualified profile term",
       "kind": "term",
@@ -1523,6 +1664,7 @@
       "batch": "8H"
     },
     {
+      "id": "NC-P08-008",
       "old": "naked fingerprint",
       "new": "qualified fingerprint term",
       "kind": "term",
@@ -1544,6 +1686,7 @@
       "batch": "8H"
     },
     {
+      "id": "NC-P08-009",
       "old": "naked family",
       "new": "qualified family term",
       "kind": "term",
@@ -1565,6 +1708,7 @@
       "batch": "8H"
     },
     {
+      "id": "NC-P08-010",
       "old": "winning lineage",
       "new": "known-solution-prefix survival",
       "kind": "term",
@@ -1586,6 +1730,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-011",
       "old": "naked residual API term",
       "new": "domain-qualified residual term",
       "kind": "term",
@@ -1607,6 +1752,7 @@
       "batch": "8H"
     },
     {
+      "id": "NC-P12-001",
       "old": "ActionType command members",
       "new": "GameCommandType",
       "kind": "symbol",
@@ -1627,6 +1773,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P12-002",
       "old": "ActionType event members",
       "new": "GameEventType",
       "kind": "symbol",
@@ -1647,6 +1794,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P12-003",
       "old": "event variable carrying command",
       "new": "command",
       "kind": "term",
@@ -1667,6 +1815,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P12-004",
       "old": "command variable carrying event",
       "new": "event",
       "kind": "term",
@@ -1687,6 +1836,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-001",
       "old": "modules/core.ts",
       "new": "specific app constants/audio dependencies",
       "kind": "file",
@@ -1707,6 +1857,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-002",
       "old": "SOUND_BUS",
       "new": "audioService",
       "kind": "symbol",
@@ -1727,6 +1878,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-003",
       "old": "createCore",
       "new": "specific dependencies",
       "kind": "symbol",
@@ -1747,6 +1899,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-004",
       "old": "modules/level-utils.ts",
       "new": "direct domain imports",
       "kind": "file",
@@ -1767,6 +1920,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-005",
       "old": "HinterState",
       "new": "HintDisplayState",
       "kind": "symbol",
@@ -1787,10 +1941,11 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-006",
       "old": "ENGINE (mutable state property)",
       "new": "engineState",
       "kind": "field",
-      "risk": "medium",
+      "risk": "high",
       "persistence": "none",
       "phase": 14,
       "status": "pending",
@@ -1802,11 +1957,12 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Avoid constant-looking mutable state.",
+      "notes": "Avoid constant-looking mutable state. Forward-spec rubric review raised this to high risk because this is the top-level mutable application state property and the rename crosses state/controller/render-facing consumers.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-007",
       "old": "publicDrawPath",
       "new": "drawPathWithCurrentOrientation",
       "kind": "symbol",
@@ -1827,6 +1983,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-008",
       "old": "pendingAction",
       "new": "pendingConfirmationAction",
       "kind": "field",
@@ -1847,6 +2004,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-009",
       "old": "*-core.ts (ADR 0006 qualified cores)",
       "new": "*-core.ts (ADR 0006 qualified cores)",
       "kind": "term",
@@ -1867,6 +2025,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P14-010",
       "old": "state/actions/core-actions.ts",
       "new": "state/actions/core-actions.ts",
       "kind": "file",
@@ -1887,6 +2046,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P13-001",
       "old": "normalized reqLen",
       "new": "requiredLength",
       "kind": "field",
@@ -1904,9 +2064,15 @@
       },
       "notes": "Raw wire field reqLen remains serialized compatibility spelling.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null
+      "verificationRecord": null,
+      "compatibility": {
+        "mode": "wire-format-retained",
+        "retireWhen": "never",
+        "owner": "raw-to-normalized level parser; raw wire field remains reqLen"
+      }
     },
     {
+      "id": "NC-P13-002",
       "old": "normalized reqInt",
       "new": "requiredIntersections",
       "kind": "field",
@@ -1924,9 +2090,15 @@
       },
       "notes": "Raw wire field reqInt remains serialized compatibility spelling.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null
+      "verificationRecord": null,
+      "compatibility": {
+        "mode": "wire-format-retained",
+        "retireWhen": "never",
+        "owner": "raw-to-normalized level parser; raw wire field remains reqInt"
+      }
     },
     {
+      "id": "NC-P13-003",
       "old": "raw wire reqLen",
       "new": "raw wire reqLen",
       "kind": "field",
@@ -1947,6 +2119,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P13-004",
       "old": "raw wire reqInt",
       "new": "raw wire reqInt",
       "kind": "field",
@@ -1967,6 +2140,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P09-001",
       "old": "solver:bench",
       "new": "solver:regression",
       "kind": "package-alias",
@@ -1984,9 +2158,15 @@
       },
       "notes": "One compatibility PR; solved-set regression, not speed.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null
+      "verificationRecord": null,
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-phase-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P09-002",
       "old": "solver:speed-probe",
       "new": "solver:measure-speed",
       "kind": "package-alias",
@@ -2007,6 +2187,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P09-003",
       "old": "stress:benchmark",
       "new": "stress:measure-solver",
       "kind": "package-alias",
@@ -2024,9 +2205,15 @@
       },
       "notes": "Actual corpus solver measurement.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null
+      "verificationRecord": null,
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-phase-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P09-004",
       "old": "run-solverv2-direct.mjs",
       "new": "run-solver-direct.mjs",
       "kind": "tool",
@@ -2047,6 +2234,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P09-005",
       "old": "scripts/portfolio-sweep-reports-to-benchmark.mjs",
       "new": "scripts/combine-solver-sweep-reports.mjs",
       "kind": "tool",
@@ -2067,6 +2255,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P09-006",
       "old": "solver:combine-corpus2-batches",
       "new": "solver:combine-sweep-reports",
       "kind": "package-alias",
@@ -2084,9 +2273,15 @@
       },
       "notes": "Combiner now used beyond Corpus 2.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null
+      "verificationRecord": null,
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-phase-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P09-007",
       "old": "reports/stress/benchmark-parallel.json",
       "new": "reports/stress/solver-corpus1-latest.json",
       "kind": "file",
@@ -2107,6 +2302,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P09-008",
       "old": "reports/stress/benchmark-latest-random.json",
       "new": "reports/stress/solver-corpus2-latest.json",
       "kind": "file",
@@ -2127,6 +2323,7 @@
       "verificationRecord": null
     },
     {
+      "id": "NC-P08-012",
       "old": "hint-path-oracle.mjs",
       "new": "validate-hint-paths.mjs",
       "kind": "tool",
@@ -2148,6 +2345,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-013",
       "old": "test:hint-path-oracle",
       "new": "test:hint-path-validation",
       "kind": "package-alias",
@@ -2166,9 +2364,15 @@
       "notes": "Update current docs/workflows.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8A"
+      "batch": "8A",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-014",
       "old": "cpsat-full-probe.py",
       "new": "cpsat-reference-probe.py",
       "kind": "tool",
@@ -2190,6 +2394,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-015",
       "old": "cpsat-explicit-prefix-oracle.mjs",
       "new": "cpsat-explicit-prefix-reference.mjs",
       "kind": "tool",
@@ -2211,6 +2416,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-016",
       "old": "atlas-sweep.mjs",
       "new": "collect-prune-gap-labels.mjs",
       "kind": "tool",
@@ -2232,6 +2438,7 @@
       "batch": "8E"
     },
     {
+      "id": "NC-P08-017",
       "old": "branch atlas",
       "new": "labelled branch set",
       "kind": "term",
@@ -2253,6 +2460,7 @@
       "batch": "8E"
     },
     {
+      "id": "NC-P08-018",
       "old": "family-wide-trove-manifest.mjs",
       "new": "build-variant-family-dataset-manifest.mjs",
       "kind": "tool",
@@ -2274,6 +2482,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-019",
       "old": "trove",
       "new": "variant-family dataset",
       "kind": "term",
@@ -2295,6 +2504,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-020",
       "old": "winning-path archaeology",
       "new": "winning-path analysis",
       "kind": "term",
@@ -2316,6 +2526,7 @@
       "batch": "8H"
     },
     {
+      "id": "NC-P08-021",
       "old": "technique-census-second-order.mjs",
       "new": "analyze-technique-census.mjs",
       "kind": "tool",
@@ -2337,6 +2548,7 @@
       "batch": "8D"
     },
     {
+      "id": "NC-P08-022",
       "old": "technique-census-second-order-analysis.md",
       "new": "technique-census-analysis.md",
       "kind": "doc",
@@ -2358,6 +2570,7 @@
       "batch": "8D"
     },
     {
+      "id": "NC-P08-023",
       "old": "run-audit-export.mjs",
       "new": "analyze-solver-diagnostics.mjs",
       "kind": "tool",
@@ -2379,6 +2592,7 @@
       "batch": "8G"
     },
     {
+      "id": "NC-P08-024",
       "old": "knownHardCluster",
       "new": "hardClusterHeuristicMatch",
       "kind": "field",
@@ -2397,9 +2611,15 @@
       "notes": "Heuristic, not known fact.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8G"
+      "batch": "8G",
+      "compatibility": {
+        "mode": "permanent-historical-read",
+        "retireWhen": "never",
+        "owner": "solver-diagnostics generated-report normalizer"
+      }
     },
     {
+      "id": "NC-P08-025",
       "old": "recommendedGating",
       "new": "derivedGatingCandidate",
       "kind": "field",
@@ -2418,9 +2638,15 @@
       "notes": "Generated candidate, not normative recommendation.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8G"
+      "batch": "8G",
+      "compatibility": {
+        "mode": "permanent-historical-read",
+        "retireWhen": "never",
+        "owner": "solver-diagnostics generated-report normalizer"
+      }
     },
     {
+      "id": "NC-P08-026",
       "old": "audit:newhint:full",
       "new": "solver:analyze-diagnostics",
       "kind": "package-alias",
@@ -2439,9 +2665,15 @@
       "notes": "Opaque historical alias.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8G"
+      "batch": "8G",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-027",
       "old": "repair-direct-probe.mjs",
       "new": "run-repair-search.mjs",
       "kind": "tool",
@@ -2463,6 +2695,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P08-028",
       "old": "repair-direct-probe-worker.mjs",
       "new": "run-repair-search-worker.mjs",
       "kind": "tool",
@@ -2484,6 +2717,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P08-029",
       "old": "stress/winning-lineage-pilot.mjs",
       "new": "stress/collect-known-solution-prefix-survival.mjs",
       "kind": "tool",
@@ -2505,6 +2739,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-030",
       "old": "solver:winning-lineage-pilot",
       "new": "solver:collect-known-solution-prefix-survival",
       "kind": "package-alias",
@@ -2523,9 +2758,15 @@
       "notes": "Surfaced durable command.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8B"
+      "batch": "8B",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-031",
       "old": "stress/winning-prefix-atlas-pilot.mjs",
       "new": "stress/collect-known-solution-prefix-branches.mjs",
       "kind": "tool",
@@ -2547,6 +2788,7 @@
       "batch": "8B"
     },
     {
+      "id": "NC-P08-032",
       "old": "solver:winning-prefix-atlas-pilot",
       "new": "solver:collect-known-solution-prefix-branches",
       "kind": "package-alias",
@@ -2565,9 +2807,15 @@
       "notes": "Surfaced durable command.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8B"
+      "batch": "8B",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-033",
       "old": "stress/producer-population-pilot.mjs",
       "new": "stress/compare-search-producer-populations.mjs",
       "kind": "tool",
@@ -2589,6 +2837,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P08-034",
       "old": "solver:producer-population-pilot",
       "new": "solver:compare-search-producer-populations",
       "kind": "package-alias",
@@ -2607,9 +2856,15 @@
       "notes": "Surfaced durable command.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8C"
+      "batch": "8C",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-035",
       "old": "stress/residual-interface-mining-pilot.mjs",
       "new": "stress/analyze-residual-interfaces.mjs",
       "kind": "tool",
@@ -2631,6 +2886,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P08-036",
       "old": "solver:residual-interface-pilot",
       "new": "solver:analyze-residual-interfaces",
       "kind": "package-alias",
@@ -2649,9 +2905,15 @@
       "notes": "Surfaced durable command.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8C"
+      "batch": "8C",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-037",
       "old": "stress/repair-rollback-census-pilot.mjs",
       "new": "stress/census-repair-rollback-windows.mjs",
       "kind": "tool",
@@ -2673,6 +2935,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P08-038",
       "old": "solver:repair-rollback-pilot",
       "new": "solver:census-repair-rollback-windows",
       "kind": "package-alias",
@@ -2691,9 +2954,15 @@
       "notes": "Surfaced durable command.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8C"
+      "batch": "8C",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-039",
       "old": "stress/symmetry-repair-seed-pilot.mjs",
       "new": "stress/compare-symmetry-repair-seed.mjs",
       "kind": "tool",
@@ -2715,6 +2984,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P08-040",
       "old": "solver:symmetry-repair-seed-pilot",
       "new": "solver:compare-symmetry-repair-seed",
       "kind": "package-alias",
@@ -2733,9 +3003,15 @@
       "notes": "Surfaced durable command.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8C"
+      "batch": "8C",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-041",
       "old": "stress/restart-continuation-population-pilot.mjs",
       "new": "stress/compare-repair-restart-continuation-population.mjs",
       "kind": "tool",
@@ -2757,6 +3033,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P08-042",
       "old": "stress/analyze-equal-work-census-pilot.mjs",
       "new": "stress/analyze-equal-work-census.mjs",
       "kind": "tool",
@@ -2778,6 +3055,7 @@
       "batch": "8D"
     },
     {
+      "id": "NC-P08-043",
       "old": ".github/workflows/atlas-sweep.yml",
       "new": ".github/workflows/collect-prune-gap-labels.yml",
       "kind": "workflow",
@@ -2799,6 +3077,7 @@
       "batch": "8E"
     },
     {
+      "id": "NC-P08-044",
       "old": "workflow atlas-sweep display/concurrency",
       "new": "collect-prune-gap-labels",
       "kind": "term",
@@ -2820,6 +3099,7 @@
       "batch": "8E"
     },
     {
+      "id": "NC-P08-045",
       "old": ".github/workflows/cpsat-explicit-prefix-oracle.yml",
       "new": ".github/workflows/cpsat-explicit-prefix-reference.yml",
       "kind": "workflow",
@@ -2841,6 +3121,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-046",
       "old": "CP-SAT workflow/job oracle display",
       "new": "reference",
       "kind": "term",
@@ -2862,6 +3143,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-047",
       "old": ".github/workflows/family-wide-trove.yml",
       "new": ".github/workflows/collect-variant-family-dataset.yml",
       "kind": "workflow",
@@ -2883,6 +3165,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-048",
       "old": "family-wide-trove-shard-run.mjs",
       "new": "collect-variant-family-dataset-shard.mjs",
       "kind": "tool",
@@ -2904,6 +3187,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-049",
       "old": "family-wide-trove-shard-slice.mjs",
       "new": "plan-variant-family-dataset-shard.mjs",
       "kind": "tool",
@@ -2925,6 +3209,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-050",
       "old": "family-wide-trove-combine.mjs",
       "new": "merge-variant-family-dataset-shards.mjs",
       "kind": "tool",
@@ -2946,6 +3231,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-051",
       "old": "family-trove-doctor.mjs",
       "new": "validate-variant-family-dataset-worktree.mjs",
       "kind": "tool",
@@ -2967,6 +3253,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-052",
       "old": "family:trove:doctor",
       "new": "family:validate-dataset-worktree",
       "kind": "package-alias",
@@ -2985,9 +3272,15 @@
       "notes": "Update docs/workflows.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8F"
+      "batch": "8F",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-053",
       "old": "PATHFINDER_VARIANT_TROVE",
       "new": "PATHFINDER_VARIANT_FAMILY_DATASET_ROOT",
       "kind": "env",
@@ -3006,9 +3299,15 @@
       "notes": "External developer/CI env compatibility window.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8F"
+      "batch": "8F",
+      "compatibility": {
+        "mode": "external-config-transition",
+        "retireWhen": "phase-15-review",
+        "owner": "variant-family dataset root resolver"
+      }
     },
     {
+      "id": "NC-P08-054",
       "old": "TROVE_BRANCH",
       "new": "VARIANT_FAMILY_DATASET_BRANCH",
       "kind": "symbol",
@@ -3030,6 +3329,7 @@
       "batch": "8F"
     },
     {
+      "id": "NC-P08-055",
       "old": ".github/workflows/audit-export.yml",
       "new": ".github/workflows/solver-diagnostics.yml",
       "kind": "workflow",
@@ -3051,6 +3351,7 @@
       "batch": "8G"
     },
     {
+      "id": "NC-P08-056",
       "old": "Audit Export",
       "new": "Solver diagnostics and hint capture",
       "kind": "term",
@@ -3072,6 +3373,7 @@
       "batch": "8G"
     },
     {
+      "id": "NC-P08-057",
       "old": "stress/confirm-residual-001-archetype-audit.mjs",
       "new": "stress/audit-candidate-eligibility-and-participation.mjs",
       "kind": "tool",
@@ -3093,6 +3395,7 @@
       "batch": "8C"
     },
     {
+      "id": "NC-P06-031",
       "old": "stress/select-repair-probe-adaptive-sample.mjs",
       "new": "stress/select-early-repair-search-adaptive-sample.mjs",
       "kind": "tool",
@@ -3103,6 +3406,7 @@
       "notes": "Migrate with stage identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-032",
       "old": "stress/repair-probe-badness-report.mjs",
       "new": "stress/early-repair-search-badness-report.mjs",
       "kind": "tool",
@@ -3113,6 +3417,7 @@
       "notes": "Migrate with stage identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-033",
       "old": ".github/workflows/solver-repair-probe-adaptive-sample-ab.yml",
       "new": ".github/workflows/solver-early-repair-search-adaptive-sample-ab.yml",
       "kind": "workflow",
@@ -3123,6 +3428,7 @@
       "notes": "Migrate with stage identity. Implemented in naming-cleanup PR 6 (#1553)."
     },
     {
+      "id": "NC-P06-034",
       "old": "MAIN_LOOP_LATE_RESERVE_FRACTION / MAIN_LOOP_LATE_RESERVE_CONFIG_COUNT",
       "new": "MAIN_SEARCH_LATE_RESERVE_FRACTION / MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT",
       "kind": "symbol",
@@ -3133,6 +3439,7 @@
       "notes": "Derived-vocabulary rename discovered unclassified during the closeout session's full-repo audit (stage-budget.ts/orchestration.ts derived the mainLoop* family from the phase-6 main-loop stage-id rename, but the derived constants/locals themselves were never renamed). Direct internal rename across modules/solver/stage-budget.ts, orchestration.ts, their .test.ts files, and every live scripts/.github consumer; naming-consumer-residue guard covers this family is out of its strict scope (SolveOpts override fields kept below) since the bare constants have no legitimate dual-read need."
     },
     {
+      "id": "NC-P06-035",
       "old": "mainLoopLateReserveFractionOverride / mainLoopLateReserveConfigCountOverride (SolveOpts)",
       "new": "mainSearchLateReserveFractionOverride / mainSearchLateReserveConfigCountOverride",
       "kind": "field",
@@ -3143,6 +3450,7 @@
       "notes": "SolveOpts override fields kept as @deprecated dual-read aliases (orchestration.ts) so existing scripts/*.mjs CLI callers (--main-loop-late-reserve-fraction/--main-loop-late-reserve-config-count in level-blind-capability-sweep.mjs and portfolio-solve-sweep.mjs) and .github/workflows/*.yml inputs (solver-stress-refresh.yml) continue to work unchanged. Parity test in stage-budget.test.ts proves identical StageBudgetPlan output for legacy vs. canonical field names. The CLI flag names themselves (--main-loop-late-reserve-*) were NOT renamed to --main-search-late-reserve-* -- see the pending entry below."
     },
     {
+      "id": "NC-P06-036",
       "old": "--main-loop-late-reserve-fraction / --main-loop-late-reserve-config-count (CLI flags)",
       "new": "--main-search-late-reserve-fraction / --main-search-late-reserve-config-count",
       "kind": "package-alias",
@@ -3153,6 +3461,7 @@
       "notes": "scripts/level-blind-capability-sweep.mjs and scripts/portfolio-solve-sweep.mjs now parse the canonical flag first, falling back to the legacy spelling (accepted for one migration window). .github/workflows/solver-stress-refresh.yml's workflow_dispatch input NAMES were deliberately left as main_loop_late_reserve_fraction/main_loop_late_reserve_config_count -- GitHub Actions workflow_dispatch inputs have no alias mechanism, so renaming the input name itself would be a breaking change for any external caller (gh workflow run -f, saved dispatch bookmarks) with no compatibility window, unlike a script flag or SolveOpts field. The workflow's internal extra+=(...) lines were updated to emit the canonical --main-search-late-reserve-* flag string to the script, so the migration is live end-to-end; only the GH Actions form field label itself stays at its current name."
     },
     {
+      "id": "NC-P06-037",
       "old": "REPAIR_PROBE_ADAPTIVE_BIASED_BADNESS_GATE / REPAIR_PROBE_ADAPTIVE_BIASED_MIN_SCALE / REPAIR_PROBE_ATTEMPT_MS_CAP / REPAIR_PROBE_BIASED_NODE_BUDGET / REPAIR_PROBE_ORDINARY_NODE_BUDGET / REPAIR_PROBE_ORDINARY_SEED_SALTS / REPAIR_PROBE_PREDICTED_TIER_SHARE",
       "new": "EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE / EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE / EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP / EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET / EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET / EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS / EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE",
       "kind": "symbol",
@@ -3163,6 +3472,7 @@
       "notes": "Derived-vocabulary rename discovered unclassified during the closeout session's full-repo audit, same shape as the mainLoop* entry above but for the repair-probe/early-repair-search family. The repairProbeShrinkRecovery* sub-family is a SEPARATE stage (repair-shrink-recovery, not early-repair-search) and is tracked in its own entry below, not folded into this one. Direct internal rename across the same file set plus scripts/solver-parallel/race.mjs, race-stage-parity-node-test.mjs, stress/early-repair-search-badness-report.mjs, stress/select-early-repair-search-adaptive-sample.mjs, stress/confirm-residual-001-archetype-audit.mjs, .github/workflows/solver-repair-fallback-reserve-sample-ab.yml (all of which read the per-attempt telemetry field, now dual-read below)."
     },
     {
+      "id": "NC-P06-038",
       "old": "repairProbeAdaptiveBiasedBadnessGateOverride / repairProbeAdaptiveBiasedMinScaleOverride (SolveOpts)",
       "new": "earlyRepairSearchAdaptiveBiasedBadnessGateOverride / earlyRepairSearchAdaptiveBiasedMinScaleOverride",
       "kind": "field",
@@ -3173,6 +3483,7 @@
       "notes": "Same @deprecated dual-read alias / parity-test pattern as mainLoopLateReserve*Override above. CLI flags --repair-probe-adaptive-badness-gate/--repair-probe-adaptive-min-scale (level-blind-capability-sweep.mjs, solver-early-repair-search-adaptive-sample-ab.yml) still use the legacy spelling -- see the pending entry below."
     },
     {
+      "id": "NC-P06-039",
       "old": "--repair-probe-adaptive-badness-gate / --repair-probe-adaptive-min-scale (CLI flags)",
       "new": "--early-repair-search-adaptive-badness-gate / --early-repair-search-adaptive-min-scale",
       "kind": "package-alias",
@@ -3183,6 +3494,7 @@
       "notes": "Same disposition as the main-search-late-reserve CLI-flag entry above: scripts/level-blind-capability-sweep.mjs parses the canonical flag first, falling back to the legacy spelling; .github/workflows/solver-early-repair-search-adaptive-sample-ab.yml's workflow_dispatch input names (repair_probe_adaptive_badness_gate/repair_probe_adaptive_min_scale) were deliberately kept as-is for the same no-alias-mechanism reason, but its internal extra+=(...) lines now emit the canonical --early-repair-search-adaptive-* flag string."
     },
     {
+      "id": "NC-P06-040",
       "old": "--attraction-diversity-budget-fraction (CLI flag)",
       "new": "--goal-attraction-disabled-retry-budget-fraction",
       "kind": "package-alias",
@@ -3193,6 +3505,7 @@
       "notes": "Same shape as the two CLI-flag entries above; discovered during the same follow-through pass (not previously classified). scripts/portfolio-solve-sweep.mjs and scripts/stress/benchmark.mjs now parse --goal-attraction-disabled-retry-budget-fraction first, falling back to the legacy --attraction-diversity-budget-fraction spelling. Fixing this surfaced a real latent bug: scripts/solver-parallel/race.mjs's own solveLevelRaced()/createRacePool() reimplement the SolveOpts contract independently of orchestration.ts and only read the field by its old name (levelOpts.attractionDiversityBudgetFractionOverride) -- renaming the field passed in from portfolio-solve-sweep.mjs without also dual-reading it in race.mjs would have silently broken the raced engine's goal-attraction-disabled-retry phase override. race.mjs now reads goalAttractionDisabledRetryBudgetFractionOverride first, falling back to the legacy name; parity test added in scripts/solver-parallel-unit-tests.mjs."
     },
     {
+      "id": "NC-P06-041",
       "old": "attempt.repairProbe (per-attempt telemetry field)",
       "new": "attempt.earlyRepairSearch",
       "kind": "field",
@@ -3203,6 +3516,7 @@
       "notes": "Persisted Attempt telemetry field (orchestration.ts's Attempt type). portfolio-solve-sweep-lib.mjs's attemptRecord() dual-reads and canonical-writes; analyze-technique-campaign.mjs's technique() classifier and early-repair-search-badness-report.mjs's levelBadnessInfo() dual-read the raw field when reconstructing technique identity for historical rows without a stageId."
     },
     {
+      "id": "NC-P06-042",
       "old": "REPAIR_PROBE_SHRINK_RECOVERY_NODE_RESERVE_FRACTION",
       "new": "REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION",
       "kind": "symbol",
@@ -3213,6 +3527,7 @@
       "notes": "Split out from the general repairProbe* family above because this constant and its derived locals/telemetry belong to the distinct repair-shrink-recovery stage, not early-repair-search -- renaming it alongside the general family would have produced the wrong derived name (earlyRepairSearchShrinkRecoveryNodeReserveFraction) for a stage that isn't early-repair-search."
     },
     {
+      "id": "NC-P06-043",
       "old": "repairProbeShrinkRecoveryNodeReserveFractionOverride (SolveOpts)",
       "new": "repairShrinkRecoveryNodeReserveFractionOverride",
       "kind": "field",
@@ -3223,6 +3538,7 @@
       "notes": "@deprecated dual-read alias, same pattern as the sibling override-field entries above. No CLI flag currently exposes this override."
     },
     {
+      "id": "NC-P06-044",
       "old": "attempt.repairProbeShrinkRecovery (per-attempt telemetry field)",
       "new": "attempt.repairShrinkRecovery",
       "kind": "field",
@@ -3233,6 +3549,7 @@
       "notes": "Same dual-read treatment as attempt.repairProbe above, in portfolio-solve-sweep-lib.mjs's attemptRecord()."
     },
     {
+      "id": "NC-P06-045",
       "old": "ATTRACTION_DIVERSITY_BUDGET_FRACTION / ATTRACTION_DIVERSITY_NODE_RESERVE_FRACTION / ATTRACTION_DIVERSITY_CANDIDATE_FLAGS",
       "new": "GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION / GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION / GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS",
       "kind": "symbol",
@@ -3243,6 +3560,7 @@
       "notes": "Derived-vocabulary rename discovered unclassified during the closeout session's full-repo audit, same shape as the mainLoop*/repairProbe* entries above, derived from the phase-6 attraction-diversity -> goal-attraction-disabled-retry stage-id rename. Direct internal rename across modules/solver/attempts.ts (GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS), stage-budget.ts, orchestration.ts, their .test.ts files, and scripts/solver-parallel/race.mjs + race-stage-parity-node-test.mjs (which import these constants directly and would otherwise crash at import time)."
     },
     {
+      "id": "NC-P06-046",
       "old": "attractionDiversityBudgetFractionOverride / attractionDiversityNodeReserveFractionOverride (SolveOpts)",
       "new": "goalAttractionDisabledRetryBudgetFractionOverride / goalAttractionDisabledRetryNodeReserveFractionOverride",
       "kind": "field",
@@ -3253,6 +3571,7 @@
       "notes": "Same @deprecated dual-read alias / parity-test pattern as the other SolveOpts override-field entries above. CLI flag --attraction-diversity-budget-fraction (portfolio-solve-sweep.mjs, scripts/stress/benchmark.mjs's own doc comment) still uses the legacy spelling; not renamed this session (cosmetic, works via the alias). CORRECTION (2026-08-29 closeout): scripts/portfolio-solve-sweep-worker.mjs forwarded only the legacy attractionDiversityBudgetFractionOverride into the nested race-pool solveLevel() call's options object, never the canonical goalAttractionDisabledRetryBudgetFractionOverride -- so a canonical-only caller silently lost the override on the raced path even though race.mjs itself dual-reads correctly. Fixed by forwarding both fields; regression test added in scripts/portfolio-solve-sweep-worker-node-test.mjs (test:portfolio-solve-sweep-worker), and scripts/check-solveopts-transport-parity.mjs (check:solveopts-transport-parity) now mechanically checks every dual-read SolveOpts override-field pair for this exact single-file-only-mentions-the-legacy-half shape."
     },
     {
+      "id": "NC-P06-047",
       "old": "attempt.attractionDiversity (per-attempt telemetry field)",
       "new": "attempt.goalAttractionDisabledRetry",
       "kind": "field",
@@ -3263,6 +3582,7 @@
       "notes": "Persisted Attempt telemetry field. portfolio-solve-sweep-lib.mjs's attemptRecord() dual-reads and canonical-writes (the exact site the naming-cleanup-plan's own closeout task named); analyze-technique-campaign.mjs's technique() classifier, portfolio-solve-sweep.mjs's winnerKind classification, and confirm-residual-001-archetype-audit.mjs also updated."
     },
     {
+      "id": "NC-P06-048",
       "old": "STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY",
       "new": "STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY",
       "kind": "symbol",
@@ -3273,6 +3593,7 @@
       "notes": "Matches its sibling SCORE_GOAL_ATTRACTION_LEGACY_DISTANCE -> SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE's already-completed rename. Wired into ablation-config.ts's existing LEGACY_FEATURE_ALIASES / canonicalAblationFeatureName() dual-read seam (same mechanism as STRATEGY_DEDUP_NEAR_TIE_RETRY -> STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY), so every existing enable_flags=/ablation-config caller continues to work. Derived constants GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY_BUDGET_FRACTION/_NODE_RESERVE_FRACTION and local variable family goalAttractionLegacyDistanceRetry* renamed alongside it in stage-budget.ts/orchestration.ts (persistence: none, no dual-read needed for pure internal locals). New regression tests in modules/solver/ablation-config.test.ts."
     },
     {
+      "id": "NC-P06-049",
       "old": "STRATEGY_REPAIR_PROBE / STRATEGY_REPAIR_PROBE_ADAPTIVE_BIASED_BUDGET / STRATEGY_REPAIR_PROBE_MULTI_SEED / STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY / STRATEGY_MAIN_LOOP_LATE_RESERVE / STRATEGY_ATTRACTION_DIVERSITY / STRATEGY_ATTRACTION_DIVERSITY_NODE_RESERVE",
       "new": "STRATEGY_EARLY_REPAIR_SEARCH / STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET / STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED / STRATEGY_REPAIR_SHRINK_RECOVERY / STRATEGY_MAIN_SEARCH_LATE_RESERVE / STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY / STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE",
       "kind": "symbol",
@@ -3283,6 +3604,7 @@
       "notes": "Closeout session, phase 6 completion: canonical names invented for this family (explicit user authorization to make this call, since naming-cleanup-plan.md Section 4.6 fixed no spelling) by applying the same stage-id derivation already used for every sibling in this phase -- repair-probe -> early-repair-search, main-loop -> main-search, attraction-diversity -> goal-attraction-disabled-retry -- with one deliberate exception: STRATEGY_REPAIR_PROBE_SHRINK_RECOVERY -> STRATEGY_REPAIR_SHRINK_RECOVERY, not STRATEGY_EARLY_REPAIR_SEARCH_SHRINK_RECOVERY, because repair-shrink-recovery is its own distinct stage (stage-policy.ts), not a facet of early-repair-search. Wired into ablation-config.ts's existing LEGACY_FEATURE_ALIASES/canonicalAblationFeatureName() dual-read seam (same mechanism as STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY and STRATEGY_DEDUP_NEAR_TIE_RETRY above); FEATURES/OPT_IN_FEATURES keys, all live cfg.STRATEGY_* reads in stage-budget.ts/orchestration.ts, and scripts/solver-parallel/race.mjs's independent ablationCfg construction (previously bypassed the dual-read seam entirely -- fixed to canonicalize keys via canonicalAblationFeatureName() too) all migrated to canonical. Workflow_dispatch input names (enable_flags, main_loop_late_reserve_fraction, etc.) deliberately left as-is per the existing GitHub Actions no-alias-mechanism precedent elsewhere in this ledger -- only the flag *values* those inputs carry, and the description text naming them, moved to canonical. Regression coverage: modules/solver/ablation-config.test.ts asserts canonicalAblationFeatureName()/normalizeAblationConfig() dual-read parity for all 7 legacy spellings."
     },
     {
+      "id": "NC-P08-058",
       "old": "portfolio-scheduler-report.mjs",
       "new": "legacy-latency-portfolio-report.mjs",
       "kind": "tool",
@@ -3304,6 +3626,7 @@
       "batch": "8G"
     },
     {
+      "id": "NC-P08-059",
       "old": "solver:portfolio-report",
       "new": "solver:legacy-latency-portfolio-report",
       "kind": "package-alias",
@@ -3322,9 +3645,15 @@
       "notes": "Historical wall-clock portfolio semantics.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8G"
+      "batch": "8G",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-060",
       "old": "portfolio-historical-replay.mjs",
       "new": "legacy-latency-portfolio-replay.mjs",
       "kind": "tool",
@@ -3346,6 +3675,7 @@
       "batch": "8G"
     },
     {
+      "id": "NC-P08-061",
       "old": "solver:portfolio-replay",
       "new": "solver:legacy-latency-portfolio-replay",
       "kind": "package-alias",
@@ -3364,9 +3694,15 @@
       "notes": "Historical wall-clock portfolio semantics.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8G"
+      "batch": "8G",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P08-062",
       "old": "scripts/gha-result.mjs",
       "new": "scripts/fetch-gha-result.mjs",
       "kind": "tool",
@@ -3388,6 +3724,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-063",
       "old": "gha:result",
       "new": "gha:fetch-result",
       "kind": "package-alias",
@@ -3406,9 +3743,15 @@
       "notes": "Completed-run retrieval.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
-      "batch": "8A"
+      "batch": "8A",
+      "compatibility": {
+        "mode": "temporary-command-alias",
+        "retireWhen": "owning-batch-closeout",
+        "owner": "package.json compatibility alias"
+      }
     },
     {
+      "id": "NC-P02-001",
       "old": "docs/solver-optimization-current-queue.md",
       "new": "docs/solver-optimization-workstreams.md",
       "kind": "doc",
@@ -3419,6 +3762,7 @@
       "notes": "Stable workstream IDs separated from current execution order. Implemented in naming-cleanup PR 2."
     },
     {
+      "id": "NC-P02-002",
       "old": "ranked queue numbering",
       "new": "workstream IDs plus explicit execution priority",
       "kind": "term",
@@ -3429,6 +3773,7 @@
       "notes": "Do not renumber historical references. Implemented in naming-cleanup PR 2."
     },
     {
+      "id": "NC-P02-003",
       "old": "Automatic configuration / portfolio construction",
       "new": "Automatic solver action selection",
       "kind": "term",
@@ -3439,6 +3784,7 @@
       "notes": "Current workstream umbrella name. Implemented in naming-cleanup PR 2."
     },
     {
+      "id": "NC-P08-064",
       "old": "solver-shadow-eval-harness.md",
       "new": "solver-offline-replay-harness.md",
       "kind": "doc",
@@ -3460,6 +3806,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-065",
       "old": "interface-probe-harness.mjs",
       "new": "offline-replay-harness.mjs",
       "kind": "tool",
@@ -3481,6 +3828,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-066",
       "old": "producer -> receptor",
       "new": "producer -> consumer",
       "kind": "term",
@@ -3502,6 +3850,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-067",
       "old": "receptor limitation",
       "new": "consumer limitation",
       "kind": "term",
@@ -3523,6 +3872,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P08-068",
       "old": "receptor can rediscover",
       "new": "consumer can rediscover",
       "kind": "term",
@@ -3544,6 +3894,7 @@
       "batch": "8A"
     },
     {
+      "id": "NC-P01-001",
       "old": "baseWorkBudget",
       "new": "baseWorkBudget",
       "kind": "field",
@@ -3554,6 +3905,7 @@
       "notes": "Preferred base-allocation API; intentional retain."
     },
     {
+      "id": "NC-P01-002",
       "old": "workBudget",
       "new": "workBudget",
       "kind": "field",
@@ -3564,6 +3916,7 @@
       "notes": "Compatibility alias; docs qualify as base allocation."
     },
     {
+      "id": "NC-P01-003",
       "old": "LEGACY_MS_TO_WORK_RATE",
       "new": "LEGACY_MS_TO_WORK_RATE",
       "kind": "symbol",
@@ -3574,6 +3927,7 @@
       "notes": "Legacy is behaviorally meaningful compatibility conversion."
     },
     {
+      "id": "NC-P01-004",
       "old": "legacyMsToWork",
       "new": "legacyMsToWork",
       "kind": "symbol",
@@ -3584,6 +3938,7 @@
       "notes": "Legacy is behaviorally meaningful compatibility conversion."
     },
     {
+      "id": "NC-P01-005",
       "old": "scaledStageWorkBudget",
       "new": "scaledStageWorkBudget",
       "kind": "symbol",
@@ -3594,6 +3949,7 @@
       "notes": "Canonical additive-stage work sizing helper."
     },
     {
+      "id": "NC-P01-006",
       "old": "strictTotalWorkBudget",
       "new": "strictTotalWorkBudget",
       "kind": "field",
@@ -3604,6 +3960,7 @@
       "notes": "Accurately names experiment-only whole-solve cap."
     },
     {
+      "id": "NC-P01-007",
       "old": "solver-sweep-result",
       "new": "solver-sweep-result",
       "kind": "protocol",
@@ -3614,6 +3971,7 @@
       "notes": "Intentional standardized protocol name."
     },
     {
+      "id": "NC-P01-008",
       "old": "pathfinder-solver-sweep-result",
       "new": "pathfinder-solver-sweep-result",
       "kind": "protocol",
@@ -3624,6 +3982,7 @@
       "notes": "Intentional manifest protocol kind."
     },
     {
+      "id": "NC-P01-009",
       "old": "gha-source-run",
       "new": "gha-source-run",
       "kind": "protocol",
@@ -3634,6 +3993,7 @@
       "notes": "Intentional provenance name."
     },
     {
+      "id": "NC-P01-010",
       "old": "publish-solver-sweep-result.mjs",
       "new": "publish-solver-sweep-result.mjs",
       "kind": "tool",
@@ -3644,6 +4004,7 @@
       "notes": "Operation-first and descriptive."
     },
     {
+      "id": "NC-P01-011",
       "old": "check-solver-sweep-result-contract.mjs",
       "new": "check-solver-sweep-result-contract.mjs",
       "kind": "tool",
@@ -3654,6 +4015,7 @@
       "notes": "Honest deterministic check verb."
     },
     {
+      "id": "NC-P01-012",
       "old": "additive-tier-participation-audit.mjs",
       "new": "additive-tier-participation-audit.mjs",
       "kind": "tool",
@@ -3664,6 +4026,7 @@
       "notes": "Bounded systematic audit; retain."
     },
     {
+      "id": "NC-P01-013",
       "old": "connectivity-rejection-audit.mjs",
       "new": "connectivity-rejection-audit.mjs",
       "kind": "tool",
@@ -3674,6 +4037,7 @@
       "notes": "Systematic audit; retain."
     },
     {
+      "id": "NC-P01-014",
       "old": "method-probe",
       "new": "method-probe",
       "kind": "tool",
@@ -3684,6 +4048,7 @@
       "notes": "Genuine bounded diagnostic single-method execution."
     },
     {
+      "id": "NC-P01-015",
       "old": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE",
       "new": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE",
       "kind": "field",
@@ -3694,6 +4059,7 @@
       "notes": "Closed negative default-off experiment ID; delete later rather than rename."
     },
     {
+      "id": "NC-P01-016",
       "old": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE",
       "new": "STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE",
       "kind": "field",
@@ -3704,6 +4070,7 @@
       "notes": "Closed negative default-off experiment ID; delete later rather than rename."
     },
     {
+      "id": "NC-P03-020",
       "old": "modules/solver/archetype.ts",
       "new": "modules/solver/routing-regime.ts",
       "kind": "file",
@@ -3714,6 +4081,7 @@
       "notes": "Late phase-3 audit residue: contents already used routing-regime terminology; physical module and test filenames now match the canonical concept. GAP FOUND (2026-08-29 closeout, Priority 2 of the naming-cleanup-plan bug-fix pass): several plain-.mjs research scripts invoked directly by plain node (not tsx/run-bundled.mjs) -- scripts/corpus-query-lib.mjs, scripts/family-boundary-report.mjs, scripts/family-census-combine.mjs -- imported normalizeRoutingRegime from this .ts file directly, which fails under the repo's supported/CI Node 20 (ERR_UNKNOWN_FILE_EXTENSION; ts-node/tsx-style type stripping only masks this under a newer local Node). The single-source normalizer/legacy-alias-map was relocated to a new plain-JS sibling, modules/solver/routing-regime-normalization.mjs (JSDoc-typed so npm run check:types still enforces the RoutingRegime literal union); routing-regime.ts now imports and re-exports from it rather than duplicating the map. The three scripts above now import the plain-.mjs sibling directly. Verified against a real Node 20.19.0 binary, not just the sandbox's newer default."
     },
     {
+      "id": "NC-P07-032",
       "old": "isConnectedForTrap",
       "new": "isConnectedForFalseGoalTriggerSearch",
       "kind": "symbol",
@@ -3724,6 +4092,7 @@
       "notes": "Phase-7 re-audit found an internal solver helper still using player-facing trap vocabulary; renamed without changing connectivity semantics."
     },
     {
+      "id": "NC-P07-033",
       "old": "trapInvalidSet",
       "new": "invalidFalseGoalCellSet",
       "kind": "field",
@@ -3734,6 +4103,7 @@
       "notes": "Phase-7 re-audit found an internal prep field still using trap vocabulary; direct internal rename completed."
     },
     {
+      "id": "NC-P07-034",
       "old": "onSpots",
       "new": "onTriggerableCells",
       "kind": "symbol",
@@ -3744,6 +4114,7 @@
       "notes": "Phase-7 re-audit found a scan-controller callback retaining the old generic spots vocabulary; canonicalized."
     },
     {
+      "id": "NC-P07-035",
       "old": "editor progress spots",
       "new": "triggerableCells",
       "kind": "field",
@@ -3754,6 +4125,7 @@
       "notes": "Live editor progress callback was destructuring a non-existent spots count after the canonical progress migration, producing undefined progress text; corrected to consume the canonical field."
     },
     {
+      "id": "NC-P06-050",
       "old": "--scheduler-mode (portfolio-solve-sweep.mjs, silent default)",
       "new": "--scheduler-mode (required, no default; throws when omitted or unrecognized)",
       "kind": "package-alias",
@@ -3764,6 +4136,7 @@
       "notes": "Genuinely a behavior correction bundled into the Phase-6 vocabulary migration, called out explicitly here per the naming-cleanup-plan's own requirement that intentional behavior changes not ride silently inside a rename PR. scripts/portfolio-solve-sweep.mjs now throws when --scheduler-mode is omitted or unrecognized rather than silently defaulting into the historical portfolio-experiment scheduler; every live workflow already passes it explicitly (solver-highbudget-unsolved-sweep.yml, solver-typical-budget-baseline.yml, both --scheduler-mode=legacy). 2026-08-29 closeout audit found exactly one caller relying on the old silent default: reports/portfolio/README.md's own historical corpus-1 reproduction command, which has been fixed to pass --scheduler-mode=legacy-latency-portfolio-experiment explicitly (the mode that command was always actually exercising). All dated reports/*.md reproduction commands already pass --scheduler-mode explicitly and needed no change."
     },
     {
+      "id": "NC-P03-021",
       "old": "parentFeatures.archetype (family-boundary-report.mjs output) / --archetype (CLI flag)",
       "new": "parentFeatures.routingRegime / --routing-regime",
       "kind": "field",
@@ -3778,7 +4151,7 @@
   "lastUpdated": "2026-08-29",
   "closeoutSessionNotes": "2026-08-29 closeout session (docs/naming-cleanup-plan.md P0-P4 punch list, plus a user-authorized follow-up to finish the two items it left pending): fixed two functional regressions from incomplete phase-7 propagation (dead editor trap-spot overlays; submission-time false-goal budget field name); added missing dual-reads across research tooling for phases 3/5/6 field renames; completed the phase-6 derived-vocabulary rename (mainLoop*/repairProbe*/attractionDiversity* families and STRATEGY_GOAL_ATTRACTION_LEGACY_DISTANCE_RETRY) across modules/solver/'s full definition+test surface and every live consumer this session located; fixed assorted stale doc/comment vocabulary drift; restored and broadened the naming-consumer-residue guard deleted in ad60c19c (scripts/check-naming-consumer-residue.mjs, wired into npm run check, now covers every phase 1-7 ledger entry with persistence 'none' instead of 5 hand-picked patterns) and corrected 3 ledger entries this guard's build surfaced as misclassified (navDensity, validTrapSpots, trapParityCandidates). Follow-up (same session): completed the two items left pending by the original punch list -- the --main-loop-late-reserve-*/--repair-probe-adaptive-* CLI flag dual-read renames, and the STRATEGY_REPAIR_PROBE*/STRATEGY_MAIN_LOOP_LATE_RESERVE/STRATEGY_ATTRACTION_DIVERSITY* ablation-flag rename that naming-cleanup-plan.md Section 4.6 had fixed no canonical name for -- by deriving canonical spellings consistent with this phase's stage-id families and wiring them into ablation-config.ts's existing dual-read seam (see that ledger entry's own notes for the full writeup, including a real bug this surfaced and fixed in scripts/solver-parallel/race.mjs, which built its ablationCfg from raw, uncanonicalized keys). Phase 6 is now fully clean: zero pending entries. Phase 7 remains clean too. Everything renamed this session keeps existing callers working via @deprecated dual-read aliases with parity tests; nothing here changes solver behavior, scoring, budgets, or pruning. 2026-08-29 regression-audit closeout session (separate, later session on the same date; three independent read-only audits had each verified real, concrete regressions in the Phase 1-7 'done' work, not naming residue -- actual functional bugs, a broken-under-supported-Node-20 tool surface, and process/documentation gaps). Fixed all of the following before Phase 8 may start:\nPRIORITY 1 (solver behavior/config bugs): (1) scripts/portfolio-solve-sweep-worker.mjs forwarded only the legacy attractionDiversityBudgetFractionOverride into the raced solver's options object, silently dropping a canonical-only goalAttractionDisabledRetryBudgetFractionOverride even though race.mjs itself dual-reads correctly -- fixed to forward both; see that ledger entry's own notes. (2) scripts/level-blind-capability-sweep.mjs hardcoded the removed 'legacy' scheduler-mode label into every report despite always actually running in production mode (it sets no schedulerMode at all) -- fixed to set/report 'production' explicitly. (3) scripts/stress/elite-prefix-dfs-ab.mjs read the fully-removed AttemptConfig field profileName with no fallback, silently printing profile: undefined in every flip row it ever recorded -- fixed to read scoringProfileId. All three now have regression tests (test:portfolio-solve-sweep-worker, test:level-blind-capability-sweep-cli, test:elite-prefix-dfs-ab) that fail against the pre-fix code and pass against the fix.\nPRIORITY 2 (broke the repo's own supported/CI Node 20): five .mjs research scripts imported modules/solver/*.ts directly, which throws ERR_UNKNOWN_FILE_EXTENSION under real Node 20 (confirmed against an actual v20.19.0 binary via nvm, not just the sandbox's newer default, which silently masks this class of bug with its own type-stripping) -- scripts/corpus-query-lib.mjs, scripts/family-boundary-report.mjs, scripts/family-census-combine.mjs, scripts/portfolio-solve-sweep-lib.mjs (all four via modules/solver/routing-regime.ts or stage-policy.ts), plus scripts/analyze-technique-campaign.mjs (importing a stage-policy.js that does not exist at all, silently working only because its one test routed it through scripts/run-bundled.mjs's bundler instead of plain node, an undocumented, unintentional contract change). Fixed by extracting the single-source normalizer + legacy-alias map each needs into new plain-JS sibling modules -- modules/solver/routing-regime-normalization.mjs and modules/solver/stage-id-normalization.mjs (each JSDoc-typed so npm run check:types still enforces the literal-union return type) -- with routing-regime.ts/stage-policy.ts now importing and re-exporting from them rather than duplicating the maps. All five scripts, plus scripts/hint-query-lib.mjs (defense-in-depth) and the two Priority-3 scripts below, now import the plain-.mjs sibling directly; analyze-technique-campaign.mjs is plain-node-runnable again and its test now invokes it directly instead of through run-bundled.mjs. All seven previously-failing npm test targets (test:corpus-query, test:research-index, test:family-boundary, test:family-boundary-cli, test:family-census-combine, test:technique-census-second-order, test:winning-attempt-family) were re-verified green against the real v20.19.0 binary, including the nested `execFile('node', ...)` subprocess spawns inside the two CLI tests (which need PATH itself pointed at the v20 bin dir, not just the outer test-runner process, to actually exercise the bug -- an easy way to accidentally re-verify nothing). Separately audited scripts/portfolio-solve-sweep.mjs's --scheduler-mode-must-be-explicit behavior (a genuine, intentional behavior correction bundled into the original Phase-6 PR, not a regression): every live workflow already passes it explicitly; found and fixed the one doc caller that didn't (reports/portfolio/README.md's historical reproduction command).\nPRIORITY 3 (silent data-completeness gaps): scripts/stress/early-repair-search-badness-report.mjs and scripts/stress/restart-continuation-population-pilot.mjs did raw stageId string equality instead of routing through normalizeSolverStageId(), so a historical row carrying the literal legacy stageId 'repair-probe' (not null, but the old string) matched neither branch and was silently excluded -- fixed, with a repair-probe fixture row proving recognition in each tool's own new test. scripts/family-boundary-report.mjs already read/normalized routing-regime values correctly but wrote the canonical VALUE out under the legacy FIELD NAME (parentFeatures.archetype) and exposed only --archetype as its CLI flag -- an actively-run report generator, not a frozen artifact -- fixed to parentFeatures.routingRegime / --routing-regime, keeping --archetype as a documented legacy input alias.\nPRIORITY 4 (stale doc/comment vocabulary): fixed docs/solver-architecture.md's attractionDiversityBudgetFractionOverride example, a stale 'attraction-diversity' workflow comment, ADR 0003's archetype/trap-search/solve/findTrapSpots/modules-Solver.ts references, tooling-catalog.md's --technique= example, a mangled docstring path (literal space) in confirm-residual-001-archetype-audit.mjs, a stale vocabulary array in run-audit-export.mjs, hint-query.mjs's stale repair-late-probe usage example (plus added defense-in-depth normalizeSolverStageId() routing to hint-query-lib.mjs's retryTier filtering, even though no legacy value is currently persisted in data/hints/), and a stale 'unreachable' vs. 'untriggerable' comment in submission-controller.ts.\nPRIORITY 5 (process/ledger hygiene): extracted a single normalizeSchedulerMode() helper (modules/solver/scheduler-mode-normalization.mjs, mirroring normalizeSolverStageId()'s pattern) shared by scripts/req-length-sweep.mjs and scripts/portfolio-solve-sweep.mjs, which had independently reimplemented the same legacy/canonical scheduler-mode alias mapping -- each script keeps its own distinct omission policy (default-to-legacy vs. throw) layered on top of the shared normalizer. Added scripts/check-solveopts-transport-parity.mjs (check:solveopts-transport-parity, wired into npm run check), a narrow mechanical check that would have caught the Priority-1 worker bug: for every ledger-recorded dual-read SolveOpts override-field pair, if a scripts/modules source file mentions the legacy field name it must also mention the canonical name somewhere in the same file. check-naming-consumer-residue.mjs cannot catch this class of bug by design (it explicitly excludes dual-read entries, and only flags a fully-removed old name) -- left an explicit KNOWN SCOPE GAP comment in that file's own header documenting this, since the new check only covers the SolveOpts-override-field shape of the bug, not the AttemptConfig-field-with-no-fallback-at-all shape (elite-prefix-dfs-ab.mjs) or the correct-value-under-legacy-field-name shape (family-boundary-report.mjs) -- a green run of either guard is not proof of completeness for those.\nVALIDATION: npm run check, npm run test:node, and npm run test:coverage (i.e. everything npm run ci runs) are all green under the sandbox's default Node, AND npm run check / npm run test:node were separately re-run fully green under a real Node v20.19.0 binary (via nvm, PATH pointed at its bin dir so nested subprocess spawns also use it). lastCompletedPhase advanced to 7 only after this full verification. Nothing in this session changes solver behavior, scoring, budgets, pruning, or attempt order -- every fix either restores the INTENDED already-canonical behavior a bug had silently defeated, or corrects tooling/doc vocabulary drift. No Phase 8 work (routing-regime sample tools, atlas/trove renames, technique-census-second-order rename) was started.",
   "processHardeningAuthority": "docs/naming-cleanup-process-hardening.md",
-  "completionContractVersion": 3,
+  "completionContractVersion": 4,
   "phase8Gate": {
     "status": "ready",
     "authority": "docs/naming-cleanup-process-hardening.md",
@@ -3836,8 +4209,63 @@
     "batch": null,
     "branch": null,
     "pr": null,
-    "baseMainSha": "ec97a5c0a9c2de20b1f3009960f5561bcbd0af95",
+    "baseMainSha": null,
     "recordPath": null,
     "notes": "No Phase-8 implementation batch has started. Claim exactly one batch and create its checked-in execution record before changing canonical names."
+  },
+  "specificationNotes": "Completion contract v4 adds stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate.",
+  "phaseBatches": {
+    "8": [
+      "8A",
+      "8B",
+      "8C",
+      "8D",
+      "8E",
+      "8F",
+      "8G",
+      "8H"
+    ]
+  },
+  "batchCompletions": {
+    "8A": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "8B": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "8C": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "8D": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "8E": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "8F": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "8G": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "8H": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    }
   }
 }

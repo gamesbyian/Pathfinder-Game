@@ -395,7 +395,7 @@ For Phase 8 onward each entry has a `verification` object with these fields:
 
 Values are `pending`, `done`, or `not-applicable`. A row may use `not-applicable` only with a short explanation in `notes` or the phase PR.
 
-A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`. Under completion contract v3, every Phase-8+ row that is `in-progress` or `done` must also point at a checked-in `verificationRecord`; Phase-8 rows must identify their assigned serial `batch`. The top-level `activeExecution` object identifies the one implementation batch currently allowed to be in progress.
+A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`. Under completion contract v4, every ledger row has an immutable `NC-P##-###` ID; every Phase-8+ row that is `in-progress` or `done` must point at a checked-in `verificationRecord`; Phase-8 rows identify their assigned serial `batch`; and every future `dual-read` row declares a compatibility `mode`, retirement gate, and owning boundary. The top-level `activeExecution` object identifies the one implementation batch currently allowed to be in progress.
 
 The ledger also carries a Phase-8 hardening gate. Until that gate is marked ready, agents must not begin PR 8 implementation.
 
@@ -409,18 +409,26 @@ If hardening exposes an already-live Phase-1-7 regression, fix it and record it 
 
 ## 9. Handoff for the next agent
 
-The table-setting prerequisite is complete and merged via PR #1580 (merge commit `02abde6c651a7070e7be10775f75c177b1bdb23b`). The next naming-cleanup agent may begin **Phase 8A only**, using the serial execution model in Sections 4-7 and the Phase-8 batch authority in [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md):
+Do not maintain a prose “next batch” pointer here. Execution state is ledger-derived:
 
-1. start from current `main` and repeat the plan's Section 0 reconciliation if newer unrelated work has merged;
-2. claim only the 8A ledger rows, create the 8A checked-in execution record, and set `activeExecution` before editing;
-3. use the checked-in surface inventory and CI/smoke coverage to identify every live consumer and any remaining structurally-only or manually audited surface;
-4. preserve legacy-read/canonical-write boundaries and frozen evidence exactly as classified;
-5. run targeted contract validation, before/after parity where applicable, and a consumer-inward closeout audit before marking any row done;
-6. merge 8A, verify current `main`, clear the active batch, then branch 8B from that new `main`; do not stack 8B;
-7. leave Phase 9 untouched until the merged-tree Phase-8 closeout is complete and every Phase-8 verification dimension is resolved.
+```sh
+npm run naming:status
+npm run check:naming-cleanup-ledger
+```
 
-The repository now contains substantially more machine-enforced proof than the Phase-1-7 cycle did; the next agent should use those checks as an entry map, not as a substitute for the required adversarial audit.
+The next naming-cleanup agent executes only the phase/batch reported by `naming:status`, then follows Sections 4-7 and the corresponding phase execution authority under `docs/naming-cleanup-phase-records/`.
 
+At entry:
+
+1. start from current `main` and perform the plan's required delta/full reconciliation;
+2. claim only the next allowed ledger rows by immutable ID and create the checked-in batch record;
+3. record any predecessor batch's actual merged PR/commit in `batchCompletions`, then set branch-local `activeExecution` before canonical edits;
+4. verify risk, target occupancy, compatibility ownership/retirement, and the change envelope;
+5. run targeted validation, before/after parity where applicable, and consumer-inward closeout before closing rows;
+6. when rows are complete, return `activeExecution` to `idle` in the implementation PR before merge; leave that batch's own `batchCompletions` pending because its merge SHA does not exist yet;
+7. merge the batch; the following branch records the predecessor's merged PR/commit before it may claim the next batch.
+
+The repository checks enforce ordering, but the status command is the human-facing entry point. This keeps volatile execution state out of long-lived explanatory prose.
 
 ## 10. Table-setting progress
 
@@ -564,7 +572,8 @@ These are intentionally recorded rather than silently treated as covered:
 - **Phase 8:** high-risk external env-var compatibility plus medium-risk generated-report fields, tool/workflow identities, and the live research-lineage module/type family.
 - **Phase 11:** high-risk application-wide runtime orientation migration crossing engine state, transforms, rendering, pointer inverse transforms, editor operations, and tests.
 - **Phase 13:** high-risk normalized-level field expansion. Raw wire `reqLen`/`reqInt` remain compatibility spellings while normalized/runtime consumers migrate atomically.
-- **Phase 10:** medium-risk budget vocabulary because part of the concept is already canonical while the live repair option/local names remain old; implementation must reconcile rather than mechanically rename the whole original row set.
+- **Phase 14:** includes a high-risk rename of the top-level mutable engine-state property across state/controller/render-facing consumers, alongside medium-risk facade extraction work.
+- **Phase 10:** includes a high-risk repair-budget override rename because a transport miss can silently alter solver resource allocation. Part of the budget-policy concept is already canonical, so implementation must reconcile rather than mechanically rename the original row set.
 
 ### Readiness result
 
@@ -584,3 +593,19 @@ A second history review was performed after the technical gate had been marked r
 - split later broad/high-risk phases into prep/atomic-switch/merged-tree-closeout or smaller domain batches in the plan.
 
 No Phase-8 canonical rename is part of this second hardening review. Its purpose is to make the already-ready technical substrate much harder to use in the same failure-prone way as Phases 1-7.
+
+## 14. Forward specification hardening before Phase 8
+
+A further pre-implementation review focused on weaknesses that did **not** depend on repeating Phase-1-7 mistakes. The remaining plan now also guards against specification drift and operator ambiguity:
+
+- stable ledger row IDs decouple machine identity from editable old/new prose;
+- a risk rubric ties low/medium/high to concrete boundary classes and evidence minimums;
+- each batch defines an explicit change envelope: intended naming deltas, invariant observables, and out-of-scope findings;
+- every future dual-read row declares compatibility ownership and retirement policy instead of leaving “one migration window” implicit;
+- canonical target occupancy/collision is checked before editing, not discovered by overwrite/confusion later;
+- phase and Phase-8 batch dependencies are machine-enforced so later work cannot begin out of order;
+- specification amendments are separated from ordinary impact-map expansion;
+- `npm run naming:status` derives volatile next-step state from the ledger instead of copying it into more prose;
+- the ledger checker has negative-case self-tests so the control itself is not trusted only because a valid ledger passes.
+
+These controls deliberately balance safety with execution cost. Delta reconciliation is the default per batch; full remaining-plan reconciliation is reserved for high-risk/specification/architecture/final-closeout boundaries.
