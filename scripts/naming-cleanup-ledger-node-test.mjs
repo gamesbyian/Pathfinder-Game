@@ -39,6 +39,21 @@ try {
   expectPass('current ledger', source);
 
   {
+    const status = spawnSync(process.execPath, ['scripts/naming-cleanup-status.mjs', '--json'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+    });
+    if (status.status !== 0) throw new Error(`naming status failed:\n${status.stdout}\n${status.stderr}`);
+    const parsed = JSON.parse(status.stdout);
+    if (parsed.nextPhase !== 8 || parsed.nextBatch !== '8A') {
+      throw new Error(`naming status expected next Phase 8 / 8A, got ${parsed.nextPhase} / ${parsed.nextBatch}`);
+    }
+    if (!parsed.nextScope.rows.every(row => typeof row.id === 'string' && row.id.startsWith('NC-P08-'))) {
+      throw new Error('naming status did not expose stable Phase-8 row IDs');
+    }
+  }
+
+  {
     const ledger = clone(source);
     ledger.entries[1].id = ledger.entries[0].id;
     expectFail('duplicate row id', ledger, /duplicate id/u);
