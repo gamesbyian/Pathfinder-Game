@@ -30,10 +30,11 @@ const allowedMigrationClasses = new Set([
   'current-surface-rename-preserve-frozen-history',
 ]);
 const phase8Batches = ledger.phaseBatches?.['8'];
-if (!Array.isArray(phase8Batches) || !phase8Batches.length || new Set(phase8Batches).size !== phase8Batches.length) {
+if (!Array.isArray(phase8Batches) || !phase8BatchOrder.length || new Set(phase8Batches).size !== phase8BatchOrder.length) {
   failures.push('phaseBatches["8"] must be a non-empty unique ordered batch list');
 }
-const phase8BatchSet = new Set(Array.isArray(phase8Batches) ? phase8Batches : []);
+const phase8BatchOrder = Array.isArray(phase8Batches) ? phase8Batches : [];
+const phase8BatchSet = new Set(phase8BatchOrder);
 const batchCompletions = ledger.batchCompletions;
 if (!batchCompletions || typeof batchCompletions !== 'object' || Array.isArray(batchCompletions)) {
   failures.push('batchCompletions must be an object keyed by Phase-8 batch');
@@ -251,8 +252,8 @@ for (const entry of futureEntries) {
 
 /* Phase 8 has an explicit serial batch order and a durable merge barrier. */
 const phase8Entries = futureEntries.filter(entry => entry.phase === 8);
-for (let i = 0; i < phase8Batches.length; i += 1) {
-  const batch = phase8Batches[i];
+for (let i = 0; i < phase8BatchOrder.length; i += 1) {
+  const batch = phase8BatchOrder[i];
   const rows = phase8Entries.filter(entry => entry.batch === batch);
   const completion = batchCompletions?.[batch];
 
@@ -273,7 +274,7 @@ for (let i = 0; i < phase8Batches.length; i += 1) {
     if (incompleteOwnRows.length) {
       fail(`batchCompletions.${batch} is merged but ${incompleteOwnRows.length} row(s) are not done`);
     }
-    for (const previousBatch of phase8Batches.slice(0, i)) {
+    for (const previousBatch of phase8BatchOrder.slice(0, i)) {
       if (batchCompletions?.[previousBatch]?.status !== 'merged') {
         fail(`batchCompletions.${batch} cannot be merged before predecessor ${previousBatch}`);
       }
@@ -283,7 +284,7 @@ for (let i = 0; i < phase8Batches.length; i += 1) {
   const batchHasStarted = rows.some(entry => entry.status !== 'pending');
   if (!batchHasStarted) continue;
 
-  for (const previousBatch of phase8Batches.slice(0, i)) {
+  for (const previousBatch of phase8BatchOrder.slice(0, i)) {
     const previousRows = phase8Entries.filter(entry => entry.batch === previousBatch);
     const incomplete = previousRows.filter(entry => entry.status !== 'done');
     if (incomplete.length) {
@@ -327,7 +328,7 @@ if (!active || !['idle', 'active'].includes(active.status)) {
     fail(`activeExecution.recordPath must be an existing file under docs/naming-cleanup-phase-records/; found ${JSON.stringify(active.recordPath)}`);
   }
   if (active.phase === 8 && !phase8BatchSet.has(active.batch)) {
-    fail(`activeExecution.batch must be one of 8A-8H for Phase 8; found ${JSON.stringify(active.batch)}`);
+    fail(`activeExecution.batch must be one of ${phase8BatchOrder.join(', ')} for Phase 8; found ${JSON.stringify(active.batch)}`);
   }
   if (!inProgressEntries.length) {
     fail('activeExecution is active but no Phase-8+ ledger row is in-progress');
@@ -354,7 +355,7 @@ for (let phase = 8; phase <= Number(ledger.lastCompletedPhase); phase += 1) {
 }
 
 if (Number(ledger.lastCompletedPhase) >= 8) {
-  const unmergedBatches = phase8Batches.filter(batch => batchCompletions?.[batch]?.status !== 'merged');
+  const unmergedBatches = phase8BatchOrder.filter(batch => batchCompletions?.[batch]?.status !== 'merged');
   if (unmergedBatches.length) {
     fail(`lastCompletedPhase=${ledger.lastCompletedPhase}, but Phase-8 batch merge completion is missing for: ${unmergedBatches.join(', ')}`);
   }
@@ -367,7 +368,7 @@ if (failures.length) {
 }
 
 const phase8Counts = Object.fromEntries(
-  (Array.isArray(phase8Batches) ? phase8Batches : []).map(batch => [batch, phase8Entries.filter(entry => entry.batch === batch).length]),
+  phase8BatchOrder.map(batch => [batch, phase8Entries.filter(entry => entry.batch === batch).length]),
 );
 console.log(
   `Naming-cleanup ledger contract valid: schema=v4; gate=${gate.status}; active=${active.status}; ` +
