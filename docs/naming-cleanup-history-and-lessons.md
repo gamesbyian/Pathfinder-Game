@@ -10,13 +10,15 @@ The original decision-complete plan landed in PR #1544. The review below follows
 
 The important pattern is not that one implementation was unusually bad. The repository repeatedly produced plausible, green, locally correct migrations that were incomplete at a different boundary. The same classes of omission reappeared across solver APIs, research tooling, generated data, workers, workflows, application state, and documentation authority.
 
-At the time of this review:
+Snapshot at the start of this review on 2026-08-29, before this hardening PR was opened:
 
-- Phases 1-7 are implemented and have been subjected to repeated follow-up audits;
-- the pre-Phase-8 hardening infrastructure from PR #1580 is on `main`;
-- Phase 8 has not started;
-- there are no open pull requests matching the naming-cleanup work;
-- GitHub still contains **37 branches whose names include `naming-cleanup`**, most of them historical implementation/audit branches that must not be treated as current authority without an explicit comparison against `main`.
+- Phases 1-7 were implemented and had been subjected to repeated follow-up audits;
+- the pre-Phase-8 hardening infrastructure from PR #1580 was on `main`;
+- Phase 8 had not started;
+- there were no open pull requests matching the naming-cleanup work;
+- GitHub contained **37 branches whose names included `naming-cleanup`**, most of them historical implementation/audit branches that must not be treated as current authority without an explicit comparison against `main`.
+
+These counts are historical evidence for the branch-authority problem, not volatile facts that later agents should keep manually synchronized.
 
 ## 2. Timeline
 
