@@ -4524,7 +4524,10 @@
       "NC-P08-007": {
         "kind": "semantic-contract",
         "legacy": "naked profile",
-        "contract": "typed-scoring-profile-shorthand"
+        "contract": "typed-scoring-profile-shorthand",
+        "retainedSurfaceIds": [
+          "NC-RET-P08-011"
+        ]
       },
       "NC-P08-008": {
         "kind": "retained-boundary",
@@ -5129,6 +5132,23 @@
             ]
           }
         ]
+      },
+      {
+        "id": "NC-RET-P08-011",
+        "owner": "NC-P08-007 historical attempt-profile compatibility read",
+        "lifecycle": "permanent historical read; canonical current attempts use scoringProfileId",
+        "matches": [
+          {
+            "term": "profile?: string",
+            "files": [
+              "modules/solver/hint-provenance.ts"
+            ]
+          }
+        ],
+        "ownerRowIds": [
+          "NC-P08-007"
+        ],
+        "ownerClass": "compatibility-or-deferred"
       }
     ]
   }

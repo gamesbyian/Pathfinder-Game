@@ -100,6 +100,13 @@ try {
   assert.match(result.stderr, /unclassified naked profile declaration/);
   unlinkSync(profileExpansion);
 
+  const exportedTypedProfileExpansion = path.join(fixture, 'modules/solver/unowned-exported-typed-profile.ts');
+  writeFileSync(exportedTypedProfileExpansion, 'export interface Unowned { profile: ScoringProfile }\n');
+  result = run(cleanLedgerPath, fixture);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /exported naked ScoringProfile property/);
+  unlinkSync(exportedTypedProfileExpansion);
+
   const familyExpansion = path.join(fixture, 'modules/solver/unowned-family.ts');
   writeFileSync(familyExpansion, 'export interface Unowned { family?: string }\n');
   result = run(cleanLedgerPath, fixture);
@@ -123,7 +130,8 @@ try {
   writeFileSync(workflowFixture, workflowSource);
 
   const staleCasePath = path.join(fixture, 'scripts/stale-case-import.mjs');
-  writeFileSync(staleCasePath, 'import "../modules/Solver.ts";\n');
+  const staleImportSource = ['import', ' "../modules/', 'Solver.ts"', ';\n'].join('');
+  writeFileSync(staleCasePath, staleImportSource);
   result = run(cleanLedgerPath, fixture);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /stale case-sensitive solver module path/);

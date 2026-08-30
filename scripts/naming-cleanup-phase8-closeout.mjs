@@ -156,6 +156,13 @@ for (const id of retainedSurfaceIds) {
   if (!referencedRetainedSurfaceIds.has(id)) failures.push({ label: 'unowned Phase-8 retained surface', file: 'docs/naming-cleanup-ledger.json', line: 0, text: id });
 }
 
+const retainedStringProfileFiles = new Set(
+  phase8RetainedSurfaces
+    .flatMap(retained => retained.matches ?? [])
+    .filter(match => match.term === 'profile?: string')
+    .flatMap(match => match.files ?? []),
+);
+
 for (const file of files) {
   const source = readFileSync(file, 'utf8');
   const lines = source.split(/\r?\n/u);
@@ -203,12 +210,40 @@ for (const file of expectedApplicationFingerprintCluster) {
   if (!applicationFingerprintCluster.has(file)) failures.push({ label: 'stale application fingerprint retained-cluster contract', file, line: 0, text: 'remove/reclassify this boundary entry explicitly' });
 }
 
+function exportedObjectTypeBodies(source) {
+  const bodies = [];
+  const startPattern = /\bexport\s+(?:interface\s+[A-Za-z_$][\w$]*(?:\s+extends\s+[^\{]+)?|type\s+[A-Za-z_$][\w$]*(?:<[^{}]*>)?\s*=)\s*\{/gu;
+  for (const match of source.matchAll(startPattern)) {
+    const open = match.index + match[0].lastIndexOf('{');
+    let depth = 0;
+    for (let index = open; index < source.length; index += 1) {
+      if (source[index] === '{') depth += 1;
+      else if (source[index] === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          bodies.push(source.slice(open + 1, index));
+          break;
+        }
+      }
+    }
+  }
+  return bodies;
+}
+
 for (const file of files.filter(file => file.startsWith('modules/') && file.endsWith('.ts') && !file.endsWith('.test.ts'))) {
   const source = readFileSync(file, 'utf8');
+
+  for (const body of exportedObjectTypeBodies(source)) {
+    const exportedProfile = body.match(/\bprofile\??:\s*ScoringProfile\b/u);
+    if (exportedProfile) {
+      failures.push({ label: 'exported naked ScoringProfile property', file, line: 0, text: exportedProfile[0] });
+    }
+  }
+
   const profileDeclarations = source.match(/\bprofile\??:\s*(?:string|ScoringProfile)\b/gu) ?? [];
   for (const declaration of profileDeclarations) {
     if (/ScoringProfile/u.test(declaration)) continue;
-    if (file === 'modules/solver/hint-provenance.ts' && /profile\?:\s*string/u.test(declaration)) continue;
+    if (/profile\?:\s*string/u.test(declaration) && retainedStringProfileFiles.has(file)) continue;
     failures.push({ label: 'unclassified naked profile declaration', file, line: 0, text: declaration });
   }
   const familyDeclarations = source.match(/\b(?:family|families|familyIds)\??:\s*(?:string|string\[\]|number)\b/gu) ?? [];
