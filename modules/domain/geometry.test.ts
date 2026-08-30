@@ -64,7 +64,7 @@ test('transformTurnDir flips cw/ccw exactly for the reflecting variants (4-7), n
 
 // turnDirection is the single implementation of the turn-detection cross product shared by
 // runtime/path-state.ts, domain/path-validator.ts, and solver/search-state.ts (previously three
-// independent copies of the same formula; scripts/hint-path-oracle.mjs and
+// independent copies of the same formula; scripts/validate-hint-paths.mjs and
 // scripts/check-hint-validity.mjs both reach it indirectly via path-validator.ts's
 // validateCandidatePath rather than reimplementing it).
 test('turnDirection: cw for a clockwise bend (east then south)', () => {

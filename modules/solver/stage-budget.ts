@@ -254,7 +254,7 @@ export const REPAIR_FALLBACK_NODE_RESERVE_FRACTION = 0.15;
  *  solvable level into a self-defeating structural commitment — see GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_
  *  FRACTION's own comment). Whether real node room actually helps it is exactly what this flag's own
  *  eventual A/B must show — this comment only establishes why the starvation premise is real and why
- *  the receptor is a priori more promising than the one just closed, not that the fix works.
+ *  the consumer is a priori more promising than the one just closed, not that the fix works.
  *
  *  THE MECHANISM: a fraction of the ALREADY-SAFE remainder `mainSearchLateReserve - repairFallback
  *  NodeReserve` (never of `mainSearchLateReserve` or `earlyTierNodeBudget` directly) — nesting one
@@ -1376,7 +1376,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // already-fixed admissible-order-fallback/everything-before-it bug (ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION),
     // one tier boundary further down the ladder — same mechanism as the admissible-order-fallback reserve
     // (a flat carve-out from the ceiling the PRODUCER runs against, computed before the producer
-    // runs), not the early-repair-search fix's live-signal shrink, because here the receptor (the fallback
+    // runs), not the early-repair-search fix's live-signal shrink, because here the consumer (the fallback
     // loop) needs a share of the pool it's currently denied entirely, not a scale-down of an
     // over-consuming producer's own budget.
     //

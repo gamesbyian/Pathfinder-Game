@@ -1,5 +1,5 @@
 /**
- * Hint-Path Oracle (G1 from solver improvement plan)
+ * Hint-Path Validator (G1 from solver improvement plan)
  *
  * Validates all hint paths from data/levels.json against their level constraints WITHOUT
  * using the paths to guide the solver — via the same PLAY-context referee
@@ -10,7 +10,7 @@
  *      with a per-level, per-hint breakdown (--output) that check:hint-validity doesn't provide
  *
  * Usage:
- *   npm run test:hint-path-oracle -- [--levels=pos:92,pos:108,pos:134] [--verbose] [--output=path.json]
+ *   npm run test:hint-path-validation -- [--levels=pos:92,pos:108,pos:134] [--verbose] [--output=path.json]
  *
  * Exit code: 0 = all checked paths pass, 1 = one or more paths fail.
  */
@@ -74,7 +74,7 @@ async function main() {
     }
 
     // Parsing/normalization is level-scoped, not hint-scoped. A level can carry thousands of
-    // stored hints; reparsing the identical raw level for every path used to dominate this oracle.
+    // stored hints; reparsing the identical raw level for every path used to dominate this validator.
     const level = parseRawLevel(raw, i);
     const hintAnalyses = raw.hints.map((hintPath, hi) => {
       const result = level
@@ -116,7 +116,7 @@ async function main() {
   }
 
   const checked = passed + failed;
-  console.log(`\nHint-path oracle: ${passed} passed, ${failed} failed, ${skipped} skipped (${checked} checked of ${levels.length} total)`);
+  console.log(`\nHint-path validator: ${passed} passed, ${failed} failed, ${skipped} skipped (${checked} checked of ${levels.length} total)`);
 
   if (outputFile) {
     const dir = path.dirname(outputFile);
@@ -137,6 +137,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('hint-path-oracle error:', err);
+  console.error('validate-hint-paths error:', err);
   process.exit(1);
 });

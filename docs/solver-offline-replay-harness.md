@@ -1,19 +1,19 @@
-# Shadow-mode solver evaluation harness
+# Offline-replay solver evaluation harness
 
 > **Status:** current tool contract. Historical prototype results are preserved separately.
 
-The shadow harness tests candidate solver reasoners against labelled states **without changing production search**. Use it to falsify a pruning/representation premise cheaply before wiring a live treatment.
+The offline replay harness tests candidate solver reasoners against labelled states **without changing production search**. Use it to falsify a pruning/representation premise cheaply before wiring a live treatment.
 
 The full pre-consolidation document, including the first prototype campaigns and dated result interpretation, is frozen at [`archive/snapshots/solver-shadow-eval-harness-2026-08-20.md`](archive/snapshots/solver-shadow-eval-harness-2026-08-20.md). Current solver priority lives in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
 ## Entry point
 
-`scripts/stress/interface-probe-harness.mjs` consumes the existing CP-SAT-labelled branch atlas under `reports/stress/` and replays each branch through the real solver-state primitives. It does not call CP-SAT itself.
+`scripts/stress/offline-replay-harness.mjs` consumes the existing CP-SAT-labelled branch atlas under `reports/stress/` and replays each branch through the real solver-state primitives. It does not call CP-SAT itself.
 
 Example:
 
 ```bash
-node scripts/run-bundled.mjs scripts/stress/interface-probe-harness.mjs -- \
+node scripts/run-bundled.mjs scripts/stress/offline-replay-harness.mjs -- \
   --atlas-dir=reports/stress \
   --probes=<probe-id> \
   --out=reports/stress/interface-probe-harness-results.json
@@ -61,7 +61,7 @@ The atlas is a labelled research sample, not an automatically representative dis
 - Separate **classification quality** from **production value**. A perfect dead/live separator can still be too expensive or fire too late to help search.
 - Report denominator and coverage: supported live/dead states, abstentions, model timeouts/unsupported mechanics, duplicate/related states, and independent parent families where relevant.
 - Prefer exact/reference labels generated independently of the candidate reasoner. Do not define “dead” using the same heuristic being evaluated.
-- A probe may nominate a score/retention/scheduler signal without being eligible for hard pruning. Soundness class and intended receptor must remain explicit.
+- A probe may nominate a score/retention/scheduler signal without being eligible for hard pruning. Soundness class and intended consumer must remain explicit.
 
 ## Invariants
 
@@ -75,7 +75,7 @@ The atlas is a labelled research sample, not an automatically representative dis
 
 ## Promotion path
 
-A shadow success is a gate, not a production verdict:
+A replay success is a gate, not a production verdict:
 
 1. show the candidate separates the intended exact/live-dead or other labelled condition;
 2. confirm that the signal recurs outside the cases used to design/select it;
@@ -85,7 +85,7 @@ A shadow success is a gate, not a production verdict:
 6. run the relevant soundness/referee/differential checks if the treatment can reject states;
 7. keep exact labels and historical identities out of the production decision path.
 
-If the live result is null, do not keep tuning thresholds indefinitely on the same atlas. Reopen only when the failure shows a materially different receptor/cost problem or new labels change the premise.
+If the live result is null, do not keep tuning thresholds indefinitely on the same atlas. Reopen only when the failure shows a materially different consumer/cost problem or new labels change the premise.
 
 ## When to use something else
 
@@ -93,10 +93,10 @@ If the live result is null, do not keep tuning thresholds indefinitely on the sa
 - Need a level/family boundary? Use [`variant-level-research.md`](variant-level-research.md) and family tools.
 - Need actual beam retention/extinction? Use [`solver-winning-lineage-survival-analysis.md`](solver-winning-lineage-survival-analysis.md).
 - Need a causal before/after search divergence? Use family pair-divergence / witness-divergence tooling.
-- Need a production decision? A shadow result nominates a narrow live experiment; it is not the promotion verdict.
+- Need a production decision? A replay result nominates a narrow live experiment; it is not the promotion verdict.
 
-## Extending shadow evaluation
+## Extending offline replay evaluation
 
-Share replay, oracle labels, run identity, and reporting infrastructure where semantics match. Do not force fundamentally different artifacts into `reject|pass` merely to reuse this API. Producer/receptor information-sharing experiments may need richer typed artifacts; follow [`solver-research-operating-model.md`](solver-research-operating-model.md#producer--receptor-cooperation) rather than building a parallel generic “shadow mode” platform.
+Share replay, oracle labels, run identity, and reporting infrastructure where semantics match. Do not force fundamentally different artifacts into `reject|pass` merely to reuse this API. Producer/consumer information-sharing experiments may need richer typed artifacts; follow [`solver-research-operating-model.md`](solver-research-operating-model.md#producer--consumer-cooperation) rather than building a parallel generic “shadow mode” platform.
 
 Do not grow the harness into a general research framework merely because many experiments can be expressed as observation. Extend it only when the shared replay/label semantics genuinely reduce repeated work.

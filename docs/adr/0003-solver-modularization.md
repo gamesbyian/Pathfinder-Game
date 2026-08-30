@@ -20,5 +20,5 @@ canonical surface.
 - Each solver concern has a focused unit suite (`scripts/solver-*-unit-tests.mjs`).
 - The runtime solver's public shape is `solveLevel`/`findTriggerableFalseGoalCells`/… only.
 - The solver can run off-thread (`modules/solver/worker.js` + `solver-worker-client.js`).
-- Performance/behavior is guarded by `test:hint-path-oracle`, `test:bundled-levels`, and the
+- Performance/behavior is guarded by `test:hint-path-validation`, `test:bundled-levels`, and the
   ablation lab; tuning happens in `modules/solver/attempts.js`/`policy.js`, not the facade.

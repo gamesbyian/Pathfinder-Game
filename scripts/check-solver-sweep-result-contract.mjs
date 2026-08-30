@@ -13,7 +13,7 @@ const workflows = [
   '.github/workflows/solver-repair-fallback-reserve-sample-ab.yml',
   '.github/workflows/technique-census.yml',
   '.github/workflows/method-probe-sweep.yml',
-  '.github/workflows/cpsat-explicit-prefix-oracle.yml',
+  '.github/workflows/cpsat-explicit-prefix-reference.yml',
   '.github/workflows/cpsat-hint-harvest-sweep-published.yml',
   '.github/workflows/cpsat-hint-harvest-sweep.yml',
   '.github/workflows/atlas-sweep.yml',
@@ -41,9 +41,9 @@ if (!helper.includes('GITHUB_EVENT_PATH')) failures.push('publisher must capture
 if (!helper.includes('shardCompleteness')) failures.push('publisher must emit shard completeness');
 if (!helper.includes("kind: 'pathfinder-solver-sweep-result'")) failures.push('publisher manifest kind is missing');
 
-const retriever = fs.readFileSync('scripts/gha-result.mjs', 'utf8');
-if (!retriever.includes("'solver-sweep-result'")) failures.push('gha-result helper must request the standard artifact');
-if (!retriever.includes("'--status', 'completed'")) failures.push('gha-result helper must resolve latest completed runs');
+const retriever = fs.readFileSync('scripts/fetch-gha-result.mjs', 'utf8');
+if (!retriever.includes("'solver-sweep-result'")) failures.push('fetch-gha-result helper must request the standard artifact');
+if (!retriever.includes("'--status', 'completed'")) failures.push('fetch-gha-result helper must resolve latest completed runs');
 
 if (failures.length) {
   console.error('Solver sweep result contract check failed:');

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /** Drives the item-C binary search (exact minimum repair-retreat rollback) to convergence for a
- * fixed set of elites, using the same cpsat-full-probe.py oracle and native-prefix replay/referee
- * checks as cpsat-explicit-prefix-oracle.mjs/cpsat-explicit-prefix-round-builder.mjs — just without
+ * fixed set of elites, using the same cpsat-reference-probe.py oracle and native-prefix replay/referee
+ * checks as cpsat-explicit-prefix-reference.mjs/cpsat-explicit-prefix-round-builder.mjs — just without
  * a GitHub Actions round trip per probe. Monotonicity (a prefix that has no exact completion stays
  * infeasible for every deeper prefix along the same elite trajectory) is what makes bisection valid
  * here; see reports/2026-08-12-repair-retreat-cpsat.md for the argument. */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { classifyProbeProcess, parseEmittedPath } from './cpsat-explicit-prefix-oracle-lib.mjs';
+import { classifyProbeProcess, parseEmittedPath } from './cpsat-explicit-prefix-reference-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
     const [key, ...rest] = x.split('='); return [key, rest.join('=')];
@@ -58,9 +58,9 @@ const replayPrefix = (levelId, keys) => {
     return { ok: true };
 };
 
-const probePath = 'scripts/stress/cpsat-full-probe.py';
-// cpsat-full-probe.py's --prefix consumes raw 1-based [x,y] pairs (the witness/CLI convention),
-// not internal packed solver keys — same conversion cpsat-explicit-prefix-oracle.mjs's packRaw does.
+const probePath = 'scripts/stress/cpsat-reference-probe.py';
+// cpsat-reference-probe.py's --prefix consumes raw 1-based [x,y] pairs (the witness/CLI convention),
+// not internal packed solver keys — same conversion cpsat-explicit-prefix-reference.mjs's packRaw does.
 const unpackToRaw = key => [(key & 0xffff) + 1, (key >>> 16) + 1];
 function oracleProbe(elite, depth) {
     const prefix = elite.path.slice(0, depth + 1);

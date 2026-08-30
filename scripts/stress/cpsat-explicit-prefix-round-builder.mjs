@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Builds+validates a round of explicit-prefix CP-SAT cases from a repair-elite-path-dump.mjs
  * output, given a JSON probe list [{eliteId, depth}]. Validates every prefix replays legally
- * against the native solver before writing (same check cpsat-explicit-prefix-oracle.mjs itself
+ * against the native solver before writing (same check cpsat-explicit-prefix-reference.mjs itself
  * performs, done here so we don't burn CI time on an illegal prefix). Used to build the
  * coarse-to-fine/binary-search rounds for item C (repair-retreat exact minimum rollback). */
 import { readFileSync, writeFileSync } from 'node:fs';

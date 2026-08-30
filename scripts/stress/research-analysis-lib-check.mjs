@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { classifyProbeProcess, extractExplicitPrefixCases, parseEmittedPath } from './cpsat-explicit-prefix-oracle-lib.mjs';
+import { classifyProbeProcess, extractExplicitPrefixCases, parseEmittedPath } from './cpsat-explicit-prefix-reference-lib.mjs';
 import { classifyScoreWidthExtinction, compareProducerPopulations, enumerateKnownPrefixBranches, mineResidualInterfaces, rollbackCensus } from './research-analysis-lib.mjs';
 
 assert.equal(compareProducerPopulations([{ path: [1, 2], metrics: { x: 1 } }], [{ path: [1, 2], metrics: { x: 1 } }]).exactPrefixOverlap, 1);
@@ -36,7 +36,7 @@ assert.equal(atlas.find(row => row.child === 3).label, 'known-valid-continuation
 assert.equal(atlas.find(row => row.child === 4).neutral.intersections, 1, 'neutral facts describe the child state');
 
 // Explicit-prefix CP-SAT seam: packed solver cells are 0-based internally and MUST be shifted to
-// raw/witness 1-based coordinates before cpsat-full-probe.py sees them. Explicit coordinate pairs
+// raw/witness 1-based coordinates before cpsat-reference-probe.py sees them. Explicit coordinate pairs
 // are already in that raw convention.
 const K = (x, y) => x | (y << 16);
 const explicit = extractExplicitPrefixCases({ levelsFile: 'c.json', levels: [{ levelId: 'R1', branches: [

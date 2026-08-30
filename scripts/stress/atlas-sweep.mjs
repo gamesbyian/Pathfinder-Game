@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Multi-level driver for prune-gap-probe.mjs — the CP-SAT-oracle-labelled-branch atlas that
- * interface-probe-harness.mjs scores probes against currently covers only 16 levels (~623
+ * offline-replay-harness.mjs scores probes against currently covers only 16 levels (~623
  * branches, all produced by hand-run single-level invocations). Growing it to a meaningful slice
  * of the ~2000-level corpus is exactly the kind of job CLAUDE.md says to shard on GitHub Actions
  * (each level's CP-SAT calls can run tens of seconds, and a real sweep needs many levels) — see
@@ -13,15 +13,15 @@
  * validated CP-SAT comparison script for the sake of code reuse here). This driver just spawns it
  * once per level via child_process and lets IT write its own `reports/stress/prune-gap-<id>.json`
  * — so running this against a new slice of the corpus grows the SAME atlas
- * interface-probe-harness.mjs already reads (no new format, no separate merge step needed).
+ * offline-replay-harness.mjs already reads (no new format, no separate merge step needed).
  *
- * Requires python3 + ortools (cpsat-full-probe.py's dependency) on PATH.
+ * Requires python3 + ortools (cpsat-reference-probe.py's dependency) on PATH.
  *
  * TWO SELECTION MODES (mutually exclusive):
  *   --levels=pos:1-85          Raw corpus positions, unfiltered -- the original mode. Wastes
  *                              shard time on hint-less/portal/filter/flipper levels that can
  *                              never produce a labelled branch (see atlas-eligibility.mjs's doc
- *                              for why, and docs/solver-shadow-eval-harness.md's Part 5 for the
+ *                              for why, and docs/solver-offline-replay-harness.md's Part 5 for the
  *                              real numbers that motivated the mode below).
  *   --shard-index=N --shard-count=M   Filters the corpus to CP-SAT-eligible levels FIRST (has a
  *                              stored hint, no portals/filters/flipping filters), then takes every

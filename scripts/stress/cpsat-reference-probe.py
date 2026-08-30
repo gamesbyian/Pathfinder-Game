@@ -45,7 +45,7 @@ SCOPE. Static (regular) filters remain unencoded, deliberately, not just deferre
 either stress corpus use them (data/stress/README.md: "No static filters. Only flipping filters are
 used, by design"), so there is no population to validate an encoding against yet. Flipping filters
 ARE encoded (added 2026-08-15, see FLIPPING FILTER SUPPORT below) -- CLAUDE.md's own summary called
-this "the harder half" and it was originally deliberately deferred (docs/solver-shadow-eval-harness.md's
+this "the harder half" and it was originally deliberately deferred (docs/solver-offline-replay-harness.md's
 Part 6, 2026-08-05, recommended against building it at all -- see that section's own note below for
 why this doesn't contradict that verdict).
 
@@ -92,7 +92,7 @@ other cell can be the path's terminal node). Fixed by gating the touch literals 
 for `c == goal` specifically; every other cell keeps the original, cheaper, still-correct form. Full
 repro/root-cause/validation: reports/2026-08-15-cpsat-flipping-filter-support.md.
 
-Usage:  python3 scripts/stress/cpsat-full-probe.py <levelId> [timeLimitSec] [--emit-path]
+Usage:  python3 scripts/stress/cpsat-reference-probe.py <levelId> [timeLimitSec] [--emit-path]
         [--corpus=<path>] (default: data/stress/stress-levels-random.json)
 """
 import json, sys, time
@@ -537,7 +537,7 @@ for (c, role, want) in ([] if (core_only or no_landmarks) else landmarks):
         if opts: m.Add(sum(opts) >= 1)
 
 # --prefix=<json [[x,y],...]> pins the FIRST k positions (1-indexed coords, like a witness) and
-# leaves the rest free, turning this file into a prefix-feasibility ORACLE: "does any valid
+# leaves the rest free, turning this file into a prefix-feasibility REFERENCE MODEL: "does any valid
 # completion exist from this partial path?" scripts/stress/prune-gap-probe.mjs uses it to ask, for
 # each branch our own search declines to prune, whether that branch was actually dead — which is how
 # a missing global inference is localised without solving each subtree by brute force.

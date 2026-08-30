@@ -122,7 +122,7 @@ Empirical tranche tables precede survival/hazard models; bandit/value-of-computa
 
 ### Typed producer signals
 
-Only after one stage demonstrably emits useful information another action cannot cheaply rediscover should a typed artifact enter scheduler state. Follow the producer→receptor contract in [`solver-research-operating-model.md`](solver-research-operating-model.md); no general blackboard.
+Only after one stage demonstrably emits useful information another action cannot cheaply rediscover should a typed artifact enter scheduler state. Follow the producer→consumer contract in [`solver-research-operating-model.md`](solver-research-operating-model.md); no general blackboard.
 
 ## Fallback
 

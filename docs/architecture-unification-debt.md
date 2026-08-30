@@ -59,7 +59,7 @@ Diagnosis pattern:
 2. snapshot/diff every mutable field the action can read;
 3. clear candidate state classes one at a time, starting with supposedly pure lower-bound memo tables and stage overrides;
 4. locate the first search decision or budget check that diverges;
-5. if predecessor information is genuinely useful, replace accidental shared mutation with a typed producer -> receptor artifact and independent control path;
+5. if predecessor information is genuinely useful, replace accidental shared mutation with a typed producer -> consumer artifact and independent control path;
 6. add a regression fixture so later refactors cannot silently reintroduce history dependence.
 
 Do not “fix” this by making isolated experiments run the whole predecessor ladder. That hides the dependency instead of defining it.

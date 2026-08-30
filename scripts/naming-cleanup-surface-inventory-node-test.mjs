@@ -28,13 +28,13 @@ assert.ok(inventory.summary.reportSurfaces > 0);
 assert.ok(inventory.reportSurfaces.some(row => row.producers.length > 0));
 assert.ok(inventory.reportSurfaces.some(row => row.consumers.length > 0));
 
-const hintValidator = inventory.scripts.find(row => row.file === 'scripts/hint-path-oracle.mjs');
-assert.ok(hintValidator, 'Phase-8 inventory should map hint-path-oracle.mjs');
-assert.ok(hintValidator.packageAliases.includes('test:hint-path-oracle'));
+const hintValidator = inventory.scripts.find(row => row.file === 'scripts/validate-hint-paths.mjs');
+assert.ok(hintValidator, 'Phase-8 inventory should map validate-hint-paths.mjs');
+assert.ok(hintValidator.packageAliases.includes('test:hint-path-validation'));
 assert.equal(
   hintValidator.coverageStatus,
   'ci-test-reference',
-  'hint-path-oracle should be distinguished from direct package-command execution',
+  'validate-hint-paths should be distinguished from direct package-command execution',
 );
 assert.equal(hintValidator.ciDirectAliases.length, 0);
 assert.ok(hintValidator.ciTestReferences.length > 0);
@@ -69,7 +69,7 @@ assert.ok(lineageSymbol.surfaces.symbolOwners.includes('modules/solver/research-
 const atlasWorkflow = inventory.workflows.find(row => row.file === '.github/workflows/atlas-sweep.yml');
 assert.ok(atlasWorkflow, 'Phase-8 inventory should map atlas-sweep workflow');
 
-const hintAlias = inventory.packageCommands.find(row => row.name === 'test:hint-path-oracle');
+const hintAlias = inventory.packageCommands.find(row => row.name === 'test:hint-path-validation');
 assert.ok(hintAlias);
 assert.equal(hintAlias.ciCommandReachable, false);
 

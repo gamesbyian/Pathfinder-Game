@@ -53,7 +53,7 @@ Required handling:
 1. reproduce the action from a freshly prepared state and from the predecessor-stage sequence with identical explicit action/config/seed/work limits;
 2. diff every mutable/prepared field or generation-owned cache reachable by the action, plus work-meter and PRNG state;
 3. identify whether the difference is wall-only, work-accounting, search-order, legality, cached-value, or randomness behavior;
-4. if the predecessor contributes useful information intentionally, promote that information into a bounded typed producer -> receptor contract and add an independent control path;
+4. if the predecessor contributes useful information intentionally, promote that information into a bounded typed producer -> consumer contract and add an independent control path;
 5. otherwise reset/isolate the leaked state and re-derive any isolated cap/routing conclusions that depended on the contaminated behavior.
 
 Do not tune scheduler caps or technique value around unexplained stage-history dependence. See [`solver-research-operating-model.md`](solver-research-operating-model.md), [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md), and [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).

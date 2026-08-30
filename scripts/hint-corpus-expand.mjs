@@ -27,7 +27,7 @@
  *
  * Read-only by default (writes an audit JSON). Pass --write-levels to append accepted hints; the
  * caller must then regenerate heatmaps (npm run levels:generate-heatmaps) and run
- * npm run check:level-data-validity + npm run test:hint-path-oracle.
+ * npm run check:level-data-validity + npm run test:hint-path-validation.
  *
  * --parallel[=N] processes levels across N worker threads (default: availableParallelism()-1).
  * Each level is still expanded by a single worker, start to finish, exactly as processLevel() runs
@@ -386,6 +386,6 @@ async function main() {
         + `Skipped: ${skippedTag} garbage, ${skippedCap} at-cap. Report -> ${output}`);
     if (writeLevels && totalAccepted > 0) {
         writeLevelsWithHints(resolveFromRoot(cfg.levelsJsonPath), rawLevels);
-        console.log(`Wrote ${totalAccepted} new hint(s) to ${cfg.levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:level-data-validity && npm run test:hint-path-oracle`);
+        console.log(`Wrote ${totalAccepted} new hint(s) to ${cfg.levelsJsonPath}. Now run: npm run levels:generate-heatmaps && npm run check:level-data-validity && npm run test:hint-path-validation`);
     }
 }

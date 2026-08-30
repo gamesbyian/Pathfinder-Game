@@ -232,7 +232,7 @@ async function main() {
     });
 
     console.log(`\nDone: ${totalAccepted} accepted, ${totalDuplicateProvenance} duplicate-provenance merge(s) across ${shards.length} shard(s) (${failed.length} failed). Report -> ${output}`);
-    if (changedFiles.size > 0) console.log('Post-write checks: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-oracle');
+    if (changedFiles.size > 0) console.log('Post-write checks: npm run levels:generate-heatmaps && npm run check:hint-validity && npm run test:hint-path-validation');
     if (failed.length > 0) {
         console.error(`${failed.length} shard(s) failed: ${failed.map(r => `shard ${r.shardIndex} (exit ${r.exitCode}${r.error ? `, ${r.error}` : ''})`).join('; ')}`);
         process.exitCode = 1;

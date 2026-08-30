@@ -1,7 +1,7 @@
 # Sharded runner for scripts/stress/atlas-sweep.mjs, which itself drives
 # scripts/stress/prune-gap-probe.mjs across many levels -- growing the CP-SAT-oracle-labelled
-# branch atlas (reports/stress/prune-gap-*.json) that scripts/stress/interface-probe-harness.mjs
-# scores every middle-layer reasoning probe against (see docs/solver-shadow-eval-harness.md).
+# branch atlas (reports/stress/prune-gap-*.json) that scripts/stress/offline-replay-harness.mjs
+# scores every middle-layer reasoning probe against (see docs/solver-offline-replay-harness.md).
 #
 # Per-level CP-SAT calls can take tens of seconds and vary substantially. The normal dispatch uses
 # 60 round-robin buckets queued behind 20 concurrent Actions lanes so a lane that finishes a cheap
@@ -18,7 +18,7 @@
 # not through whatever egress policy a dispatching agent session happens to be behind.
 #
 # Validated end-to-end 2026-08-05: a 1-shard/1-level trial (run_id 30981689448) confirmed ortools
-# installs cleanly and cpsat-full-probe.py classifies real branches with zero unknown/timeout. A
+# installs cleanly and cpsat-reference-probe.py classifies real branches with zero unknown/timeout. A
 # later 20-shard sweep established the value of eligibility-filtered round-robin assignment; the
 # 2026-08-25 throughput pass keeps that assignment model but makes its buckets finer to reduce tail
 # latency, matching the queue-based pattern already used by other variable-runtime batch workflows.

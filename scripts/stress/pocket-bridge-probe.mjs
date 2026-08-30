@@ -47,7 +47,7 @@
  * how many DISCONNECTED pockets of fresh cells must be bridged into to satisfy the level's exact
  * distinct-cell requirement, which can be small even when total reachable area is large.
  *
- * SCOPE: portal-free only (matches the census, which itself is portal-free via cpsat-full-probe.py).
+ * SCOPE: portal-free only (matches the census, which itself is portal-free via cpsat-reference-probe.py).
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/pocket-bridge-probe.mjs

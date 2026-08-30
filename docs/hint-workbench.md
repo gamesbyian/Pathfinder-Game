@@ -93,7 +93,7 @@ After applying a patch or mutating hints:
 ```bash
 npm run levels:generate-heatmaps
 npm run check:level-data-validity
-npm run test:hint-path-oracle
+npm run test:hint-path-validation
 ```
 
 ## Cross-level parallelism

@@ -88,13 +88,13 @@ Possible sources include successor/tie order, retention/dedup, coordinate-derive
 
 ## Deferred interoperability / infrastructure
 
-### Typed producer → receptor artifacts
+### Typed producer → consumer artifacts
 
 One stage may sometimes discover information another cannot cheaply reproduce, such as proven dead interfaces, exact-live descriptors, scarcity signals, or structural certificates. Do not build a general blackboard.
 
-A handoff must demonstrate receptor limitation, novel timely information, bounded production/storage/replay cost, independent control, positive shadow evidence, and matched-work benefit. Charge artifact production and consumption.
+A handoff must demonstrate consumer limitation, novel timely information, bounded production/storage/replay cost, independent control, positive shadow evidence, and matched-work benefit. Charge artifact production and consumption.
 
-**Stop:** if the receptor can cheaply rediscover the information, it arrives too late, or consumption displaces better search, keep stages independent.
+**Stop:** if the consumer can cheaply rediscover the information, it arrives too late, or consumption displaces better search, keep stages independent.
 
 ### Queryable analytical layer
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Shared evaluation harness for "middle-layer" solver reasoners. The current contract is
- * docs/solver-shadow-eval-harness.md; historical prototype context is frozen under
+ * docs/solver-offline-replay-harness.md; historical prototype context is frozen under
  * docs/archive/snapshots/solver-shadow-eval-harness-2026-08-20.md. Every candidate reasoner
  * runs against the SAME labelled states and is scored on the SAME telemetry, instead of each
  * probe script growing its own bespoke comparison harness (the pattern axis-reach-probe.mjs /
@@ -32,13 +32,13 @@
  * unique catch beyond the existing gauntlet's own verdict (branch.pruned), overlap with the
  * existing gauntlet, abstain rate, and per-branch depth (branch.step) so catches can be weighted by
  * how early they fire. Deliberately NOT reduced to one leaderboard number; see
- * docs/solver-shadow-eval-harness.md.
+ * docs/solver-offline-replay-harness.md.
  *
  * PERSISTENCE. Writes --out after EVERY atlas file, following scripts/README.md's rule that long
  * batch tools persist recoverable progress incrementally.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/stress/interface-probe-harness.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/offline-replay-harness.mjs -- \
  *     --atlas-dir=reports/stress --probes=scripts/stress/probes/separator-resource-probe.mjs \
  *     --out=reports/stress/interface-probe-harness-results.json
  */
