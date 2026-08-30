@@ -1,6 +1,6 @@
-# Sharded runner for scripts/stress/atlas-sweep.mjs, which itself drives
+# Sharded runner for scripts/stress/collect-prune-gap-labels.mjs, which itself drives
 # scripts/stress/prune-gap-probe.mjs across many levels -- growing the CP-SAT-oracle-labelled
-# branch atlas (reports/stress/prune-gap-*.json) that scripts/stress/offline-replay-harness.mjs
+# branch set (reports/stress/prune-gap-*.json) that scripts/stress/offline-replay-harness.mjs
 # scores every middle-layer reasoning probe against (see docs/solver-offline-replay-harness.md).
 #
 # Per-level CP-SAT calls can take tens of seconds and vary substantially. The normal dispatch uses
@@ -11,9 +11,10 @@
 #
 # Unlike method-probe-sweep.yml (purely diagnostic, never touches the repo), the combine job here
 # commits new/changed reports/stress/prune-gap-*.json files straight back to the dispatched branch
-# -- this workflow's whole purpose IS growing that committed atlas, so a human manually downloading
-# an artifact and copying files in by hand would just be a chore nobody would actually do every
-# time. It still also uploads the combined artifact as a downloadable copy for convenience/audit.
+# -- this workflow's whole purpose IS growing that committed branch set, so a human manually
+# downloading an artifact and copying files in by hand would just be a chore nobody would actually
+# do every time. It still also uploads the combined artifact as a downloadable copy for
+# convenience/audit.
 # The commit step runs on GitHub's own runner (native network + the checkout's push credentials),
 # not through whatever egress policy a dispatching agent session happens to be behind.
 #
@@ -22,8 +23,8 @@
 # later 20-shard sweep established the value of eligibility-filtered round-robin assignment; the
 # 2026-08-25 throughput pass keeps that assignment model but makes its buckets finer to reduce tail
 # latency, matching the queue-based pattern already used by other variable-runtime batch workflows.
-name: atlas-sweep (grow the CP-SAT-labelled branch atlas)
-run-name: "Atlas sweep · ${{ inputs.backfill_run_id && format('backfill {0}', inputs.backfill_run_id) || 'fresh' }} · ${{ inputs.corpus }} · shards=${{ inputs.shard_count }}"
+name: collect-prune-gap-labels (grow the CP-SAT-labelled branch set)
+run-name: "Collect prune-gap labels · ${{ inputs.backfill_run_id && format('backfill {0}', inputs.backfill_run_id) || 'fresh' }} · ${{ inputs.corpus }} · shards=${{ inputs.shard_count }}"
 
 on:
   workflow_dispatch:
@@ -54,18 +55,18 @@ on:
       backfill_run_id:
         description: >-
           Set this (and leave every other input at its default) to run ONLY the backfill job:
-          download a PAST atlas-sweep run's shard artifacts and commit them, without re-running the
-          sweep. Leave blank for a normal sweep dispatch.
+          download a PAST collect-prune-gap-labels run's shard artifacts and commit them, without
+          re-running the sweep. Leave blank for a normal sweep dispatch.
         required: false
         default: ''
 
 concurrency:
-  group: atlas-sweep
+  group: collect-prune-gap-labels
   cancel-in-progress: false
 
 jobs:
   sweep-shards:
-    name: atlas-sweep shard ${{ matrix.shard }}/60
+    name: collect-prune-gap-labels shard ${{ matrix.shard }}/60
     if: ${{ inputs.backfill_run_id == '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
@@ -111,45 +112,45 @@ jobs:
         shell: bash
         run: echo "nn=$(printf '%02d' "${{ matrix.shard }}")" >> "$GITHUB_OUTPUT"
 
-      - name: Run atlas-sweep on this shard's round-robin slice of eligible levels
+      - name: Run collect-prune-gap-labels on this shard's round-robin slice of eligible levels
         id: sweep
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          mkdir -p reports/stress logs/atlas-sweep
-          timeout -k 30s --preserve-status 290m node scripts/run-bundled.mjs scripts/stress/atlas-sweep.mjs -- \
+          mkdir -p reports/stress logs/collect-prune-gap-labels
+          timeout -k 30s --preserve-status 290m node scripts/run-bundled.mjs scripts/stress/collect-prune-gap-labels.mjs -- \
             --corpus="${{ inputs.corpus }}" \
             --shard-index="${{ matrix.shard }}" --shard-count=60 \
             --every="${{ inputs.every }}" \
             --oracle-limit="${{ inputs.oracle_limit }}" \
             --out-dir=reports/stress \
-            --summary-out="logs/atlas-sweep/shard-${{ steps.range.outputs.nn }}-summary.md" \
-            2>&1 | tee "logs/atlas-sweep/shard-${{ steps.range.outputs.nn }}.console.log"
+            --summary-out="logs/collect-prune-gap-labels/shard-${{ steps.range.outputs.nn }}-summary.md" \
+            2>&1 | tee "logs/collect-prune-gap-labels/shard-${{ steps.range.outputs.nn }}.console.log"
           status=${PIPESTATUS[0]}
           echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Stage this shard's new/changed atlas files for upload
+      - name: Stage this shard's new/changed labelled-branch files for upload
         if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
         shell: bash
         run: |
-          stage="artifact-staging/atlas-sweep-shard-${{ steps.range.outputs.nn }}"
+          stage="artifact-staging/collect-prune-gap-labels-shard-${{ steps.range.outputs.nn }}"
           mkdir -p "${stage}/reports/stress" "${stage}/logs"
           while IFS= read -r f; do
             [ -z "$f" ] && continue
             mkdir -p "$(dirname "${stage}/${f}")"
             cp "${f}" "${stage}/${f}"
           done < <(git status --porcelain -- reports/stress/ | awk '{print $2}')
-          cp -r logs/atlas-sweep "${stage}/logs/" 2>/dev/null || true
+          cp -r logs/collect-prune-gap-labels "${stage}/logs/" 2>/dev/null || true
 
       - name: Upload this shard's results
         if: ${{ always() && matrix.shard <= fromJSON(inputs.shard_count) }}
         uses: actions/upload-artifact@v7
         with:
-          name: atlas-sweep-shard-${{ steps.range.outputs.nn }}
-          path: artifact-staging/atlas-sweep-shard-${{ steps.range.outputs.nn }}/
+          name: collect-prune-gap-labels-shard-${{ steps.range.outputs.nn }}
+          path: artifact-staging/collect-prune-gap-labels-shard-${{ steps.range.outputs.nn }}/
           retention-days: 30
           if-no-files-found: warn
 
@@ -170,14 +171,14 @@ jobs:
       - name: Download all shard artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: atlas-sweep-shard-*
+          pattern: collect-prune-gap-labels-shard-*
           path: artifact-staging
           merge-multiple: true
 
-      - name: Upload combined atlas additions (also kept as a downloadable artifact regardless of the commit below)
+      - name: Upload combined labelled-branch additions (also kept as a downloadable artifact regardless of the commit below)
         uses: actions/upload-artifact@v7
         with:
-          name: atlas-sweep-combined
+          name: collect-prune-gap-labels-combined
           path: artifact-staging/reports/stress/
           retention-days: 30
           if-no-files-found: warn
@@ -189,9 +190,9 @@ jobs:
           node scripts/publish-solver-sweep-result.mjs \
             --primary="artifact-staging/reports/stress" \
             --shards-expected="${{ inputs.shard_count }}" \
-            --shards-observed="$(find artifact-staging/logs/atlas-sweep -maxdepth 1 -name 'shard-*-summary.md' | wc -l | tr -d ' ')" \
-            --provenance-out="reports/stress/atlas-source-run-${{ github.run_id }}.json" \
-            --source-artifact="atlas-sweep-combined"
+            --shards-observed="$(find artifact-staging/logs/collect-prune-gap-labels -maxdepth 1 -name 'shard-*-summary.md' | wc -l | tr -d ' ')" \
+            --provenance-out="reports/stress/collect-prune-gap-labels-source-run-${{ github.run_id }}.json" \
+            --source-artifact="collect-prune-gap-labels-combined"
 
       - name: Upload standard solver sweep result
         if: always()
@@ -202,7 +203,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
-      - name: Merge new/updated atlas files into the working tree and commit
+      - name: Merge new/updated labelled-branch files into the working tree and commit
         shell: bash
         run: |
           if [ -d artifact-staging/reports/stress ]; then
@@ -213,16 +214,16 @@ jobs:
             git config user.name 'github-actions[bot]'
             git config user.email 'github-actions[bot]@users.noreply.github.com'
             git add reports/stress/
-            git commit -m "atlas-sweep: grow the CP-SAT-labelled branch atlas (run ${{ github.run_id }})"
+            git commit -m "collect-prune-gap-labels: grow the CP-SAT-labelled branch set (run ${{ github.run_id }})"
             git push origin HEAD:"${{ github.ref_name }}"
           else
-            echo "No new/changed atlas files -- nothing to commit."
+            echo "No new/changed labelled-branch files -- nothing to commit."
           fi
 
   # Backfill mode (inputs.backfill_run_id set): commits a PAST run's shard artifacts without
   # re-sweeping.
   backfill:
-    name: Backfill atlas from run ${{ inputs.backfill_run_id }}
+    name: Backfill labelled branch set from run ${{ inputs.backfill_run_id }}
     if: ${{ inputs.backfill_run_id != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -238,13 +239,13 @@ jobs:
       - name: Download all shard artifacts from the given run
         uses: actions/download-artifact@v8
         with:
-          pattern: atlas-sweep-shard-*
+          pattern: collect-prune-gap-labels-shard-*
           path: artifact-staging
           merge-multiple: true
           run-id: ${{ inputs.backfill_run_id }}
           github-token: ${{ github.token }}
 
-      - name: Merge new/updated atlas files into the working tree and commit
+      - name: Merge new/updated labelled-branch files into the working tree and commit
         shell: bash
         run: |
           if [ -d artifact-staging/reports/stress ]; then
@@ -255,8 +256,8 @@ jobs:
             git config user.name 'github-actions[bot]'
             git config user.email 'github-actions[bot]@users.noreply.github.com'
             git add reports/stress/
-            git commit -m "atlas-sweep: backfill committed atlas from run ${{ inputs.backfill_run_id }}"
+            git commit -m "collect-prune-gap-labels: backfill committed labelled branch set from run ${{ inputs.backfill_run_id }}"
             git push origin HEAD:"${{ github.ref_name }}"
           else
-            echo "No new/changed atlas files -- nothing to commit."
+            echo "No new/changed labelled-branch files -- nothing to commit."
           fi

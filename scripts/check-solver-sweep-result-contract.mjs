@@ -16,7 +16,7 @@ const workflows = [
   '.github/workflows/cpsat-explicit-prefix-reference.yml',
   '.github/workflows/cpsat-hint-harvest-sweep-published.yml',
   '.github/workflows/cpsat-hint-harvest-sweep.yml',
-  '.github/workflows/atlas-sweep.yml',
+  '.github/workflows/collect-prune-gap-labels.yml',
   '.github/workflows/family-wide-trove.yml',
   '.github/workflows/mitm-frontier-sweep.yml',
   '.github/workflows/solver-elite-prefix-dfs-retry-validate.yml',

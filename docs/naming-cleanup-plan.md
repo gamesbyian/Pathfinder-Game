@@ -827,8 +827,8 @@ Current docs must say explicitly: solved-set regression is not a speed benchmark
 
 ### 5.5 Atlas, trove, archaeology, lineage
 
-- `atlas-sweep.mjs` -> `collect-prune-gap-labels.mjs`;
-- "branch atlas" -> "labelled branch set";
+- former atlas-sweep.mjs -> `collect-prune-gap-labels.mjs` (implemented by batch 8E);
+- "branch atlas" -> "labelled branch set" (implemented by batch 8E);
 - `family-wide-trove-manifest.mjs` -> `build-variant-family-dataset-manifest.mjs`;
 - "trove" -> "variant-family dataset" in current docs and tool output;
 - "winning-path archaeology" -> "winning-path analysis";
@@ -895,10 +895,10 @@ Canonical live mappings:
 
 | Current | Canonical |
 |---|---|
-| `.github/workflows/atlas-sweep.yml` | `.github/workflows/collect-prune-gap-labels.yml` |
-| workflow display/concurrency "atlas-sweep" | "collect-prune-gap-labels" |
-| `.github/workflows/cpsat-explicit-prefix-oracle.yml` | `.github/workflows/cpsat-explicit-prefix-reference.yml` |
-| workflow/job display "oracle" for that CP-SAT model | "reference" |
+| former `.github/workflows/atlas-sweep.yml` | `.github/workflows/collect-prune-gap-labels.yml` |
+| former workflow display/concurrency "atlas-sweep" | "collect-prune-gap-labels" |
+| former `.github/workflows/cpsat-explicit-prefix-oracle.yml` | `.github/workflows/cpsat-explicit-prefix-reference.yml` |
+| former workflow/job display "oracle" for that CP-SAT model | "reference" |
 | `.github/workflows/family-wide-trove.yml` | `.github/workflows/collect-variant-family-dataset.yml` |
 | `family-wide-trove-manifest.mjs` | `build-variant-family-dataset-manifest.mjs` |
 | `family-wide-trove-shard-run.mjs` | `collect-variant-family-dataset-shard.mjs` |

@@ -92,7 +92,7 @@ All three share `scripts/plan-ab-corpus-shards.mjs` for the mandatory Corpus 1 +
 - `cpsat-hint-harvest-sweep.yml` — 60 shards / 20 lanes for highly variable per-level runtime.
 - `cpsat-hint-harvest-sweep-published.yml` — smaller published-level matrix.
 - `cpsat-explicit-prefix-reference.yml` — independent prefix cases sharded across 20 runners, then coverage-checked and combined.
-- `atlas-sweep.yml` — 60 fixed interleaved buckets behind 20 lanes; smaller trials select a literal subset rather than repartitioning.
+- `collect-prune-gap-labels.yml` — 60 fixed interleaved buckets behind 20 lanes; smaller trials select a literal subset rather than repartitioning.
 - `mitm-frontier-sweep.yml` — curated per-level MITM frontier experiments.
 
 Do not infer that CP-SAT search workers should equal runner vCPUs; compare representative runs because those workers also diversify search.

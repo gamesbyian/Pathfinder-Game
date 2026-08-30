@@ -7,7 +7,7 @@
  * probe script growing its own bespoke comparison harness (the pattern axis-reach-probe.mjs /
  * backward-exact-probe.mjs / pocket-bridge-probe.mjs had each independently repeated).
  *
- * DATA SOURCE. Consumes the labelled-branch atlas ALREADY produced by
+ * DATA SOURCE. Consumes the labelled branch set ALREADY produced by
  * scripts/stress/prune-gap-probe.mjs (reports/stress/prune-gap-*.json — 16 levels / ~623
  * CP-SAT-labelled branches as of 2026-08-05, see that script's own doc for the oracle-labelling
  * method). No new CP-SAT calls here: replays each labelled branch through the real solver-state

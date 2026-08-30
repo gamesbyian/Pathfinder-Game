@@ -8,7 +8,7 @@
  * applied to PRUNE_MC_RESERVED_WALL/PRUNE_MC_FORCED_NEIGHBOR: walk every known-valid solution we
  * possess (each level's stressMeta.witnessSolution plus every saved hint) through real search
  * state and assert the new check never verdicts 'reject' on a state lying on a REAL, PLAY-valid
- * solution. This is the harness's ~5,518-branch atlas's stronger sibling — full corpora, tens of
+ * solution. This is the harness's ~5,518-branch labelled set's stronger sibling — full corpora, tens of
  * thousands of paths — because a must-cross rejection rule gets no benefit of the doubt in this
  * codebase without it (CLAUDE.md's must-cross lower-bound/deadlock gotchas).
  *
