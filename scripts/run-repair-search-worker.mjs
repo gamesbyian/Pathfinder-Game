@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Worker process for repair-direct-probe.mjs's --races mode. Pure compute: prepares the level
+/** Worker process for run-repair-search.mjs's --races mode. Pure compute: prepares the level
  *  and runs one repairSearchFromGate call with the given seedSalt, returns solution or failure
  *  diagnostics. */
 import { readFileSync } from 'node:fs';

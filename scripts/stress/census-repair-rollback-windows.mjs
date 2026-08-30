@@ -13,9 +13,9 @@ const levelsFile = args.get('--levels') ?? 'data/stress/stress-levels-random.jso
 const levelLimit = Number(args.get('--limit-levels') ?? 3);
 const nodeBudget = Number(args.get('--node-budget') ?? 30000);
 const eliteLimit = Number(args.get('--limit-elites') ?? 5);
-const outFile = args.get('--out') ?? 'reports/stress/repair-rollback-census-pilot.json';
+const outFile = args.get('--out') ?? 'reports/stress/census-repair-rollback-windows.json';
 // Deterministic stratified draw (2026-08-13, same convention as scripts/stress/benchmark.mjs and
-// producer-population-pilot.mjs's own --sample=N --seed=X), added for the repair-retreat CP-SAT
+// compare-search-producer-populations.mjs's own --sample=N --seed=X), added for the repair-retreat CP-SAT
 // broadening (reports/2026-08-12-repair-retreat-cpsat.md's own "a broader sample... could still
 // show slack" ask) -- the original pilot only ever took the first N file-order levels.
 const sampleSize = args.has('--sample') ? Number(args.get('--sample')) : null;

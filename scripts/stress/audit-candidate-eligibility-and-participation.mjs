@@ -23,7 +23,7 @@
  *    any future candidate confirmation that comes back with unexpected zero participation.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/stress/confirm-residual-001-archetype-audit.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/audit-candidate-eligibility-and-participation.mjs -- \
  *     --pool=<sealed-pool.json> --phase1-report=<sealed-phase1-control-report.json> \
  *     [--phase2-treatment-report=<sealed-phase2-treatment-report.json>] \
  *     [--dump-full-attempts-for-id=<levelId>] \

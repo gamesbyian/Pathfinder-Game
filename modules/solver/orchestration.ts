@@ -1164,7 +1164,7 @@ export const EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
  *  repairSearchFromGate's randomized local search is seeded from the gate's own coordinates
  *  (repair-search.ts's `rand`), so its outcome on a given (level, gate) is one sample from a
  *  genuinely high-variance distribution, not a deterministic verdict on that level's real
- *  difficulty — confirmed directly with scripts/repair-direct-probe.mjs's --races flag and by
+ *  difficulty — confirmed directly with scripts/run-repair-search.mjs's --races flag and by
  *  calling repairSearchFromGate directly per seed (see
  *  reports/families/2026-07-15-{symmetry-orientation-bias,re-embedded-cousin-grid-growth}.md for
  *  the investigation this grew out of). A whole-level rotation or a grid re-embedding incidentally
@@ -1413,7 +1413,7 @@ function legacyLatencyPortfolioFeatureGateMatches(level: NormalizedLevel, gate: 
  * of a plain `{ ...cfg }` spread. Both of `solveLevel`/`runPortfolioExperiment` funnel every
  * externally-supplied `opts.ablation` through here before it ever reaches `prep._cfg` — the only
  * place any read site ever gets a cfg from — so a sparse override is safe from ANY entry point
- * (production call, orchestration.test.ts, scripts/repair-direct-probe.mjs, future tooling)
+ * (production call, orchestration.test.ts, scripts/run-repair-search.mjs, future tooling)
  * without every call site needing to remember to build it via ablation-config.ts's
  * `defaultConfig()`/`withFeatureDisabled()` helpers first.
  *

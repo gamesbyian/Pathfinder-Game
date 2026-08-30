@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Development pilot for docs/reports/2026-08-24-restart-continuation-value-audit.md's primary
+ * Comparison tool for docs/reports/2026-08-24-restart-continuation-value-audit.md's primary
  * comparison, run over a frozen baseline-failure-conditioned residual population: levels where
  * the raised-cap census run (reports/stress/benchmark-latest-random.json, commit fc625d18,
  * budgetMs=86400000/nodeBudget=50000000/workBudget=67000000 over Corpus 2) still could not solve
@@ -23,19 +23,19 @@
  * see reports/2026-08-26-restart-vs-continuation-near-miss-development-pilot.md.
  *
  * `--offset=<n>` (default 0) skips the first N candidates (in the same fixed census order,
- * before `--sample-every`/`--limit`) so a follow-up pilot can select a disjoint, non-overlapping
- * slice of the same stratum without re-running or re-selecting rows an earlier pilot already
+ * before `--sample-every`/`--limit`) so a follow-up run can select a disjoint, non-overlapping
+ * slice of the same stratum without re-running or re-selecting rows an earlier run already
  * inspected and drew conclusions from — see reports/2026-08-26-restart-continuation-larger-w-pilot.md.
  *
  * `--min-badness=<n>` (default 0) is `--max-badness`'s companion lower bound, so a follow-up
- * pilot can select a disjoint, materially different badness band (e.g. 7-9) instead of a disjoint
+ * run can select a disjoint, materially different badness band (e.g. 7-9) instead of a disjoint
  * slice of the SAME band — useful once a fixed band's whole population has already been spent
- * across earlier pilots — see reports/2026-08-27-repair-restart-continuation-production-candidate-
+ * across earlier runs — see reports/2026-08-27-repair-restart-continuation-production-candidate-
  * design.md.
  *
  * `--budget-ms=<ms>` (default 120000, this tool's original hardcoded per-arm wall-clock deadline)
  * must stay large enough that `--work-budget`, not this wall clock, is what actually stops a slow
- * arm. The harness reports the bound that stopped each arm and this pilot FAILS CLOSED if any arm
+ * arm. The harness reports the bound that stopped each arm and this tool FAILS CLOSED if any arm
  * is wall-clock-truncated, so a right-censored run cannot be mistaken for equal-work evidence.
  * A small `--limit` timing smoke is still useful for sizing the safety deadline efficiently. See
  * the same design report.
@@ -45,9 +45,9 @@
  * --offset/--limit ranges without duplicating this file's own selection filter.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/stress/restart-continuation-population-pilot.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/compare-repair-restart-continuation-population.mjs -- \
  *     --census=reports/stress/benchmark-latest-random.json --corpus=data/stress/stress-levels-random.json \
- *     --work-budget=2000000 --sample-every=29 --out=tmp/restart-continuation-pilot.json
+ *     --work-budget=2000000 --sample-every=29 --out=tmp/repair-restart-continuation-comparison.json
  */
 import path from 'node:path';
 import process from 'node:process';
@@ -65,8 +65,8 @@ const workBudget = Number(argMap.get('--work-budget') || 2_000_000);
 const sampleEvery = Number(argMap.get('--sample-every') || 29);
 const maxBadness = argMap.has('--max-badness') ? Number(argMap.get('--max-badness')) : Infinity;
 // `--min-badness` (default 0, inert): companion lower bound to `--max-badness`, so a follow-up
-// pilot can select a disjoint, materially different badness band (e.g. 7-9) from an earlier one
-// (e.g. 2-6) without re-including any level the earlier pilot already inspected and drew
+// run can select a disjoint, materially different badness band (e.g. 7-9) from an earlier one
+// (e.g. 2-6) without re-including any level the earlier run already inspected and drew
 // conclusions from — same rationale as `--offset`, but by stratum definition rather than by
 // position within one fixed stratum. See reports/2026-08-27-repair-restart-continuation-
 // production-candidate-design.md.
@@ -83,7 +83,7 @@ const limit = argMap.has('--limit') ? Number(argMap.get('--limit')) : Infinity;
 const budgetMs = Number(argMap.get('--budget-ms') || 120_000);
 const offset = argMap.has('--offset') ? Number(argMap.get('--offset')) : 0;
 const restartSplitFraction = argMap.has('--restart-split') ? Number(argMap.get('--restart-split')) : 0.5;
-const outPath = argMap.get('--out') || path.join(root, 'tmp/restart-continuation-pilot.json');
+const outPath = argMap.get('--out') || path.join(root, 'tmp/repair-restart-continuation-comparison.json');
 
 installBrowserStubs();
 const { createSolver } = await import('../../modules/solver.js');
@@ -101,7 +101,7 @@ const rawLevels = Array.isArray(corpusParsed) ? corpusParsed : corpusParsed.leve
 // lifecycle-failure-map already documents as a starvation/allocation question for queue item #1,
 // not this restart-vs-continuation question). `--max-badness` additionally restricts to the
 // primary (seedSalt-0) early-repair-search attempt's own recorded `bestBadness` — a NEAR-MISS stratum,
-// disclosed and chosen on the census's pre-existing difficulty label (never on this pilot's own
+// disclosed and chosen on the census's pre-existing difficulty label (never on this tool's own
 // outcome): deep failures (bestBadness in the teens/twenties+, most of the population — see this
 // report's own bestBadness distribution) are not close enough for ANY bounded repair work,
 // continuation or restart, to plausibly close, so including them mostly measures "population too
@@ -122,13 +122,13 @@ const candidates = census.levels.filter(lv => {
 });
 
 // `--offset` (applied first) skips a prefix of candidates in census order, purely to let a
-// follow-up pilot select rows disjoint from an earlier one's — not outcome-based. `--limit`
+// follow-up run select rows disjoint from an earlier one's — not outcome-based. `--limit`
 // truncates to the first N candidates after that (compute-boundedness, not outcome selection);
 // `--sample-every` (applied after offset, before limit) is the alternative stride-based reducer —
 // combine only deliberately, since all three change which rows are covered.
 const selected = candidates.slice(offset).filter((_, i) => i % sampleEvery === 0).slice(0, limit);
 
-console.log(`restart-continuation-population-pilot: census=${censusPath} (${census.solved}/${census.total} solved, commit ${census.commitSha})`);
+console.log(`compare-repair-restart-continuation-population: census=${censusPath} (${census.solved}/${census.total} solved, commit ${census.commitSha})`);
 console.log(`population: ${candidates.length} unsolved levels with a early-repair-search attempt (min-badness=${minBadness}, max-badness=${Number.isFinite(maxBadness) ? maxBadness : '(none)'}); offset=${offset}, sampling every ${sampleEvery}th, limit=${Number.isFinite(limit) ? limit : '(none)'} -> ${selected.length} levels; work-budget=${workBudget}; restart-split=${restartSplitFraction}; budget-ms=${budgetMs}`);
 
 // --count-only: print the population size (post min/max-badness filter, pre offset/sample-every/
@@ -191,6 +191,6 @@ writeFileSync(outPath, JSON.stringify({
 }, null, 2));
 console.log(`\nWrote ${outPath}`);
 if (!validEqualWorkComparison) {
-    console.error(`INVALID EQUAL-WORK PILOT: wall-clock deadline truncated ${deadlineTruncatedIds.length} level(s): ${deadlineTruncatedIds.join(',')}`);
+    console.error(`INVALID EQUAL-WORK COMPARISON: wall-clock deadline truncated ${deadlineTruncatedIds.length} level(s): ${deadlineTruncatedIds.join(',')}`);
     process.exitCode = 2;
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Regression coverage for restart-continuation-population-pilot.mjs's population filter: it used
- * to require strict `a.stageId === 'early-repair-search'`, so a historical census row carrying the
- * literal legacy stageId string `'repair-probe'` was silently excluded from the selectable
- * population instead of being recognized as the canonical early-repair-search stage. Uses
- * `--count-only` (no solver work run) against a tiny fixture census/corpus so this stays fast.
+ * Regression coverage for compare-repair-restart-continuation-population.mjs's population filter:
+ * it used to require strict `a.stageId === 'early-repair-search'`, so a historical census row
+ * carrying the literal legacy stageId string `'repair-probe'` was silently excluded from the
+ * selectable population instead of being recognized as the canonical early-repair-search stage.
+ * Uses `--count-only` (no solver work run) against a tiny fixture census/corpus so this stays fast.
  */
 import assert from 'node:assert/strict';
 import { execFile as execFileCallback } from 'node:child_process';
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-const dir = await mkdtemp(path.join(os.tmpdir(), 'restart-continuation-population-pilot-cli-'));
+const dir = await mkdtemp(path.join(os.tmpdir(), 'compare-repair-restart-continuation-population-cli-'));
 const censusPath = path.join(dir, 'census.json');
 const corpusPath = path.join(dir, 'corpus.json');
 await writeFile(censusPath, JSON.stringify({
@@ -31,7 +31,7 @@ await writeFile(censusPath, JSON.stringify({
 await writeFile(corpusPath, JSON.stringify([{ id: 'R00001', grid: { w: 1, h: 1 }, gates: [], goal: { x: 1, y: 1 }, reqLen: 1, reqInt: 0 }]));
 
 const { stdout } = await execFile(process.execPath, [
-    'scripts/run-bundled.mjs', 'scripts/stress/restart-continuation-population-pilot.mjs',
+    'scripts/run-bundled.mjs', 'scripts/stress/compare-repair-restart-continuation-population.mjs',
     `--census=${censusPath}`, `--corpus=${corpusPath}`, '--count-only',
 ], { cwd: ROOT });
 
@@ -40,4 +40,4 @@ const count = Number(lines[lines.length - 1]);
 assert.equal(count, 1,
     'the legacy repair-probe stageId row must count toward the selectable population, not be silently dropped');
 
-console.log('restart-continuation-population-pilot CLI: all tests passed');
+console.log('compare-repair-restart-continuation-population CLI: all tests passed');

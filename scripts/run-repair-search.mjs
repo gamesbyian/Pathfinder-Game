@@ -33,8 +33,8 @@
  *                      faithfully across arms. Single-run, this process, deterministic.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/repair-direct-probe.mjs -- --corpus=data/stress/stress-levels.json --level=44 --gate-index=0 --budget-ms=20000 --node-budget=8000000 [--must-turn-biased] [--races=8]
- *   node scripts/run-bundled.mjs scripts/repair-direct-probe.mjs -- --corpus=data/stress/stress-levels.json --level=44 --gate-index=0 --work-budget=200000
+ *   node scripts/run-bundled.mjs scripts/run-repair-search.mjs -- --corpus=data/stress/stress-levels.json --level=44 --gate-index=0 --budget-ms=20000 --node-budget=8000000 [--must-turn-biased] [--races=8]
+ *   node scripts/run-bundled.mjs scripts/run-repair-search.mjs -- --corpus=data/stress/stress-levels.json --level=44 --gate-index=0 --work-budget=200000
  */
 import path from 'node:path';
 import process from 'node:process';
@@ -77,7 +77,7 @@ const gateKey = gateKeys[gateIndex];
 if (gateKey === undefined) { console.error(`--gate-index=${gateIndex}: level has ${gateKeys.length} gate(s).`); process.exit(2); }
 const profile = SCORING_PROFILES.repair ?? SCORING_PROFILES.default;
 
-console.log(`repair-direct-probe: level=${levelNumber}${raw.id ? ` (${raw.id})` : ''} gate=${gateIndex}/${gateKeys.length} budget=${budgetMs}ms node-budget=${Number.isFinite(nodeBudget) ? nodeBudget : '(none)'} must-turn-biased=${mustTurnBiased} races=${races}${workBudget !== null ? ` work-budget=${workBudget}` : ''}`);
+console.log(`run-repair-search: level=${levelNumber}${raw.id ? ` (${raw.id})` : ''} gate=${gateIndex}/${gateKeys.length} budget=${budgetMs}ms node-budget=${Number.isFinite(nodeBudget) ? nodeBudget : '(none)'} must-turn-biased=${mustTurnBiased} races=${races}${workBudget !== null ? ` work-budget=${workBudget}` : ''}`);
 
 if (workBudget !== null) {
     const result = await runRepairRestartVsContinuation(gateKey, level, () => prepLevel(level), profile, workBudget, { budgetMs, nodeBudget, restartSplitFraction });
@@ -100,7 +100,7 @@ if (workBudget !== null) {
     }
     process.exitCode = solution ? 0 : 1;
 } else {
-    const workerScript = path.join(root, 'scripts', 'repair-direct-probe-worker.mjs');
+    const workerScript = path.join(root, 'scripts', 'run-repair-search-worker.mjs');
     const tasks = Array.from({ length: races }, (_, i) => ({
         corpusPath, levelNumber, gateIndex, budgetMs, nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null, mustTurnBiased, seedSalt: i + 1,
     }));

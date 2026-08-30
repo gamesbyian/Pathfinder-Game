@@ -1052,7 +1052,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         let survivorPaths: number[][] = [];
         // 'post-mechanic-bucket-selection' is the final retained frontier when mechanic-bucket selection ran;
         // 'post-score-width-cull' is the equivalent boundary when it didn't (same convention
-        // scripts/stress/producer-population-pilot.mjs's own offline pilot already uses). Only the
+        // scripts/stress/compare-search-producer-populations.mjs already uses). Only the
         // LAST record of either kind matters — each phase overwrites the previous one, so this ends
         // up holding the beam's final surviving frontier, not an intermediate one.
         prep._beamResearchObserver = { observe: (record: BeamResearchRecord) => {
