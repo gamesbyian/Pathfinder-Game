@@ -67,7 +67,7 @@ For persisted identities use dual-read/single-write unless the owning plan expli
 - emit only the canonical form;
 - do not rewrite frozen reports, logs, archived snapshots, or historical workflow artifacts merely to modernize terminology.
 
-Every future dual-read ledger row also names its compatibility owner and retirement policy. Keep legacy knowledge at that owner only. A `temporary-command-alias` must be gone by owning-phase closeout; `permanent-historical-read` and `wire-format-retained` are intentionally indefinite; `phase-15-review` modes require evidence before removal rather than automatic deletion.
+Every future dual-read ledger row also names its compatibility owner and retirement policy. Keep legacy knowledge at that owner only. A `temporary-command-alias` must be gone by owning-batch closeout when batched (otherwise owning-phase closeout); `permanent-historical-read` and `wire-format-retained` are intentionally indefinite; `phase-15-review` modes require evidence before removal rather than automatic deletion.
 
 A compatibility alias may be removed only when live code/workflows no longer emit it, current docs no longer teach it, historical readers still accept any promised legacy form, the ledger retirement condition is satisfied, and a representative historical fixture proves compatibility where historical reads are promised.
 
