@@ -7,7 +7,7 @@
 | Phase | 8 post-completion specification amendment |
 | Base | `542947e1` (PR #1596 merge, current repository main tip supplied to this branch) |
 | Historical implementation records | unchanged; 8A through 8H remain evidence of what ran |
-| Behavior envelope | plan/ledger/vocabulary/checker/test changes only; no solver, application, schema, CLI, workflow, seed, budget, corpus, or persisted identity rename |
+| Behavior envelope | specification/accounting/checker/test changes plus the five narrow case-sensitive research-tool import corrections recorded in Section 8; no solver policy, application behavior, schema, CLI contract, workflow behavior, seed, budget, corpus, or persisted identity rename |
 | Completion decision | Phase 8 remains complete after explicit reclassification |
 
 The review began with `npm run naming:status`, `npm run check:naming-cleanup-ledger`, and a fresh
@@ -83,11 +83,11 @@ converted to `not-applicable`. Dedicated compatibility checks include the varian
 root resolver, experiment-manifest/family-index readers, known-solution-prefix survival tests, and
 the new closeout negative fixtures.
 
-### Executed validation (final)
+### Executed validation during amendment development
 
 - `npm run check` — pass, including types, documentation links, workflow structure, ledger contract,
   corpus formatting/validity, and all validators.
-- `npm run test:node` — pass, including the closeout checker and its three negative fixtures.
+- `npm run test:node` — passed during amendment development; the negative-fixture suite was expanded repeatedly during follow-up hardening.
 - `npm run test:coverage` — pass: 108 files / 1,336 tests; 86.98% statements, 79.14% branches,
   94.12% functions, and 92.42% lines.
 - `npm run check:naming-cleanup-ledger` — pass with 68/68 Phase-8 closeout classifications.
@@ -113,10 +113,10 @@ The follow-up review tightened three parts of the first amendment implementation
 2. The closeout checker binds every semantic contract ID to its authorized ledger row(s), so moving
    a valid contract name onto an unrelated row fails instead of receiving accidental coverage.
 3. Phase-15 deferred rows now carry exact `inventoryTerms`; the surface inventory consumes and
-   validates them, and its permanent range test covers Phases 8–15. All five deferred boundaries
-   resolve to `old-live` with concrete current files; the artifact row includes a workflow category
-   and the fingerprint row includes an application category. This replaces description-only future
-   rows that the inventory could not connect to live surfaces.
+   validates them, and its permanent range test covers Phases 8–15. The initial five deferred
+   boundaries resolved to `old-live` with concrete current files; Section 8 later added NC-P15-006
+   and NC-P15-007 after the analogous-exclusion audit found two more live Batch-8E boundaries.
+   This replaces description-only future rows that the inventory could not connect to live surfaces.
 
 The injected-legacy negative fixture now supplies every targeted contract file and asserts that no
 missing-contract noise occurs, proving NC-P08-002 fails for the intended ledger-derived reason alone.
@@ -210,3 +210,31 @@ NC-P15-007 owns the persisted/shared atlas-directory CLI and generated-report fi
 terms are registered as NC-RET-P08-009/010 with exact term/file ownership until Phase 15. This closes
 the last execution-record `out of scope` items that represented live interfaces rather than frozen
 history, behavior-sensitive seeds, methodology, or genuinely unrelated debris.
+
+
+## 9. Final closeout-hardening follow-up after PR #1597
+
+PR #1597 merged the specification-accounting amendment after its final exact-head CI run #3365
+reported one failure in `check:plain-node-import-boundaries`. The failure was caused by the
+negative-fixture test embedding the literal source text for a stale `modules/Solver.ts` import;
+the repository-wide static import-boundary checker correctly scanned that test source and mistook
+the fixture datum for the test file's own runtime import. Build, lint, node tests, deep proofs, and
+coverage/deep verification were green in that run, but the amendment's earlier "final" `npm run
+check` wording therefore overstated the final PR-head state.
+
+The follow-up hardening corrects that evidence/accounting defect without weakening the import
+boundary: the fixture constructs the stale import from string fragments so the generated temporary
+file still contains the exact bad import while the test source itself does not. It also closes two
+remaining semantic-accounting gaps:
+
+- the historical read-only `AttemptLike.profile?: string` adapter in
+  `modules/solver/hint-provenance.ts` is now NC-RET-P08-011, linked to NC-P08-007, so the closeout
+  checker derives that exception from the retained-surface registry instead of a hardcoded file
+  special case;
+- the typed-profile exemption is narrowed to local/positional `profile: ScoringProfile` usage.
+  Exported object-type contracts may not expose a naked `profile: ScoringProfile` property; a
+  dedicated negative fixture now proves that such an API expansion fails the closeout checker.
+
+This section supersedes the word "final" in the earlier validation subsection. Final acceptance of
+this follow-up requires the complete CI suite to pass on the exact final PR head; GitHub Actions is
+the durable authority for that exact-head result.
