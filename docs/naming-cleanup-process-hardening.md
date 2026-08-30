@@ -409,18 +409,25 @@ If hardening exposes an already-live Phase-1-7 regression, fix it and record it 
 
 ## 9. Handoff for the next agent
 
-The table-setting prerequisite is complete and merged via PR #1580 (merge commit `02abde6c651a7070e7be10775f75c177b1bdb23b`). The next naming-cleanup agent may begin **Phase 8A only**, using the serial execution model in Sections 4-7 and the Phase-8 batch authority in [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md):
+Do not maintain a prose “next batch” pointer here. Execution state is ledger-derived:
 
-1. run `npm run naming:status`, start from current `main`, and perform the plan's delta/full reconciliation level required by Section 0;
-2. claim only the 8A ledger rows, create the 8A checked-in execution record, and set `activeExecution` before editing;
-3. use the checked-in surface inventory and CI/smoke coverage to identify every live consumer and any remaining structurally-only or manually audited surface;
-4. preserve legacy-read/canonical-write boundaries and frozen evidence exactly as classified;
-5. run targeted contract validation, before/after parity where applicable, and a consumer-inward closeout audit before marking any row done;
-6. merge 8A, verify current `main`, clear the active batch, then branch 8B from that new `main`; do not stack 8B;
-7. leave Phase 9 untouched until the merged-tree Phase-8 closeout is complete and every Phase-8 verification dimension is resolved.
+```sh
+npm run naming:status
+npm run check:naming-cleanup-ledger
+```
 
-The repository now contains substantially more machine-enforced proof than the Phase-1-7 cycle did; the next agent should use those checks as an entry map, not as a substitute for the required adversarial audit.
+The next naming-cleanup agent executes only the phase/batch reported by `naming:status`, then follows Sections 4-7 and the corresponding phase execution authority under `docs/naming-cleanup-phase-records/`.
 
+At entry:
+
+1. start from current `main` and perform the plan's required delta/full reconciliation;
+2. claim only the next allowed ledger rows by immutable ID and create the checked-in batch record;
+3. set `activeExecution` before canonical edits;
+4. verify risk, target occupancy, compatibility ownership/retirement, and the change envelope;
+5. run targeted validation, before/after parity where applicable, and consumer-inward closeout before closing rows;
+6. merge the batch, clear the active claim on merged `main`, and only then allow the status command to expose the next batch/phase.
+
+The repository checks enforce ordering, but the status command is the human-facing entry point. This keeps volatile execution state out of long-lived explanatory prose.
 
 ## 10. Table-setting progress
 
