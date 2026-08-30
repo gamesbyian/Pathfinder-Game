@@ -125,8 +125,11 @@ const intentionalLegacyByLabel = new Map([
     'scripts/family-index-lib-check.mjs',
     'scripts/experiment-manifest-lib-check.mjs',
     'scripts/family-run-manifest-producer-node-test.mjs',
+    'scripts/collect-variant-family-dataset-shard.mjs',
+    'scripts/family-index.mjs',
     'scripts/merge-variant-family-dataset-shards.mjs',
     '.github/workflows/collect-variant-family-dataset.yml',
+    'docs/tooling-catalog.md',
     'docs/variant-level-research.md',
   ])],
   ['winning-prefix-atlas collector', new Set([
