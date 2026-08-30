@@ -63,4 +63,51 @@ test.describe('Level editor', () => {
         const after = await page.evaluate(() => window.APP.State.ENGINE.editor.workingLevel.grid.w);
         expect(after).toBe(before + 1);
     });
+
+    test('rotate and mirror keep editor geometry and pointer mapping consistent', async ({ page }) => {
+        await enterEditor(page);
+        const before = await page.evaluate(() => {
+            const eng = window.APP.State.ENGINE;
+            const l = eng.editor.workingLevel;
+            const unpack = window.APP.LevelUtils.UNPACK;
+            const firstPortal = [...l.portalMap.entries()][0];
+            return {
+                w: l.grid.w, h: l.grid.h, goal: unpack(l.goalKey),
+                portal: firstPortal ? [unpack(firstPortal[0]), unpack(firstPortal[1].dest)] : null,
+            };
+        });
+
+        await page.locator('#gridRotateBtn').click();
+        await page.locator('#gridMirrorBtn').click();
+
+        const after = await page.evaluate(() => {
+            const eng = window.APP.State.ENGINE;
+            const l = eng.editor.workingLevel;
+            const unpack = window.APP.LevelUtils.UNPACK;
+            const firstPortal = [...l.portalMap.entries()][0];
+            const goal = unpack(l.goalKey);
+            const canvas = window.APP.Renderer.getCanvas();
+            const rect = canvas.getBoundingClientRect();
+            const pointer = {
+                clientX: rect.left + (goal.x + 0.5) * eng.viewport.cellW * (rect.width / canvas.width),
+                clientY: rect.top + (goal.y + 0.5) * eng.viewport.cellH * (rect.height / canvas.height),
+            };
+            return {
+                goal, pointerGoal: window.APP.LevelUtils.getGridCoord(pointer),
+                portal: firstPortal ? [unpack(firstPortal[0]), unpack(firstPortal[1].dest)] : null,
+                mirrorHorizontal: eng.editor.mirrorHorizontal,
+            };
+        });
+
+        const rotate = ({ x, y }) => ({ x: before.h - 1 - y, y: x });
+        const mirror = after.mirrorHorizontal
+            ? ({ x, y }) => ({ x: before.h - 1 - x, y })
+            : ({ x, y }) => ({ x, y: before.w - 1 - y });
+        expect(after.goal).toEqual(mirror(rotate(before.goal)));
+        expect(after.pointerGoal).toEqual(after.goal);
+        if (before.portal) {
+            const expected = before.portal.map(point => mirror(rotate(point)));
+            expect(after.portal).toEqual(expected);
+        }
+    });
 });

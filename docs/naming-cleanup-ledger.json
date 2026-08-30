@@ -1768,7 +1768,7 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "MOVE/UNDO/RESET/level navigation.",
+      "notes": "Specification amendment (2026-08-30): MOVE/UNDO/RESET/LEVEL_* have no production producer or consumer on the audited base; controllers call engine/state ports directly and no command transport exists. Phase 12 must re-census current main and either identify an external retained-API owner or remove these superseded definition/test-only members. Do not create a command bus to make this row live.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },
@@ -1789,7 +1789,7 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "BACKTRACK/PORTAL_TRAVERSE/hazards/WIN/logic state.",
+      "notes": "Specification amendment (2026-08-30): only WIN and LOGIC_STATE_CHANGE are live step events (step-processor producer -> step-dispatcher consumer). BACKTRACK/PORTAL_TRAVERSE/GOOSE_TRIGGERED/FALSE_GOAL_DETONATED are definition/test-only; their live semantics are represented by outcomes or EffectType effects. Migrate the two live events; retain the other names only with an identified API owner, otherwise remove them as superseded.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },
@@ -1810,7 +1810,7 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Match type role.",
+      "notes": "Conditional consumer audit: no production command-typed transport exists on the 2026-08-30 base. Rename only a real command-carrying variable found on implementation-time main; do not introduce one.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },
@@ -1831,7 +1831,7 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "notes": "Match type role.",
+      "notes": "Match type role for the live WIN/LOGIC_STATE_CHANGE producer-consumer path; generic event/command terms outside that path are retained vocabulary.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null
     },

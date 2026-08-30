@@ -17,6 +17,22 @@ test('ActionType values equal their keys', () => {
     }
 });
 
+test('ActionType current vocabulary separates live step events from retained definition-only vocabulary', () => {
+    const liveStepEvents = ['LOGIC_STATE_CHANGE', 'WIN'];
+    const retainedDefinitionOnly = [
+        'MOVE', 'UNDO', 'RESET',
+        'LEVEL_LOAD', 'LEVEL_ADVANCE', 'LEVEL_PREV', 'LEVEL_RESTART',
+        'BACKTRACK', 'PORTAL_TRAVERSE', 'GOOSE_TRIGGERED', 'FALSE_GOAL_DETONATED',
+    ];
+
+    assert.deepEqual(Object.keys(ActionType).sort(), [...liveStepEvents, ...retainedDefinitionOnly].sort());
+    assert.deepEqual(
+        liveStepEvents.map((key) => ActionType[key as keyof typeof ActionType]),
+        ['LOGIC_STATE_CHANGE', 'WIN'],
+        'only these ActionType members currently cross step-processor -> step-dispatcher',
+    );
+});
+
 test('ActionType contains expected navigation constants', () => {
     assert.equal(ActionType.MOVE,      'MOVE');
     assert.equal(ActionType.UNDO,      'UNDO');

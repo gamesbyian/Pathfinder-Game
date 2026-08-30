@@ -7,6 +7,27 @@ import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { planGridResize, computeFalseGoalTriggerRetryBudget, decideFalseGoalTriggerReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
 
+export function applyEditorCoordTransform(
+    { state, ui, engine, levelUtils, editor }: any,
+    l: any, coordMap: any, newW: any, newH: any, axisMap: any, reflect: boolean = false,
+) {
+    editor.saveEditorState();
+    const mapKey = (k: any) => {
+        if (k === -1) return -1;
+        const { x, y } = levelUtils.UNPACK(k);
+        const tp = coordMap(x, y);
+        return levelUtils.PACK(tp.x, tp.y);
+    };
+    levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap, reflect);
+    const eng = state.ENGINE;
+    if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
+    engine.navigation.remapNavKeys(mapKey);
+    engine.hints.clearHintPaths();
+    clearEditorTriggerableFalseGoalCells(state);
+    setEditorModified(state, true);
+    ui.updateViewport();
+}
+
 export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, falseGoalTriggerScan }: any) {
 
     // --- Grid transform orchestration ---
@@ -15,21 +36,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     // engine state mutations (path remapping, rebuild, viewport update).
 
     function applyCoordTransform(l: any, coordMap: any, newW: any, newH: any, axisMap: any, reflect: boolean = false) {
-        editor.saveEditorState();
-        const mapKey = (k: any) => {
-            if (k === -1) return -1;
-            const { x, y } = levelUtils.UNPACK(k);
-            const tp = coordMap(x, y);
-            return levelUtils.PACK(tp.x, tp.y);
-        };
-        levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap, reflect);
-        const eng = state.ENGINE;
-        if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
-        engine.navigation.remapNavKeys(mapKey);
-        engine.hints.clearHintPaths();
-        clearEditorTriggerableFalseGoalCells(state);
-        setEditorModified(state, true);
-        ui.updateViewport();
+        applyEditorCoordTransform({ state, ui, engine, levelUtils, editor }, l, coordMap, newW, newH, axisMap, reflect);
     }
 
     function changeGridSize(delta: any) {

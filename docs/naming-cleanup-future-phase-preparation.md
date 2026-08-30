@@ -504,3 +504,172 @@ until public-facade and persistence ownership are resolved.
 Before any implementation, rerun both old and target searches against the selected batch, inspect
 changes since this audit base, resolve target occupancy, and record every newly added consumer in the
 batch execution record. This audit intentionally leaves the ledger and `activeExecution` untouched.
+
+# Narrow support-gap closure pass (2026-08-30)
+
+This section is the second preparation pass on merge `360f9dab` (PR #1591). It does not supersede
+or repeat the broad census above. No future row was claimed or renamed, and the ledger execution
+state remains unchanged.
+
+## Phase 12 specification amendment and complete member disposition
+
+The runtime trace confirmed that input controllers call grouped engine ports (movement, undo, reset,
+level navigation), which in turn call controllers and state actions directly. `computeStep` is the
+only production `ActionType` producer and `createStepDispatcher` is the only production consumer.
+The dispatcher preserves array order: it applies `LOGIC_STATE_CHANGE` through `setLogicState`, calls
+`onWin` for `WIN`, and delegates `EffectType` descriptors to the effect runner. Browser movement and
+reset therefore exercise the direct controller path, not an `ActionType` command transport.
+
+| Current member | Production producer | Production consumer | Honest disposition before Phase 12 |
+| --- | --- | --- | --- |
+| `MOVE`, `UNDO`, `RESET` | none | none | definition/test-only command-shaped API vocabulary; superseded by engine/controller ports unless an external owner is identified |
+| `LEVEL_LOAD`, `LEVEL_ADVANCE`, `LEVEL_PREV`, `LEVEL_RESTART` | none | none | definition/test-only lifecycle vocabulary; superseded by level/navigation controllers unless an external owner is identified |
+| `BACKTRACK`, `PORTAL_TRAVERSE` | none | none | definition/test-only event-shaped vocabulary; live behavior is a `computeStep` outcome/mutation |
+| `GOOSE_TRIGGERED`, `FALSE_GOAL_DETONATED` | none | none | definition/test-only event-shaped vocabulary; live behavior uses `EffectType` plus outcome/mutation |
+| `LOGIC_STATE_CHANGE` | `computeStep` | step dispatcher | live event; payload-bearing and order-sensitive |
+| `WIN` | `computeStep` | step dispatcher | live event; order-sensitive |
+
+This materially contradicted the old implication that all named commands and events had symmetric
+transports. Section 4.12 and ledger rows NC-P12-001–004 now state the conditional disposition: migrate
+the two live events, and retain definition-only names only if implementation-time current main finds
+a concrete external API owner; otherwise remove superseded definitions. The amendment preserves the
+command/event semantic distinction without inventing a bus. `runtime/actions.test.ts` now pins the
+complete current member set and explicitly identifies the two live step-event discriminators.
+Phase 12 is **specification-ready**, but its execution record must repeat the narrow producer/consumer
+census and record the disposition of each definition-only member before editing.
+
+## Phase 13 boundary evidence
+
+The codec golden now compares canonical fingerprint source across raw input, parsed runtime data
+(re-serialized at the boundary), canonical clone, and wire output. A second test reads one real
+representative from each maintained source (`data/levels.json`, corpus1, corpus2), parses and clones
+it, and verifies both challenge metrics and fingerprint semantics survive. This closes the semantic
+golden and representative-data gaps without introducing future fields.
+
+`npm run check:level-metric-boundaries` now provides the mechanical raw-access inventory. The
+reviewed manifest `docs/naming-cleanup-level-metric-boundaries.json` explicitly lists every current
+non-frozen file as raw/wire boundary, normalized consumer, or `ambiguous/unclassified`; the checker
+rejects new unclassified hits, duplicate ownership, and stale entries. Frozen evidence is counted
+separately rather than copied into the mutable manifest. Script/workflow hits remain explicitly
+ambiguous rather than pretending directory location proves dataflow. Its deliberately failing future mode,
+`node scripts/audit-level-metric-boundaries.mjs --require-normalized-clean`, is the 13B gate: raw
+boundary and frozen hits remain legal while any normalized-runtime raw spelling fails. The exact
+ownership map is allowlist-capable through reviewed manifest entries; 13B must refine the printed
+script list at file-and-context granularity before switching fields. Current ambiguous owners remain
+manual worker/test objects and scripts that alternately consume raw corpus documents and parsed
+levels. The portfolio worker fixture now also sends three otherwise-identical manual raw objects
+through the real parent -> forked worker -> nested race path: the valid metric pair solves, while
+changing only `reqLen` or only `reqInt` makes the same adjacent-goal topology unsatisfiable. This
+behaviorally proves both challenge metrics survive the real transport and constrain the downstream
+solver. Phase 13A is **ready**; refining ambiguous script ownership remains the first 13B execution-
+record task before the atomic switch.
+
+## Phase 11A compatibility and persistence conclusion
+
+The narrowed live search separates runtime orientation targets (`state.ENGINE.variant`, its state
+action, geometry, renderer, input option, level-flow reset/load consumers) from retained terms:
+research level variants, solver technique variants, editor palette variants, and frozen history.
+No persistence repository or session serializer writes runtime `variant`; it is authoritative only
+for the live level-flow state and is reinitialized by state construction. `window.APP.State.ENGINE`
+is intentionally a live-reference debug facade today (`app.test.ts` pins identity), but no published
+compatibility/version contract was found. Phase 11B must migrate that debug exposure atomically with
+the runtime state rather than add a second spelling; documentation should continue to call it debug,
+not persisted API.
+
+Existing geometry and PR-1591 transform/input parity cover the eight transforms. The level-flow
+characterization proves a play load selects the runtime transform, reset preserves it, and editor
+load returns to canonical transform zero. `editor-coordinate-transform.test.ts` now exercises the
+real editor orchestration seam for rotation followed by reflection: navigation path and pending
+portal keys follow the map, portal endpoints remain paired, filter axes rotate, landmark chirality
+is preserved by rotation and reversed by reflection, stale hints/false-goal results clear, and the
+editor/viewport side effects run. `tests/editor.spec.mjs` adds the focused browser flow: it activates
+the real rotate/mirror buttons, checks the transformed goal and portal pair through the debug facade,
+then projects the goal to canvas coordinates and confirms `getGridCoord` maps the pointer back to the
+same cell. Phase 11A is **prepared pending browser execution**; the flow could not execute in this
+container because the Playwright Chromium binary was absent and the browser CDN returned HTTP 403.
+
+## Phase 10B transport conclusion
+
+The current budget model has not superseded the Phase-10 repair/prune mappings. The portfolio worker
+test now supplies a repair-eligible raw fixture and an explicit `repairBudgetFractionOverride` through
+the real parent process -> forked portfolio worker -> nested race worker path. It proves a
+`repair-fallback` attempt is reached and that its reported `allocatedBudgetMs` reflects the supplied
+fraction after dispatch elapsed time. The input object contains neither an alternate sibling nor a
+fabricated legacy field, while the earlier structural assertions still pin both manual reconstruction
+sites. This closes the prior structurally-only limitation without changing allocation policy.
+
+Batch structure should refine 10A into **10A1 repair terminology** and **10A2 prune terminology**:
+they have independent owners and correctness gates. This is a rowless execution-record subdivision,
+not new ledger rows. Keep 10B separate.
+
+## Phase 14 complete facade ownership map
+
+Every `core.ts` return member has an explicit destination:
+
+| Members | Post-facade owner |
+| --- | --- |
+| `$` | browser/UI consumer-local DOM lookup adapter |
+| `AXIS`, `H`, `V`, `NONE`; `MODES`, `PLAY`, `EDITOR`, `REVIEW`; `LogicStatus` and destructured statuses; `OverlayStatus` and destructured statuses | direct application constants import |
+| `DEV` | application/composition-root configuration; delete if the closeout census confirms no consumer |
+| `SOUND_BUS` | composition-root audio service dependency; mute provider and unlock/error behavior remain adapter contracts |
+| `deepClone` | direct pure helper import or native clone at the owning application consumer; not an audio/constants concern |
+
+Every `level-utils.ts` return member is classified below:
+
+| Members | Post-facade owner |
+| --- | --- |
+| `PACK`, `UNPACK`, `inBounds` | direct `domain/cell-key` import |
+| `expCoords`, `resolvePortal`, `getPortalDisplayColor`, `hasParitySwitchingPortal`, `getParityInvalidKeys` | direct `domain/portal-utils` import |
+| `transformPoint`, `inverseTransformPoint`, `transformAxis` | direct `domain/geometry` import, atomically coordinated with Phase 11 |
+| `canonicalCloneLevel`, `deepCloneLevel`, `cloneLevelWithReq`, `denormalizeLevel`, `getLevelBounds`, `assertLevelShape`, `normalizeMetadata`, `processRawLevel` | direct `domain/level-codec` import, coordinated with Phase 13 boundary ownership |
+| `isValidMove` | direct `domain/move-rules` import |
+| `getGridCoord` | browser/input adapter (canvas + viewport + active-state + inverse-transform dependency) |
+| `normalizeLevel`, `getRawLevels` | application data-loading service (data port, validation reporting, parsing/freezing policy) |
+| `shiftLevelCoords`, `applyCoordMapToLevel` | editor application adapter over domain remapping; preserves hint clearing, axes, and chirality |
+
+`activeLevel`/mutable current-level access is a state/controller concern and must not be pushed into
+browser-free domain code. `pendingAction` is not persisted: it stores a callback in runtime memory,
+and the real facade test pins set/execute/explicit-clear identity and lifecycle. `publicDrawPath` is
+the renderer's state-bound adapter around the separate pure `render/draw-path.ts` function; the
+public port remains `drawPath`, so the two are distinct contracts. `window.APP.State.ENGINE` is a
+live debug convenience intentionally exposed by current code/tests, not a serialized compatibility
+surface; Phase 14 still needs an explicit remove-or-migrate decision rather than an alias.
+
+Split 14C as **14C1** (local `HinterState`, renderer adapter helper, pending callback) and **14C2**
+(the atomic `ENGINE` state/action/controller/render/debug surface). Keep 14A and 14B separate because
+the latter is blocked on application-adapter destinations, and keep 14D rowless closeout. Phase 14A
+and pure portions of 14B are ownership-ready. `core.test.ts` now pins the current audio adapter's
+mute-before-synth behavior and its one-shot pointer/keyboard/touch unlock registration without
+changing audio ownership. `tests/security.spec.mjs` adds the public debug-facade reset smoke: the
+live `ENGINE` object retains identity, the level reloads, runtime transform is preserved, reset
+streak advances, and navigation is cleared. Like the Phase-11 browser flow, it awaits execution in
+an environment with the Playwright Chromium binary.
+
+## Phase 9 workflow conclusion
+
+Phase 9 remains low risk, but `stress:benchmark:raced` is a distinct package identity rather than an
+automatic member of the main corpus naming row. The enrolled
+`naming-cleanup-phase9-command-smoke-node-test.mjs` pins all four current package identities and
+invokes the real `solver:speed-probe` npm alias with a zero-work temporary report, proving package ->
+bundled runner -> writer execution without solver cost. The existing combiner node test already
+provides temporary synthetic shard writer -> combiner -> report-reader execution. The future record
+must still enumerate workflow-local inline shell/JavaScript paths explicitly; structural workflow
+checks do not prove remote semantic argument/output agreement. No workflow semantics or aliases were
+changed in this pass.
+
+## Updated cross-phase status
+
+| Phase | Readiness | Remaining blocker | New guardrail | Risk after prep |
+| --- | --- | --- | --- | --- |
+| 9 | mechanically prepared | implementation-time inline workflow reconciliation | real npm invocation, distinct-identity ratchet, synthetic combiner flow | low |
+| 10 | 10A ownership-ready; 10B behaviorally prepared | implementation-time current-main reconciliation | real worker-hop allocation proof; recommend 10A1 repair / 10A2 prune separation | medium-low |
+| 11 | prepared pending browser execution | run the checked-in focused flow where Chromium is available | load/reset, editor path/portal/axis/chirality, and render/input browser flow | medium |
+| 12 | specification-ready | implementation-time dead-member API-owner census | amended plan/ledger plus exact member-set ratchet | medium-low |
+| 13 | 13A ready, not switch-ready | script-hit refinement before atomic 13B | fingerprint golden, three real-data families, raw-access checker, real worker metric fixture | highest |
+| 14 | ownership-ready pending browser execution | application-adapter extraction design and run checked-in debug smoke | facade maps, audio behavior, debug reset flow, 14C1/14C2 split | medium-high |
+
+Preparation gates remain rowless: they are prerequisites and execution-record evidence, not fake
+implementation ledger rows. None forces an atomic grouping beyond Phase 11 runtime state/render/input,
+Phase 13's two normalized metrics, and Phase 14C2's `ENGINE` graph. At implementation time every
+batch must rerun target occupancy and consumer searches, cite its immutable row IDs, and preserve the
+serialization state reported by `npm run naming:status`.
