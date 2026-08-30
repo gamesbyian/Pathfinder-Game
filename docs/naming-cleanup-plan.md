@@ -866,7 +866,7 @@ Rename surfaced tools according to Section 2.6 when touched by this cleanup:
 - isolated technique execution -> run;
 - diagnostic bounded samplers may retain `probe`.
 
-In particular, `repair-direct-probe.mjs` is isolated technique execution rather than a diagnostic sampler. Rename it to `run-repair-search.mjs`, and rename `repair-direct-probe-worker.mjs` to `run-repair-search-worker.mjs`. Update current documentation/reproduction commands together.
+In particular, former repair-direct-probe.mjs was isolated technique execution rather than a diagnostic sampler. Renamed to `run-repair-search.mjs`, and former repair-direct-probe-worker.mjs to `run-repair-search-worker.mjs` (implemented by batch 8C). Update current documentation/reproduction commands together.
 
 Do not perform blind filename replacement across cold historical scripts. The surfaced-tool inventory in `docs/tooling-catalog.md`, `scripts/README.md`, `.github/workflows/README.md`, and `package.json` is the required migration scope.
 
@@ -878,11 +878,11 @@ The following commands are already surfaced and therefore are no longer unnamed/
 |---|---|
 | former `stress/winning-lineage-pilot.mjs` / solver:winning-lineage-pilot | `stress/collect-known-solution-prefix-survival.mjs` / `solver:collect-known-solution-prefix-survival` |
 | former `stress/winning-prefix-atlas-pilot.mjs` / solver:winning-prefix-atlas-pilot | `stress/collect-known-solution-prefix-branches.mjs` / `solver:collect-known-solution-prefix-branches` |
-| `stress/producer-population-pilot.mjs` / `solver:producer-population-pilot` | `stress/compare-search-producer-populations.mjs` / **solver:compare-search-producer-populations** |
-| `stress/residual-interface-mining-pilot.mjs` / `solver:residual-interface-pilot` | `stress/analyze-residual-interfaces.mjs` / **solver:analyze-residual-interfaces** |
-| `stress/repair-rollback-census-pilot.mjs` / `solver:repair-rollback-pilot` | `stress/census-repair-rollback-windows.mjs` / **solver:census-repair-rollback-windows** |
-| `stress/symmetry-repair-seed-pilot.mjs` / `solver:symmetry-repair-seed-pilot` | `stress/compare-symmetry-repair-seed.mjs` / **solver:compare-symmetry-repair-seed** |
-| `stress/restart-continuation-population-pilot.mjs` | `stress/compare-repair-restart-continuation-population.mjs` |
+| former `stress/producer-population-pilot.mjs` / solver:producer-population-pilot | `stress/compare-search-producer-populations.mjs` / `solver:compare-search-producer-populations` |
+| former `stress/residual-interface-mining-pilot.mjs` / solver:residual-interface-pilot | `stress/analyze-residual-interfaces.mjs` / `solver:analyze-residual-interfaces` |
+| former `stress/repair-rollback-census-pilot.mjs` / solver:repair-rollback-pilot | `stress/census-repair-rollback-windows.mjs` / `solver:census-repair-rollback-windows` |
+| former `stress/symmetry-repair-seed-pilot.mjs` / solver:symmetry-repair-seed-pilot | `stress/compare-symmetry-repair-seed.mjs` / `solver:compare-symmetry-repair-seed` |
+| former `stress/restart-continuation-population-pilot.mjs` | `stress/compare-repair-restart-continuation-population.mjs` |
 | `stress/analyze-equal-work-census-pilot.mjs` | `stress/analyze-equal-work-census.mjs` |
 
 The restart/continuation tool is not currently a package alias, but it is active durable research machinery referenced by current decision documents, so its lifecycle label is still inappropriate. Historical report filenames containing `pilot` remain frozen.
@@ -910,7 +910,7 @@ Canonical live mappings:
 | local `TROVE_BRANCH` | `VARIANT_FAMILY_DATASET_BRANCH` |
 | `.github/workflows/audit-export.yml` | `.github/workflows/solver-diagnostics.yml` |
 | workflow display "Audit Export" | "Solver diagnostics and hint capture" |
-| `stress/confirm-residual-001-archetype-audit.mjs` | `stress/audit-candidate-eligibility-and-participation.mjs` |
+| former `stress/confirm-residual-001-archetype-audit.mjs` | `stress/audit-candidate-eligibility-and-participation.mjs` |
 | `stress/select-repair-probe-adaptive-sample.mjs` | `stress/select-early-repair-search-adaptive-sample.mjs` |
 | `stress/repair-probe-badness-report.mjs` | `stress/early-repair-search-badness-report.mjs` |
 | `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml` | `.github/workflows/solver-early-repair-search-adaptive-sample-ab.yml` |

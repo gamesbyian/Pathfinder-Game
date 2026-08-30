@@ -75,9 +75,9 @@ assert.equal(JSON.parse(readFileSync(schedulerOut, 'utf8')).levels.length, 0);
 // Research collectors that can take an empty corpus. This loads their real solver/bundler seams
 // while performing no search work.
 for (const [script, outName] of [
-  ['scripts/stress/producer-population-pilot.mjs', 'producer.json'],
-  ['scripts/stress/repair-rollback-census-pilot.mjs', 'rollback.json'],
-  ['scripts/stress/residual-interface-mining-pilot.mjs', 'residual.json'],
+  ['scripts/stress/compare-search-producer-populations.mjs', 'producer.json'],
+  ['scripts/stress/census-repair-rollback-windows.mjs', 'rollback.json'],
+  ['scripts/stress/analyze-residual-interfaces.mjs', 'residual.json'],
   ['scripts/stress/collect-known-solution-prefix-survival.mjs', 'known-solution-prefix-survival.json'],
   ['scripts/stress/collect-known-solution-prefix-branches.mjs', 'known-solution-prefix-branches.json'],
 ]) {
@@ -89,13 +89,13 @@ for (const [script, outName] of [
 // Argument-validation exits still prove the surfaced CLI and its static/bundled imports load
 // without launching an expensive research campaign.
 expectFastFailure(
-  'scripts/repair-direct-probe.mjs',
+  'scripts/run-repair-search.mjs',
   [],
   /--level=<n> is required/u,
   true,
 );
 expectFastFailure(
-  'scripts/stress/confirm-residual-001-archetype-audit.mjs',
+  'scripts/stress/audit-candidate-eligibility-and-participation.mjs',
   [],
   /Usage: --pool=<path> --phase1-report=<path>/u,
   true,

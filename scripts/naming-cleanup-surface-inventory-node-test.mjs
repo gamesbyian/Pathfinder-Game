@@ -40,7 +40,7 @@ assert.equal(hintValidator.ciDirectAliases.length, 0);
 assert.ok(hintValidator.ciTestReferences.length > 0);
 
 const restartComparison = inventory.scripts.find(
-  row => row.file === 'scripts/stress/restart-continuation-population-pilot.mjs',
+  row => row.file === 'scripts/stress/compare-repair-restart-continuation-population.mjs',
 );
 assert.ok(restartComparison, 'Phase-8 inventory should map restart-continuation population tool');
 assert.equal(
@@ -50,7 +50,7 @@ assert.equal(
 );
 assert.ok(
   restartComparison.ciTestReferences.includes(
-    'scripts/stress/restart-continuation-population-pilot-cli-node-test.mjs',
+    'scripts/stress/compare-repair-restart-continuation-population-cli-node-test.mjs',
   ),
 );
 

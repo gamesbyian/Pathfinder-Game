@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Observation-only beam-survivor versus repair-elite population pilot. */
+/** Observation-only beam-survivor versus repair-elite search producer population comparison. */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
@@ -13,7 +13,7 @@ const levelsFile = args.get('--levels') ?? 'data/stress/stress-levels-random.jso
 const limit = Number(args.get('--limit-levels') ?? 3);
 const nodeBudget = Number(args.get('--node-budget') ?? 30000);
 const beamWidth = Number(args.get('--beam-width') ?? 100);
-const outFile = args.get('--out') ?? 'reports/stress/producer-population-pilot.json';
+const outFile = args.get('--out') ?? 'reports/stress/compare-search-producer-populations.json';
 const includeArtifacts = args.has('--include-artifacts');
 // Deterministic stratified draw (2026-08-13, reports/2026-08-11-beam-repair-producer-population-
 // pilot.md's own "one bounded, stratified follow-up" ask -- the original pilot took only the first

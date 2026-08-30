@@ -207,7 +207,7 @@ Complete-mode Find-all alone uses this pool; targeted tiers stay main-thread. Se
 | `solver:direct` | sequential | few-level debugging |
 | `solver:req-length-sweep` | sequential | controlled `reqLen` scaling |
 | `portfolio-solve-sweep.mjs` | configurable/resumable | repeated hard-population iteration |
-| `repair-direct-probe.mjs` | direct repair | repair-only; bypasses ladder |
+| `run-repair-search.mjs` | direct repair | repair-only; bypasses ladder |
 
 Across-level `--parallel` may beat within-level racing for mostly-fast levels; do not combine them in `stress:benchmark`. Long batch tools must persist per-level progress: benchmark partial output/`--skip-existing-dir`; portfolio JSONL/`--resume`. Use the cheapest population/budget that decides the gate; do not time competing CPU-bound arms concurrently.
 
@@ -234,7 +234,7 @@ Tools: `solver:portfolio-report`, `solver:portfolio-replay`, `portfolio-solve-sw
 
 `REPAIR_EXTRA_BUDGET_FRACTION = 6.0`; 30 s can add 180 s. `--node-budget` / top-level `repairBudgetFractionOverride` control it. Corpus1: fraction 0 cut ~51 -> ~18 min while losing six 35–115 s solves. **Testing/benchmarking uses 0; hint discovery keeps 6×; interactive 30 s UIs use 0.** Keep the override outside sparse `ablation`.
 
-`repair-direct-probe.mjs` calls `repairSearchFromGate` directly; `--races=N` runs salted restarts, `seedSalt` default 0. `--work-budget=<n>` instead runs `restart-continuation-harness.ts`'s equal-canonical-`workSpent` continuation-vs-restart comparison (seed 0 to `n`, versus seed 0 to `n/2` then, only on failure, fresh seed 1 for the remainder) — see [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) item 0 and the 2026-08-24 restart-continuation-value audit; mutually exclusive with `--races`.
+`run-repair-search.mjs` calls `repairSearchFromGate` directly; `--races=N` runs salted restarts, `seedSalt` default 0. `--work-budget=<n>` instead runs `restart-continuation-harness.ts`'s equal-canonical-`workSpent` continuation-vs-restart comparison (seed 0 to `n`, versus seed 0 to `n/2` then, only on failure, fresh seed 1 for the remainder) — see [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) item 0 and the 2026-08-24 restart-continuation-value audit; mutually exclusive with `--races`.
 
 ## Memory / hot path
 

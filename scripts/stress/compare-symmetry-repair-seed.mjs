@@ -17,7 +17,7 @@ const variantId = args.get('--variant-id') ?? 'F02248-sym-02';
 const researchSeed = Number(args.get('--research-seed') ?? 12345);
 const nodeBudget = Number(args.get('--node-budget') ?? 100000);
 const recordLimit = Number(args.get('--record-limit') ?? 2000);
-const outFile = args.get('--out') ?? 'reports/stress/symmetry-repair-seed-pilot.json';
+const outFile = args.get('--out') ?? 'reports/stress/compare-symmetry-repair-seed.json';
 const levelsOf = file => { const x = JSON.parse(readFileSync(file, 'utf8')); return Array.isArray(x) ? x : x.levels; };
 
 const manifest = JSON.parse(readFileSync(manifestFile, 'utf8'));

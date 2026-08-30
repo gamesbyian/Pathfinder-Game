@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Reproduces repair-rollback-census-pilot.mjs's exact elite selection (same inputs, same
+/** Reproduces census-repair-rollback-windows.mjs's exact elite selection (same inputs, same
  * deterministic output) but also dumps full packed-key paths (gate first) so prefixes can be
  * sliced at arbitrary depths for exact-minimum-rollback CP-SAT binary search (item C in
  * docs/claude-remote-solver-handoff.md). Output is local working data, not a committed artifact —
@@ -19,7 +19,7 @@ const nodeBudget = Number(args.get('--node-budget') ?? 30000);
 const eliteLimit = Number(args.get('--limit-elites') ?? 5);
 const outFile = args.get('--out') ?? '/tmp/elite-paths.json';
 // Direct id selection (2026-08-13, repair-retreat CP-SAT broadening): lets a caller who already
-// identified specific interesting levels/elites from repair-rollback-census-pilot.mjs's own output
+// identified specific interesting levels/elites from census-repair-rollback-windows.mjs's own output
 // (e.g. smallest rollbackSteps, or a specific mechanic profile) dump exactly those paths, instead of
 // re-running repair search over every file-order level up to an arbitrary --limit-levels just to
 // reach the ones that matter. Overrides --limit-levels entirely when present.
