@@ -4213,5 +4213,17 @@
     "recordPath": null,
     "notes": "No Phase-8 implementation batch has started. Claim exactly one batch and create its checked-in execution record before changing canonical names."
   },
-  "specificationNotes": "Completion contract v4 adds stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity."
+  "specificationNotes": "Completion contract v4 adds stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence.",
+  "phaseBatches": {
+    "8": [
+      "8A",
+      "8B",
+      "8C",
+      "8D",
+      "8E",
+      "8F",
+      "8G",
+      "8H"
+    ]
+  }
 }
