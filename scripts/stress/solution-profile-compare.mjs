@@ -90,7 +90,7 @@ function loadPool(files, bucket) {
         for (const levelEntry of parsed.levels || []) {
             const profile = bucket === 'combined' ? levelEntry.combined : levelEntry.bySource?.[bucket];
             if (!profile || profile.insufficientData) continue;
-            pool.push({ id: `${corpusTag}#${levelEntry.level}`, profile });
+            pool.push({ id: `${corpusTag}#${levelEntry.level}`, solutionProfile: profile });
         }
     }
     return pool;
@@ -121,13 +121,13 @@ function buildTargetProfile(levels, levelNumber) {
     if (level.hintRecords && level.hintRecords.length) {
         return {
             source: `${level.hintRecords.length} mined hint(s)`,
-            profile: buildBucketProfile(level.hintRecords, level, objectives, mcKeys, useCrossings),
+            solutionProfile: buildBucketProfile(level.hintRecords, level, objectives, mcKeys, useCrossings),
         };
     }
     const witnessPairs = level.stressMeta?.witnessSolution;
     if (Array.isArray(witnessPairs) && witnessPairs.length) {
         const path_ = witnessPairs.map(([x, y]) => PACK(x - 1, y - 1));
-        return { source: 'hidden witness (single path — no mined corpus yet)', profile: buildSinglePathProfile(path_, level) };
+        return { source: 'hidden witness (single path — no mined corpus yet)', solutionProfile: buildSinglePathProfile(path_, level) };
     }
     throw new Error(`Level ${levelNumber} has neither mined hints nor a stressMeta.witnessSolution to profile.`);
 }
@@ -141,7 +141,7 @@ function main() {
     const targetLevelsPath = path.resolve(ROOT, TARGET_LEVELS_JSON);
     const targetLevels = readLevelsWithHints(targetLevelsPath);
     const targetPosition = resolveTargetPosition(targetLevels, TARGET_LEVEL_SPEC);
-    const { source, profile: targetProfile } = buildTargetProfile(targetLevels, targetPosition);
+    const { source, solutionProfile: targetProfile } = buildTargetProfile(targetLevels, targetPosition);
     const pool = loadPool(LIBRARY_FILES, BUCKET);
     if (!pool.length) {
         console.error('No usable library entries found — run `npm run stress:solution-profile` for each corpus first.');

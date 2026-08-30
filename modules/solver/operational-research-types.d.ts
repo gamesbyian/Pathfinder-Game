@@ -10,12 +10,12 @@ declare module './types.js' {
     export interface OrderingResearchPolicy {
         id: string;
         /** null means the true no-soft-tie-break admissible ordering; DFS ignores null policies. */
-        profile: ScoringProfile | null;
+        scoringProfile: ScoringProfile | null;
         orderingBias?: StructuralOrderingBias | null;
     }
 
     export interface OrderingResearchRecord {
-        family: 'dfs' | 'admissible-order';
+        searchFamily: 'dfs' | 'admissible-order';
         depth: number;
         candidates: number[];
         rankings: { policyId: string; order: number[]; scores: number[] }[];

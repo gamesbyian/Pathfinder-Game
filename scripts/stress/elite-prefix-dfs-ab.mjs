@@ -17,7 +17,7 @@ import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 export function buildFlipRecord(id, onResult, offResult, nodesOn, nodesOff, repairConfig) {
     return {
         id: id ?? '(no id)', solvedOn: !!onResult.path, solvedOff: !!offResult.path, nodesOn, nodesOff,
-        profile: repairConfig.scoringProfileId,
+        scoringProfile: repairConfig.scoringProfileId,
     };
 }
 

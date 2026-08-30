@@ -126,7 +126,7 @@ function summarizeOrdering(records, observed) {
             // their soft scores would silently discard the primary slack ordering. Encode their
             // already-observed final order as ordinal scores for the generic order reducer.
             const scoreByCandidate = ranking => new Map(ranking.order.map((id, index) =>
-                [id, record.family === 'admissible-order' ? ranking.order.length - index : ranking.scores[index]]));
+                [id, record.searchFamily === 'admissible-order' ? ranking.order.length - index : ranking.scores[index]]));
             const aScores = scoreByCandidate(a), bScores = scoreByCandidate(b);
             return compareSiblingRankings(record.candidates.map(id => ({ id, score: aScores.get(id) })),
                 record.candidates.map(id => ({ id, score: bScores.get(id) })));
@@ -149,7 +149,7 @@ function summarizeOrdering(records, observed) {
                 scoringWeightDecomposition: firstRecord.pairwiseDivergences?.find(row =>
                     row.leftPolicyId === left && row.rightPolicyId === right) ?? null } : null });
     }
-    const admissible = records.filter(record => record.family === 'admissible-order' && record.admissibleSlack);
+    const admissible = records.filter(record => record.searchFamily === 'admissible-order' && record.admissibleSlack);
     const slackTieCounts = admissible.map(record => {
         let ties = 0;
         for (let i = 0; i < record.admissibleSlack.length; i++) for (let j = i + 1; j < record.admissibleSlack.length; j++)
@@ -218,7 +218,7 @@ async function probeLevel(entry) {
     const orderingRecords = [];
     let orderingObserved = 0;
     if (ORDERING_PROFILES.length) prep._orderingResearchObserver = {
-        policies: ORDERING_PROFILES.map(id => ({ id, profile: id === 'none' ? null : SCORING_PROFILES[id] })),
+        policies: ORDERING_PROFILES.map(id => ({ id, scoringProfile: id === 'none' ? null : SCORING_PROFILES[id] })),
         observe(record) { if (record.candidates.length >= 2) { orderingObserved++; if (orderingRecords.length < ORDERING_LIMIT) orderingRecords.push(record); } },
     };
 

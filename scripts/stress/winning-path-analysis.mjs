@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Winning-path archaeology — an early local-child-rank evidence tool. Current known-solution-prefix
+ * Winning-path analysis — an early local-child-rank evidence tool. Current known-solution-prefix
  * survival instrumentation and follow-up methodology live in docs/solver-known-solution-prefix-survival.md.
  *
  * WHAT THIS MEASURES: for each sampled level with a known, PLAY-valid winning path (a stored hint,
@@ -32,9 +32,9 @@
  * Persists --out after every level, following scripts/README.md's long-batch persistence rule.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/stress/winning-path-archaeology.mjs -- \
+ *   node scripts/run-bundled.mjs scripts/stress/winning-path-analysis.mjs -- \
  *     --corpus=data/stress/stress-levels-random.json --count=40 --seed=1 \
- *     --out=logs/winning-path-archaeology/corpus2-sample.json
+ *     --out=logs/winning-path-analysis/corpus2-sample.json
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -83,7 +83,7 @@ for (let i = shuffled.length - 1; i > 0; i--) {
 }
 const sample = shuffled.slice(0, COUNT);
 
-console.log(`winning-path-archaeology: ${sample.length} level(s) sampled from ${eligible.length} eligible (of ${corpusLevels.length} total), seed=${SEED}.`);
+console.log(`winning-path-analysis: ${sample.length} level(s) sampled from ${eligible.length} eligible (of ${corpusLevels.length} total), seed=${SEED}.`);
 
 const results = [];
 
@@ -173,7 +173,7 @@ function summarizeBucket(bucket) {
 
 const solvedBucket = results.filter(r => r.coldSolved === true);
 const unsolvedBucket = results.filter(r => r.coldSolved === false);
-console.log(`\nwinning-path-archaeology summary (${results.length} levels: ${solvedBucket.length} cold-solved, ${unsolvedBucket.length} cold-unsolved at ${COLD_SOLVE_TIME_BUDGET_MS}ms/${COLD_SOLVE_WORK_BUDGET} nodes):`);
+console.log(`\nwinning-path-analysis summary (${results.length} levels: ${solvedBucket.length} cold-solved, ${unsolvedBucket.length} cold-unsolved at ${COLD_SOLVE_TIME_BUDGET_MS}ms/${COLD_SOLVE_WORK_BUDGET} nodes):`);
 console.log('  cold-solved bucket:  ', JSON.stringify(summarizeBucket(solvedBucket)));
 console.log('  cold-unsolved bucket:', JSON.stringify(summarizeBucket(unsolvedBucket)));
 

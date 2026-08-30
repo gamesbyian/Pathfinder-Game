@@ -300,7 +300,7 @@ test('nearestProfiles: ranks the closer pool entry first and attaches a per-axis
     const candidate = buildSinglePathProfile([p(0, 0), p(1, 0), p(2, 0), p(3, 0), p(4, 0)], level);
     const near = buildSinglePathProfile([p(0, 0), p(1, 0), p(2, 0), p(3, 0)], level);
     const far = buildSinglePathProfile([p(0, 0), p(0, 0)], { grid: { w: 1, h: 1 }, mustPass: [], mustCross: [], landmarks: [] });
-    const results = nearestProfiles(candidate, [{ id: 'far', profile: far }, { id: 'near', profile: near }], 2);
+    const results = nearestProfiles(candidate, [{ id: 'far', solutionProfile: far }, { id: 'near', solutionProfile: near }], 2);
     assert.equal(results[0].id, 'near');
     assert.ok('cellFootprint' in results[0].terms);
 });

@@ -9,7 +9,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { fingerprint, mergeNewHints, normalizeLevel, makeLevelIdMinter, hasProvenance, ensureProvenance } from './import-published-levels.mjs';
+import { levelFingerprint, mergeNewHints, normalizeLevel, makeLevelIdMinter, hasProvenance, ensureProvenance } from './import-published-levels.mjs';
 
 const rawLevel = (overrides = {}) => ({
   grid: { w: 5, h: 5 },
@@ -27,45 +27,45 @@ const rawLevel = (overrides = {}) => ({
 // private stableStringify comparison, which treated a landmark-only raw level and its
 // canonical export (landmark + the landmark's own derived block/mustPass cell) as
 // DIFFERENT levels — so re-importing an already-bundled landmark level would have been
-// appended as a duplicate instead of merging its new hints. The shared domain fingerprint
+// appended as a duplicate instead of merging its new hints. The shared domain levelFingerprint
 // (v2) canonicalizes by mechanics and considers them the same.
-test('fingerprint matches a landmark-only level against its canonical form with the derived block', () => {
+test('levelFingerprint matches a landmark-only level against its canonical form with the derived block', () => {
   const landmarkOnly = rawLevel({ landmarks: [{ x: 3, y: 3, objectType: 'park', role: 'surround' }] });
   const canonicalForm = rawLevel({
     blocks: [{ x: 3, y: 3 }],
     landmarks: [{ x: 3, y: 3, objectType: 'park', role: 'surround' }],
   });
-  assert.equal(fingerprint(landmarkOnly), fingerprint(canonicalForm));
+  assert.equal(levelFingerprint(landmarkOnly), levelFingerprint(canonicalForm));
 });
 
-test('fingerprint matches a must-turn landmark-only level against its canonical form with the derived must-pass', () => {
+test('levelFingerprint matches a must-turn landmark-only level against its canonical form with the derived must-pass', () => {
   const landmarkOnly = rawLevel({ landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurn', turn: 'ccw' }] });
   const canonicalForm = rawLevel({
     mustPass: [{ x: 2, y: 2 }],
     landmarks: [{ x: 2, y: 2, objectType: 'library', role: 'mustTurnCcw' }],
   });
-  assert.equal(fingerprint(landmarkOnly), fingerprint(canonicalForm));
+  assert.equal(levelFingerprint(landmarkOnly), levelFingerprint(canonicalForm));
 });
 
-test('fingerprint still distinguishes a plain block from a landmark at the same cell', () => {
+test('levelFingerprint still distinguishes a plain block from a landmark at the same cell', () => {
   const plainBlock = rawLevel({ blocks: [{ x: 3, y: 3 }] });
   const landmarkBlock = rawLevel({
     blocks: [{ x: 3, y: 3 }],
     landmarks: [{ x: 3, y: 3, objectType: 'park', role: 'surround' }],
   });
-  assert.notEqual(fingerprint(plainBlock), fingerprint(landmarkBlock));
+  assert.notEqual(levelFingerprint(plainBlock), levelFingerprint(landmarkBlock));
 });
 
-test('fingerprint ignores hints/designerName/description/difficulty', () => {
+test('levelFingerprint ignores hints/designerName/description/difficulty', () => {
   const a = rawLevel({ hints: [[1, 2, 3]], designerName: 'Alice', description: 'x', difficulty: 5 });
   const b = rawLevel({ hints: [[4, 5]], designerName: 'Bob', description: 'y', difficulty: 1 });
-  assert.equal(fingerprint(a), fingerprint(b));
+  assert.equal(levelFingerprint(a), levelFingerprint(b));
 });
 
-test('fingerprint differs for a genuinely different structural level', () => {
+test('levelFingerprint differs for a genuinely different structural level', () => {
   const a = rawLevel({ reqLen: 8 });
   const b = rawLevel({ reqLen: 9 });
-  assert.notEqual(fingerprint(a), fingerprint(b));
+  assert.notEqual(levelFingerprint(a), levelFingerprint(b));
 });
 
 // --- normalizeLevel ---

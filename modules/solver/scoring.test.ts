@@ -87,9 +87,9 @@ test('ordering research observer compares profiles and ordering biases without c
   const records: import('./types.js').OrderingResearchRecord[] = [];
   prep._orderingResearchObserver = {
     policies: [
-      { id: 'base', profile: SCORING_PROFILES.default },
-      { id: 'orderingBias', profile: SCORING_PROFILES.default, orderingBias: STRUCTURAL_ORDERING_BIASES.perimeterCW },
-      { id: 'must-cross', profile: SCORING_PROFILES.mustCrossFirst },
+      { id: 'base', scoringProfile: SCORING_PROFILES.default },
+      { id: 'orderingBias', scoringProfile: SCORING_PROFILES.default, orderingBias: STRUCTURAL_ORDERING_BIASES.perimeterCW },
+      { id: 'must-cross', scoringProfile: SCORING_PROFILES.mustCrossFirst },
     ],
     observe: record => records.push(record),
   };
@@ -110,8 +110,8 @@ test('ordering divergence contribution sum reproduces the ordinary score-margin 
   const records: import('./types.js').OrderingResearchRecord[] = [];
   prep._orderingResearchObserver = {
     policies: [
-      { id: 'objective', profile: SCORING_PROFILES.objectiveFirst },
-      { id: 'intersection', profile: SCORING_PROFILES.intersectionHarvest },
+      { id: 'objective', scoringProfile: SCORING_PROFILES.objectiveFirst },
+      { id: 'intersection', scoringProfile: SCORING_PROFILES.intersectionHarvest },
     ],
     observe: record => records.push(record),
   };
