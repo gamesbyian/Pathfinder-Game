@@ -17,9 +17,18 @@ const args = new Map(
   }),
 );
 
+if (args.has('--help')) {
+  console.log('Usage: npm run naming:status -- [--phase=N] [--batch=8A] [--json]');
+  process.exit(0);
+}
+
 const phaseFilter = args.has('--phase') ? Number(args.get('--phase')) : null;
 const batchFilter = args.get('--batch') || null;
 const json = args.has('--json');
+if (phaseFilter !== null && (!Number.isInteger(phaseFilter) || phaseFilter < 1)) {
+  console.error('--phase must be a positive integer');
+  process.exit(2);
+}
 
 const rows = ledger.entries ?? [];
 const future = rows.filter(row => row.phase >= 8);
@@ -63,6 +72,10 @@ if (ledger.activeExecution?.status === 'active') {
 let selected = future;
 if (phaseFilter !== null) selected = selected.filter(row => row.phase === phaseFilter);
 if (batchFilter) selected = selected.filter(row => row.batch === batchFilter);
+if (batchFilter && selected.length === 0) {
+  console.error(`No naming-cleanup ledger rows match --batch=${batchFilter}${phaseFilter !== null ? ` in Phase ${phaseFilter}` : ''}`);
+  process.exit(2);
+}
 
 const nextScope = future.filter(row =>
   row.phase === nextPhase &&
