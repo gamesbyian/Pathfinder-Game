@@ -142,11 +142,6 @@ For `temporary-command-alias`, the old alias must be gone by owning phase closeo
 
 For a high-risk batch, state the rollback unit before implementation. Prefer reverting the whole atomic batch over partial restoration of old/new names. Identify any compatibility reader or raw-wire invariant that must survive a revert.
 
-| Legacy form | Canonical form | Owning boundary | Legacy read test | Canonical single-write test | Frozen artifacts intentionally unchanged |
-| --- | --- | --- | --- | --- | --- |
-| | | | | | |
-
-Do not duplicate legacy maps in sibling consumers.
 
 ## 5. Before-change baseline
 
@@ -216,7 +211,6 @@ Record:
 
 - reconciliation mode used (delta/full), base/reconciliation SHA, and why that level was sufficient;
 - target-occupancy result for every canonical target;
-
 - legacy-term/residue searches;
 - canonical-term searches;
 - phase-aware surface inventory after implementation;
