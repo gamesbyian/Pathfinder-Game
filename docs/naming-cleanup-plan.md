@@ -317,7 +317,7 @@ Current docs may say, for example, "`ida:default` (legacy; canonical form `admis
 
 | Mode | Retirement | Meaning |
 | --- | --- | --- |
-| `temporary-command-alias` | `owning-phase-closeout` | old package/CLI spelling exists only while live repo callers/docs/workflows migrate; it must not survive phase closeout |
+| `temporary-command-alias` | `owning-batch-closeout` when batched, otherwise `owning-phase-closeout` | old package/CLI spelling exists only while live repo callers/docs/workflows migrate; do not carry it into unrelated later batches |
 | `permanent-historical-read` | `never` | frozen artifacts may contain the old value indefinitely; current internal form/writers remain canonical |
 | `external-config-transition` | `phase-15-review` | old environment/config spelling may exist outside git; current docs/workflows prefer canonical immediately, final cleanup decides whether evidence supports removal |
 | `wire-format-retained` | `never` | old spelling is intentionally still the raw serialized wire contract while normalized/runtime code uses canonical expanded names |
@@ -1060,7 +1060,7 @@ For Phase 8 onward, completion contract v4 adds durable execution evidence and e
   "verificationRecord": null,
   "compatibility": {
     "mode": "temporary-command-alias",
-    "retireWhen": "owning-phase-closeout",
+    "retireWhen": "owning-batch-closeout",
     "owner": "package.json compatibility alias"
   },
   "verification": {
