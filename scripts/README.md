@@ -10,6 +10,7 @@ Before opening large evidence/data files:
 
 - research/experiment status: `node scripts/research-status-index.mjs --compact`, optionally `--query=...`, `--status=...`, or `--kind=queue|experiment|evidence`;
 - active naming-cleanup status: `npm run naming:status`; add `-- --phase=N`, `--batch=8A`, or `--json` to inspect the machine-readable ledger without rereading the whole plan;
+- active naming-cleanup status: `npm run naming:status`; add `-- --phase=N`, `--batch=8A`, or `--json` to inspect the machine-readable ledger without rereading the whole plan;
 - level corpora: `node scripts/corpus-query.mjs --corpus=stress2` for a summary; add filters, `--list`, or deterministic `--sample=N`; use `--full` only when exact level payloads are needed;
 - hint/provenance evidence: `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; filter by cold-evidence class, source, solver, technique, or retry tier; use `--full` only for exact paths/provenance;
 - tracked raw artifacts: `node scripts/artifact-query.mjs`, optionally `--query=...` or `--role=...`;
