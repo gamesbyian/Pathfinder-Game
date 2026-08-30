@@ -1058,6 +1058,11 @@ For Phase 8 onward, completion contract v4 adds durable execution evidence and e
 {
   "batch": "8A",
   "verificationRecord": null,
+  "compatibility": {
+    "mode": "temporary-command-alias",
+    "retireWhen": "owning-phase-closeout",
+    "owner": "package.json compatibility alias"
+  },
   "verification": {
     "surfaceInventory": "pending|done|not-applicable",
     "implementation": "pending|done|not-applicable",
@@ -1069,7 +1074,7 @@ For Phase 8 onward, completion contract v4 adds durable execution evidence and e
 }
 ```
 
-`batch` is mandatory for Phase 8 and is fixed to 8A-8H by [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md). Later phases add batch identifiers when the plan serializes them. `verificationRecord` is `null` while a row is merely pending; as soon as a Phase-8+ row becomes `in-progress`, it must point at the checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md), and the pointer remains after the row becomes `done`. Every future row with `persistence: "dual-read"` also carries a `compatibility` object whose `mode`, `retireWhen`, and `owner` follow Section 3.4.
+`batch` is mandatory for Phase 8 and is fixed to 8A-8H by [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md). Later phases add batch identifiers when the plan serializes them. `verificationRecord` is `null` while a row is merely pending; as soon as a Phase-8+ row becomes `in-progress`, it must point at the checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md), and the pointer remains after the row becomes `done`. The example `compatibility` object applies only to `persistence: "dual-read"` rows; other rows omit it. Every future dual-read row carries a `mode`, `retireWhen`, and `owner` following Section 3.4.
 
 A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable` and the checked-in `verificationRecord` exists. `not-applicable` requires an explicit rationale in the entry notes or record. The top-level `activeExecution` object identifies the one phase/batch/branch/record allowed to have `in-progress` rows. The ledger checker rejects duplicate/unstable IDs, missing compatibility policy, idle-with-in-progress state, skipped phases or Phase-8 predecessor batches, multiple/mismatched active batches, missing records, unassigned Phase-8 rows, and `lastCompletedPhase` values that outrun incomplete future rows.
 
