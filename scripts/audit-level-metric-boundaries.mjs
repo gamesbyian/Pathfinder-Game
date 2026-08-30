@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Phase-13 reqLen/reqInt ownership ratchet. Rename-neutral today; zero-leakage gate in 13B. */
-import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import path from 'node:path';
 
 const requireNormalizedClean = process.argv.includes('--require-normalized-clean');
 const BASELINE_PATH = 'docs/naming-cleanup-level-metric-boundaries.json';
@@ -24,10 +24,35 @@ for (const [label, key] of categories) {
   }
 }
 
-const hits = execFileSync('rg', [
-  '-l', '--max-filesize', '2M', '--glob', '*.{js,cjs,mjs,ts,mts,tsx,md,yml,yaml}',
-  '\\b(reqLen|reqInt)\\b', 'modules', 'scripts', 'docs', 'reports', 'logs', '.github',
-], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).trim().split('\n').filter(Boolean);
+const ROOTS = ['modules', 'scripts', 'docs', 'reports', 'logs', '.github'];
+const SOURCE_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts', '.mts', '.tsx', '.md', '.yml', '.yaml']);
+const MAX_BYTES = 2 * 1024 * 1024;
+const METRIC_PATTERN = /\b(?:reqLen|reqInt)\b/;
+
+function collectMetricHits(root) {
+  const hits = [];
+  let entries;
+  try {
+    entries = readdirSync(root, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') return hits;
+    throw error;
+  }
+
+  for (const entry of entries) {
+    const file = path.posix.join(root.replaceAll('\\', '/'), entry.name);
+    if (entry.isDirectory()) {
+      hits.push(...collectMetricHits(file));
+      continue;
+    }
+    if (!entry.isFile() || !SOURCE_EXTENSIONS.has(path.extname(entry.name))) continue;
+    if (statSync(file).size > MAX_BYTES) continue;
+    if (METRIC_PATTERN.test(readFileSync(file, 'utf8'))) hits.push(file);
+  }
+  return hits;
+}
+
+const hits = ROOTS.flatMap(collectMetricHits);
 const current = new Set(hits.filter(file => file !== SELF && !/^(?:docs\/archive|reports|logs|data)\//.test(file)));
 
 for (const file of current) if (!owners.has(file)) failures.push(`${file} is a new unclassified metric access`);
