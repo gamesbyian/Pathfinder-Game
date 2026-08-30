@@ -729,6 +729,8 @@ Required canonical forms in new/current text and exported APIs:
 - `knownSolutionPrefixSurvival` for the current beam "winning lineage" concept;
 - `residualLevelSet`, `residualSearchState`, or another explicit qualifier instead of naked `residual` in APIs.
 
+Batch 8H qualified the naked exported research/tooling surface it found: `OrderingResearchPolicy.profile`/`OrderingResearchRecord.family` -> `scoringProfile`/`searchFamily` (`modules/solver/operational-research-types.d.ts` and its 6 consumers); `scripts/import-published-levels.mjs`'s naked `fingerprint` export -> `levelFingerprint`; `scripts/stress/elite-prefix-dfs-ab.mjs`'s generated `profile` field -> `scoringProfile`; `scripts/stress/solution-profile-lib.mjs`'s `nearestProfiles` pool contract -> `{ id, solutionProfile }`. A full-repo consumer-inward search found no naked `residual` in any exported API surface (already adequately qualified everywhere it appears). Explicitly left out of scope, with rationale recorded in batch 8H's execution record: the ~10 core solver functions' `profile: ScoringProfile` positional parameter names (type-annotated, high-blast-radius hot-path code, not a "low risk" fit); the application/Firestore-persistence `fingerprint` cluster spanning `modules/input`, `modules/state-slices.ts`, `modules/persistence/*`, `modules/ports.ts`, `modules/data.ts`, `modules/dev-corpus.ts` (~25 files, a genuine Section 3.2 persisted-identity concern needing its own dedicated migration); and `KnownSolutionLabel`/`PrefixSupport`'s `family`/`families` fields on `modules/solver/known-solution-prefix-survival.ts`'s `KnownSolutionPrefixIndex` (a distinct "structural solution family" concept that does not cleanly fit `levelFamily`/`attemptFamily`/`searchFamily` — needs a specification amendment adding a new canonical form, not an ad-hoc name).
+
 Rename current instrument and implementation names (implemented by batch 8B):
 
 - former `solver-winning-lineage-survival-analysis.md` -> `docs/solver-known-solution-prefix-survival.md`;
@@ -846,7 +848,7 @@ Current docs must say explicitly: solved-set regression is not a speed benchmark
 - "branch atlas" -> "labelled branch set" (implemented by batch 8E);
 - former `family-wide-trove-manifest.mjs` -> `build-variant-family-dataset-manifest.mjs` (implemented by batch 8F);
 - "trove" -> "variant-family dataset" in current docs and tool output (implemented by batch 8F);
-- "winning-path archaeology" -> "winning-path analysis";
+- former "winning-path archaeology" -> "winning-path analysis" (implemented by batch 8H: `scripts/stress/winning-path-archaeology.mjs` -> `scripts/stress/winning-path-analysis.mjs`);
 - "winning lineage" -> "known-solution-prefix survival" as specified above.
 
 Do not rename historical report filenames containing atlas/trove/archaeology/lineage.

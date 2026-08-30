@@ -88,7 +88,7 @@ export function normalizeLevel(level) {
 // fields (grid, reqLen/reqInt, gates, goal, falseGoals, blocks, mustPass, mustCross, filters,
 // flippingFilters, portals, geese, landmarks) — hints/designerName/description/difficulty are
 // never part of it, so there is nothing to strip before fingerprinting a normalized level.
-export function fingerprint(level) {
+export function levelFingerprint(level) {
   return getLevelFingerprintSource(level);
 }
 
@@ -188,12 +188,12 @@ export async function main() {
   // Fingerprint → existing level object (structural fingerprint ignores hints/metadata), so a
   // published level that already exists is matched and its NEW hints merged in, rather than
   // re-appended as a duplicate level. Existing levels keep their position (no reordering).
-  const byFingerprint = new Map(levels.map(level => [fingerprint(level), level]));
+  const byFingerprint = new Map(levels.map(level => [levelFingerprint(level), level]));
   const mintId = makeLevelIdMinter(levels);
 
   let newLevels = 0, hintsAdded = 0, levelsUpdated = 0;
   for (const level of await fetchPublishedLevels()) {
-    const fp = fingerprint(level);
+    const fp = levelFingerprint(level);
     const match = byFingerprint.get(fp);
     if (match) {
       const added = mergeNewHints(match, level);
@@ -219,7 +219,7 @@ export async function main() {
 }
 
 // Guarded (matches generate-level-heatmaps.mjs's convention): this module now exports pure
-// helpers (normalizeLevel/fingerprint/mergeNewHints) for unit testing, and importing it must
+// helpers (normalizeLevel/levelFingerprint/mergeNewHints) for unit testing, and importing it must
 // never have the side effect of hitting the network / rewriting data/levels.json.
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(err => {

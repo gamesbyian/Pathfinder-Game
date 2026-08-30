@@ -673,15 +673,15 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
     const research = prep._orderingResearchObserver;
     if (research) {
         const candidates = [...neighbors];
-        const policies = (research.policies ?? [{ id: 'active', profile, orderingBias }])
-            .filter((policy): policy is typeof policy & { profile: ScoringProfile } => policy.profile !== null);
+        const policies = (research.policies ?? [{ id: 'active', scoringProfile: profile, orderingBias }])
+            .filter((policy): policy is typeof policy & { scoringProfile: ScoringProfile } => policy.scoringProfile !== null);
         const rankings = policies.map(policy => {
-            const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy.profile);
+            const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy.scoringProfile);
             const scored = candidates.map((candidate, index) => {
                 const isJump = !!(portalEntry && portalEntry.dest === candidate);
                 const remaining = level.reqLen - realLen - (isJump ? 0 : 1);
                 return { candidate, index, score: scoreMove(candidate, pos, state, level, prep,
-                    policy.profile, remaining, policy.orderingBias, ctx) };
+                    policy.scoringProfile, remaining, policy.orderingBias, ctx) };
             }).sort((a, b) => b.score - a.score || a.index - b.index);
             return { policyId: policy.id, order: scored.map(row => row.candidate), scores: scored.map(row => row.score) };
         });
@@ -699,20 +699,20 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
                 return scoreMove(leftTop, pos, state, level, prep, policy, remaining(leftTop), leftPolicy.orderingBias, ctx)
                     - scoreMove(rightTop, pos, state, level, prep, policy, remaining(rightTop), leftPolicy.orderingBias, ctx);
             };
-            const leftMargin = margin(leftPolicy.profile), rightMargin = margin(rightPolicy.profile);
-            const terms = [...new Set([...Object.keys(leftPolicy.profile), ...Object.keys(rightPolicy.profile)])].sort();
+            const leftMargin = margin(leftPolicy.scoringProfile), rightMargin = margin(rightPolicy.scoringProfile);
+            const terms = [...new Set([...Object.keys(leftPolicy.scoringProfile), ...Object.keys(rightPolicy.scoringProfile)])].sort();
             const scoringWeightContributions = terms.map(term => {
-                const leftValue = leftPolicy.profile[term as keyof ScoringProfile] ?? 1;
-                const rightValue = rightPolicy.profile[term as keyof ScoringProfile] ?? 1;
+                const leftValue = leftPolicy.scoringProfile[term as keyof ScoringProfile] ?? 1;
+                const rightValue = rightPolicy.scoringProfile[term as keyof ScoringProfile] ?? 1;
                 if (leftValue === rightValue) return { term, marginDelta: 0 };
-                const hybrid = { ...leftPolicy.profile, [term]: rightValue };
+                const hybrid = { ...leftPolicy.scoringProfile, [term]: rightValue };
                 return { term, marginDelta: margin(hybrid) - leftMargin };
             }).filter(row => Math.abs(row.marginDelta) > 1e-10);
             pairwiseDivergences.push({ leftPolicyId: leftPolicy.id, rightPolicyId: rightPolicy.id,
                 leftTop, rightTop, leftMargin, rightMargin, scoringWeightContributions,
                 contributionSum: scoringWeightContributions.reduce((sum, row) => sum + row.marginDelta, 0) });
         }
-        research.observe({ family: 'dfs', depth: state.path.length - 1, candidates, rankings, pairwiseDivergences });
+        research.observe({ searchFamily: 'dfs', depth: state.path.length - 1, candidates, rankings, pairwiseDivergences });
     }
     // Insertion sort (tiny arrays ≤4)
     for (let i = 1; i < n; i++) {

@@ -632,15 +632,15 @@ export function profileDistance(a, b) {
     return wsum ? d / wsum : 1;
 }
 
-/** Min distance of `candidate` (a bucket profile) to a pool of {id, profile} entries, with the
- *  named per-axis breakdown attached to each result. */
+/** Min distance of `candidate` (a bucket profile) to a pool of {id, solutionProfile} entries, with
+ *  the named per-axis breakdown attached to each result. */
 export function nearestProfiles(candidate, pool, topK = 5) {
     return pool
         .map(entry => ({
             id: entry.id,
-            distance: Number(profileDistance(candidate, entry.profile).toFixed(4)),
+            distance: Number(profileDistance(candidate, entry.solutionProfile).toFixed(4)),
             terms: Object.fromEntries(
-                Object.entries(profileDistanceTerms(candidate, entry.profile))
+                Object.entries(profileDistanceTerms(candidate, entry.solutionProfile))
                     .map(([name, value]) => [name, value === null || value === undefined ? null : Number(value.toFixed(4))]),
             ),
         }))

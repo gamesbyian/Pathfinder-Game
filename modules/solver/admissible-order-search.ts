@@ -143,12 +143,12 @@ export function rankByAdmissibleSlack(candidates: number[], level: NormalizedLev
     });
     const research = prep._orderingResearchObserver;
     if (research) {
-        const researchPolicies = research.policies ?? [{ id: tieBreakProfile === null ? 'none' : 'active', profile: tieBreakProfile }];
+        const researchPolicies = research.policies ?? [{ id: tieBreakProfile === null ? 'none' : 'active', scoringProfile: tieBreakProfile }];
         const rankings = researchPolicies.map(policy => {
-            const ctx = policy.profile ? buildCurUrgencyContext(fromKey, state, level, prep, true, policy.profile) : null;
+            const ctx = policy.scoringProfile ? buildCurUrgencyContext(fromKey, state, level, prep, true, policy.scoringProfile) : null;
             const rows = ranked.map(row => ({ ...row, index: candidates.indexOf(row.key),
-                policyScore: policy.profile ? scoreMove(row.key, fromKey, state, level, prep,
-                    policy.profile, level.reqLen - preRealLen - (portalFromHere?.dest === row.key ? 0 : 1), null, ctx) : 0 }));
+                policyScore: policy.scoringProfile ? scoreMove(row.key, fromKey, state, level, prep,
+                    policy.scoringProfile, level.reqLen - preRealLen - (portalFromHere?.dest === row.key ? 0 : 1), null, ctx) : 0 }));
             rows.sort((a, b) => {
                 const aDead = a.slack < 0, bDead = b.slack < 0;
                 if (aDead !== bDead) return aDead ? 1 : -1;
@@ -156,7 +156,7 @@ export function rankByAdmissibleSlack(candidates: number[], level: NormalizedLev
             });
             return { policyId: policy.id, order: rows.map(row => row.key), scores: rows.map(row => row.policyScore) };
         });
-        research.observe({ family: 'admissible-order', depth: state.path.length - 1, candidates: [...candidates], rankings,
+        research.observe({ searchFamily: 'admissible-order', depth: state.path.length - 1, candidates: [...candidates], rankings,
             admissibleSlack: ranked.map(row => ({ candidate: row.key, slack: row.slack })) });
     }
     return ranked.map(r => r.key);

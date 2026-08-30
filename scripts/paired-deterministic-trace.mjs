@@ -77,10 +77,10 @@ function serializableNumber(value) {
 }
 
 function activePolicyFor(config) {
-    if (config.admissibleOrderNoTieBreak) return { id: 'active', profile: null };
+    if (config.admissibleOrderNoTieBreak) return { id: 'active', scoringProfile: null };
     const profile = SCORING_PROFILES[config.scoringProfileId];
     if (!profile) throw new Error(`No scoring profile for ${config.scoringProfileId}`);
-    return { id: 'active', profile, orderingBias: config.orderingBias ?? null };
+    return { id: 'active', scoringProfile: profile, orderingBias: config.orderingBias ?? null };
 }
 
 async function runArm(label, key, config) {
@@ -104,7 +104,7 @@ async function runArm(label, key, config) {
             const active = record.rankings.find(ranking => ranking.policyId === 'active');
             if (!active) throw new Error(`${label}: active ranking missing from ordering research record`);
             events.push({
-                family: record.family,
+                searchFamily: record.searchFamily,
                 depth: record.depth,
                 candidates: [...record.candidates],
                 activeOrder: [...active.order],
