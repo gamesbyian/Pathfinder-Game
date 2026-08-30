@@ -32,7 +32,7 @@ if (phaseFilter !== null && (!Number.isInteger(phaseFilter) || phaseFilter < 1))
 
 const rows = ledger.entries ?? [];
 const future = rows.filter(row => row.phase >= 8);
-const phase8BatchOrder = ['8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H'];
+const phase8BatchOrder = ledger.phaseBatches?.['8'] ?? [];
 
 function rowSummary(row) {
   return {
