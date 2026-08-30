@@ -422,10 +422,11 @@ At entry:
 
 1. start from current `main` and perform the plan's required delta/full reconciliation;
 2. claim only the next allowed ledger rows by immutable ID and create the checked-in batch record;
-3. set `activeExecution` before canonical edits;
+3. record any predecessor batch's actual merged PR/commit in `batchCompletions`, then set branch-local `activeExecution` before canonical edits;
 4. verify risk, target occupancy, compatibility ownership/retirement, and the change envelope;
 5. run targeted validation, before/after parity where applicable, and consumer-inward closeout before closing rows;
-6. merge the batch, clear the active claim on merged `main`, and only then allow the status command to expose the next batch/phase.
+6. when rows are complete, return `activeExecution` to `idle` in the implementation PR before merge; leave that batch's own `batchCompletions` pending because its merge SHA does not exist yet;
+7. merge the batch; the following branch records the predecessor's merged PR/commit before it may claim the next batch.
 
 The repository checks enforce ordering, but the status command is the human-facing entry point. This keeps volatile execution state out of long-lived explanatory prose.
 
