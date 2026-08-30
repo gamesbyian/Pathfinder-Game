@@ -56,7 +56,7 @@ Required handling:
 4. if the predecessor contributes useful information intentionally, promote that information into a bounded typed producer -> consumer contract and add an independent control path;
 5. otherwise reset/isolate the leaked state and re-derive any isolated cap/routing conclusions that depended on the contaminated behavior.
 
-Do not tune scheduler caps or technique value around unexplained stage-history dependence. See [`solver-research-operating-model.md`](solver-research-operating-model.md), [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md), and [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).
+Do not tune scheduler caps or technique value around unexplained stage-history dependence. See [`solver-research-operating-model.md`](solver-research-operating-model.md), [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md), and [`technique-census-analysis.md`](technique-census-analysis.md).
 
 ## Supporting contracts
 

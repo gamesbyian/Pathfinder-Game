@@ -98,7 +98,7 @@ This is a value-of-information gate. If a tiny static policy captures nearly all
 
 For every current additive/retry stage record reach, unique residual solves, conditional `workSpent`, actual winning sub-actions, upstream redundancy, equal-cost alternatives, robustness of rare wins, and whether later tranches still earn continuation value.
 
-Current cap/tranche evidence is documented in [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md) and [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md). The immediate live gate remains in the queue, not here.
+Current cap/tranche evidence is documented in [`technique-census-analysis.md`](technique-census-analysis.md) and [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md). The immediate live gate remains in the queue, not here.
 
 ## Generalization
 

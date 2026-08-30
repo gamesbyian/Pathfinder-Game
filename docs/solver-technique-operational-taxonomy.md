@@ -2,7 +2,7 @@
 
 > **Status:** current implementation interpretation plus bounded supporting research. Operational-similarity work exists to improve scheduler/configuration decisions and causal diagnosis; it is **not** a mandate for another full expensive census.
 > **Implementation authority:** [`solver-architecture.md`](solver-architecture.md) and `modules/solver/*`.
-> **Outcome evidence:** [`technique-census-second-order-analysis.md`](technique-census-second-order-analysis.md).
+> **Outcome evidence:** [`technique-census-analysis.md`](technique-census-analysis.md).
 > **Scheduling use:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md).
 
 ## Core distinction
