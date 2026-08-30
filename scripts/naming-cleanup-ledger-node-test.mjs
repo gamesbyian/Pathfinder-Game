@@ -154,20 +154,23 @@ try {
 
   {
     const ledger = clone(source);
-    const row = ledger.entries.find(entry => entry.phase === 9);
+    const nextIncompletePhase = Number(source.lastCompletedPhase) + 1;
+    const skippedPhase = nextIncompletePhase + 1;
+    const row = ledger.entries.find(entry => entry.phase === skippedPhase);
+    if (!row) throw new Error(`skip-phase fixture needs a row after Phase ${nextIncompletePhase}`);
     row.status = 'in-progress';
     row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-08.md';
     ledger.activeExecution = {
       status: 'active',
-      phase: 9,
+      phase: skippedPhase,
       batch: null,
-      branch: 'test/phase9-skip',
+      branch: `test/phase${skippedPhase}-skip`,
       pr: null,
       baseMainSha: 'a2cb5162c551a700672e2edd7756af5785bc8aff',
       recordPath: 'docs/naming-cleanup-phase-records/phase-08.md',
       notes: 'fixture',
     };
-    expectFail('cannot skip incomplete phase', ledger, /ahead of next incomplete Phase 8|must equal next incomplete Phase 8/u);
+    expectFail('cannot skip incomplete phase', ledger, /ahead of next incomplete Phase|must equal next incomplete Phase/u);
   }
 
   {
