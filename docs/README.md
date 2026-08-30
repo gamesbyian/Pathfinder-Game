@@ -4,7 +4,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories curr
 
 ## Naming
 
-Current docs use lowercase kebab-case, stable undated names, and canonical repository terms. Put dated/narrative investigations in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports merely to modernize paths. Canonical naming rules live in [`naming-and-vocabulary.md`](naming-and-vocabulary.md). The active repository-wide cleanup is specified by [`naming-cleanup-plan.md`](naming-cleanup-plan.md), its Phase-8+ process gate and lessons are in [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md), and execution state is tracked in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json).
+Current docs use lowercase kebab-case, stable undated names, and canonical repository terms. Put dated/narrative investigations in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports merely to modernize paths. Canonical naming rules live in [`naming-and-vocabulary.md`](naming-and-vocabulary.md). The active repository-wide cleanup is specified by [`naming-cleanup-plan.md`](naming-cleanup-plan.md); its implementation history and failure-derived lessons are in [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md); its Phase-8+ execution controls are in [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md); machine-readable state is tracked in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json); and each active implementation batch uses a checked-in record based on [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md).
 
 ## Current references
 
@@ -14,9 +14,12 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 | [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining authority/mutable-lifetime architecture debt |
 | [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes and experiment preflight recipes |
 | [`naming-and-vocabulary.md`](naming-and-vocabulary.md) | Permanent canonical naming and vocabulary rules |
-| [`naming-cleanup-plan.md`](naming-cleanup-plan.md) | Decision-complete repository naming cleanup, compatibility rules, rename inventory, implementation sequence, and phase gates |
-| [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md) | Phase-1-7 failure analysis, pre-Phase-8 table-setting prerequisite, and stronger contract-migration/closeout model |
-| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Machine-readable execution status, Phase-8 readiness gate, and Phase-8+ verification state |
+| [`naming-cleanup-plan.md`](naming-cleanup-plan.md) | Decision-complete repository naming cleanup, compatibility rules, rename inventory, serial implementation sequence, and phase gates |
+| [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md) | PR-by-PR implementation retrospective and the failure patterns that justify the remaining safeguards |
+| [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md) | Phase-1-7 failure analysis, pre-Phase-8 technical gate, batch execution controls, and stronger contract-migration/closeout model |
+| [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md) | Durable per-batch impact-map, validation, parity, audit, and pre-merge evidence template |
+| [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md) | Phase-8 serial batch authority and merged-tree completion gate |
+| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Machine-readable execution status, active-batch claim, Phase-8 readiness/batch assignments, and Phase-8+ verification evidence pointers |
 | [`testing.md`](testing.md) | Validation and finish-line gates |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
