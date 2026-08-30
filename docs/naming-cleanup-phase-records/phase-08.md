@@ -1,6 +1,6 @@
 # Naming-cleanup Phase 8 execution record
 
-Status: **not started**. Phase 8 is a milestone composed of serial implementation batches. Do not implement more than one batch on an unmerged branch.
+Execution state is **ledger-derived**, not maintained in this document. Run `npm run naming:status -- --phase=8`. This document owns Phase-8 batch partitioning/order and completion rules. Do not implement more than one batch on an unmerged branch.
 
 Authority for exact mappings: [`naming-cleanup-plan.md`](../naming-cleanup-plan.md) and [`naming-cleanup-ledger.json`](../naming-cleanup-ledger.json).
 
@@ -23,16 +23,16 @@ Use these IDs in PR descriptions and batch records. Old/new wording may be clari
 
 ## Batch sequence
 
-| Batch | Scope | Compatibility/risk focus | Status |
-| --- | --- | --- | --- |
-| **8A** | Hint-path validator; CP-SAT reference naming/workflow; GHA result retrieval; offline replay harness and producer/consumer terminology | command aliases, workflow identities, real runtime/path verification | not started |
-| **8B** | Known-solution-prefix survival doc/module/types/analyzer/collectors and former lineage/atlas pilot names | module/type propagation, generated/research consumers, frozen historical lineage evidence | not started |
-| **8C** | Durable research command names: repair search runner/worker, producer-population, residual-interface, rollback census, symmetry repair seed, restart/continuation, candidate eligibility/participation audit | real CLI/runtime coverage, parent/worker wiring, package aliases | not started |
-| **8D** | Technique-census analysis doc/tool and equal-work analyzer | generated census readers, package/docs/tooling references, historical census evidence | not started |
-| **8E** | Prune-gap label collection formerly called atlas sweep, including workflow/display/concurrency names | workflow command/path/artifact identities, frozen old runs | not started |
-| **8F** | Variant-family dataset formerly called trove: workflow, manifest/shard/merge/doctor tools, package alias, env var, branch local | **high-risk external env compatibility**, workflow/tool family propagation | not started |
-| **8G** | Solver diagnostics formerly audit-export, generated field dual-read/single-write, workflow/package alias; legacy-latency portfolio report/replay names | generated-report compatibility boundary, current writer single-write, surfaced CLI aliases | not started |
-| **8H** | Remaining low-risk semantic qualification sweep: naked profile/fingerprint/family/residual, winning-path archaeology, Phase-8-wide residue/authority closeout | current docs/exported APIs only; frozen history stays frozen | not started |
+| Batch | Scope | Compatibility/risk focus |
+| --- | --- | --- |
+| **8A** | Hint-path validator; CP-SAT reference naming/workflow; GHA result retrieval; offline replay harness and producer/consumer terminology | command aliases, workflow identities, real runtime/path verification |
+| **8B** | Known-solution-prefix survival doc/module/types/analyzer/collectors and former lineage/atlas pilot names | module/type propagation, generated/research consumers, frozen historical lineage evidence |
+| **8C** | Durable research command names: repair search runner/worker, producer-population, residual-interface, rollback census, symmetry repair seed, restart/continuation, candidate eligibility/participation audit | real CLI/runtime coverage, parent/worker wiring, package aliases |
+| **8D** | Technique-census analysis doc/tool and equal-work analyzer | generated census readers, package/docs/tooling references, historical census evidence |
+| **8E** | Prune-gap label collection formerly called atlas sweep, including workflow/display/concurrency names | workflow command/path/artifact identities, frozen old runs |
+| **8F** | Variant-family dataset formerly called trove: workflow, manifest/shard/merge/doctor tools, package alias, env var, branch local | **high-risk external env compatibility**, workflow/tool family propagation |
+| **8G** | Solver diagnostics formerly audit-export, generated field dual-read/single-write, workflow/package alias; legacy-latency portfolio report/replay names | generated-report compatibility boundary, current writer single-write, surfaced CLI aliases |
+| **8H** | Remaining low-risk semantic qualification sweep: naked profile/fingerprint/family/residual, winning-path archaeology, Phase-8-wide residue/authority closeout | current docs/exported APIs only; frozen history stays frozen |
 
 ## Serial merge rule
 
