@@ -128,8 +128,10 @@ For Phase-8+ naming-cleanup batches:
 2. compare head vs current `main` and confirm the intended diff is unique and non-empty;
 3. confirm no next-batch implementation is stacked into the PR;
 4. confirm the batch record, immutable row IDs, risk/compatibility policy, ledger state, targeted tests, and required aggregate CI agree;
-5. merge the batch before creating the next implementation branch;
-6. run the phase-wide final closeout on merged `main` before advancing `lastCompletedPhase` for a multi-batch phase.
+5. after rows close, reset `activeExecution` to `idle` before merging the implementation PR; leave that batch's own merge-completion record pending until the merge exists;
+6. merge the batch before creating the next implementation branch;
+7. on the next branch, record the predecessor's merged PR/commit before claiming new rows;
+8. run the phase-wide final closeout on merged `main` before advancing `lastCompletedPhase` for a multi-batch phase.
 
 Use this recipe when a change is conceptually small but crosses representations or execution boundaries. The point is to prevent plausible 80%-complete patches, not to make ordinary local renames ceremonial.
 
