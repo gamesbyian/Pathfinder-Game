@@ -222,17 +222,20 @@ No unclassified live hit may remain in the batch scope.
 
 ## 11. Pre-merge barrier
 
+- [ ] if this batch has a predecessor, its `batchCompletions` entry records the real merged PR/commit before this batch was claimed;
 - [ ] branch rebased/updated against current `main` as required;
 - [ ] compare branch head against current `main`;
 - [ ] intended diff is non-empty and contains no already-merged duplicate work;
 - [ ] no unrelated next-batch implementation is stacked in this PR;
 - [ ] targeted validation green;
 - [ ] required aggregate CI green;
-- [ ] ledger IDs, risk, compatibility policy, and verification fields match the evidence in this record;
+- [ ] ledger IDs, risk, compatibility policy, verification fields, and predecessor merge barrier match the evidence in this record;
 - [ ] all predecessor phases/batches required by the ledger are complete;
 - [ ] no specification amendment is being smuggled inside this implementation PR;
 - [ ] PR description links this record and summarizes its unresolved risks;
-- [ ] no unexplained solved-set, report-completeness, UI, or workflow behavior change.
+- [ ] no unexplained solved-set, report-completeness, UI, or workflow behavior change;
+- [ ] all selected rows are `done` and `activeExecution` has been reset to `idle` in this PR before merge;
+- [ ] this batch's own `batchCompletions` entry is still `pending` until its merge PR/commit actually exists.
 
 Record current `main`, head SHA, and comparison result.
 
@@ -243,6 +246,7 @@ A batch is complete only after its applicable ledger verification dimensions are
 After merge:
 
 - next implementation batch starts from the new current `main`, not from this branch;
+- that next branch first records this batch's merged PR number and merge commit in `batchCompletions` before claiming its own rows;
 - do not keep working on the merged branch as an informal queue;
 - if the next batch finds a regression from this batch, reopen/correct the affected verification state rather than pretending the prior closeout still proves correctness.
 
