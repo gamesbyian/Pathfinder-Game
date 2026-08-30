@@ -12,7 +12,7 @@
  * race.mjs in isolation.
  */
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { runWorkerPool } from './solver-worker-pool.mjs';
@@ -61,6 +61,22 @@ await test('without an override the raced diversity phase still runs (control fo
     assert.equal(result.ok, false);
     const diversityAttempts = (result.attempts || []).filter(a => a.stageId === 'goal-attraction-disabled-retry');
     assert.ok(diversityAttempts.length > 0, 'expected the raced diversity phase to run without a suppressing override');
+});
+
+await test('the repair budget override is preserved at both raced portfolio reconstruction boundaries', async () => {
+    const parentSource = readFileSync('scripts/portfolio-solve-sweep.mjs', 'utf8');
+    const workerSource = readFileSync('scripts/portfolio-solve-sweep-worker.mjs', 'utf8');
+    const raceSource = readFileSync('scripts/solver-parallel/race.mjs', 'utf8');
+
+    assert.match(parentSource,
+        /repairBudgetFractionOverride:\s*solveOpts\.repairBudgetFractionOverride/,
+        'the portfolio parent must include the override in its manually reconstructed raced solve options');
+    assert.match(workerSource,
+        /repairBudgetFractionOverride:\s*solveOpts\.repairBudgetFractionOverride/,
+        'the forked worker must include the override in its nested race-pool solve options');
+    assert.match(raceSource,
+        /Number\(levelOpts\.repairBudgetFractionOverride\)/,
+        'the race pool must consume the same override field forwarded by the parent and worker');
 });
 
 console.log(`\nportfolio-solve-sweep-worker tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);
