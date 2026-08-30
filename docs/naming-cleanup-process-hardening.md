@@ -395,7 +395,7 @@ For Phase 8 onward each entry has a `verification` object with these fields:
 
 Values are `pending`, `done`, or `not-applicable`. A row may use `not-applicable` only with a short explanation in `notes` or the phase PR.
 
-A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`. Under completion contract v3, every Phase-8+ row that is `in-progress` or `done` must also point at a checked-in `verificationRecord`; Phase-8 rows must identify their assigned serial `batch`. The top-level `activeExecution` object identifies the one implementation batch currently allowed to be in progress.
+A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`. Under completion contract v4, every ledger row has an immutable `NC-P##-###` ID; every Phase-8+ row that is `in-progress` or `done` must point at a checked-in `verificationRecord`; Phase-8 rows identify their assigned serial `batch`; and every future `dual-read` row declares a compatibility `mode`, retirement gate, and owning boundary. The top-level `activeExecution` object identifies the one implementation batch currently allowed to be in progress.
 
 The ledger also carries a Phase-8 hardening gate. Until that gate is marked ready, agents must not begin PR 8 implementation.
 
@@ -411,7 +411,7 @@ If hardening exposes an already-live Phase-1-7 regression, fix it and record it 
 
 The table-setting prerequisite is complete and merged via PR #1580 (merge commit `02abde6c651a7070e7be10775f75c177b1bdb23b`). The next naming-cleanup agent may begin **Phase 8A only**, using the serial execution model in Sections 4-7 and the Phase-8 batch authority in [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md):
 
-1. start from current `main` and repeat the plan's Section 0 reconciliation if newer unrelated work has merged;
+1. run `npm run naming:status`, start from current `main`, and perform the plan's delta/full reconciliation level required by Section 0;
 2. claim only the 8A ledger rows, create the 8A checked-in execution record, and set `activeExecution` before editing;
 3. use the checked-in surface inventory and CI/smoke coverage to identify every live consumer and any remaining structurally-only or manually audited surface;
 4. preserve legacy-read/canonical-write boundaries and frozen evidence exactly as classified;
@@ -584,3 +584,19 @@ A second history review was performed after the technical gate had been marked r
 - split later broad/high-risk phases into prep/atomic-switch/merged-tree-closeout or smaller domain batches in the plan.
 
 No Phase-8 canonical rename is part of this second hardening review. Its purpose is to make the already-ready technical substrate much harder to use in the same failure-prone way as Phases 1-7.
+
+## 14. Forward specification hardening before Phase 8
+
+A further pre-implementation review focused on weaknesses that did **not** depend on repeating Phase-1-7 mistakes. The remaining plan now also guards against specification drift and operator ambiguity:
+
+- stable ledger row IDs decouple machine identity from editable old/new prose;
+- a risk rubric ties low/medium/high to concrete boundary classes and evidence minimums;
+- each batch defines an explicit change envelope: intended naming deltas, invariant observables, and out-of-scope findings;
+- every future dual-read row declares compatibility ownership and retirement policy instead of leaving “one migration window” implicit;
+- canonical target occupancy/collision is checked before editing, not discovered by overwrite/confusion later;
+- phase and Phase-8 batch dependencies are machine-enforced so later work cannot begin out of order;
+- specification amendments are separated from ordinary impact-map expansion;
+- `npm run naming:status` derives volatile next-step state from the ledger instead of copying it into more prose;
+- the ledger checker has negative-case self-tests so the control itself is not trusted only because a valid ledger passes.
+
+These controls deliberately balance safety with execution cost. Delta reconciliation is the default per batch; full remaining-plan reconciliation is reserved for high-risk/specification/architecture/final-closeout boundaries.
