@@ -100,7 +100,7 @@ When optimizing test runtime, profile the actual suite/subcommand before deletin
 
 A PLAY-valid stored hint proves a solution, not cold solver capability; use shared provenance classification for capability claims.
 
-A static check preventing exact level IDs or stale docs is a useful guardrail, but passing it does not establish that a generic policy is not overfit to Corpus 2 or a family trove.
+A static check preventing exact level IDs or stale docs is a useful guardrail, but passing it does not establish that a generic policy is not overfit to Corpus 2 or a variant-family dataset.
 
 ## Unit, harness, coverage
 

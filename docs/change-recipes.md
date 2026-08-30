@@ -195,7 +195,7 @@ Before generating another large variant, stress, census, oracle, or lineage data
 7. record generation and solver-evaluation provenance separately;
 8. decide whether outputs belong on `main`, off-main, in workflow artifacts, or only as rebuildable derived summaries.
 
-Do not generate a large trove because it may be useful someday. Existing large family data is a resource to query before more generation.
+Do not generate a large variant-family dataset because it may be useful someday. Existing large family data is a resource to query before more generation.
 
 ## Solver result or telemetry field
 

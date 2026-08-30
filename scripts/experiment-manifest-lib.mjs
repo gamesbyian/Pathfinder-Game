@@ -22,7 +22,7 @@ export function captureSolverGitState() {
 
 /** Assembles + validates one family evaluation run manifest from a producer's own tracked run
  *  state — the ONE canonical shape every current/future family/variant solver-evaluation producer
- *  (family-wide-trove-shard-run.mjs today) should build through, instead of each hand-assembling
+ *  (collect-variant-family-dataset-shard.mjs today) should build through, instead of each hand-assembling
  *  the FAMILY_RUN_REQUIRED object shape itself. `solver` defaults to captureSolverGitState() (a
  *  producer overrides it only for testing — see this module's own node-test). Throws (via
  *  validateFamilyEvaluationRunManifest) before returning anything a caller could write to disk, so

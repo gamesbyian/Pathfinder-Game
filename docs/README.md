@@ -33,7 +33,7 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 | [`solver-level-blindness.md`](solver-level-blindness.md) | Runtime information boundary vs statistical generalization |
 | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline reproducibility and shared envelopes |
 | [`solver-correctness-hardening.md`](solver-correctness-hardening.md) | Solver correctness/state/provenance invariants |
-| [`variant-level-research.md`](variant-level-research.md) | Variant/family evidence, trove use, parent holdouts, generation gates |
+| [`variant-level-research.md`](variant-level-research.md) | Variant/family evidence, variant-family dataset use, parent holdouts, generation gates |
 | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Default-off mechanism dispositions |
 | [`solver-future-work.md`](solver-future-work.md) | Deferred/reopen ideas and gates |
 | [`investigation-report-conventions.md`](investigation-report-conventions.md) | Report status, evidence role, selection, precommitment |

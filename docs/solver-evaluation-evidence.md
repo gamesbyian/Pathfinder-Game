@@ -200,7 +200,7 @@ as the independent unit.
 | Spent/void 2026 confirmation cohorts | historical/development evidence as documented in their reports |
 | Locked unused blocks/cohorts from the same random generator | confirmation, not cross-generator transfer |
 | Topology-composition fresh/locked blocks | cross-generator transfer/challenge when treatment design did not inspect their outcomes |
-| Variant trove | development/causal-family evidence unless whole independent parents were held out |
+| Variant-family dataset | development/causal-family evidence unless whole independent parents were held out |
 | Unpublished independent human/editor levels | potential transfer/challenge evidence when genuinely untouched |
 
 Roles are claim-relative. A population can be untouched for one candidate and development data for a

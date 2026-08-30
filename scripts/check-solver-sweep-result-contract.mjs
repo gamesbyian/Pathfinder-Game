@@ -17,7 +17,7 @@ const workflows = [
   '.github/workflows/cpsat-hint-harvest-sweep-published.yml',
   '.github/workflows/cpsat-hint-harvest-sweep.yml',
   '.github/workflows/collect-prune-gap-labels.yml',
-  '.github/workflows/family-wide-trove.yml',
+  '.github/workflows/collect-variant-family-dataset.yml',
   '.github/workflows/mitm-frontier-sweep.yml',
   '.github/workflows/solver-elite-prefix-dfs-retry-validate.yml',
 ];

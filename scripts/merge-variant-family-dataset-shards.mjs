@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Aggregates the family-wide-trove.yml workflow's per-(level,mode) summary lines
+ * Aggregates the collect-variant-family-dataset.yml workflow's per-(level,mode) summary lines
  * (logs/family-census/wide-shard-*-summary.jsonl, one line per {id, mode, solved, total}) into a
- * compact coverage/solve-rate report, joined against data/families/wide-trove-manifest.json for
- * corpus. Unlike the fragile-robust census, this run's purpose is building a general reusable
- * trove (levels + hints + per-attempt telemetry across corpora/modes), not testing one specific
- * hypothesis -- so the report here is a coverage/health check, not a research finding.
+ * compact coverage/solve-rate report, joined against data/families/variant-family-dataset-manifest.json
+ * for corpus. Unlike the fragile-robust census, this run's purpose is building a general reusable
+ * variant-family dataset (levels + hints + per-attempt telemetry across corpora/modes), not testing
+ * one specific hypothesis -- so the report here is a coverage/health check, not a research finding.
  *
- * Usage: node scripts/family-wide-trove-combine.mjs --in-dir=logs/family-census
- *   [--manifest=data/families/wide-trove-manifest.json] [--out=<report.md>]
+ * Usage: node scripts/merge-variant-family-dataset-shards.mjs --in-dir=logs/family-census
+ *   [--manifest=data/families/variant-family-dataset-manifest.json] [--out=<report.md>]
  *
  * The failure-provenance attempts consolidation (below) is chunked at ~40MB/file
  * (ATTEMPTS_CHUNK_BYTES) -- the 2026-08-07 first run's unchunked corpus2 file came out at 170.60MB,
@@ -25,14 +25,20 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     return [k, v.join('=')];
 }));
 const IN_DIR = args.get('--in-dir') || 'logs/family-census';
-const MANIFEST = args.get('--manifest') || 'data/families/wide-trove-manifest.json';
+const MANIFEST = args.get('--manifest') || 'data/families/variant-family-dataset-manifest.json';
+// NOTE: this default output path deliberately keeps its original 2026-08-07/"wide-trove" naming --
+// it is the established historical report-filename convention every prior run of this tool has
+// written to (and family-index-lib.mjs's wide-trove-attempts-*.json discovery regex, plus the
+// combine workflow's own "print headline numbers"/artifact-upload steps, key off this exact
+// string). Renaming it is out of scope for this batch; see docs/naming-cleanup-plan.md's "Do not
+// rename historical report filenames containing atlas/trove/archaeology/lineage" rule.
 const OUT = args.get('--out') || 'reports/families/2026-08-07-wide-trove-summary.md';
 
 const manifest = JSON.parse(readFileSync(path.resolve(process.cwd(), MANIFEST), 'utf8'));
 const idToCorpus = new Map(manifest.map((e) => [e.id, e.corpus]));
 
-// Deduped by (id, mode), keeping the LAST occurrence: family-wide-trove-shard-run.mjs's progress
-// files are append-only (appendFileSync), and a re-dispatch of an already-committed shard re-checks
+// Deduped by (id, mode), keeping the LAST occurrence: collect-variant-family-dataset-shard.mjs's
+// progress files are append-only (appendFileSync), and a re-dispatch of an already-committed shard re-checks
 // out that shard's summary file WITH its prior committed lines already in it -- every task the
 // shard re-visits (even ones its own idempotency check skips regenerating) gets logged a second
 // time. Confirmed 2026-08-07: shard 1's summary file, re-touched by the shard-8/enrich-existing
@@ -77,7 +83,7 @@ function summarize(rowsSubset, label) {
 }
 
 const lines = [];
-lines.push('# Wide trove: generation + solve + hint-extraction coverage');
+lines.push('# Variant-family dataset: generation + solve + hint-extraction coverage');
 lines.push('');
 lines.push(`${rows.length}/${expectedTasks} (level, mode) tasks completed (${manifest.length} levels in manifest across published/corpus1/corpus2).`);
 lines.push('');
@@ -111,7 +117,7 @@ lines.push([...missingIds].slice(0, 50).join(', ') || '(none)');
 // fail -- it's just scattered across ~7800 small per-task files with no index. This merges every
 // one's single level entry (tagged with parentId/mode/corpus) into per-corpus combined files in
 // the SAME {levels:[...]} shape scripts/stress/rank-levels.mjs and
-// scripts/stress/cluster-unsolved-failures.mjs already know how to read, so this trove's failure
+// scripts/stress/cluster-unsolved-failures.mjs already know how to read, so this dataset's failure
 // data is queryable with the existing corpus-analysis tooling, not just readable.
 const ABBR_TO_MODE = { sym: 'symmetry', lm: 'local-mutant', swap: 'swap', gr: 'group-reshuffle', cs: 'constrained-shuffle' };
 const solveFileRe = /^solve-([A-Za-z]\d+)-(sym|lm|swap|gr|cs)\.json$/;

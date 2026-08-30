@@ -11,13 +11,13 @@ Browser grid-path puzzle game with a Vite/TypeScript app, solver/research toolch
 | Full developer/game-rule reference | [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) |
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md) |
 | Current solver priorities | [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md) |
-| Variant/family research trove | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
+| Variant/family research dataset | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
 | CLI/research tooling | [`docs/tooling-catalog.md`](docs/tooling-catalog.md) |
 | Tests/merge gates | [`docs/testing.md`](docs/testing.md) |
 | Reports/history | [`reports/README.md`](reports/README.md) |
 | Documentation index | [`docs/README.md`](docs/README.md) |
 
-Use the live solver queue for current priorities, not dated reports. Check the existing variant trove before generating more families.
+Use the live solver queue for current priorities, not dated reports. Check the existing variant-family dataset before generating more families.
 
 ## Development
 

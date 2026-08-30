@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Producer-side coverage for buildFamilyEvaluationRunManifest (experiment-manifest-lib.mjs) — the
- * shared helper family-wide-trove-shard-run.mjs (and any future family/variant evaluation
+ * shared helper collect-variant-family-dataset-shard.mjs (and any future family/variant evaluation
  * producer) builds its run manifest through, instead of hand-assembling the
  * FAMILY_RUN_REQUIRED shape itself. Complements family-index-lib-check.mjs's consumer-side
  * coverage (which hand-builds manifest fixtures) by proving the PRODUCER helper itself emits
@@ -21,9 +21,9 @@ function test(name, fn) {
 }
 
 const baseInput = {
-    runId: 'run-wide-9001', tool: 'family-wide-trove-shard-run.mjs', workflow: 'family-wide-trove.yml',
+    runId: 'run-wide-9001', tool: 'collect-variant-family-dataset-shard.mjs', workflow: 'collect-variant-family-dataset.yml',
     corpora: ['corpus1'], families: ['corpus1:S00001'],
-    trove: { manifest: 'data/families/wide-trove-manifest.json', shardFile: 'logs/family-census/wide-shard-01-slice.json' },
+    trove: { manifest: 'data/families/variant-family-dataset-manifest.json', shardFile: 'logs/family-census/wide-shard-01-slice.json' },
     solverPolicy: { mode: 'production', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
     budgets: { workUnits: 48_240_000, nodeCeiling: 36_000_000, wallDeadlineMs: 86_400_000 },
     seeds: [20260807], shardCount: 2, shardIndex: 1,
@@ -38,13 +38,14 @@ test('buildFamilyEvaluationRunManifest produces a manifest validateFamilyEvaluat
     const manifest = buildFamilyEvaluationRunManifest(baseInput);
     assert.deepEqual(validateFamilyEvaluationRunManifest(manifest), manifest);
     assert.equal(manifest.schemaVersion, 1);
-    assert.equal(manifest.invocation.tool, 'family-wide-trove-shard-run.mjs');
+    assert.equal(manifest.invocation.tool, 'collect-variant-family-dataset-shard.mjs');
     assert.deepEqual(manifest.shard, { count: 2, index: 1 });
 });
 
 // (2)+(3): shards of one run agree on invariant fields, and output artifact paths join back to
-// family-index evidence — set up a real trove tree with two shards' manifests + their evidence
-// files and run them through the real consumer (family-index-lib.mjs's buildFamilyIndex).
+// family-index evidence — set up a real variant-family dataset tree with two shards' manifests +
+// their evidence files and run them through the real consumer (family-index-lib.mjs's
+// buildFamilyIndex).
 test('two shards of one run agree on invariant fields and join their evidence via outputArtifacts', () => {
     const root = mkdtempSync(path.join(tmpdir(), 'family-run-manifest-producer-'));
     mkdirSync(path.join(root, 'logs/family-census/wide-shard-01'), { recursive: true });

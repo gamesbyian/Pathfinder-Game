@@ -5,7 +5,7 @@
  * pair per one of its 927 corpus-2 ids) ran family-generate + portfolio-solve-sweep --save-hints
  * only -- no hint-workbench enumeration pass, since that integration didn't exist yet. This finds
  * every existing family-*.json under data/families/ (flat, i.e. NOT one of the new per-corpus
- * subdirectories, which already get hint-workbench as part of family-wide-trove-shard-run.mjs) and
+ * subdirectories, which already get hint-workbench as part of collect-variant-family-dataset-shard.mjs) and
  * runs hint-workbench.mjs --preset=enumerate-targeted --write-levels on each -- no regeneration,
  * no re-solving, purely additional-solution discovery on data that already exists.
  *
