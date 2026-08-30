@@ -429,12 +429,15 @@ const selectedLedgerEntries = (ledger.entries ?? [])
     const oldReferenceFiles = reconciliationReferenceFilesForValue(entry.old);
     const newReferenceFiles = reconciliationReferenceFilesForValue(entry.new);
     return {
+      id: entry.id,
       old: entry.old,
       new: entry.new,
       kind: entry.kind,
       risk: entry.risk,
       persistence: entry.persistence,
+      compatibility: entry.compatibility ?? null,
       phase: entry.phase,
+      batch: entry.batch ?? null,
       status: entry.status,
       surfaces: exactSurfaceMatches(entry),
       referenceFiles: referenceMatches(entry),
