@@ -8,7 +8,7 @@ Use [`naming-cleanup-phase-record-template.md`](../naming-cleanup-phase-record-t
 
 ## Immutable ledger assignment
 
-Batch order is a dependency chain: **8A -> 8B -> 8C -> 8D -> 8E -> 8F -> 8G -> 8H**. The ledger checker rejects starting a later batch while any predecessor row is incomplete. This document is the human structural authority; the same ordered list is mirrored in ledger `phaseBatches["8"]` as the machine projection used by checker/status tooling.
+Batch order is a dependency chain: **8A -> 8B -> 8C -> 8D -> 8E -> 8F -> 8G -> 8H**. Row completion is not the merge barrier: ledger `batchCompletions` must record each predecessor as `merged` with its PR/merge commit before the next batch may start. The ledger checker rejects starting a later batch while any predecessor row is incomplete. This document is the human structural authority; the same ordered list is mirrored in ledger `phaseBatches["8"]` as the machine projection used by checker/status tooling.
 
 - **8A:** NC-P08-012, NC-P08-013, NC-P08-014, NC-P08-015, NC-P08-045, NC-P08-046, NC-P08-062, NC-P08-063, NC-P08-064, NC-P08-065, NC-P08-066, NC-P08-067, NC-P08-068
 - **8B:** NC-P08-001, NC-P08-002, NC-P08-003, NC-P08-004, NC-P08-005, NC-P08-006, NC-P08-010, NC-P08-029, NC-P08-030, NC-P08-031, NC-P08-032
@@ -39,9 +39,9 @@ Use these IDs in PR descriptions and batch records. Old/new wording may be clari
 1. Create the batch branch from current `main`.
 2. Create its checked-in batch execution record before implementation.
 3. Implement and close out only that batch.
-4. Merge it.
-5. Verify current `main` and update this phase record's status table.
-6. Only then create the next batch branch.
+4. Before merge, finish the batch rows and reset branch-local `activeExecution` to `idle`; leave the batch's own merge record pending.
+5. Merge it.
+6. Create the next batch branch from new current `main`, record the predecessor's PR/merge commit in `batchCompletions`, and only then claim the next batch.
 
 Do not stack 8B on an unmerged 8A branch, and so on. A batch may be split further if its impact map reveals multiple independent compatibility owners, but batches must not be recombined into a larger PR merely to reduce PR count.
 
