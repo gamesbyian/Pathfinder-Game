@@ -40,12 +40,18 @@ const verificationKeys = [
   'closeoutAudit',
 ];
 const compatibilityPolicies = new Map([
-  ['temporary-command-alias', 'owning-phase-closeout'],
   ['permanent-historical-read', 'never'],
   ['external-config-transition', 'phase-15-review'],
   ['wire-format-retained', 'never'],
   ['runtime-compatibility-transition', 'phase-15-review'],
 ]);
+
+function expectedCompatibilityRetirement(entry) {
+  if (entry.compatibility?.mode === 'temporary-command-alias') {
+    return entry.batch ? 'owning-batch-closeout' : 'owning-phase-closeout';
+  }
+  return compatibilityPolicies.get(entry.compatibility?.mode);
+}
 
 function repoPathExists(relativePath) {
   return typeof relativePath === 'string' &&
@@ -142,7 +148,7 @@ for (const [index, entry] of (ledger.entries ?? []).entries()) {
     if (!compatibility || typeof compatibility !== 'object' || Array.isArray(compatibility)) {
       fail(`${label}: future dual-read row must define compatibility ownership and retirement`);
     } else {
-      const expectedRetirement = compatibilityPolicies.get(compatibility.mode);
+      const expectedRetirement = expectedCompatibilityRetirement(entry);
       if (!expectedRetirement) {
         fail(`${label}: invalid compatibility.mode ${JSON.stringify(compatibility.mode)}`);
       } else if (compatibility.retireWhen !== expectedRetirement) {
