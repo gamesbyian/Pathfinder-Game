@@ -34,6 +34,16 @@ if (!Array.isArray(phase8Batches) || !phase8Batches.length || new Set(phase8Batc
   failures.push('phaseBatches["8"] must be a non-empty unique ordered batch list');
 }
 const phase8BatchSet = new Set(Array.isArray(phase8Batches) ? phase8Batches : []);
+const batchCompletions = ledger.batchCompletions;
+if (!batchCompletions || typeof batchCompletions !== 'object' || Array.isArray(batchCompletions)) {
+  failures.push('batchCompletions must be an object keyed by Phase-8 batch');
+} else {
+  const completionKeys = Object.keys(batchCompletions).sort();
+  const expectedKeys = [...phase8BatchSet].sort();
+  if (JSON.stringify(completionKeys) !== JSON.stringify(expectedKeys)) {
+    failures.push(`batchCompletions keys must exactly match Phase-8 batches; found ${completionKeys.join(', ')}`);
+  }
+}
 const verificationKeys = [
   'surfaceInventory',
   'implementation',
@@ -239,11 +249,37 @@ for (const entry of futureEntries) {
   }
 }
 
-/* Phase 8 has an explicit serial batch order. */
+/* Phase 8 has an explicit serial batch order and a durable merge barrier. */
 const phase8Entries = futureEntries.filter(entry => entry.phase === 8);
 for (let i = 0; i < phase8Batches.length; i += 1) {
   const batch = phase8Batches[i];
   const rows = phase8Entries.filter(entry => entry.batch === batch);
+  const completion = batchCompletions?.[batch];
+
+  if (!completion || !['pending', 'merged'].includes(completion.status)) {
+    fail(`batchCompletions.${batch}.status must be "pending" or "merged"`);
+  } else if (completion.status === 'pending') {
+    if (completion.pr !== null || completion.mergeCommit !== null) {
+      fail(`batchCompletions.${batch} is pending, so pr and mergeCommit must be null`);
+    }
+  } else {
+    if (!Number.isInteger(completion.pr) || completion.pr < 1) {
+      fail(`batchCompletions.${batch}.pr must be a positive PR number when merged`);
+    }
+    if (typeof completion.mergeCommit !== 'string' || !/^[0-9a-f]{40}$/u.test(completion.mergeCommit)) {
+      fail(`batchCompletions.${batch}.mergeCommit must be a full commit SHA when merged`);
+    }
+    const incompleteOwnRows = rows.filter(entry => entry.status !== 'done');
+    if (incompleteOwnRows.length) {
+      fail(`batchCompletions.${batch} is merged but ${incompleteOwnRows.length} row(s) are not done`);
+    }
+    for (const previousBatch of phase8Batches.slice(0, i)) {
+      if (batchCompletions?.[previousBatch]?.status !== 'merged') {
+        fail(`batchCompletions.${batch} cannot be merged before predecessor ${previousBatch}`);
+      }
+    }
+  }
+
   const batchHasStarted = rows.some(entry => entry.status !== 'pending');
   if (!batchHasStarted) continue;
 
@@ -252,6 +288,9 @@ for (let i = 0; i < phase8Batches.length; i += 1) {
     const incomplete = previousRows.filter(entry => entry.status !== 'done');
     if (incomplete.length) {
       fail(`Phase-8 batch ${batch} has started before predecessor ${previousBatch} is fully done (${incomplete.length} incomplete row(s))`);
+    }
+    if (batchCompletions?.[previousBatch]?.status !== 'merged') {
+      fail(`Phase-8 batch ${batch} has started before predecessor ${previousBatch} is recorded merged`);
     }
   }
 }
@@ -311,6 +350,13 @@ for (let phase = 8; phase <= Number(ledger.lastCompletedPhase); phase += 1) {
   const incomplete = phaseRows.filter(entry => entry.status !== 'done');
   if (phaseRows.length && incomplete.length) {
     fail(`lastCompletedPhase=${ledger.lastCompletedPhase}, but Phase ${phase} still has ${incomplete.length} non-done row(s)`);
+  }
+}
+
+if (Number(ledger.lastCompletedPhase) >= 8) {
+  const unmergedBatches = phase8Batches.filter(batch => batchCompletions?.[batch]?.status !== 'merged');
+  if (unmergedBatches.length) {
+    fail(`lastCompletedPhase=${ledger.lastCompletedPhase}, but Phase-8 batch merge completion is missing for: ${unmergedBatches.join(', ')}`);
   }
 }
 
