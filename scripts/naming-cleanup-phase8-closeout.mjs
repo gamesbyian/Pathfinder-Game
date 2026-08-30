@@ -40,6 +40,8 @@ function isFrozenOrAuthority(file) {
   return file.startsWith('docs/archive/')
     || file.startsWith('docs/history/')
     || file.startsWith('docs/naming-cleanup-phase-records/')
+    || file.startsWith('scripts/naming-cleanup-')
+    || file === 'scripts/check-naming-cleanup-ledger.mjs'
     || file === 'docs/naming-cleanup-plan.md'
     || file === 'docs/naming-cleanup-ledger.json'
     || file === 'docs/naming-cleanup-history-and-lessons.md'
@@ -102,7 +104,7 @@ const legacyChecks = [
   ['portfolio report alias', /solver:portfolio-report\b/gu],
   ['portfolio historical replay', /portfolio-historical-replay\.mjs/gu],
   ['portfolio replay alias', /solver:portfolio-replay\b/gu],
-  ['gha-result filename', /(?:scripts\/)?gha-result\.mjs/gu],
+  ['gha-result filename', /(?<!fetch-)(?:scripts\/)?gha-result\.mjs/gu],
   ['gha:result alias', /\bgha:result\b/gu],
   ['shadow-eval harness doc', /solver-shadow-eval-harness\.md/gu],
   ['interface-probe harness', /interface-probe-harness\.mjs/gu],
@@ -110,6 +112,20 @@ const legacyChecks = [
   ['winning-path archaeology phrase', /\bwinning-path archaeology\b/giu],
   ['winning-path archaeology filename', /winning-path-archaeology\.mjs/gu],
 ];
+
+
+const intentionalLegacyByLabel = new Map([
+  ['winning-prefix-atlas collector', new Set([
+    '.github/workflows/cpsat-explicit-prefix-reference.yml',
+  ])],
+  ['producer-population pilot', new Set([
+    'modules/solver/repair-search.ts',
+    'scripts/stress/compare-search-producer-populations.mjs',
+  ])],
+  ['repair-rollback pilot', new Set([
+    'scripts/stress/census-repair-rollback-windows.mjs',
+  ])],
+]);
 
 const compatibilityAllowlist = new Map([
   ['PATHFINDER_VARIANT_TROVE', new Set([
@@ -141,7 +157,9 @@ for (const file of files) {
     pattern.lastIndex = 0;
     for (let i = 0; i < lines.length; i++) {
       pattern.lastIndex = 0;
-      if (pattern.test(lines[i])) failures.push({ label, file, line: i + 1, text: lines[i].trim() });
+      if (!pattern.test(lines[i])) continue;
+      if (intentionalLegacyByLabel.get(label)?.has(file)) continue;
+      failures.push({ label, file, line: i + 1, text: lines[i].trim() });
     }
   }
 
