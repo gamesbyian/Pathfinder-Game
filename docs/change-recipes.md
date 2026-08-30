@@ -10,22 +10,25 @@ For the repository-wide naming cleanup, also read [`naming-cleanup-process-harde
 
 For Phase-8+ naming-cleanup work:
 
-1. start from current `main` and record the full SHA;
-2. search open naming-cleanup PRs and similarly named branches;
-3. compare plausible predecessor/sibling branches against current `main` rather than inferring work from branch names;
-4. recover unique relevant commits or explicitly record the old branch as superseded;
-5. create the batch execution record and claim the one active batch in the ledger;
-6. do not stack the next implementation batch on an unmerged predecessor.
+1. run `npm run naming:status` and cite selected rows by immutable ledger ID;
+2. start from current `main` and record the full SHA;
+3. search open naming-cleanup PRs and similarly named branches;
+4. compare plausible predecessor/sibling branches against current `main` rather than inferring work from branch names;
+5. recover unique relevant commits or explicitly record the old branch as superseded;
+6. create the batch execution record and claim the one active batch in the ledger;
+7. do not stack the next implementation batch on an unmerged predecessor.
 
 Before merge, compare the branch head with current `main`. If the intended patch is empty or already present, close/supersede rather than merge a duplicate/no-op PR.
 
 ### 1. Build the impact map before editing
 
 1. read [`naming-and-vocabulary.md`](naming-and-vocabulary.md), the owning plan, and active row(s) in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json);
-2. search the old spelling, canonical spelling, abbreviations, case variants, human-readable labels, physical paths, and persisted values across source, tests, package scripts, workflows, current docs, schemas, telemetry/provenance, environment variables, artifact/concurrency/cache identifiers, and spawned/imported paths;
+2. search the old spelling, canonical spelling, abbreviations, case variants, human-readable labels, physical paths, and persisted values across source, tests, package scripts, workflows, current docs, schemas, telemetry/provenance, environment variables, artifact/concurrency/cache identifiers, and spawned/imported paths; explicitly classify existing **canonical-target occupancy** as same concept, unrelated use, collision, or already migrated;
 3. identify producers, canonical readers/normalizers, transports, writers/projections, historical fixtures, grouping/classification consumers, CLI/workflow surfaces, and application/UI consumers before changing a persisted or cross-boundary value;
 4. identify which concrete test/check actually executes or structurally validates each live consumer. Record whether the real boundary is native Node, bundled/tsx, worker, browser, parser, or workflow-structural validation; those classes are not interchangeable. A green aggregate suite is not evidence for a surface it never runs;
-5. for medium/high-risk behavior-preserving migrations, capture the smallest useful before-change observable that can be compared after implementation.
+5. verify the ledger risk class against the plan rubric and raise it before implementation if the impact map reveals a stronger boundary;
+6. define the batch change envelope: intended naming deltas, invariant observables, and out-of-scope findings;
+7. for medium/high-risk behavior-preserving migrations, capture the smallest useful before-change observable that exercises an invariant and can be compared after implementation.
 
 For surfaced tooling, run `node scripts/tooling-census.mjs --compact --query=<term>` for both legacy and canonical terms when applicable. For physical file/workflow renames, separately audit exact-case paths and spawned/imported targets.
 
@@ -64,7 +67,9 @@ For persisted identities use dual-read/single-write unless the owning plan expli
 - emit only the canonical form;
 - do not rewrite frozen reports, logs, archived snapshots, or historical workflow artifacts merely to modernize terminology.
 
-A compatibility alias may be removed only when live code/workflows no longer emit it, current docs no longer teach it, historical readers still accept the legacy form, and a representative historical fixture proves compatibility.
+Every future dual-read ledger row also names its compatibility owner and retirement policy. Keep legacy knowledge at that owner only. A `temporary-command-alias` must be gone by owning-phase closeout; `permanent-historical-read` and `wire-format-retained` are intentionally indefinite; `phase-15-review` modes require evidence before removal rather than automatic deletion.
+
+A compatibility alias may be removed only when live code/workflows no longer emit it, current docs no longer teach it, historical readers still accept any promised legacy form, the ledger retirement condition is satisfied, and a representative historical fixture proves compatibility where historical reads are promised.
 
 For structured identities require parse/format round trips, uniqueness, deterministic canonical formatting, legacy-to-canonical fixtures, and a collision check proving distinct legacy behavior does not collapse.
 
@@ -79,6 +84,10 @@ For TypeScript/plain-Node boundaries:
 - do not assume a `.mjs` tool can import a `.ts` source file merely because a newer local runtime or bundler accepts it;
 - verify plain-Node tools under the repository's minimum supported Node version when the touched boundary depends on native Node loading;
 - tighten `any`/broad port types when a wrong renamed option/result field could otherwise pass compilation.
+
+### 4.1 Distinguish impact-map growth from specification change
+
+Another consumer of an already-fixed mapping may be added to the batch impact map. A different canonical target, risk class, compatibility owner/lifetime, phase/batch assignment, or allowed change envelope is a **specification amendment**. Stop implementation and amend the plan/ledger/phase authority first; do not normalize the divergence by documenting it after the code lands.
 
 ### 5. Validate the migrated contract, not just the definition
 
@@ -118,7 +127,7 @@ For Phase-8+ naming-cleanup batches:
 1. reconcile/update from current `main` as required;
 2. compare head vs current `main` and confirm the intended diff is unique and non-empty;
 3. confirm no next-batch implementation is stacked into the PR;
-4. confirm the batch record, ledger state, targeted tests, and required aggregate CI agree;
+4. confirm the batch record, immutable row IDs, risk/compatibility policy, ledger state, targeted tests, and required aggregate CI agree;
 5. merge the batch before creating the next implementation branch;
 6. run the phase-wide final closeout on merged `main` before advancing `lastCompletedPhase` for a multi-batch phase.
 
