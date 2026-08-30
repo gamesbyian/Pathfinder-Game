@@ -58,14 +58,14 @@ runNode('scripts/analyze-known-solution-prefix-survival.mjs', [
 assert.equal(JSON.parse(readFileSync(survivalOut, 'utf8')).rows.length, 0);
 
 const replayOut = path.join(tmp, 'portfolio-replay.json');
-runBundled('scripts/portfolio-historical-replay.mjs', [
+runBundled('scripts/legacy-latency-portfolio-replay.mjs', [
   `--inputs=${emptyReplay}`,
   `--out=${replayOut}`,
 ]);
 assert.equal(JSON.parse(readFileSync(replayOut, 'utf8')).totalWinningAttempts, 0);
 
 const schedulerOut = path.join(tmp, 'portfolio-report.json');
-runBundled('scripts/portfolio-scheduler-report.mjs', [
+runBundled('scripts/legacy-latency-portfolio-report.mjs', [
   `--corpus=${emptyLevels}`,
   `--out=${schedulerOut}`,
   `--summary-out=${path.join(tmp, 'portfolio-report.md')}`,

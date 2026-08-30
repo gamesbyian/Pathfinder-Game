@@ -3,7 +3,7 @@
  * Offline replay of portfolio cap policies against already-recorded winning attempts.
  *
  * Usage:
- *   npm run solver:portfolio-replay -- --inputs=logs/published.json --out=reports/portfolio-historical-replay.json
+ *   npm run solver:legacy-latency-portfolio-replay -- --inputs=logs/published.json --out=reports/legacy-latency-portfolio-replay.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -16,10 +16,10 @@ const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const positional = args.filter(a => !a.startsWith('--'));
 const inputs = (argMap.get('--inputs') || '').split(',').map(s => s.trim()).filter(Boolean).concat(positional);
-const outFile = argMap.get('--out') || 'reports/portfolio-historical-replay.json';
+const outFile = argMap.get('--out') || 'reports/legacy-latency-portfolio-replay.json';
 
 if (inputs.length === 0) {
-    console.error('Usage: npm run solver:portfolio-replay -- --inputs=logs/a.json[,logs/b.json] [--out=reports/portfolio-historical-replay.json]');
+    console.error('Usage: npm run solver:legacy-latency-portfolio-replay -- --inputs=logs/a.json[,logs/b.json] [--out=reports/legacy-latency-portfolio-replay.json]');
     process.exit(2);
 }
 

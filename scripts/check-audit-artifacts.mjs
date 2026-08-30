@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import process from 'node:process';
 
 // Allow latest.json and any timestamped snapshot: YYYY-MM-DDTHH-MM-SSZ-<sha>.json
-// Timestamped snapshots are committed by the audit-export workflow to maintain a
+// Timestamped snapshots are committed by the solver-diagnostics workflow to maintain a
 // rolling history for solver regression analysis.
 const ALLOWED_NAMES = new Set(['latest.json']);
 const TIMESTAMP_SNAPSHOT = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z-[0-9a-f]+\.json$/;

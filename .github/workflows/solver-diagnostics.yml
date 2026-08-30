@@ -1,4 +1,4 @@
-name: Audit Export
+name: Solver diagnostics and hint capture
 
 on:
   push:
@@ -34,8 +34,8 @@ jobs:
       # computed path was thrown away. Now a novel solution becomes a new hint, and a rediscovery
       # appends a provenance entry stamped with this commit — which is what gives the cost-drift
       # check below something to compare against previous commits.
-      - name: Run full SolverV2 audit export
-        run: npm run audit:newhint:full -- --save-hints
+      - name: Run full SolverV2 diagnostics analysis
+        run: npm run solver:analyze-diagnostics -- --save-hints
 
       - name: Guard audit output
         run: npm run check:audit-output -- logs/solver-workflow/latest.json
@@ -57,10 +57,10 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload full audit artifact
+      - name: Upload full diagnostics artifact
         uses: actions/upload-artifact@v7
         with:
-          name: fullaudit-${{ github.sha }}
+          name: solver-diagnostics-${{ github.sha }}
           path: |
             logs/solver-workflow/latest.json
             logs/solver-workflow/*.json

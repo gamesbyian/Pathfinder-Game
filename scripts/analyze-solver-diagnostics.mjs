@@ -83,8 +83,13 @@ const deriveLevelFailureSignature = (levelRow = {}) => {
     + (signature.causality.portalCommitmentChurn * 0.8)
     + (hardFailure ? 1.5 : 0)
   ).toFixed(5));
-  signature.knownHardCluster = signature.signatureScore >= 2.15;
-  signature.recommendedGating = signature.knownHardCluster
+  // NC-P08-024/025 (docs/naming-cleanup-plan.md Section 5.7): historical committed reports under
+  // logs/solver-workflow/ still carry the legacy knownHardCluster/recommendedGating field names and
+  // are never rewritten in place -- any future reader of those files must accept both the legacy and
+  // canonical names. This writer emits ONLY the canonical names from Phase 8 onward (no current
+  // reader consumes either field, confirmed by a full-repo search before this rename).
+  signature.hardClusterHeuristicMatch = signature.signatureScore >= 2.15;
+  signature.derivedGatingCandidate = signature.hardClusterHeuristicMatch
     ? {
         passOrder: ['structural-modern', 'orderingBias', 'routingRegime'],
         budgetMultiplier: Number((1.15 + Math.min(0.35, signature.signatureScore * 0.08)).toFixed(3))
@@ -395,21 +400,21 @@ const _summarizeMetrics = (payload, commitSha) => {
       .sort((a, b) => (b.signatureScore - a.signatureScore) || ((a.level || 0) - (b.level || 0)))
   };
 
-  const knownHardClusterLevels = summary.levelFailureSignatures
-    .filter((row) => row.knownHardCluster)
+  const hardClusterHeuristicMatchLevels = summary.levelFailureSignatures
+    .filter((row) => row.hardClusterHeuristicMatch)
     .map((row) => row.level)
     .filter((level) => Number.isFinite(level));
   summary.hardClusterGating = {
-    knownHardLevels: knownHardClusterLevels,
+    knownHardLevels: hardClusterHeuristicMatchLevels,
     budgetByLevel: Object.fromEntries(
       summary.levelFailureSignatures
         .filter((row) => Number.isFinite(row.level))
-        .map((row) => [row.level, row.recommendedGating?.budgetMultiplier || 1])
+        .map((row) => [row.level, row.derivedGatingCandidate?.budgetMultiplier || 1])
     ),
     passOrderByLevel: Object.fromEntries(
       summary.levelFailureSignatures
-        .filter((row) => Number.isFinite(row.level) && Array.isArray(row.recommendedGating?.passOrder))
-        .map((row) => [row.level, row.recommendedGating.passOrder])
+        .filter((row) => Number.isFinite(row.level) && Array.isArray(row.derivedGatingCandidate?.passOrder))
+        .map((row) => [row.level, row.derivedGatingCandidate.passOrder])
     )
   };
 
@@ -555,12 +560,12 @@ const pruneRawExports = async (rawDir, latestFileName, keepDays = 10) => {
 };
 
 const run = async () => {
-  const directOutPath = path.join(process.cwd(), 'logs', 'local-direct', '.audit-export-tmp.json');
-  console.log('[audit-export] running Solver direct on all levels');
+  const directOutPath = path.join(process.cwd(), 'logs', 'local-direct', '.solver-diagnostics-tmp.json');
+  console.log('[solver-diagnostics] running Solver direct on all levels');
   // Route through run-bundled.mjs (esbuild bundle), like `npm run solver:direct`: run-solverv2-direct
   // imports modules/solver.js, which is TypeScript post-migration and cannot be resolved by plain
   // `node` (ERR_MODULE_NOT_FOUND). The bundler transforms the .ts entry the same way production does.
-  // --save-hints (opt-in, passed by audit-export.yml) makes this pass RECORD what it finds instead
+  // --save-hints (opt-in, passed by solver-diagnostics.yml) makes this pass RECORD what it finds instead
   // of discarding it. This run already solves all 160 published levels on every merge that touches
   // the solver or the level data; without it, every path it computes was thrown away — the audit
   // payload keeps only metrics, never the solution. Two things are recovered by keeping them:
@@ -595,7 +600,7 @@ const run = async () => {
 
     await pruneRawExports(rawDir, 'latest.json', 10);
 
-    console.log(`Audit export written: ${path.relative(process.cwd(), rawFilePath)}`);
+    console.log(`Solver diagnostics report written: ${path.relative(process.cwd(), rawFilePath)}`);
 };
 
 run().catch((err) => {
