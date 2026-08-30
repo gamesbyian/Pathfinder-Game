@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Winning-path archaeology — an early local-child-rank evidence tool. Current winning-lineage
- * instrumentation and follow-up methodology live in docs/solver-winning-lineage-survival-analysis.md.
+ * Winning-path archaeology — an early local-child-rank evidence tool. Current known-solution-prefix
+ * survival instrumentation and follow-up methodology live in docs/solver-known-solution-prefix-survival.md.
  *
  * WHAT THIS MEASURES: for each sampled level with a known, PLAY-valid winning path (a stored hint,
  * any provenance), replay the path step by step through the REAL production primitives
@@ -15,9 +15,9 @@
  * exploratory budget — see BUDGET below, NOT the authoritative corpus baseline) so results can be
  * bucketed by solved-vs-unsolved and compared.
  *
- * SCOPE. This is local child rank, not full beam-lineage survival: "beam admission" depends on a
- * width-limited GLOBAL frontier pooled across every parent. Faithfully measuring that requires the
- * production beam observer/instrumentation documented in solver-winning-lineage-survival-analysis.md.
+ * SCOPE. This is local child rank, not full beam known-solution-prefix survival: "beam admission"
+ * depends on a width-limited GLOBAL frontier pooled across every parent. Faithfully measuring that
+ * requires the production beam observer/instrumentation documented in solver-known-solution-prefix-survival.md.
  * A low local rank does not guarantee beam survival, and a high local rank does not guarantee beam
  * death. This is a heuristic-preference proxy, not a beam-survival simulator.
  *

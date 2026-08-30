@@ -54,17 +54,17 @@ assert.ok(
   ),
 );
 
-const lineageModule = inventory.modules.find(row => row.file === 'modules/solver/research-lineage.ts');
-assert.ok(lineageModule, 'Phase-8 inventory should map the research-lineage module');
-assert.ok(lineageModule.exports.includes('WinningPrefixIndex'));
-assert.ok(lineageModule.exports.includes('WinningLineageObserver'));
-assert.ok(lineageModule.importOrTextRefs.some(file => file.startsWith('scripts/')));
+const survivalModule = inventory.modules.find(row => row.file === 'modules/solver/known-solution-prefix-survival.ts');
+assert.ok(survivalModule, 'Phase-8 inventory should map the known-solution-prefix-survival module');
+assert.ok(survivalModule.exports.includes('KnownSolutionPrefixIndex'));
+assert.ok(survivalModule.exports.includes('KnownSolutionPrefixSurvivalObserver'));
+assert.ok(survivalModule.importOrTextRefs.some(file => file.startsWith('scripts/')));
 
-const lineageSymbol = inventory.ledgerEntries.find(row => row.old === 'WinningLineageObserver');
-assert.ok(lineageSymbol);
-assert.equal(lineageSymbol.id, 'NC-P08-005');
-assert.equal(lineageSymbol.batch, '8B');
-assert.ok(lineageSymbol.surfaces.symbolOwners.includes('modules/solver/research-lineage.ts'));
+const survivalSymbol = inventory.ledgerEntries.find(row => row.old === 'WinningLineageObserver');
+assert.ok(survivalSymbol);
+assert.equal(survivalSymbol.id, 'NC-P08-005');
+assert.equal(survivalSymbol.batch, '8B');
+assert.ok(survivalSymbol.surfaces.symbolOwners.includes('modules/solver/known-solution-prefix-survival.ts'));
 
 const atlasWorkflow = inventory.workflows.find(row => row.file === '.github/workflows/atlas-sweep.yml');
 assert.ok(atlasWorkflow, 'Phase-8 inventory should map atlas-sweep workflow');

@@ -32,8 +32,8 @@ test('SOLVER_TESTING_API exposes stable analysis helpers', () => {
     assert.equal(typeof SOLVER_TESTING_API.getAttemptConfigs, 'function');
     assert.equal(typeof SOLVER_TESTING_API.prepLevel, 'function');
     assert.equal(typeof SOLVER_TESTING_API.beamSearchFromGate, 'function');
-    assert.equal(typeof SOLVER_TESTING_API.WinningPrefixIndex, 'function');
-    assert.equal(typeof SOLVER_TESTING_API.WinningLineageObserver, 'function');
+    assert.equal(typeof SOLVER_TESTING_API.KnownSolutionPrefixIndex, 'function');
+    assert.equal(typeof SOLVER_TESTING_API.KnownSolutionPrefixSurvivalObserver, 'function');
     assert.equal(typeof SOLVER_TESTING_API.evaluatePrunedMove, 'function');
     assert.equal(typeof SOLVER_TESTING_API.getRealLengthFromState, 'function');
     assert.equal(typeof SOLVER_TESTING_API.scoreMove, 'function');

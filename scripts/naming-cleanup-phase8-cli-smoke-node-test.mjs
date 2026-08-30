@@ -9,10 +9,10 @@ import process from 'node:process';
 const root = process.cwd();
 const tmp = mkdtempSync(path.join(os.tmpdir(), 'pathfinder-phase8-smoke-'));
 const emptyLevels = path.join(tmp, 'levels.json');
-const emptyLineage = path.join(tmp, 'lineage.json');
+const emptySurvival = path.join(tmp, 'known-solution-prefix-survival.json');
 const emptyReplay = path.join(tmp, 'replay.json');
 writeFileSync(emptyLevels, JSON.stringify({ levels: [] }));
-writeFileSync(emptyLineage, JSON.stringify({ scoreWidthForensics: [] }));
+writeFileSync(emptySurvival, JSON.stringify({ scoreWidthForensics: [] }));
 writeFileSync(emptyReplay, JSON.stringify({ levels: [] }));
 
 function runNode(script, args = []) {
@@ -49,13 +49,13 @@ function expectFastFailure(script, args, expected, bundled = false) {
 }
 
 // Pure/offline analyzers: real argument parsing + serializer path, synthetic zero-row data.
-const lineageOut = path.join(tmp, 'lineage-out.json');
-runNode('scripts/analyze-lineage-mechanics.mjs', [
-  `--lineage=${emptyLineage}`,
+const survivalOut = path.join(tmp, 'known-solution-prefix-survival-out.json');
+runNode('scripts/analyze-known-solution-prefix-survival.mjs', [
+  `--survival=${emptySurvival}`,
   `--levels=${emptyLevels}`,
-  `--out=${lineageOut}`,
+  `--out=${survivalOut}`,
 ]);
-assert.equal(JSON.parse(readFileSync(lineageOut, 'utf8')).rows.length, 0);
+assert.equal(JSON.parse(readFileSync(survivalOut, 'utf8')).rows.length, 0);
 
 const replayOut = path.join(tmp, 'portfolio-replay.json');
 runBundled('scripts/portfolio-historical-replay.mjs', [
@@ -78,8 +78,8 @@ for (const [script, outName] of [
   ['scripts/stress/producer-population-pilot.mjs', 'producer.json'],
   ['scripts/stress/repair-rollback-census-pilot.mjs', 'rollback.json'],
   ['scripts/stress/residual-interface-mining-pilot.mjs', 'residual.json'],
-  ['scripts/stress/winning-lineage-pilot.mjs', 'lineage-pilot.json'],
-  ['scripts/stress/winning-prefix-atlas-pilot.mjs', 'prefix-atlas.json'],
+  ['scripts/stress/collect-known-solution-prefix-survival.mjs', 'known-solution-prefix-survival.json'],
+  ['scripts/stress/collect-known-solution-prefix-branches.mjs', 'known-solution-prefix-branches.json'],
 ]) {
   const out = path.join(tmp, outName);
   runBundled(script, [`--levels=${emptyLevels}`, `--out=${out}`]);

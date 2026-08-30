@@ -26,7 +26,7 @@ const stableCaseId = ({ levelId, depth, prefix, child }, index) => {
     return `${levelId}:${depth ?? prefix.length - 1}:${suffix}:${index}`;
 };
 
-/** Accept either the committed winning-prefix atlas or a generic explicit case document:
+/** Accept either the committed known-solution-prefix branch collection or a generic explicit case document:
  * { corpus, cases: [{ id?, levelId, prefix, child? }] }. Prefix/child cells may be packed solver
  * keys (0-based internally), raw [x,y] coordinate pairs, or raw {x,y}; emitted prefixes are always
  * 1-based [x,y] pairs as expected by cpsat-reference-probe.py's --prefix argument. */

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * Regression coverage for analyze-lineage-mechanics.mjs's feature projection: it correctly
- * dual-reads level.stressMeta.requiredPathCoverageRatio/.navDensity, but wrote the result under the
- * legacy `navDensity` key in its freshly-generated `features` output -- an actively-run analysis
- * tool, not a frozen artifact, so this manufactured new evidence under a retired schema field name.
+ * Regression coverage for analyze-known-solution-prefix-survival.mjs's feature projection: it
+ * correctly dual-reads level.stressMeta.requiredPathCoverageRatio/.navDensity, but wrote the result
+ * under the legacy `navDensity` key in its freshly-generated `features` output -- an actively-run
+ * analysis tool, not a frozen artifact, so this manufactured new evidence under a retired schema
+ * field name.
  */
 import assert from 'node:assert/strict';
 import { execFile as execFileCallback } from 'node:child_process';
@@ -16,12 +17,12 @@ import { fileURLToPath } from 'node:url';
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const dir = await mkdtemp(path.join(os.tmpdir(), 'analyze-lineage-mechanics-cli-'));
-const lineagePath = path.join(dir, 'lineage.json');
+const dir = await mkdtemp(path.join(os.tmpdir(), 'analyze-known-solution-prefix-survival-cli-'));
+const survivalPath = path.join(dir, 'known-solution-prefix-survival.json');
 const levelsPath = path.join(dir, 'levels.json');
 const outPath = path.join(dir, 'out.json');
 
-await writeFile(lineagePath, JSON.stringify({
+await writeFile(survivalPath, JSON.stringify({
     scoreWidthForensics: [{
         levelId: 'R00001', classification: 'A-1', solved: true,
         scoreMarginToCutoff: 1, candidatePoolSize: 2, normalizedDepth: 0.5,
@@ -33,8 +34,8 @@ await writeFile(levelsPath, JSON.stringify([{
 }]));
 
 await execFile(process.execPath, [
-    'scripts/analyze-lineage-mechanics.mjs',
-    `--lineage=${lineagePath}`, `--levels=${levelsPath}`, `--out=${outPath}`,
+    'scripts/analyze-known-solution-prefix-survival.mjs',
+    `--survival=${survivalPath}`, `--levels=${levelsPath}`, `--out=${outPath}`,
 ], { cwd: ROOT });
 
 const result = JSON.parse(await readFile(outPath, 'utf8'));
@@ -45,4 +46,4 @@ assert.equal('navDensity' in features, false, 'the legacy navDensity key must no
 assert.ok('requiredPathCoverageRatio' in result.groups['clearly-mis-ranked'].featureMedians,
     'group feature medians must be keyed by the canonical field name');
 
-console.log('analyze-lineage-mechanics CLI: all tests passed');
+console.log('analyze-known-solution-prefix-survival CLI: all tests passed');

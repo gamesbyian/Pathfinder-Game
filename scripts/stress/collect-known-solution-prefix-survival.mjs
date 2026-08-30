@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Bounded real-beam winning-lineage pilot. Known solutions label observation only. */
+/** Bounded real-beam known-solution-prefix survival collector. Known solutions label observation only. */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
@@ -14,13 +14,13 @@ const levelsFile = args.get('--levels') ?? 'data/stress/stress-levels-random.jso
 const limit = Number(args.get('--limit-levels') ?? 8);
 const beamWidth = Number(args.get('--beam-width') ?? 100);
 const nodeBudget = Number(args.get('--node-budget') ?? 100000);
-const outFile = args.get('--out') ?? 'reports/stress/winning-lineage-pilot.json';
+const outFile = args.get('--out') ?? 'reports/stress/collect-known-solution-prefix-survival.json';
 const includeStages = args.has('--include-stages');
 const metadataFile = args.get('--metadata');
 const requestedLevelIds = (args.get('--level-ids') ?? '').split(',').map(x => x.trim()).filter(Boolean);
 const retainAllRemovalDetails = args.has('--retain-all-removal-details');
 const retainRankedPoolDetails = args.has('--retain-ranked-pool-details');
-const runId = args.get('--run-id') ?? `winning-lineage-${new Date().toISOString()}`;
+const runId = args.get('--run-id') ?? `known-solution-prefix-survival-${new Date().toISOString()}`;
 const solverRef = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 const familyDefinitionVersion = 'structural-solution-family-v1';
 if (![limit, beamWidth, nodeBudget].every(Number.isFinite) || limit < 1 || beamWidth < 1 || nodeBudget < 1) {
@@ -76,7 +76,7 @@ for (const raw of selected) {
     const offPrep = api.prepLevel(level); offPrep._cfg = null; offPrep._metrics = { nodesExpanded: 0 };
     const offPath = await api.beamSearchFromGate(gateKey, level, offPrep, api.SCORING_PROFILES.default,
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
-    const observer = new api.WinningLineageObserver(new api.WinningPrefixIndex(labels), {
+    const observer = new api.KnownSolutionPrefixSurvivalObserver(new api.KnownSolutionPrefixIndex(labels), {
         retainAllRemovalDetails,
         retainRankedPoolDetails,
     });
@@ -85,17 +85,17 @@ for (const raw of selected) {
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
     const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath) && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded;
     if (!behaviorIdentical) throw new Error(`${raw.id}: observer changed path or nodes`);
-    const lineage = observer.summary(level.reqLen);
+    const survival = observer.summary(level.reqLen);
     rows.push({ runId, solverRef, levelId: raw.id, coldSolved: metadataColdById?.get(String(raw.id)) ?? null,
         gateKey, validLabels: labels.length, reqLen: level.reqLen, beamWidth, nodeBudget,
         producer: 'beam', scoringProfileId: 'default', seed: null, controlTreatment: 'observation-on',
-        solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded, behaviorIdentical, lineage });
+        solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded, behaviorIdentical, survival });
     console.error(`${raw.id}: labels=${labels.length} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded}`);
 }
 const forensic = rows.map(row => {
-    const loss = row.lineage.finalSupportLoss;
+    const loss = row.survival.finalSupportLoss;
     if (!loss || loss.lossCause !== 'score-width-culled') return null;
-    const removal = [...(row.lineage.stages ?? [])].reverse().find(stage => stage.depth === loss.depth && stage.stage === 'score-width-culled');
+    const removal = [...(row.survival.stages ?? [])].reverse().find(stage => stage.depth === loss.depth && stage.stage === 'score-width-culled');
     const supported = removal?.details?.supportedPool ?? [];
     const ranks = supported.map(x => x.rank), scores = supported.map(x => x.score);
     const margin = scores.length ? Math.min(...scores.map(score => removal.details.cutoffScore - score)) : null;
@@ -121,17 +121,17 @@ const forensic = rows.map(row => {
         supportedInsertionOrders: supported.map(x => x.insertionOrder),
         directionalOrderInvolvement: 'not determinable from the production cull record', widthSaturated,
         structuralFamiliesAroundCutoff: removal?.details?.supportedPoolFamilies ?? 0,
-        canonicalWorkAfterExtinction: row.lineage.workAfterFinalKnownSupport, classification };
+        canonicalWorkAfterExtinction: row.survival.workAfterFinalKnownSupport, classification };
 }).filter(Boolean);
-for (const row of rows) if (!includeStages && row.lineage.stages) delete row.lineage.stages;
+for (const row of rows) if (!includeStages && row.survival.stages) delete row.survival.stages;
 const document = { schemaVersion: 4, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
     corpus: levelsFile, selection, retainAllRemovalDetails, retainRankedPoolDetails,
     familyDefinition: 'portal usage + crossing placement + must-cross first-entry/completion order; local edge detours ignored',
-    familyDefinitionVersion, technique: 'beam winning-lineage observation', scoringProfileId: 'default', seed: null,
+    familyDefinitionVersion, technique: 'beam known-solution-prefix survival observation', scoringProfileId: 'default', seed: null,
     workBudget: nodeBudget, limitLevels: limit, beamWidth, nodeBudget, levels: rows, scoreWidthForensics: forensic,
     summary: { levels: rows.length, solved: rows.filter(x => x.solved).length,
         behaviorIdentical: rows.filter(x => x.behaviorIdentical).length,
-        correctnessAlarms: rows.reduce((n, x) => n + x.lineage.correctnessAlarms.length, 0) } };
+        correctnessAlarms: rows.reduce((n, x) => n + x.survival.correctnessAlarms.length, 0) } };
 mkdirSync(path.dirname(outFile), { recursive: true });
 writeFileSync(outFile, `${JSON.stringify(document, null, 2)}\n`);
 console.log(`Wrote ${outFile}`);

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Small contrastive known-winning-prefix atlas using authoritative solver replay/enumeration. */
+/** Small contrastive known-solution-prefix branch collector using authoritative solver replay/enumeration. */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
@@ -12,7 +12,7 @@ const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x
 const levelsFile = args.get('--levels') ?? 'data/stress/stress-levels-random.json';
 const levelLimit = Number(args.get('--limit-levels') ?? 3);
 const solutionLimit = Number(args.get('--limit-solutions') ?? 3);
-const outFile = args.get('--out') ?? 'reports/stress/winning-prefix-atlas-pilot.json';
+const outFile = args.get('--out') ?? 'reports/stress/collect-known-solution-prefix-branches.json';
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
