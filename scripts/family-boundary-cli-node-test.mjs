@@ -68,6 +68,31 @@ try {
     assert.equal(JSON.parse(await readFile(out, 'utf8')).families.length, 0, '--routing-regime excludes a non-matching family');
     await assert.rejects(execFile('node', [...baseArgs, '--routing-regime=general', '--archetype=turns'], { cwd: ROOT }),
         /--routing-regime and --archetype disagree/, 'conflicting --routing-regime/--archetype values must fail loudly, not silently pick one');
+
+    // The core regression: an equivalent canonical/legacy pair with genuinely different raw
+    // spellings must NOT be rejected as conflicting (must-not-throw is the assertion here).
+    await execFile('node', [...baseArgs, '--routing-regime=intersection-heavy', '--archetype=high-intersection-burden'], { cwd: ROOT });
+
+    // Producer/consumer coverage contract: a manifest carrying the canonical
+    // parentRequiredPathCoverageRatio (as family-generate.mjs's schemaVersion-2 manifests do) must
+    // survive into parentFeatures.requiredPathCoverageRatio even when the matched parent level's
+    // own stressMeta has neither the canonical nor legacy coverage field.
+    const covManifest = path.join(dir, 'cov-manifest.json');
+    const covLevels = path.join(dir, 'cov-levels.json');
+    const covOut = path.join(dir, 'cov-out.json');
+    await writeFile(covManifest, JSON.stringify({
+        familyId: 'FCOV', parentLevelId: 'PCOV', parentCorpus: 'tiny', familyMode: 'symmetry',
+        parentRequiredPathCoverageRatio: 0.55,
+        variants: [{ variantId: 'VCOV', relation: 'symmetry', mutationManifest: { operation: 'transform', variant: 1 } }],
+    }));
+    await writeFile(covLevels, JSON.stringify([{ id: 'PCOV', reqInt: 1, portals: [] }]));
+    await execFile('node', [
+        'scripts/family-boundary-report.mjs', `--manifests=${covManifest}`, `--canonical=${canonical}`,
+        `--variants=${variants}`, `--parent-levels=${covLevels}`, `--out=${covOut}`,
+    ], { cwd: ROOT });
+    const covReport = JSON.parse(await readFile(covOut, 'utf8'));
+    assert.equal(covReport.families[0].features.requiredPathCoverageRatio, 0.55,
+        'manifest.parentRequiredPathCoverageRatio must be read before falling back to the legacy parentNavDensity when the parent level itself has no coverage field');
 } finally {
     await rm(dir, { recursive: true, force: true });
 }

@@ -55,7 +55,7 @@ manifests = manifests.map(manifest => {
         ...manifest,
         parentFeatures: {
             reqInt: level.reqInt ?? manifest.selectedWitnessIntersectionCount ?? null,
-            requiredPathCoverageRatio: level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? manifest.parentNavDensity ?? null,
+            requiredPathCoverageRatio: level.stressMeta?.requiredPathCoverageRatio ?? level.stressMeta?.navDensity ?? manifest.parentRequiredPathCoverageRatio ?? manifest.parentNavDensity ?? null,
             turnLoad: level.stressMeta?.turnLoad ?? null,
             routingRegime: safeNormalizeRoutingRegime(level.stressMeta?.routingRegime ?? level.stressMeta?.archetype ?? null),
             portalCount: Array.isArray(level.portals) ? level.portals.length : 0,
@@ -92,8 +92,11 @@ for (const [flag, field, accept] of numericFilters) {
 }
 // --archetype remains a documented legacy input alias for one migration window; both write to the
 // canonical parentFeatures.routingRegime filter. Fail loudly rather than silently pick one if a
-// caller somehow supplies both with different values.
-if (args.has('--routing-regime') && args.has('--archetype') && args.get('--routing-regime') !== args.get('--archetype')) {
+// caller somehow supplies both with different values -- compare NORMALIZED values, not raw
+// strings, so an equivalent pair like canonical intersection-heavy and legacy
+// high-intersection-burden is not wrongly rejected as conflicting.
+if (args.has('--routing-regime') && args.has('--archetype') &&
+    safeNormalizeRoutingRegime(args.get('--routing-regime')) !== safeNormalizeRoutingRegime(args.get('--archetype'))) {
     throw new Error(`--routing-regime and --archetype disagree ("${args.get('--routing-regime')}" vs "${args.get('--archetype')}"); pass only one`);
 }
 const routingRegimeArg = args.get('--routing-regime') ?? args.get('--archetype');
