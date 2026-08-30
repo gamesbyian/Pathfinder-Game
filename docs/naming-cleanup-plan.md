@@ -961,20 +961,28 @@ Each entry must contain:
 
 Populate it with every explicit mapping in Sections 4-8 before implementing code renames, including workflow/package/env/protocol mappings. Also add an entry for each potentially confusing live term that the final census intentionally retains; for retained terms, set `old` and `new` to the same canonical spelling and explain the contextual justification in `notes` (for example the ADR-0006 `*-core` convention or genuine bounded `method-probe`). The ledger is the checklist of record. A rename PR marks only its own entries `done`.
 
-For Phase 8 onward, each ledger entry also carries:
+For Phase 8 onward, completion contract v3 adds durable execution evidence:
 
 ```json
-"verification": {
-  "surfaceInventory": "pending|done|not-applicable",
-  "implementation": "pending|done|not-applicable",
-  "targetedValidation": "pending|done|not-applicable",
-  "consumerAudit": "pending|done|not-applicable",
-  "behavioralParity": "pending|done|not-applicable",
-  "closeoutAudit": "pending|done|not-applicable"
+{
+  "batch": "8A",
+  "verificationRecord": null,
+  "verification": {
+    "surfaceInventory": "pending|done|not-applicable",
+    "implementation": "pending|done|not-applicable",
+    "targetedValidation": "pending|done|not-applicable",
+    "consumerAudit": "pending|done|not-applicable",
+    "behavioralParity": "pending|done|not-applicable",
+    "closeoutAudit": "pending|done|not-applicable"
+  }
 }
 ```
 
-A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable`. `not-applicable` requires an explicit rationale in the entry notes or phase PR. This model is prospective: do not manufacture retroactive verification claims for Phases 1-7; their later audit history remains recorded in the ledger closeout notes and the process-hardening document.
+`batch` is mandatory for Phase 8 and is fixed to 8A-8H by [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md). Later phases add batch identifiers when the plan serializes them. `verificationRecord` is `null` while a row is merely pending; as soon as a Phase-8+ row becomes `in-progress`, it must point at the checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md), and the pointer remains after the row becomes `done`.
+
+A Phase-8+ entry may become `status: "done"` only when every verification dimension is `done` or `not-applicable` and the checked-in `verificationRecord` exists. `not-applicable` requires an explicit rationale in the entry notes or record. The top-level `activeExecution` object identifies the one phase/batch/branch/record allowed to have `in-progress` rows. The ledger checker rejects idle-with-in-progress state, multiple/mismatched active batches, missing records, unassigned Phase-8 rows, and `lastCompletedPhase` values that outrun incomplete future rows.
+
+This model is prospective: do not manufacture retroactive verification claims for Phases 1-7; their later audit history remains recorded in the ledger closeout notes, the process-hardening document, and the retrospective.
 
 When the cleanup is complete, archive the final ledger under `docs/archive/snapshots/` and replace the temporary live file with a short completion note in the permanent naming/vocabulary authority.
 
