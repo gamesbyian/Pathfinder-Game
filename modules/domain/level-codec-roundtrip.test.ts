@@ -138,6 +138,24 @@ test('cloneLevelWithReq overrides only the challenge metrics', () => {
     assert.deepEqual(c.gateKeys, l.gateKeys);
 });
 
+test('challenge metrics survive raw parse, canonical clone, and wire serialization boundaries', () => {
+    const parsed = parseRawLevel(FULL_RAW)! as any;
+    const clone = canonicalCloneLevel(parsed) as any;
+    const wire = buildWireLevelData(clone);
+
+    assert.equal(parsed.reqLen, FULL_RAW.reqLen, 'raw parser carries the length metric into runtime data');
+    assert.equal(parsed.reqInt, FULL_RAW.reqInt, 'raw parser carries the intersection metric into runtime data');
+    assert.equal(clone.reqLen, parsed.reqLen, 'canonical clone preserves the runtime length metric');
+    assert.equal(clone.reqInt, parsed.reqInt, 'canonical clone preserves the runtime intersection metric');
+    assert.equal(wire.reqLen, FULL_RAW.reqLen, 'wire writer restores the serialized length metric');
+    assert.equal(wire.reqInt, FULL_RAW.reqInt, 'wire writer restores the serialized intersection metric');
+    assert.deepEqual(
+        Object.keys(wire).filter((key) => key.startsWith('req')).sort(),
+        ['reqInt', 'reqLen'],
+        'wire output has exactly the two established challenge-metric keys',
+    );
+});
+
 test('assertLevelShape throws on structurally unusable levels', () => {
     assert.throws(() => assertLevelShape(null), /null/);
     assert.throws(() => assertLevelShape({ gateKeys: [K(1, 1)], grid: { w: 3, h: 3 } }), /missing goal/);
