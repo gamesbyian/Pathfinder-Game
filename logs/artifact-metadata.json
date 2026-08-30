@@ -6,11 +6,11 @@
       "selector": { "kind": "exact", "value": "logs/solver-workflow/latest.json" },
       "role": "current-pointer",
       "canonicalInput": false,
-      "generator": "scripts/run-audit-export.mjs",
+      "generator": "scripts/analyze-solver-diagnostics.mjs",
       "artifactSchemaVersion": null,
       "sourceCommitOrRunId": "embedded in artifact",
       "consumers": ["scripts/check-audit-output.mjs", "solver audit comparison"],
-      "regenerationCommand": "npm run audit:newhint:full",
+      "regenerationCommand": "npm run solver:analyze-diagnostics",
       "supersededBy": null,
       "safeToDelete": false,
       "safeToRegenerate": true

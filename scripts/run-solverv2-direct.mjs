@@ -27,7 +27,7 @@ const budgetMsArg  = argMap.get('--budget-ms');
 const outputFile   = argMap.get('--output') || 'logs/Solver/latest.json';
 const verbose      = argFlags.has('--verbose');
 // Opt-in, default OFF: an ordinary `npm run solver:direct` debugging run must never write to the
-// committed hint corpus. audit-export.yml passes it so the CI solver pass stops discarding what it
+// committed hint corpus. solver-diagnostics.yml passes it so the CI solver pass stops discarding what it
 // finds -- see that workflow and docs/testing.md's "Retroactive cost drift" note.
 const saveHints    = argFlags.has('--save-hints');
 

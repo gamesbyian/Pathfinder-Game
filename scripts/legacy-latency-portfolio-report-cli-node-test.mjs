@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Regression coverage for scripts/portfolio-scheduler-report.mjs's portfolio-winner projection:
+ * Regression coverage for scripts/legacy-latency-portfolio-report.mjs's portfolio-winner projection:
  * it correctly recognizes the canonical schedulerPhase 'legacy-latency-portfolio' when computing
  * pass numbers (passForPortfolioWin) and runtime breakdowns (summarizeRuntime), but the separate
  * `portfolioWinner` lookup used for winningConfig/gateKey only checked the legacy 'portfolio' and
@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 const execFile = promisify(execFileCallback);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const dir = await mkdtemp(path.join(os.tmpdir(), 'portfolio-scheduler-report-cli-'));
+const dir = await mkdtemp(path.join(os.tmpdir(), 'legacy-latency-portfolio-report-cli-'));
 const corpusPath = path.join(dir, 'corpus.json');
 const outFile = path.join(dir, 'report.json');
 const summaryOutFile = path.join(dir, 'report-summary.md');
@@ -32,7 +32,7 @@ await writeFile(corpusPath, JSON.stringify([{
 }]));
 
 await execFile(process.execPath, [
-    'scripts/run-bundled.mjs', 'scripts/portfolio-scheduler-report.mjs',
+    'scripts/run-bundled.mjs', 'scripts/legacy-latency-portfolio-report.mjs',
     `--corpus=${corpusPath}`, '--budget-ms=5000', `--out=${outFile}`, `--summary-out=${summaryOutFile}`,
 ], { cwd: ROOT });
 
@@ -43,4 +43,4 @@ assert.equal(portfolio.ok, true, 'fixture level must be solvable for this to be 
 assert.notEqual(portfolio.winningConfig, null,
     'a canonical (pre-fallback) portfolio-scheduler win must report a real winningConfig, not null');
 
-console.log('portfolio-scheduler-report CLI: all tests passed');
+console.log('legacy-latency-portfolio-report CLI: all tests passed');

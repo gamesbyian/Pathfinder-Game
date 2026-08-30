@@ -3,7 +3,7 @@
  * Compare the legacy solver ladder with the opt-in fast portfolio scheduler experiment.
  *
  * Usage:
- *   node scripts/run-bundled.mjs scripts/portfolio-scheduler-report.mjs -- --levels=pos:1-25 --budget-ms=30000 --out=reports/portfolio-scheduler-report.json
+ *   node scripts/run-bundled.mjs scripts/legacy-latency-portfolio-report.mjs -- --levels=pos:1-25 --budget-ms=30000 --out=reports/legacy-latency-portfolio-report.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -21,7 +21,7 @@ const flags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 
 const root = new URL('..', import.meta.url).pathname;
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
-const outFile = argMap.get('--out') || 'reports/portfolio-scheduler-report.json';
+const outFile = argMap.get('--out') || 'reports/legacy-latency-portfolio-report.json';
 const summaryOutFile = argMap.get('--summary-out') || outFile.replace(/\.json$/u, '-summary.md');
 const corpusPath = argMap.get('--corpus') || path.join(root, 'data', 'levels.json');
 const stopOnMismatch = flags.has('--stop-on-mismatch');
@@ -209,7 +209,7 @@ let fallbackSearchMs = 0;
 let schedulerOverheadMs = 0;
 let prepMs = 0;
 
-console.log(`portfolio-scheduler-report: corpus=${path.relative(root, corpusPath)} levels=${targets.length} budget=${budgetMs}ms`);
+console.log(`legacy-latency-portfolio-report: corpus=${path.relative(root, corpusPath)} levels=${targets.length} budget=${budgetMs}ms`);
 for (const [i, levelNumber] of targets.entries()) {
     const raw = rawLevels[levelNumber - 1];
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });

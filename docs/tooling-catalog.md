@@ -93,7 +93,7 @@ Use this short preflight before choosing a command:
 | Research status | `research:index`; structured current evidence plus non-authoritative discovery metadata for older reports |
 | Artifact provenance | `scripts/artifact-query.mjs`; compact view over tracked exception metadata |
 
-Historical portfolio tools (`solver:portfolio-report`, `solver:portfolio-replay`) and pilots remain available; code presence does not imply an active hypothesis. The old broad cold-start portfolio experiment is closed; reuse plumbing only if it serves the new scheduling design and current baselines. Completed migrations and narrow forensic audits may remain as direct scripts without npm aliases; find them through `scripts/tooling-census.mjs`, inspect headers/evidence, then delete or deliberately retain according to current lifecycle value.
+Historical portfolio tools (`solver:legacy-latency-portfolio-report`, `solver:legacy-latency-portfolio-replay`) and pilots remain available; code presence does not imply an active hypothesis. The old broad cold-start portfolio experiment is closed; reuse plumbing only if it serves the new scheduling design and current baselines. Completed migrations and narrow forensic audits may remain as direct scripts without npm aliases; find them through `scripts/tooling-census.mjs`, inspect headers/evidence, then delete or deliberately retain according to current lifecycle value.
 
 ## Rules
 

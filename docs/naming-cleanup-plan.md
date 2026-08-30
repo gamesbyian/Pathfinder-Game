@@ -368,7 +368,7 @@ For structured or persisted identifiers, "the tests pass" is not enough. Add the
 - direct symbol/file renames leave no live old-name imports, spawns, workflow filters, or package aliases after their compatibility window closes;
 - behavior-preserving solver renames compare representative attempt order, stage order, work/node accounting, and solved outcomes before/after, not merely final solved count.
 
-For workflow/file changes, run a case-sensitive path audit. The current repository already contains at least one naming-era hazard of this class: `.github/workflows/audit-export.yml` watches **modules/Solver.ts** while the live facade is `modules/solver.ts`. Correct stale trigger paths when that workflow is migrated; do not preserve them as historical spelling.
+For workflow/file changes, run a case-sensitive path audit. Former `.github/workflows/audit-export.yml` (now `.github/workflows/solver-diagnostics.yml`) previously watched a stale-case modules/Solver.ts trigger path against the live lowercase `modules/solver.ts` facade; verified corrected (no case mismatch remains) as part of batch 8G.
 
 ## 4. Canonical rename inventory
 
@@ -860,16 +860,16 @@ Do not rename historical report filenames containing atlas/trove/archaeology/lin
 
 ### 5.7 Audit export
 
-Rename `run-audit-export.mjs` to `analyze-solver-diagnostics.mjs`.
+Former `run-audit-export.mjs` -> `analyze-solver-diagnostics.mjs` (implemented by batch 8G).
 
-Rename generated fields:
+Renamed generated fields (implemented by batch 8G):
 
-- `knownHardCluster` -> `hardClusterHeuristicMatch`;
-- `recommendedGating` -> `derivedGatingCandidate`;
-- preserve legacy-field reads for existing generated JSON;
-- write only the new fields after all current consumers accept both.
+- former `knownHardCluster` -> `hardClusterHeuristicMatch`;
+- former `recommendedGating` -> `derivedGatingCandidate`;
+- legacy-field reads preserved for existing generated JSON (historical `logs/solver-workflow/*.json` snapshots keep the legacy field names permanently; no current reader consumed either field at implementation time);
+- the writer emits only the new fields.
 
-Replace the opaque npm alias `audit:newhint:full` with **solver:analyze-diagnostics**. Remove the old alias after current docs/workflows are migrated.
+Replaced the opaque npm alias audit:newhint:full with `solver:analyze-diagnostics` (implemented by batch 8G).
 
 ### 5.8 Probe overloading
 
@@ -923,14 +923,14 @@ Canonical live mappings:
 | former npm family:trove:doctor | `family:validate-dataset-worktree` |
 | legacy env `PATHFINDER_VARIANT_TROVE` (dual-read, retire at phase-15 review) | `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` |
 | former local `TROVE_BRANCH` | `VARIANT_FAMILY_DATASET_BRANCH` |
-| `.github/workflows/audit-export.yml` | `.github/workflows/solver-diagnostics.yml` |
-| workflow display "Audit Export" | "Solver diagnostics and hint capture" |
+| former `.github/workflows/audit-export.yml` | `.github/workflows/solver-diagnostics.yml` |
+| former workflow display "Audit Export" | "Solver diagnostics and hint capture" |
 | former `stress/confirm-residual-001-archetype-audit.mjs` | `stress/audit-candidate-eligibility-and-participation.mjs` |
 | `stress/select-repair-probe-adaptive-sample.mjs` | `stress/select-early-repair-search-adaptive-sample.mjs` |
 | `stress/repair-probe-badness-report.mjs` | `stress/early-repair-search-badness-report.mjs` |
 | `.github/workflows/solver-repair-probe-adaptive-sample-ab.yml` | `.github/workflows/solver-early-repair-search-adaptive-sample-ab.yml` |
-| `portfolio-scheduler-report.mjs` / npm `solver:portfolio-report` | `legacy-latency-portfolio-report.mjs` / **solver:legacy-latency-portfolio-report** |
-| `portfolio-historical-replay.mjs` / npm `solver:portfolio-replay` | `legacy-latency-portfolio-replay.mjs` / **solver:legacy-latency-portfolio-replay** |
+| former `portfolio-scheduler-report.mjs` / npm solver:portfolio-report | `legacy-latency-portfolio-report.mjs` / `solver:legacy-latency-portfolio-report` |
+| former `portfolio-historical-replay.mjs` / npm solver:portfolio-replay | `legacy-latency-portfolio-replay.mjs` / `solver:legacy-latency-portfolio-replay` |
 
 The `confirm-residual-001` diagnostic explicitly describes itself as durable general tooling, so its permanent name must describe its reusable job rather than the cohort that caused it to be written. The early-repair-search filenames migrate in the same PR as the stage identity so current tools/workflows do not preserve `repair-probe` after the runtime stage has changed.
 
