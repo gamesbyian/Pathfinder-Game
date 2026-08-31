@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 10 |
-| Status | implementation and exact-head CI complete; merge/merged-tree closeout pending |
+| Status | implementation and review hardening complete; latest-head CI/merge/merged-tree closeout pending |
 | Base `main` SHA | `c7fcc35d3079ccbc511c92b1255e010adba2c35a` |
 | Branch | `codex/implement-phase-10-of-naming-cleanup-process` |
 | PR | `#1607` |
@@ -63,7 +63,7 @@ The closeout guard scans maintained source, scripts, tests, workflows, and curre
 - [x] implementation and targeted runtime validation completed locally;
 - [x] durable negative closeout fixtures added;
 - [x] PR #1607 created and bound to this implementation branch;
-- [x] exact-head GitHub CI completed green on reviewed implementation head `5c269519144cdf297d63707e4530495367ff820c` (run #3397 / `33352943695`);
+- [ ] latest-head GitHub CI completed green; prior implementation head `5c269519144cdf297d63707e4530495367ff820c` passed run #3397 / `33352943695`, but review hardening moved the head;
 - [ ] implementation merged using expected head SHA;
 - [ ] fresh merged-tree closeout branch/PR completed;
 - [ ] `lastCompletedPhase` advanced to 10 and `activeExecution` returned to idle.
