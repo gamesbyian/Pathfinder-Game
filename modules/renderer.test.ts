@@ -38,7 +38,7 @@ test('renderer path helper uses the same current transform as screen-position lo
         const path = [PACK(1, 2), PACK(3, 4)];
 
         for (let orientation = 0; orientation < 8; orientation += 1) {
-            engineState.orientation = variant;
+            engineState.orientation = orientation;
             calls.length = 0;
             renderer.drawPath(path, new Set(), '#fff', 2);
 
