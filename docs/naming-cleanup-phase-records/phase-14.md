@@ -9,7 +9,7 @@
 | Status | 14D in progress |
 | Base `main` SHA | `bd809ed8c3bb55a02757f29868eafe15fb91402d` |
 | Branch | `chatgpt/phase14d-merged-tree-closeout-2026-08-31` |
-| PR | pending |
+| PR | #1628 |
 | Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
