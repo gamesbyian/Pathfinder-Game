@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14A core extraction |
-| Status | 14A validated; merge pending |
-| Base `main` SHA | `8432f175b26934606355b0f4150912fabd84085a` |
-| Branch | `chatgpt/phase14a-core-extraction-2026-08-31` |
-| PR | #1624 |
+| Current batch | 14B LevelUtils facade removal |
+| Status | 14A merged; 14B in progress |
+| Base `main` SHA | `03a1298669df019d5cbef486890e044fc7f1f07e` |
+| Branch | `chatgpt/phase14b-level-utils-removal-2026-08-31` |
+| PR | pending |
 | Selected ledger row IDs | NC-P14-001 through NC-P14-003 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
@@ -161,7 +161,24 @@ still required in 14D, but these row-level verification dimensions are complete.
 
 ## 7. 14B LevelUtils facade removal
 
-Not started. Must branch from merged 14A main.
+Started from merged 14A main `03a1298669df019d5cbef486890e044fc7f1f07e`.
+
+The facade is being decomposed by ownership, not replaced with another bag:
+
+- pure cell-key, portal, move-rule, geometry, and codec consumers import their domain owners directly;
+- `normalizeLevel` moves to `modules/level-data.ts` as
+  `normalizeLevelFromData(data, index, reportError)`, preserving diagnostic validation,
+  parsing, and shallow-freeze behavior;
+- `getGridCoord` moves to `modules/input/grid-coordinates.ts`, taking the live engine state and
+  canvas explicitly rather than closing over app/renderer state;
+- `shiftLevelCoords` and `applyCoordMapToLevel` move to
+  `modules/editor/level-coordinate-transforms.ts`, keeping coordinate mutation editor-owned;
+- state, controller, engine, and input dependency types no longer expose a `LevelUtils` port;
+- application composition no longer constructs, returns, or exposes `levelUtils`.
+
+The old normalize/getGridCoord behavior tests have already been recreated under their new owners.
+The facade file remains temporarily present only while test fixtures and residue are being migrated.
+It may be deleted only after exact consumer/type census reaches zero.
 
 ## 8. 14C1 local state/render names
 
