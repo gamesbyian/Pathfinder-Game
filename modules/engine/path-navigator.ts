@@ -19,7 +19,7 @@ export function createPathNavigator({
     now = () => Date.now()
 }: any) {
     const resetActiveLogicState = (engineState: EngineState) => {
-        if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(engineState.logicState)) {
+        if (engineState.logicState === DRAGGING || engineState.logicState === PORTAL_PAUSE || engineState.logicState === HAZARD_TRIGGERED) {
             setLogicState(IDLE);
         }
     };
