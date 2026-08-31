@@ -6,14 +6,14 @@ import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from
 import { knownHintCount, hintButtonLabel, mergeUniqueHints } from '../solver/diversification.js';
 import { defaultReportError } from '../error-reporting.js';
 import { OVERLAY_NONE, SOLVER_RUNNING } from '../app-constants.js';
-import { buildWireLevelData } from '../domain/level-codec.js';
+import { buildWireLevelData, cloneLevelWithReq } from '../domain/level-codec.js';
 import { mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 import { provenanceFromSolveResult } from '../solver/hint-provenance.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { SOLVER_VERSION } from '../build-info.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
 
-export function createReviewController({ state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createReviewController({ state, ui, engine, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'solverApi'>) {
 
     // --- Admin sign-in ---
 
@@ -103,7 +103,7 @@ export function createReviewController({ state, ui, engine, levelUtils, editor, 
     // Returns the array of still-valid, de-duplicated hint paths (pure core does the dedupe).
     const revalidateHints = (hints: any, wl: any, requiredLength: any, requiredIntersections: any) =>
         revalidateWorkingHints(hints, (candidatePath: any) => {
-            const lv = levelUtils.cloneLevelWithReq(wl, requiredLength, requiredIntersections);
+            const lv = cloneLevelWithReq(wl, requiredLength, requiredIntersections);
             return solverApi.validateCandidatePath(lv, candidatePath);
         });
 
@@ -134,7 +134,7 @@ export function createReviewController({ state, ui, engine, levelUtils, editor, 
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
             await new Promise((r: any) => setTimeout(r, 0));
-            const solveLevel = levelUtils.cloneLevelWithReq(wl, requiredLength, requiredIntersections);
+            const solveLevel = cloneLevelWithReq(wl, requiredLength, requiredIntersections);
             _t0 = Date.now();
             _lastTenths = -1;
             // disableExtraBudgetPasses -- see solver-controller.ts's identical comment: this is an

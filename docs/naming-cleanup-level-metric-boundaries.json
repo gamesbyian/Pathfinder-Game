@@ -15,10 +15,11 @@
     "modules/domain/path-validator.test.ts",
     "modules/domain/portal-utils.test.ts",
     "modules/editor/editor-export.test.ts",
+    "modules/engine/engine-controllers.test.ts",
     "modules/engine/level-rating-manager.test.ts",
     "modules/input/editor-coordinate-transform.test.ts",
     "modules/input/submission-controller.test.ts",
-    "modules/level-utils.test.ts",
+    "modules/level-data.test.ts",
     "modules/runtime/game-rules.test.ts",
     "modules/solver/admissible-order-search.test.ts",
     "modules/solver/diversification.test.ts",
@@ -116,6 +117,6 @@
     "scripts/stress/query-mustcross-flipper-eligibility.mjs",
     "scripts/stress/repair-retreat-binary-search.mjs"
   ],
-  "notes": "Post-Phase-13B/13C ownership ratchet. Normalized/runtime code uses requiredLength/requiredIntersections and must never re-enter this legacy-token inventory. rawWireBoundary is the reviewed permanent reqLen/reqInt compatibility surface for actual raw fixtures/corpus/wire data; retainedNonNormalizedUse contains naming/checker authorities and independent report/result schemas whose legacy labels are not NormalizedLevel properties. Phase 13C consumer-inward checks prevent a raw-file allowlist from masking stale runtime property reads.",
+  "notes": "Post-Phase-13B/13C ownership ratchet. Normalized/runtime code uses requiredLength/requiredIntersections and must never re-enter this legacy-token inventory. rawWireBoundary is the reviewed permanent reqLen/reqInt compatibility surface for actual raw fixtures/corpus/wire data; retainedNonNormalizedUse contains naming/checker authorities and independent report/result schemas whose legacy labels are not NormalizedLevel properties. Phase 14B moved raw-level normalization tests from the deleted LevelUtils facade to level-data.ts and added parseable raw fixtures to engine controller tests; those replacement test surfaces are explicitly classified here.",
   "normalizedMigrationComplete": true
 }

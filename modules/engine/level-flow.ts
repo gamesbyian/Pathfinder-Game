@@ -29,6 +29,8 @@ import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { hintPaths } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
 import { EDITOR, IDLE, OVERLAY_NONE, PLAY, REVIEW } from '../app-constants.js';
+import { assertLevelShape, deepCloneLevel } from '../domain/level-codec.js';
+import { normalizeLevelFromData } from '../level-data.js';
 
 /**
  * Pure decision for the reset-streak cheat easter egg: 5 consecutive resets briefly reveal
@@ -56,7 +58,7 @@ export function planResetCheat({ cheatActive, resetStreak }: any) {
 }
 
 export function createLevelFlowController({
-    state, ui, data, levelUtils, persistence, editor, audioService, reportError = defaultReportError,
+    state, ui, data, persistence, editor, audioService, reportError = defaultReportError,
     PathNavigator,
     clearFalseGoalTimers,
     applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
@@ -91,7 +93,7 @@ export function createLevelFlowController({
     // editor-entry paths — switching into EDITOR mode (switchMode) and loading a level while
     // already in EDITOR mode (_loadLevelByIndex) — which previously duplicated this block verbatim.
     function _initEditorWorkingCopy() {
-        setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
+        setEditorWorkingLevel(state, deepCloneLevel(state.ENGINE.level));
         setEditorPencilMode(state, false);
         clearEditorUndoStack(state);
         clearEditorTriggerableFalseGoalCells(state);
@@ -145,11 +147,11 @@ export function createLevelFlowController({
         setLogicState(IDLE);
         setOverlayState(OVERLAY_NONE);
 
-        const baseLevel = levelUtils.normalizeLevel(idx);
+        const baseLevel = normalizeLevelFromData(data, idx, reportError);
         const optionsResult = applyPlayChallengeOptions(baseLevel);
         showOptionsBlockedModalIfNeeded(optionsResult);
         setLevel(state, optionsResult.level ?? baseLevel);
-        if (optionsResult.playable !== false) levelUtils.assertLevelShape(state.ENGINE.level);
+        if (optionsResult.playable !== false) assertLevelShape(state.ENGINE.level);
         // Reset the run for the freshly-set level (clear path/undo/geese/ripples, re-arm false
         // goals), then the hint state. resetRunState is the single nav-reset primitive.
         resetRunState({ keepLevel: true });

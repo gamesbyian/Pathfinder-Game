@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { PACK, UNPACK } from '../domain/cell-key.js';
 import { parseRawLevel } from '../domain/level-codec.js';
-import { createLevelUtils } from '../level-utils.js';
 import { applyEditorCoordTransform } from './editor-toolbar-controller.js';
 
 function fixture() {
@@ -28,12 +27,8 @@ function harness() {
         },
     } as any;
     const calls = { saved: 0, hintsCleared: 0, viewport: 0 };
-    const levelUtils = createLevelUtils({
-        data: { getLevels: () => [] }, getState: () => state.ENGINE,
-        getRenderer: () => ({ getCanvas: () => null }),
-    });
     const deps = {
-        state, levelUtils,
+        state,
         editor: { saveEditorState: () => calls.saved++ },
         engine: {
             navigation: { remapNavKeys: (mapKey: (key: number) => number) => {

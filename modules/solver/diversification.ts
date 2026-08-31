@@ -240,7 +240,7 @@ async function roundRobinCombos(
  * their cascade/strategy state, completed combos are never revisited, and phases
  * (baseline -> gate-direction -> portal-direction -> done) only advance forward.
  *
- * @param level - solver-internal level (e.g. levelUtils.deepCloneLevel(workingLevel))
+ * @param level - solver-internal level (e.g. deepCloneLevel(workingLevel))
  * @param existingHints - paths already known for this level (not re-reported as novel)
  * @param opts - { solverApi, attemptBudgetMs?, baselineBudgetMs? }
  */

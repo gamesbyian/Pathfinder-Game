@@ -6,8 +6,6 @@
 // call site. Signatures keep `any` for genuinely dynamic params; the *return* types carry the
 // domain types (EngineLevel, …) so callers get checked access to the objects that flow out.
 
-import type { EngineLevel } from './domain/level-schema.js';
-import type { PackedKey } from './domain/cell-key.js';
 import type { Attempt, SolveOpts } from './solver/orchestration.js';
 import type { NormalizedLevel } from './domain/types.js';
 import type {
@@ -58,38 +56,6 @@ export interface SolveResult {
             totalMs: number;
         };
     };
-}
-
-/**
- * `levelUtils` — the level codec/geometry/query bag built by `createLevelUtils`. The clone,
- * normalize, and parse methods return `EngineLevel`, so level objects are typed at every consumer.
- */
-export interface LevelUtils {
-    PACK(x: number, y: number): PackedKey;
-    UNPACK(k: PackedKey): { x: number; y: number };
-    inBounds(x: number, y: number, w: number, h: number): boolean;
-    expCoords(keys: Iterable<number>): { x: number; y: number }[];
-    transformPoint(x: number, y: number, orientation: any, w: number, h: number): { tx: number; ty: number };
-    inverseTransformPoint(tx: number, ty: number, orientation: any, w: number, h: number): { x: number; y: number };
-    transformAxis(axis: any, orientation: any): any;
-    getGridCoord(e: { clientX: number; clientY: number }): { x: number; y: number };
-    canonicalCloneLevel(src: any, options?: { includeHints?: boolean }): EngineLevel;
-    deepCloneLevel(src: any): EngineLevel;
-    cloneLevelWithReq(src: any, requiredLength: any, requiredIntersections: any): EngineLevel;
-    normalizeLevel(idx: number): EngineLevel | null;
-    denormalizeLevel(level: any): any;
-    shiftLevelCoords(l: any, dx: number, dy: number): void;
-    applyCoordMapToLevel(l: any, coordMap: any, newW: number, newH: number, axisMap: any, reflect?: boolean): void;
-    getLevelBounds(l: any): LevelBounds | null;
-    assertLevelShape(level: any): void;
-    processRawLevel(raw: any, id?: number | null): EngineLevel | null;
-    getRawLevels(): any[];
-    resolvePortal(level: any, key: number, lastWasPortalJump?: boolean): any;
-    getPortalDisplayColor(level: any, key: number): any;
-    isValidMove(...args: any[]): any;
-    normalizeMetadata(raw?: any): { designerName: string; description: string; difficulty: number | null };
-    hasParitySwitchingPortal(level: any): boolean;
-    getParityInvalidKeys(level: any): any;
 }
 
 /** `data` — the level/theme data store built by `createData`. */

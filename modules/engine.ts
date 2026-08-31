@@ -31,6 +31,7 @@ import {
     toggleMuted as toggleMutedState,
 } from './state-actions.js';
 import { DRAGGING, EDITOR, EDIT_DRAG, IDLE, PORTAL_PAUSE, REVIEW } from './app-constants.js';
+import { PACK, UNPACK } from './domain/cell-key.js';
 
 // Declarative grouped-facade membership: the single source of truth for which flat engine
 // methods each narrow namespace (game/navigation/overlays/hints/solver/review/ratings) exposes.
@@ -74,7 +75,7 @@ export function buildGroupedFacade(api: Record<string, any>): Record<string, Rec
     return grouped;
 }
 
-export function createEngine({ state, ui, renderer, levelUtils, themes, data, persistence, editor, audioService, reportError }: RequireDeps<'levelUtils' | 'data'>) {
+export function createEngine({ state, ui, renderer, themes, data, persistence, editor, audioService, reportError }: RequireDeps<'data'>) {
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
     // Accepts either full engineState (with .nav sub-object) or a flat state (for tests).
@@ -91,9 +92,9 @@ export function createEngine({ state, ui, renderer, levelUtils, themes, data, pe
         if (dx !== 0 && dy !== 0) return [];
         const pathSteps = [];
         if (dx !== 0) {
-            for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(levelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y));
+            for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(PACK(headPos.x + Math.sign(dx) * i, headPos.y));
         } else if (dy !== 0) {
-            for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(levelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i));
+            for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(PACK(headPos.x, headPos.y + Math.sign(dy) * i));
         }
         return pathSteps;
     };
@@ -101,7 +102,7 @@ export function createEngine({ state, ui, renderer, levelUtils, themes, data, pe
     function attemptMoveTo(target: any, _opts: any = {}) {
         if ((state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW) && !state.ENGINE.editor.isPencilMode) return;
         if (!state.ENGINE.nav.path.length) return;
-        const headPos = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
+        const headPos = UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
         if (state.ENGINE.logicState === PORTAL_PAUSE) {
             if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING);
             else return;
@@ -196,11 +197,11 @@ export function createEngine({ state, ui, renderer, levelUtils, themes, data, pe
         assertStateConsistency
     });
 
-    const levelRatingManager = createLevelRatingManager({ state, ui, data, levelUtils, persistence, reportError });
+    const levelRatingManager = createLevelRatingManager({ state, ui, data, persistence, reportError });
     const { refreshForCurrentLevel: refreshLevelRatingPane } = levelRatingManager;
 
     const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission, removeAndAdvance } =
-        createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane });
+        createReviewModeController({ state, ui, editor, PathNavigator, refreshLevelRatingPane });
 
     const overlayController = createOverlayController({ state, ui });
     const {
@@ -221,17 +222,17 @@ export function createEngine({ state, ui, renderer, levelUtils, themes, data, pe
     const { handleWin } = winController;
 
     const { processStep } = createStepDispatcher({
-        state, themes, levelUtils, audioService,
+        state, themes, audioService,
         setLogicState, rebuildDerivedPathState, createSnapshot,
         onJumpScare: triggerJumpScare,
         onFalseGoalDetonation: triggerFalseGoalDetonation,
         onWin: handleWin,
     });
 
-    const { findTapRoute } = createTapRouter({ state, levelUtils });
+    const { findTapRoute } = createTapRouter({ state });
 
     const { applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded } =
-        createChallengeOptionsController({ state, ui, levelUtils });
+        createChallengeOptionsController({ state, ui });
 
     const { loop } = createRenderLoop({ state, themes, ui, renderer, setOverlayState });
 
@@ -248,7 +249,7 @@ export function createEngine({ state, ui, renderer, levelUtils, themes, data, pe
         updatePlayModeLayout,
         updateCompletionUI,
     } = createLevelFlowController({
-        state, ui, data, levelUtils, persistence, editor, audioService, reportError,
+        state, ui, data, persistence, editor, audioService, reportError,
         PathNavigator,
         clearFalseGoalTimers,
         applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,

@@ -69,7 +69,7 @@ test.describe('Level editor', () => {
         const before = await page.evaluate(() => {
             const eng = window.APP.State.ENGINE;
             const l = eng.editor.workingLevel;
-            const unpack = window.APP.LevelUtils.UNPACK;
+            const unpack = (key) => ({ x: key & 0xFFFF, y: key >> 16 });
             const firstPortal = [...l.portalMap.entries()][0];
             return {
                 w: l.grid.w, h: l.grid.h, goal: unpack(l.goalKey),
@@ -83,7 +83,7 @@ test.describe('Level editor', () => {
         const after = await page.evaluate(() => {
             const eng = window.APP.State.ENGINE;
             const l = eng.editor.workingLevel;
-            const unpack = window.APP.LevelUtils.UNPACK;
+            const unpack = (key) => ({ x: key & 0xFFFF, y: key >> 16 });
             const firstPortal = [...l.portalMap.entries()][0];
             const goal = unpack(l.goalKey);
             const canvas = window.APP.Renderer.getCanvas();
@@ -93,7 +93,7 @@ test.describe('Level editor', () => {
                 clientY: rect.top + (goal.y + 0.5) * eng.viewport.cellH * (rect.height / canvas.height),
             };
             return {
-                goal, pointerGoal: window.APP.LevelUtils.getGridCoord(pointer),
+                goal, pointerGoal: window.APP.Input.getGridCoord(pointer),
                 portal: firstPortal ? [unpack(firstPortal[0]), unpack(firstPortal[1].dest)] : null,
                 mirrorHorizontal: eng.editor.mirrorHorizontal,
             };

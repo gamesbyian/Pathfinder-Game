@@ -14,8 +14,9 @@ import { DENSE_LEVEL_COVERAGE_THRESHOLD } from '../solver/prep.js';
 import { createEnumerationPoolClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';
 import { OVERLAY_NONE, SOLVER_RUNNING } from '../app-constants.js';
+import { deepCloneLevel } from '../domain/level-codec.js';
 
-export function createSolverController({ state, ui, engine, levelUtils, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createSolverController({ state, ui, engine, solverApi, reportError = defaultReportError }: RequireDeps<'solverApi'>) {
 
     // --- Solver close / abort ---
 
@@ -92,7 +93,7 @@ export function createSolverController({ state, ui, engine, levelUtils, solverAp
             ui.setSolverDetailText('Searching…');
             ui.setSolverProgress(0);
             await new Promise((r: any) => setTimeout(r, 0));
-            const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
+            const level = deepCloneLevel(state.ENGINE.editor.workingLevel);
             const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
             _t0 = Date.now();
             _lastTenths = -1;
@@ -160,7 +161,7 @@ export function createSolverController({ state, ui, engine, levelUtils, solverAp
     }
 
     function buildSessionForCurrentLevel() {
-        const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
+        const level = deepCloneLevel(state.ENGINE.editor.workingLevel);
         const wl = state.ENGINE.editor.workingLevel;
         const existingHints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
         const session = solverApi.createVarietySearch(level, existingHints, { rng: mulberry32((0x50f7 ^ (state.ENGINE.levelIdx + 1)) >>> 0) });

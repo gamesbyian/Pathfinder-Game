@@ -44,7 +44,6 @@ function makeHarness(solverApi: any, reportError: (...args: any[]) => void = () 
     const controller = createFalseGoalTriggerScanController({
         state,
         ui: { showMessage() {} },
-        levelUtils: { deepCloneLevel: (value: any) => value },
         editor: { validateWorkingLevel: () => ({ ok: true }) },
         solverApi,
         reportError,

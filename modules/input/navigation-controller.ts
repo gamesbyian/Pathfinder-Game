@@ -4,8 +4,9 @@ import { DRAGGING, EDITOR, IDLE, OVERLAY_NONE, PLAY, REVIEW } from '../app-const
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 import { prevIndexWrap, nextIndexWrap, validIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
+import { UNPACK } from '../domain/cell-key.js';
 
-export function createNavigationController({ state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
+export function createNavigationController({ state, ui, engine, data, editor, renderer }: RequireDeps<'data'>) {
 
     // --- Unsaved-changes guard ---
 
@@ -117,7 +118,7 @@ export function createNavigationController({ state, ui, engine, levelUtils, edit
             if (!subs.length) return;
             engine.review.loadReviewLevel(prevIndexWrap(state.ENGINE.review.currentIdx, subs.length));
         } else {
-            const levels = levelUtils.getRawLevels();
+            const levels = data.getLevels();
             engine.game.loadLevel(validIndexWrap(state.ENGINE.levelIdx, levels.length, -1, (idx) => !!levels[idx]));
             ui.setSolutionOutput('');
         }
@@ -131,7 +132,7 @@ export function createNavigationController({ state, ui, engine, levelUtils, edit
             if (!subs.length) return;
             engine.review.loadReviewLevel(nextIndexWrap(state.ENGINE.review.currentIdx, subs.length));
         } else {
-            const levels = levelUtils.getRawLevels();
+            const levels = data.getLevels();
             engine.game.loadLevel(validIndexWrap(state.ENGINE.levelIdx, levels.length, 1, (idx) => !!levels[idx]));
             ui.setSolutionOutput('');
         }
@@ -150,7 +151,7 @@ export function createNavigationController({ state, ui, engine, levelUtils, edit
     };
 
     (document.getElementById('nextLevelModalBtn') as any).onclick = () => {
-        const levels = levelUtils.getRawLevels();
+        const levels = data.getLevels();
         handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.game.loadLevel(state.ENGINE.levelIdx + 1); });
     };
     (document.getElementById('dismissWinModalBtn') as any).onclick = () => handleWinClose(() => engine.setLogicState(IDLE));
@@ -204,7 +205,7 @@ export function createNavigationController({ state, ui, engine, levelUtils, edit
             engine.navigation.PathNavigator.pushStep(state.ENGINE, gateKey, false);
             engine.setLogicState(DRAGGING);
         }
-        const head = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
+        const head = UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
         engine.game.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
     }
 

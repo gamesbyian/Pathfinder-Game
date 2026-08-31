@@ -39,7 +39,7 @@ function createHarness({ ratingsByFingerprint = {} as Record<string, any> } = {}
     };
     const reportError = (context: string, err: any) => errors.push({ context, err });
 
-    const manager = createLevelRatingManager({ state, ui, data, levelUtils: {} as any, persistence: persistence as any, reportError });
+    const manager = createLevelRatingManager({ state, ui, data, persistence: persistence as any, reportError });
     return { state, manager, loadCalls, saveCalls, errors, renderCalls };
 }
 
@@ -101,7 +101,7 @@ test('a failed migration write reports but does not block applying the legacy ra
         saveLevelRating: async () => { throw new Error('write failed'); },
     };
     const reportError = (context: string, err: any) => errors.push({ context, err });
-    const manager = createLevelRatingManager({ state, ui, data, levelUtils: {} as any, persistence: persistence as any, reportError });
+    const manager = createLevelRatingManager({ state, ui, data, persistence: persistence as any, reportError });
 
     await manager.refreshForCurrentLevel();
 

@@ -18,10 +18,11 @@ import { computeParityCandidates } from './false-goal-trigger-scan-core.js';
 import { createSolverWorkerClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';
 import { EDITOR, OVERLAY_NONE } from '../app-constants.js';
+import { deepCloneLevel } from '../domain/level-codec.js';
 
 const WATCH_INTERVAL_MS = 300;
 
-export function createFalseGoalTriggerScanController({ state, ui, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createFalseGoalTriggerScanController({ state, ui, editor, solverApi, reportError = defaultReportError }: RequireDeps<'solverApi'>) {
     let client: any = null;
     let workerFailed = false;
     let scanToken = 0;              // bump to detach any in-flight scan from state
@@ -88,7 +89,7 @@ export function createFalseGoalTriggerScanController({ state, ui, levelUtils, ed
         // Instant layer: faint outlines on every cell parity can't rule out.
         setEditorFalseGoalTriggerParityCandidates(state, computeParityCandidates(state.ENGINE.editor.workingLevel));
         markDirty(state);
-        const searchLevel = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
+        const searchLevel = deepCloneLevel(state.ENGINE.editor.workingLevel);
         try {
             const res: any = await runFalseGoalTriggerSearch(searchLevel, budgetMs, {
                 shouldCancel: () => scanInvalidated(token) || (hooks.shouldCancel?.() ?? false),

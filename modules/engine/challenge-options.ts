@@ -1,6 +1,7 @@
 import type { RequireDeps } from '../state.js';
 import { PLAY } from '../app-constants.js';
-export function createChallengeOptionsController({ state, ui, levelUtils }: RequireDeps<'levelUtils'>) {
+import { getParityInvalidKeys } from '../domain/portal-utils.js';
+export function createChallengeOptionsController({ state, ui }: RequireDeps<never>) {
     return {
         // Returns { playable, level, reason? } where `level` is a derived copy with options
         // applied — the input level is never mutated. Callers must use result.level.
@@ -16,7 +17,7 @@ export function createChallengeOptionsController({ state, ui, levelUtils }: Requ
                 derived = { ...derived, falseGoalKeys: new Set() };
             }
             if (opts.deadGates === false) {
-                const dead = levelUtils.getParityInvalidKeys(derived);
+                const dead = getParityInvalidKeys(derived);
                 if (dead.gates.size > 0) {
                     const kept = derived.gateKeys.filter((k: any) => !dead.gates.has(k));
                     if (kept.length === 0) return { playable: false, reason: 'dead-gates', level };

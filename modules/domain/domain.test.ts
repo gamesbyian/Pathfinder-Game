@@ -11,7 +11,6 @@ import { test } from 'vitest';
 import { EDITOR, H, PLAY, V } from '../app-constants.js';
 import { deepClone } from '../deep-clone.js';
 import { createState } from '../state.js';
-import { createLevelUtils } from '../level-utils.js';
 import { createEngine } from '../engine.js';
 import { createData, validateDataSources } from '../data.js';
 import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../runtime/state-machine.js';
@@ -27,11 +26,15 @@ import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
          REQUIRED_THEME_PATHS }                               from '../theme/theme-normalizer.js';
 import { encodeHints, decodeHints }                          from '../persistence/level-submission-repository.js';
 import { getLevelFingerprintSource, isSameLevelStructure }   from './level-fingerprint.js';
+import { PACK, UNPACK, inBounds }                               from './cell-key.js';
+import { parseRawLevel as processRawLevel, denormalizeLevel }  from './level-codec.js';
+import { isValidMove }                                         from './move-rules.js';
+import { normalizeLevelFromData }                              from '../level-data.js';
 
 // ---------------------------------------------------------------------------
 // Minimal bootstrap using Phase 9 factory functions
 // ---------------------------------------------------------------------------
-// Provides only what createEngine/createLevelUtils need at construction time.
+// Provides only what createEngine and the direct level-data adapter need at construction time.
 // DOM, Firebase, Canvas, and audio-unlock paths are all guarded internally
 // and never called during the pure function tests below.
 
@@ -52,17 +55,10 @@ function buildTestApp() {
     const persistenceStub = {};
     const themesStub      = {};
 
-    const levelUtils = createLevelUtils({
-        data,
-        getState:    () => state.ENGINE,
-        getRenderer: () => rendererStub,
-    });
-
     const _engine = createEngine({
         state,
         ui:          uiStub,
         renderer:    rendererStub,
-        levelUtils,
         themes:      themesStub,
         data:        data as any,
         persistence: persistenceStub,
@@ -70,15 +66,14 @@ function buildTestApp() {
         audioService: { play() {} },
     });
 
-    return { state, levelUtils, engine: _engine };
+    return { state, engine: _engine, data };
 }
 
 // Data store for normalizeLevel tests — populated per-test.
 let _rawLevels: any[] = [];
 
-const { levelUtils, engine } = buildTestApp();
-const { PACK, UNPACK, inBounds, processRawLevel, denormalizeLevel, normalizeLevel,
-        isValidMove } = levelUtils;
+const { engine, data } = buildTestApp();
+const normalizeLevel = (idx: number) => normalizeLevelFromData(data as any, idx);
 const { areWinMetricsSatisfied, getRealLength } = engine;
 
 // ---------------------------------------------------------------------------

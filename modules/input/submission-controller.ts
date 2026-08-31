@@ -17,7 +17,8 @@ import {
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
 import { OVERLAY_NONE, REVIEW, SOLVER_RUNNING } from '../app-constants.js';
-import { buildWireLevelData } from '../domain/level-codec.js';
+import { buildWireLevelData, cloneLevelWithReq } from '../domain/level-codec.js';
+import { UNPACK } from '../domain/cell-key.js';
 import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint, HUMAN_PLAYER_ID } from '../domain/hint-types.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
@@ -32,7 +33,7 @@ function mulberry32(seed: number) {
     };
 }
 
-export function createSubmissionController({ state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi' | 'data'>) {
+export function createSubmissionController({ state, ui, engine, editor, persistence, solverApi, data, reportError = defaultReportError }: RequireDeps<'solverApi' | 'data'>) {
 
     // Fingerprints every level in data.getLevels() (the local corpus — always the published one
     // when submitting normally; see dev-corpus.ts) so a submission can be checked against it, not
@@ -106,7 +107,7 @@ export function createSubmissionController({ state, ui, engine, levelUtils, edit
         let trapWarned = false;
         if (l.falseGoalKeys && l.falseGoalKeys.size > 0) {
             try {
-                const fgLevel = levelUtils.cloneLevelWithReq(l, requiredLength, requiredIntersections);
+                const fgLevel = cloneLevelWithReq(l, requiredLength, requiredIntersections);
                 const trapBudget = Math.min(solverApi.getFalseGoalTriggerSearchBudgetMs(fgLevel), 8000);
                 const trapRes = await solverApi.findTriggerableFalseGoalCells(fgLevel, {
                     timeLimitMs: trapBudget,
@@ -118,7 +119,7 @@ export function createSubmissionController({ state, ui, engine, levelUtils, edit
                     .filter(([, st]: any) => st === 'untriggerable')
                     .map(([k]: any) => k);
                 if (dead.length > 0) {
-                    const coords = dead.map((k: any) => { const p = levelUtils.UNPACK(k); return `(${p.x + 1},${p.y + 1})`; }).join(', ');
+                    const coords = dead.map((k: any) => { const p = UNPACK(k); return `(${p.x + 1},${p.y + 1})`; }).join(', ');
                     ui.setSubmitStep('smStep-validate', 'warn', [
                         'Structure valid.',
                         `${dead.length} false goal${dead.length > 1 ? 's' : ''} can never be triggered: ${coords}.`,
@@ -184,7 +185,7 @@ export function createSubmissionController({ state, ui, engine, levelUtils, edit
         currentStepId = 'smStep-solve';
         ui.setSubmitStep('smStep-solve', 'running');
         const validateHintPath = (candidatePath: any) => {
-            const lv = levelUtils.cloneLevelWithReq(l, requiredLength, requiredIntersections);
+            const lv = cloneLevelWithReq(l, requiredLength, requiredIntersections);
             return solverApi.validateCandidatePath(lv, candidatePath);
         };
         const candidatePaths = [
@@ -241,7 +242,7 @@ export function createSubmissionController({ state, ui, engine, levelUtils, edit
                 updateCountdown();
                 await new Promise((r: any) => setTimeout(r, 0));
                 stopTicker = scheduleTick(updateCountdown);
-                const solveLevel = levelUtils.cloneLevelWithReq(l, requiredLength, requiredIntersections);
+                const solveLevel = cloneLevelWithReq(l, requiredLength, requiredIntersections);
                 const varietySeed = (0x53ab ^ (baseCount + 1)) >>> 0;
                 // High target + disabled saturation so the 10s deadline is the real limiter — we keep
                 // finding distinct solutions (all of which get submitted) for the whole budget.

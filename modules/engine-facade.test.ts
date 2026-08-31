@@ -31,7 +31,6 @@ function makeDeps() {
         state: deepStub(),
         ui: deepStub(),
         renderer: deepStub(),
-        levelUtils: deepStub(),
         themes: deepStub(),
         data: deepStub(),
         persistence: deepStub(),

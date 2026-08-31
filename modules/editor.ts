@@ -23,8 +23,9 @@ import {
     toggleEditorPencilMode
 } from './state-actions.js';
 import { makeLevelProvenance, makeProvenanceEntry } from './domain/level-provenance-types.js';
+import { deepCloneLevel } from './domain/level-codec.js';
 
-export function createEditor({ state, ui, levelUtils, solverApi, getEngineRuntime }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createEditor({ state, ui, solverApi, getEngineRuntime }: RequireDeps<'solverApi'>) {
     // The editor drives the engine only through a narrow EditorRuntimePort, resolved lazily on
     // first use via getEngineRuntime() and memoized. Resolving lazily (rather than via a
     // post-construction init() call) means the editor is fully valid the moment it's constructed:
@@ -103,7 +104,7 @@ export function createEditor({ state, ui, levelUtils, solverApi, getEngineRuntim
         saveEditorSnapshot(
             state.ENGINE.editor,
             state.ENGINE.hinter,
-            levelUtils.deepCloneLevel
+            deepCloneLevel
         );
     }
 
@@ -120,7 +121,7 @@ export function createEditor({ state, ui, levelUtils, solverApi, getEngineRuntim
         const requiredLength = parseInt(ui.getValue('editReqLen')) || 0;
         const requiredIntersections = parseInt(ui.getValue('editReqInt')) || 0;
         const validateHintPath = (candidatePath: any) => {
-            const levelForValidation = levelUtils.deepCloneLevel(l);
+            const levelForValidation = deepCloneLevel(l);
             levelForValidation.requiredLength = requiredLength;
             levelForValidation.requiredIntersections = requiredIntersections;
             return solverApi.validateCandidatePath(levelForValidation, candidatePath);
@@ -178,11 +179,11 @@ export function createEditor({ state, ui, levelUtils, solverApi, getEngineRuntim
         enterEditorMode() { runtime().switchMode(EDITOR); },
         exitEditorMode() { runtime().switchMode(PLAY); },
         loadWorkingLevel(fromLevelObjOrBlank: any) {
-            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(fromLevelObjOrBlank));
+            setEditorWorkingLevel(state, deepCloneLevel(fromLevelObjOrBlank));
             setEditorModified(state, false);
         },
         commitWorkingLevel() {
-            setLevel(state, levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel));
+            setLevel(state, deepCloneLevel(state.ENGINE.editor.workingLevel));
             setEditorModified(state, false);
         },
         applyMetricsFromUI() {

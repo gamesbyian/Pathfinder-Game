@@ -7,19 +7,22 @@ import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { planGridResize, computeFalseGoalTriggerRetryBudget, decideFalseGoalTriggerReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
 import { EDITOR, H, OVERLAY_NONE, REVIEW, SOLVER_RUNNING, V } from '../app-constants.js';
+import { PACK, UNPACK } from '../domain/cell-key.js';
+import { getLevelBounds } from '../domain/level-codec.js';
+import { applyCoordMapToLevel, shiftLevelCoords } from '../editor/level-coordinate-transforms.js';
 
 export function applyEditorCoordTransform(
-    { state, ui, engine, levelUtils, editor }: any,
+    { state, ui, engine, editor }: any,
     l: any, coordMap: any, newW: any, newH: any, axisMap: any, reflect: boolean = false,
 ) {
     editor.saveEditorState();
     const mapKey = (k: any) => {
         if (k === -1) return -1;
-        const { x, y } = levelUtils.UNPACK(k);
+        const { x, y } = UNPACK(k);
         const tp = coordMap(x, y);
-        return levelUtils.PACK(tp.x, tp.y);
+        return PACK(tp.x, tp.y);
     };
-    levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap, reflect);
+    applyCoordMapToLevel(l, coordMap, newW, newH, axisMap, reflect);
     const eng = state.ENGINE;
     if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
     engine.navigation.remapNavKeys(mapKey);
@@ -29,15 +32,14 @@ export function applyEditorCoordTransform(
     ui.updateViewport();
 }
 
-export function createEditorToolbarController({ state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, falseGoalTriggerScan }: any) {
+export function createEditorToolbarController({ state, ui, engine, editor, solverApi, reportError = defaultReportError }: RequireDeps<'solverApi'>, { tryNavigate, falseGoalTriggerScan }: any) {
 
     // --- Grid transform orchestration ---
-    // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
-    // levelUtils.shiftLevelCoords. The functions below handle the surrounding
+    // Pure level coordinate mapping is editor-owned in level-coordinate-transforms.ts. The functions below handle the surrounding
     // engine state mutations (path remapping, rebuild, viewport update).
 
     function applyCoordTransform(l: any, coordMap: any, newW: any, newH: any, axisMap: any, reflect: boolean = false) {
-        applyEditorCoordTransform({ state, ui, engine, levelUtils, editor }, l, coordMap, newW, newH, axisMap, reflect);
+        applyEditorCoordTransform({ state, ui, engine, editor }, l, coordMap, newW, newH, axisMap, reflect);
     }
 
     function changeGridSize(delta: any) {
@@ -45,9 +47,9 @@ export function createEditorToolbarController({ state, ui, engine, levelUtils, e
         if (eng.overlayState !== OVERLAY_NONE || !eng.editor.workingLevel) return;
         const l = eng.editor.workingLevel;
         // Feasibility + shift planning is pure (editor-toolbar-core); the controller applies it.
-        const bounds = levelUtils.getLevelBounds(l);
-        const mustCrossCoords = l.mustCrossKeys.map((k: any) => levelUtils.UNPACK(k));
-        const pathCoords      = eng.nav.path.map((k: any) => levelUtils.UNPACK(k));
+        const bounds = getLevelBounds(l);
+        const mustCrossCoords = l.mustCrossKeys.map((k: any) => UNPACK(k));
+        const pathCoords      = eng.nav.path.map((k: any) => UNPACK(k));
         const plan = planGridResize(l.grid.w, delta, bounds, mustCrossCoords, pathCoords);
         if (!plan.ok) {
             ui.showMessage(plan.message, plan.reason === 'limit' ? 'warning' : 'error');
@@ -56,8 +58,8 @@ export function createEditorToolbarController({ state, ui, engine, levelUtils, e
         const { newSize, shiftX, shiftY, pathOutOfBounds } = plan;
         editor.saveEditorState();
         if (shiftX !== 0 || shiftY !== 0) {
-            levelUtils.shiftLevelCoords(l, shiftX, shiftY);
-            const shiftKey = (k: any) => { const p = levelUtils.UNPACK(k); return levelUtils.PACK(p.x + shiftX, p.y + shiftY); };
+            shiftLevelCoords(l, shiftX, shiftY);
+            const shiftKey = (k: any) => { const p = UNPACK(k); return PACK(p.x + shiftX, p.y + shiftY); };
             if (eng.editor.pendingPortal) setEditorPendingPortal(state, shiftKey(eng.editor.pendingPortal));
             engine.navigation.remapNavKeys(shiftKey);
             engine.hints.clearHintPaths();

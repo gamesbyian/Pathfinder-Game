@@ -8,7 +8,6 @@ import { createRenderer }    from './renderer.js';
 import { createEngine }      from './engine.js';
 import { createEditor }      from './editor.js';
 import { createPersistence } from './persistence.js';
-import { createLevelUtils }  from './level-utils.js';
 import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
@@ -74,7 +73,6 @@ const DEFAULT_FACTORIES = {
     createEngine,
     createEditor,
     createPersistence,
-    createLevelUtils,
     createThemes,
     createInput,
     createBoot,
@@ -112,13 +110,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     });
     const renderer = f.createRenderer({ state, ui });
 
-    const levelUtils = f.createLevelUtils({
-        data,
-        getState:    () => state.ENGINE,
-        getRenderer: () => renderer,
-        reportError,
-    });
-
     // themes↔persistence cycle removed: persistence's only use of themes was a theme-id validity
     // check, now sourced from the leaf `data` service (themeExists). So persistence no longer
     // depends on themes and is built first; themes takes persistence directly. (See ADR 0008.)
@@ -151,13 +142,12 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // lazily via getEngineRuntime() — `engine` is a const declared just below, only dereferenced
     // when an editor method actually runs (long after both exist). See ADR 0008.
     const editor = f.createEditor({
-        state, ui, levelUtils, solverApi,
+        state, ui, solverApi,
         getEngineRuntime: () => createEditorEnginePort(engine),
     });
     const engine = f.createEngine({
         state, ui,
         renderer,
-        levelUtils,
         themes,
         data,
         persistence,
@@ -169,7 +159,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const input = f.createInput({
         state, ui,
         engine,
-        levelUtils,
         editor,
         renderer,
         themes,
@@ -204,7 +193,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         themes,
         renderer,
         debug,
-        levelUtils,
         editor,
         persistence,
         engine,
@@ -219,7 +207,6 @@ export function createAppFacade(app: any) {
         State:       { get ENGINE() { return app.state.ENGINE; } },
         Engine:      app.engine,
         Editor:      app.editor,
-        LevelUtils:  app.levelUtils,
         Themes:      app.themes,
         Solver:    app.solverApi,
         UI:          app.ui,

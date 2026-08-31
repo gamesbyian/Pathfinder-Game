@@ -1,4 +1,4 @@
-import type { RequireDeps } from '../state.js';
+import type { ControllerDeps } from '../state.js';
 import {
     DRAGGING, EDITOR, EDIT_DRAG, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY,
     HAZARD_TRIGGERED, HINT_ANIMATING, IDLE, PLAY, RESOLVED, REVIEW, SOLVER_RUNNING,
@@ -8,6 +8,9 @@ import {
 
 import { getOccupant } from '../editor/editor-occupancy.js';
 import { MoveContext } from '../domain/move-context.js';
+import { PACK } from '../domain/cell-key.js';
+import { isValidMove } from '../domain/move-rules.js';
+import { getGridCoord } from './grid-coordinates.js';
 import { decideEditorCellAction, shouldReversePencilPath, findNearestAxisGate } from './pointer-input-core.js';
 import {
     incrementEditorEmptyClickCount,
@@ -21,15 +24,15 @@ import {
     setRuntimeTapStartCoord
 } from '../state-actions.js';
 
-export function createPointerInputController({ state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
+export function createPointerInputController({ state, ui, engine, editor, renderer }: ControllerDeps) {
 
     const handleDown = (e: { clientX: number; clientY: number }) => {
         if (state.ENGINE.solver.controller
             || state.ENGINE.logicState === RESOLVED
             || ([HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING] as readonly string[]).includes(state.ENGINE.overlayState)) return;
 
-        const p           = levelUtils.getGridCoord(e);
-        const k           = levelUtils.PACK(p.x, p.y);
+        const p           = getGridCoord(e, state.ENGINE, renderer.getCanvas());
+        const k           = PACK(p.x, p.y);
         const activeLevel = state.ENGINE.mode === PLAY
             ? state.ENGINE.level
             : state.ENGINE.editor.workingLevel;
@@ -84,7 +87,7 @@ export function createPointerInputController({ state, ui, engine, levelUtils, ed
             // Tapping an earlier visited cell: truncate or allow legal intersection
             const lastIdx = state.ENGINE.nav.path.lastIndexOf(k);
             if (lastIdx !== -1 && lastIdx < state.ENGINE.nav.path.length - 1) {
-                const legalIntersectionMove = levelUtils.isValidMove(k, state.ENGINE, activeLevel, MoveContext.TAP_ROUTE)
+                const legalIntersectionMove = isValidMove(k, state.ENGINE, activeLevel, MoveContext.TAP_ROUTE)
                     && !engine.game.wouldCreateBlockedTIntersection?.(state.ENGINE, k, activeLevel);
                 if (!legalIntersectionMove) {
                     engine.navigation.PathNavigator.truncateTo(state.ENGINE, lastIdx);
@@ -124,7 +127,7 @@ export function createPointerInputController({ state, ui, engine, levelUtils, ed
             const crect  = canvas.getBoundingClientRect();
             if (e.clientX >= crect.left && e.clientX <= crect.right
                     && e.clientY >= crect.top && e.clientY <= crect.bottom) {
-                editor.placeEditorObject(levelUtils.PACK(levelUtils.getGridCoord(e).x, levelUtils.getGridCoord(e).y));
+                editor.placeEditorObject(PACK(getGridCoord(e, state.ENGINE, renderer.getCanvas()).x, getGridCoord(e, state.ENGINE, renderer.getCanvas()).y));
             } else if (state.ENGINE.editor.draggedFromGrid) {
                 setEditorDraggedObject(state, null);
                 editor.saveEditorState();
@@ -163,7 +166,7 @@ export function createPointerInputController({ state, ui, engine, levelUtils, ed
         if (e.pointerId !== state.ENGINE.runtime.activePointerId
                 && state.ENGINE.logicState !== EDIT_DRAG) return;
 
-        const dragCoord = levelUtils.getGridCoord(e);
+        const dragCoord = getGridCoord(e, state.ENGINE, renderer.getCanvas());
         const tapStart  = state.ENGINE.runtime.tapStartCoord;
         if (tapStart && (dragCoord.x !== tapStart.x || dragCoord.y !== tapStart.y)) {
             setRuntimeTapMoved(state, true);
