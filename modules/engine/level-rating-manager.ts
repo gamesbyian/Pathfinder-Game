@@ -11,12 +11,13 @@ import {
 } from '../state-actions.js';
 import { getLevelFingerprint, getLegacyLevelFingerprints } from '../domain/level-fingerprint.js';
 import { defaultReportError } from '../error-reporting.js';
+import { PLAY, REVIEW } from '../app-constants.js';
 
-export function createLevelRatingManager({ core, state, ui, data, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils'>) {
+export function createLevelRatingManager({ state, ui, data, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils'>) {
 
     function getCurrentRawLevel() {
         const eng = state.ENGINE;
-        if (eng.mode === core.PLAY) return data.getLevel(eng.levelIdx);
+        if (eng.mode === PLAY) return data.getLevel(eng.levelIdx);
         const wl = eng.editor.workingLevel;
         return wl ? levelUtils.denormalizeLevel(wl) : null;
     }
@@ -50,7 +51,7 @@ export function createLevelRatingManager({ core, state, ui, data, levelUtils, pe
     async function refreshForCurrentLevel() {
         const eng = state.ENGINE;
         const requestId = incrementLevelRatingRequestId(state);
-        const levelNumber = eng.mode === core.REVIEW ? null : eng.levelIdx + 1;
+        const levelNumber = eng.mode === REVIEW ? null : eng.levelIdx + 1;
         setLevelRatingContext(state, { fingerprint: null, levelNumber, loaded: false });
         render();
         if (!eng.isDevMode) return;
