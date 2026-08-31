@@ -285,3 +285,8 @@ it records why its "vacuous permanent reader" interpretation is superseded.
 The correction also fixes an evidence-model defect: the old closeout scanner counted raw source
 lines and could report an allowlisted explanatory comment as a "retained compatibility read."
 Compatibility claims must be proven by an executable reader/fixture, not by lexical presence.
+
+The correction was implemented in PR #1633 on final head
+`208dc417597dc9a94f043caf5c8a0412a52418bc`. Ordinary CI run `33446596466` and the
+Phase-11 orientation/Chromium gate `33446596279` both completed successfully before merge.
+The PR merged as `bae742f3b2e5affc98328fa1e622b6f7698f399d`.
