@@ -8,13 +8,14 @@ import { wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl,
          pushStep as pushStepImpl } from '../runtime/path-state.js';
 import { addRipple, markDirty, setEditorModified,
          setNavigationLastFlipTime, truncateNavigationPath } from '../state-actions.js';
+import { DRAGGING, EDITOR, HAZARD_TRIGGERED, IDLE, PLAY, PORTAL_PAUSE, REVIEW } from '../app-constants.js';
 
 /**
  * Creates the step-processing pipeline: low-level nav helpers used inside
  * computeStep, the event dispatcher for step outcomes, and processStep itself.
  *
  * @param {{
- *   core: object,
+ *   audioService: object,
  *   state: object,
  *   themes: object,
  *   levelUtils: object,
@@ -27,7 +28,7 @@ import { addRipple, markDirty, setEditorModified,
  * }} deps
  */
 export function createStepDispatcher({
-    core, state, themes, levelUtils,
+    state, themes, levelUtils, audioService,
     setLogicState, rebuildDerivedPathState, createSnapshot,
     onJumpScare, onFalseGoalDetonation, onWin,
 }: any) {
@@ -44,8 +45,8 @@ export function createStepDispatcher({
     // Used by computeStep when backtracking.
     const truncateNavTo = (nav: any, targetLen: any) => {
         if (!truncateNavigationPath(nav, targetLen)) return;
-        if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
-            setLogicState(core.IDLE);
+        if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
+            setLogicState(IDLE);
         }
         rebuildDerivedPathState(state.ENGINE);
     };
@@ -68,15 +69,15 @@ export function createStepDispatcher({
         checkWinCondition:              (nav: any, level: any, mode: any, logicState: any) =>
             checkWinConditionImpl(nav.path, level, mode, logicState, nav.isPortalJump, nav.visitedCounts, nav.intersections, nav.turnsAtMap),
         MoveContext,
-        HAZARD_TRIGGERED:               core.HAZARD_TRIGGERED,
-        PORTAL_PAUSE:                   core.PORTAL_PAUSE,
-        EDITOR:                         core.EDITOR,
-        REVIEW:                         core.REVIEW,
+        HAZARD_TRIGGERED,
+        PORTAL_PAUSE,
+        EDITOR,
+        REVIEW,
         portalThemeColor:               '#d946ef',
     };
 
     const stepEffectAdapters = {
-        playSound:          (note: any, dur: any) => core.SOUND_BUS.play(note, dur),
+        playSound:          (note: any, dur: any) => audioService.play(note, dur),
         showGooseJumpScare: ()          => onJumpScare(),
         showFalseGoalDetonation: (fx: any)   => onFalseGoalDetonation(fx.key),
     };
@@ -88,7 +89,7 @@ export function createStepDispatcher({
     }
 
     function processStep(key: any) {
-        const activeLevel = state.ENGINE.mode === core.PLAY
+        const activeLevel = state.ENGINE.mode === PLAY
             ? state.ENGINE.level
             : state.ENGINE.editor.workingLevel;
         stepHelpers.portalThemeColor = themes.THEMES[themes.getCurrentTheme()]?.colors?.portal || '#d946ef';
@@ -98,7 +99,7 @@ export function createStepDispatcher({
         );
         if (outcome !== null) {
             markDirty(state);
-            if (state.ENGINE.mode === core.EDITOR) setEditorModified(state, true);
+            if (state.ENGINE.mode === EDITOR) setEditorModified(state, true);
         }
         const now = Date.now();
         for (const { x, y, color } of mutations.ripples) {
