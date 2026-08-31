@@ -43,14 +43,14 @@ export function setDevCorpus(stateOrEngine: StateOrEngine, corpus: string) {
     return runtime.devCorpus;
 }
 
-export function setRuntimePendingAction(stateOrEngine: StateOrEngine, pendingAction: (() => void) | null) {
+export function setRuntimePendingConfirmationAction(stateOrEngine: StateOrEngine, pendingConfirmationAction: (() => void) | null) {
     const engineState = resolveEngineState(stateOrEngine);
     const runtime = engineState?.runtime;
     if (!runtime) return undefined;
-    runtime.pendingAction = pendingAction;
-    return runtime.pendingAction;
+    runtime.pendingConfirmationAction = pendingConfirmationAction;
+    return runtime.pendingConfirmationAction;
 }
 
 export function clearRuntimePendingAction(stateOrEngine: StateOrEngine) {
-    return setRuntimePendingAction(stateOrEngine, null);
+    return setRuntimePendingConfirmationAction(stateOrEngine, null);
 }
