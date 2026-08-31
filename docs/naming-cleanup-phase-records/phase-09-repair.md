@@ -11,8 +11,9 @@
 | Original implementation PR | #1599 |
 | Original merge commit | `15cbf90a4b1f2bda5037ab4f6ef6584f45dc8154` |
 | Original failing CI run | `33345175850` |
-| Repair PR | pending creation |
+| Repair PR | #1600 |
 | Reopened rows | NC-P09-007, NC-P09-008, and new accounting row NC-P09-009 |
+| PR head at PR creation | `c5cb19a10d89aaf8e9e051d6cc22011ad8637310` |
 | Closure authority | this repair record plus the amended Phase-9 record |
 
 ## 1. Why Phase 9 was reopened
