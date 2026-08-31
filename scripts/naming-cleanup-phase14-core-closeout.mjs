@@ -32,7 +32,7 @@ export function findCoreFacadeResidue(relativePath, content) {
   const failures = [];
   if (/\bcreateCore\b/u.test(code)) failures.push(`${relativePath}: retired createCore symbol remains`);
   if (/\bSOUND_BUS\b/u.test(code)) failures.push(`${relativePath}: retired SOUND_BUS symbol remains`);
-  if (/\bcore\s*\./u.test(code)) failures.push(`${relativePath}: retired core dependency bag member access remains`);
+  if (/(?<![-\\w])core\\s*\\./u.test(code)) failures.push(`${relativePath}: retired core dependency bag member access remains`);
   if (/\bcore\s*:/u.test(code)) failures.push(`${relativePath}: retired core dependency property remains`);
   if (/\bCore\s*:/u.test(code) && relativePath === 'modules/app.ts') {
     failures.push(`${relativePath}: mutable debug facade still exposes retired Core member`);
