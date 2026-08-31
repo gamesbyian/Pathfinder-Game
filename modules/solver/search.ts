@@ -114,7 +114,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 
     // _DFS_DEBUG-only backtrack-depth tracking. `_dbgPushNodesAt[d]`/`_dbgPushDepthAt[d]` record,
     // parallel to `stack` (index d = stack depth, kept in lockstep with push/pop), the nodesExpanded
-    // count and reqLen-relative depth at the moment a frame was pushed — so when it's later popped
+    // count and requiredLength-relative depth at the moment a frame was pushed — so when it's later popped
     // (every child exhausted, no solution beneath it), the difference is that frame's SUBTREE SIZE:
     // how many nodes the search spent before recognizing this particular branch doesn't pan out.
     // Kept entirely separate from the hot-path `DfsFrame`/`stack` shape (no new field on the frame
@@ -204,7 +204,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         const undo = applyMove(next, state, level, prep, isPortalJump);
 
         const realLen = getRealLengthFromState(state);
-        const rSteps = level.reqLen - realLen;
+        const rSteps = level.requiredLength - realLen;
         // Connectivity + volume check: every 64 nodes and always near end. Passed as a resolved
         // boolean since the throttle schedule (nodesExpanded) is DFS-loop-local — see
         // hard-prune-pipeline.ts's file doc for why this differs per caller.
@@ -324,7 +324,7 @@ const _LDS_PROBE_MAX_FRACTION = 0.6;
  *  `PF_LDS_DEBUG=1`, isolated fresh prep) on the winning (gate, config) pair for every
  *  probe-phase-solved level across the published corpus and the 150-level hypothesis stress
  *  corpus. The published corpus's hardest probe-solved case needs 1,926,137 nodes at
- *  area=144/reqLen=59/2 special objectives; these coefficients give it ~1.64x headroom
+ *  area=144/requiredLength=59/2 special objectives; these coefficients give it ~1.64x headroom
  *  (3,168,000). Re-measure before changing either the coefficients or the bounds. */
 const _LDS_PROBE_NODE_AREA_COEF = 8000;
 const _LDS_PROBE_NODE_REQLEN_COEF = 32000;
@@ -336,7 +336,7 @@ export function getLdsProbeNodeBudget(level: NormalizedLevel): number {
     const area = (level.grid?.w || 0) * (level.grid?.h || 0);
     const special = (level.mustPassKeys?.length || 0) + (level.mustCrossKeys?.length || 0) +
         (level.portalMap?.size || 0) + (level.flippingFilterMap?.size || 0);
-    const raw = area * _LDS_PROBE_NODE_AREA_COEF + (level.reqLen || 0) * _LDS_PROBE_NODE_REQLEN_COEF + special * _LDS_PROBE_NODE_SPECIAL_COEF;
+    const raw = area * _LDS_PROBE_NODE_AREA_COEF + (level.requiredLength || 0) * _LDS_PROBE_NODE_REQLEN_COEF + special * _LDS_PROBE_NODE_SPECIAL_COEF;
     return Math.min(_LDS_PROBE_NODE_BUDGET_MAX, Math.max(_LDS_PROBE_NODE_BUDGET_MIN, raw));
 }
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
@@ -521,7 +521,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // mixed-radix encoding below is a provably exact bijection with the (key, 7-field) tuple, not
     // a heuristic. `_numericCoarseStateKeySafe` gates it: whenever the full product would not fit under
     // Number.MAX_SAFE_INTEGER (needs several landmark mechanic types simultaneously present, each
-    // near its per-level maximum, plus a long reqInt — measured never to occur on the published or
+    // near its per-level maximum, plus a long requiredIntersections — measured never to occur on the published or
     // stress-corpus-2 corpora, but not provably impossible), every site below falls back to the
     // exact same delimited-string key it always used. Correctness never depends on this fitting —
     // only speed does. See reports/2026-08-23-beam-dedup-numeric-key-arena.md.
@@ -531,12 +531,12 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const _surroundBase = (prep.initialSurroundMask ?? 0) + 1;
     const _turnBase = (prep.initialMustTurnMask ?? 0) + 1;
     const _adjBase = (prep.initialAdjTurnMask ?? 0) + 1;
-    const _intsBase = level.reqInt + 1;
+    const _intsBase = level.requiredIntersections + 1;
     const _coarseStateKeyProduct = KEY_SPACE * _intsBase * _mpBase * _mcBase * _flipperBase * _surroundBase * _turnBase * _adjBase;
     const _numericCoarseStateKeySafe = Number.isSafeInteger(_coarseStateKeyProduct) && !prep._forceBeamCoarseStateStringKeyForTests;
     // Numeric coarse-state key: strict positional (mixed-radix) encoding — every field is strictly
     // smaller than its own base by construction (masks are `< 2^bitCount`; `ints` is bounded by
-    // `evaluatePrunedMove`'s own `state.ints > level.reqInt` reject, so always `<= reqInt`;
+    // `evaluatePrunedMove`'s own `state.ints > level.requiredIntersections` reject, so always `<= requiredIntersections`;
     // packed cell keys are always `< KEY_SPACE` for a `<=15x15` grid), so distinct tuples can never
     // collide to the same number. Order of composition is arbitrary but must stay internally
     // consistent (it is: this is the only place either key is built).
@@ -547,8 +547,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // Root node: prev=null, key=startKey, depth=0
     let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 }];
     let lastYield = startTime;
-    // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
-    const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
+    // Work-based budget: beam search terminates in at most requiredLength + portal-pair phases.
+    const maxPhases = level.requiredLength + Math.floor(level.portalMap.size / 2);
     let phasesCompleted = 0;
     let frontierIndex = 0;
     // Sum of every COMPLETED phase's frontier size. frontierIndex tracks only the current phase and
@@ -708,7 +708,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = getRealLengthFromState(ws);
-                const rSteps  = level.reqLen - realLen;
+                const rSteps  = level.requiredLength - realLen;
                 // Beam keeps its deliberately wider connectivity schedule, but all rule
                 // ordering and verdicts come from the shared gauntlet so it cannot drift from DFS.
                 const runConnectivity = rSteps <= 20 || (realLen & 7) === 0;

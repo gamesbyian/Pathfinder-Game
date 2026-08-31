@@ -2,7 +2,7 @@
 
 `modules/solver.ts` is the public facade over `modules/solver/*`. This doc covers solution generation; hint display/cycling: [`hint-curation.md`](hint-curation.md).
 
-> **Level-blind:** strategy may use mechanics/current state (`reqInt`, `requiredPathCoverageRatio`, counts, gates, `reqLen`, etc.), never level identity. `check:no-solver-level-numbers` enforces this.
+> **Level-blind:** strategy may use mechanics/current state (`requiredIntersections`, `requiredPathCoverageRatio`, counts, gates, `requiredLength`, etc.), never level identity. `check:no-solver-level-numbers` enforces this.
 >
 > **Corpus caveat:** before stress pass-rate tuning, read [`data/stress/README.md`](../data/stress/README.md), especially “Corpus 1: hypothesis-driven.” Some batches target historical weaknesses and are not independent generalization evidence.
 
@@ -28,13 +28,13 @@ Technique/config names do not by themselves imply distinct search behavior. See 
 
 ### Routing regimes (`classifyRoutingRegime`)
 
-1. **sparse-low-intersection:** `reqInt <= 1 && requiredPathCoverageRatio < 0.35`.
-2. **intersection-heavy:** `(reqInt>=5 && requiredPathCoverageRatio>=0.45) || (reqInt>=4 && requiredPathCoverageRatio>=0.55) || reqInt>=10`.
-3. **must-cross-heavy:** `mustCrossKeys.length >= 2 && reqInt >= 2`.
+1. **sparse-low-intersection:** `requiredIntersections <= 1 && requiredPathCoverageRatio < 0.35`.
+2. **intersection-heavy:** `(requiredIntersections>=5 && requiredPathCoverageRatio>=0.45) || (requiredIntersections>=4 && requiredPathCoverageRatio>=0.55) || requiredIntersections>=10`.
+3. **must-cross-heavy:** `mustCrossKeys.length >= 2 && requiredIntersections >= 2`.
 4. **multi-portal:** `portalMap.size >= 4`.
 5. **general**.
 
-`requiredPathCoverageRatio = reqLen / nonGateWinningPathCellCount`, where `nonGateWinningPathCellCount = w*h - blocks - geese - falseGoals - gates`.
+`requiredPathCoverageRatio = requiredLength / nonGateWinningPathCellCount`, where `nonGateWinningPathCellCount = w*h - blocks - geese - falseGoals - gates`.
 
 ### Attempt policy
 
@@ -42,9 +42,9 @@ Technique/config names do not by themselves imply distinct search behavior. See 
 
 - **sparse-low-intersection:** `nearClosureRescue -> harvestThenFinish -> finishFirst -> perimeterSweep`, then structural ordering biases.
 - **intersection-heavy:**
-  - `reqInt >= POLICY.VERY_HIGH_REQINT (7)`: beam first; portal-dense (`portals >= 2`) leads `objectiveFirst`, otherwise `intersectionHarvest`; DFS fallback.
+  - `requiredIntersections >= POLICY.VERY_HIGH_REQINT (7)`: beam first; portal-dense (`portals >= 2`) leads `objectiveFirst`, otherwise `intersectionHarvest`; DFS fallback.
   - `requiredPathCoverageRatio >= POLICY.NEAR_HAMILTONIAN_COVERAGE_THRESHOLD (0.82)`: DFS perimeter both directions; skip leading beams.
-  - otherwise perimeter/objective beams first; long multi-gate (`reqLen >= 90 && gates >= 2`) gets budget floors; DFS prefers objectives when `mustPass >= 3`, CCW when `reqInt <= 4 && mustPass = 0`.
+  - otherwise perimeter/objective beams first; long multi-gate (`requiredLength >= 90 && gates >= 2`) gets budget floors; DFS prefers objectives when `mustPass >= 3`, CCW when `requiredIntersections <= 4 && mustPass = 0`.
 - **multi-portal:** `portalFirstTransfer`, `portalCommitted`, then structural ordering biases.
 - **must-cross-heavy:**
   - `mustPass >= 3 && flippers >= 2`: mechanic-bucket-retaining `intersectionHarvest` beam 5000, then DFS; 15000/50000 tiers were removed after zero-yield natural exhaustion.
@@ -205,7 +205,7 @@ Complete-mode Find-all alone uses this pool; targeted tiers stay main-thread. Se
 | `stress:measure-solver` | raced default; sequential opt-in | corpus iteration/perf |
 | `stress:measure-solver:raced` | persistent race pool | raced-specific output |
 | `solver:direct` | sequential | few-level debugging |
-| `solver:req-length-sweep` | sequential | controlled `reqLen` scaling |
+| `solver:req-length-sweep` | sequential | controlled `requiredLength` scaling |
 | `portfolio-solve-sweep.mjs` | configurable/resumable | repeated hard-population iteration |
 | `run-repair-search.mjs` | direct repair | repair-only; bypasses ladder |
 

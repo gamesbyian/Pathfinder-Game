@@ -91,7 +91,7 @@ export function mineResidualInterfaces(solutionRecords, { maxSpan = 12 } = {}) {
 
 /** Conservative known-trajectory rollback proxy: longest common prefix to any valid label. It
  * demonstrates where a labelled continuation diverges; it does not prove minimal edit distance. */
-export function rollbackCensus(nearMisses, knownSolutions, reqLen) {
+export function rollbackCensus(nearMisses, knownSolutions, requiredLength) {
     const rows = nearMisses.map(miss => {
         let best = 0, label = null;
         for (const solution of knownSolutions) {
@@ -100,7 +100,7 @@ export function rollbackCensus(nearMisses, knownSolutions, reqLen) {
         }
         const rollbackSteps = Math.max(0, miss.path.length - best);
         return { id: miss.id, matchedSolution: label, commonPrefixSteps: best, rollbackSteps,
-            rollbackFractionReqLen: rollbackSteps / Math.max(1, reqLen), meaning: 'known-trajectory divergence proxy' };
+            rollbackFractionReqLen: rollbackSteps / Math.max(1, requiredLength), meaning: 'known-trajectory divergence proxy' };
     });
     return { rows, medianRollbackSteps: rows.length ? [...rows].sort((a, b) => a.rollbackSteps - b.rollbackSteps)[Math.floor(rows.length / 2)].rollbackSteps : null };
 }
@@ -146,7 +146,7 @@ export function enumerateKnownPrefixBranches({ api, level, prep, knownSolutions,
                 depth: group.depth, prefix: [...group.prefix], child,
                 label: group.continuations.has(child) ? 'known-valid-continuation' : 'oracle-abstain',
                 knownContinuationChildren: [...group.continuations], scoreRank: ranked.indexOf(child) + 1,
-                neutral: { remainingSteps: level.reqLen - group.depth - 1, remainingIntersections: level.reqInt - childState.ints,
+                neutral: { remainingSteps: level.requiredLength - group.depth - 1, remainingIntersections: level.requiredIntersections - childState.ints,
                     intersections: childState.ints, mustPassVisitedMask: childState.mpVisitedMask,
                     mustCrossMask: childState.mustCrossMask, mustTurnMask: childState.mustTurnMask,
                     surroundMask: childState.surroundMask, adjacentTurnMask: childState.adjTurnMask,

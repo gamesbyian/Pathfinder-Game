@@ -99,11 +99,11 @@ const prep = prepLevel(level);
 prep._cfg = null;
 prep._metrics = { nodesExpanded: 0 };
 
-const maxDepth = Number(arg('max-depth', String(Math.ceil(level.reqLen / 2))));
+const maxDepth = Number(arg('max-depth', String(Math.ceil(level.requiredLength / 2))));
 const nFlippers = (raw.flippingFilters || []).length;
 const nPortals = (raw.portals || []).length;
 const nMustCross = (raw.mustCross || []).length;
-console.log(`${levelId}: reqLen=${level.reqLen} reqInt=${level.reqInt} grid=${level.grid.w}x${level.grid.h} ` +
+console.log(`${levelId}: requiredLength=${level.requiredLength} requiredIntersections=${level.requiredIntersections} grid=${level.grid.w}x${level.grid.h} ` +
     `flippingFilters=${nFlippers} portals=${nPortals} mustCross=${nMustCross}; meet depth ${maxDepth}, cap ${CAP.toLocaleString()}`);
 
 function entryAxisAt(state) {
@@ -242,7 +242,7 @@ if (outFile) {
     const abs = path.resolve(root, outFile);
     mkdirSync(path.dirname(abs), { recursive: true });
     writeFileSync(abs, JSON.stringify({
-        level: levelId, reqLen: level.reqLen, reqInt: level.reqInt,
+        level: levelId, requiredLength: level.requiredLength, requiredIntersections: level.requiredIntersections,
         grid: { w: level.grid.w, h: level.grid.h },
         flippingFilters: nFlippers, portals: nPortals, mustCross: nMustCross,
         maxDepth, cap: CAP, elapsedMs,

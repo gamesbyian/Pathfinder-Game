@@ -1,6 +1,6 @@
 // Canonical shape for a level's own provenance record: an append-only history of every known
 // origin/modification event, plus a derived summary. Lives directly on the level object
-// (alongside grid/reqLen/hints) rather than in a side document, so it travels with the level
+// (alongside grid/requiredLength/hints) rather than in a side document, so it travels with the level
 // through editor -> submission -> review -> publish the same way the level's own data does.
 //
 // Mirrors hint-types.ts's design language deliberately: an append-only entry list (never

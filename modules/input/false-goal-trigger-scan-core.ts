@@ -7,7 +7,7 @@ import { isParityCompatibleEndpoint } from '../solver/false-goal-trigger-search.
 /**
  * Cells that could possibly be false-goal trigger endpoints by the cheap parity test:
  * empty cells (or already-placed false goals) whose parity matches some gate's
- * endpoint parity for the level's reqLen. This is a sound over-approximation of
+ * endpoint parity for the level's requiredLength. This is a sound over-approximation of
  * the false-goal trigger search's triggerable-cell set — it only rules cells OUT — so the editor can paint
  * it instantly as "not ruled out yet" while the real scan streams confirmations.
  */

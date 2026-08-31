@@ -75,7 +75,7 @@ export interface LevelUtils {
     getGridCoord(e: { clientX: number; clientY: number }): { x: number; y: number };
     canonicalCloneLevel(src: any, options?: { includeHints?: boolean }): EngineLevel;
     deepCloneLevel(src: any): EngineLevel;
-    cloneLevelWithReq(src: any, reqLen: any, reqInt: any): EngineLevel;
+    cloneLevelWithReq(src: any, requiredLength: any, requiredIntersections: any): EngineLevel;
     normalizeLevel(idx: number): EngineLevel | null;
     denormalizeLevel(level: any): any;
     shiftLevelCoords(l: any, dx: number, dy: number): void;

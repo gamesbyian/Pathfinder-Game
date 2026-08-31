@@ -17,7 +17,7 @@
 # referenced in future-work.md/reports/2026-07-31-mustcross-forced-structure.md's widening (for
 # continuity with the documented-but-undercounted numbers), clean flipping-filter-only levels
 # spanning the real flipper-count range (5-8 -- CLAUDE.md's documented "max 4" is published-corpus-
-# only; the stress corpora go higher), and matched flipper-free baselines at similar reqLen, so the
+# only; the stress corpora go higher), and matched flipper-free baselines at similar requiredLength, so the
 # flipper-specific effect on frontier growth is isolated rather than assumed.
 #
 # `--cap` was 5,000,000 on the first dispatch and OOM'd every shard: the probe's first rewrite

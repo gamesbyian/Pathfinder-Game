@@ -29,8 +29,8 @@ test('normalizeRawLevel converts 1-indexed raw coordinates to packed solver keys
   assert.equal(level.id, 6);
   assert.equal(level.level, 7);
   assert.deepEqual(level.grid, { w: 6, h: 5 });
-  assert.equal(level.reqLen, 9);
-  assert.equal(level.reqInt, 1);
+  assert.equal(level.requiredLength, 9);
+  assert.equal(level.requiredIntersections, 1);
   assert.equal(level.goalKey, PACK(5, 4));
   assert.deepEqual(level.gateKeys, [PACK(0, 0), PACK(1, 0)]);
   assert.equal(level.blockSet.has(PACK(2, 1)), true);

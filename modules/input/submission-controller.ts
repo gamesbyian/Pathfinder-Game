@@ -82,14 +82,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         editor.applyMetricsFromUI();
         const l          = state.ENGINE.editor.workingLevel;
         const validation = editor.validateWorkingLevel();
-        const reqLen     = parseInt(ui.getValue('editReqLen')) || 0;
-        const reqInt     = parseInt(ui.getValue('editReqInt')) || 0;
+        const requiredLength     = parseInt(ui.getValue('editReqLen')) || 0;
+        const requiredIntersections     = parseInt(ui.getValue('editReqInt')) || 0;
         if (!validation?.ok) {
             ui.setSubmitStep('smStep-validate', 'error', validation.reasons?.length ? validation.reasons : ['Fix errors first.']);
             ui.showSubmitDismiss();
             return;
         }
-        if (!reqLen) {
+        if (!requiredLength) {
             ui.setSubmitStep('smStep-validate', 'error', ['Set a path length target before submitting.']);
             ui.showSubmitDismiss();
             return;
@@ -105,7 +105,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         let trapWarned = false;
         if (l.falseGoalKeys && l.falseGoalKeys.size > 0) {
             try {
-                const fgLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
+                const fgLevel = levelUtils.cloneLevelWithReq(l, requiredLength, requiredIntersections);
                 const trapBudget = Math.min(solverApi.getFalseGoalTriggerSearchBudgetMs(fgLevel), 8000);
                 const trapRes = await solverApi.findTriggerableFalseGoalCells(fgLevel, {
                     timeLimitMs: trapBudget,
@@ -132,7 +132,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         }
         if (!trapWarned) ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
 
-        const buildLevelData = (hints: any = [], provenance: any = l.provenance ?? null) => buildWireLevelData(l, { reqLen, reqInt, hints, provenance });
+        const buildLevelData = (hints: any = [], provenance: any = l.provenance ?? null) => buildWireLevelData(l, { requiredLength, requiredIntersections, hints, provenance });
 
         // Step 2: Check duplicates. Both a pending-queue match and an already-published
         // match are deferred — the player may still be contributing genuinely novel
@@ -183,7 +183,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         currentStepId = 'smStep-solve';
         ui.setSubmitStep('smStep-solve', 'running');
         const validateHintPath = (candidatePath: any) => {
-            const lv = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
+            const lv = levelUtils.cloneLevelWithReq(l, requiredLength, requiredIntersections);
             return solverApi.validateCandidatePath(lv, candidatePath);
         };
         const candidatePaths = [
@@ -240,7 +240,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 updateCountdown();
                 await new Promise((r: any) => setTimeout(r, 0));
                 stopTicker = scheduleTick(updateCountdown);
-                const solveLevel = levelUtils.cloneLevelWithReq(l, reqLen, reqInt);
+                const solveLevel = levelUtils.cloneLevelWithReq(l, requiredLength, requiredIntersections);
                 const varietySeed = (0x53ab ^ (baseCount + 1)) >>> 0;
                 // High target + disabled saturation so the 10s deadline is the real limiter — we keep
                 // finding distinct solutions (all of which get submitted) for the whole budget.

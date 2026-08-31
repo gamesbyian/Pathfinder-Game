@@ -2,10 +2,11 @@ import { PACK } from './encoding.js';
 import { applyLandmark } from '../domain/landmark-rules.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { TurnDir } from '../domain/level-schema.js';
+import { readRawChallengeMetrics } from '../domain/level-codec.js';
 
 // Normalize raw 1-indexed level wire data into Solver's packed-key shape.
-// This is intentionally dependency-free so tests and tooling can validate solver
-// input contracts without importing the full search implementation.
+// Challenge-metric wire compatibility is owned by domain/level-codec.ts; this module consumes
+// its canonical projection so Solver does not become a second raw-field compatibility boundary.
 /**
  * @param rawLevel  untrusted wire-format level (1-indexed); validated elsewhere
  */
@@ -34,6 +35,7 @@ export function normalizeRawLevel(rawLevel: any, levelNumber: number | null = nu
     const adjacentTurnDirs: TurnDir[]  = [];
     const mustPassTurnDirs = new Map<number, TurnDir>();
     const landmarkMeta = new Map<number, { objectType: string; role: string }>();
+    const challengeMetrics = readRawChallengeMetrics(rawLevel, { coerce: true });
     const landmarkFields = { blockSet, mustPassKeys, mustPassTurnDirs, surroundKeys, adjacentTurnKeys, adjacentTurnDirs, landmarkMeta };
     arr(rawLevel?.landmarks).forEach(lm => {
         if (!lm || !lm.role) return;
@@ -45,8 +47,7 @@ export function normalizeRawLevel(rawLevel: any, levelNumber: number | null = nu
         id: levelId,
         level: levelNum ?? (levelId + 1),
         grid: { w: Number(rawLevel?.grid?.w) || 0, h: Number(rawLevel?.grid?.h) || 0 },
-        reqLen: Number(rawLevel?.reqLen) || 0,
-        reqInt: Number(rawLevel?.reqInt) || 0,
+        ...challengeMetrics,
         goalKey: pack(rawLevel.goal.x, rawLevel.goal.y),
         gateKeys: arr(rawLevel?.gates).map(g => pack(g.x, g.y)),
         blockSet,

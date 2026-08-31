@@ -12,8 +12,8 @@ import type { NormalizedLevel } from '../domain/types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 10, h: 10 },
-    reqLen: 50,
-    reqInt: 2,
+    requiredLength: 50,
+    requiredIntersections: 2,
     gateKeys: [PACK(0, 0)],
     blockSet: new Set(),
     gooseSet: new Set(),
@@ -29,7 +29,7 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS B
   // Must-turn repair-fallback level (mustCross≥2 & mustPass≥3 → needsRepairFallback; mustPassTurnDirs
   // non-empty → mustTurn>0), so the ordinary + biased repair attempt(s) are present.
   const lowReqIntLevel = makeLevel({
-    reqLen: 40, reqInt: 2,
+    requiredLength: 40, requiredIntersections: 2,
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
@@ -39,33 +39,33 @@ test('repairTurnBiased attempt is default-off; under STRATEGY_REPAIR_TURN_BIAS B
   assert.equal(off.some(c => c.repairTurnBiased), false, 'not added with null cfg (production default)');
   assert.equal(off.filter(c => c.repair).length, 2, 'production: exactly ordinary + mustTurnBiased, never turnBiased');
 
-  // reqInt=2 (<= the heuristic's threshold): predicts mustTurnBiased. Non-exclusive design (see
+  // requiredIntersections=2 (<= the heuristic's threshold): predicts mustTurnBiased. Non-exclusive design (see
   // predictLikelyBiasedRepairTechnique) — BOTH techniques are still added, never just one; the
   // predicted one goes first (before ordinary repair), the other becomes a genuine fallback (after
   // ordinary repair) rather than being excluded outright.
   const onLowReqInt = getAttemptConfigs(lowReqIntLevel, { ...defaultConfig(), STRATEGY_REPAIR_TURN_BIAS: true });
   const lowRepairs = onLowReqInt.filter(c => c.repair);
-  assert.equal(lowRepairs.length, 3, 'low reqInt: predicted + ordinary + fallback, all three present');
-  assert.equal(lowRepairs[0].repairMustTurnBiased, true, 'low reqInt: predicted (mustTurnBiased) goes first');
+  assert.equal(lowRepairs.length, 3, 'low requiredIntersections: predicted + ordinary + fallback, all three present');
+  assert.equal(lowRepairs[0].repairMustTurnBiased, true, 'low requiredIntersections: predicted (mustTurnBiased) goes first');
   assert.equal(lowRepairs[1].repair && !lowRepairs[1].repairMustTurnBiased && !lowRepairs[1].repairTurnBiased, true, 'ordinary repair second');
-  assert.equal(lowRepairs[2].repairTurnBiased, true, 'low reqInt: turnBiased is the fallback, still tried, placed last');
+  assert.equal(lowRepairs[2].repairTurnBiased, true, 'low requiredIntersections: turnBiased is the fallback, still tried, placed last');
 
-  // reqInt=9 (above threshold): predicts turnBiased instead — same non-exclusive shape, reversed.
+  // requiredIntersections=9 (above threshold): predicts turnBiased instead — same non-exclusive shape, reversed.
   const highReqIntLevel = makeLevel({
-    reqLen: 40, reqInt: 9,
+    requiredLength: 40, requiredIntersections: 9,
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassTurnDirs: new Map([[PACK(1, 1), 'either']]),
   });
   const onHighReqInt = getAttemptConfigs(highReqIntLevel, { ...defaultConfig(), STRATEGY_REPAIR_TURN_BIAS: true });
   const highRepairs = onHighReqInt.filter(c => c.repair);
-  assert.equal(highRepairs.length, 3, 'high reqInt: predicted + ordinary + fallback, all three present');
-  assert.equal(highRepairs[0].repairTurnBiased, true, 'high reqInt: predicted (turnBiased) goes first (early-probe latency)');
-  assert.equal(highRepairs[2].repairMustTurnBiased, true, 'high reqInt: mustTurnBiased is the fallback, still tried, placed last');
+  assert.equal(highRepairs.length, 3, 'high requiredIntersections: predicted + ordinary + fallback, all three present');
+  assert.equal(highRepairs[0].repairTurnBiased, true, 'high requiredIntersections: predicted (turnBiased) goes first (early-probe latency)');
+  assert.equal(highRepairs[2].repairMustTurnBiased, true, 'high requiredIntersections: mustTurnBiased is the fallback, still tried, placed last');
 });
 
 test('default attempt order keeps orderingBias sweep before profile fallbacks, with beams trailing last', () => {
-  const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
+  const attempts = getAttemptConfigs(makeLevel({ requiredLength: 40, requiredIntersections: 2, mustPassKeys: [PACK(1, 1)] }));
   assert.deepEqual(attempts.slice(0, 4).map(c => c.orderingBias?.id), ATTEMPT_CONFIGS.slice(0, 4).map(c => c.orderingBias?.id));
   // Excludes the admissible-order-search last-resort tier appended at the very end (see
   // ADMISSIBLE_ORDER_PROFILES) -- this assertion is specifically about the main DFS/beam profile
@@ -86,7 +86,7 @@ test('default attempt order keeps orderingBias sweep before profile fallbacks, w
 });
 
 test('default no-must-pass levels prefer perimeterCCW before perimeterCW, with beams trailing last', () => {
-  const attempts = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [] }));
+  const attempts = getAttemptConfigs(makeLevel({ requiredLength: 40, requiredIntersections: 2, mustPassKeys: [] }));
   assert.deepEqual(attempts.slice(0, 4).map(c => c.orderingBias?.id), [
     'cornerHarvest',
     'perimeterCCW',
@@ -103,7 +103,7 @@ test('default no-must-pass levels prefer perimeterCCW before perimeterCW, with b
 });
 
 test('sparse-low-intersection attempts prioritize closure rescue profiles before templates', () => {
-  const attempts = getAttemptConfigs(makeLevel({ reqLen: 10, reqInt: 1 }));
+  const attempts = getAttemptConfigs(makeLevel({ requiredLength: 10, requiredIntersections: 1 }));
   assert.deepEqual(attempts.slice(0, 4).map(c => c.scoringProfileId), [
     'nearClosureRescue',
     'harvestThenFinish',
@@ -115,10 +115,10 @@ test('sparse-low-intersection attempts prioritize closure rescue profiles before
 });
 
 test('multi-portal levels lead with portal profiles, with beam configs trailing last', () => {
-  // portalMap.size >= 4 (2+ pairs) triggers the multi-portal routing regime (routing-regime.ts); reqInt kept
+  // portalMap.size >= 4 (2+ pairs) triggers the multi-portal routing regime (routing-regime.ts); requiredIntersections kept
   // low enough to avoid the intersection-heavy rule matching first.
   const attempts = getAttemptConfigs(makeLevel({
-    reqLen: 40, reqInt: 2,
+    requiredLength: 40, requiredIntersections: 2,
     portalMap: new Map([[PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)], [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)]]),
   }));
   assert.deepEqual(attempts.slice(0, 2).map(c => c.scoringProfileId), ['portalFirstTransfer', 'portalCommitted']);
@@ -136,7 +136,7 @@ test('multi-portal levels lead with portal profiles, with beam configs trailing 
 });
 
 test('high-intersection dense levels lead with beam configs', () => {
-  const attempts = getAttemptConfigs(makeLevel({ reqLen: 60, reqInt: 7 }));
+  const attempts = getAttemptConfigs(makeLevel({ requiredLength: 60, requiredIntersections: 7 }));
   assert.deepEqual(attempts.slice(0, 2).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['intersectionHarvest', 5000],
     ['objectiveFirst', 5000],
@@ -145,7 +145,7 @@ test('high-intersection dense levels lead with beam configs', () => {
 
 
 test('STRATEGY_ROUTING_REGIME_SELECTION disabled forces the catch-all rule regardless of features', () => {
-  const level = makeLevel({ reqLen: 60, reqInt: 7 });
+  const level = makeLevel({ requiredLength: 60, requiredIntersections: 7 });
   const routed = getAttemptConfigs(level);
   assert.deepEqual(routed.slice(0, 2).map(c => [c.scoringProfileId, c.beamWidth]), [
     ['intersectionHarvest', 5000],
@@ -156,7 +156,7 @@ test('STRATEGY_ROUTING_REGIME_SELECTION disabled forces the catch-all rule regar
   assert.deepEqual(forcedDefault.slice(0, 4).map(c => c.orderingBias?.id), [
     'cornerHarvest', 'perimeterCW', 'perimeterCCW', 'sideCommitment',
   ]);
-  // This level is also repair-eligible (isHighInt && reqInt>=7), so a repair attempt gets appended
+  // This level is also repair-eligible (isHighInt && requiredIntersections>=7), so a repair attempt gets appended
   // after the rule's own list too -- filter both trailing tiers to isolate the rule's own ordering.
   const forcedNonAdmissibleOrder = forcedDefault.filter(c => !c.admissibleOrder && !c.repair);
   assert.deepEqual(forcedNonAdmissibleOrder.slice(-4).map(c => [c.scoringProfileId, c.beamWidth]), [
@@ -173,7 +173,7 @@ test('STRATEGY_ROUTING_REGIME_SELECTION disabled forces the catch-all rule regar
 });
 
 test('applyAttemptConfigOptions filters disabled ordering biases and scoring profiles', () => {
-  const base = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
+  const base = getAttemptConfigs(makeLevel({ requiredLength: 40, requiredIntersections: 2, mustPassKeys: [PACK(1, 1)] }));
   const filtered = applyAttemptConfigOptions(base, {
     ORDERING_BIAS_CORNER_HARVEST: false,
     PROFILE_default: false,
@@ -189,7 +189,7 @@ test('applyAttemptConfigOptions does not restore the base ladder when every conf
 });
 
 test('applyAttemptConfigOptions supports reverse, random, and profile-grouped ordering', () => {
-  const base = getAttemptConfigs(makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] }));
+  const base = getAttemptConfigs(makeLevel({ requiredLength: 40, requiredIntersections: 2, mustPassKeys: [PACK(1, 1)] }));
   assert.deepEqual(applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'reverse' }), [...base].reverse());
 
   const randomA = applyAttemptConfigOptions(base, { ATTEMPT_ORDER: 'random', _randomSeed: 123 });
@@ -210,7 +210,7 @@ test('applyAttemptConfigOptions supports reverse, random, and profile-grouped or
 });
 
 test('getConfiguredAttemptConfigs combines base ordering with ablation options', () => {
-  const level = makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] });
+  const level = makeLevel({ requiredLength: 40, requiredIntersections: 2, mustPassKeys: [PACK(1, 1)] });
   const cfg = { ORDERING_BIAS_CORNER_HARVEST: false };
   const configured = getConfiguredAttemptConfigs(level, { ...cfg, ATTEMPT_ORDER: 'reverse' });
   assert.equal(configured.some(c => c.orderingBias?.id === 'cornerHarvest'), false);
@@ -219,7 +219,7 @@ test('getConfiguredAttemptConfigs combines base ordering with ablation options',
 });
 
 test('getConfiguredAttemptConfigs normalizes sparse and undefined overrides at its public boundary', () => {
-  const level = makeLevel({ reqLen: 40, reqInt: 2, mustPassKeys: [PACK(1, 1)] });
+  const level = makeLevel({ requiredLength: 40, requiredIntersections: 2, mustPassKeys: [PACK(1, 1)] });
   const baseline = getConfiguredAttemptConfigs(level, null);
   const sparse = getConfiguredAttemptConfigs(level, { PRUNE_PARITY: false, PROFILE_default: undefined });
   assert.equal(sparse.length, baseline.length, 'unrelated sparse flags must not collapse the attempt ladder');
@@ -227,11 +227,11 @@ test('getConfiguredAttemptConfigs normalizes sparse and undefined overrides at i
   assert.equal(sparse.some(c => c.admissibleOrder), baseline.some(c => c.admissibleOrder), 'default-on tiers remain present');
 });
 
-test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the missing STANDARD intersection-harvest beam to very-high-reqInt high-intersection rules', () => {
-  const nonPortal = makeLevel({ reqLen: 60, reqInt: 8 });
+test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the missing STANDARD intersection-harvest beam to very-high-requiredIntersections high-intersection rules', () => {
+  const nonPortal = makeLevel({ requiredLength: 60, requiredIntersections: 8 });
   const off = getAttemptConfigs(nonPortal, null);
   assert.equal(off.some(c => c.scoringProfileId === 'intersectionHarvest' && c.beamWidth === 2000 && !c.mechanicBucketRetention), false,
-    'production default leaves the STANDARD intersection-harvest beam absent in the very-high-reqInt rule');
+    'production default leaves the STANDARD intersection-harvest beam absent in the very-high-requiredIntersections rule');
 
   const on = getAttemptConfigs(nonPortal, {
     ...defaultConfig(),
@@ -243,7 +243,7 @@ test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the
   assert.deepEqual(withoutAdded, off, 'treatment is purely additive inside the selected rule');
 
   const portalDense = makeLevel({
-    reqLen: 60, reqInt: 8,
+    requiredLength: 60, requiredIntersections: 8,
     portalMap: new Map([
       [PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)],
       [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)],
@@ -260,13 +260,13 @@ test('STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE adds only the
 
   // Below VERY_HIGH_REQINT, the medium-high-int rule already contains the STANDARD beam.
   // The experimental flag must not duplicate or otherwise perturb that existing exposure.
-  const mediumHigh = makeLevel({ reqLen: 55, reqInt: 5 });
+  const mediumHigh = makeLevel({ requiredLength: 55, requiredIntersections: 5 });
   const mediumOff = getAttemptConfigs(mediumHigh, null);
   const mediumOn = getAttemptConfigs(mediumHigh, {
     ...defaultConfig(),
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
   });
-  assert.deepEqual(mediumOn, mediumOff, 'flag has no effect outside the two very-high-reqInt rules');
+  assert.deepEqual(mediumOn, mediumOff, 'flag has no effect outside the two very-high-requiredIntersections rules');
 });
 
 test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps the old protected five-config suffix intact', () => {
@@ -294,20 +294,20 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
       'removing the inserted action reproduces the production main-search config order exactly');
   };
 
-  assertPreservesSuffix(makeLevel({ reqLen: 60, reqInt: 8 }));
+  assertPreservesSuffix(makeLevel({ requiredLength: 60, requiredIntersections: 8 }));
   assertPreservesSuffix(makeLevel({
-    reqLen: 60, reqInt: 8,
+    requiredLength: 60, requiredIntersections: 8,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
   }));
   assertPreservesSuffix(makeLevel({
-    reqLen: 60, reqInt: 8,
+    requiredLength: 60, requiredIntersections: 8,
     portalMap: new Map([
       [PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)],
       [PACK(3, 3), PACK(4, 4)], [PACK(4, 4), PACK(3, 3)],
     ]),
   }));
   assertPreservesSuffix(makeLevel({
-    reqLen: 60, reqInt: 8,
+    requiredLength: 60, requiredIntersections: 8,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     portalMap: new Map([
       [PACK(1, 1), PACK(2, 2)], [PACK(2, 2), PACK(1, 1)],
@@ -315,7 +315,7 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
     ]),
   }));
 
-  const both = getAttemptConfigs(makeLevel({ reqLen: 60, reqInt: 8 }), {
+  const both = getAttemptConfigs(makeLevel({ requiredLength: 60, requiredIntersections: 8 }), {
     ...defaultConfig(),
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE: true,
     STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE: true,
@@ -325,10 +325,10 @@ test('reserve-preserving high-int STANDARD intersection-harvest exposure keeps t
 });
 
 test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026-08-27) and appends the plain WIDE beams only for the must-cross+flipper-heavy rule', () => {
-  // mustCross>=2 & reqInt=4 & density<0.55 -> must-cross-heavy (not intersection-heavy);
+  // mustCross>=2 & requiredIntersections=4 & density<0.55 -> must-cross-heavy (not intersection-heavy);
   // mustPass>=OBJECTIVE_HEAVY_MUSTPASS(3) & flippers>=FLIPPER_HEAVY(2) -> the flipper-heavy rule.
   const level = makeLevel({
-    reqLen: 40, reqInt: 4,
+    requiredLength: 40, requiredIntersections: 4,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
     flippingFilterMap: new Map([[PACK(6, 6), 1], [PACK(7, 7), 1]]),
@@ -358,7 +358,7 @@ test('STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE is default-ON (promoted 2026
   // A must-cross-heavy level that does NOT match the flipper-heavy sub-rule (flippers < FLIPPER_HEAVY)
   // must stay untouched even with the flag on: this is a single-rule promotion, not routing-regime-wide.
   const nonFlipperLevel = makeLevel({
-    reqLen: 40, reqInt: 4,
+    requiredLength: 40, requiredIntersections: 4,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
   });
@@ -371,7 +371,7 @@ test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam
   // isMustCross & mustPass>=3, flippers<FLIPPER_HEAVY(2) -> "must-cross, must-pass-heavy" rule
   // (not the flipper-heavy rule, which STRATEGY_MUSTCROSS_FLIPPER_WIDE_BEAM_EXPOSURE already covers).
   const mustPassHeavyLevel = makeLevel({
-    reqLen: 40, reqInt: 4,
+    requiredLength: 40, requiredIntersections: 4,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
   });
@@ -386,7 +386,7 @@ test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam
   // isMustCross, mustPass<OBJECTIVE_HEAVY_MUSTPASS, below COMBO_MUSTCROSS/COMBO_MUSTPASS -> the
   // must-cross "default" catch-all rule.
   const mustCrossDefaultLevel = makeLevel({
-    reqLen: 40, reqInt: 4,
+    requiredLength: 40, requiredIntersections: 4,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
   });
   const mustCrossDefaultOff = getAttemptConfigs(mustCrossDefaultLevel, null);
@@ -401,7 +401,7 @@ test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam
   // fully exposed with room to spare, and default-ON since 2026-08-27 — see the sibling test above).
   // Disable it explicitly so this isolation check does not pick up its own beam.
   const flipperHeavyLevel = makeLevel({
-    reqLen: 40, reqInt: 4,
+    requiredLength: 40, requiredIntersections: 4,
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
     flippingFilterMap: new Map([[PACK(6, 6), 1], [PACK(7, 7), 1]]),
@@ -415,17 +415,17 @@ test('STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE appends one plain WIDE beam
 });
 
 test('SOLVER_TESTING_API exposes the extracted attempt-order helper', () => {
-  const level = makeLevel({ reqLen: 10, reqInt: 1 });
+  const level = makeLevel({ requiredLength: 10, requiredIntersections: 1 });
   assert.equal(SOLVER_TESTING_API.getAttemptConfigs, getAttemptConfigs);
   assert.deepEqual(SOLVER_TESTING_API.getAttemptConfigs(level), getAttemptConfigs(level));
 });
 
 test('must-cross-threaded medium-high-int levels get floored mechanic-bucket-retention wide beams', () => {
-  // reqInt 5 at density ~0.55 → intersection-heavy, below the very-high-reqInt and
+  // requiredIntersections 5 at density ~0.55 → intersection-heavy, below the very-high-requiredIntersections and
   // near-Hamiltonian branches. With ≥2 must-cross cells the plain 2000-wide beams collapse
   // to one structural mode and DFS never recovers (stress-corpus finding: the mechanic-bucket-retained
   // WIDE beam solves these in seconds while the shipped ladder times out).
-  const level = makeLevel({ reqLen: 55, reqInt: 5, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
+  const level = makeLevel({ requiredLength: 55, requiredIntersections: 5, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
   const attempts = getAttemptConfigs(level);
   const retained = attempts.filter(c => c.mechanicBucketRetention);
   assert.equal(retained.length >= 2, true, 'expected mechanic-bucket-retention beam attempts');
@@ -438,13 +438,13 @@ test('must-cross-threaded medium-high-int levels get floored mechanic-bucket-ret
 });
 
 test('medium-high-int levels without must-cross keep the plain beam ladder', () => {
-  const level = makeLevel({ reqLen: 55, reqInt: 5, mustCrossKeys: [] });
+  const level = makeLevel({ requiredLength: 55, requiredIntersections: 5, mustCrossKeys: [] });
   const attempts = getAttemptConfigs(level);
   assert.equal(attempts.some(c => c.mechanicBucketRetention), false);
 });
 
-test('very-high-reqInt levels with must-cross threading also get mechanic-bucket-retention beams', () => {
-  const level = makeLevel({ reqLen: 60, reqInt: 8, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
+test('very-high-requiredIntersections levels with must-cross threading also get mechanic-bucket-retention beams', () => {
+  const level = makeLevel({ requiredLength: 60, requiredIntersections: 8, mustCrossKeys: [PACK(4, 4), PACK(6, 6)] });
   const attempts = getAttemptConfigs(level);
   assert.equal(attempts.some(c => c.mechanicBucketRetention && c.scoringProfileId === 'intersectionHarvest'), true);
 });
@@ -453,7 +453,7 @@ test('STRATEGY_REPAIR_FALLBACK / STRATEGY_REPAIR_MUSTTURN_BIAS filter the repair
   // mustCross ≥ 2 + mustPass ≥ 3 matches the repair gate; mustPassTurnDirs makes the level a
   // must-turn level, so the biased second attempt is appended too.
   const level = makeLevel({
-    reqLen: 60, reqInt: 4,
+    requiredLength: 60, requiredIntersections: 4,
     mustPassKeys: [PACK(1, 1), PACK(2, 2), PACK(3, 3)],
     mustCrossKeys: [PACK(4, 4), PACK(5, 5)],
     mustPassTurnDirs: new Map([[PACK(1, 1), 'cw']]),

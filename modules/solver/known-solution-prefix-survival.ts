@@ -102,7 +102,7 @@ export class KnownSolutionPrefixSurvivalObserver implements BeamResearchObserver
             ...(correctnessAlarm ? { correctnessAlarm: true } : {}),
         });
     }
-    summary(reqLen: number): Record<string, unknown> {
+    summary(requiredLength: number): Record<string, unknown> {
         // Removal-event records describe what left a population, not the surviving population.
         // Only boundary snapshots participate in extinction accounting.
         const boundaries = this.stages.filter(s => !['generated', 'hard-pruned', 'coarse-state-merge-removed', 'score-width-culled', 'mechanic-bucket-culled'].includes(s.stage));
@@ -119,7 +119,7 @@ export class KnownSolutionPrefixSurvivalObserver implements BeamResearchObserver
             schemaVersion: 1, solutionLabels: this.index.solutions.length, stages: this.stages,
             firstSupportLoss: losses[0] ?? null, finalSupportLoss: losses.at(-1) ?? null,
             lastSupportDepth: last?.depth ?? null,
-            normalizedLastSupportDepth: last ? last.depth / Math.max(1, reqLen) : null,
+            normalizedLastSupportDepth: last ? last.depth / Math.max(1, requiredLength) : null,
             workAfterFinalKnownSupport: last ? Math.max(0, (this.stages.at(-1)?.work ?? last.work) - last.work) : null,
             correctnessAlarms: this.stages.filter(s => s.correctnessAlarm),
             caution: 'Known support extinction does not prove that no valid solution remains.',

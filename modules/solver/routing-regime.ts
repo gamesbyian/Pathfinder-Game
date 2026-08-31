@@ -25,7 +25,7 @@ export function getNonGateWinningPathCellCount(level: NormalizedLevel): number {
 
 /** Required path length divided by getNonGateWinningPathCellCount(level). */
 export function getRequiredPathCoverageRatio(level: NormalizedLevel): number {
-    return level.reqLen / getNonGateWinningPathCellCount(level);
+    return level.requiredLength / getNonGateWinningPathCellCount(level);
 }
 
 /** Classify a level into the implementation routing regime that drives attempt ordering. */
@@ -33,12 +33,12 @@ export function classifyRoutingRegime(level: NormalizedLevel): RoutingRegime {
     const coverage = getRequiredPathCoverageRatio(level);
     // Sparse path needing at most 1 intersection. Classify before multi-portal so sparse
     // two-portal-pair levels preserve the historical first-match routing priority.
-    if (level.reqInt <= 1 && coverage < 0.35) return 'sparse-low-intersection';
+    if (level.requiredIntersections <= 1 && coverage < 0.35) return 'sparse-low-intersection';
     // Intersection-heavy: high coverage plus many intersections, or extreme intersection count.
-    if ((level.reqInt >= 5 && coverage >= 0.45)
-        || (level.reqInt >= 4 && coverage >= 0.55)
-        || level.reqInt >= 10) return 'intersection-heavy';
-    if (level.mustCrossKeys.length >= 2 && level.reqInt >= 2) return 'must-cross-heavy';
+    if ((level.requiredIntersections >= 5 && coverage >= 0.45)
+        || (level.requiredIntersections >= 4 && coverage >= 0.55)
+        || level.requiredIntersections >= 10) return 'intersection-heavy';
+    if (level.mustCrossKeys.length >= 2 && level.requiredIntersections >= 2) return 'must-cross-heavy';
     if ((level.portalMap?.size || 0) >= 4) return 'multi-portal';
     return 'general';
 }

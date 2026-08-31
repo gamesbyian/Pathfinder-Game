@@ -84,7 +84,7 @@ export function evaluate({ level, prep, state, pos }) {
         };
     }
 
-    const rSteps = level.reqLen - getRealLengthFromState(state);
+    const rSteps = level.requiredLength - getRealLengthFromState(state);
     if (best > rSteps) {
         return {
             verdict: 'reject', abstained: false,

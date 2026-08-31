@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
 | Current batch | 13A boundary preparation |
-| Status | 13A validated; merge pending |
+| Status | 13A merged; 13B implementation assembled |
 | Base `main` SHA | `efe94db31469f903a42b3921535beb32e1b785fb` |
 | Branch | `chatgpt/phase13a-boundary-prep-2026-08-31` |
 | PR | #1620 |
@@ -178,7 +178,33 @@ any Phase-13 implementation/behavioral/closeout verification dimension other tha
 
 ## 8. 13B atomic normalized migration
 
-Not started. Must begin from merged 13A main, not this branch. Entry gate:
+Started from merged 13A main `1eb8d80c75e6ae5d02f90df5d8c9daee21b19dd9`.
+
+The implementation is assembled as one atomic source tree. The 80 normalized-only files were
+mechanically migrated with word-boundary replacements only after 13A established that every
+`reqLen`/`reqInt` hit in those files referred to normalized/current vocabulary. The 13 mixed
+files were then edited selectively so raw fixture/wire/report keys remain legacy while
+`EngineLevel`/`NormalizedLevel` properties use `requiredLength`/`requiredIntersections`.
+
+Boundary changes:
+
+- `RawLevel.reqLen` and `RawLevel.reqInt` remain unchanged.
+- `EngineLevel` and `NormalizedLevel` expose `requiredLength` and
+  `requiredIntersections`.
+- `parseRawLevel` maps the raw fields to the expanded runtime names.
+- `denormalizeLevel` and `buildWireLevelData` continue emitting raw `reqLen`/`reqInt`.
+- the writer option API is canonicalized to `requiredLength`/`requiredIntersections` while its
+  serialized output remains unchanged.
+- `canonicalCloneLevel` and `cloneLevelWithReq` operate only on expanded runtime fields.
+- `modules/solver/normalization.ts` no longer reads either raw metric directly. It delegates to
+  `readRawChallengeMetrics` in `modules/domain/level-codec.ts`, preserving the solver's
+  historical numeric coercion while leaving one compatibility owner.
+- the post-migration ownership inventory has 88 raw/wire files, 18 retained non-normalized files,
+  zero normalized legacy consumers, zero mixed files, and zero ambiguous files.
+- `normalizedMigrationComplete: true` makes the ordinary CI checker permanently enforce the
+  zero-normalized/zero-mixed invariant without a special command-line flag.
+
+13B validation is pending publication of the atomic tree and exact-head CI. Entry gate:
 
 - ownership inventory still has zero ambiguous files;
 - `normalizedRuntimeConsumer` is the complete set that should lose legacy spellings;

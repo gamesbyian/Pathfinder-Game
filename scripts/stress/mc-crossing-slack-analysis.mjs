@@ -251,7 +251,7 @@ function analyzeAtlas() {
                     abstainedByReason.set(obs.abstain, (abstainedByReason.get(obs.abstain) || 0) + 1);
                 } else {
                     const cohort = branch.dead ? (branch.pruned ? 'dead-pruned' : 'dead-residual') : 'alive';
-                    const bucket = depthBucket(branch.step, level.reqLen);
+                    const bucket = depthBucket(branch.step, level.requiredLength);
                     const key = `${cohort}|depth=${bucket}|pendingMC=${obs.remainingMustCross}`;
                     addGrouped(grouped, key, obs);
                     if (!overall.has(cohort)) overall.set(cohort, freshDist());

@@ -84,7 +84,7 @@ export async function completeFromState(
         const isJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
         const undo = applyMove(next, state, level, prep, isJump);
         const realLen = getRealLengthFromState(state);
-        const rSteps = level.reqLen - realLen;
+        const rSteps = level.requiredLength - realLen;
 
         if (useAdmissibleGauntlet) {
             // Match admissibleOrderSearch's connectivity cadence; it is the expensive gauntlet member.
@@ -101,7 +101,7 @@ export async function completeFromState(
             continue;
         }
 
-        if (realLen > level.reqLen || state.ints > level.reqInt) { undoMove(undo, state); continue; }
+        if (realLen > level.requiredLength || state.ints > level.requiredIntersections) { undoMove(undo, state); continue; }
         if (next === level.goalKey) {
             if (isSolutionState(state, level)) onSolution(state.path.slice(), nodes, Date.now() - startedAt);
             undoMove(undo, state); continue;

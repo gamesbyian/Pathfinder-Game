@@ -15,7 +15,7 @@ function levelWithThirtyTwoFlippers(): { level: NormalizedLevel; target: number;
     }
     entries.push([target, AXIS_H]);
     const level = {
-        grid: { w: 15, h: 15 }, reqLen: 20, reqInt: 0,
+        grid: { w: 15, h: 15 }, requiredLength: 20, requiredIntersections: 0,
         goalKey: PACK(14, 14), gateKeys: [start],
         blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(),
         mustPassKeys: [], mustCrossKeys: [], surroundKeys: [], adjacentTurnKeys: [],

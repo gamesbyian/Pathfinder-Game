@@ -398,7 +398,7 @@ function _reportConnectivityRejection(
         subtype, objectiveIndex, pos, stateFingerprint: stateSignature(state),
         intNeeded, mpVisitedMask: state.mpVisitedMask, mustCrossMask: state.mustCrossMask,
         reservedWallActive: mcOpenMask !== 0, freshVolume,
-        remainingSteps: remainingStepsKnown ?? (level.portalMap.size === 0 ? level.reqLen - getRealLengthFromState(state) : null),
+        remainingSteps: remainingStepsKnown ?? (level.portalMap.size === 0 ? level.requiredLength - getRealLengthFromState(state) : null),
         work: prep._workMeter.units,
         ...(research.includeBoundarySketch
             ? { boundarySketch: _computeBoundarySketch(level, state, prep, maxVisit, pos, mcOpenMask, level.mustCrossKeys, axisExhausted) }
@@ -430,25 +430,25 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // Dual increment — see applyMove's identical comment in search-state.ts.
     workMeter.units += CONNECTIVITY_WORK_UNITS;
     prep._workMeter.units += CONNECTIVITY_WORK_UNITS;
-    const intNeeded = level.reqInt - state.ints;
+    const intNeeded = level.requiredIntersections - state.ints;
     // Threshold: visited count allowed to pass through.
     //   0 intersections remaining: only unvisited cells (path acts as hard walls).
     //   N > 0 intersections remaining: cells visited up to twice are traversable.
     //   The original maxVisit=1 was wrong: after making one intersection (visited[A]=2),
     //   cell A still needs to be passable in BFS if we have intersection budget left.
-    //   Cap at 2 rather than reqInt to bound BFS cost on high-intersection levels.
+    //   Cap at 2 rather than requiredIntersections to bound BFS cost on high-intersection levels.
     let maxVisit = intNeeded > 0 ? 2 : 0;
 
     // ── Reserved-intersection wall ────────────────────────────────────────────────────────────
     // Each pending must-cross cell has one intersection already committed to its own second
-    // crossing (PRUNE_MC_CEILING above guarantees `ints + popcount(mustCrossMask) <= reqInt`), so
+    // crossing (PRUNE_MC_CEILING above guarantees `ints + popcount(mustCrossMask) <= requiredIntersections`), so
     // the intersections available for revisiting ANYTHING ELSE are
-    //   freeInt = reqInt - ints - popcount(mustCrossMask).
+    //   freeInt = requiredIntersections - ints - popcount(mustCrossMask).
     // freeInt is non-increasing along any path: a fresh step leaves it alone, a must-cross second
     // crossing raises `ints` and lowers `popcount` by 1 each, and any other revisit spends one. So
     // once it hits 0 no ordinary cell can ever be re-entered again, for the rest of the search —
     // the visited path is a wall, not a budget-limited obstacle, and only the pending must-cross
-    // cells stay open. On `reqInt <= must-cross count` levels that holds from the first move.
+    // cells stay open. On `requiredIntersections <= must-cross count` levels that holds from the first move.
     //
     // Gates are already walls (prep.reachBlockedArr) and can never be re-entered; the goal is
     // terminal (hard-prune-pipeline.ts answers 'solution' or 'reject' the moment a move enters it), so
@@ -458,7 +458,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // Portal levels are INCLUDED, unlike the volume check below. The argument needs only "every
     // entry into a visited ordinary cell costs one intersection", which is `wasIntAdded` itself —
     // evaluated in `applyMove` for portal jumps exactly as for ordinary moves. It does NOT need the
-    // `reqInt == nodes - distinctCells` identity, which is what portals actually break (a jump
+    // `requiredIntersections == nodes - distinctCells` identity, which is what portals actually break (a jump
     // costs no path length) and what the volume check below is gated on. An earlier version of this
     // excluded portals by conflating the two.
     let mcOpenMask = 0;
@@ -504,7 +504,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // steps, inflating freshVolume). MC levels use the same formula since intNeeded
     // accounts for the extra revisit steps — the double-count concern was unfounded.
     if (level.portalMap.size === 0) {
-        const rSteps = level.reqLen - getRealLengthFromState(state);
+        const rSteps = level.requiredLength - getRealLengthFromState(state);
         if (freshVolume + intNeeded < rSteps) {
             if (research) _reportConnectivityRejection(research, 'volume', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted, rSteps);
             return false;
@@ -524,7 +524,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
 // triggerable cells are gated by a full win-condition check before being added), so the
 // looser bound buys nothing here — it would only prune less for no benefit.
 export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
-    const intNeeded = level.reqInt - state.ints;
+    const intNeeded = level.requiredIntersections - state.ints;
     const maxVisit = intNeeded > 0 ? 1 : 0;
 
     const _cfgFalseGoalTriggerSearch = prep._cfg;
@@ -537,7 +537,7 @@ export function isConnectedForFalseGoalTriggerSearch(pos: number, state: SolverS
         if ((state.mustCrossMask & (1 << i)) !== 0 && !_reached(level.mustCrossKeys[i])) return false;
     }
     if (level.portalMap.size === 0) {
-        const rSteps = level.reqLen - getRealLengthFromState(state);
+        const rSteps = level.requiredLength - getRealLengthFromState(state);
         if (freshVolume + intNeeded < rSteps) return false;
     }
     return true;

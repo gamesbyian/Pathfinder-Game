@@ -10,8 +10,8 @@ import type { NormalizedLevel } from '../domain/types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 5, h: 5 },
-    reqLen: 6,
-    reqInt: 1,
+    requiredLength: 6,
+    requiredIntersections: 1,
     goalKey: PACK(4, 2),
     gateKeys: [PACK(0, 2)],
     blockSet: new Set(),
@@ -174,7 +174,7 @@ test('createState resets every semantic field when a pooled slot is reused acros
   dirty.flipperUsedMask = 7; dirty.mustTurnMask = 7; dirty.adjTurnMask = 7;
 
   const tinyStart = PACK(1, 1);
-  const tiny = makeLevel({ grid: { w: 2, h: 2 }, gateKeys: [tinyStart], goalKey: PACK(0, 0), reqInt: 0 });
+  const tiny = makeLevel({ grid: { w: 2, h: 2 }, gateKeys: [tinyStart], goalKey: PACK(0, 0), requiredIntersections: 0 });
   const tinyPrep = prepLevel(tiny);
   const reset = createState(tinyStart, tiny, tinyPrep, STATE_BUF_BEAM);
   assert.deepEqual(reset.path, [tinyStart]);

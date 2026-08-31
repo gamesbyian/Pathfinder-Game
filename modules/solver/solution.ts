@@ -16,8 +16,8 @@ export function areMustPassesSatisfied(state: SolverSearchState, level: Normaliz
 /** Full solver acceptance predicate. */
 export function isSolutionState(state: SolverSearchState, level: NormalizedLevel): boolean {
     if (state.path[state.path.length - 1] !== level.goalKey) return false;
-    if (getRealLengthFromState(state) !== level.reqLen) return false;
-    if (state.ints !== level.reqInt) return false;
+    if (getRealLengthFromState(state) !== level.requiredLength) return false;
+    if (state.ints !== level.requiredIntersections) return false;
     if (state.mustMask !== 0) return false;
     if (state.mustCrossMask !== 0) return false;
     // Dense-level DFS may keep mustMask=0, so mpVisitedMask independently enforces must-pass completion.
@@ -30,8 +30,8 @@ export function isSolutionState(state: SolverSearchState, level: NormalizedLevel
 
 /** Unweighted count of exact length/intersection and structural deficits; 0 iff accepted obligations match. */
 export function computeBadness(state: SolverSearchState, level: NormalizedLevel): number {
-    const lenDeficit = Math.abs(getRealLengthFromState(state) - level.reqLen);
-    const intDeficit = Math.abs(state.ints - level.reqInt);
+    const lenDeficit = Math.abs(getRealLengthFromState(state) - level.requiredLength);
+    const intDeficit = Math.abs(state.ints - level.requiredIntersections);
     return lenDeficit + intDeficit + structuralDeficit(state, level);
 }
 

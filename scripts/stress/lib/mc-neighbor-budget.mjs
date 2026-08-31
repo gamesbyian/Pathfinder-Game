@@ -3,7 +3,7 @@
 // required neighbor already visited must be revisited, costing an intersection beyond the pending
 // must-cross cell's own reserved second crossing. Count DISTINCT such cells, not requirements, to
 // avoid double-counting shared neighbors. Reject when this lower bound exceeds free intersections:
-//   freeInt = reqInt - ints - popcount(mustCrossMask)
+//   freeInt = requiredIntersections - ints - popcount(mustCrossMask)
 // Abstain on portals, flipper neighbors, and pending-MC neighbors because their future revisit cost
 // is not independently established here; skip hard walls because PRUNE_MC_FORCED_NEIGHBOR owns them.
 // Evidence/derivation: reports/2026-08-08-mc-neighbor-budget-propagation.md.
@@ -45,7 +45,7 @@ export function computeMcNeighborBudget(pos, state, level, prep) {
         }
     }
 
-    const freeInt = level.reqInt - state.ints - popcount(state.mustCrossMask);
+    const freeInt = level.requiredIntersections - state.ints - popcount(state.mustCrossMask);
     return { extraNeeded: extraCells.size, freeInt, extraCells: [...extraCells] };
 }
 

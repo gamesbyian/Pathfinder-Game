@@ -53,21 +53,21 @@ export function evaluatePrunedMove(
 ): PruneVerdict {
     const diagnostics = options.diagnostics;
     // Fundamental limits.
-    if (realLen > level.reqLen) return 'reject';
-    if (state.ints > level.reqInt) return 'reject';
+    if (realLen > level.requiredLength) return 'reject';
+    if (state.ints > level.requiredIntersections) return 'reject';
 
     // Every pending must-cross contributes one future intersection.
     if ((!cfg || cfg.PRUNE_MC_CEILING) && state.mustCrossMask !== 0 && level.mustCrossKeys.length > 0) {
         reached(diagnostics, 'PRUNE_MC_CEILING');
         const mcRemaining = popcount(state.mustCrossMask);
-        if (state.ints + mcRemaining > level.reqInt) return reject(diagnostics, 'PRUNE_MC_CEILING');
+        if (state.ints + mcRemaining > level.requiredIntersections) return reject(diagnostics, 'PRUNE_MC_CEILING');
     }
 
     if (next === level.goalKey) {
         return isSolutionState(state, level) ? 'solution' : 'reject';
     }
 
-    const rSteps = level.reqLen - realLen;
+    const rSteps = level.requiredLength - realLen;
 
     if (!cfg || cfg.PRUNE_DISTANCE_BOUND) {
         reached(diagnostics, 'PRUNE_DISTANCE_BOUND');
@@ -150,7 +150,7 @@ export function evaluatePrunedMove(
 
     if (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) {
         reached(diagnostics, 'PRUNE_INTERSECTION_DEFICIT');
-        const intNeeded = level.reqInt - state.ints;
+        const intNeeded = level.requiredIntersections - state.ints;
         if (intNeeded > rSteps) return reject(diagnostics, 'PRUNE_INTERSECTION_DEFICIT');
     }
 

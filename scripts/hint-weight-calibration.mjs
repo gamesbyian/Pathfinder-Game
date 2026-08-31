@@ -94,10 +94,10 @@ function replayHintPath(level, prep, routingRegime, hintPath, profileWeights, on
         if (candidates.length >= 2) {
             const realLen = getRealLengthFromState(state);
             const portalEntry = level.portalMap.get(pos);
-            const rRatio = level.reqLen > 0 ? Math.max(0, 1 - realLen / level.reqLen) : 1;
+            const rRatio = level.requiredLength > 0 ? Math.max(0, 1 - realLen / level.requiredLength) : 1;
             const scored = candidates.map(key => {
                 const isJump = !!(portalEntry && portalEntry.dest === key);
-                const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
+                const nRSteps = level.requiredLength - realLen - (isJump ? 0 : 1);
                 return { key, score: scoreMove(key, pos, state, level, prep, profileWeights, nRSteps, null) };
             });
             const expert = scored.find(c => c.key === target);

@@ -16,7 +16,7 @@ export function getRealLength(state: PathMetricsState): number {
 export function areWinMetricsSatisfied(state: PathMetricsState, level: NormalizedLevel | undefined): boolean {
     if (!level || !state.path.length) return false;
     const curLen = getRealLength(state);
-    if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false;
+    if (curLen !== level.requiredLength || state.intersections !== level.requiredIntersections) return false;
     const allMustPass  = level.mustPassKeys.every(k => (state.visitedCounts.get(k) ?? 0) > 0);
     const allMustCross = level.mustCrossKeys.every(k => (state.visitedCounts.get(k) || 0) >= 2);
     if (!allMustPass || !allMustCross) return false;

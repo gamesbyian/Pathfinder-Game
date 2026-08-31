@@ -399,7 +399,7 @@ function makeLevelFlowDeps(overrides: any = {}) {
     const state = makeState();
     state.ENGINE.mode = core.PLAY;
     state.ENGINE.levelIdx = 0;
-    state.ENGINE.level = { reqLen: 3, reqInt: 0 } as any;
+    state.ENGINE.level = { requiredLength: 3, requiredIntersections: 0 } as any;
     state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, triggerableFalseGoalCells: new Set(), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'stale' } as any;
     state.ENGINE.hazards = { detonatedFalseGoals: new Set(), revealedGeese: new Set(), armedFalseGoals: new Set() } as any;
     state.ENGINE.solver = { controller: null } as any;
@@ -439,7 +439,7 @@ function makeLevelFlowDeps(overrides: any = {}) {
         core,
         data: { getLevels: () => [{}], getLevel: () => ({}) },
         levelUtils: {
-            normalizeLevel: (_idx: any) => ({ reqLen: 3, reqInt: 0, gateKeys: [0], goalKey: 9, grid: { w: 3, h: 3 }, blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), mustPassKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map() }),
+            normalizeLevel: (_idx: any) => ({ requiredLength: 3, requiredIntersections: 0, gateKeys: [0], goalKey: 9, grid: { w: 3, h: 3 }, blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), mustPassKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map() }),
             assertLevelShape: () => {},
             deepCloneLevel: (l: any) => ({ ...l }),
         },
@@ -458,7 +458,7 @@ function makeLevelFlowDeps(overrides: any = {}) {
 
 test('switchMode to EDITOR sets editor working level from current level', () => {
     const deps = makeLevelFlowDeps();
-    deps.state.ENGINE.level = { reqLen: 5, reqInt: 1 } as any;
+    deps.state.ENGINE.level = { requiredLength: 5, requiredIntersections: 1 } as any;
     let cloned = null;
     deps.levelUtils.deepCloneLevel = (l: any) => { cloned = { ...l }; return cloned; };
     deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, triggerableFalseGoalCells: new Set(), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'stale' } as any;
@@ -492,13 +492,13 @@ function instrumentEditorInit(deps: any) {
 
 test('switchMode(EDITOR) initializes the editor working copy from the current level', () => {
     const deps = makeLevelFlowDeps();
-    deps.state.ENGINE.level = { reqLen: 5, reqInt: 2 } as any;
+    deps.state.ENGINE.level = { requiredLength: 5, requiredIntersections: 2 } as any;
     deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], triggerableFalseGoalCells: new Set([1]), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'complete' } as any;
     const rec = instrumentEditorInit(deps);
     const ctrl = createLevelFlowController(deps);
     ctrl.switchMode(core.EDITOR);
     assertEditorWorkingCopyInitialized(deps, rec, 5, 2);
-    assertEqual(deps.state.ENGINE.editor.workingLevel.reqLen, 5, 'working level cloned from current level');
+    assertEqual(deps.state.ENGINE.editor.workingLevel.requiredLength, 5, 'working level cloned from current level');
 });
 
 test('loadLevel(idx) in EDITOR mode initializes the editor working copy', () => {
@@ -508,7 +508,7 @@ test('loadLevel(idx) in EDITOR mode initializes the editor working copy', () => 
     const rec = instrumentEditorInit(deps);
     const ctrl = createLevelFlowController(deps);
     ctrl.loadLevel(0);
-    // normalizeLevel stub returns reqLen:3, reqInt:0 → that's the level the editor copy comes from.
+    // normalizeLevel stub returns requiredLength:3, requiredIntersections:0 → that's the level the editor copy comes from.
     assertEditorWorkingCopyInitialized(deps, rec, 3, 0);
 });
 
@@ -668,7 +668,7 @@ test('removeAndAdvance removes the submission, loads the next, and reports allDo
         state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
                      setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
                      showMessage: () => {}, applyHintPinState: () => {} },
-        levelUtils: { processRawLevel: (raw: any) => ({ ...raw, reqLen: 0, reqInt: 0 }) } as any,
+        levelUtils: { processRawLevel: (raw: any) => ({ ...raw, requiredLength: 0, requiredIntersections: 0 }) } as any,
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
     });

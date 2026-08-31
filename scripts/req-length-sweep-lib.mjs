@@ -56,7 +56,7 @@ export function portalFreeParityReason(level) {
     const goalParity = parity(level.goalKey);
     const hasFeasibleGate = level.gateKeys.some(gate => {
         const gateParity = parity(gate);
-        return (gateParity ^ goalParity ^ (level.reqLen & 1)) === 0;
+        return (gateParity ^ goalParity ^ (level.requiredLength & 1)) === 0;
     });
     return hasFeasibleGate ? null : 'portal-free gate/goal parity mismatch';
 }

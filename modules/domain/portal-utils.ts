@@ -43,12 +43,12 @@ export const getParityInvalidKeys = (
         targetParity: null as number | null,
     };
     if (!level || level.goalKey === -1 || level.goalKey === undefined) return out;
-    const reqLen = (reqLenOverride === null || reqLenOverride === undefined)
-        ? Number(level.reqLen || 0)
+    const requiredLength = (reqLenOverride === null || reqLenOverride === undefined)
+        ? Number(level.requiredLength || 0)
         : Number(reqLenOverride || 0);
-    if (!reqLen || out.hasParitySwitch) return out;
+    if (!requiredLength || out.hasParitySwitch) return out;
     const gp = UNPACK(level.goalKey);
-    out.targetParity = (gp.x + gp.y + reqLen) % 2;
+    out.targetParity = (gp.x + gp.y + requiredLength) % 2;
     (level.gateKeys || []).forEach(k => {
         const p = UNPACK(k);
         if ((p.x + p.y) % 2 !== out.targetParity) out.gates.add(k);

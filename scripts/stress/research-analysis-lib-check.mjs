@@ -29,7 +29,7 @@ const api = {
     applyMove: (child, state) => { state.path.push(child); state.ints += child === 4 ? 1 : 0; },
     scoreAndSort: children => children.sort((a, b) => b - a), SCORING_PROFILES: { default: {} },
 };
-const atlas = enumerateKnownPrefixBranches({ api, level: { portalMap: new Map(), reqLen: 3, reqInt: 1 }, prep: {}, depths: [1],
+const atlas = enumerateKnownPrefixBranches({ api, level: { portalMap: new Map(), requiredLength: 3, requiredIntersections: 1 }, prep: {}, depths: [1],
     knownSolutions: [{ id: 'a', path: [1, 2, 3], provenance: 'x' }, { id: 'b', path: [1, 2, 3], provenance: 'y' }] });
 assert.equal(atlas.length, 2, 'shared known prefixes are enumerated once, not once per solution');
 assert.equal(atlas.find(row => row.child === 3).label, 'known-valid-continuation');

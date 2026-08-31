@@ -10,8 +10,8 @@ import type { SolverSearchState } from './types.js';
 function makeLevel(overrides = {}) {
   return {
     goalKey: PACK(3, 0),
-    reqLen: 3,
-    reqInt: 1,
+    requiredLength: 3,
+    requiredIntersections: 1,
     mustPassKeys: [PACK(1, 0), PACK(2, 0)],
     mustCrossKeys: [PACK(2, 0)],
     ...overrides,

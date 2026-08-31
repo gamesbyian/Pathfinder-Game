@@ -11,8 +11,8 @@ import type { NormalizedLevel } from '../domain/types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 5, h: 5 },
-    reqLen: 8,
-    reqInt: 1,
+    requiredLength: 8,
+    requiredIntersections: 1,
     goalKey: PACK(4, 4),
     gateKeys: [PACK(0, 0)],
     blockSet: new Set(),
@@ -46,12 +46,12 @@ test('prepLevel builds index maps, distance mirrors, and objective lists', () =>
 });
 
 test('prepLevel prepares masks and dense-level must-pass scoring behavior', () => {
-  const sparse = prepLevel(makeLevel({ reqLen: 8 }));
+  const sparse = prepLevel(makeLevel({ requiredLength: 8 }));
   assert.equal(sparse.initialMustMask, 1);
   assert.equal(sparse.initialMustCrossMask, 1);
   assert.equal(sparse.mustMaskForDFS, 1);
 
-  const dense = prepLevel(makeLevel({ reqLen: 20 }));
+  const dense = prepLevel(makeLevel({ requiredLength: 20 }));
   assert.equal(dense.initialMustMask, 1);
   assert.equal(dense.mustMaskForDFS, 0);
 });

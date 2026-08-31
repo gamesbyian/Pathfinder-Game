@@ -12,8 +12,8 @@ import type { NormalizedLevel } from '../domain/types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 3, h: 1 },
-    reqLen: 2,
-    reqInt: 0,
+    requiredLength: 2,
+    requiredIntersections: 0,
     goalKey: PACK(2, 0),
     gateKeys: [PACK(0, 0)],
     blockSet: new Set(),
@@ -64,7 +64,7 @@ test('admissibleOrderSearch solves the same level with tieBreakProfile: null (no
 test('admissibleOrderSearch with tieBreakProfile: null still respects a forced first step', async () => {
   // Regression guard: skipping the score computation must not skip getNeighbors'
   // prep._forcedFirstStepKey filtering (offline tooling hook) — the two are independent gates.
-  const level = makeLevel({ grid: { w: 3, h: 3 }, reqLen: 4, goalKey: PACK(2, 2) });
+  const level = makeLevel({ grid: { w: 3, h: 3 }, requiredLength: 4, goalKey: PACK(2, 2) });
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
@@ -120,7 +120,7 @@ test('admissibleOrderSearchLDS solves a simple line level (probe-then-fallback w
 });
 
 test('admissibleOrderSearchLDS respects a forced first step through both the probe and fallback phases', async () => {
-  const level = makeLevel({ grid: { w: 3, h: 3 }, reqLen: 4, goalKey: PACK(2, 2) });
+  const level = makeLevel({ grid: { w: 3, h: 3 }, requiredLength: 4, goalKey: PACK(2, 2) });
   const prep = prepLevel(level);
   prep._cfg = null;
   prep._metrics = { nodesExpanded: 0 };
@@ -136,7 +136,7 @@ test('admissibleOrderSearchLDS respects a forced first step through both the pro
 
 test('a candidate with negative admissible slack (already provably dead by the must-pass bound) sorts LAST, not first', () => {
     // 7x7 grid, gate (1,4)->goal (7,4) [1-indexed raw], a must-pass cell at (4,1) off the direct
-    // route, reqLen=12. Hand-verified via the admissible bound math: at the gate, moving to (0,3)
+    // route, requiredLength=12. Hand-verified via the admissible bound math: at the gate, moving to (0,3)
     // [raw (1,3), left toward the mustpass] or (0,2) [raw (1,2)] both have slack 0 (live, exactly on
     // budget); moving to (0,4) [raw (1,4), away from the mustpass] has slack -2 (already dead — even
     // the best case from there needs 2 more steps than remain). All three are real graph neighbors

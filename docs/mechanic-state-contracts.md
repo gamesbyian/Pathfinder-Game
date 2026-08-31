@@ -26,7 +26,7 @@ Definitions:
 | Mechanic | State | Bound | Mono. | Move legality | Connectivity | Win | Incoming dir. | External model |
 |---|---|---:|---|---|---|---|---|---|
 | **Edge usage** | per-cell H/V bits | grid ≤225 | yes | yes: used axis cannot be reused | yes | indirect | yes | exact |
-| **Visited/intersection** | per-cell count | grid | yes | no | no | yes: exact `reqInt` | no | exact |
+| **Visited/intersection** | per-cell count | grid | yes | no | no | yes: exact `requiredIntersections` | no | exact |
 | **Must-pass** | per-object visited bit | published max 4; schema ≤30 | yes | no | no | yes | no | exact; bound memoizable on `(pos, mpVisitedMask)` |
 | **Must-cross** | per-object count + first-axis consequence through edge usage | published max 4; schema ≤30 | count yes; axis resource matters | yes: first-pass turn would consume both axes and block required second crossing | yes | yes | yes | exact in current CP-SAT when combined with exact edge-axis-touch reuse and `visits == 2` |
 | **Regular filter** | static | n/a | n/a | yes, precompiled | yes, static | no | no | **unsupported in the maintained full CP-SAT probe**; it explicitly abstains on static-filter levels |

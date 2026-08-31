@@ -161,13 +161,13 @@ export function createUI({ core, getState }: any) {
         if (lMet) lMet.textContent = `Set (${currentLen}/${intersections})`;
     };
 
-    const renderMetricsPanel = ({ currentLen = 0, reqLen = 0, currentInt = 0, reqInt = 0 }: any = {}) => {
+    const renderMetricsPanel = ({ currentLen = 0, requiredLength = 0, currentInt = 0, requiredIntersections = 0 }: any = {}) => {
         const lenEl = resolveEl('lengthInfo');
-        if (lenEl) lenEl.textContent = `${currentLen}/${reqLen}`;
+        if (lenEl) lenEl.textContent = `${currentLen}/${requiredLength}`;
         const intEl = resolveEl('intersectionInfo');
         if (!intEl) return;
-        intEl.textContent = `${currentInt}/${reqInt}`;
-        intEl.dataset.status = currentInt > reqInt ? 'over' : 'normal';
+        intEl.textContent = `${currentInt}/${requiredIntersections}`;
+        intEl.dataset.status = currentInt > requiredIntersections ? 'over' : 'normal';
     };
 
     const renderWinExportPanel = ({ solutionOutput = '', showExportArea = false }: any = {}) => {

@@ -557,7 +557,7 @@ export function getFalseGoalTriggerSearchBudgetMs(level: NormalizedLevel): numbe
     // longer blocks interaction, so the budget errs toward complete enumeration —
     // the old main-thread values timed out on typical mid-size levels.
     const gates = Math.max(1, level.gateKeys?.length || 1);
-    const perGateCost = area * 45 + (level.reqLen || 0) * 120 + special * 360;
+    const perGateCost = area * 45 + (level.requiredLength || 0) * 120 + special * 360;
     return Math.min(120000, Math.max(10000, 5000 + perGateCost * gates));
 }
 
@@ -565,7 +565,7 @@ export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: 
     if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
 
     const goalP = keyParity(level.goalKey);
-    const feasible = gateKeys.filter(gk => (keyParity(gk) ^ goalP ^ (level.reqLen & 1)) === 0);
+    const feasible = gateKeys.filter(gk => (keyParity(gk) ^ goalP ^ (level.requiredLength & 1)) === 0);
     return feasible.length > 0 ? feasible : gateKeys;
 }
 
@@ -1132,7 +1132,7 @@ const EARLY_REPAIR_SEARCH_PREDICTED_TIER_SHARE = 0.75;
  *  eligible population + 50 control, real 50,000,000-node production budget, matching
  *  solver-stress-refresh.yml's own default — .github/workflows/solver-early-repair-search-adaptive-
  *  sample-ab.yml) reproduced the local pilot's zero-loss shape at 25x the sample size: control
- *  108/300, treatment 109/300, net +1 (1 gained: R02719, mustCross=8/mustTurn=5/reqInt=9 —
+ *  108/300, treatment 109/300, net +1 (1 gained: R02719, mustCross=8/mustTurn=5/requiredIntersections=9 —
  *  squarely inside the eligible population, not a control-bucket artifact; 0 lost), nodes -1.5%,
  *  work -9.0%. Promoted to production default-ON on this evidence at the project owner's explicit
  *  direction. This is a REAL DEVIATION from this ledger's own stated bar (a dedicated
@@ -1378,7 +1378,7 @@ export function attemptConfigKey(config: AttemptConfig): string {
 
 function legacyLatencyPortfolioFeatureSummary(level: NormalizedLevel): Record<string, number> {
     return {
-        reqInt: level.reqInt ?? 0,
+        requiredIntersections: level.requiredIntersections ?? 0,
         mustPass: level.mustPassKeys?.length ?? 0,
         mustCross: level.mustCrossKeys?.length ?? 0,
         mustTurn: level.mustPassTurnDirs?.size ?? 0,
@@ -1389,7 +1389,7 @@ function legacyLatencyPortfolioFeatureSummary(level: NormalizedLevel): Record<st
 
 function legacyLatencyPortfolioFeatureGateMatches(level: NormalizedLevel, gate: NonNullable<LegacyLatencyPortfolioExperimentDefinition['conditionalPasses']>[number]['when']): boolean {
     const f = legacyLatencyPortfolioFeatureSummary(level);
-    return (gate.minReqInt == null || f.reqInt >= gate.minReqInt)
+    return (gate.minReqInt == null || f.requiredIntersections >= gate.minReqInt)
         && (gate.minMustPass == null || f.mustPass >= gate.minMustPass)
         && (gate.minMustCross == null || f.mustCross >= gate.minMustCross)
         && (gate.minMustTurn == null || f.mustTurn >= gate.minMustTurn)

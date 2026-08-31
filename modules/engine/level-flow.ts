@@ -95,8 +95,8 @@ export function createLevelFlowController({
         clearEditorUndoStack(state);
         clearEditorTriggerableFalseGoalCells(state);
         setEditorEmptyClickCount(state, 0);
-        ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
-        ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
+        ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.requiredLength || 0);
+        ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.requiredIntersections || 0);
         editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
         setEditorModified(state, false);
         // Hints button shows the count of known solutions (saved + found this session); foundHints was

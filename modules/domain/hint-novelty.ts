@@ -15,7 +15,7 @@ export interface PortalLike { x1: number; y1: number; x2: number; y2: number }
 export interface GridLike { w: number; h: number }
 export interface HintNoveltyLevel {
     grid: GridLike;
-    reqLen?: number;
+    requiredLength?: number;
     gates?: CoordLike[];
     goal?: CoordLike;
     falseGoals?: CoordLike[];
@@ -162,13 +162,13 @@ export function mustCrossKeysOf(level: HintNoveltyLevel): number[] {
     return mc.map(m => PACK(m.x - 1, m.y - 1));
 }
 
-/** reqLen / non-gate winning-path cell count — mirrors the solver's getRequiredPathCoverageRatio. 0 when reqLen is unknown. */
+/** requiredLength / non-gate winning-path cell count — mirrors the solver's getRequiredPathCoverageRatio. 0 when requiredLength is unknown. */
 export function requiredPathCoverageRatio(level: HintNoveltyLevel): number {
-    if (!level.reqLen) return 0;
+    if (!level.requiredLength) return 0;
     const { w, h } = level.grid;
     const occupied = (level.blocks?.length || 0) + (level.geese?.length || 0)
         + (level.falseGoals?.length || 0) + (level.gates?.length || 0);
-    return level.reqLen / Math.max(1, w * h - occupied);
+    return level.requiredLength / Math.max(1, w * h - occupied);
 }
 
 /** Edge-only nearest-neighbor distance (a plain drawn-line similarity primitive). */

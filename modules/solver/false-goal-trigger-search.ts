@@ -14,11 +14,11 @@ type OnTriggerableCellFn = ((key: number) => void) | null;
 interface FalseGoalTriggerFrame { key: number; children: number[]; childIdx: number; undoChain: UndoToken[]; }
 
 function isPrematureFalseGoalStep(level: NormalizedLevel, key: number, realLen: number): boolean {
-    return level.falseGoalKeys.has(key) && realLen < level.reqLen;
+    return level.falseGoalKeys.has(key) && realLen < level.requiredLength;
 }
 
 // DFS from startKey recording every cell that can serve as a valid false-goal location.
-// A valid triggerable false-goal cell is any cell where a path of exactly reqLen steps from the gate
+// A valid triggerable false-goal cell is any cell where a path of exactly requiredLength steps from the gate
 // satisfies all win conditions (length, intersections, must-pass, must-cross).
 // Adds found cells to triggerableCells. Returns true on full completion, false on timeout.
 //
@@ -71,11 +71,11 @@ async function dfsEnumerateTriggerableFalseGoalCells(
         let curRealLen = getRealLengthFromState(state);
 
         // Basic pruning for the first step
-        if (curRealLen > level.reqLen || state.ints > level.reqInt || isPrematureFalseGoalStep(level, next, curRealLen)) { undoMove(undo, state); continue; }
+        if (curRealLen > level.requiredLength || state.ints > level.requiredIntersections || isPrematureFalseGoalStep(level, next, curRealLen)) { undoMove(undo, state); continue; }
         if (state.mustCrossMask !== 0 && mcN > 0 &&
-            state.ints + popcount(state.mustCrossMask) > level.reqInt) { undoMove(undo, state); continue; }
-        if (curRealLen === level.reqLen) {
-            if (state.ints === level.reqInt && structuralDeficit(state, level) === 0 &&
+            state.ints + popcount(state.mustCrossMask) > level.requiredIntersections) { undoMove(undo, state); continue; }
+        if (curRealLen === level.requiredLength) {
+            if (state.ints === level.requiredIntersections && structuralDeficit(state, level) === 0 &&
                 !prep.invalidFalseGoalCellSet.has(next)) recordTriggerableCell(next);
             undoMove(undo, state);
             continue;
@@ -95,7 +95,7 @@ async function dfsEnumerateTriggerableFalseGoalCells(
 
             if (curNeighbors.length !== 1) {
                 // Real branching point — run full pruning once for the whole chain
-                const rSteps = level.reqLen - curRealLen;
+                const rSteps = level.requiredLength - curRealLen;
 
                 if (mpAllMask !== 0 && (state.mpVisitedMask & mpAllMask) !== mpAllMask) {
                     let mpLB = 0;
@@ -119,7 +119,7 @@ async function dfsEnumerateTriggerableFalseGoalCells(
                     if (!Number.isFinite(mcLB) || mcLB > rSteps) { chainDone = true; break; }
                 }
 
-                if (level.reqInt - state.ints > rSteps) { chainDone = true; break; }
+                if (level.requiredIntersections - state.ints > rSteps) { chainDone = true; break; }
 
                 if (!isConnectedForFalseGoalTriggerSearch(cur, state, level, prep)) { chainDone = true; break; }
 
@@ -134,15 +134,15 @@ async function dfsEnumerateTriggerableFalseGoalCells(
             curRealLen = getRealLengthFromState(state);
 
             // Light pruning after each forced step
-            if (curRealLen > level.reqLen || state.ints > level.reqInt || isPrematureFalseGoalStep(level, forcedNext, curRealLen)) {
+            if (curRealLen > level.requiredLength || state.ints > level.requiredIntersections || isPrematureFalseGoalStep(level, forcedNext, curRealLen)) {
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
             if (state.mustCrossMask !== 0 && mcN > 0 &&
-                state.ints + popcount(state.mustCrossMask) > level.reqInt) {
+                state.ints + popcount(state.mustCrossMask) > level.requiredIntersections) {
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
-            if (curRealLen === level.reqLen) {
-                if (state.ints === level.reqInt && structuralDeficit(state, level) === 0 &&
+            if (curRealLen === level.requiredLength) {
+                if (state.ints === level.requiredIntersections && structuralDeficit(state, level) === 0 &&
                     !prep.invalidFalseGoalCellSet.has(forcedNext)) recordTriggerableCell(forcedNext);
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
@@ -189,8 +189,8 @@ export type FalseGoalTriggerSearchOptions = {
 };
 
 // Sound, cheap necessary-condition test for whether a cell could ever be a path
-// endpoint. On portal-free levels every path of exactly reqLen counted steps from
-// a gate ends on a cell whose parity equals (gateParity ^ (reqLen & 1)) — each
+// endpoint. On portal-free levels every path of exactly requiredLength counted steps from
+// a gate ends on a cell whose parity equals (gateParity ^ (requiredLength & 1)) — each
 // step flips parity and counted length equals the step count. A cell whose parity
 // matches NO gate can therefore never terminate a path, so a false goal there can
 // never be triggered regardless of any other constraint.
@@ -208,7 +208,7 @@ export function isParityCompatibleEndpoint(level: NormalizedLevel, key: number):
     for (const [a, p] of level.portalMap) {
         if ((keyParity(a) ^ keyParity(p.dest)) !== 0) return true; // parity-flipping portal present
     }
-    const rp = level.reqLen & 1;
+    const rp = level.requiredLength & 1;
     const kp = keyParity(key);
     for (const g of level.gateKeys) if ((keyParity(g) ^ rp) === kp) return true;
     return false;

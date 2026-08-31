@@ -309,7 +309,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // Harvest (early path, rRatio < 0.45): weaken goal pull so the DFS builds
     // structural layout before committing to a direction.
     // Finish (late path, rRatio > 0.82): strengthen goal pull to commit to ending.
-    const rRatio = level.reqLen > 0 ? Math.max(0, 1 - rStepsAfterMove / level.reqLen) : 1;
+    const rRatio = level.requiredLength > 0 ? Math.max(0, 1 - rStepsAfterMove / level.requiredLength) : 1;
     let phaseGoalScale = 1.0;
     if (rRatio < 0.45) {
         phaseGoalScale = 0.65 + (rRatio / 0.45) * 0.35;  // 0.65 at rRatio=0, 1.0 at 0.45
@@ -433,7 +433,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     }
 
     // Portal-parity guidance: reward heading toward the nearer terminal of a "twist" portal
-    // (mismatched-parity pair — see prep.ts) exactly when the level's gate/goal/reqLen parity
+    // (mismatched-parity pair — see prep.ts) exactly when the level's gate/goal/requiredLength parity
     // relationship requires an odd number of such crossings and none has happened yet. This is a
     // *guidance* term only — isSolutionState independently enforces the real win condition, so an
     // over/under-estimate here can only cost search efficiency, never correctness. Gate parity is
@@ -441,7 +441,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
     // multi-gate level's attempts run per-gate and different gates can have different parity.
     const _ppMaps = prep.parityPortalDistMaps;
     if ((!cfg || cfg.SCORE_PORTAL_PARITY_GUIDANCE) && _ppMaps && _ppMaps.length > 0) {
-        const needsTwist = (keyParity(state.path[0]) ^ keyParity(level.goalKey) ^ (level.reqLen & 1)) === 1;
+        const needsTwist = (keyParity(state.path[0]) ^ keyParity(level.goalKey) ^ (level.requiredLength & 1)) === 1;
         if (needsTwist) {
             const anyTwistUsed = _ppMaps.some(p => state.visited[p.a] > 0 || state.visited[p.b] > 0);
             if (!anyTwistUsed) {
@@ -622,7 +622,7 @@ export function scoreMove(target: number, pos: number, state: SolverSearchState,
 
     // Intersection setup: reward second visit to a non-gate, non-goal cell if ints needed
     if (!cfg || cfg.SCORE_INTERSECTION_SETUP) {
-        const intNeeded = level.reqInt - state.ints;
+        const intNeeded = level.requiredIntersections - state.ints;
         if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateFlags[target]) {
             score += wi * 12;
         } else if (intNeeded > 0) {
@@ -667,7 +667,7 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
     for (let i = 0; i < n; i++) {
         const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);
-        const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
+        const nRSteps = level.requiredLength - realLen - (isJump ? 0 : 1);
         _sas[i] = scoreMove(nk, pos, state, level, prep, profile, nRSteps, orderingBias, curCtx);
     }
     const research = prep._orderingResearchObserver;
@@ -679,7 +679,7 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
             const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy.scoringProfile);
             const scored = candidates.map((candidate, index) => {
                 const isJump = !!(portalEntry && portalEntry.dest === candidate);
-                const remaining = level.reqLen - realLen - (isJump ? 0 : 1);
+                const remaining = level.requiredLength - realLen - (isJump ? 0 : 1);
                 return { candidate, index, score: scoreMove(candidate, pos, state, level, prep,
                     policy.scoringProfile, remaining, policy.orderingBias, ctx) };
             }).sort((a, b) => b.score - a.score || a.index - b.index);
@@ -694,7 +694,7 @@ export function scoreAndSort(neighbors: number[], pos: number, state: SolverSear
             const leftTop = leftRanking.order[0], rightTop = rightRanking.order[0];
             const margin = (policy: ScoringProfile): number => {
                 const ctx = buildCurUrgencyContext(pos, state, level, prep, true, policy);
-                const remaining = (candidate: number) => level.reqLen - realLen
+                const remaining = (candidate: number) => level.requiredLength - realLen
                     - (portalEntry?.dest === candidate ? 0 : 1);
                 return scoreMove(leftTop, pos, state, level, prep, policy, remaining(leftTop), leftPolicy.orderingBias, ctx)
                     - scoreMove(rightTop, pos, state, level, prep, policy, remaining(rightTop), leftPolicy.orderingBias, ctx);

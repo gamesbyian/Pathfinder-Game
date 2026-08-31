@@ -50,7 +50,7 @@ export function evaluate({ level, state, pos }) {
         return { verdict: 'pass', abstained: true, reason: 'sole goal-entry neighbor not yet visited — no forced revisit yet' };
     }
 
-    const remainingInts = level.reqInt - state.ints;
+    const remainingInts = level.requiredIntersections - state.ints;
     if (remainingInts < 1) {
         return {
             verdict: 'reject', abstained: false,

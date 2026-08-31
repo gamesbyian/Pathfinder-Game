@@ -134,9 +134,9 @@ test('canonicalCloneLevel: hints only when asked; collections are independent co
 test('cloneLevelWithReq overrides only the challenge metrics', () => {
     const l = parseRawLevel(FULL_RAW)!;
     const c = cloneLevelWithReq(l, 30, 2);
-    assert.equal(c.reqLen, 30);
-    assert.equal(c.reqInt, 2);
-    assert.equal(l.reqLen, 24, 'source untouched');
+    assert.equal(c.requiredLength, 30);
+    assert.equal(c.requiredIntersections, 2);
+    assert.equal(l.requiredLength, 24, 'source untouched');
     assert.deepEqual(c.gateKeys, l.gateKeys);
 });
 
@@ -145,10 +145,10 @@ test('challenge metrics survive raw parse, canonical clone, and wire serializati
     const clone = canonicalCloneLevel(parsed) as any;
     const wire = buildWireLevelData(clone);
 
-    assert.equal(parsed.reqLen, FULL_RAW.reqLen, 'raw parser carries the length metric into runtime data');
-    assert.equal(parsed.reqInt, FULL_RAW.reqInt, 'raw parser carries the intersection metric into runtime data');
-    assert.equal(clone.reqLen, parsed.reqLen, 'canonical clone preserves the runtime length metric');
-    assert.equal(clone.reqInt, parsed.reqInt, 'canonical clone preserves the runtime intersection metric');
+    assert.equal(parsed.requiredLength, FULL_RAW.reqLen, 'raw parser carries the length metric into runtime data');
+    assert.equal(parsed.requiredIntersections, FULL_RAW.reqInt, 'raw parser carries the intersection metric into runtime data');
+    assert.equal(clone.requiredLength, parsed.requiredLength, 'canonical clone preserves the runtime length metric');
+    assert.equal(clone.requiredIntersections, parsed.requiredIntersections, 'canonical clone preserves the runtime intersection metric');
     assert.equal(wire.reqLen, FULL_RAW.reqLen, 'wire writer restores the serialized length metric');
     assert.equal(wire.reqInt, FULL_RAW.reqInt, 'wire writer restores the serialized intersection metric');
     assert.deepEqual(
@@ -245,7 +245,7 @@ test('a level\'s persistent id round-trips through parse -> denormalize -> parse
 
 test('buildWireLevelData emits canonical landmark wire data and option overrides', () => {
     const l = parseRawLevel(FULL_RAW, 41)!;
-    const wire = buildWireLevelData(l, { reqLen: 30, reqInt: 2, hints: [[K(1, 1), K(1, 2)]] });
+    const wire = buildWireLevelData(l, { requiredLength: 30, requiredIntersections: 2, hints: [[K(1, 1), K(1, 2)]] });
     assert.equal(wire.levelId, undefined, 'levelId omitted by default');
     assert.equal(wire.reqLen, 30);
     assert.equal(wire.reqInt, 2);
