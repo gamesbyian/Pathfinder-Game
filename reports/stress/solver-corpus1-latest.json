@@ -5,7 +5,7 @@
  "budgetMs": 86400000,
  "nodeBudget": 50000000,
  "workBudget": 67000000,
- "witnessAccess": "none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as stress:benchmark.mjs)",
+ "witnessAccess": "none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as scripts/stress/benchmark.mjs)",
  "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 60 batch report(s))",
  "sourceReports": [
   "logs/solver-corpus2-batches/corpus1-batch-01.json",
