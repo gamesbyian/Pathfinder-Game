@@ -97,7 +97,6 @@ test('submit flow serializes landmarks for duplicate check and Firestore submiss
                 review: { setReviewSubmissions() {}, loadReviewLevel() {} },
                 hints: { setHintPaths() {}, pinCurrentHint() {}, clearPersistedHint() {}, pinCurrentHeatmap() {}, clearPersistedHeatmap() {} },
             },
-            levelUtils: { cloneLevelWithReq },
             editor: { applyMetricsFromUI() {}, validateWorkingLevel: () => ({ ok: true }) },
             persistence,
             solverApi: {
@@ -173,7 +172,6 @@ test('an unexpected throw outside the per-step guards still surfaces a clear mod
             review: { setReviewSubmissions() {}, loadReviewLevel() {} },
             hints: { setHintPaths() {}, pinCurrentHint() {}, clearPersistedHint() {}, pinCurrentHeatmap() {}, clearPersistedHeatmap() {} },
         },
-        levelUtils: { cloneLevelWithReq },
         // Simulates an unanticipated bug in a code path with no dedicated try/catch of its own.
         editor: { applyMetricsFromUI() {}, validateWorkingLevel: () => { throw new Error('boom'); } },
         persistence: {
@@ -254,7 +252,6 @@ test('submission-time false-goal check passes the capped budget as timeLimitMs a
                 review: { setReviewSubmissions() {}, loadReviewLevel() {} },
                 hints: { setHintPaths() {}, pinCurrentHint() {}, clearPersistedHint() {}, pinCurrentHeatmap() {}, clearPersistedHeatmap() {} },
             },
-            levelUtils: { cloneLevelWithReq, UNPACK: (k: number) => ({ x: k & 0xFFFF, y: k >> 16 }) },
             editor: { applyMetricsFromUI() {}, validateWorkingLevel: () => ({ ok: true }) },
             persistence,
             solverApi: {
@@ -347,7 +344,6 @@ test('re-submitting an already-locally-published level with a new hint contribut
                 review: { setReviewSubmissions() {}, loadReviewLevel() {} },
                 hints: { setHintPaths() {}, pinCurrentHint() {}, clearPersistedHint() {}, pinCurrentHeatmap() {}, clearPersistedHeatmap() {} },
             },
-            levelUtils: { cloneLevelWithReq },
             editor: { applyMetricsFromUI() {}, validateWorkingLevel: () => ({ ok: true }) },
             persistence,
             solverApi: {
