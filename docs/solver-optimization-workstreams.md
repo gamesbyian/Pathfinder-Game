@@ -8,6 +8,8 @@ This file owns **current execution priority, workstream state, and next gate**. 
 
 Primary authorities: research method [`solver-research-operating-model.md`](solver-research-operating-model.md); scheduling/allocation [`solver-scheduling-policy.md`](solver-scheduling-policy.md); residual representation [`solver-residual-state-representation.md`](solver-residual-state-representation.md); deterministic cost [`solver-budget-determinism.md`](solver-budget-determinism.md); level-blindness [`solver-level-blindness.md`](solver-level-blindness.md); retained opt-ins [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md); deferred/reopen ideas [`solver-future-work.md`](solver-future-work.md).
 
+Naming-migration handoff: frozen reports remain evidence in their original vocabulary, not current executable runbooks. Before decision-bearing solver work resumes after Phase 15, follow [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) and pass `npm run test:solver-research-resumption`. While Phase 15 is still open, that document is a completion contract rather than permission to bypass the naming work.
+
 ## Workstream-wide rules
 
 Every active item follows **premise → smallest value-of-information pilot → explicit success/stop gate → bounded implementation → confirmation → broader integration**.
