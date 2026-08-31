@@ -5,7 +5,6 @@ import { PACK } from '../domain/cell-key.js';
 import { createRenderModel } from './create-render-model.js';
 import { EDITOR } from '../app-constants.js';
 
-const core = { PLAY: 0, EDITOR: 1, REVIEW: 2, IDLE: 'idle', OVERLAY_NONE: 'none', HINT_ANIMATING: 'hint_animating' };
 const themes = { THEMES: { classic: { path: '#fff' } }, getCurrentTheme: () => 'classic' };
 
 test('createRenderModel surfaces the editor false-goal-trigger overlay sets from EditorState', () => {
