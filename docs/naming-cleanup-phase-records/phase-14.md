@@ -5,12 +5,12 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14B LevelUtils facade removal |
-| Status | 14B validated; merge pending |
-| Base `main` SHA | `03a1298669df019d5cbef486890e044fc7f1f07e` |
-| Branch | `chatgpt/phase14b-level-utils-removal-2026-08-31` |
-| PR | #1625 |
-| Selected ledger row IDs | NC-P14-004 |
+| Current batch | 14C1 local state/render names |
+| Status | 14B merged; 14C1 in progress |
+| Base `main` SHA | `a4139cefefb69706e70c1b4e6a637d6280802c6d` |
+| Branch | `chatgpt/phase14c1-local-names-2026-08-31` |
+| PR | pending |
+| Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
 | 14A risk | medium |
@@ -204,7 +204,18 @@ and row-level closeout evidence complete. Phase-wide merged-tree closeout remain
 
 ## 8. 14C1 local state/render names
 
-Not started. Must branch from merged 14B main.
+Started from merged 14B main `a4139cefefb69706e70c1b4e6a637d6280802c6d`.
+
+Authorized scope is deliberately small:
+
+- NC-P14-005: `HinterState` -> `HintDisplayState`;
+- NC-P14-007: renderer-local `publicDrawPath` -> `drawPathWithCurrentOrientation`; the renderer
+  port remains named `drawPath`;
+- NC-P14-008: runtime confirmation callback field `pendingAction` ->
+  `pendingConfirmationAction` atomically across state/actions/controller/tests.
+
+NC-P14-006 (`ENGINE` -> `engineState`) is high risk and explicitly excluded from this branch.
+14C2 may start only after 14C1 merges.
 
 ## 9. 14C2 atomic ENGINE graph
 
