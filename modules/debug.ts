@@ -1,6 +1,8 @@
+import { AXIS, DEV } from './app-constants.js';
+
 export function createDebug(
-    { core, getWindow = () => (typeof window === 'undefined' ? null : window) }:
-        { core: any, getWindow?: () => any },
+    { getWindow = () => (typeof window === 'undefined' ? null : window) }:
+        { getWindow?: () => any } = {},
 ) {
     const debugExports: Record<string, any> = {};
 
@@ -10,10 +12,10 @@ export function createDebug(
     }
 
     function expose() {
-        if (!core.DEV) return;
+        if (!DEV) return;
         const targetWindow = getWindow();
         if (!targetWindow) return;
-        targetWindow.AXIS = core.AXIS;
+        targetWindow.AXIS = AXIS;
         Object.entries(debugExports).forEach(([name, value]) => {
             targetWindow[name] = value;
         });
