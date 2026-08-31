@@ -179,6 +179,24 @@ try {
 
   {
     const ledger = clone(source);
+    delete ledger.phaseClosures['10'].mergedTreeCloseout.finalHeadSha;
+    expectFail('Phase-10+ closeout requires final head evidence', ledger, /mergedTreeCloseout\.finalHeadSha must be a full commit SHA/u);
+  }
+
+  {
+    const ledger = clone(source);
+    delete ledger.phaseClosures['11'].implementation.browserRunId;
+    expectFail('Phase-11 implementation requires browser evidence', ledger, /implementation must record the successful exact-head Phase-11 browser run/u);
+  }
+
+  {
+    const ledger = clone(source);
+    delete ledger.phaseClosures['11'].mergedTreeCloseout.browserRunId;
+    expectFail('Phase-11 closeout requires browser evidence', ledger, /mergedTreeCloseout must record the successful exact-head Phase-11 browser run/u);
+  }
+
+  {
+    const ledger = clone(source);
     // As above: force the predecessor merge barrier back to unmerged so this negative case is
     // meaningful regardless of whether 8A (or any predecessor batch) has actually merged.
     ledger.batchCompletions['8A'] = { status: 'pending', pr: null, mergeCommit: null };

@@ -31,7 +31,7 @@ test('specific orientations land where expected', () => {
     assert.deepEqual(inverseTransformPoint(3, 4, 99, W, H), { x: 3, y: 4 });
 });
 
-test('transformAxis swaps H/V exactly for the transposing variants', () => {
+test('transformAxis swaps H/V exactly for the transposing orientations', () => {
     const swapping = [1, 3, 6, 7];
     for (let orientation = 0; orientation <= 7; orientation++) {
         const h = transformAxis(AXIS_H, orientation);
@@ -44,11 +44,11 @@ test('transformAxis swaps H/V exactly for the transposing variants', () => {
             assert.equal(v, AXIS_V);
         }
     }
-    // Non-axis values pass through untouched even on swapping variants.
+    // Non-axis values pass through untouched even on swapping orientations.
     assert.equal(transformAxis(0, 1), 0);
 });
 
-test('transformTurnDir flips cw/ccw exactly for the reflecting variants (4-7), never for rotations (0-3)', () => {
+test('transformTurnDir flips cw/ccw exactly for the reflecting orientations (4-7), never for rotations (0-3)', () => {
     const reflecting = [4, 5, 6, 7];
     for (let orientation = 0; orientation <= 7; orientation++) {
         if (reflecting.includes(orientation)) {

@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - 'modules/domain/geometry.ts'
+      - 'modules/domain/geometry.test.ts'
+      - 'modules/domain/landmark-rules.ts'
+      - 'modules/domain/level-codec.ts'
       - 'modules/level-utils.ts'
       - 'modules/state-slices.ts'
       - 'modules/state-actions.ts'
@@ -11,6 +14,8 @@ on:
       - 'modules/engine.ts'
       - 'modules/engine/level-flow.ts'
       - 'modules/input/options-controller.ts'
+      - 'modules/input/editor-toolbar-controller.ts'
+      - 'modules/input/editor-coordinate-transform.test.ts'
       - 'modules/render/**'
       - 'modules/renderer.ts'
       - 'modules/ui/layout-ui.ts'
