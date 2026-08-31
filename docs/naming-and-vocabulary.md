@@ -89,7 +89,7 @@ Runtime flow distinguishes:
 - **game event**: emitted outcome such as WIN or PORTAL_TRAVERSE;
 - **state action**: imperative mutation helper under `state/actions/`.
 
-Qualified `*-core.ts` remains valid for the pure transition/input cores defined by ADR 0006. The top-level mixed-responsibility `modules/core.ts` is the naming/architecture problem; the word `core` is not globally banned.
+Qualified `*-core.ts` remains valid for the pure transition/input cores defined by ADR 0006. The former top-level mixed-responsibility core facade was the naming/architecture problem and was removed in Phase 14A; the word `core` is not globally banned.
 
 ## Qualified overloaded terms
 
