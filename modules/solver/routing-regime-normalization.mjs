@@ -45,7 +45,7 @@ export function routingRegimeIdentityTerms(value) {
     return Object.freeze([
         canonical,
         ...Object.entries(LEGACY_ROUTING_REGIME_ALIASES)
-            .filter(([, target]) => target === canonical && target !== value)
+            .filter(([, target]) => target === canonical)
             .map(([legacy]) => legacy),
     ]);
 }
