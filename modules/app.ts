@@ -91,7 +91,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const state = f.createState();
     const audioService = f.createAudioService({ reportError });
     // Wire the audio adapter to the live mute flag after state exists.
-    audioService.setMutedProvider(() => state.ENGINE.muted);
+    audioService.setMutedProvider(() => state.engineState.muted);
     const solverApi = f.createSolver();
     // `data` no longer reads the theme registry. Themes flow one way at runtime
     // (loader → data.ingest({ themes }) → theme-registry reads data.getThemes()), so the
@@ -106,7 +106,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     //   • persistence → themes — persistence validates theme ids via a data-sourced predicate,
     //                            so it's built before themes, which takes persistence directly.
     const ui = f.createUI({
-        getState: () => state.ENGINE,
+        getState: () => state.engineState,
     });
     const renderer = f.createRenderer({ state, ui });
 
@@ -114,7 +114,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // check, now sourced from the leaf `data` service (themeExists). So persistence no longer
     // depends on themes and is built first; themes takes persistence directly. (See ADR 0008.)
     const persistence = f.createPersistence({
-        getState:          () => state.ENGINE,
+        getState:          () => state.engineState,
         themeExists:       (id: any) => !!data.getThemes()?.[id],
         getRawLevels:      () => data.getLevels(),
         onProgressChanged: () => markDirty(state),
@@ -204,7 +204,7 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
 
 export function createAppFacade(app: any) {
     return {
-        State:       { get ENGINE() { return app.state.ENGINE; } },
+        State:       { get engineState() { return app.state.engineState; } },
         Engine:      app.engine,
         Editor:      app.editor,
         Themes:      app.themes,
@@ -221,23 +221,23 @@ export function createAppFacade(app: any) {
 }
 
 // Read-only production diagnostics surface. Unlike createAppFacade (which exposes the
-// live, mutable subsystem objects — including State.ENGINE), this only hands out cloned
+// live, mutable subsystem objects — including State.engineState), this only hands out cloned
 // snapshots, so console users or injected scripts can observe state without being able to
 // mutate game/editor/review/runtime state through it.
 export function createReadOnlyDiagnostics(app: any) {
     return Object.freeze({
         getStateSnapshot() {
-            try { return deepClone(app.state.ENGINE); }
+            try { return deepClone(app.state.engineState); }
             catch (e: any) { app.errorReporter?.report('diagnostics.state-snapshot', e); return null; }
         },
         getCurrentLevel() {
-            const level = app.state.ENGINE?.level;
+            const level = app.state.engineState?.level;
             if (!level) return null;
             try { return deepClone(level); }
             catch (e: any) { app.errorReporter?.report('diagnostics.current-level', e); return null; }
         },
-        getCurrentLevelIndex() { return app.state.ENGINE?.levelIdx ?? null; },
-        getMode() { return app.state.ENGINE?.mode ?? null; },
+        getCurrentLevelIndex() { return app.state.engineState?.levelIdx ?? null; },
+        getMode() { return app.state.engineState?.mode ?? null; },
     });
 }
 
@@ -269,7 +269,7 @@ export function bootstrapApp() {
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader, reportError: app.errorReporter.report });
     // Default production surface: read-only diagnostics. Reduces the always-on mutable
     // debug surface that previously let anything with console (or an injected-script CSP
-    // gap) mutate the live engine via window.APP.State.ENGINE.
+    // gap) mutate the live engine via window.APP.State.engineState.
     (window as any).PATHFINDER = createReadOnlyDiagnostics(app);
     // The full, mutable compatibility facade is opt-in via the `?debug` query param, so
     // the documented production debugging workflow still works (load the app with

@@ -8,8 +8,8 @@ import { EDITOR, HINT_ANIMATING, OVERLAY_NONE, REVIEW } from '../app-constants.j
 
 export function createRenderLoop({ state, themes, ui, renderer, setOverlayState }: ControllerDeps) {
     function loop() {
-        if (state.ENGINE.overlayState === HINT_ANIMATING && state.ENGINE.hinter.pathList.length) {
-            const _h                 = state.ENGINE.hinter;
+        if (state.engineState.overlayState === HINT_ANIMATING && state.engineState.hinter.pathList.length) {
+            const _h                 = state.engineState.hinter;
             const hPath              = _h.pathList[_h.displayIndices?.[_h.currentPathIdx] ?? _h.currentPathIdx];
             const hintNowMs          = Date.now();
             const hintHoldDurationMs = 2700;
@@ -19,17 +19,17 @@ export function createRenderLoop({ state, themes, ui, renderer, setOverlayState 
 
             advanceHintAnimationIndex(state, 0.285);
 
-            if (state.ENGINE.hinter.index >= hPath.length) {
+            if (state.engineState.hinter.index >= hPath.length) {
                 setHintAnimationIndex(state, hPath.length);
                 setHintHoldStartMsIfUnset(state, hintNowMs);
             }
 
-            const holdElapsedMs = state.ENGINE.hinter.holdStartMs ? (hintNowMs - state.ENGINE.hinter.holdStartMs) : 0;
-            const holdComplete  = state.ENGINE.hinter.holdStartMs && holdElapsedMs >= hintHoldDurationMs;
+            const holdElapsedMs = state.engineState.hinter.holdStartMs ? (hintNowMs - state.engineState.hinter.holdStartMs) : 0;
+            const holdComplete  = state.engineState.hinter.holdStartMs && holdElapsedMs >= hintHoldDurationMs;
             if (holdComplete) setHintBlinkStartMsIfUnset(state, hintNowMs);
 
-            if (state.ENGINE.hinter.blinkStartMs && !state.ENGINE.hinter.fadeStartMs) {
-                const blinkElapsedMs = hintNowMs - state.ENGINE.hinter.blinkStartMs;
+            if (state.engineState.hinter.blinkStartMs && !state.engineState.hinter.fadeStartMs) {
+                const blinkElapsedMs = hintNowMs - state.engineState.hinter.blinkStartMs;
                 const blinkWindowMs  = hintBlinkCount * hintBlinkCycleMs;
                 if (blinkElapsedMs < blinkWindowMs) {
                     const blinkPhase = (blinkElapsedMs % hintBlinkCycleMs) / hintBlinkCycleMs;
@@ -40,10 +40,10 @@ export function createRenderLoop({ state, themes, ui, renderer, setOverlayState 
                 }
             }
 
-            if (state.ENGINE.hinter.fadeStartMs) {
-                const fadeElapsedMs = hintNowMs - state.ENGINE.hinter.fadeStartMs;
+            if (state.engineState.hinter.fadeStartMs) {
+                const fadeElapsedMs = hintNowMs - state.engineState.hinter.fadeStartMs;
                 setHintAnimationAlpha(state, Math.max(0, 1 - (fadeElapsedMs / hintFadeDurationMs)));
-                if (state.ENGINE.hinter.alpha <= 0) {
+                if (state.engineState.hinter.alpha <= 0) {
                     setOverlayState(OVERLAY_NONE);
                     ui.showMessage('', '');
                 }
@@ -54,15 +54,15 @@ export function createRenderLoop({ state, themes, ui, renderer, setOverlayState 
         const now = Date.now();
         pruneRipples(state, now);
         const hasContinuousAnimation =
-            state.ENGINE.ripples.length > 0 || state.ENGINE.overlayState === HINT_ANIMATING;
+            state.engineState.ripples.length > 0 || state.engineState.overlayState === HINT_ANIMATING;
         if (hasContinuousAnimation) markDirty(state);
-        const shouldRender = state.ENGINE.isDirty || hasContinuousAnimation;
+        const shouldRender = state.engineState.isDirty || hasContinuousAnimation;
         if (shouldRender) {
             clearDirty(state);
-            const reqLenPreview = (state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW)
+            const reqLenPreview = (state.engineState.mode === EDITOR || state.engineState.mode === REVIEW)
                 ? parseInt(ui.getValue('editReqLen'))
                 : null;
-            renderer.render(createRenderModel({ eng: state.ENGINE, themes }, reqLenPreview));
+            renderer.render(createRenderModel({ eng: state.engineState, themes }, reqLenPreview));
         }
         requestAnimationFrame(loop);
     }

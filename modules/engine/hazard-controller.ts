@@ -39,7 +39,7 @@ export function createHazardController({ state, ui, setOverlayState, audioServic
                 showGooseJumpScare: () => ui.showGooseJumpScare(),
             });
             scheduleTimer(() => {
-                if (state.ENGINE.overlayState === GOOSE_OVERLAY) {
+                if (state.engineState.overlayState === GOOSE_OVERLAY) {
                     ui.hideGooseJumpScare();
                     setOverlayState(OVERLAY_NONE);
                 }

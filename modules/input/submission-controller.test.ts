@@ -64,7 +64,7 @@ test('submit flow serializes landmarks for duplicate check and Firestore submiss
         };
         createSubmissionController({
             state: {
-                ENGINE: {
+                engineState: {
                     solver: { controller: null, abortRequested: false },
                     editor: { workingLevel },
                     foundHintsSinceLoad: [],
@@ -139,7 +139,7 @@ test('an unexpected throw outside the per-step guards still surfaces a clear mod
 
     await createSubmissionController({
         state: {
-            ENGINE: {
+            engineState: {
                 solver: { controller: null, abortRequested: false },
                 editor: { workingLevel },
                 foundHintsSinceLoad: [],
@@ -219,7 +219,7 @@ test('submission-time false-goal check passes the capped budget as timeLimitMs a
         };
         createSubmissionController({
             state: {
-                ENGINE: {
+                engineState: {
                     solver: { controller: null, abortRequested: false },
                     editor: { workingLevel },
                     foundHintsSinceLoad: [],
@@ -311,7 +311,7 @@ test('re-submitting an already-locally-published level with a new hint contribut
         };
         createSubmissionController({
             state: {
-                ENGINE: {
+                engineState: {
                     solver: { controller: null, abortRequested: false },
                     editor: { workingLevel },
                     foundHintsSinceLoad: [],

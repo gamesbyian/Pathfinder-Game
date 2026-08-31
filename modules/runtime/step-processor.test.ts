@@ -97,7 +97,7 @@ function makeStepHelpers(level: any, nav: any): any {
         UNPACK,
         pushStepOnNav,
         truncateNavTo,
-        // No-arg closure — mirrors engine.js createSnapshot() which reads from state.ENGINE.nav
+        // No-arg closure — mirrors engine.js createSnapshot() which reads from state.engineState.nav
         createNavSnapshot:               () => ({
             path:                nav.path.slice(),
             isPortalJump:        new Set(nav.isPortalJump),

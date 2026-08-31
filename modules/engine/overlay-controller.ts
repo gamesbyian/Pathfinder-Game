@@ -13,7 +13,7 @@ import { HINT_ANIMATING, OVERLAY_NONE } from '../app-constants.js';
 
 export function createOverlayController({ state, ui }: ControllerDeps) {
     function applyHintPinState(isAnimating: any) {
-        const hinter = state.ENGINE.hinter;
+        const hinter = state.engineState.hinter;
         ui.applyHintPinState(
             isAnimating,
             hinter.persistedPath.length > 0,
@@ -23,25 +23,25 @@ export function createOverlayController({ state, ui }: ControllerDeps) {
     }
 
     function setOverlayState(newState: any) {
-        if (state.ENGINE.overlayState === newState) return true;
-        if (state.ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
+        if (state.engineState.overlayState === newState) return true;
+        if (state.engineState.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
             resetHintAnimationClock(state, { alpha: 0 });
             applyHintPinState(false);
         }
         setOverlayStateValue(state, newState);
         markDirty(state);
-        ui.setSolverAbortRequested(state.ENGINE.solver.abortRequested);
+        ui.setSolverAbortRequested(state.engineState.solver.abortRequested);
         ui.applyOverlayState(newState);
         return true;
     }
 
     function startHintAnimation() {
-        if (!state.ENGINE.hinter.pathList.length) return;
+        if (!state.engineState.hinter.pathList.length) return;
         clearPersistedHintState(state);
         clearPersistedHeatmapState(state);
         setOverlayState(HINT_ANIMATING);
         resetHintAnimationClock(state, { alpha: 1, index: 0 });
-        const hinter = state.ENGINE.hinter;
+        const hinter = state.engineState.hinter;
         const count = hinter.displayIndices?.length || hinter.pathList.length;
         const atLast = hinter.currentPathIdx >= count - 1;
         let msg = `Solution ${hinter.currentPathIdx + 1}/${count}`;
@@ -58,7 +58,7 @@ export function createOverlayController({ state, ui }: ControllerDeps) {
 
     function clearHintPaths() {
         clearHintPathsState(state);
-        if (state.ENGINE.overlayState === HINT_ANIMATING) setOverlayState(OVERLAY_NONE);
+        if (state.engineState.overlayState === HINT_ANIMATING) setOverlayState(OVERLAY_NONE);
     }
 
     function pinCurrentHint() {
@@ -71,19 +71,19 @@ export function createOverlayController({ state, ui }: ControllerDeps) {
     function clearPersistedHint() {
         clearPersistedHintState(state);
         markDirty(state);
-        applyHintPinState(state.ENGINE.overlayState === HINT_ANIMATING);
+        applyHintPinState(state.engineState.overlayState === HINT_ANIMATING);
     }
 
     function pinCurrentHeatmap() {
         if (!pinCurrentHeatmapState(state)) return;
         markDirty(state);
-        applyHintPinState(state.ENGINE.overlayState === HINT_ANIMATING);
+        applyHintPinState(state.engineState.overlayState === HINT_ANIMATING);
     }
 
     function clearPersistedHeatmap() {
         clearPersistedHeatmapState(state);
         markDirty(state);
-        applyHintPinState(state.ENGINE.overlayState === HINT_ANIMATING);
+        applyHintPinState(state.engineState.overlayState === HINT_ANIMATING);
     }
 
     return {

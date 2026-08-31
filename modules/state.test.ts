@@ -5,14 +5,14 @@ import { createState } from './state.js';
 import { IDLE, OVERLAY_NONE, PLAY } from './app-constants.js';
 import { createNavigationState, createHazardState, createEngineState } from './state-slices.js';
 
-test('createState builds the expected top-level ENGINE defaults', () => {
-  const { ENGINE } = createState();
-  assert.equal(ENGINE.mode, PLAY);
-  assert.equal(ENGINE.logicState, IDLE);
-  assert.equal(ENGINE.overlayState, OVERLAY_NONE);
-  assert.equal(ENGINE.runtime.currentTheme, 'classic');
-  assert.equal(ENGINE.muted, true);
-  assert.deepEqual(ENGINE.options, { geese: true, falseGoals: true, deadGates: true });
+test('createState builds the expected top-level engineState defaults', () => {
+  const { engineState } = createState();
+  assert.equal(engineState.mode, PLAY);
+  assert.equal(engineState.logicState, IDLE);
+  assert.equal(engineState.overlayState, OVERLAY_NONE);
+  assert.equal(engineState.runtime.currentTheme, 'classic');
+  assert.equal(engineState.muted, true);
+  assert.deepEqual(engineState.options, { geese: true, falseGoals: true, deadGates: true });
 });
 
 test('state slice factories return independent mutable collections', () => {

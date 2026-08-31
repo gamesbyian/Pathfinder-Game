@@ -1,4 +1,4 @@
-// Re-export barrel for the engine state-action helpers. All ENGINE mutations must flow
+// Re-export barrel for the engine state-action helpers. All engineState mutations must flow
 // through these helpers (enforced by check:engine-state-boundary). The implementations are
 // split by state slice under modules/state/actions/ — this file preserves the historical
 // `modules/state-actions.js` import path so existing callers keep working unchanged.

@@ -26,7 +26,7 @@ function makeLevel() {
 function makeHarness(solverApi: any, reportError: (...args: any[]) => void = () => {}) {
     const level = makeLevel();
     const state: any = {
-        ENGINE: {
+        engineState: {
             editor: {
                 workingLevel: level,
                 falseGoalTriggerScanState: 'stale',
@@ -104,7 +104,7 @@ test('worker-backed editor scan sends canonical budget, streams canonical progre
         const searchMessage = worker.messages.find(m => m.type === 'FALSE_GOAL_TRIGGER_SEARCH');
         assert.ok(searchMessage);
         assert.equal(searchMessage.budgetMs, 1234, 'controller budget must reach worker client as timeLimitMs');
-        assert.ok(state.ENGINE.editor.triggerableFalseGoalCells.has(PACK(1, 1)),
+        assert.ok(state.engineState.editor.triggerableFalseGoalCells.has(PACK(1, 1)),
             'canonical newTriggerableCells progress must stream into editor state');
 
         worker.emitResult({
@@ -121,10 +121,10 @@ test('worker-backed editor scan sends canonical budget, streams canonical progre
         const result: any = await scanPromise;
 
         assert.equal(result.status, 'complete');
-        assert.deepEqual([...state.ENGINE.editor.triggerableFalseGoalCells].sort((a, b) => a - b),
+        assert.deepEqual([...state.engineState.editor.triggerableFalseGoalCells].sort((a, b) => a - b),
             [PACK(1, 1), PACK(2, 0)].sort((a, b) => a - b));
-        assert.equal(state.ENGINE.editor.falseGoalTriggerScanState, 'complete');
-        assert.equal(state.ENGINE.editor.falseGoalTriggerParityCandidates.size, 0);
+        assert.equal(state.engineState.editor.falseGoalTriggerScanState, 'complete');
+        assert.equal(state.engineState.editor.falseGoalTriggerParityCandidates.size, 0);
     } finally {
         if (originalWorker) Object.defineProperty(globalThis, 'Worker', originalWorker);
         else delete (globalThis as any).Worker;
@@ -167,9 +167,9 @@ test('main-thread fallback passes canonical timeLimitMs/onTriggerableCell and st
         assert.equal(Object.hasOwn(receivedOpts, 'timeLimit'), false);
         assert.equal(Object.hasOwn(receivedOpts, 'onSpot'), false);
         assert.equal(result.status, 'partial');
-        assert.deepEqual([...state.ENGINE.editor.triggerableFalseGoalCells].sort((a, b) => a - b),
+        assert.deepEqual([...state.engineState.editor.triggerableFalseGoalCells].sort((a, b) => a - b),
             [PACK(1, 1), PACK(2, 0)].sort((a, b) => a - b));
-        assert.equal(state.ENGINE.editor.falseGoalTriggerScanState, 'partial');
+        assert.equal(state.engineState.editor.falseGoalTriggerScanState, 'partial');
     } finally {
         if (originalWorker) Object.defineProperty(globalThis, 'Worker', originalWorker);
         else delete (globalThis as any).Worker;

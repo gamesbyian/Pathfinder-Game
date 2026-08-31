@@ -94,8 +94,8 @@ export function createReviewController({ state, ui, engine, editor, persistence,
     // --- Helpers ---
 
     const updateReviewHintBtn = () => {
-        const wl = state.ENGINE.editor.workingLevel;
-        const count = knownHintCount(wl?.hints, state.ENGINE.foundHintsSinceLoad);
+        const wl = state.engineState.editor.workingLevel;
+        const count = knownHintCount(wl?.hints, state.engineState.foundHintsSinceLoad);
         ui.setButtonLabel('reviewHintBtn', hintButtonLabel(count));
     };
 
@@ -125,7 +125,7 @@ export function createReviewController({ state, ui, engine, editor, persistence,
             if (_cancelled) throw new Error('Solver:cancelled');
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
-        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+        const abortPoll = setInterval(() => { if (state.engineState.solver.abortRequested) cancelSolve(); }, 100);
         try {
             engine.overlays.setOverlayState(SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
@@ -178,23 +178,23 @@ export function createReviewController({ state, ui, engine, editor, persistence,
     // --- Approve / Reject ---
 
     (document.getElementById('reviewApproveBtn') as any).onclick = async () => {
-        const subs = state.ENGINE.review.submissions;
-        const idx  = state.ENGINE.review.currentIdx;
-        if (!subs.length || !state.ENGINE.editor.workingLevel) return;
+        const subs = state.engineState.review.submissions;
+        const idx  = state.engineState.review.currentIdx;
+        if (!subs.length || !state.engineState.editor.workingLevel) return;
 
         const sub            = subs[idx];
         const { isHintAddition, isLocal } = classifyApproval(sub);
 
-        const wl     = state.ENGINE.editor.workingLevel;
+        const wl     = state.engineState.editor.workingLevel;
         const requiredLength = parseInt(ui.getValue('editReqLen')) || 0;
         const requiredIntersections = parseInt(ui.getValue('editReqInt')) || 0;
         editor.applyMetricsFromUI();
 
         // Fold in any solutions the reviewer discovered this session (via the Solve button) so they
         // are persisted alongside the submission's own hints, not just used for the Hints button.
-        let hints = mergeUniqueHints(Array.isArray(wl.hints) ? wl.hints : [], state.ENGINE.foundHintsSinceLoad || []);
+        let hints = mergeUniqueHints(Array.isArray(wl.hints) ? wl.hints : [], state.engineState.foundHintsSinceLoad || []);
         // Re-validate the full set if the level was modified during review.
-        if (state.ENGINE.editor.isModified && hints.length > 0) {
+        if (state.engineState.editor.isModified && hints.length > 0) {
             ui.showMessage('Re-validating hints…', 'warning');
             hints = revalidateHints(hints, wl, requiredLength, requiredIntersections);
         }
@@ -232,7 +232,7 @@ export function createReviewController({ state, ui, engine, editor, persistence,
         // session, and the solver-fallback solution above — so approval never drops provenance for
         // a path that already had some.
         const knownHintRecords = mergeHints(
-            mergeHints(wl.hintRecords || [], state.ENGINE.foundHintsSinceLoadRecords || []),
+            mergeHints(wl.hintRecords || [], state.engineState.foundHintsSinceLoadRecords || []),
             solverFallbackHint ? [solverFallbackHint] : [],
         );
         const hintsToPersist = reconcileHints(hints, knownHintRecords);
@@ -258,8 +258,8 @@ export function createReviewController({ state, ui, engine, editor, persistence,
     };
 
     (document.getElementById('reviewRejectBtn') as any).onclick = async () => {
-        const subs = state.ENGINE.review.submissions;
-        const idx  = state.ENGINE.review.currentIdx;
+        const subs = state.engineState.review.submissions;
+        const idx  = state.engineState.review.currentIdx;
         if (!subs.length) return;
         const sub = subs[idx];
         try {

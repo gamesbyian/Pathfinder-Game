@@ -47,10 +47,10 @@ export function createStepDispatcher({
     // Used by computeStep when backtracking.
     const truncateNavTo = (nav: any, targetLen: any) => {
         if (!truncateNavigationPath(nav, targetLen)) return;
-        if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
+        if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(state.engineState.logicState)) {
             setLogicState(IDLE);
         }
-        rebuildDerivedPathState(state.ENGINE);
+        rebuildDerivedPathState(state.engineState);
     };
 
     // Stable helpers object passed into computeStep on every call.
@@ -91,17 +91,17 @@ export function createStepDispatcher({
     }
 
     function processStep(key: any) {
-        const activeLevel = state.ENGINE.mode === PLAY
-            ? state.ENGINE.level
-            : state.ENGINE.editor.workingLevel;
+        const activeLevel = state.engineState.mode === PLAY
+            ? state.engineState.level
+            : state.engineState.editor.workingLevel;
         stepHelpers.portalThemeColor = themes.THEMES[themes.getCurrentTheme()]?.colors?.portal || '#d946ef';
         const { outcome, events, mutations } = computeStep(
-            state.ENGINE.nav, state.ENGINE.hazards, state.ENGINE.mode,
-            state.ENGINE.logicState, activeLevel, key, stepHelpers
+            state.engineState.nav, state.engineState.hazards, state.engineState.mode,
+            state.engineState.logicState, activeLevel, key, stepHelpers
         );
         if (outcome !== null) {
             markDirty(state);
-            if (state.ENGINE.mode === EDITOR) setEditorModified(state, true);
+            if (state.engineState.mode === EDITOR) setEditorModified(state, true);
         }
         const now = Date.now();
         for (const { x, y, color } of mutations.ripples) {

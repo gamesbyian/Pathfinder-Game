@@ -12,7 +12,7 @@ export function createRenderer({ state, ui }: any) {
     const canvasRenderer  = createCanvasRenderer(cvs, ctx, mustPassOverlay);
 
     function getScreenPos(cx: any, cy: any) {
-        const eng = state.ENGINE;
+        const eng = state.engineState;
         const l   = activeLevel(eng);
         if (!l) return { sx: 0, sy: 0 };
         const { tx, ty } = transformPoint(cx, cy, eng.orientation, l.grid.w, l.grid.h);
@@ -38,7 +38,7 @@ export function createRenderer({ state, ui }: any) {
 
     // drawPath and drawScorchMark are kept on the public API for external callers.
     function drawPathWithCurrentOrientation(pathArr: any, isJumpSet: any, strokeStyle: any, width: any, isCaution: any = false) {
-        const eng = state.ENGINE;
+        const eng = state.engineState;
         const l   = activeLevel(eng);
         if (!l) return;
         const screenPosFn = (cx: any, cy: any) => {

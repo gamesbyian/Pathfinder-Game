@@ -6,8 +6,8 @@ export function createChallengeOptionsController({ state, ui }: RequireDeps<neve
         // Returns { playable, level, reason? } where `level` is a derived copy with options
         // applied — the input level is never mutated. Callers must use result.level.
         applyPlayChallengeOptions(level: any) {
-            if (!level || state.ENGINE.mode !== PLAY) return { playable: true, level };
-            const opts = state.ENGINE.options || {};
+            if (!level || state.engineState.mode !== PLAY) return { playable: true, level };
+            const opts = state.engineState.options || {};
             let derived = level;
 
             if (opts.geese === false && derived.gooseSet.size > 0) {

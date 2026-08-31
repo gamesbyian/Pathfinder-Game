@@ -11,7 +11,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
     // --- Unsaved-changes guard ---
 
     const tryNavigate = (actionFn: any) => {
-        if (needsUnsavedGuard(state.ENGINE.mode, state.ENGINE.editor.isModified, EDITOR)) {
+        if (needsUnsavedGuard(state.engineState.mode, state.engineState.editor.isModified, EDITOR)) {
             engine.setPendingConfirmationAction(actionFn);
             ui.openModal('unsavedModal');
         } else {
@@ -38,7 +38,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
             { name: 'CONTROLS', elements: Array.from((document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn') as any)).filter((el) => !(el as HTMLElement).classList.contains('hidden') && (el as HTMLElement).offsetParent !== null) },
             { name: 'LEVEL', elements: [(document.getElementById('prevLevelBtn') as any), (document.getElementById('nextLevelBtn') as any)].filter(Boolean) }
         ];
-        if (state.ENGINE.mode === EDITOR) {
+        if (state.engineState.mode === EDITOR) {
             groups.push({ name: 'METRICS', elements: [(document.getElementById('editReqLen') as any), (document.getElementById('editReqInt') as any)].filter(Boolean) });
         }
         return groups.filter((g: any) => g.elements.length > 0);
@@ -48,7 +48,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
         (document.querySelectorAll('.gamepad-focus') as any).forEach((node: Element) =>
             ui.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2'])
         );
-        if (!state.ENGINE.ui.gamepadFocusEnabled || !el) return;
+        if (!state.engineState.ui.gamepadFocusEnabled || !el) return;
         ui.addClasses(el, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']);
         if (typeof el.focus === 'function') el.focus({ preventScroll: true });
     }
@@ -60,31 +60,31 @@ export function createNavigationController({ state, ui, engine, data, editor, re
         if (!group) return;
         setUiFocusGroupState(state, group.name, clampFocusIndex(index, group.elements.length));
         if (forceVisual) setGamepadFocusEnabled(state, true);
-        applyFocusVisual(group.elements[state.ENGINE.ui.focusIndex]);
+        applyFocusVisual(group.elements[state.engineState.ui.focusIndex]);
     }
 
     function cycleFocusGroup() {
         const groups = getFocusableGroups();
         if (!groups.length) return;
-        const idx  = groups.findIndex((g: any) => g.name === state.ENGINE.ui.focusGroup);
+        const idx  = groups.findIndex((g: any) => g.name === state.engineState.ui.focusGroup);
         const next = groups[nextGroupIndex(idx, groups.length)];
         setFocusGroup(next.name, 0, true);
     }
 
     function moveFocusWithinGroup(delta: any) {
         const groups = getFocusableGroups();
-        const group  = groups.find((g: any) => g.name === state.ENGINE.ui.focusGroup);
+        const group  = groups.find((g: any) => g.name === state.engineState.ui.focusGroup);
         if (!group || !group.elements.length) return;
-        setUiFocusIndex(state, wrapWithinGroup(state.ENGINE.ui.focusIndex, delta, group.elements.length));
-        applyFocusVisual(group.elements[state.ENGINE.ui.focusIndex]);
+        setUiFocusIndex(state, wrapWithinGroup(state.engineState.ui.focusIndex, delta, group.elements.length));
+        applyFocusVisual(group.elements[state.engineState.ui.focusIndex]);
     }
 
     function activateFocusedControl() {
         const groups = getFocusableGroups();
-        const group  = groups.find((g: any) => g.name === state.ENGINE.ui.focusGroup);
-        const el     = group?.elements?.[state.ENGINE.ui.focusIndex];
+        const group  = groups.find((g: any) => g.name === state.engineState.ui.focusGroup);
+        const el     = group?.elements?.[state.engineState.ui.focusIndex];
         if (!el) return;
-        if (el.id === 'gameCanvas') { state.ENGINE.ui.gamepadGridPrimaryAction?.(); return; }
+        if (el.id === 'gameCanvas') { state.engineState.ui.gamepadGridPrimaryAction?.(); return; }
         el.click();
     }
 
@@ -98,7 +98,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
 
     const viewportUpdateHandler = () => {
         ui.updateAppScale();
-        setFocusGroup(state.ENGINE.ui.focusGroup || 'GRID', state.ENGINE.ui.focusIndex || 0);
+        setFocusGroup(state.engineState.ui.focusGroup || 'GRID', state.engineState.ui.focusIndex || 0);
     };
     window.addEventListener('resize', viewportUpdateHandler);
     window.addEventListener('orientationchange', viewportUpdateHandler);
@@ -112,28 +112,28 @@ export function createNavigationController({ state, ui, engine, data, editor, re
 
     (document.getElementById('prevLevelBtn') as any).onclick = () => tryNavigate(() => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
-        if (state.ENGINE.mode === REVIEW) {
-            const subs = state.ENGINE.review.submissions;
+        if (state.engineState.overlayState !== OVERLAY_NONE || state.engineState.solver.controller) return;
+        if (state.engineState.mode === REVIEW) {
+            const subs = state.engineState.review.submissions;
             if (!subs.length) return;
-            engine.review.loadReviewLevel(prevIndexWrap(state.ENGINE.review.currentIdx, subs.length));
+            engine.review.loadReviewLevel(prevIndexWrap(state.engineState.review.currentIdx, subs.length));
         } else {
             const levels = data.getLevels();
-            engine.game.loadLevel(validIndexWrap(state.ENGINE.levelIdx, levels.length, -1, (idx) => !!levels[idx]));
+            engine.game.loadLevel(validIndexWrap(state.engineState.levelIdx, levels.length, -1, (idx) => !!levels[idx]));
             ui.setSolutionOutput('');
         }
     });
 
     (document.getElementById('nextLevelBtn') as any).onclick = () => tryNavigate(() => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
-        if (state.ENGINE.mode === REVIEW) {
-            const subs = state.ENGINE.review.submissions;
+        if (state.engineState.overlayState !== OVERLAY_NONE || state.engineState.solver.controller) return;
+        if (state.engineState.mode === REVIEW) {
+            const subs = state.engineState.review.submissions;
             if (!subs.length) return;
-            engine.review.loadReviewLevel(nextIndexWrap(state.ENGINE.review.currentIdx, subs.length));
+            engine.review.loadReviewLevel(nextIndexWrap(state.engineState.review.currentIdx, subs.length));
         } else {
             const levels = data.getLevels();
-            engine.game.loadLevel(validIndexWrap(state.ENGINE.levelIdx, levels.length, 1, (idx) => !!levels[idx]));
+            engine.game.loadLevel(validIndexWrap(state.engineState.levelIdx, levels.length, 1, (idx) => !!levels[idx]));
             ui.setSolutionOutput('');
         }
     });
@@ -152,7 +152,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
 
     (document.getElementById('nextLevelModalBtn') as any).onclick = () => {
         const levels = data.getLevels();
-        handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.game.loadLevel(state.ENGINE.levelIdx + 1); });
+        handleWinClose(() => { if (state.engineState.levelIdx < levels.length - 1) engine.game.loadLevel(state.engineState.levelIdx + 1); });
     };
     (document.getElementById('dismissWinModalBtn') as any).onclick = () => handleWinClose(() => engine.setLogicState(IDLE));
     (document.getElementById('copyWinDataBtn') as any).onclick = async () => {
@@ -172,12 +172,12 @@ export function createNavigationController({ state, ui, engine, data, editor, re
     // --- Mode toggle ---
 
     (document.getElementById('modeToggleShellBtn') as any).onclick = () => {
-        if (state.ENGINE.mode === REVIEW) {
+        if (state.engineState.mode === REVIEW) {
             tryNavigate(() => {
                 ui.closeAllModals();
                 engine.switchMode(PLAY);
             });
-        } else if (state.ENGINE.mode === EDITOR) {
+        } else if (state.engineState.mode === EDITOR) {
             tryNavigate(() => { ui.closeAllModals(); editor.exitEditorMode(); });
         } else {
             ui.closeAllModals();
@@ -195,17 +195,17 @@ export function createNavigationController({ state, ui, engine, data, editor, re
         !!document.querySelector('.screen-modal:not(.hidden), .modal-overlay:not(.hidden)');
 
     function moveGridHead(dx: any, dy: any) {
-        if (anyModalOpen() || state.ENGINE.overlayState !== OVERLAY_NONE) return;
-        const level = activeLevel(state.ENGINE);
+        if (anyModalOpen() || state.engineState.overlayState !== OVERLAY_NONE) return;
+        const level = activeLevel(state.engineState);
         if (!level) return;
-        if (!state.ENGINE.nav.path.length) {
+        if (!state.engineState.nav.path.length) {
             const gateKey = level.gateKeys?.length ? level.gateKeys[0] : null;
             if (gateKey == null) return;
             setNavigationActiveGateKey(state, gateKey);
-            engine.navigation.PathNavigator.pushStep(state.ENGINE, gateKey, false);
+            engine.navigation.PathNavigator.pushStep(state.engineState, gateKey, false);
             engine.setLogicState(DRAGGING);
         }
-        const head = UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
+        const head = UNPACK(state.engineState.nav.path[state.engineState.nav.path.length - 1]);
         engine.game.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
     }
 

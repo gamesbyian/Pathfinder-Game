@@ -81,15 +81,15 @@ export function createFalseGoalTriggerScanController({ state, ui, editor, solver
     // token; any edit resets falseGoalTriggerScanState via clearEditorTriggerableFalseGoalCells, which
     // both cancels the scan and discards whatever it already streamed.
     const scanInvalidated = (token: number) =>
-        token !== scanToken || state.ENGINE.editor.falseGoalTriggerScanState !== 'scanning';
+        token !== scanToken || state.engineState.editor.falseGoalTriggerScanState !== 'scanning';
 
     async function executeScan(budgetMs: number, hooks: any) {
         const token = ++scanToken;
         setEditorFalseGoalTriggerScanState(state, 'scanning');
         // Instant layer: faint outlines on every cell parity can't rule out.
-        setEditorFalseGoalTriggerParityCandidates(state, computeParityCandidates(state.ENGINE.editor.workingLevel));
+        setEditorFalseGoalTriggerParityCandidates(state, computeParityCandidates(state.engineState.editor.workingLevel));
         markDirty(state);
-        const searchLevel = deepCloneLevel(state.ENGINE.editor.workingLevel);
+        const searchLevel = deepCloneLevel(state.engineState.editor.workingLevel);
         try {
             const res: any = await runFalseGoalTriggerSearch(searchLevel, budgetMs, {
                 shouldCancel: () => scanInvalidated(token) || (hooks.shouldCancel?.() ?? false),
@@ -139,12 +139,12 @@ export function createFalseGoalTriggerScanController({ state, ui, editor, solver
     // (object place/remove, grid transforms, undo, metric edits — they all funnel
     // through clearEditorTriggerableFalseGoalCells, which this observes as 'stale').
     const falseGoalToolActive = () => {
-        const ed = state.ENGINE.editor;
+        const ed = state.engineState.editor;
         return ed.selectedTool === 'falseGoal' || ed.draggedObject?.type === 'falseGoal';
     };
 
     const shouldAutoScan = () => {
-        const eng = state.ENGINE;
+        const eng = state.engineState;
         return eng.mode === EDITOR                    // triggerable-cell highlights only render in editor mode
             && eng.overlayState === OVERLAY_NONE      // don't race the modal solver flows
             && !eng.solver.controller
@@ -158,7 +158,7 @@ export function createFalseGoalTriggerScanController({ state, ui, editor, solver
         if (!shouldAutoScan()) return;
         // A structurally-invalid or metric-less level has no meaningful spot set;
         // stay 'stale' and re-check next tick (edits change the answer).
-        const l = state.ENGINE.editor.workingLevel;
+        const l = state.engineState.editor.workingLevel;
         if (!(l.requiredLength > 0) || !editor.validateWorkingLevel()?.ok) return;
         void scan(solverApi.getFalseGoalTriggerSearchBudgetMs(l)).then((res: any) => {
             // Background completion is silent — the highlights are the signal, and the
@@ -166,7 +166,7 @@ export function createFalseGoalTriggerScanController({ state, ui, editor, solver
             // rarely finishes on open levels, so a toast per rescan would be constant
             // noise). Speak only when an incomplete sweep found NOTHING: a bare grid
             // would otherwise read as "no valid triggerable cells".
-            if (res && res.status !== 'complete' && state.ENGINE.editor.triggerableFalseGoalCells.size === 0) {
+            if (res && res.status !== 'complete' && state.engineState.editor.triggerableFalseGoalCells.size === 0) {
                 ui.showMessage('Trap scan incomplete — press Trap Spots for a deeper search.', 'warning');
             }
         });

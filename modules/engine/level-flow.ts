@@ -68,15 +68,15 @@ export function createLevelFlowController({
     scheduleTimer = setTimeout,
 }: any) {
     function updatePencilState() {
-        ui.updatePencilButton(state.ENGINE.editor.isPencilMode);
+        ui.updatePencilButton(state.engineState.editor.isPencilMode);
     }
 
     function updatePlayModeLayout() {
-        ui.applyModeLayout(state.ENGINE.mode, { isDevMode: state.ENGINE.isDevMode });
+        ui.applyModeLayout(state.engineState.mode, { isDevMode: state.engineState.isDevMode });
     }
 
     function updateCompletionUI() {
-        const eng        = state.ENGINE;
+        const eng        = state.engineState;
         const isComplete = eng.progressSet.has(eng.levelIdx);
         const isPlayMode = eng.mode === PLAY;
         const isReview   = eng.mode === REVIEW;
@@ -93,18 +93,18 @@ export function createLevelFlowController({
     // editor-entry paths — switching into EDITOR mode (switchMode) and loading a level while
     // already in EDITOR mode (_loadLevelByIndex) — which previously duplicated this block verbatim.
     function _initEditorWorkingCopy() {
-        setEditorWorkingLevel(state, deepCloneLevel(state.ENGINE.level));
+        setEditorWorkingLevel(state, deepCloneLevel(state.engineState.level));
         setEditorPencilMode(state, false);
         clearEditorUndoStack(state);
         clearEditorTriggerableFalseGoalCells(state);
         setEditorEmptyClickCount(state, 0);
-        ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.requiredLength || 0);
-        ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.requiredIntersections || 0);
-        editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
+        ui.setInputValue('editReqLen', state.engineState.editor.workingLevel.requiredLength || 0);
+        ui.setInputValue('editReqInt', state.engineState.editor.workingLevel.requiredIntersections || 0);
+        editor.syncMetadataFieldsFromLevel(state.engineState.editor.workingLevel);
         setEditorModified(state, false);
         // Hints button shows the count of known solutions (saved + found this session); foundHints was
         // just reset on load, so this is the saved count until a Solve adds more.
-        ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel.hints, state.ENGINE.foundHintsSinceLoad)));
+        ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.engineState.editor.workingLevel.hints, state.engineState.foundHintsSinceLoad)));
         _attachSavedHintsToWorkingCopy();
         updatePencilState();
     }
@@ -116,31 +116,31 @@ export function createLevelFlowController({
     // flight or hints arrived some other way (e.g. a Solve run).
     function _attachSavedHintsToWorkingCopy() {
         if (typeof data?.getHints !== 'function') return; // test stubs may omit the data service
-        const wl = state.ENGINE.editor.workingLevel;
+        const wl = state.engineState.editor.workingLevel;
         if (!wl || (Array.isArray(wl.hints) && wl.hints.length > 0)) return;
-        const levelNumber = state.ENGINE.levelIdx + 1;
-        const rawLevel = data.getLevel(state.ENGINE.levelIdx);
+        const levelNumber = state.engineState.levelIdx + 1;
+        const rawLevel = data.getLevel(state.engineState.levelIdx);
         data.getHints(rawLevel)
             .then((hints: import('../domain/hint-types.js').Hint[]) => {
-                if (state.ENGINE.editor.workingLevel !== wl || hints.length === 0) return;
+                if (state.engineState.editor.workingLevel !== wl || hints.length === 0) return;
                 if (Array.isArray(wl.hints) && wl.hints.length > 0) return;
                 setEditorWorkingHints(state, hintPaths(hints).map((h) => h.slice()));
                 setEditorWorkingHintRecords(state, hints);
-                ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(wl.hints, state.ENGINE.foundHintsSinceLoad)));
+                ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(wl.hints, state.engineState.foundHintsSinceLoad)));
             })
             .catch((err: any) => { reportError('hints.editor-load', err, { levelNumber }); });
     }
 
     function _loadLevelByIndex(idx: any, keepOrientation: any = false) {
         clearFalseGoalTimers();
-        if (state.ENGINE.solver.controller) return;
+        if (state.engineState.solver.controller) return;
 
         const levels = data.getLevels();
         if (!levels || !data.getLevel(idx)) return;
 
         setLevelIndex(state, idx);
 
-        const isEditor = state.ENGINE.mode === EDITOR;
+        const isEditor = state.engineState.mode === EDITOR;
         if (isEditor) setOrientationState(state, 0);
         else if (!keepOrientation) setOrientationState(state, Math.floor(Math.random() * 8));
 
@@ -151,7 +151,7 @@ export function createLevelFlowController({
         const optionsResult = applyPlayChallengeOptions(baseLevel);
         showOptionsBlockedModalIfNeeded(optionsResult);
         setLevel(state, optionsResult.level ?? baseLevel);
-        if (optionsResult.playable !== false) assertLevelShape(state.ENGINE.level);
+        if (optionsResult.playable !== false) assertLevelShape(state.engineState.level);
         // Reset the run for the freshly-set level (clear path/undo/geese/ripples, re-arm false
         // goals), then the hint state. resetRunState is the single nav-reset primitive.
         resetRunState({ keepLevel: true });
@@ -174,26 +174,26 @@ export function createLevelFlowController({
     }
 
     function resetRunState({ keepLevel = true }: any = {}) {
-        PathNavigator.clear(state.ENGINE);
+        PathNavigator.clear(state.engineState);
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
         clearRipples(state);
 
         if (!keepLevel) setLevel(state, null);
-        resetFalseGoalHazardsForLevel(state, state.ENGINE.level);
+        resetFalseGoalHazardsForLevel(state, state.engineState.level);
     }
 
     function loadLevel(levelObjOrIdx: any, options: any = {}) {
         if (typeof levelObjOrIdx === 'number') return _loadLevelByIndex(levelObjOrIdx, !!options.keepOrientation);
-        const mode = options.mode || state.ENGINE.mode;
+        const mode = options.mode || state.engineState.mode;
         if (mode === PLAY) setLevel(state, levelObjOrIdx);
         else setEditorWorkingLevel(state, levelObjOrIdx);
         resetRunState({ keepLevel: true });
     }
 
     function switchMode(newMode: any) {
-        if (newMode === PLAY && state.ENGINE.mode === REVIEW) {
-            setLevelIndex(state, state.ENGINE.review.savedPlayLevelIdx);
+        if (newMode === PLAY && state.engineState.mode === REVIEW) {
+            setLevelIndex(state, state.engineState.review.savedPlayLevelIdx);
         }
         const isEd     = newMode === EDITOR;
         const isReview = newMode === REVIEW;
@@ -206,22 +206,22 @@ export function createLevelFlowController({
         setOverlayState(OVERLAY_NONE);
         resetHinterForLevel(state);
         ui.applyHintPinState(false, false);
-        PathNavigator.clear(state.ENGINE);
+        PathNavigator.clear(state.engineState);
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
         setDetonatedFalseGoals(state);
-        ui.applyModeLayout(newMode, { isDevMode: state.ENGINE.isDevMode });
+        ui.applyModeLayout(newMode, { isDevMode: state.engineState.isDevMode });
         if (isEd) {
             setOrientationState(state, 0);
             _initEditorWorkingCopy();
         } else if (isReview) {
-            setReviewSavedPlayLevelIndex(state, state.ENGINE.levelIdx);
+            setReviewSavedPlayLevelIndex(state, state.engineState.levelIdx);
             setEditorPencilMode(state, false);
             setEditorEmptyClickCount(state, 0);
             resetEmptyReviewState();
             updatePencilState();
         } else {
-            _loadLevelByIndex(state.ENGINE.levelIdx, true);
+            _loadLevelByIndex(state.engineState.levelIdx, true);
         }
         ui.updateAppScale();
         ui.updateViewport();
@@ -234,20 +234,20 @@ export function createLevelFlowController({
 
     function handleResetAction() {
         const plan = planResetCheat({
-            cheatActive: state.ENGINE.cheatActive,
-            resetStreak: state.ENGINE.resetStreak,
+            cheatActive: state.engineState.cheatActive,
+            resetStreak: state.engineState.resetStreak,
         });
         setResetStreak(state, plan.nextResetStreak);
         if (plan.activateCheat) setCheatActive(state, true);
         if (plan.playSound) audioService.play('F5', '8n');
         if (plan.rescheduleExpiry) {
-            if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
+            if (state.engineState.cheatTimer) clearTimeout(state.engineState.cheatTimer);
             setCheatTimer(state, scheduleTimer(() => {
                 setCheatActive(state, false);
                 if (plan.expiryClearsStreak) setResetStreak(state, 0);
             }, 3000));
         }
-        _loadLevelByIndex(state.ENGINE.levelIdx, true);
+        _loadLevelByIndex(state.engineState.levelIdx, true);
     }
 
     function initReviewMode() {

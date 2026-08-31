@@ -9,7 +9,7 @@ import type { EngineState, NavigationState } from '../../state-slices.js';
 // to the nav slice it mutates.
 type NavInput = StateOrEngine | NavigationState;
 function resolveNav(input: NavInput): NavigationState | undefined {
-    const engine = (input as { ENGINE?: EngineState })?.ENGINE ?? input;
+    const engine = (input as { engineState?: EngineState })?.engineState ?? input;
     if (!engine) return undefined;
     return (engine as EngineState).nav ?? (engine as NavigationState);
 }

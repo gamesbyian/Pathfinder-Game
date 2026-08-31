@@ -7,11 +7,11 @@ import { endSolverRun as endSolverRunState,
 export function createSolverManager({ state, ui }: ControllerDeps) {
     return {
         cancelSolver() {
-            if (!state.ENGINE.solver.controller) return;
+            if (!state.engineState.solver.controller) return;
             requestSolverAbort(state);
             ui.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
             ui.setButtonState('solverCloseBtn', { enabled: false });
-            state.ENGINE.solver.controller.abort();
+            state.engineState.solver.controller.abort();
         },
 
         startSolverRun(controller: any) { startSolverRunState(state, controller); },
@@ -22,6 +22,6 @@ export function createSolverManager({ state, ui }: ControllerDeps) {
             setHintPathsState(state, pathList, source, currentIdx, opts);
         },
 
-        isRunning() { return !!state.ENGINE.solver.controller; },
+        isRunning() { return !!state.engineState.solver.controller; },
     };
 }

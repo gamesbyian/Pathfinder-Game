@@ -79,7 +79,7 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
     // Accepts either full engineState (with .nav sub-object) or a flat state (for tests).
-    function areWinMetricsSatisfied(engineState: any = state.ENGINE, level: any) {
+    function areWinMetricsSatisfied(engineState: any = state.engineState, level: any) {
         const lvl = level !== undefined ? level : activeLevel(engineState);
         return areWinMetricsSatisfiedImpl(engineState.nav ?? engineState, lvl);
     }
@@ -100,10 +100,10 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
     };
 
     function attemptMoveTo(target: any, _opts: any = {}) {
-        if ((state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW) && !state.ENGINE.editor.isPencilMode) return;
-        if (!state.ENGINE.nav.path.length) return;
-        const headPos = UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
-        if (state.ENGINE.logicState === PORTAL_PAUSE) {
+        if ((state.engineState.mode === EDITOR || state.engineState.mode === REVIEW) && !state.engineState.editor.isPencilMode) return;
+        if (!state.engineState.nav.path.length) return;
+        const headPos = UNPACK(state.engineState.nav.path[state.engineState.nav.path.length - 1]);
+        if (state.engineState.logicState === PORTAL_PAUSE) {
             if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING);
             else return;
         }
@@ -117,11 +117,11 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
     }
 
     function checkWinCondition() {
-        if (!state.ENGINE.level) return;
+        if (!state.engineState.level) return;
         if (checkWinConditionImplFn(
-                state.ENGINE.nav.path, state.ENGINE.level, state.ENGINE.mode, state.ENGINE.logicState,
-                state.ENGINE.nav.isPortalJump, state.ENGINE.nav.visitedCounts, state.ENGINE.nav.intersections,
-                state.ENGINE.nav.turnsAtMap)) {
+                state.engineState.nav.path, state.engineState.level, state.engineState.mode, state.engineState.logicState,
+                state.engineState.nav.isPortalJump, state.engineState.nav.visitedCounts, state.engineState.nav.intersections,
+                state.engineState.nav.turnsAtMap)) {
             handleWin();
         }
     }
@@ -133,26 +133,26 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
         // discovered, stays visible across undo so the player isn't sent blindly back into a
         // known hazard. Geese are reset only on level (re)load, not by undo.
         return {
-            path:                [...state.ENGINE.nav.path],
-            isPortalJump:        new Set(state.ENGINE.nav.isPortalJump),
-            activeGateKey:       state.ENGINE.nav.activeGateKey,
-            logicState:          state.ENGINE.logicState,
-            detonatedFalseGoals: new Set(state.ENGINE.hazards.detonatedFalseGoals)
+            path:                [...state.engineState.nav.path],
+            isPortalJump:        new Set(state.engineState.nav.isPortalJump),
+            activeGateKey:       state.engineState.nav.activeGateKey,
+            logicState:          state.engineState.logicState,
+            detonatedFalseGoals: new Set(state.engineState.hazards.detonatedFalseGoals)
         };
     }
 
     function applySnapshot(snap: any) {
         // State restoration lives in PathNavigator.applySnapshot (unit-testable without booting);
         // engine adds only the UI message-clear side effect.
-        PathNavigator.applySnapshot(state.ENGINE, snap);
+        PathNavigator.applySnapshot(state.engineState, snap);
         ui.showMessage('', '');
     }
 
     // Wrapper: accepts either full engineState (has .nav) or flat state (for tests).
-    function getRealLength(engineState: any = state.ENGINE) { return getRealLengthImpl(engineState.nav ?? engineState); }
+    function getRealLength(engineState: any = state.engineState) { return getRealLengthImpl(engineState.nav ?? engineState); }
 
     // Wrapper: determines level, delegates to runtime/path-state.js, then tracks lastFlipTime.
-    function rebuildDerivedPathState(engineState: any = state.ENGINE) {
+    function rebuildDerivedPathState(engineState: any = state.engineState) {
         const nav = engineState.nav ?? engineState;
         const oldFlipCount = nav.flipCount;
         const level = activeLevel(engineState);
@@ -160,7 +160,7 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
         if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
     }
 
-    function assertStateConsistency(engineState: any = state.ENGINE) {
+    function assertStateConsistency(engineState: any = state.engineState) {
         if (!engineState.isDevMode) return;
         const l = activeLevel(engineState);
         if (!l) return;
@@ -177,11 +177,11 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
     }
 
     function setLogicState(newState: any) {
-        if (newState !== IDLE && !VALID_LOGIC_TRANSITIONS[state.ENGINE.logicState]?.includes(newState)) {
-            console.warn(`Blocked Logic Transition: ${state.ENGINE.logicState} -> ${newState}`);
+        if (newState !== IDLE && !VALID_LOGIC_TRANSITIONS[state.engineState.logicState]?.includes(newState)) {
+            console.warn(`Blocked Logic Transition: ${state.engineState.logicState} -> ${newState}`);
             return false;
         }
-        if (state.ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
+        if (state.engineState.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
             ui.EditorDragGhost.update({ visible: false });
         }
         setLogicStateValue(state, newState);
@@ -263,13 +263,13 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
     function setOrientation(v: any) {
         setOrientationState(state, v);
         ui.updateViewport();
-        rebuildDerivedPathState(state.ENGINE);
+        rebuildDerivedPathState(state.engineState);
         markDirty(state);
     }
 
     function reversePathDirection() {
         reverseNavigationPath(state);
-        rebuildDerivedPathState(state.ENGINE);
+        rebuildDerivedPathState(state.engineState);
         markDirty(state);
     }
 
@@ -277,7 +277,7 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
     // Used by editor coord-transform operations (rotate, flip, resize).
     function remapNavKeys(mapFn: any) {
         remapNavigationKeys(state, mapFn);
-        rebuildDerivedPathState(state.ENGINE);
+        rebuildDerivedPathState(state.engineState);
         markDirty(state);
     }
 
@@ -285,7 +285,7 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
     function toggleMute()     { toggleMutedState(state); }
     function setPendingConfirmationAction(fn: any)   { setRuntimePendingConfirmationActionState(state, fn); }
     function clearPendingConfirmationAction()   { clearRuntimePendingConfirmationActionState(state); }
-    function executePendingConfirmationAction() { if (state.ENGINE.runtime.pendingConfirmationAction) state.ENGINE.runtime.pendingConfirmationAction(); }
+    function executePendingConfirmationAction() { if (state.engineState.runtime.pendingConfirmationAction) state.engineState.runtime.pendingConfirmationAction(); }
     function setOption(key: any, value: any)  { setOptionValue(state, key, value); }
 
     const api = {
@@ -302,8 +302,8 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
         createSnapshot()                             { return createSnapshot(); },
         applySnapshot(snap: any)                          { return applySnapshot(snap); },
         checkWinConditionImpl: checkWinConditionImplFn,
-        getPackedPath()    { return [...(state.ENGINE?.nav?.path || [])]; },
-        getIntersections() { return state.ENGINE?.nav?.intersections ?? 0; },
+        getPackedPath()    { return [...(state.engineState?.nav?.path || [])]; },
+        getIntersections() { return state.engineState?.nav?.intersections ?? 0; },
         updatePlayModeLayout,
         loadReviewLevel,
         loop,

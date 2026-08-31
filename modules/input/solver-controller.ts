@@ -32,11 +32,11 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
     // --- Dev: referee-solver toggle ---
 
     document.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (!state.ENGINE.isDevMode) return;
+        if (!state.engineState.isDevMode) return;
         if (e.shiftKey && e.key.toLowerCase() === 'r') {
             toggleFlag(state, 'useRefereeSolver');
             ui.showMessage(
-                `Referee solver ${state.ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`,
+                `Referee solver ${state.engineState.flags.useRefereeSolver ? 'ON' : 'OFF'}`,
                 'info'
             );
         }
@@ -46,7 +46,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
 
     (document.getElementById('solveLevelBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.solver.controller) return;
+        if (state.engineState.solver.controller) return;
         ui.openModal('solveOptionsModal');
     };
 
@@ -60,7 +60,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
 
     (document.getElementById('solveFindOneBtn') as any).onclick = async () => {
         ui.closeAllModals();
-        if (state.ENGINE.solver.controller) return;
+        if (state.engineState.solver.controller) return;
         let _cancelled = false;
         const cancelSolve = () => {
             if (_cancelled) return;
@@ -85,7 +85,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
             if (_cancelled) throw new Error('Solver:cancelled');
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
-        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+        const abortPoll = setInterval(() => { if (state.engineState.solver.abortRequested) cancelSolve(); }, 100);
         try {
             engine.overlays.setOverlayState(SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
@@ -93,7 +93,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
             ui.setSolverDetailText('Searching…');
             ui.setSolverProgress(0);
             await new Promise((r: any) => setTimeout(r, 0));
-            const level = deepCloneLevel(state.ENGINE.editor.workingLevel);
+            const level = deepCloneLevel(state.engineState.editor.workingLevel);
             const overlayMinTimer = new Promise((r: any) => setTimeout(r, 400));
             _t0 = Date.now();
             _lastTenths = -1;
@@ -155,16 +155,16 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
     }
 
     function invalidateSessionIfStale() {
-        if (activeSession && isSessionStale(activeSessionLevelIdx, state.ENGINE.levelIdx)) {
+        if (activeSession && isSessionStale(activeSessionLevelIdx, state.engineState.levelIdx)) {
             activeSession = null; activeSessionLevelIdx = -1; activeTier = null; activeLevel = null; activeExistingHints = [];
         }
     }
 
     function buildSessionForCurrentLevel() {
-        const level = deepCloneLevel(state.ENGINE.editor.workingLevel);
-        const wl = state.ENGINE.editor.workingLevel;
-        const existingHints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
-        const session = solverApi.createVarietySearch(level, existingHints, { rng: mulberry32((0x50f7 ^ (state.ENGINE.levelIdx + 1)) >>> 0) });
+        const level = deepCloneLevel(state.engineState.editor.workingLevel);
+        const wl = state.engineState.editor.workingLevel;
+        const existingHints = mergeUniqueHints(wl?.hints || [], state.engineState.foundHintsSinceLoad || []);
+        const session = solverApi.createVarietySearch(level, existingHints, { rng: mulberry32((0x50f7 ^ (state.engineState.levelIdx + 1)) >>> 0) });
         return { session, level, existingHints };
     }
 
@@ -200,7 +200,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
 
     async function executeVarietySearch(session: any, tier: any, level: any, existingHints: number[][]) {
         ui.closeAllModals();
-        if (state.ENGINE.solver.controller) return;
+        if (state.engineState.solver.controller) return;
         let _cancelled = false;
         const cancelSolve = () => {
             if (_cancelled) return;
@@ -209,7 +209,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
             ui.setButtonState('solverCloseBtn', { enabled: false });
         };
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
-        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+        const abortPoll = setInterval(() => { if (state.engineState.solver.abortRequested) cancelSolve(); }, 100);
         let _progressTicker: any = null;
 
         const bounded = Number.isFinite(tier.ceilingMs);
@@ -285,7 +285,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
                 // far instead — a delta source like the pool, so cumulative tracking stays consistent
                 // (mixing "session self-accumulates" with "concatenate a delta" would double-count).
                 const runner = everUsedPool
-                    ? solverApi.createVarietySearch(level, existingHints.concat(cumulativeNewlySaved), { rng: mulberry32((0x50f7 ^ (state.ENGINE.levelIdx + 1)) >>> 0) })
+                    ? solverApi.createVarietySearch(level, existingHints.concat(cumulativeNewlySaved), { rng: mulberry32((0x50f7 ^ (state.engineState.levelIdx + 1)) >>> 0) })
                     : session;
                 const stageRes = await runner.run({
                     mode: 'complete', target: tier.target, maxHints,
@@ -335,12 +335,12 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
             ui.setSolverProgress(100);
             engine.overlays.setOverlayState(OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
-                setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
+                setFoundHintsSinceLoad(state, mergeUniqueHints(state.engineState.foundHintsSinceLoad || [], res.newlySaved));
                 const levelRevision = await getLevelFingerprint(level);
                 const newlyFoundRecords = hintsFromVarietyResult(res, { usedExistingHints: existingHints.length > 0, solverVersion: SOLVER_VERSION, levelRevision });
-                setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
+                setFoundHintsSinceLoadRecords(state, mergeHints(state.engineState.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 // Live-update the Edit/Review Hints button count to include the just-found solutions.
-                ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.ENGINE.editor.workingLevel?.hints, state.ENGINE.foundHintsSinceLoad)));
+                ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(state.engineState.editor.workingLevel?.hints, state.engineState.foundHintsSinceLoad)));
             }
             const summary = buildVarietySearchSummary(res, { target: tier.target, maxHints: currentMaxHints, mode: tier.complete ? 'complete' : 'targeted' });
             ui.showDiverseSearchResult('Search Complete', summary, { showExtend: shouldOfferExtend(res.outcome) });
@@ -362,13 +362,13 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
     }
 
     function startVarietySearch(tier: any) {
-        if (state.ENGINE.solver.controller) return;
+        if (state.engineState.solver.controller) return;
         invalidateSessionIfStale();
         const built = buildSessionForCurrentLevel();
         activeSession = built.session;
         activeLevel = built.level;
         activeExistingHints = built.existingHints;
-        activeSessionLevelIdx = state.ENGINE.levelIdx;
+        activeSessionLevelIdx = state.engineState.levelIdx;
         activeTier = tier;
         // Fire-and-forget: executeVarietySearch self-handles all its awaits.
         void executeVarietySearch(activeSession, tier, activeLevel, activeExistingHints);
@@ -376,7 +376,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
 
     function extendVarietySearch() {
         invalidateSessionIfStale();
-        if (!activeSession || !activeTier || state.ENGINE.solver.controller) return;
+        if (!activeSession || !activeTier || state.engineState.solver.controller) return;
         void executeVarietySearch(activeSession, activeTier, activeLevel, activeExistingHints);
     }
 
@@ -397,7 +397,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
     // of grid size, so exhaustive completion is unlikely — steer the user toward "no cap" instead of the
     // 1,000-cap variant, which will most likely just report `capped` without exploring much more.
     async function confirmFindAll(tier: any): Promise<boolean> {
-        const level = state.ENGINE.editor.workingLevel;
+        const level = state.engineState.editor.workingLevel;
         const dense = !!level && getRequiredPathCoverageRatio(level) >= DENSE_LEVEL_COVERAGE_THRESHOLD;
         const text = dense
             ? `This level's solution space is very large, so an exhaustive search is unlikely to finish${tier.hardCap ? '' : ' — consider "Find all — no cap" instead'}. This can take 20+ minutes; you can stop at any time and everything found so far is kept.`
@@ -406,7 +406,7 @@ export function createSolverController({ state, ui, engine, solverApi, reportErr
     }
 
     async function confirmAndStartFindAll(tier: any) {
-        if (state.ENGINE.solver.controller) return;
+        if (state.engineState.solver.controller) return;
         if (await confirmFindAll(tier)) startVarietySearch(tier);
     }
 

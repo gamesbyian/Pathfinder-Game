@@ -17,14 +17,14 @@ import { denormalizeLevel } from '../domain/level-codec.js';
 export function createLevelRatingManager({ state, ui, data, persistence, reportError = defaultReportError }: RequireDeps<'data'>) {
 
     function getCurrentRawLevel() {
-        const eng = state.ENGINE;
+        const eng = state.engineState;
         if (eng.mode === PLAY) return data.getLevel(eng.levelIdx);
         const wl = eng.editor.workingLevel;
         return wl ? denormalizeLevel(wl) : null;
     }
 
     function render() {
-        ui.renderLevelRatingPane(state.ENGINE.levelRating);
+        ui.renderLevelRatingPane(state.engineState.levelRating);
     }
 
     // A rating saved under a pre-bump fingerprint algorithm (see LEVEL_FINGERPRINT_VERSION) is
@@ -50,7 +50,7 @@ export function createLevelRatingManager({ state, ui, data, persistence, reportE
     }
 
     async function refreshForCurrentLevel() {
-        const eng = state.ENGINE;
+        const eng = state.engineState;
         const requestId = incrementLevelRatingRequestId(state);
         const levelNumber = eng.mode === REVIEW ? null : eng.levelIdx + 1;
         setLevelRatingContext(state, { fingerprint: null, levelNumber, loaded: false });
@@ -59,7 +59,7 @@ export function createLevelRatingManager({ state, ui, data, persistence, reportE
         const rawLevel = getCurrentRawLevel();
         if (!rawLevel) return;
         const fingerprint = await getLevelFingerprint(rawLevel);
-        if (state.ENGINE.levelRating.requestId !== requestId) return;
+        if (state.engineState.levelRating.requestId !== requestId) return;
         setLevelRatingContext(state, { fingerprint, levelNumber, loaded: false });
         render();
         let existing = null;
@@ -69,13 +69,13 @@ export function createLevelRatingManager({ state, ui, data, persistence, reportE
         } catch (e: any) {
             reportError('level-rating.load', e);
         }
-        if (state.ENGINE.levelRating.requestId !== requestId) return;
+        if (state.engineState.levelRating.requestId !== requestId) return;
         applyLevelRatingData(state, existing || {});
         render();
     }
 
     function save() {
-        const rating = state.ENGINE.levelRating;
+        const rating = state.engineState.levelRating;
         if (!rating.fingerprint) return;
         persistence.saveLevelRating(rating.fingerprint, rating.levelNumber, {
             tags: [...rating.tags],

@@ -74,7 +74,7 @@ test.describe('Modal focus management', () => {
         await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
 
         await page.locator('#gameCanvas').focus();
-        expect(await page.evaluate(() => window.APP.State.ENGINE.nav.path.length)).toBe(0);
+        expect(await page.evaluate(() => window.APP.State.engineState.nav.path.length)).toBe(0);
 
         // From the gate, at least one cardinal direction is a valid first move on any
         // solvable level. Stop at the first one so exactly one step (one undo snapshot)
@@ -82,13 +82,13 @@ test.describe('Modal focus management', () => {
         let drawn = 0;
         for (const key of ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp']) {
             await page.keyboard.press(key);
-            drawn = await page.evaluate(() => window.APP.State.ENGINE.nav.path.length);
+            drawn = await page.evaluate(() => window.APP.State.engineState.nav.path.length);
             if (drawn >= 2) break;
         }
         expect(drawn).toBeGreaterThanOrEqual(2);
 
         await page.keyboard.press('Backspace');
-        const undone = await page.evaluate(() => window.APP.State.ENGINE.nav.path.length);
+        const undone = await page.evaluate(() => window.APP.State.engineState.nav.path.length);
         expect(undone).toBeLessThan(drawn);
     });
 

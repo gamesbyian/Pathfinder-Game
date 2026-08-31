@@ -73,7 +73,7 @@ async function preparePage(browser) {
     await page.goto('/?debug=1');
     await page.locator('#loadingOverlay').waitFor({ state: 'hidden', timeout: LOAD_TIMEOUT });
     await page.evaluate(() => {
-        window.APP.State.ENGINE.isDevMode = true;
+        window.APP.State.engineState.isDevMode = true;
         window.APP.Engine.updatePlayModeLayout();
         document.querySelectorAll('.hidden').forEach(el => el.classList.remove('hidden'));
         const style = document.createElement('style');

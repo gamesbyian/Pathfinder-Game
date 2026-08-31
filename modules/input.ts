@@ -33,6 +33,6 @@ export function createInput({ state, ui, engine, editor, renderer, themes, data,
 
     return {
         init,
-        getGridCoord: (event: { clientX: number; clientY: number }) => getGridCoord(event, state.ENGINE, renderer.getCanvas()),
+        getGridCoord: (event: { clientX: number; clientY: number }) => getGridCoord(event, state.engineState, renderer.getCanvas()),
     };
 }

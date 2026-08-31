@@ -5,11 +5,11 @@ import type { DataService, SolverApi, ReportError } from './ports.js';
 import { PLAY } from './app-constants.js';
 
 /** The top-level mutable application state container handed to every controller. */
-export type AppState = { ENGINE: EngineState };
+export type AppState = { engineState: EngineState };
 
 /**
  * The dependency bundle a controller/factory receives. The `state` carrier is typed to {@link
- * AppState} (so `state.ENGINE.<field>` accesses and state-action calls are checked end-to-end),
+ * AppState} (so `state.engineState.<field>` accesses and state-action calls are checked end-to-end),
  * and the domain-object-bearing bags carry real interfaces (see ports.ts) so level objects, raw
  * data, and solver results stay typed at every call site. The remaining DOM/controller handles
  * (ui/engine/editor/renderer/persistence/themes/debug) still arrive via the index signature
@@ -34,7 +34,7 @@ export type RequireDeps<K extends 'data' | 'solverApi'> =
     ControllerDeps & Required<Pick<ControllerDeps, K>>;
 
 export function createState(): AppState {
-    return { ENGINE: createEngineState() };
+    return { engineState: createEngineState() };
 }
 
 /**

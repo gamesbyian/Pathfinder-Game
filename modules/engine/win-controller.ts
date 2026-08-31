@@ -14,8 +14,8 @@ export function computeWinEffects(state: AppState): Effect[] {
         Effects.playSound('C5', '8n'),
         Effects.openModal('winModal'),
     ];
-    if (state.ENGINE.mode === PLAY) {
-        effects.push(Effects.persistProgress(state.ENGINE.levelIdx));
+    if (state.engineState.mode === PLAY) {
+        effects.push(Effects.persistProgress(state.engineState.levelIdx));
     }
     return effects;
 }
@@ -32,13 +32,13 @@ export function computeWinEffects(state: AppState): Effect[] {
 export async function saveWinAsHintIfNovel(
     { state, data, persistence, reportError = defaultReportError }: ControllerDeps,
 ): Promise<void> {
-    if (state.ENGINE.mode !== PLAY) return;
-    if (state.ENGINE.runtime?.devCorpus !== 'published') return;
+    if (state.engineState.mode !== PLAY) return;
+    if (state.engineState.runtime?.devCorpus !== 'published') return;
     if (typeof persistence?.saveLocalLevelHintIfNovel !== 'function' || typeof data?.getLevel !== 'function') return;
-    const path = state.ENGINE.nav.path;
+    const path = state.engineState.nav.path;
     if (!Array.isArray(path) || path.length < 2) return;
     try {
-        const levelIdx = state.ENGINE.levelIdx;
+        const levelIdx = state.engineState.levelIdx;
         const rawLevel = data.getLevel(levelIdx);
         if (!rawLevel) return;
         const fingerprint = await getLevelFingerprint(rawLevel);
@@ -58,8 +58,8 @@ export function createWinController({ state, ui, data, persistence, reportError,
         handleWin() {
             setLogicState(RESOLVED);
             ui.renderWinExportPanel({
-                solutionOutput: JSON.stringify(state.ENGINE.nav.path).replace(/\s/g, ''),
-                showExportArea: state.ENGINE.isDevMode,
+                solutionOutput: JSON.stringify(state.engineState.nav.path).replace(/\s/g, ''),
+                showExportArea: state.engineState.isDevMode,
             });
             runEffects(computeWinEffects(state), {
                 playSound:       (note: any, dur: any) => audioService.play(note, dur),
