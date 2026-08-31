@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 9 repair / reopened closeout |
-| Status | active; exact PR revision CI required before re-closing Phase 9 |
+| Status | repair merged and validated; post-merge closure recorded in follow-up PR |
 | Base `main` SHA | `3f980ec54147441e3922c990e272fdfe413170fb` |
 | Branch | `chatgpt/phase9-repair-and-plan-hardening-2026-08-30` |
 | Original implementation PR | #1599 |
@@ -14,6 +14,10 @@
 | Repair PR | #1600 |
 | Reopened rows | NC-P09-007, NC-P09-008, and new accounting row NC-P09-009 |
 | PR head at PR creation | `c5cb19a10d89aaf8e9e051d6cc22011ad8637310` |
+| Intermediate failed repair CI | run `33345965965` on `31be14e3d962b7e18e1f8ba025247f0b665373f0` |
+| Final repair PR head | `d545bcd0e81cddf16af8ba168f525d63200044d4` |
+| Final repair CI | run `33346142339`: **success** |
+| Repair merge commit | `2bf6b040ea2128bc3e4ec2a6039733238433d4fa` |
 | Closure authority | this repair record plus the amended Phase-9 record |
 
 ## 1. Why Phase 9 was reopened
@@ -69,12 +73,28 @@ artifact bytes are changed.
 | ledger/accounting | `check:naming-cleanup-ledger` and Phase-9 closeout |
 | aggregate repository behavior | complete PR CI for the final head/base pair |
 
-## 4. Closure rule
+## 4. Validation and closure evidence
 
-Phase 9 remains reopened while this repair PR is active. Do not advance to Phase 10 merely because
-local or synthetic checks pass. Re-close Phase 9 only after GitHub reports the complete required CI
-suite green for the final PR revision against its current base, and then record the PR number, final
-head SHA, tested merge/ref SHA when available, CI run ID/conclusion, and merge commit here.
+The first repair revision audited in GitHub, `31be14e3d962b7e18e1f8ba025247f0b665373f0`,
+failed CI run `33345965965`. Importantly, the original Phase-9 defects were already repaired there:
+`check:naming-cleanup-phase9-closeout`, `test:naming-cleanup-phase9-closeout`,
+`test:repository-file-view`, and `test:stress-measurement-output-path` all passed in the real
+sparse Node-test topology. The remaining failures were closure/accounting fallout:
+
+- the status fixture rejected the ad-hoc non-Phase-8 `batch: "repair"` label;
+- the surface-inventory fixture hard-coded 114 future rows and failed after NC-P09-009 made 115;
+- documentation validation treated a backticked retired package alias in the retrospective as a
+  currently runnable bare npm command.
+
+Those were corrected without runtime/solver changes. The final PR #1600 head
+`d545bcd0e81cddf16af8ba168f525d63200044d4` then passed the complete GitHub CI workflow in run
+`33346142339`, including checks, lint, node-tests, build, deep proofs, and deep verification. PR
+#1600 merged as `2bf6b040ea2128bc3e4ec2a6039733238433d4fa`.
+
+The post-merge tree therefore contains the validated repair. This follow-up closure changes only
+evidence/ledger state: NC-P09-007, NC-P09-008, and NC-P09-009 may return to `done`,
+`lastCompletedPhase` may return to 9, and `activeExecution` may return to idle once the closure
+PR's own current-head CI is green.
 
 The original Phase-9 record remains useful implementation history, but its original pre-merge
 validation claims are superseded by this repair record where they conflict with GitHub CI evidence.
