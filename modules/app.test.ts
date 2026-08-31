@@ -31,7 +31,6 @@ function makeFactories(events: any[] = []) {
   };
   const renderer = { name: 'renderer' };
   const debug = { name: 'debug' };
-  const levelUtils = { name: 'levelUtils' };
   const editor = {
     name: 'editor',
     // The editor resolves its engine port lazily via getEngineRuntime() (no init() call).
@@ -83,16 +82,9 @@ function makeFactories(events: any[] = []) {
       return renderer;
     },
     createDebug: () => debug,
-    createLevelUtils: ({ data: receivedData, getState, getRenderer }: any) => {
-      assert.equal(receivedData, data);
-      assert.equal(getState(), state.ENGINE);
-      assert.equal(getRenderer(), renderer);
-      return levelUtils;
-    },
-    createEditor: ({ state: receivedState, ui: receivedUi, levelUtils: receivedLevelUtils, solverApi: receivedSolver, getEngineRuntime }: any) => {
+    createEditor: ({ state: receivedState, ui: receivedUi, solverApi: receivedSolver, getEngineRuntime }: any) => {
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
-      assert.equal(receivedLevelUtils, levelUtils);
       assert.equal(receivedSolver, solverApi);
       editor.capturedGetEngineRuntime = getEngineRuntime;
       events.push('editor.create');
@@ -109,11 +101,10 @@ function makeFactories(events: any[] = []) {
       assert.equal(state.ENGINE.isDirty, true);
       return persistence;
     },
-    createEngine: ({ state: receivedState, ui: receivedUi, renderer: receivedRenderer, levelUtils: receivedLevelUtils, themes: receivedThemes, data: receivedData, persistence: receivedPersistence, editor: receivedEditor, audioService: receivedAudioService }: any) => {
+    createEngine: ({ state: receivedState, ui: receivedUi, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, persistence: receivedPersistence, editor: receivedEditor, audioService: receivedAudioService }: any) => {
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
       assert.equal(receivedRenderer, renderer);
-      assert.equal(receivedLevelUtils, levelUtils);
       assert.equal(receivedThemes, themes);
       assert.equal(receivedData, data);
       assert.equal(receivedPersistence, persistence);
@@ -121,7 +112,7 @@ function makeFactories(events: any[] = []) {
       assert.equal(receivedAudioService, audioService);
       return engine;
     },
-    createInput: ({ state: receivedState, ui: receivedUi, engine: receivedEngine, levelUtils: receivedLevelUtils, editor: receivedEditor, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, solverApi: receivedSolver, persistence: receivedPersistence, audioService: receivedAudioService }: any) => {
+    createInput: ({ state: receivedState, ui: receivedUi, engine: receivedEngine, editor: receivedEditor, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, solverApi: receivedSolver, persistence: receivedPersistence, audioService: receivedAudioService }: any) => {
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
       assert.equal(receivedEngine, engine);
