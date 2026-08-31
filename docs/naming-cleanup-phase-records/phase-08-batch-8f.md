@@ -280,3 +280,16 @@ No unclassified live hit remains in this batch's scope.
 | Known structural-only surfaces | `collect-variant-family-dataset.yml`'s full GHA dispatch remains structurally-validated-only (workflow lint/contract checks), matching its pre-batch coverage class; `collect-variant-family-dataset-shard.mjs`'s full generate/solve/hint-workbench run remains untested end-to-end locally (requires the off-main dataset and multi-hour solver budgets), also matching pre-batch coverage class |
 
 Batch 8G (solver diagnostics and legacy-latency portfolio tools) must not start on this unmerged branch. The next batch's session must start from new current `main` after this PR merges, record this batch's merged PR/commit in ledger `batchCompletions["8F"]`, and only then claim 8G.
+
+
+## 13. Post-closeout audit correction
+
+A later Phases 8-14 forensic audit found one specification-compliance defect in NC-P08-054. The
+original 8F implementation used the local name `DATASET_BRANCH` even though the plan and ledger
+fixed the canonical target as `VARIANT_FAMILY_DATASET_BRANCH`. The original record documented
+that substitution, but a batch record is not authorized to replace a fixed canonical target merely
+because a shorter local spelling seems clear.
+
+The audit repair renames the local constant to the exact canonical target and hardens the permanent
+Phase-8 closeout checker plus its negative fixtures so future substitutions fail mechanically.
+The branch value and worktree behavior are unchanged.
