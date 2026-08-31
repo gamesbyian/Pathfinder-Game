@@ -24,9 +24,9 @@ const htmlSelectors = [
 
 const noRestrictedSyntax = ['error', ...eventSelectors, ...htmlSelectors];
 
-// ── Local AST rule: engineState-state mutation boundary ───────────────────────────
+// ── Local AST rule: engine-state mutation boundary ───────────────────────────
 // Replaces the former check-engine-state-boundary.mjs regex. The consumer layers (engine/, input/,
-// ui/) must route all engineState-state mutations through modules/state-actions.js — they may not assign
+// ui/) must route all engine-state mutations through modules/state-actions.js — they may not assign
 // to, or call a mutator on, `state.engineState.*`, `engineState.editor.*`, or the destructured `nav.*`
 // fields directly. Being AST-based, this also catches evasions the regex missed (computed member
 // access like state.engineState['nav'], and `++`/`--` updates).
@@ -55,13 +55,13 @@ const atEngineEditor = s => s && s[0] === 'engineState' && s[1] === 'editor';
 const localPlugin = {
     rules: {
         'engine-state-boundary': {
-            meta: { type: 'problem', docs: { description: 'engineState-state mutations must go through state-actions helpers' }, schema: [] },
+            meta: { type: 'problem', docs: { description: 'engine-state mutations must go through state-actions helpers' }, schema: [] },
             create(context) {
                 const flagWrite = (node, target) => {
                     if (!target || target.type !== 'MemberExpression') return;
                     const s = memberSegments(target);
                     if (!s) return;
-                    if (atStateEngine(s)) context.report({ node, message: 'Write engineState state through a state-action helper (modules/state-actions.js), not state.engineState.* directly.' });
+                    if (atStateEngine(s)) context.report({ node, message: 'Write engine state through a state-action helper (modules/state-actions.js), not state.engineState.* directly.' });
                     else if (atEngineEditor(s)) context.report({ node, message: 'Use editor state actions for engineState.editor.* writes.' });
                     else if (s[0] === 'nav' && NAV_FIELDS.has(s[1])) context.report({ node, message: 'Use navigation state actions for nav.* field writes.' });
                 };
@@ -74,7 +74,7 @@ const localPlugin = {
                         if (!MUTATORS.has(callee.property.name)) return;
                         const s = memberSegments(callee.object);
                         if (!s) return;
-                        if (atStateEngine(s)) context.report({ node, message: `Mutate engineState state collections through state actions, not state.engineState.*.${callee.property.name}().` });
+                        if (atStateEngine(s)) context.report({ node, message: `Mutate engine state collections through state actions, not state.engineState.*.${callee.property.name}().` });
                         else if (s[0] === 'nav' && s[1] === 'path' && (callee.property.name === 'splice' || callee.property.name === 'reverse'))
                             context.report({ node, message: 'Use navigation state actions for nav.path mutations.' });
                     },
@@ -262,7 +262,7 @@ export default [
         rules: { 'local/engine-state-boundary': 'error' },
     },
     {
-        // Colocated unit tests legitimately set up engineState state directly and stub browser/adapter
+        // Colocated unit tests legitimately set up engine state directly and stub browser/adapter
         // deps — they are tests, not production layer code. Exempt them from the architecture rules
         // (correctness/type-checking of tests is enforced by tsconfig.test.json / check:types:tests).
         files: ['modules/**/*.test.ts'],
