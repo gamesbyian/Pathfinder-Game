@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describeLevel, loadCorpus } from './corpus-query-lib.mjs';
 import { techniqueCensusIdentityKey } from './technique-census-result-lib.mjs';
-import { parseAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+import { normalizeAttemptIdentityKey, parseAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const DEFAULT_DIRECTORY = 'reports/stress/technique-census/32240161854';
 const DEFAULT_PRODUCTION_RUN = 'reports/stress/capability-runs/32526927206';
@@ -693,8 +693,10 @@ export function analyzeTechniqueCensus(document, coverageRows, thresholds = DEFA
     const reverseOracleLevels = coverageRows.filter(row => row.wasSolvedByProduction && row.solvedByT1.length === 0)
         .map(row => {
             const productionRow = frozenRowsById.get(`${row.corpus}/${row.levelId}`);
-            const matchingIsolated = productionRow?.winningConfig
-                ? byTechnique.get(productionRow.winningConfig)?.find(cell => cell.levelId === row.levelId
+            const productionWinningConfig = productionRow?.winningConfig
+                ? normalizeAttemptIdentityKey(productionRow.winningConfig) : null;
+            const matchingIsolated = productionWinningConfig
+                ? byTechnique.get(productionWinningConfig)?.find(cell => cell.levelId === row.levelId
                     && cell.corpus === row.corpus) : null;
             return {
                 corpus: row.corpus, levelId: row.levelId,
