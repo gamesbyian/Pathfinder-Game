@@ -83,11 +83,10 @@ const deriveLevelFailureSignature = (levelRow = {}) => {
     + (signature.causality.portalCommitmentChurn * 0.8)
     + (hardFailure ? 1.5 : 0)
   ).toFixed(5));
-  // NC-P08-024/025 (docs/naming-cleanup-plan.md Section 5.7): historical committed reports under
-  // logs/solver-workflow/ still carry the legacy knownHardCluster/recommendedGating field names and
-  // are never rewritten in place -- any future reader of those files must accept both the legacy and
-  // canonical names. This writer emits ONLY the canonical names from Phase 8 onward (no current
-  // reader consumes either field, confirmed by a full-repo search before this rename).
+  // NC-P08-024/025: the Phase-8 implementation audit found no persisted historical instance
+  // of these generated fields and no reader for them. They are therefore canonical-only source
+  // fields, not a compatibility boundary. If this currently-dead summary path is wired in later,
+  // new output must keep these canonical names unless real external history is discovered.
   signature.hardClusterHeuristicMatch = signature.signatureScore >= 2.15;
   signature.derivedGatingCandidate = signature.hardClusterHeuristicMatch
     ? {

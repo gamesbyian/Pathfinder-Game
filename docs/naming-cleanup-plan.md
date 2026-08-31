@@ -886,8 +886,8 @@ Renamed generated fields (implemented by batch 8G):
 
 - former `knownHardCluster` -> `hardClusterHeuristicMatch`;
 - former `recommendedGating` -> `derivedGatingCandidate`;
-- legacy-field reads preserved for existing generated JSON (historical `logs/solver-workflow/*.json` snapshots keep the legacy field names permanently; no current reader consumed either field at implementation time);
-- the writer emits only the new fields.
+- post-closeout audit correction: the 8G implementation census proved that no committed generated JSON ever contained either old or new field and no historical reader existed, so these rows are direct current-source renames rather than dual-read boundaries;
+- the writer emits only the new fields; do not invent a compatibility reader unless real external historical data is later discovered.
 
 Replaced the opaque npm alias audit:newhint:full with `solver:analyze-diagnostics` (implemented by batch 8G).
 
@@ -1296,7 +1296,7 @@ This is a blocking prerequisite, not an implementation phase and not permission 
 #### Batch 8G: Solver diagnostics and legacy-latency portfolio tools
 
 - audit-export tool/workflow/package identity -> solver diagnostics;
-- generated fields `knownHardCluster` / `recommendedGating` -> `hardClusterHeuristicMatch` / `derivedGatingCandidate` with explicit dual-read/single-write ownership;
+- generated fields `knownHardCluster` / `recommendedGating` -> `hardClusterHeuristicMatch` / `derivedGatingCandidate`; post-closeout correction: no persisted instance/reader existed, so the fields are canonical-only rather than dual-read;
 - legacy-latency portfolio report/replay tool and package names;
 - prove representative historical diagnostics rows still reach real downstream consumers.
 

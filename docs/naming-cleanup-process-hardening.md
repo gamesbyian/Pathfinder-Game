@@ -538,14 +538,12 @@ Do not infer from this progress record that the Phase-8 gate can be opened. Its 
 
 ### Compatibility-boundary ownership for remaining phases
 
-The future ledger contains 22 intentional `dual-read` rows. Twelve are npm/package aliases in Phase 8, three are package aliases in Phase 9, and seven are real value/data boundaries. Command aliases are compatibility at the command-dispatch surface only: the old alias may invoke the canonical command for one migration window, but scripts/modules must use one canonical internal name.
+The pre-Phase-8 future ledger was initially recorded as 22 intentional `dual-read` rows. A later post-closeout audit corrected NC-P08-024/025: the implementation record itself proved that no persisted diagnostics artifact or historical reader existed, so those two rows were never real dual-read boundaries. Command aliases are compatibility at the command-dispatch surface only: the old alias may invoke the canonical command for one migration window, but scripts/modules must use one canonical internal name.
 
 The real value/data boundaries are:
 
 | Phase | Legacy -> canonical | Owning compatibility boundary | Single-write rule |
 | --- | --- | --- | --- |
-| 8 | `knownHardCluster` -> `hardClusterHeuristicMatch` | solver-diagnostics generated-report normalization/reader boundary around the current audit-export tool family | current diagnostics writer emits only canonical after Phase 8; historical report readers accept legacy |
-| 8 | `recommendedGating` -> `derivedGatingCandidate` | same solver-diagnostics generated-report boundary | same |
 | 8 | `PATHFINDER_VARIANT_TROVE` -> `PATHFINDER_VARIANT_FAMILY_DATASET_ROOT` | variant-family dataset root resolver used by the dataset doctor/workflow family | prefer canonical env input, accept legacy for one compatibility window, never copy both names deeper into tool logic |
 | 10 | stage budget policy `additive-fraction` -> `additive-wall-multiplier` | stage-policy/report compatibility boundary | **definition is already canonical on current main**; Phase 10 must audit historical readers only and must not recreate the old definition |
 | 11 | runtime `variant` -> `orientation` | engine-state + level-transform boundary | runtime/application state becomes canonical orientation; research level-variant vocabulary remains separate and unchanged |
@@ -623,7 +621,7 @@ These are intentionally recorded rather than silently treated as covered:
 ### Compatibility and duplicated mapping status
 
 - Remaining package-command aliases are compatibility at `package.json` only. Internal scripts/modules must not carry dual command-name knowledge.
-- The real Phase-8 compatibility boundaries are the diagnostics generated schema (`knownHardCluster` / `recommendedGating`) and the external dataset-root environment variable. Their owning boundaries are fixed in Section 10.
+- The real Phase-8 value/data compatibility boundary from this inventory is the external dataset-root environment variable. NC-P08-024/025 were later corrected to direct source renames because no persisted diagnostics instance or historical reader existed.
 - Solver option transport duplication has a parity guard and the public solver port now uses `SolveOpts`; no Phase-8 solver-option rename is planned.
 - Existing stage, scheduler, routing-regime, and hint/provenance compatibility maps remain centralized and must not be copied into Phase-8 tools.
 
