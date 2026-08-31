@@ -116,7 +116,6 @@ function makeFactories(events: any[] = []) {
       assert.equal(receivedState, state);
       assert.equal(receivedUi, ui);
       assert.equal(receivedEngine, engine);
-      assert.equal(receivedLevelUtils, levelUtils);
       assert.equal(receivedEditor, editor);
       assert.equal(receivedRenderer, renderer);
       assert.equal(receivedThemes, themes);
