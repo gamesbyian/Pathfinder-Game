@@ -3339,7 +3339,7 @@
         "behavioralParity": "done",
         "closeoutAudit": "done"
       },
-      "notes": "Local script variable.",
+      "notes": "Local script variable. Post-closeout forensic audit corrected the original 8F substitution DATASET_BRANCH to the fixed canonical target VARIANT_FAMILY_DATASET_BRANCH and added exact-target closeout coverage.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
       "batch": "8F"
@@ -4460,7 +4460,7 @@
     "pr": null,
     "baseMainSha": null,
     "recordPath": null,
-    "notes": "Phase 14D behavior/evidence head efac451061e5a97488582ea25cf980f23ba43ad4 passed CI 33439683295 and Chromium 33439683284. The composed phase-wide guard is green; seven ADR-qualified *-core.ts modules and modules/state/actions/core-actions.ts are intentionally retained and permanently documented. All Phase 14 rows are row-complete; lastCompletedPhase remains 13 until #1628 merges and immutable closure evidence is recorded."
+    "notes": "Phase 14D PR #1628 merged, but a later Phases 8-14 forensic audit found stale current architecture/typing documentation that the merged-tree guard had missed. A post-closeout repair is required; Phase 14 remains incomplete and lastCompletedPhase stays 13 until that repair merges green and final immutable closure evidence is recorded."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior.",
   "phaseBatches": {
@@ -5321,7 +5321,11 @@
       "mergedTreeCloseout": {
         "baseMainSha": "235b82c8063c153a78da589e17e0d17f4dcbd79f",
         "pr": 1606,
-        "ciPolicy": "exact-head-green-before-merge"
+        "ciPolicy": "exact-head-green-before-merge",
+        "finalHeadSha": "8822f8a0c7b0c340a780ec1c72111a48faab698e",
+        "ciRunId": 33349756398,
+        "ciConclusion": "success",
+        "mergeCommit": "c7fcc35d3079ccbc511c92b1255e010adba2c35a"
       }
     },
     "10": {
