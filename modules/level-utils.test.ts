@@ -56,7 +56,7 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
   });
 
   for (let orientation = 0; orientation < 8; orientation += 1) {
-    engineState.orientation = variant;
+    engineState.orientation = orientation;
     engineState.viewport.swapped = [1, 3, 6, 7].includes(orientation);
     for (let x = 0; x < level.grid.w; x += 1) {
       for (let y = 0; y < level.grid.h; y += 1) {
@@ -68,7 +68,7 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
         assert.deepEqual(
           levelUtils.getGridCoord(pointer),
           { x, y },
-          `transform ${variant} rendered cell (${tx},${ty}) maps back to (${x},${y})`,
+          `transform ${orientation} rendered cell (${tx},${ty}) maps back to (${x},${y})`,
         );
       }
     }
