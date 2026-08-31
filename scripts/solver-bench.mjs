@@ -28,7 +28,8 @@
  *   node scripts/solver-bench.mjs --check                # compare default-order run to baseline (exit 1 on regression)
  *   node scripts/solver-bench.mjs --order=reverse        # order-independence probe vs baseline
  *   node scripts/solver-bench.mjs --order=random --seed=7
- *   flags: --budget-ms=30000  --work-budget=<n>  --levels=all|pos:1,...|pos:1-10  --out=path.json\n *          --baseline=path.json (defaults to logs/solver-baseline.json; useful for isolated smoke fixtures)
+ *   flags: --budget-ms=30000  --work-budget=<n>  --levels=all|pos:1,...|pos:1-10  --out=path.json
+ *          --baseline=path.json (defaults to logs/solver-baseline.json; useful for isolated smoke fixtures)
  *
  * REPRODUCIBILITY: this is the regression gate, so it pins a WORK budget
  * (modules/solver/work-meter.ts) rather than letting the solve be shaped by wall clock. A work
