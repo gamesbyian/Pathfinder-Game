@@ -12,8 +12,9 @@ function createDefaultLoaderBrowser() {
 }
 
 import { defaultReportError } from './error-reporting.js';
+import { DEV } from './app-constants.js';
 
-export function createLoader({ ui, data, themes, core, browser = createDefaultLoaderBrowser(), dataAssetLoader = null, reportError = defaultReportError }: any) {
+export function createLoader({ ui, data, themes, browser = createDefaultLoaderBrowser(), dataAssetLoader = null, reportError = defaultReportError }: any) {
     const state = {
         progress:    0,
         hasLoaded:   false,
@@ -83,7 +84,7 @@ export function createLoader({ ui, data, themes, core, browser = createDefaultLo
                 state.hasLoaded = true;
                 state.status    = 'ready';
                 setProgress(95, label);
-                if (core.DEV) console.log('Levels loaded:', data.getLevels().length);
+                if (DEV) console.log('Levels loaded:', data.getLevels().length);
                 done('ready');
             };
 
