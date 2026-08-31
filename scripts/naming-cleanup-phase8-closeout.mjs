@@ -131,7 +131,6 @@ const coverageContractRows = new Map([
   ['solution-path-family-concept', new Set(['NC-P08-009'])],
   ['domain-qualified-residual-exports', new Set(['NC-P08-011'])],
   ['trove-compatibility-and-persisted-identities', new Set(['NC-P08-019'])],
-  ['solver-diagnostics-historical-reader', new Set(['NC-P08-024', 'NC-P08-025'])],
   ['prune-gap-workflow-identity', new Set(['NC-P08-044'])],
   ['cpsat-reference-display', new Set(['NC-P08-046'])],
   ['variant-family-dataset-root-resolver', new Set(['NC-P08-053'])],
