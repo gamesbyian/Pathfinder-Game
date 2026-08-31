@@ -4,6 +4,8 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { repositoryPathKind } from './repository-file-view.mjs';
+
 const rootArg = process.argv.find(arg => arg.startsWith('--scan-root='));
 const ledgerArg = process.argv.find(arg => arg.startsWith('--ledger='));
 const root = path.resolve(rootArg?.slice('--scan-root='.length) ?? process.cwd());
@@ -73,13 +75,21 @@ const expectedCommands = {
 for (const [command, target] of Object.entries(expectedCommands)) {
   if (pkg.scripts?.[command] !== target) failures.push(`package.json: missing/drifted ${command} target`);
 }
+function canonicalSurfaceExists(file) {
+  if (existsSync(path.join(root, file))) return true;
+  // Normal CI intentionally sparse-checks out reports/. The canonical surface still exists when
+  // Git tracks it at HEAD, so use the repository view rather than forcing large report blobs into
+  // every Node-test checkout. Synthetic --scan-root fixtures remain ordinary filesystem checks.
+  return !rootArg && repositoryPathKind(root, file) === 'file';
+}
+
 for (const file of [
   'scripts/run-solver-direct.mjs',
   'scripts/combine-solver-sweep-reports.mjs',
   'reports/stress/solver-corpus1-latest.json',
   'reports/stress/solver-corpus2-latest.json',
 ]) {
-  if (!existsSync(path.join(root, file))) failures.push(`${file}: canonical Phase-9 surface missing`);
+  if (!canonicalSurfaceExists(file)) failures.push(`${file}: canonical Phase-9 surface missing`);
 }
 
 if (failures.length) {
