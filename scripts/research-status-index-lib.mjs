@@ -1,5 +1,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { SOLVER_STAGE_IDS, solverStageIdentityTerms } from '../modules/solver/stage-id-normalization.mjs';
+import { ROUTING_REGIMES, routingRegimeIdentityTerms } from '../modules/solver/routing-regime-normalization.mjs';
 
 const REPORT_NAME = /^(\d{4}-\d{2}-\d{2})-(.+)\.md$/;
 const METADATA = /^# (.+)\r?\n\r?\n> \*\*Status:\*\* ([a-z-]+)\r?\n> \*\*Last evidence:\*\* (\d{4}-\d{2}-\d{2}) — (.+)\r?\n> \*\*Decision:\*\* (.+)\r?\n> \*\*Remaining gate:\*\* (.+)$/m;
@@ -112,6 +114,20 @@ function compactEntry(kind, entry) {
         report: entry.latestEvidence.report, authorities: entry.authorities };
 }
 
+function equivalentQueryTerms(query) {
+    const raw = query.trim().toLowerCase();
+    if (!raw) return [];
+    const terms = new Set([raw]);
+    const expand = variants => {
+        for (const source of variants) if (raw.includes(source.toLowerCase())) {
+            for (const target of variants) terms.add(raw.replaceAll(source.toLowerCase(), target.toLowerCase()));
+        }
+    };
+    for (const canonical of SOLVER_STAGE_IDS) expand(solverStageIdentityTerms(canonical));
+    for (const canonical of ROUTING_REGIMES) expand(routingRegimeIdentityTerms(canonical));
+    return [...terms];
+}
+
 export function queryResearchStatusIndex(index, { query = '', status = '', kind = '' } = {}) {
     const entries = [
         ...index.queue.map(entry => compactEntry('queue', entry)),
@@ -119,12 +135,16 @@ export function queryResearchStatusIndex(index, { query = '', status = '', kind 
         ...index.evidence.map(entry => compactEntry('evidence', entry)),
         ...(index.legacyEvidence ?? []).map(entry => compactEntry('legacy-evidence', entry)),
     ];
-    const q = query.trim().toLowerCase();
+    const queryTerms = equivalentQueryTerms(query);
     const wantedStatus = status.trim().toLowerCase();
     const wantedKind = kind.trim().toLowerCase();
-    return entries.filter(entry => (!wantedKind || entry.kind === wantedKind) &&
-        (!wantedStatus || entry.status === wantedStatus) &&
-        (!q || JSON.stringify(entry).toLowerCase().includes(q)));
+    return entries.filter(entry => {
+        if (wantedKind && entry.kind !== wantedKind) return false;
+        if (wantedStatus && entry.status !== wantedStatus) return false;
+        if (!queryTerms.length) return true;
+        const haystack = JSON.stringify(entry).toLowerCase();
+        return queryTerms.some(term => haystack.includes(term));
+    });
 }
 
 export function compactResearchStatusIndex(index, filters = {}) {
