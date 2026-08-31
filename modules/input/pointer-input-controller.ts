@@ -17,16 +17,16 @@ import {
     setRuntimeTapStartCoord
 } from '../state-actions.js';
 
-export function createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
+export function createPointerInputController({ state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
 
     const handleDown = (e: { clientX: number; clientY: number }) => {
         if (state.ENGINE.solver.controller
-            || state.ENGINE.logicState === core.RESOLVED
-            || [core.HINT_ANIMATING, core.FALSE_GOAL_ANIMATING, core.GOOSE_OVERLAY, core.SOLVER_RUNNING].includes(state.ENGINE.overlayState)) return;
+            || state.ENGINE.logicState === RESOLVED
+            || [HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING].includes(state.ENGINE.overlayState)) return;
 
         const p           = levelUtils.getGridCoord(e);
         const k           = levelUtils.PACK(p.x, p.y);
-        const activeLevel = state.ENGINE.mode === core.PLAY
+        const activeLevel = state.ENGINE.mode === PLAY
             ? state.ENGINE.level
             : state.ENGINE.editor.workingLevel;
 
@@ -35,7 +35,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         setRuntimeTapMoved(state, false);
 
         // --- Editor/review drag-object mode (decision in pointer-input-core) ---
-        if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
+        if ((state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW)
                 && !state.ENGINE.editor.isPencilMode) {
             const cellAction = decideEditorCellAction({
                 hasOccupant:     !!getOccupant(activeLevel, k),
@@ -46,7 +46,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                 setEditorEmptyClickCount(state, 0);
                 setEditorDraggedObject(state, editor.pickUpObject(k));
                 if (state.ENGINE.editor.draggedObject) {
-                    engine.setLogicState(core.EDIT_DRAG);
+                    engine.setLogicState(EDIT_DRAG);
                     ui.EditorDragGhost.update({ visible: true, cellSize: state.ENGINE.viewport.cellW, type: state.ENGINE.editor.draggedObject.type });
                 }
             } else if (cellAction.action === 'place') {
@@ -68,11 +68,11 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                 engine.navigation.PathNavigator.clear(state.ENGINE);
                 setNavigationActiveGateKey(state, k);
                 engine.navigation.PathNavigator.pushStep(state.ENGINE, k, false);
-                engine.setLogicState(core.DRAGGING);
+                engine.setLogicState(DRAGGING);
                 return;
             }
             // Pencil mode: allow reversing the path direction from the tail end
-            if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
+            if ((state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW)
                     && state.ENGINE.editor.isPencilMode
                     && shouldReversePencilPath(state.ENGINE.nav.path, k, p)) {
                 engine.navigation.reversePathDirection();
@@ -84,21 +84,21 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                     && !engine.game.wouldCreateBlockedTIntersection?.(state.ENGINE, k, activeLevel);
                 if (!legalIntersectionMove) {
                     engine.navigation.PathNavigator.truncateTo(state.ENGINE, lastIdx);
-                    engine.setLogicState(core.DRAGGING);
+                    engine.setLogicState(DRAGGING);
                     return;
                 }
             }
-            engine.setLogicState(core.DRAGGING);
+            engine.setLogicState(DRAGGING);
             engine.game.handlePrimaryGridInput(p, { inputType: 'tap' });
 
         } else {
             // --- Path start ---
             if (!activeLevel) return;
-            if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
+            if ((state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW)
                     && state.ENGINE.editor.isPencilMode) {
                 setNavigationActiveGateKey(state, null);
                 engine.navigation.PathNavigator.pushStep(state.ENGINE, k, false);
-                engine.setLogicState(core.DRAGGING);
+                engine.setLogicState(DRAGGING);
                 engine.game.handlePrimaryGridInput(p, { inputType: 'tap' });
             } else {
                 // Find nearest same-axis gate (decision in pointer-input-core)
@@ -106,7 +106,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                 if (bestGate !== null) {
                     setNavigationActiveGateKey(state, bestGate);
                     engine.navigation.PathNavigator.pushStep(state.ENGINE, bestGate, false);
-                    engine.setLogicState(core.DRAGGING);
+                    engine.setLogicState(DRAGGING);
                     if (bestGate !== k) engine.game.handlePrimaryGridInput(p, { inputType: 'tap' });
                 }
             }
@@ -114,8 +114,8 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
     };
 
     const handleUp = (e: { clientX: number; clientY: number }) => {
-        if (state.ENGINE.logicState === core.EDIT_DRAG
-                && (state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)) {
+        if (state.ENGINE.logicState === EDIT_DRAG
+                && (state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW)) {
             const canvas = renderer.getCanvas();
             const crect  = canvas.getBoundingClientRect();
             if (e.clientX >= crect.left && e.clientX <= crect.right
@@ -127,9 +127,9 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                 ui.showMessage('Deleted', 'info');
             }
             setEditorDraggedObject(state, null);
-            engine.setLogicState(core.IDLE);
+            engine.setLogicState(IDLE);
         }
-        if (state.ENGINE.logicState === core.DRAGGING) engine.setLogicState(core.IDLE);
+        if (state.ENGINE.logicState === DRAGGING) engine.setLogicState(IDLE);
     };
 
     // --- Canvas pointer listeners ---
@@ -145,8 +145,8 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
 
     window.addEventListener('pointermove', (e: PointerEvent) => {
         // Drag-ghost update
-        if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
-                && (state.ENGINE.editor.draggedObject || (state.ENGINE.editor.selectedTool && state.ENGINE.logicState === core.EDIT_DRAG))) {
+        if ((state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW)
+                && (state.ENGINE.editor.draggedObject || (state.ENGINE.editor.selectedTool && state.ENGINE.logicState === EDIT_DRAG))) {
             const type = state.ENGINE.editor.draggedObject
                 ? state.ENGINE.editor.draggedObject.type
                 : state.ENGINE.editor.selectedTool;
@@ -157,7 +157,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         }
 
         if (e.pointerId !== state.ENGINE.runtime.activePointerId
-                && state.ENGINE.logicState !== core.EDIT_DRAG) return;
+                && state.ENGINE.logicState !== EDIT_DRAG) return;
 
         const dragCoord = levelUtils.getGridCoord(e);
         const tapStart  = state.ENGINE.runtime.tapStartCoord;
@@ -165,7 +165,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
             setRuntimeTapMoved(state, true);
         }
         e.preventDefault();
-        if ([core.DRAGGING, core.HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
+        if ([DRAGGING, HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
             engine.game.handlePrimaryGridInput(dragCoord, { inputType: 'drag' });
         }
     });
