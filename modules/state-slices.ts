@@ -2,6 +2,7 @@ import { createEditorState } from './editor/editor-model.js';
 import type { EditorState } from './editor/editor-model.js';
 import type { CellUsage } from './domain/types.js';
 import type { EngineLevel } from './domain/level-schema.js';
+import { PLAY, IDLE, OVERLAY_NONE } from './app-constants.js';
 
 /**
  * Runtime state slice factories for the top-level ENGINE object.
@@ -367,18 +368,11 @@ export interface EngineState {
     levelRating: LevelRatingState;
 }
 
-/** The subset of core constants (modules/core.ts) that the initial engine state reads. */
-export interface EngineCoreConstants {
-    PLAY: number;
-    IDLE: string;
-    OVERLAY_NONE: string;
-}
-
-export function createEngineState({ core }: { core: EngineCoreConstants }): EngineState {
+export function createEngineState(): EngineState {
     return {
-        mode: core.PLAY,
-        logicState: core.IDLE,
-        overlayState: core.OVERLAY_NONE,
+        mode: PLAY,
+        logicState: IDLE,
+        overlayState: OVERLAY_NONE,
         isDevMode: false,
         cheatActive: false,
         levelIdx: 0,
