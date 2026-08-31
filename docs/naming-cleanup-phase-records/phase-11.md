@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 11 — application orientation versus level variant |
-| Current batch | post-closeout audit repair |
-| Status | original 11A/11B/11C closure merged green; post-closeout audit repair in progress |
+| Current batch | post-closeout audit repair (merged) |
+| Status | closed after post-closeout audit repair PR #1615 merged green |
 | Base `main` SHA | `8c2f3d4f2f23f9fc0a31afb30096ee0ed3aa3e60` |
 | Branch | `chatgpt/phase11-audit-repairs-2026-08-31` |
 | Rows | NC-P11-001 compatibility classification; NC-P11-005 prose residue; Phase-11 evidence guardrails |
@@ -199,3 +199,9 @@ Post-closeout audit-repair PR #1615, based on `main` `8c2f3d4f2f23f9fc0a31afb300
 The original implementation/merge ancestry also resolves the missing pre-merge comparison record without inventing history: #1612's merge commit `b2ee0d74cab245c042555516474e1492975b4fd6` has first parent `53c32911e840a342c9eb6d90ecd0d26fd59052ae`, exactly the 11B entry-main SHA, and #1613's merge commit `994fa8cebaf5faafd5304026584acde25560e0d2` has first parent `b2ee0d74cab245c042555516474e1492975b4fd6`, exactly the 11B merge used as the 11C base. The required comparison was not durably recorded at the time, which remains a process-evidence defect, but the merge graph proves neither PR actually landed over intervening main drift.
 
 This repair changes no runtime orientation semantics, transform math, persistence behavior, solver behavior, or editor transform behavior.
+
+### 15.1 Merged audit-repair completion
+
+PR #1615 completed ordinary CI run `33364132333` and the widened Phase 11 Chromium orientation gate run `33364131978` successfully on exact final head `7125e50859fab3430e04ebbb3e38c9de600d6b38`. It merged as `a042e6d877278923c1234e51bce124c606ccaa4b`.
+
+Phase 11 is therefore closed again with the audit findings repaired: NC-P11-005 has no live runtime-transform `variant`/`variants` prose in the guarded graph; NC-P11-001 no longer advertises a nonexistent dual-read boundary; the browser gate covers the behavior owners identified by the audit; and the structured closure checker rejects missing Phase-11 browser evidence and incomplete Phase-10+ merged-tree closeout evidence.
