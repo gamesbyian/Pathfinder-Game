@@ -9,7 +9,7 @@
 | Status | in progress |
 | Base `main` SHA | `8432f175b26934606355b0f4150912fabd84085a` |
 | Branch | `chatgpt/phase14a-core-extraction-2026-08-31` |
-| PR | pending |
+| PR | #1624 |
 | Selected ledger row IDs | NC-P14-001 through NC-P14-003 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
@@ -91,7 +91,22 @@ than retaining an unowned compatibility facade.
 
 ## 5. 14A implementation log
 
-Pending.
+Initial implementation removes the mixed `core` dependency bag from composition, state, UI,
+renderer, editor, engine, input and their controller subgraphs.
+
+New owners:
+- `app-constants.ts` for immutable axis/mode/logic/overlay vocabulary and `DEV`;
+- `audio-service.ts` for the former sound bus behavior;
+- `deep-clone.ts` for the existing structuredClone/JSON fallback helper.
+
+Audio is injected only into engine/input paths that actually play sound. Constants are imported
+directly by their consumers. `app.ts` no longer constructs or returns a core facade, and
+`createAppFacade` no longer exposes `Core`.
+
+`modules/core.ts` and `modules/core.test.ts` are deleted. The extracted audio behavior has a
+dedicated unit test, and `check:naming-cleanup-phase14-core-closeout` is enrolled permanently in
+the validator graph. The first exact-head CI pass is expected to identify any remaining stale test
+fixtures or indirect consumers; those will be repaired rather than allowlisted.
 
 ## 6. 14A validation
 
