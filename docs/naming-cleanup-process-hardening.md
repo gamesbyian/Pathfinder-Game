@@ -345,7 +345,10 @@ record during the next reconciliation or immediate post-merge closeout when need
 
 A local `ci:fast`, a subset of CI, or a green run from an earlier behavior-changing PR revision is not evidence for item 6.
 Do not merge while required CI is queued or running. This rule still applies when branch protection does
-not mechanically prevent the merge.
+not mechanically prevent the merge. For this repository, GitHub-side PR/required-check enforcement is
+tracked in issue #1604. Until that issue is closed with the ruleset verified on `main`, this remains a
+manual barrier and every agent must query the exact final head's CI state immediately before merging.
+A checked box or prose claim is not a substitute for that GitHub state.
 
 Evidence records must distinguish **local validation** from **GitHub PR CI**. Never pre-fill a remote
 CI result as passed merely because the same command passed in another environment. If GitHub CI later
@@ -363,6 +366,14 @@ job's actual materialization rules.
   when the question is whether a tracked path exists or what HEAD contains. Do not replace a
   repository-existence check with `existsSync()` unless physical materialization is itself the
   contract being tested.
+
+- Classify artifacts by lifecycle and current readers/producers, not by directory. A history-heavy
+  `logs/` or `reports/` tree may contain maintained baseline/current artifacts. Register those
+  paths in the ledger's phase current-artifact set and scan them directly from Git under sparse CI;
+  blanket directory exclusions are forbidden for a phase that owns current artifacts there.
+- Temporary one-shot repair workflows are scaffolding, not maintained product surface. Exercise
+  them, let them produce the intended data commit, then delete them before closeout. If a workflow
+  is intentionally retained, it must satisfy the ordinary workflow documentation and naming checks.
 - Negative/synthetic fixtures should create the smallest representative artifact. Do not copy a
   maintained multi-megabyte report merely to prove that a pathname exists.
 - Any helper that reads unmaterialized Git blobs must stream them or size subprocess buffers from
@@ -440,7 +451,7 @@ For Phase 8 onward each entry has a `verification` object with these fields:
 
 Values are `pending`, `done`, or `not-applicable`. A row may use `not-applicable` only with a short explanation in `notes` or the phase PR.
 
-A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`. Under completion contract v4, every ledger row has an immutable `NC-P##-###` ID; every Phase-8+ row that is `in-progress` or `done` must point at a checked-in `verificationRecord`; Phase-8 rows identify their assigned serial `batch`; and every future `dual-read` row declares a compatibility `mode`, retirement gate, and owning boundary. The top-level `activeExecution` object identifies the one implementation batch currently allowed to be in progress.
+A future row can become `status: "done"` only when every verification field is `done` or `not-applicable`. Under completion contract v5, every ledger row has an immutable `NC-P##-###` ID; every Phase-8+ row that is `in-progress` or `done` must point at a checked-in `verificationRecord`; Phase-8 rows identify their assigned serial `batch`; and every future `dual-read` row declares a compatibility `mode`, retirement gate, and owning boundary. The top-level `activeExecution` object identifies the one implementation batch currently allowed to be in progress.
 
 The ledger also carries a Phase-8 hardening gate. Until that gate is marked ready, agents must not begin PR 8 implementation.
 
