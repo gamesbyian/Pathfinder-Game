@@ -24,6 +24,7 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver workstreams and current execution priority** |
+| [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) | Historical-evidence translation and post-Phase-15 solver research resumption gate |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research/evidence method, stop rules, promotion and selection discipline |
 | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer roles, proportional holdout gates, confirmation blocks, cross-generator challenge |
 | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection, fixed-work allocation, portfolio/configuration research |
@@ -52,7 +53,7 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 
 ## Solver research route
 
-Read, in order: current [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) → [`solver-research-operating-model.md`](solver-research-operating-model.md) → [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters → relevant specialist doc → [`tooling-catalog.md`](tooling-catalog.md) → dated evidence. Do not promote a specialist report's local next step above the current execution priority.
+Read, in order: current [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) → [`solver-research-operating-model.md`](solver-research-operating-model.md) → [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters → relevant specialist doc → [`tooling-catalog.md`](tooling-catalog.md) → dated evidence. Do not promote a specialist report's local next step above the current execution priority. After Phase 15, use [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) before executing or aggregating recipes from frozen pre-cleanup evidence.
 
 For prior evidence, start at [`../reports/README.md`](../reports/README.md) or run `node scripts/research-status-index.mjs --compact --query=<term>`. For stress data use [`../data/stress/README.md`](../data/stress/README.md). Load [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md) only for rare rules/gotchas/facts/provenance.
 
