@@ -4,8 +4,9 @@ import type { RequireDeps } from '../state.js';
 import { popNavigationUndoStack, setDevCorpus, toggleDevMode } from '../state-actions.js';
 import { defaultReportError } from '../error-reporting.js';
 import { OVERLAY_NONE, PLAY, REVIEW } from '../app-constants.js';
+import { deepCloneLevel } from '../domain/level-codec.js';
 
-export function createOptionsController({ state, ui, engine, themes, data, devCorpus, solverApi, levelUtils, persistence, audioService, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
+export function createOptionsController({ state, ui, engine, themes, data, devCorpus, solverApi, persistence, audioService, reportError = defaultReportError }: RequireDeps<'data' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
 
     // --- Mute ---
 
@@ -46,7 +47,7 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
     (document.getElementById('devGenBtn') as any).onclick = async () => {
         ui.closeAllModals();
         const hints = (state.ENGINE.foundHintsSinceLoad || []).filter((path: any) =>
-            solverApi.validateCandidatePath(levelUtils.deepCloneLevel(state.ENGINE.level), path)?.ok
+            solverApi.validateCandidatePath(deepCloneLevel(state.ENGINE.level), path)?.ok
         );
         if (!hints.length) { ui.showMessage('No valid hints found yet.', ''); return; }
         const hintText = JSON.stringify(hints).replace(/\s/g, '');
