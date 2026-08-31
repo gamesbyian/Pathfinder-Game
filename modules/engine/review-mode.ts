@@ -7,6 +7,7 @@ import { clearEditorUndoStack, clearEditorTriggerableFalseGoalCells, clearNaviga
          setReviewSubmissions as setReviewSubmissionsState } from '../state-actions.js';
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { hintPaths, upgradeLegacyHints } from '../domain/hint-types.js';
+import { parseRawLevel } from '../domain/level-codec.js';
 
 /**
  * Pure decision: after removing the submission at `removedIdx`, which review index should load
@@ -22,7 +23,7 @@ export function planSubmissionAdvance(remainingCount: any, removedIdx: any) {
     return { loadReviewIdx: Math.min(removedIdx, remainingCount - 1), allDone: false };
 }
 
-export function createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane = () => {} }: RequireDeps<'levelUtils'>) {
+export function createReviewModeController({ state, ui, editor, PathNavigator, refreshLevelRatingPane = () => {} }: RequireDeps<never>) {
     function resetEmptyReviewState() {
         setReviewIndex(state, 0);
         setEditorWorkingLevel(state, null);
@@ -57,7 +58,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         const safeIdx = Math.max(0, Math.min(idx, subs.length - 1));
         setReviewIndex(state, safeIdx);
         const rawLevel   = subs[safeIdx].levelData;
-        const normalized = levelUtils.processRawLevel(rawLevel, safeIdx);
+        const normalized = parseRawLevel(rawLevel, safeIdx);
         if (!normalized) {
             ui.showMessage('Could not load submission.', 'error');
             return;
