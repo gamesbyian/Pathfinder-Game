@@ -2,7 +2,7 @@
   "schemaVersion": 5,
   "authority": "docs/naming-cleanup-plan.md",
   "permanentVocabularyAuthority": "docs/naming-and-vocabulary.md",
-  "generatedForPlanRevision": "2026-08-31-phase15-hardened-execution-plan",
+  "generatedForPlanRevision": "2026-08-31-phase15a-contract-decomposition",
   "status": "active",
   "entries": [
     {
@@ -4165,14 +4165,15 @@
     },
     {
       "id": "NC-P15-001",
-      "old": "shared --trove-root CLI and troveRootArg API",
-      "new": "--variant-family-dataset-root with an explicitly designed legacy alias",
+      "old": "external --trove-root variant-family dataset-root CLI",
+      "new": "--variant-family-dataset-root with one owned legacy CLI alias",
       "kind": "interface",
       "risk": "medium",
       "persistence": "dual-read",
       "phase": 15,
+      "batch": "15C",
       "status": "pending",
-      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "notes": "15A narrowed the inherited CLI/API bundle. External dataset-root CLI compatibility is owned here; private helper/local names moved to NC-P15-008. Inventory and decision record: docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
       "verification": {
@@ -4184,26 +4185,27 @@
         "closeoutAudit": "pending"
       },
       "compatibility": {
-        "mode": "runtime-compatibility-transition",
+        "mode": "external-config-transition",
         "retireWhen": "phase-15-review",
-        "owner": "shared family-path root parser and all family CLI callers"
+        "owner": "scripts/family-paths.mjs shared dataset-root CLI parser"
       },
       "inventoryTerms": [
         "--trove-root",
-        "troveRootArg",
-        "familyArtifactRoots"
+        "--variant-family-dataset-root",
+        "family-paths.mjs"
       ]
     },
     {
       "id": "NC-P15-002",
-      "old": "family-run manifest trove field",
-      "new": "variantFamilyDataset field with permanent historical-read normalization",
+      "old": "family-run manifest schemaVersion 1 trove field",
+      "new": "schemaVersion 2 variantFamilyDataset field with permanent v1 trove normalization",
       "kind": "field",
       "risk": "high",
       "persistence": "dual-read",
       "phase": 15,
+      "batch": "15D",
       "status": "pending",
-      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "notes": "15A fixed the schema decision: new writes bump family-run manifests from v1/trove to v2/variantFamilyDataset; the validator/index permanently normalize authentic v1 manifests and reject conflicts. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
       "verification": {
@@ -4215,26 +4217,29 @@
         "closeoutAudit": "pending"
       },
       "compatibility": {
-        "mode": "runtime-compatibility-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "family-run manifest writer/normalizer and family-index readers"
+        "mode": "permanent-historical-read",
+        "retireWhen": "never",
+        "owner": "family-run manifest writer/validator and family-index reader"
       },
       "inventoryTerms": [
         "buildFamilyEvaluationRunManifest",
         "FAMILY_RUN_REQUIRED",
-        "invariantFields"
+        "invariantFields",
+        "trove",
+        "variantFamilyDataset"
       ]
     },
     {
       "id": "NC-P15-003",
-      "old": "live dated wide-trove report/artifact path convention",
-      "new": "canonical new-run variant-family-dataset paths while retaining historical paths",
+      "old": "family-index discovery of historical wide-trove-attempts-* paths",
+      "new": "one discovery owner for historical wide-trove and canonical variant-family-dataset attempt paths",
       "kind": "artifact",
       "risk": "high",
       "persistence": "dual-read",
       "phase": 15,
+      "batch": "15E",
       "status": "pending",
-      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "notes": "15A split historical-reader discovery from current writer filenames. Frozen dated paths remain readable permanently; current writer migration is NC-P15-009. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
       "verification": {
@@ -4246,26 +4251,28 @@
         "closeoutAudit": "pending"
       },
       "compatibility": {
-        "mode": "runtime-compatibility-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "variant-family dataset workflow, merger, and family-index discovery"
+        "mode": "permanent-historical-read",
+        "retireWhen": "never",
+        "owner": "scripts/family-index-lib.mjs attempt-evidence discovery/normalization"
       },
       "inventoryTerms": [
         "wide-trove-attempts-",
-        "2026-08-07-wide-trove"
+        "variant-family-dataset-attempts-",
+        "family-index-lib.mjs"
       ]
     },
     {
       "id": "NC-P15-004",
-      "old": "application/Firestore naked fingerprint contract cluster",
-      "new": "levelFingerprint application names while preserving stored document IDs and serialized compatibility",
+      "old": "application-local generic fingerprint fields/parameters for level identity",
+      "new": "levelFingerprint application vocabulary while preserving all stored identity bytes/paths/fields",
       "kind": "field",
       "risk": "high",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 15,
+      "batch": "15F",
       "status": "pending",
-      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
-      "migrationClass": "compatibility-boundary-migration",
+      "notes": "15A found no persisted generic fingerprint field in this cluster: Firestore already stores levelFingerprint/fingerprintVersion and uses the computed value as document/path identity. The inherited dual-read claim was removed; stored IDs, algorithm/version, old-document migration, duplicate detection, ratings, hints, and submission behavior are invariants. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null,
       "verification": {
         "surfaceInventory": "done",
@@ -4275,28 +4282,25 @@
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
-      "compatibility": {
-        "mode": "runtime-compatibility-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "application state/actions, submission ports, and persistence repositories"
-      },
       "inventoryTerms": [
-        "LevelRatingState",
         "rating.fingerprint",
+        "LocalCorpusMatch",
+        "DuplicateCheckPresentation",
         "loadLevelRating",
         "getLocalLevelHints"
       ]
     },
     {
       "id": "NC-P15-005",
-      "old": "CP-SAT explicit-prefix oracle result/job identities",
-      "new": "reference-prefixed new result/job identities with historical-schema normalization",
+      "old": "CP-SAT explicit-prefix result schemaVersion 1 oracleLabel/oracleReason/oracle-unknown",
+      "new": "schemaVersion 2 referenceLabel/referenceReason/reference-unknown with permanent v1 normalization",
       "kind": "field",
       "risk": "high",
       "persistence": "dual-read",
       "phase": 15,
+      "batch": "15G",
       "status": "pending",
-      "notes": "Created by the Phase-8 specification-accounting amendment. This is deferred compatibility design work, not authorization to rename the live boundary during Phase 8 closeout. Surface inventory completed by docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md; implementation and migration validation remain pending.",
+      "notes": "15A narrowed the inherited result/job/input bundle to the persisted explicit-prefix result schema. New writes bump to v2; v1/v2 and mixed-era shards normalize through the owning combiner. Workflow job/input/source-schema identities are NC-P15-010..012. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
       "verification": {
@@ -4308,29 +4312,29 @@
         "closeoutAudit": "pending"
       },
       "compatibility": {
-        "mode": "runtime-compatibility-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "CP-SAT explicit-prefix workflow, result writer, analyzer, and historical artifact readers"
+        "mode": "permanent-historical-read",
+        "retireWhen": "never",
+        "owner": "CP-SAT explicit-prefix result writer/normalizer and workflow combiner"
       },
       "inventoryTerms": [
         "oracleLabel",
         "oracleReason",
-        "oracle-shards",
-        "oracle-abstain",
         "oracle-unknown",
-        "atlas-abstain"
+        "referenceLabel",
+        "referenceReason"
       ]
     },
     {
       "id": "NC-P15-006",
-      "old": "atlas-eligibility.mjs / selectEligibleAtlasLevels",
-      "new": "cpsat-branch-label-eligibility.mjs / selectEligibleCpsatBranchLevels",
+      "old": "atlas-eligibility.mjs / selectEligibleAtlasLevels / isEligibleForCpsatAtlas",
+      "new": "cpsat-branch-label-eligibility.mjs / selectEligibleCpsatBranchLevels / branch-label-specific predicate",
       "kind": "tool",
       "risk": "medium",
       "persistence": "none",
       "phase": 15,
+      "batch": "15B",
       "status": "pending",
-      "notes": "Created by the Phase-8 specification-accounting analogous-exclusion audit from batch 8E. Shared by prune-gap collection and CP-SAT hint harvest; implementation requires a consumer-inward shared-library rename. No implementation is authorized by the Phase-8 closeout amendment. Surface inventory: docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md.",
+      "notes": "15A reconfirmed this is a private shared-library/import graph with no persistence contract. Rename atomically and pin eligibility population parity; no compatibility file/export alias. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null,
       "verification": {
@@ -4349,14 +4353,125 @@
     },
     {
       "id": "NC-P15-007",
-      "old": "--atlas-dir / ATLAS_DIR / atlasDir / atlasFiles",
-      "new": "--prune-gap-dir / PRUNE_GAP_DIR / pruneGapDir / pruneGapFiles",
+      "old": "--atlas-dir CLI and ATLAS_DIR local variable in prune-gap consumers",
+      "new": "--prune-gap-dir CLI and PRUNE_GAP_DIR local variable",
+      "kind": "interface",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 15,
+      "batch": "15H",
+      "status": "pending",
+      "notes": "15A corrected two inherited assumptions: ATLAS_DIR is a local constant, not an environment variable, and no maintained machine/external caller for --atlas-dir was found beyond current docs. Generated report fields moved to NC-P15-013. No legacy alias without a demonstrated caller. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "direct-current-surface-rename",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "inventoryTerms": [
+        "--atlas-dir",
+        "ATLAS_DIR",
+        "--prune-gap-dir",
+        "PRUNE_GAP_DIR"
+      ]
+    },
+    {
+      "id": "NC-P15-008",
+      "old": "troveRootArg API and troveRoot locals meaning the mounted variant-family dataset root",
+      "new": "variantFamilyDatasetRootArg API and variantFamilyDatasetRoot local vocabulary",
+      "kind": "symbol",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 15,
+      "batch": "15C",
+      "status": "pending",
+      "notes": "15A split private source/API vocabulary from NC-P15-001 because it has no external alias lifetime. Migrate all imports/current call sites atomically; no private compatibility alias. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "direct-current-surface-rename",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "inventoryTerms": [
+        "troveRootArg",
+        "troveRoot",
+        "variantFamilyDatasetRootArg"
+      ]
+    },
+    {
+      "id": "NC-P15-009",
+      "old": "current 2026-08-07-wide-trove summary/attempt/source-run writer paths",
+      "new": "stable variant-family-dataset summary/attempt/source-run paths for new runs",
+      "kind": "artifact",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 15,
+      "batch": "15E",
+      "status": "pending",
+      "notes": "15A split current writer/workflow filenames from NC-P15-003 historical discovery. New runs use stable variant-family-dataset names; committed historical dated paths remain frozen and are read via NC-P15-003. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "inventoryTerms": [
+        "2026-08-07-wide-trove",
+        "wide-trove-summary",
+        "variant-family-dataset-summary",
+        "collect-variant-family-dataset.yml"
+      ]
+    },
+    {
+      "id": "NC-P15-010",
+      "old": "cpsat-explicit-prefix-reference workflow job id oracle-shards",
+      "new": "reference-shards workflow-local job id",
+      "kind": "workflow",
+      "risk": "medium",
+      "persistence": "none",
+      "phase": 15,
+      "batch": "15G",
+      "status": "pending",
+      "notes": "15A split workflow-local dependency identity from NC-P15-005. Rename the job id and every needs/expression reference atomically; it has no historical data reader. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "direct-current-surface-rename",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "inventoryTerms": [
+        "oracle-shards",
+        "reference-shards",
+        "needs:"
+      ]
+    },
+    {
+      "id": "NC-P15-011",
+      "old": "external explicit-prefix case-format token atlas-abstain",
+      "new": "reference-abstain canonical case-format token with one legacy parser alias",
       "kind": "interface",
       "risk": "high",
       "persistence": "dual-read",
       "phase": 15,
+      "batch": "15G",
       "status": "pending",
-      "notes": "Created by the Phase-8 specification-accounting analogous-exclusion audit from batch 8E. Shared CLI and generated-report boundary across offline replay and must-crossing analysis; design dual-read CLI/schema normalization before canonical writes. No implementation is authorized by the Phase-8 closeout amendment. Surface inventory: docs/naming-cleanup-phase-records/phase-08-specification-accounting-amendment.md.",
+      "notes": "15A split the workflow/CLI input token from NC-P15-005. The shared input parser owns the transition alias; current workflow/docs single-write the canonical token after migration. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": null,
       "verification": {
@@ -4368,15 +4483,76 @@
         "closeoutAudit": "pending"
       },
       "compatibility": {
-        "mode": "runtime-compatibility-transition",
+        "mode": "external-config-transition",
         "retireWhen": "phase-15-review",
-        "owner": "offline replay and must-crossing analysis CLI/report normalizer"
+        "owner": "extractExplicitPrefixCases input-format parser plus cpsat-explicit-prefix-reference workflow input"
       },
       "inventoryTerms": [
-        "--atlas-dir",
-        "ATLAS_DIR",
+        "atlas-abstain",
+        "reference-abstain",
+        "case_format",
+        "--format"
+      ]
+    },
+    {
+      "id": "NC-P15-012",
+      "old": "known-solution-prefix branch schemaVersion 1 oracle metadata / oracle-abstain labels",
+      "new": "schemaVersion 2 reference metadata / reference-abstain labels with permanent v1 normalization",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "dual-read",
+      "phase": 15,
+      "batch": "15G",
+      "status": "pending",
+      "notes": "15A found this is still a live writer, not frozen-only residue. New known-prefix branch artifacts bump to v2 and canonical reference vocabulary; extractExplicitPrefixCases permanently reads the committed v1 winning-prefix fixture. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "compatibility-boundary-migration",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "compatibility": {
+        "mode": "permanent-historical-read",
+        "retireWhen": "never",
+        "owner": "known-solution-prefix branch writer plus extractExplicitPrefixCases historical normalizer"
+      },
+      "inventoryTerms": [
+        "oracle-abstain",
+        "unknownSiblingLabel",
+        "oracleAbstentions",
+        "collect-known-solution-prefix-branches"
+      ]
+    },
+    {
+      "id": "NC-P15-013",
+      "old": "generated atlasDir / atlasFiles metadata in prune-gap analysis reports",
+      "new": "generated pruneGapDir / pruneGapFiles metadata for new reports",
+      "kind": "field",
+      "risk": "high",
+      "persistence": "none",
+      "phase": 15,
+      "batch": "15H",
+      "status": "pending",
+      "notes": "15A split generated report fields from NC-P15-007. No maintained reader of these metadata fields was found, so old reports remain frozen and new writers rename directly; no dead dual-read normalizer. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history",
+      "verificationRecord": null,
+      "verification": {
+        "surfaceInventory": "done",
+        "implementation": "pending",
+        "targetedValidation": "pending",
+        "consumerAudit": "pending",
+        "behavioralParity": "pending",
+        "closeoutAudit": "pending"
+      },
+      "inventoryTerms": [
         "atlasDir",
-        "atlasFiles"
+        "atlasFiles",
+        "pruneGapDir",
+        "pruneGapFiles"
       ]
     }
   ],
@@ -4440,17 +4616,18 @@
     "11": "docs/naming-cleanup-phase-records/phase-11.md",
     "12": "docs/naming-cleanup-phase-records/phase-12.md",
     "13": "docs/naming-cleanup-phase-records/phase-13.md",
-    "14": "docs/naming-cleanup-phase-records/phase-14.md"
+    "14": "docs/naming-cleanup-phase-records/phase-14.md",
+    "15": "docs/naming-cleanup-phase-records/phase-15.md"
   },
   "activeExecution": {
-    "status": "idle",
-    "phase": null,
-    "batch": null,
-    "branch": null,
+    "status": "active",
+    "phase": 15,
+    "batch": "15A",
+    "branch": "chatgpt/phase15a-contract-decomposition-2026-08-31",
     "pr": null,
-    "baseMainSha": null,
-    "recordPath": null,
-    "notes": "Naming cleanup is complete through Phase 14. Phase-15 preparation #1634 and pre-entry forensic repair #1636 are merged; all NC-P15-001 through NC-P15-007 remain pending. Phase 15 has not started. The next authorized step is the specification-only 15A contract-decomposition gate in docs/naming-cleanup-plan.md."
+    "baseMainSha": "fad988569c70802db7d69b85f4443a4daf0486a6",
+    "recordPath": "docs/naming-cleanup-phase-records/phase-15.md",
+    "notes": "Phase 15A specification-only contract decomposition and control-plane gate; all implementation rows remain pending."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior. Post-closeout audit correction (2026-08-31): NC-P08-024/025 are direct current-source renames, not dual-read boundaries; 8G proved no persisted artifact or historical reader existed, and the Phase-8 closeout now bans the retired fields rather than treating comments as compatibility reads. Phase-15 hardening (2026-08-31): the final phase now requires a rowless contract-decomposition gate before any NC-P15 implementation, row splitting when bundled identities have different owners/lifetimes, reader-first executable historical fixtures, schema-version decisions, mixed-era join/discovery proof, canonical single-write proof, small serial boundary-specific batches, an independent merged-tree hostile closeout, a solver-research resumption evidence bundle, and a separate archival/finalization handoff. This amendment changes no NC-P15 row status or canonical target.",
   "phaseBatches": {
@@ -4463,6 +4640,18 @@
       "8F",
       "8G",
       "8H"
+    ],
+    "15": [
+      "15A",
+      "15B",
+      "15C",
+      "15D",
+      "15E",
+      "15F",
+      "15G",
+      "15H",
+      "15I",
+      "15J"
     ]
   },
   "batchCompletions": {
@@ -4505,6 +4694,56 @@
       "status": "merged",
       "pr": 1595,
       "mergeCommit": "d41204e42cbc99d779dd6fbc60483ea36a84a562"
+    },
+    "15A": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15B": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15C": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15D": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15E": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15F": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15G": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15H": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15I": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
+    },
+    "15J": {
+      "status": "pending",
+      "pr": null,
+      "mergeCommit": null
     }
   },
   "phaseCloseoutCoverage": {
@@ -5448,6 +5687,20 @@
           "recordPath": "docs/naming-cleanup-phase-records/phase-14.md"
         }
       ]
+    }
+  },
+  "phaseBatchKinds": {
+    "15": {
+      "15A": "specification-gate",
+      "15B": "implementation",
+      "15C": "implementation",
+      "15D": "implementation",
+      "15E": "implementation",
+      "15F": "implementation",
+      "15G": "implementation",
+      "15H": "implementation",
+      "15I": "merged-tree-closeout",
+      "15J": "finalization"
     }
   }
 }
