@@ -12,16 +12,8 @@ const root = path.resolve(rootArg?.slice('--scan-root='.length) ?? process.cwd()
 const ledgerPath = path.resolve(ledgerArg?.slice('--ledger='.length) ?? 'docs/naming-cleanup-ledger.json');
 const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8'));
 const read = file => readFileSync(path.join(root, file), 'utf8');
-const legacy = [
-  'solver:bench',
-  'solver:speed-probe',
-  'stress:benchmark',
-  'run-solverv2-direct.mjs',
-  'portfolio-sweep-reports-to-benchmark.mjs',
-  'solver:combine-corpus2-batches',
-  'reports/stress/benchmark-parallel.json',
-  'reports/stress/benchmark-latest-random.json',
-];
+const phaseRows = ledger.entries.filter(entry => entry.phase === 9);
+const legacy = [...new Set(phaseRows.map(entry => entry.old))];
 const roots = ['modules', 'scripts', 'docs', '.github', 'data'];
 const topLevel = ['package.json', 'AGENTS.md', 'README.md', 'DEVELOPER_REFERENCE.md'];
 const extensions = new Set(['.js', '.mjs', '.ts', '.tsx', '.md', '.json', '.yml', '.yaml']);
@@ -46,7 +38,6 @@ const files = [...roots.flatMap(walk), ...topLevel]
   .filter(file => existsSync(path.join(root, file)) && statSync(path.join(root, file)).isFile() &&
     statSync(path.join(root, file)).size <= 2 * 1024 * 1024 && extensions.has(path.extname(file)));
 const failures = [];
-const phaseRows = ledger.entries.filter(entry => entry.phase === 9);
 const coverage = ledger.phaseCloseoutCoverage?.['9'] ?? {};
 for (const row of phaseRows) {
   if (coverage[row.id]?.kind !== 'literal-legacy-surface' || coverage[row.id]?.legacy !== row.old) {
