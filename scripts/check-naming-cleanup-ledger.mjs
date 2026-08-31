@@ -17,8 +17,6 @@ import process from 'node:process';
 
 import { repositoryPathKind } from './repository-file-view.mjs';
 
-import { repositoryPathKind } from './repository-file-view.mjs';
-
 const root = process.cwd();
 const ledgerArg = process.argv.find(arg => arg.startsWith('--ledger='));
 const ledgerRelativePath = ledgerArg?.slice('--ledger='.length) || 'docs/naming-cleanup-ledger.json';
