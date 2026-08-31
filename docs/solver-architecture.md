@@ -228,7 +228,7 @@ Shared `level-data-io.mjs` parsers reject bare numeric ambiguity:
 
 `opts.schedulerMode = 'legacy-latency-portfolio-experiment'` is offline-only; live Play/Editor/Review/hint discovery use `'production'`. Its `pass1Ms`/`pass2Ms`/`pass3Ms` policy is explicitly a **legacy wall-clock scheduler experiment**, useful for historical latency/architecture questions but not machine-independent equal-work evidence. Best published 2026-07-12 variant was **1.51×** legacy with equal solves; a later repair-speed change moved a stress comparison from **0.57×** to **1.45×**, illustrating exactly why elapsed-time thresholds are host/implementation sensitive. New scheduler research should use work quanta rather than extending this ms policy. See `reports/portfolio/portfolio-scheduler-decision.md` and 2026-07-16 reverification.
 
-Tools: `solver:legacy-latency-portfolio-report`, `solver:legacy-latency-portfolio-replay`, `portfolio-solve-sweep.mjs`. The sweep supports JSONL `--resume`, mechanic filters, baseline/priority ordering, dependency-hashed negative `--attempt-cache`, child `--workers`, and `--race-pool-size`; legacy scheduler required for race pools, which are incompatible with `--node-budget`.
+Tools: `solver:legacy-latency-portfolio-report`, `solver:legacy-latency-portfolio-replay`, `portfolio-solve-sweep.mjs`. The sweep supports JSONL `--resume`, mechanic filters, baseline/priority ordering, dependency-hashed negative `--attempt-cache`, child `--workers`, and `--race-pool-size`. Race pools require `--scheduler-mode=production` because the race implementation covers the plain production attempt ladder, not the legacy latency scheduler; race pools remain incompatible with `--node-budget`.
 
 ### Repair extra budget
 
