@@ -336,9 +336,14 @@ Before merge:
 4. verify targeted validation, required aggregate CI, ledger state, and the checked-in execution record agree;
 5. record the current-main SHA, head SHA, and comparison result in the batch record;
 6. wait for the repository's required GitHub PR CI for the **current head/base pair** to finish and verify every required job is green;
-7. record the CI run ID, tested PR merge/ref SHA when available, conclusion, and the head SHA it corresponds to.
+7. record a completed GitHub CI run ID/conclusion and the head/tested-ref SHA it actually covered; after any evidence-only commit, rerun CI and verify the new final head is green before merge.
 
-A local `ci:fast`, a subset of CI, or a green run from an earlier PR revision is not evidence for item 6.
+The checked-in record does not need to predict the run ID of the CI execution triggered by the commit
+that records prior evidence. That would create a self-invalidating loop. The final-head run is verified
+from GitHub before merge, may be captured in PR/merge metadata, and is backfilled into the durable
+record during the next reconciliation or immediate post-merge closeout when needed.
+
+A local `ci:fast`, a subset of CI, or a green run from an earlier behavior-changing PR revision is not evidence for item 6.
 Do not merge while required CI is queued or running. This rule still applies when branch protection does
 not mechanically prevent the merge.
 
