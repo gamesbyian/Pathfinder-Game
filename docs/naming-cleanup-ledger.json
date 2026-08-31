@@ -1410,9 +1410,9 @@
       "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
+        "implementation": "done",
         "targetedValidation": "pending",
-        "consumerAudit": "pending",
+        "consumerAudit": "done",
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
@@ -1436,9 +1436,9 @@
       "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
+        "implementation": "done",
         "targetedValidation": "pending",
-        "consumerAudit": "pending",
+        "consumerAudit": "done",
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
@@ -1457,9 +1457,9 @@
       "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
+        "implementation": "done",
         "targetedValidation": "pending",
-        "consumerAudit": "pending",
+        "consumerAudit": "done",
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
@@ -1478,9 +1478,9 @@
       "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
+        "implementation": "done",
         "targetedValidation": "pending",
-        "consumerAudit": "pending",
+        "consumerAudit": "done",
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
@@ -1499,9 +1499,9 @@
       "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
+        "implementation": "done",
         "targetedValidation": "pending",
-        "consumerAudit": "pending",
+        "consumerAudit": "done",
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
       },
@@ -4459,7 +4459,7 @@
     "phase": 11,
     "batch": "11B",
     "branch": "chatgpt/phase11b-atomic-orientation-rename-2026-08-30",
-    "pr": null,
+    "pr": 1612,
     "baseMainSha": "53c32911e840a342c9eb6d90ecd0d26fd59052ae",
     "recordPath": "docs/naming-cleanup-phase-records/phase-11.md",
     "notes": "Phase 11B atomic runtime orientation rename in progress from post-11A main. Runtime state/action/geometry/render/input/UI move together; research/editor-palette variant terminology remains retained."
