@@ -121,8 +121,8 @@ for (const id of currentResidual) {
         routingRegime,
         offered,
         features: {
-            reqLen: level.reqLen,
-            reqInt: level.reqInt,
+            reqLen: level.requiredLength,
+            reqInt: level.requiredIntersections,
             gates: level.gateKeys?.length ?? 0,
             mustPass: level.mustPassKeys?.length ?? 0,
             mustCross: level.mustCrossKeys?.length ?? 0,
