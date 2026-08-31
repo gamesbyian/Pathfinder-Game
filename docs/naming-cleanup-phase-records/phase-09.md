@@ -6,10 +6,13 @@
 | --- | --- |
 | Phase | 9 |
 | Batch | single phase implementation PR |
-| Status | implementation and validation complete; PR handoff pending |
+| Status | original implementation merged, but closure evidence superseded by `phase-09-repair.md` after post-merge CI/audit defects |
 | Base `main` SHA | `a58a7d861c427c0dfee784f36069d865bc93b315` |
-| Branch | `work` |
-| PR | pending external creation; local environment has no authenticated PR-creation surface |
+| Branch | `codex/implement-phase-9-of-naming-cleanup-plan` |
+| PR | #1599 |
+| PR head | `5226c45553bc767cc51096e1c8d4b7134cb2ddbf` |
+| Merge commit | `15cbf90a4b1f2bda5037ab4f6ef6584f45dc8154` |
+| GitHub CI | run `33345175850`: **failed** after merge |
 | Selected ledger row IDs | `NC-P09-001` through `NC-P09-008` |
 | Reconciliation mode | full (phase entry and phase closeout) |
 | Highest risk in batch | medium |
@@ -102,7 +105,10 @@ Renamed the two executable tools and the combiner test, migrated package and wor
 
 ## 7. Targeted contract validation
 
-Results are finalized in the commit containing this record:
+The implementation session recorded the following local/branch results. These do **not** constitute
+final closure evidence: GitHub CI for PR #1599's current head/base pair later failed after the PR had
+already merged. The failure and repair are authoritative in
+[`phase-09-repair.md`](phase-09-repair.md).
 
 | Command | Boundary proved | Result |
 | --- | --- | --- |
@@ -113,7 +119,7 @@ Results are finalized in the commit containing this record:
 | `npm run check:documentation-links` | current-doc paths | passed |
 | `npm run check:naming-cleanup-phase9-closeout` | consumer-inward legacy-residue scan plus canonical command/path contracts | passed |
 | `npm run test:naming-cleanup-phase9-closeout` | negative fixtures prove legacy spellings and command-target drift fail closeout | passed |
-| `npm run ci:fast` | aggregate code/workflow/current-doc validation | passed: 104 fast unit files plus the complete Node/check task set |
+| `npm run ci:fast` | local aggregate code/workflow/current-doc validation | passed in the implementation environment; **not equivalent to remote PR CI** |
 
 ## 8. Consumer-inward closeout audit
 
@@ -137,12 +143,27 @@ Full phase reconciliation was chosen because this is the sole Phase-9 implementa
 - [x] branch started from recorded current head and the Phase-8 predecessor is merged in the ledger;
 - [x] intended diff is unique/non-empty and contains only Phase-9/adjacent validation work;
 - [x] no Phase-10 implementation is stacked;
-- [x] targeted and aggregate validation green;
+- [x] targeted/local aggregate validation was reported green;
+- [ ] required GitHub PR CI was **not** observed green before merge; run `33345175850` later failed in `node-tests` and `checks`;
 - [x] rows point to this record and temporary aliases are retired;
 - [x] `activeExecution` is idle and Phase 9 is closed in the same atomic PR;
 - [x] no behavior/evidence change was identified;
 - [ ] PR creation remains an external handoff because this environment has neither an authenticated `gh` session nor a `make_pr` tool; commits are recorded in Git metadata.
 
-## 12. Closure and merge handoff
+## 12. Post-merge correction
 
-Phase 10 must start from the merged Phase-9 commit. If validation or post-merge auditing finds a missed consumer, reopen the affected Phase-9 verification state rather than relying on this closeout.
+PR #1599 merged before its required GitHub CI completed. The finished run was red:
+
+- `node-tests`: the new Phase-9 closeout checker/test incorrectly depended on sparse-excluded report
+  files being physically materialized;
+- `checks`: incremental text checking of the renamed large Corpus-2 report overflowed
+  `execFileSync`'s default `git show` buffer.
+
+A post-merge consumer audit also found that the new parallel stress-measurement default output could
+mislabel Corpus-2/custom runs as `solver-corpus1-latest.json`, and that the distinct
+`stress:benchmark:raced` -> `stress:measure-solver:raced` rename had been implemented without the
+explicit classification demanded by Phase-9 preparation.
+
+Phase 9 was therefore reopened. Its current closure authority is
+[`phase-09-repair.md`](phase-09-repair.md). Phase 10 must not begin until that repair is complete
+and the ledger again advances Phase 9 on evidence that matches GitHub's actual CI state.
