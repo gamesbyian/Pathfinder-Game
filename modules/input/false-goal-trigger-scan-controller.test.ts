@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { afterEach, test, vi } from 'vitest';
 import { PACK } from '../domain/cell-key.js';
 import { createFalseGoalTriggerScanController } from './false-goal-trigger-scan-controller.js';
+import { EDITOR, OVERLAY_NONE } from '../app-constants.js';
 
 function makeLevel() {
     return {
@@ -34,14 +35,13 @@ function makeHarness(solverApi: any, reportError: (...args: any[]) => void = () 
                 selectedTool: null,
                 draggedObject: null,
             },
-            mode: 'editor',
-            overlayState: 'none',
+            mode: EDITOR,
+            overlayState: OVERLAY_NONE,
             solver: { controller: null },
             isDirty: false,
         },
     };
     const controller = createFalseGoalTriggerScanController({
-        core: { EDITOR: 'editor', OVERLAY_NONE: 'none' },
         state,
         ui: { showMessage() {} },
         levelUtils: { deepCloneLevel: (value: any) => value },
