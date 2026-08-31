@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "description": "Phase-13 pre-migration ownership baseline. Every non-frozen current hit must be explicitly classified; update only after reviewing its dataflow.",
+  "description": "Post-Phase-13B reqLen/reqInt compatibility ownership ratchet. Every non-frozen current legacy-token hit must remain explicitly classified while normalized runtime consumers stay at zero.",
   "rawWireBoundary": [
     "modules/domain/domain.test.ts",
     "modules/domain/hint-acceptance-pipeline.test.ts",
@@ -114,6 +114,6 @@
     "scripts/stress/query-mustcross-flipper-eligibility.mjs",
     "scripts/stress/repair-retreat-binary-search.mjs"
   ],
-  "notes": "Post-Phase-13B ownership ratchet. Normalized/runtime code uses requiredLength/requiredIntersections and must never re-enter this legacy-token inventory. rawWireBoundary is the reviewed permanent reqLen/reqInt compatibility surface, including raw fixtures and the codec/schema owner; retainedNonNormalizedUse contains naming authorities and independent report/result schemas whose legacy labels are not NormalizedLevel properties. The default checker permanently requires normalized and mixed legacy ownership to stay empty once normalizedMigrationComplete is true.",
+  "notes": "Post-Phase-13B ownership ratchet. Normalized/runtime code uses requiredLength/requiredIntersections and must never re-enter this legacy-token inventory. rawWireBoundary is the reviewed permanent reqLen/reqInt compatibility surface, including raw fixtures and the codec/schema owner; retainedNonNormalizedUse contains naming authorities and independent report/result schemas whose legacy labels are not NormalizedLevel properties. The default boundary checker permanently requires normalized and mixed legacy ownership to stay empty. Phase 13C additionally performs consumer-inward normalized-object access checks so a raw-file allowlist cannot mask stale runtime property reads.",
   "normalizedMigrationComplete": true
 }
