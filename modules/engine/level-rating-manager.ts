@@ -12,14 +12,15 @@ import {
 import { getLevelFingerprint, getLegacyLevelFingerprints } from '../domain/level-fingerprint.js';
 import { defaultReportError } from '../error-reporting.js';
 import { PLAY, REVIEW } from '../app-constants.js';
+import { denormalizeLevel } from '../domain/level-codec.js';
 
-export function createLevelRatingManager({ state, ui, data, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils'>) {
+export function createLevelRatingManager({ state, ui, data, persistence, reportError = defaultReportError }: RequireDeps<'data'>) {
 
     function getCurrentRawLevel() {
         const eng = state.ENGINE;
         if (eng.mode === PLAY) return data.getLevel(eng.levelIdx);
         const wl = eng.editor.workingLevel;
-        return wl ? levelUtils.denormalizeLevel(wl) : null;
+        return wl ? denormalizeLevel(wl) : null;
     }
 
     function render() {
