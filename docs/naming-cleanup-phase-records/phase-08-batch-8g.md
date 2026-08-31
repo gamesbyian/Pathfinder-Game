@@ -266,3 +266,22 @@ No unclassified live hit remains in this batch's scope.
 | Known structural-only surfaces | `solver-diagnostics.yml`'s full GHA dispatch remains structurally-validated-only (workflow lint/contract checks), matching its pre-batch coverage class; the generated-field rename remains untested-by-execution because its only caller is dead code (documented, not silently assumed safe) |
 
 Batch 8H (remaining low-risk semantic qualification sweep and Phase-8-wide closeout) must not start on this unmerged branch. The next batch's session must start from new current `main` after this PR merges, record this batch's merged PR/commit in ledger `batchCompletions["8G"]`, and only then claim 8H.
+
+
+## Post-closeout compatibility-accounting correction
+
+A later Phases 8-14 forensic audit found that this record's NC-P08-024/025
+"permanent dual-read" conclusion over-interpreted its own evidence. Sections above already establish
+that the generating path is dead, no consumer reads either field, and **zero** committed
+`logs/solver-workflow/*.json` artifacts ever contained either the retired or canonical spelling.
+That means there is no historical representation to read and no compatibility boundary to own.
+
+The authoritative plan/ledger are therefore corrected to classify NC-P08-024/025 as direct
+current-source renames with `persistence: none`. The Phase-8 closeout coverage changes from a
+compatibility exemption to literal retired-field rejection, and the explanatory source comment no
+longer embeds the retired spellings. This does not rewrite the original execution narrative above;
+it records why its "vacuous permanent reader" interpretation is superseded.
+
+The correction also fixes an evidence-model defect: the old closeout scanner counted raw source
+lines and could report an allowlisted explanatory comment as a "retained compatibility read."
+Compatibility claims must be proven by an executable reader/fixture, not by lexical presence.
