@@ -212,6 +212,57 @@ try {
     expectFail('verification record must exist', ledger, /existing checked-in record|recordPath must be an existing file/u);
   }
 
+  {
+    const ledger = clone(source);
+    for (const row of ledger.entries.filter(entry => entry.phase === 9)) {
+      row.status = 'done';
+      row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-09-final-audit.md';
+      for (const key of Object.keys(row.verification)) row.verification[key] = 'done';
+    }
+    ledger.lastCompletedPhase = 9;
+    ledger.activeExecution = {
+      status: 'idle', phase: null, batch: null, branch: null, pr: null,
+      baseMainSha: null, recordPath: null, notes: 'fixture closed',
+    };
+    ledger.phaseClosures['9'] = {
+      status: 'closed',
+      recordPath: 'docs/naming-cleanup-phase-records/phase-09-final-audit.md',
+      implementation: {
+        pr: 9991,
+        finalHeadSha: '1111111111111111111111111111111111111111',
+        ciRunId: 9992,
+        ciConclusion: 'success',
+        mergeCommit: '2222222222222222222222222222222222222222',
+      },
+      mergedTreeCloseout: {
+        baseMainSha: '2222222222222222222222222222222222222222',
+        pr: 9993,
+        ciPolicy: 'exact-head-green-before-merge',
+      },
+    };
+    expectPass('structured Phase-9 closure can complete the phase', ledger);
+
+    const missing = clone(ledger);
+    delete missing.phaseClosures['9'];
+    expectFail('completed Phase-9 requires structured closure evidence', missing, /lacks a closed structured phaseClosures record/u);
+
+    const failedCi = clone(ledger);
+    failedCi.phaseClosures['9'].implementation.ciConclusion = 'failure';
+    expectFail('structured closure requires green implementation CI', failedCi, /successful exact-head CI run/u);
+
+    const driftedRecord = clone(ledger);
+    driftedRecord.phaseClosures['9'].recordPath = 'docs/naming-cleanup-phase-records/phase-09-repair.md';
+    expectFail('structured closure record must match phase execution authority', driftedRecord, /must match phaseExecutionRecords/u);
+
+    const reopened = clone(ledger);
+    reopened.phaseClosures['9'] = {
+      status: 'reopened',
+      recordPath: 'docs/naming-cleanup-phase-records/phase-09-final-audit.md',
+      reason: 'fixture',
+    };
+    expectFail('completed Phase-9 cannot have reopened closure evidence', reopened, /closure is reopened|lacks a closed structured/u);
+  }
+
   console.log('Naming-cleanup ledger checker self-test passed.');
 } finally {
   rmSync(fixturePath, { force: true });
