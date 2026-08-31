@@ -2,7 +2,7 @@
   "schemaVersion": 5,
   "authority": "docs/naming-cleanup-plan.md",
   "permanentVocabularyAuthority": "docs/naming-and-vocabulary.md",
-  "generatedForPlanRevision": "2026-08-31-phase10-merged-tree-closeout",
+  "generatedForPlanRevision": "2026-08-31-phase11-post-closeout-audit-repair",
   "status": "active",
   "entries": [
     {
@@ -1405,7 +1405,7 @@
       "new": "orientation",
       "kind": "field",
       "risk": "high",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 11,
       "status": "done",
       "verification": {
@@ -1416,14 +1416,9 @@
         "behavioralParity": "done",
         "closeoutAudit": "done"
       },
-      "notes": "Runtime rotation/reflection only; research level variant retained.",
-      "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": "docs/naming-cleanup-phase-records/phase-11.md",
-      "compatibility": {
-        "mode": "runtime-compatibility-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "engine-state and level-transform compatibility boundary"
-      }
+      "notes": "Runtime rotation/reflection only; research level variant retained. Phase-11 preparation proved no raw-level, session, persisted, or stable external compatibility field exists, so the runtime graph migrated atomically with no legacy alias or dual-read boundary.",
+      "migrationClass": "direct-current-surface-rename",
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-11.md"
     },
     {
       "id": "NC-P11-002",
@@ -5354,7 +5349,9 @@
         "finalHeadSha": "eca9887937f27fb68c0d75b71f25468bbbf65dc3",
         "ciRunId": 33361621887,
         "ciConclusion": "success",
-        "mergeCommit": "b2ee0d74cab245c042555516474e1492975b4fd6"
+        "mergeCommit": "b2ee0d74cab245c042555516474e1492975b4fd6",
+        "browserRunId": 33361621888,
+        "browserConclusion": "success"
       },
       "mergedTreeCloseout": {
         "baseMainSha": "b2ee0d74cab245c042555516474e1492975b4fd6",
