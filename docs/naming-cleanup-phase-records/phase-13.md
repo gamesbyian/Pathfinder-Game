@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
 | Current batch | final closure evidence |
-| Status | closed; final evidence PR #1623 pending |
+| Status | complete |
 | Base `main` SHA | `fc569655b5d715b88839458c23ff77fe4c0b9d3c` |
 | Branch | `chatgpt/phase13-final-evidence-2026-08-31` |
 | PR | #1623 |
@@ -16,7 +16,7 @@
 | Compatibility owner | raw/wire parser-writer boundary; raw `reqLen`/`reqInt` never retire |
 | Canonical normalized fields | `requiredLength`, `requiredIntersections` |
 | Implementation agent/session | ChatGPT GitHub session, 2026-08-31 |
-| Closeout auditor | 13C distinct merged-tree pass required |
+| Closeout auditor | 13C distinct merged-tree pass completed on PR #1622 |
 
 ### Branch/PR authority preflight
 
