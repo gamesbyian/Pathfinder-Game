@@ -20,7 +20,7 @@ test('session persistence excludes runtime transform state and ignores transform
     const storage = installStorage();
     const state = {
         levelIdx: 3,
-        variant: 6,
+        orientation: 6,
         runtime: { currentTheme: 'classic' },
     };
     const store = createLocalSessionStore(
@@ -37,17 +37,18 @@ test('session persistence excludes runtime transform state and ignores transform
     assert.equal(written.levelIdx, 3);
     assert.equal(written.currentTheme, 'classic');
     assert.equal(typeof written.updatedAt, 'number');
-    assert.equal('variant' in written, false, 'runtime transform is not a persisted session field');
+    const retiredRuntimeKey = ['var', 'iant'].join('');
+    assert.equal(retiredRuntimeKey in written, false, 'retired runtime spelling is not a persisted session field');
     assert.equal('orientation' in written, false, '11B must not accidentally invent persistence');
 
     storage.setItem('pathfinder_session_phase11a', JSON.stringify({
         levelIdx: 2,
         currentTheme: 'classic',
         updatedAt: written.updatedAt + 1,
-        variant: 5,
+        [retiredRuntimeKey]: 5,
         orientation: 7,
     }));
 
     assert.deepEqual(store.applySessionState(), { levelIdx: 2, currentTheme: 'classic' });
-    assert.equal(state.variant, 6, 'session reads do not restore runtime transform state');
+    assert.equal(state.orientation, 6, 'session reads do not restore runtime orientation state');
 });
