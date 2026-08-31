@@ -7,18 +7,17 @@ import { createTapRouter } from './tap-router.js';
 import { createLevelFlowController, planResetCheat } from './level-flow.js';
 import { createReviewModeController, planSubmissionAdvance } from './review-mode.js';
 import { createEngineState } from '../state-slices.js';
+import {
+    DRAGGING, EDITOR, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, IDLE,
+    OVERLAY_NONE, PLAY, RESOLVED, REVIEW,
+} from '../app-constants.js';
 
 function assert(cond: any, msg: any) { if (!cond) throw new Error(msg); }
 function assertEqual(a: any, b: any, msg: any) { if (a !== b) throw new Error(`${msg}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`); }
 
-const core = {
-    PLAY: 0, EDITOR: 1, REVIEW: 2,
-    IDLE: 'IDLE', RESOLVED: 'RESOLVED', DRAGGING: 'DRAGGING',
-    OVERLAY_NONE: 'OVERLAY_NONE', GOOSE_OVERLAY: 'GOOSE_OVERLAY', FALSE_GOAL_ANIMATING: 'FALSE_GOAL_ANIMATING',
-    SOUND_BUS: { play: () => {} },
-};
+const silentAudioService = { play: () => {} };
 
-const makeState = () => ({ ENGINE: createEngineState({ core } as any) });
+const makeState = () => ({ ENGINE: createEngineState() });
 
 // ─── HazardController ────────────────────────────────────────────────────────
 
@@ -31,9 +30,9 @@ test('triggerJumpScare sets GOOSE_OVERLAY and schedules reset', () => {
         showGooseJumpScare: () => uiCalls.push('showGooseJumpScare'),
         hideGooseJumpScare: () => uiCalls.push('hideGooseJumpScare'),
     };
-    const ctrl = createHazardController({ core, state, ui, setOverlayState });
+    const ctrl = createHazardController({ audioService: silentAudioService, state, ui, setOverlayState });
     ctrl.triggerJumpScare();
-    assertEqual(state.ENGINE.overlayState, core.GOOSE_OVERLAY, 'overlay should switch to GOOSE_OVERLAY');
+    assertEqual(state.ENGINE.overlayState, GOOSE_OVERLAY, 'overlay should switch to GOOSE_OVERLAY');
     assert(uiCalls.includes('showGooseJumpScare'), 'showGooseJumpScare should be called');
 });
 
@@ -43,22 +42,22 @@ test('triggerFalseGoalDetonation sets FALSE_GOAL_ANIMATING and plays sounds', ()
     const overlayHistory: any[] = [];
     const setOverlayState = (v: any) => { state.ENGINE.overlayState = v; overlayHistory.push(v); };
     const sounds: any[] = [];
-    const localCore = { ...core, SOUND_BUS: { play: (note: any) => sounds.push(note) } };
+    const audioService = { play: (note: any) => sounds.push(note) };
     const uiCalls: any[] = [];
     const ui = {
         showFalseGoalDetonation: (opts: any) => uiCalls.push(['showFalseGoalDetonation', opts]),
         hideFalseGoalDetonation: () => uiCalls.push('hideFalseGoalDetonation'),
     };
-    const ctrl = createHazardController({ core: localCore, state, ui, setOverlayState });
+    const ctrl = createHazardController({ audioService, state, ui, setOverlayState });
     ctrl.triggerFalseGoalDetonation(42);
-    assertEqual(state.ENGINE.overlayState, core.FALSE_GOAL_ANIMATING, 'overlay should switch to FALSE_GOAL_ANIMATING');
+    assertEqual(state.ENGINE.overlayState, FALSE_GOAL_ANIMATING, 'overlay should switch to FALSE_GOAL_ANIMATING');
     assert(state.ENGINE.hazards.detonatedFalseGoals.has(42), 'key should be added to detonated set');
     assert(sounds.includes('C2'), 'initial detonation sound should play');
 });
 
 test('clearFalseGoalTimers resets timer references without throwing', () => {
     const state = makeState();
-    const ctrl = createHazardController({ core, state, ui: {}, setOverlayState: () => {} });
+    const ctrl = createHazardController({ audioService: silentAudioService, state, ui: {}, setOverlayState: () => {} });
     // Should not throw even when no timers are active
     ctrl.clearFalseGoalTimers();
     ctrl.clearFalseGoalTimers();
@@ -87,7 +86,7 @@ test('computeFalseGoalDetonationEffects PLAY_SOUND uses C2 note', () => {
 
 test('triggerJumpScare cleanup fires hideGooseJumpScare when overlay unchanged (sync timer)', () => {
     const state = makeState();
-    state.ENGINE.overlayState = core.GOOSE_OVERLAY;
+    state.ENGINE.overlayState = GOOSE_OVERLAY;
     const uiCalls: any[] = [];
     const ui = {
         showGooseJumpScare: () => uiCalls.push('show'),
@@ -95,10 +94,10 @@ test('triggerJumpScare cleanup fires hideGooseJumpScare when overlay unchanged (
     };
     const fakeTimer = (fn: any) => fn(); // fire immediately — bypasses the real 2500ms delay
     const setOverlayState = (v: any) => { state.ENGINE.overlayState = v; };
-    const ctrl = createHazardController({ core, state, ui, setOverlayState, scheduleTimer: fakeTimer });
+    const ctrl = createHazardController({ audioService: silentAudioService, state, ui, setOverlayState, scheduleTimer: fakeTimer });
     ctrl.triggerJumpScare();
     assert(uiCalls.includes('hide'), 'hideGooseJumpScare should fire when overlay is still GOOSE_OVERLAY');
-    assertEqual(state.ENGINE.overlayState, core.OVERLAY_NONE, 'overlay should reset to NONE');
+    assertEqual(state.ENGINE.overlayState, OVERLAY_NONE, 'overlay should reset to NONE');
 });
 
 test('triggerJumpScare cleanup does NOT fire hide when overlay changed before timer fires', () => {
@@ -112,10 +111,10 @@ test('triggerJumpScare cleanup does NOT fire hide when overlay changed before ti
     let capturedCallback: any = null;
     const capturingTimer = (fn: any) => { capturedCallback = fn; };
     const setOverlayState = (v: any) => { state.ENGINE.overlayState = v; };
-    const ctrl = createHazardController({ core, state, ui, setOverlayState, scheduleTimer: capturingTimer });
+    const ctrl = createHazardController({ audioService: silentAudioService, state, ui, setOverlayState, scheduleTimer: capturingTimer });
     ctrl.triggerJumpScare(); // sets overlay to GOOSE_OVERLAY, captures callback
     // Simulate something else changing the overlay before the timer fires
-    state.ENGINE.overlayState = core.FALSE_GOAL_ANIMATING;
+    state.ENGINE.overlayState = FALSE_GOAL_ANIMATING;
     capturedCallback!(); // now fire the cleanup manually
     assert(!uiCalls.includes('hide'), 'hideGooseJumpScare should NOT fire when overlay changed before timer');
 });
@@ -129,25 +128,25 @@ test('triggerFalseGoalDetonation full sequence fires via injected sync timer', (
         showFalseGoalDetonation: (opts: any) => uiCalls.push(['showFalseGoalDetonation', opts]),
         hideFalseGoalDetonation: () => uiCalls.push('hideFalseGoalDetonation'),
     };
-    const localCore = { ...core, SOUND_BUS: { play: (n: any) => sounds.push(n) } };
+    const audioService = { play: (n: any) => sounds.push(n) };
     const overlayHistory: any[] = [];
     const setOverlayState = (v: any) => { state.ENGINE.overlayState = v; overlayHistory.push(v); };
     const fakeTimer = (fn: any) => fn(); // fires both stages immediately
-    const ctrl = createHazardController({ core: localCore, state, ui, setOverlayState, scheduleTimer: fakeTimer });
+    const ctrl = createHazardController({ audioService, state, ui, setOverlayState, scheduleTimer: fakeTimer });
     ctrl.triggerFalseGoalDetonation(42);
     // Stage 1: showFalseGoalDetonation({ exploded: true }) + F1
     assert(uiCalls.some((c: any) => Array.isArray(c) && c[1]?.exploded === true), 'should show exploded false goal');
     assert(sounds.includes('F1'), 'F1 sound should play in stage 1');
     // Stage 2: hideFalseGoalDetonation + overlay reset
     assert(uiCalls.includes('hideFalseGoalDetonation'), 'false-goal detonation UI should be hidden');
-    assert(overlayHistory.includes(core.OVERLAY_NONE), 'overlay should return to NONE after full sequence');
+    assert(overlayHistory.includes(OVERLAY_NONE), 'overlay should return to NONE after full sequence');
 });
 
 // ─── WinController ───────────────────────────────────────────────────────────
 
 test('handleWin marks level complete and opens win modal', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 5;
     state.ENGINE.nav = { path: [1, 2, 3] } as any;
     const completed: any[] = [];
@@ -158,11 +157,11 @@ test('handleWin marks level complete and opens win modal', () => {
         openModal: (id: any) => uiCalls.push(['openModal', id]),
     };
     const sounds: any[] = [];
-    const localCore = { ...core, SOUND_BUS: { play: (n: any) => sounds.push(n) } };
+    const audioService = { play: (n: any) => sounds.push(n) };
     let setLogicArg;
-    const ctrl = createWinController({ core: localCore, state, ui, persistence, setLogicState: (v: any) => { setLogicArg = v; } });
+    const ctrl = createWinController({ audioService, state, ui, persistence, setLogicState: (v: any) => { setLogicArg = v; } });
     ctrl.handleWin();
-    assertEqual(setLogicArg, core.RESOLVED, 'logic state should become RESOLVED');
+    assertEqual(setLogicArg, RESOLVED, 'logic state should become RESOLVED');
     assert(completed.includes(5), 'level 5 should be marked complete');
     assert(uiCalls.some((c: any) => c[0] === 'openModal' && c[1] === 'winModal'), 'winModal should open');
     assert(sounds.includes('C5'), 'win sound should play');
@@ -170,13 +169,13 @@ test('handleWin marks level complete and opens win modal', () => {
 
 test('handleWin does not mark complete in EDITOR mode', () => {
     const state = makeState();
-    state.ENGINE.mode = core.EDITOR;
+    state.ENGINE.mode = EDITOR;
     state.ENGINE.levelIdx = 3;
     state.ENGINE.nav = { path: [] } as any;
     const completed: any[] = [];
     const persistence = { markLevelComplete: (idx: any) => completed.push(idx) };
     const ui = { renderWinExportPanel: () => {}, openModal: () => {} };
-    const ctrl = createWinController({ core, state, ui, persistence, setLogicState: () => {} });
+    const ctrl = createWinController({ audioService: silentAudioService, state, ui, persistence, setLogicState: () => {} });
     ctrl.handleWin();
     assertEqual(completed.length, 0, 'editor wins should not mark level complete');
 });
@@ -185,7 +184,7 @@ test('handleWin does not mark complete in EDITOR mode', () => {
 
 test('saveWinAsHintIfNovel saves the path when it is not already known', async () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 0;
     state.ENGINE.nav = { path: [1, 2, 3] } as any;
     const saved: any[] = [];
@@ -199,7 +198,7 @@ test('saveWinAsHintIfNovel saves the path when it is not already known', async (
             return true;
         },
     };
-    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    await saveWinAsHintIfNovel({ state, data, persistence } as any);
     assertEqual(saved.length, 1, 'a novel path should be saved');
     assertEqual(saved[0].path, state.ENGINE.nav.path, 'the saved path must be the winning path');
     assert(!saved[0].known.has(saved[0].sig), 'the just-saved path itself must not already be in the known set passed in');
@@ -207,7 +206,7 @@ test('saveWinAsHintIfNovel saves the path when it is not already known', async (
 
 test('saveWinAsHintIfNovel does nothing when the path is already known', async () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 0;
     state.ENGINE.nav = { path: [1, 2, 3] } as any;
     const data = {
@@ -216,36 +215,36 @@ test('saveWinAsHintIfNovel does nothing when the path is already known', async (
     };
     let called = false;
     const persistence = { saveLocalLevelHintIfNovel: async () => { called = true; return true; } };
-    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    await saveWinAsHintIfNovel({ state, data, persistence } as any);
     assert(!called, 'an already-known path must never be re-saved');
 });
 
 test('saveWinAsHintIfNovel is a no-op outside PLAY mode', async () => {
     const state = makeState();
-    state.ENGINE.mode = core.EDITOR;
+    state.ENGINE.mode = EDITOR;
     state.ENGINE.nav = { path: [1, 2, 3] } as any;
     let called = false;
     const persistence = { saveLocalLevelHintIfNovel: async () => { called = true; return true; } };
     const data = { getLevel: () => ({}), getHints: async () => [] };
-    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    await saveWinAsHintIfNovel({ state, data, persistence } as any);
     assert(!called, 'editor-mode wins must never trigger the Firestore auto-save');
 });
 
 test('saveWinAsHintIfNovel is a no-op outside the published corpus', async () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.nav = { path: [1, 2, 3] } as any;
     (state.ENGINE.runtime as any).devCorpus = 'stress1';
     let called = false;
     const persistence = { saveLocalLevelHintIfNovel: async () => { called = true; return true; } };
     const data = { getLevel: () => ({}), getHints: async () => [] };
-    await saveWinAsHintIfNovel({ state, core, data, persistence } as any);
+    await saveWinAsHintIfNovel({ state, data, persistence } as any);
     assert(!called, 'a Dev-Mode stress-corpus playtest must never write to local_level_hints');
 });
 
 test('saveWinAsHintIfNovel swallows a Firestore failure rather than throwing', async () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.nav = { path: [1, 2, 3] } as any;
     const data = {
         getLevel: () => ({ grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 } }),
@@ -253,7 +252,7 @@ test('saveWinAsHintIfNovel swallows a Firestore failure rather than throwing', a
     };
     const persistence = { saveLocalLevelHintIfNovel: async () => { throw new Error('offline'); } };
     const reported: any[] = [];
-    await saveWinAsHintIfNovel({ state, core, data, persistence, reportError: (label: any, err: any) => reported.push({ label, err }) } as any);
+    await saveWinAsHintIfNovel({ state, data, persistence, reportError: (label: any, err: any) => reported.push({ label, err }) } as any);
     assert(reported.some((r) => r.label === 'win.auto-save-hint'), 'the failure should be reported, not thrown');
 });
 
@@ -261,34 +260,34 @@ test('saveWinAsHintIfNovel swallows a Firestore failure rather than throwing', a
 
 test('computeWinEffects always includes PLAY_SOUND and OPEN_MODAL', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 0;
-    const effects = computeWinEffects(state, core);
+    const effects = computeWinEffects(state);
     assert(effects.some(e => e.type === EffectType.PLAY_SOUND), 'should include PLAY_SOUND');
     assert(effects.some(e => e.type === EffectType.OPEN_MODAL), 'should include OPEN_MODAL');
 });
 
 test('computeWinEffects PLAY_SOUND uses C5 note', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
-    const effects = computeWinEffects(state, core);
+    state.ENGINE.mode = PLAY;
+    const effects = computeWinEffects(state);
     const soundFx = effects.find(e => e.type === EffectType.PLAY_SOUND)!;
     assertEqual(soundFx.note, 'C5', 'win sound should be C5');
 });
 
 test('computeWinEffects OPEN_MODAL targets winModal', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
-    const effects = computeWinEffects(state, core);
+    state.ENGINE.mode = PLAY;
+    const effects = computeWinEffects(state);
     const modalFx = effects.find(e => e.type === EffectType.OPEN_MODAL)!;
     assertEqual(modalFx.modalId, 'winModal', 'should open winModal');
 });
 
 test('computeWinEffects in PLAY mode includes PERSIST_PROGRESS with correct levelIdx', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 7;
-    const effects = computeWinEffects(state, core);
+    const effects = computeWinEffects(state);
     const persistFx = effects.find(e => e.type === EffectType.PERSIST_PROGRESS)!;
     assert(persistFx !== undefined, 'should include PERSIST_PROGRESS in PLAY mode');
     assertEqual(persistFx.levelIdx, 7, 'persistProgress should carry the correct levelIdx');
@@ -296,9 +295,9 @@ test('computeWinEffects in PLAY mode includes PERSIST_PROGRESS with correct leve
 
 test('computeWinEffects in EDITOR mode omits PERSIST_PROGRESS', () => {
     const state = makeState();
-    state.ENGINE.mode = core.EDITOR;
+    state.ENGINE.mode = EDITOR;
     state.ENGINE.levelIdx = 7;
-    const effects = computeWinEffects(state, core);
+    const effects = computeWinEffects(state);
     assert(!effects.some(e => e.type === EffectType.PERSIST_PROGRESS), 'PERSIST_PROGRESS should be absent in EDITOR mode');
 });
 
@@ -306,10 +305,10 @@ test('computeWinEffects in EDITOR mode omits PERSIST_PROGRESS', () => {
 
 test('applyPlayChallengeOptions strips geese in returned level without mutating input', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.options = { geese: false, falseGoals: true, deadGates: true } as any;
     const level = { gooseSet: new Set([1, 2]), falseGoalKeys: new Set([3]), gateKeys: [5] };
-    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} as any });
+    const ctrl = createChallengeOptionsController({ state, ui: {}, levelUtils: {} as any });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, true, 'should still be playable');
     assertEqual(result.level.gooseSet.size, 0, 'derived level should have geese cleared');
@@ -319,12 +318,12 @@ test('applyPlayChallengeOptions strips geese in returned level without mutating 
 
 test('applyPlayChallengeOptions returns playable:false when all gates are dead', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.options = { geese: true, falseGoals: true, deadGates: false } as any;
     const deadKey = 99;
     const level = { gooseSet: new Set(), falseGoalKeys: new Set(), gateKeys: [deadKey] };
     const levelUtils = { getParityInvalidKeys: () => ({ gates: new Set([deadKey]) }) };
-    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: levelUtils as any });
+    const ctrl = createChallengeOptionsController({ state, ui: {}, levelUtils: levelUtils as any });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, false, 'should be unplayable when all gates are dead');
     assertEqual(result.reason, 'dead-gates', 'reason should identify dead-gates');
@@ -333,10 +332,10 @@ test('applyPlayChallengeOptions returns playable:false when all gates are dead',
 
 test('applyPlayChallengeOptions is no-op outside PLAY mode and returns same level', () => {
     const state = makeState();
-    state.ENGINE.mode = core.EDITOR;
+    state.ENGINE.mode = EDITOR;
     state.ENGINE.options = { geese: false, falseGoals: false } as any;
     const level = { gooseSet: new Set([1]), falseGoalKeys: new Set([2]) };
-    const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} as any });
+    const ctrl = createChallengeOptionsController({ state, ui: {}, levelUtils: {} as any });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(level.gooseSet.size, 1, 'geese should be unchanged in editor mode');
     assert(result.level === level, 'returned level should be the same reference in non-PLAY mode');
@@ -346,7 +345,7 @@ test('showOptionsBlockedModalIfNeeded shows/hides modal based on result', () => 
     const state = makeState();
     const shown: any[] = [];
     const ui = { setOptionsBlockedVisible: (v: any) => shown.push(v) };
-    const ctrl = createChallengeOptionsController({ core, state, ui, levelUtils: {} as any });
+    const ctrl = createChallengeOptionsController({ state, ui, levelUtils: {} as any });
     ctrl.showOptionsBlockedModalIfNeeded({ playable: false });
     assertEqual(shown[shown.length - 1], true, 'blocked modal should show when not playable');
     ctrl.showOptionsBlockedModalIfNeeded({ playable: true });
@@ -357,18 +356,18 @@ test('showOptionsBlockedModalIfNeeded shows/hides modal based on result', () => 
 
 test('findTapRoute returns null when no nav path is active', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.level = { grid: { w: 5, h: 5 } } as any;
     state.ENGINE.nav = { path: [] } as any;
     const levelUtils = { PACK: (x: any, y: any) => y * 5 + x, UNPACK: (k: any) => ({ x: k % 5, y: Math.floor(k / 5) }) };
-    const router = createTapRouter({ core, state, levelUtils: levelUtils as any });
+    const router = createTapRouter({ state, levelUtils: levelUtils as any });
     const result = router.findTapRoute({ x: 2, y: 2 });
     assertEqual(result, null, 'no path → null');
 });
 
 test('findTapRoute returns empty array when target equals head position', () => {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.level = {
         grid: { w: 5, h: 5 },
         blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(),
@@ -388,7 +387,7 @@ test('findTapRoute returns empty array when target equals head position', () => 
     } as any;
     state.ENGINE.hazards = { armedFalseGoals: new Set(), revealedGeese: new Set(), detonatedFalseGoals: new Set() } as any;
     const levelUtils = { PACK: (x: any, y: any) => y * 5 + x, UNPACK: (k: any) => ({ x: k % 5, y: Math.floor(k / 5) }) };
-    const router = createTapRouter({ core, state, levelUtils: levelUtils as any });
+    const router = createTapRouter({ state, levelUtils: levelUtils as any });
     const result = router.findTapRoute({ x: 1, y: 0 }); // same as head
     assert(Array.isArray(result) && result.length === 0, 'target == head → empty array');
 });
@@ -397,7 +396,7 @@ test('findTapRoute returns empty array when target equals head position', () => 
 
 function makeLevelFlowDeps(overrides: any = {}) {
     const state = makeState();
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 0;
     state.ENGINE.level = { requiredLength: 3, requiredIntersections: 0 } as any;
     state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, triggerableFalseGoalCells: new Set(), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'stale' } as any;
@@ -436,7 +435,7 @@ function makeLevelFlowDeps(overrides: any = {}) {
     };
     return {
         state, ui, uiCalls,
-        core,
+        audioService: silentAudioService,
         data: { getLevels: () => [{}], getLevel: () => ({}) },
         levelUtils: {
             normalizeLevel: (_idx: any) => ({ requiredLength: 3, requiredIntersections: 0, gateKeys: [0], goalKey: 9, grid: { w: 3, h: 3 }, blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), mustPassKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map() }),
@@ -463,9 +462,9 @@ test('switchMode to EDITOR sets editor working level from current level', () => 
     deps.levelUtils.deepCloneLevel = (l: any) => { cloned = { ...l }; return cloned; };
     deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, triggerableFalseGoalCells: new Set(), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'stale' } as any;
     const ctrl = createLevelFlowController(deps);
-    ctrl.switchMode(core.EDITOR);
+    ctrl.switchMode(EDITOR);
     // After switchMode(EDITOR), applyModeLayout should have been called with EDITOR
-    assert(deps.uiCalls.some((c: any) => c[0] === 'applyModeLayout' && c[1] === core.EDITOR),
+    assert(deps.uiCalls.some((c: any) => c[0] === 'applyModeLayout' && c[1] === EDITOR),
         'applyModeLayout should be called with EDITOR mode');
 });
 
@@ -496,14 +495,14 @@ test('switchMode(EDITOR) initializes the editor working copy from the current le
     deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], triggerableFalseGoalCells: new Set([1]), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'complete' } as any;
     const rec = instrumentEditorInit(deps);
     const ctrl = createLevelFlowController(deps);
-    ctrl.switchMode(core.EDITOR);
+    ctrl.switchMode(EDITOR);
     assertEditorWorkingCopyInitialized(deps, rec, 5, 2);
     assertEqual(deps.state.ENGINE.editor.workingLevel.requiredLength, 5, 'working level cloned from current level');
 });
 
 test('loadLevel(idx) in EDITOR mode initializes the editor working copy', () => {
     const deps = makeLevelFlowDeps();
-    deps.state.ENGINE.mode = core.EDITOR;
+    deps.state.ENGINE.mode = EDITOR;
     deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: true, emptyClickCount: 3, isModified: true, undoStack: [{}], triggerableFalseGoalCells: new Set([1]), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'complete' } as any;
     const rec = instrumentEditorInit(deps);
     const ctrl = createLevelFlowController(deps);
@@ -525,7 +524,7 @@ test('level load chooses a runtime orientation, reset preserves it, and editor l
         ctrl.handleResetAction();
         assertEqual(deps.state.ENGINE.orientation, 7, 'reset reload keeps the current runtime orientation');
 
-        deps.state.ENGINE.mode = core.EDITOR;
+        deps.state.ENGINE.mode = EDITOR;
         ctrl.loadLevel(0);
         assertEqual(deps.state.ENGINE.orientation, 0, 'editor level load uses canonical coordinates');
     } finally {
@@ -540,7 +539,7 @@ test('switchMode to REVIEW calls resetEmptyReviewState', () => {
     deps.state.ENGINE.levelIdx = 3;
     deps.state.ENGINE.review = { savedPlayLevelIdx: 3, submissions: [], currentIdx: 0 } as any;
     const ctrl = createLevelFlowController(deps);
-    ctrl.switchMode(core.REVIEW);
+    ctrl.switchMode(REVIEW);
     assert(resetCalled, 'resetEmptyReviewState should be called when entering REVIEW mode');
 });
 
@@ -561,7 +560,7 @@ test('handleResetAction activates cheat mode after 5 resets and fires sync timer
     deps.state.ENGINE.cheatActive = false;
     deps.state.ENGINE.cheatTimer  = null;
     const sounds: any[] = [];
-    deps.core = { ...core, SOUND_BUS: { play: (n: any) => sounds.push(n) } };
+    deps.audioService = { play: (n: any) => sounds.push(n) };
     const fakeTimer = (fn: any) => fn();
     const ctrl = createLevelFlowController({ ...deps, scheduleTimer: fakeTimer });
     ctrl.handleResetAction(); // streak becomes 5 → cheat activates, timer fires immediately
