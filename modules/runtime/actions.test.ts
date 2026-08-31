@@ -125,7 +125,7 @@ test('Effects.persistProgress produces correct shape', () => {
 });
 
 test('Effects.scheduleTimer produces correct shape', () => {
-    const action = { type: GameEventType.WIN };
+    const action = { type: 'TEST_TIMER_CONTINUATION' };
     const e = Effects.scheduleTimer('falseGoalPhase2', 1000, action);
     assert.equal(e.type, EffectType.SCHEDULE_TIMER);
     assert.equal(e.id, 'falseGoalPhase2');
