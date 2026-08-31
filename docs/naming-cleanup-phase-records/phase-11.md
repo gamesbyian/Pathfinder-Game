@@ -5,12 +5,12 @@
 | Field | Value |
 | --- | --- |
 | Phase | 11 — application orientation versus level variant |
-| Current batch | 11C merged-tree closeout |
-| Status | closed; 11A preparation, 11B atomic rename, and 11C merged-tree closeout all merged green |
-| Base `main` SHA | `21cde93a05b251a4682f4aa09f88703d3d9a4d67` |
-| Branch | `chatgpt/phase11a-coverage-preparation-2026-08-30` |
-| Rows | NC-P11-001 through NC-P11-005 |
-| Compatibility owner | engine-state and level-transform runtime/debug boundary |
+| Current batch | post-closeout audit repair |
+| Status | original 11A/11B/11C closure merged green; post-closeout audit repair in progress |
+| Base `main` SHA | `8c2f3d4f2f23f9fc0a31afb30096ee0ed3aa3e60` |
+| Branch | `chatgpt/phase11-audit-repairs-2026-08-31` |
+| Rows | NC-P11-001 compatibility classification; NC-P11-005 prose residue; Phase-11 evidence guardrails |
+| Compatibility owner | none; 11A proved no persisted/stable external orientation compatibility boundary |
 | Research terminology | level/search/generator/editor-palette variants are retained and out of scope |
 
 ## 1. 11A change envelope
@@ -186,3 +186,16 @@ That state is deliberately validated before it becomes authoritative: ordinary C
 Phase 11C PR #1613 completed ordinary CI run #3421 / `33362227488` successfully and the maintained Chromium orientation gate run #13 / `33362227473` successfully on exact final head `4d95efd0d0501174c13e95a3c7c3507cfb6393d1`. It then merged as `994fa8cebaf5faafd5304026584acde25560e0d2`.
 
 Phase 11 is therefore closed on merged `main`: NC-P11-001 through NC-P11-005 are done, `lastCompletedPhase` is 11, and `activeExecution` is idle. Runtime rotation/reflection state uses the canonical `orientation` vocabulary throughout the reviewed application graph, while research/solver/generated/editor-palette meanings of `variant` remain intentionally retained. Phase 12 is the next incomplete phase.
+
+## 15. Post-closeout suspicious-audit correction
+
+A post-closeout audit of merged `main` found that the runtime implementation itself remained behaviorally sound, but the closure evidence overstated completeness in four ways.
+
+1. NC-P11-005 still had plural runtime-transform prose (`transposing variants`, `swapping variants`, and `reflecting variants`) in `modules/domain/geometry.test.ts`. The Phase-11 residue ratchet matched singular `variant` only, so it could not detect those hits. The repair changes that prose to `orientations`, expands the ratchet to reject both `variant` and `variants`, and adds a negative fixture for the plural form.
+2. NC-P11-001 remained classified in the ledger as `dual-read` / `runtime-compatibility-transition` even though Sections 3 and 11 proved and implemented a single canonical runtime field with no persisted or stable external legacy boundary. The plan and ledger are amended to `persistence: none` / direct current-surface rename; no Phase-15 orientation compatibility retirement remains.
+3. The dedicated Chromium gate did not trigger for every source that can change the characterized behavior. Its path filter now includes the chirality helper, level remapping helper, editor transform controller/test, and geometry test surface, so isolated changes to those owners cannot bypass the real-browser gate.
+4. The structured ledger checker previously required only an implementation CI result plus a closeout policy string. The repair requires complete Phase-10+ merged-tree closeout evidence (final head, successful CI, and merge commit) and requires both implementation and closeout browser evidence for Phase 11. The existing exact-head Phase-11 implementation browser run `33361621888` is now recorded structurally.
+
+The original implementation/merge ancestry also resolves the missing pre-merge comparison record without inventing history: #1612's merge commit `b2ee0d74cab245c042555516474e1492975b4fd6` has first parent `53c32911e840a342c9eb6d90ecd0d26fd59052ae`, exactly the 11B entry-main SHA, and #1613's merge commit `994fa8cebaf5faafd5304026584acde25560e0d2` has first parent `b2ee0d74cab245c042555516474e1492975b4fd6`, exactly the 11B merge used as the 11C base. The required comparison was not durably recorded at the time, which remains a process-evidence defect, but the merge graph proves neither PR actually landed over intervening main drift.
+
+This repair changes no runtime orientation semantics, transform math, persistence behavior, solver behavior, or editor transform behavior.
