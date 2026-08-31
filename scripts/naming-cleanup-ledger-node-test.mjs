@@ -185,6 +185,12 @@ try {
 
   {
     const ledger = clone(source);
+    delete ledger.phaseClosures['11'].postCloseoutAuditRepair;
+    expectFail('Phase-11 closure requires audit repair evidence', ledger, /postCloseoutAuditRepair must record the merged Phase-11 audit repair/u);
+  }
+
+  {
+    const ledger = clone(source);
     delete ledger.phaseClosures['11'].implementation.browserRunId;
     expectFail('Phase-11 implementation requires browser evidence', ledger, /implementation must record the successful exact-head Phase-11 browser run/u);
   }
