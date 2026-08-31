@@ -1,58 +1,36 @@
 /** Unit tests for modules/runtime/actions.js and modules/runtime/effects.js */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { ActionType } from './actions.js';
+import { GameEventType } from './actions.js';
 import { EffectType, Effects } from './effects.js';
 
 
-// --- ActionType ---
+// --- GameEventType ---
 
-test('ActionType is frozen', () => {
-    assert.ok(Object.isFrozen(ActionType));
+test('GameEventType is frozen', () => {
+    assert.ok(Object.isFrozen(GameEventType));
 });
 
-test('ActionType values equal their keys', () => {
-    for (const [k, v] of Object.entries(ActionType)) {
-        assert.equal(v, k, `ActionType.${k} should equal '${k}'`);
+test('GameEventType values equal their keys', () => {
+    for (const [k, v] of Object.entries(GameEventType)) {
+        assert.equal(v, k, `GameEventType.${k} should equal '${k}'`);
     }
 });
 
-test('ActionType current vocabulary separates live step events from retained definition-only vocabulary', () => {
-    const liveStepEvents = ['LOGIC_STATE_CHANGE', 'WIN'];
-    const retainedDefinitionOnly = [
+test('GameEventType contains exactly the two live step events', () => {
+    assert.deepEqual(Object.keys(GameEventType).sort(), ['LOGIC_STATE_CHANGE', 'WIN']);
+    assert.equal(GameEventType.LOGIC_STATE_CHANGE, 'LOGIC_STATE_CHANGE');
+    assert.equal(GameEventType.WIN, 'WIN');
+});
+
+test('superseded command/outcome vocabulary is not retained as gameplay events', () => {
+    for (const removed of [
         'MOVE', 'UNDO', 'RESET',
         'LEVEL_LOAD', 'LEVEL_ADVANCE', 'LEVEL_PREV', 'LEVEL_RESTART',
         'BACKTRACK', 'PORTAL_TRAVERSE', 'GOOSE_TRIGGERED', 'FALSE_GOAL_DETONATED',
-    ];
-
-    assert.deepEqual(Object.keys(ActionType).sort(), [...liveStepEvents, ...retainedDefinitionOnly].sort());
-    assert.deepEqual(
-        liveStepEvents.map((key) => ActionType[key as keyof typeof ActionType]),
-        ['LOGIC_STATE_CHANGE', 'WIN'],
-        'only these ActionType members currently cross step-processor -> step-dispatcher',
-    );
-});
-
-test('ActionType contains expected navigation constants', () => {
-    assert.equal(ActionType.MOVE,      'MOVE');
-    assert.equal(ActionType.UNDO,      'UNDO');
-    assert.equal(ActionType.RESET,     'RESET');
-    assert.equal(ActionType.BACKTRACK, 'BACKTRACK');
-});
-
-test('ActionType contains expected hazard constants', () => {
-    assert.equal(ActionType.GOOSE_TRIGGERED,      'GOOSE_TRIGGERED');
-    assert.equal(ActionType.FALSE_GOAL_DETONATED, 'FALSE_GOAL_DETONATED');
-    assert.equal(ActionType.PORTAL_TRAVERSE,      'PORTAL_TRAVERSE');
-});
-
-test('ActionType contains expected lifecycle constants', () => {
-    assert.equal(ActionType.WIN,                'WIN');
-    assert.equal(ActionType.LEVEL_LOAD,         'LEVEL_LOAD');
-    assert.equal(ActionType.LEVEL_ADVANCE,      'LEVEL_ADVANCE');
-    assert.equal(ActionType.LEVEL_PREV,         'LEVEL_PREV');
-    assert.equal(ActionType.LEVEL_RESTART,      'LEVEL_RESTART');
-    assert.equal(ActionType.LOGIC_STATE_CHANGE, 'LOGIC_STATE_CHANGE');
+    ]) {
+        assert.equal(removed in GameEventType, false, `${removed} must not be retained in GameEventType`);
+    }
 });
 
 // --- EffectType ---
@@ -147,7 +125,7 @@ test('Effects.persistProgress produces correct shape', () => {
 });
 
 test('Effects.scheduleTimer produces correct shape', () => {
-    const action = { type: ActionType.WIN };
+    const action = { type: GameEventType.WIN };
     const e = Effects.scheduleTimer('falseGoalPhase2', 1000, action);
     assert.equal(e.type, EffectType.SCHEDULE_TIMER);
     assert.equal(e.id, 'falseGoalPhase2');
