@@ -106,7 +106,9 @@ a future spelling.
 
 ## Phase 9 — regression/performance CLI vocabulary
 
-**Rows:** NC-P09-001 through NC-P09-008. All eight concepts are live.
+**Rows:** NC-P09-001 through NC-P09-009. NC-P09-009 was added by the Phase-9 post-merge repair
+after the preparation warning about the distinct raced package identity was not converted into an
+implementation ledger row before PR #1599.
 
 ### Contract and consumer map
 
@@ -114,7 +116,8 @@ a future spelling.
 | --- | --- |
 | NC-P09-001 | **Target:** `package.json` alias `solver:bench` -> `scripts/run-bundled.mjs scripts/solver-bench.mjs`. Current consumers include `AGENTS.md`, `docs/testing.md`, solver architecture/budget/workstream docs, module comments, browser stubs, stress scripts, and workflow comments. **Compatibility owner:** temporary package alias only. The script filename is not itself authorized to change. |
 | NC-P09-002 | **Target:** package alias for `scripts/solver-speed-probe.mjs`. Current live documentation is concentrated in `docs/tooling-catalog.md`. No compatibility alias is authorized. The canonical target has no unrelated package-script collision. |
-| NC-P09-003 | **Target:** package alias for `scripts/stress/benchmark.mjs`; the suffixed `stress:benchmark:raced` is a related live package identity and must be explicitly classified rather than blindly rewritten. Current consumers include `data/stress/README.md`, solver docs, baseline compilers/curators, and script prose. **Compatibility owner:** package alias. Archived batch JSON names are frozen. |
+| NC-P09-003 | **Target:** package alias for `scripts/stress/benchmark.mjs`. Current consumers include `data/stress/README.md`, solver docs, baseline compilers/curators, and script prose. **Compatibility owner:** package alias. Archived batch JSON names are frozen. |
+| NC-P09-009 | **Target:** distinct raced package identity `stress:benchmark:raced` -> `stress:measure-solver:raced`. Preparation identified it as separately owned; PR #1599 changed it without a row, so the post-merge repair added explicit accounting rather than treating it as implied by NC-P09-003. |
 | NC-P09-004 | **Target:** direct-runner filename, while `solver:direct` remains retained. Consumers are `package.json`, `scripts/run-audit-export.mjs`, and `scripts/portfolio-solve-sweep.mjs`; the audit exporter reconstructs the bundled invocation manually and is the missed-consumer hazard. No target collision found. |
 | NC-P09-005/006 | **Targets:** combiner file and package alias. Producers are portfolio sweep shard reports; the combiner parses flat/wrapped reports and writes a merged stress-benchmark-shaped report. Direct workflow consumers exist in residual confirmation, routing-regime sample, repair-reserve sample, broad confirmation, level-blind targeted sweep, high-budget sweep, stress refresh, and typical-budget baseline. The synthetic CLI harness is enrolled in `test:node`. **Compatibility owner:** package alias for NC-P09-006 only; direct old filenames in workflows cannot rely on it. |
 | NC-P09-007/008 | **Targets:** maintained live corpus-output paths. The stress-refresh workflow writes them; typical-budget baseline copies/compares them; rank, stability, curation, baseline compilation, badness analysis, feature analysis, patching, clustering, and report-combination tools read them. `logs/stress-corpus{1,2}-baseline.json` contain current provenance/path strings and are current-reader inputs, not automatically frozen. Historical archive payload names stay frozen. No canonical-path collision exists on this base. |
@@ -651,15 +654,17 @@ an environment with the Playwright Chromium binary.
 
 ## Phase 9 workflow conclusion
 
-Phase 9 remains low risk, but `stress:benchmark:raced` is a distinct package identity rather than an
-automatic member of the main corpus naming row. The enrolled
-`naming-cleanup-phase9-command-smoke-node-test.mjs` pins all four current package identities and
-invokes the real `solver:speed-probe` npm alias with a zero-work temporary report, proving package ->
-bundled runner -> writer execution without solver cost. The existing combiner node test already
-provides temporary synthetic shard writer -> combiner -> report-reader execution. The future record
-must still enumerate workflow-local inline shell/JavaScript paths explicitly; structural workflow
-checks do not prove remote semantic argument/output agreement. No workflow semantics or aliases were
-changed in this pass.
+Phase 9 preparation correctly identified `stress:benchmark:raced` as a distinct package identity,
+but the implementation did not convert that warning into a ledger row before renaming it. The
+post-merge repair owns that mapping as NC-P09-009 and preserves this as a worked example of why
+related surfaced identities cannot inherit authorization from a parent row.
+
+The enrolled `naming-cleanup-phase9-command-smoke-node-test.mjs` pins the canonical package
+identities and invokes the real speed-measurement npm alias with a zero-work temporary report. The
+combiner node test provides synthetic shard writer -> combiner -> report-reader execution. The
+post-merge repair additionally tests sparse large-blob repository reads and corpus-aware default
+output naming. Structural workflow checks still do not prove remote semantic argument/output
+agreement, so workflow-local inline shell/JavaScript paths remain part of consumer-inward closeout.
 
 ## Updated cross-phase status
 
