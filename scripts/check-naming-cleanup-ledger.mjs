@@ -15,6 +15,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+import { repositoryPathKind } from './repository-file-view.mjs';
+
 const root = process.cwd();
 const ledgerArg = process.argv.find(arg => arg.startsWith('--ledger='));
 const ledgerRelativePath = ledgerArg?.slice('--ledger='.length) || 'docs/naming-cleanup-ledger.json';
@@ -83,7 +85,7 @@ function expectedCompatibilityRetirement(entry) {
 function repoPathExists(relativePath) {
   return typeof relativePath === 'string' &&
     relativePath.length > 0 &&
-    existsSync(path.join(root, relativePath));
+    repositoryPathKind(root, relativePath) !== null;
 }
 
 function fail(message) {
