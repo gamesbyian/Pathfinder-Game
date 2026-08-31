@@ -6,12 +6,12 @@
 | --- | --- |
 | Phase | 9 final adversarial audit / reopened closeout |
 | Status | active; Phase 9 reopened pending exact-head GitHub CI and merged-tree closure |
-| Base `main` SHA | `a3bcf28b7b38178e052a6a5765c82bcd8e90dc57` |
-| Branch | `chatgpt/phase9-final-audit-repairs-2026-08-30` |
+| Base `main` SHA | `aa6370dedbaffcc361ba6982aafa86808275da6b` (post-#1603 main) |
+| Branch | `chatgpt/phase9-final-audit-closeout-repair-2026-08-30` |
 | PR | pending creation |
 | Prior implementation PR | #1599 |
 | Prior repair PR | #1600 |
-| Prior merged-tree closeout PR | #1601 |
+| Prior merged-tree closeout PR | #1601 |\n| Partial final-audit repair PR | #1603, head `a548e05dbe7286e6170c827de7b3e1c5e6d27f7f`, exact-head CI run `33348457544`: **failure**, merged as `aa6370dedbaffcc361ba6982aafa86808275da6b` |\n| External merge-enforcement follow-up | #1604 |
 | Prior closeout merge | `a3bcf28b7b38178e052a6a5765c82bcd8e90dc57` |
 | Reopened rows | NC-P09-001 through NC-P09-009 |
 | Closure authority | this record once the repair and a merged-tree closeout have completed green |
@@ -19,7 +19,11 @@
 ## 1. Why Phase 9 was reopened again
 
 A fresh adversarial audit after PRs #1600/#1601 found that the implementation logic was largely
-sound but the completion claim still exceeded the evidence.
+sound but the completion claim still exceeded the evidence. PR #1603 then repaired part of the
+artifact-provenance scope, but its exact-head CI run `33348457544` failed because the temporary
+repair workflow itself violated the Phase-9 closeout and workflow-documentation checks. It was
+nevertheless merged as `aa6370dedbaffcc361ba6982aafa86808275da6b`, so this final repair starts
+from that merged tree and treats #1603 as partial evidence rather than a closure event.
 
 Confirmed gaps:
 
