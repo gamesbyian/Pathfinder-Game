@@ -1,0 +1,45 @@
+name: Phase 9 large artifact repair
+
+on:
+  push:
+    branches:
+      - chatgpt/phase9-final-audit-repairs-2026-08-30
+
+permissions:
+  contents: write
+
+jobs:
+  patch-current-corpus2-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - name: Canonicalize current Corpus 2 report provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("reports/stress/solver-corpus2-latest.json")
+          old = "stress:benchmark.mjs"
+          new = "scripts/stress/benchmark.mjs"
+          text = p.read_text()
+          count = text.count(old)
+          if count == 0:
+              print("already canonical")
+          elif count == 1:
+              p.write_text(text.replace(old, new))
+              print("patched one stale pseudo-path")
+          else:
+              raise SystemExit(f"expected at most one stale pseudo-path, found {count}")
+          PY
+          if git diff --quiet -- reports/stress/solver-corpus2-latest.json; then
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add reports/stress/solver-corpus2-latest.json
+          git commit -m "data: canonicalize Corpus 2 current report provenance path"
+          git push origin HEAD:${GITHUB_REF_NAME}
