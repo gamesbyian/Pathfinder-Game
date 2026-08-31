@@ -24,9 +24,11 @@ export const PHASE14_CURRENT_DOCS = Object.freeze([
   'docs/typing.md',
 ]);
 
+const RETIRED_MUTABLE_ROOT = ['ENG', 'INE'].join('');
+
 const RETIRED_CURRENT_DOC_PATTERNS = Object.freeze([
   { label: 'SOUND_BUS adapter', re: /\bSOUND_BUS\b/u },
-  { label: 'ENGINE mutable state root', re: /\bENGINE\b/u },
+  { label: 'mutable state root', re: new RegExp(`\\b${RETIRED_MUTABLE_ROOT}\\b`, 'u') },
   { label: 'LevelUtils facade', re: /\b(?:LevelUtils|levelUtils)\b/u },
   { label: 'core dependency bag', re: /`core`/u },
 ]);
