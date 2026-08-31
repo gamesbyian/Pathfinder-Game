@@ -6,10 +6,10 @@
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
 | Current batch | final closure evidence |
-| Status | closed; final evidence PR pending |
+| Status | closed; final evidence PR #1623 pending |
 | Base `main` SHA | `fc569655b5d715b88839458c23ff77fe4c0b9d3c` |
 | Branch | `chatgpt/phase13-final-evidence-2026-08-31` |
-| PR | pending |
+| PR | #1623 |
 | Selected ledger row IDs | NC-P13-001 through NC-P13-004 |
 | Reconciliation mode | full level-metric ownership census, because Phase 13 is high-risk and broad |
 | Highest risk | high |
