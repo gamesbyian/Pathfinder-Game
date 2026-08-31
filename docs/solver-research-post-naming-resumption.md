@@ -65,3 +65,46 @@ Before the first decision-bearing solver change after the naming cleanup:
 6. for any confirmation workflow used next, inspect its persisted resolved treatment/control flags as well as the workflow conclusion.
 
 The checkpoint is not authority to reopen August experiments. Its purpose is to prove the current research toolchain can still interpret the evidence needed by the live queue before new results depend on it.
+
+
+## Minimum post-naming evidence bundle
+
+The first resumed solver-research branch must be able to point at one compact, reproducible bundle
+from post-Phase-15 \`main\`. Record:
+
+- exact \`main\` SHA and completed Phase-15 closeout identity;
+- \`npm run test:solver-research-resumption\` result, including the Phase-15 historical fixtures;
+- \`npm run solver:regression -- --check\` result;
+- the current experiment-preflight command/result for the next workstream;
+- one small equal-work/census execution with exact command and output path;
+- one canonical research-status query that discovers representative frozen evidence written under
+  historical stage/routing vocabulary, plus the equivalent legacy query/disposition;
+- one representative mixed-era identity join from current analysis tooling, not merely a
+  single-record parser;
+- if the next experiment uses a confirmation workflow, the persisted resolved
+  treatment/control-flag artifact or equivalent proof of arm wiring.
+
+This bundle is a toolchain/provenance checkpoint. It is not a new scientific result and must not be
+used to reopen a closed treatment.
+
+## Resumption no-go conditions
+
+Do not start a decision-bearing solver experiment if any of the following is true:
+
+- a Phase-15 row or hostile closeout is still open/repaired-but-not-reclosed;
+- current \`AGENTS.md\`, workstream docs, package commands, workflows, or tooling catalog disagree
+  about the executable identity needed for the next run;
+- a historical stage/routing/attempt identity needed by the planned analysis is compared raw rather
+  than through its owning normalizer;
+- a Phase-15 persisted boundary can read one era in isolation but has no mixed-era
+  grouping/join/deduplication proof where the real consumer combines eras;
+- a new writer still emits a retired field/value/path spelling that should have become
+  canonical-single-write;
+- a claimed legacy reader exists only as comments, checker allowlists, or a synthetic string fixture;
+- the regression/preflight/equal-work anchor was run on a different commit than the branch base
+  without an explicit reconciliation;
+- a confirmation workflow has not proven which flags/arm actually reached its worker.
+
+If the naming program changes solver-research priority while resolving these conditions, update the
+canonical workstream authority with the implementation/evidence reason. Do not infer a priority
+change from renamed terminology alone.

@@ -111,8 +111,59 @@ history. The resumption smoke itself passed in both the rejected and accepted it
 
 A subsequent independent Phases-1-14 forensic audit found additional pre-entry defects in mixed-era
 research joins, historical-evidence discovery, and current authority routing. Those repairs are
-tracked separately in [`pre-phase-15-audit-repairs.md`](pre-phase-15-audit-repairs.md) and must land
-before Phase 15 starts. They do not implement or close any NC-P15 row.
+tracked separately in [`pre-phase-15-audit-repairs.md`](pre-phase-15-audit-repairs.md) and merged via
+PR #1636 as `786e3eb53b65f7c1529e71bb2525aad1b66389c2`. They do not implement or close any NC-P15 row.
 
 Phase 15 remains entirely pending. This record is preparation authority, not an implementation
-claim.
+claim. The next authorized step is the specification-only 15A contract-decomposition gate described
+in Section 6 and in the main plan.
+
+
+## 6. Hardened execution design after the Phase-1-14 review
+
+The later forensic work sharpened this preparation in ways that matter directly to Phase 15.
+PR #1636 merged the pre-entry research-continuity/current-authority repairs as
+\`786e3eb53b65f7c1529e71bb2525aad1b66389c2\`; Phase 15 must start from current \`main\` after that
+repair rather than from the original preparation base.
+
+The implementation plan now requires a rowless/specification-only **15A contract-decomposition
+gate** before any NC-P15 row changes. That gate exists because several Phase-15 rows currently bundle
+subsurfaces that may have different compatibility semantics:
+
+| Row | Subsurfaces that must be separated if their contracts differ |
+| --- | --- |
+| NC-P15-001 | canonical CLI, legacy CLI alias, shared parser/API |
+| NC-P15-002 | manifest writer, schema/version contract, validator, family-index invariant |
+| NC-P15-003 | historical path discovery, new-run output convention, deduplication/precedence |
+| NC-P15-004 | application locals/fields, Firestore document/path identity, serialized compatibility |
+| NC-P15-005 | persisted result fields, enum/reason values, workflow job IDs, \`needs\`, artifacts, external inputs |
+| NC-P15-006 | private shared file/export and two import-consumer families |
+| NC-P15-007 | CLI, environment variable, generated report fields, historical report readers |
+
+15A must split any row whose subcontracts have different owners, persistence classes, retirement
+rules, or validation topology. This is a specification correction, not implementation churn.
+
+The default implementation sequence is 15B NC-P15-006, 15C NC-P15-001, 15D NC-P15-002,
+15E NC-P15-003, 15F NC-P15-004, 15G NC-P15-005, and 15H NC-P15-007, followed by 15I hostile
+merged-tree closeout and 15J archival/finalization. Every batch starts from the merged predecessor.
+15A must create and register `docs/naming-cleanup-phase-records/phase-15.md` as the live
+implementation/closeout authority, then extend the ledger/checker/status machinery to
+machine-enforce the final Phase-15 batch/gate order and predecessor merge barriers before 15B
+begins. The existing preparation record remains historical preparation authority and is referenced
+from the new execution record rather than repurposed as it.
+
+Each real compatibility boundary now has a stronger proof contract: authentic historical fixture,
+one owning normalizer, canonical-only read, legacy-only read, explicit dual-form conflict behavior,
+schema-version decision, canonical single-write, mixed-era collection/join behavior, real fresh
+writer output, and explicit alias-retirement evidence. Comment-only legacy tokens do not count as
+readers.
+
+The final closeout is also deliberately independent. It must begin from merged \`main\`, rerun a
+Phase-1-15 census and current-authority audit without trusting batch allowlists, replay historical
+fixtures, exercise mixed-era joins, verify canonical single-write, check representative frozen
+artifact hashes, and complete the solver-research resumption anchor. A real finding keeps Phase 15
+open until repaired and re-audited.
+
+The known \`repairLateProbe\` / \`REPAIR_LATE_PROBE\` derived vocabulary family remains a mandatory
+15A semantic-classification item. It is not silently promoted into the seven-row implementation
+scope by this preparation record.

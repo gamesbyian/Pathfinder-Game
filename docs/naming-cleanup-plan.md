@@ -1368,61 +1368,312 @@ Do not combine all facade/state cleanup into one PR. Use serial batches with arc
 - **14C state/UI names:** `HinterState`, mutable `ENGINE`, renderer orientation helper, and `pendingConfirmationAction` renames with state/controller/render/browser coverage;
 - **14D merged-tree closeout:** architecture checks, browser tests, consumer-inward audit, and final Phase-14 residue census.
 
-### Phase 15 milestone: Compatibility-boundary review
+### Phase 15 milestone: Compatibility-boundary review and final semantic closeout
 
-Phase 15 owns evidence-based retain/migrate decisions for compatibility spellings intentionally
-left live by earlier phases. NC-P15-001 through NC-P15-003 cover the shared trove CLI, generated
-manifest schema, and dated artifact discovery; NC-P15-004 covers the application/Firestore level
-fingerprint cluster; NC-P15-005 covers CP-SAT explicit-prefix result fields, values, and workflow job
-identity; NC-P15-006 covers the shared CP-SAT branch-labelling eligibility library; and NC-P15-007
-covers the shared atlas-directory CLI/generated-report boundary. These rows are not advance authorization for direct renames. Each must inventory current
-writers, external/persisted identities, historical fixtures, and all readers, then design dual-read
-normalization before any canonical single-write change. A no-migration retain decision must amend
-the row and permanent vocabulary authority with evidence rather than silently marking it done.
+Phase 15 is the final implementation phase, but it is not a single repository-wide search-and-replace
+pass. It owns the remaining compatibility boundaries, the final mixed-era evidence bridge, and the
+proof that the naming program can be archived without leaving current code, current authorities, or
+solver research in two dialects.
 
-Preparation authority: [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md)
-records the current boundary audit and the solver-research handoff risks found after Phases 8-14.
-Implementation-time reconciliation still wins over that snapshot.
+NC-P15-001 through NC-P15-003 cover the shared variant-family dataset root CLI, generated
+family-run manifest schema, and dated artifact discovery. NC-P15-004 covers the
+application/Firestore level-fingerprint cluster. NC-P15-005 covers the CP-SAT explicit-prefix
+result fields, values, and workflow identities. NC-P15-006 covers the shared CP-SAT
+branch-labelling eligibility library. NC-P15-007 covers the shared prune-gap/atlas directory
+CLI and generated-report boundary.
 
-For Phase 15, a claimed historical reader must be **executable evidence**, not a lexical hit. A
-representative historical fixture must pass through the named owner to the canonical internal form.
-A comment, allowlisted legacy token, or future-looking compatibility promise does not establish a
-dual-read boundary. If implementation-time census finds no real reader/external caller for a row
-currently marked `dual-read`, amend the compatibility contract honestly rather than manufacturing
-unused normalization code.
+These rows are not advance authorization for blind direct renames. Every row must prove the actual
+reader/writer/external-identity graph on implementation-time current \`main\`, and heterogeneous
+contracts must be split by specification amendment before code changes. In particular, a persisted
+field, a workflow-local job ID, a CLI alias, an environment variable, and a private source filename
+must not share one compatibility policy merely because they contain the same legacy word.
 
-### Phase 15 solver-research resumption gate
+Preparation authority:
+[\`naming-cleanup-phase-records/phase-15-preparation.md\`](naming-cleanup-phase-records/phase-15-preparation.md).
+The independent pre-entry repair record is
+[\`naming-cleanup-phase-records/pre-phase-15-audit-repairs.md\`](naming-cleanup-phase-records/pre-phase-15-audit-repairs.md).
+Implementation-time reconciliation wins over both snapshots.
 
-The naming cleanup is not ready for archival merely because all seven Phase-15 rows are lexically
-migrated. Before final completion:
+#### Lessons Phase 15 must operationalize
 
-1. finalize [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md)
-   as the bridge from frozen historical evidence to current solver tooling;
-2. keep attempt, stage, and routing-regime historical translation centralized in
-   `normalizeAttemptIdentityKey()`, `normalizeSolverStageId()`, and `normalizeRoutingRegime()`;
-3. extend `test:solver-research-resumption` with representative Phase-15 historical fixtures or
-   named stronger tests that prove the same end-to-end property;
-4. for every real persisted/generated compatibility boundary, prove legacy read -> canonical
-   internal form -> canonical single-write as separate assertions;
-5. prove current solver authorities and executable recipes use current vocabulary while frozen
-   evidence remains unchanged;
-6. capture one small post-Phase-15 solver-research anchor using the current regression/preflight
-   and equal-work/census tooling before the next decision-bearing solver experiment.
+The Phase-1-14 history changes the standard of proof for this final phase:
+
+- a green definition-level migration is not proof that workers, reports, workflows, cold tools,
+  browser paths, persistence adapters, or current docs received the same change;
+- a legacy token in a comment, checker allowlist, fixture name, or current prose is not evidence
+  that an executable compatibility reader exists;
+- a parser can be correct while a downstream grouping, lookup, deduplication, search, or join still
+  compares the historical identity as a raw string;
+- a writer that accepts canonical input but emits a legacy field/value is still manufacturing new
+  old-dialect evidence and violates single-write;
+- a row that bundles identities with different owners or lifetimes is underspecified, even if every
+  individual rename looks locally obvious;
+- structural workflow validation does not prove runtime argument resolution, matrix wiring,
+  artifact identity, or treatment/control semantics;
+- local/full-worktree success does not prove sparse-checkout or remote-CI behavior;
+- current architecture docs, accepted/enforced ADRs, \`AGENTS.md\`, recipes, indexes, and debug/API
+  documentation are live consumers of naming, not harmless prose;
+- residue guards can miss plurals, indirect/property-shaped access, masked normalized values, or
+  semantic equivalence; their own negative fixtures and scope statements are part of the evidence;
+- frozen history must remain frozen, but current analysis must still be able to discover and join
+  that history through one canonical owner.
+
+For Phase 15, a claimed historical reader therefore requires **executable evidence**. A
+representative legacy fixture must pass through the named owner to the canonical internal form.
+A comment, lexical hit, synthetic allowlist entry, or future-looking compatibility promise does not
+establish a dual-read boundary.
+
+#### Phase 15A: mandatory contract-decomposition gate
+
+No NC-P15 implementation may begin until a rowless/specification-only 15A entry pass runs from the
+post-audit-repair current \`main\`. 15A must not perform any of the seven canonical migrations. It
+must:
+
+1. run \`npm run naming:status\`, \`npm run check:naming-cleanup-ledger\`, and a full Phase-15
+   surface inventory from current \`main\`;
+2. reconcile every row against all changes since the Phase-15 preparation audit, including the
+   merged pre-Phase-15 research-continuity repairs;
+3. for every row, record the concrete current writer(s), current reader(s), historical reader(s),
+   external callers, persisted identities, workflow consumers, schema/version owner if any,
+   canonical target occupancy, frozen fixture(s), and intended canonical writer;
+4. prove each claimed historical reader by executing a representative fixture through the real
+   owner, or amend the row away from \`dual-read\` if no such reader/caller exists;
+5. perform a **row-homogeneity test**: if one row contains identities with different compatibility
+   owners, persistence classes, retirement rules, or validation topology, split it into stable
+   ledger rows before implementation;
+6. decide explicitly whether each generated-schema rename requires a schema-version bump; never
+   change the meaning/required fields of an existing version silently;
+7. inventory current authorities semantically, not from a small fixed doc allowlist, including
+   \`AGENTS.md\`, docs indexes/recipes, accepted or enforced ADRs, architecture/typing docs, package
+   commands, workflow documentation, and solver research runbooks;
+8. classify the known deferred \`repairLateProbe\` / \`REPAIR_LATE_PROBE\` derived vocabulary
+   family as canonical-retained, separately deferred debt, or a newly authorized Phase-15 mapping.
+   Do not mass-rename it without a specification amendment and compatibility review;
+9. create `docs/naming-cleanup-phase-records/phase-15.md` as the implementation/closeout authority,
+   register it in `phaseExecutionRecords["15"]`, and make it reference this preparation record
+   rather than overwriting preparation history;
+10. extend the ledger/checker/status machinery to a machine-readable Phase-15 serial order covering
+    the actual 15B-15J lifecycle gates (or any amended split), with predecessor merge completion
+    required before the next gate can become active; do not leave this as prose-only discipline;
+11. check for overlapping Phase-15 branches/PRs and recover or supersede them before claiming the
+    first implementation batch.
+
+If 15A changes a target name, persistence classification, compatibility owner, retirement rule, or
+row partition, land that amendment before any implementation batch. Discovery is not permission to
+improvise a different contract in code.
+
+#### Default serial implementation order after 15A
+
+The default decomposition is intentionally small. 15A may split a row further, but it should not
+recombine independent boundaries merely to reduce PR count.
+
+| Batch | Default scope | Why it is isolated |
+| --- | --- | --- |
+| 15B | NC-P15-006 shared CP-SAT branch-label eligibility library | private current-surface rename; no persistence; proves consumer-inward migration on the least ambiguous row |
+| 15C | NC-P15-001 family dataset-root CLI/API | developer/external CLI compatibility and conflict semantics are independent of data schema |
+| 15D | NC-P15-002 family-run manifest field | high-risk generated schema; reader-first normalization and version decision |
+| 15E | NC-P15-003 dated dataset artifact discovery | historical path identity and mixed old/new discovery/deduplication |
+| 15F | NC-P15-004 application/Firestore fingerprint cluster | highest-risk application/persistence identity boundary; must preserve stored document identity |
+| 15G | NC-P15-005 CP-SAT result/workflow identities | persisted result fields/values and workflow-local names must be decomposed and proven separately |
+| 15H | NC-P15-007 prune-gap directory CLI/report boundary | CLI/env/report compatibility may have different real consumers and may need row splitting |
+| 15I | merged-tree hostile closeout + solver-research resumption gate | proves the integrated repository, not the implementation branches |
+| 15J | archival/finalization handoff | records immutable closeout evidence and changes routing only after the closeout has merged |
+
+Every batch starts from the merged predecessor on current \`main\`. Do not stack Phase-15 batches.
+If 15A splits a row, give the new rows explicit batch ownership and preserve dependency order:
+reader/normalizer capability before canonical producer cutover, and producer cutover before retirement.
+
+#### Compatibility-boundary migration contract
+
+For every real persisted/generated/external compatibility boundary, the batch record must prove the
+following sequence as separate facts:
+
+1. **Authentic legacy fixture:** use a minimized copy of a real committed/historical instance when
+   practical, or a fixture generated by the historical writer contract. Record provenance. A string
+   containing the old token is not sufficient.
+2. **One owning normalizer:** legacy and canonical forms enter one canonical internal representation
+   at the named owner. Do not duplicate the alias map in workers, analyzers, workflows, or docs.
+3. **Canonical-only read:** a canonical fixture reaches the same internal form.
+4. **Legacy-only read:** the historical fixture reaches that internal form through the same owner.
+5. **Dual-form conflict behavior:** when both names can be supplied, test equal and conflicting
+   values explicitly. Conflicting identities must not be silently resolved by argument order.
+6. **Schema/version decision:** if the format has a schema/version discriminator, either bump it or
+   record why the existing version contract legitimately admits the canonical form.
+7. **Canonical single-write:** new output contains only the canonical field/value/path identity
+   except where the specification explicitly preserves a stable external identifier.
+8. **Mixed-era set behavior:** test a realistic collection containing both historical and canonical
+   records/shards/artifacts. Grouping, equality, deduplication, invariant checks, and discovery must
+   treat equivalent identities as one concept.
+9. **Fresh-output residue check:** run the real writer/combiner and prove it does not manufacture the
+   retired spelling in new output, logs, provenance, or workflow artifacts.
+10. **Retirement proof:** remove a temporary alias only when its named retirement condition is
+    demonstrably satisfied. Permanent historical readers are not "temporary aliases" and do not
+    get deleted merely because Phase 15 is ending.
+
+For native-Node owners, execute the boundary under the repository's supported Node version rather
+than relying on a newer runtime that may mask import behavior. For workflow-owned contracts,
+structural YAML validation is necessary but not sufficient; exercise the argument/result wiring with
+the smallest representative workflow or a faithful executable harness. For Firestore-owned
+contracts, use the real repository/emulator boundary rather than a plain object-only unit test when
+document/path identity is part of the invariant.
+
+#### Boundary-specific Phase-15 traps and required evidence
+
+**NC-P15-001, family dataset-root CLI/API**
+
+- canonical-first parsing lives in one shared owner;
+- current callers/docs/workflows emit only the canonical option after cutover;
+- the authorized legacy CLI remains accepted only for its recorded window;
+- same-value and conflicting dual-argument behavior are both tested;
+- individual family tools must not grow their own alias parsing.
+
+**NC-P15-002, family-run manifest schema**
+
+- changing the required dataset field requires an explicit schema-version decision;
+- a real legacy manifest must validate and enter the family index as the canonical dataset identity;
+- new manifests single-write the canonical field;
+- cross-shard invariants are tested with all-legacy, all-canonical, and mixed-era shard manifests;
+- a mixed-era join must not split one dataset or silently drop the field.
+
+**NC-P15-003, dated variant-family artifact discovery**
+
+- historical wide-trove paths remain discoverable without moving or rewriting the artifacts;
+- new-run paths use the canonical convention only after dual discovery works;
+- if both historical and canonical paths expose the same logical artifact, precedence and
+  deduplication are explicit and tested;
+- ordering/globbing differences must not change which evidence is selected without a separately
+  authorized behavior change.
+
+**NC-P15-004, application/Firestore fingerprint cluster**
+
+- partition local application vocabulary from stored document/path identity before editing;
+- preserve fingerprint algorithm/version, Firestore document IDs/path keys, duplicate detection,
+  rating lookup, hint lookup, submission behavior, and old-document readability;
+- prove existing Firestore-shaped fixtures and canonical application names through the real
+  repository boundary;
+- do not rename a persisted ID merely to make a local field look uniform;
+- if the row contains local-only and persisted contracts with different retirement semantics, split
+  it before implementation.
+
+**NC-P15-005, CP-SAT result/workflow identities**
+
+- separately classify persisted result field names, persisted enum/reason values, workflow-local job
+  IDs, \`needs\` references, artifact names, and external workflow inputs;
+- workflow-local job IDs normally migrate atomically with every dependency and need no historical
+  data reader;
+- persisted fields/values require real historical fixture normalization before the writer changes;
+- the combiner/analyzer must handle mixed old/new rows, not only pure legacy and pure canonical files;
+- exercise resolved workflow inputs/outputs/job dependencies with executable evidence rather than
+  treating a green YAML parser as proof.
+
+**NC-P15-006, CP-SAT branch-label eligibility library**
+
+- rename the shared file/export and every import/current reference atomically;
+- pin the selected eligibility population before/after on representative data;
+- do not create a private filename/function compatibility alias.
+
+**NC-P15-007, prune-gap directory CLI/report boundary**
+
+- census CLI, environment-variable, generated-report field, and historical-report readers
+  separately;
+- preserve a legacy CLI alias only if an actual external/current caller justifies it;
+- preserve historical report readability only through an actual reader; do not manufacture a dead
+  report normalizer because the ledger once said \`dual-read\`;
+- if CLI/env/report fields have different owners or lifetimes, split the row during 15A.
+
+#### Phase 15 solver-research resumption gate
+
+The naming cleanup is not ready for archival merely because all Phase-15 rows are lexically
+migrated. Before the first decision-bearing solver experiment after Phase 15:
+
+1. finalize
+   [\`solver-research-post-naming-resumption.md\`](solver-research-post-naming-resumption.md)
+   against the actual resolved Phase-15 boundaries;
+2. keep attempt, composite attempt-action, stage, and routing-regime historical translation
+   centralized in their named owner functions; current analysis must not add a second rename table;
+3. extend \`test:solver-research-resumption\` with representative Phase-15 historical fixtures or
+   named stronger tests that the resumption test invokes;
+4. prove at least one mixed-era **join**, not merely one-record parsing, for each historical identity
+   family that current solver research actually combines;
+5. prove a canonical research-status query can discover representative frozen evidence written only
+   in a historical stage/routing spelling, and that legacy/canonical queries resolve the same
+   disposition where they describe the same concept;
+6. prove current solver authorities and executable recipes use current vocabulary while frozen
+   evidence files remain byte-unchanged;
+7. run \`npm run solver:regression -- --check\` on post-Phase-15 \`main\`;
+8. run the current experiment preflight appropriate to the next live workstream;
+9. execute one small current equal-work/census path and record the exact command, base SHA, output,
+   and interpretation as the post-naming research anchor;
+10. for the next confirmation workflow, inspect the persisted resolved treatment/control flags as
+    well as the workflow conclusion so a green control-vs-control wiring failure cannot masquerade
+    as scientific evidence;
+11. reconcile \`docs/solver-optimization-workstreams.md\` once more. Naming work does not get to
+    silently reorder the research queue; any changed priority must be justified by post-naming
+    implementation/evidence, not terminology.
 
 This gate preserves negative research knowledge across renamed identities. It does not authorize
-rewriting old reports or rerunning closed experiments.
+rewriting old reports, rerunning closed experiments, or treating the anchor run as decision-bearing
+research.
 
-### PR 15: Cleanup completion
+#### Phase 15I: independent merged-tree hostile closeout
 
-- run repository-wide legacy-term audit;
-- remove temporary aliases whose removal rule is satisfied;
-- verify historical fixtures still parse through their actual owning readers;
-- pass `npm run test:solver-research-resumption` after extending it for the resolved Phase-15 boundaries;
-- complete the post-naming solver research resumption gate above;
-- mark ledger complete;
-- archive this plan and the completed ledger;
-- keep `docs/naming-and-vocabulary.md` as permanent authority;
-- update docs index/AGENTS routing accordingly.
+After the final implementation batch has merged, run a separate read-only-first closeout from that
+merged \`main\`. Do not start from the implementation branch and do not treat its verification
+record as a list of things that need not be rechecked.
+
+The closeout must, at minimum:
+
+1. rerun the complete repository-wide naming census for Phases 1-15 and classify every live legacy
+   hit as current migration defect, intentional retained term, real compatibility reader, or frozen
+   history;
+2. search canonical targets as well as legacy terms and inspect collisions, same-concept occupancy,
+   and near-miss/derived names;
+3. walk current authorities semantically from \`AGENTS.md\`, docs index/recipes, architecture and
+   typing docs, accepted/enforced ADRs, package commands, workflow maps, tooling catalog, and solver
+   runbooks rather than trusting a hand-picked two-file allowlist;
+4. replay every claimed Phase-15 historical compatibility fixture through its real owner and prove
+   canonical internal form;
+5. run real writers/combiners and prove canonical single-write with no fresh legacy fields/values;
+6. run mixed-era join/discovery tests for the family dataset, CP-SAT results, and any other resolved
+   persisted boundary;
+7. verify Phase-15 migration did not modify frozen historical artifacts except for explicitly
+   authorized current generated outputs, and record blob/hash evidence for representative fixtures;
+8. rerun supported-Node, sparse-checkout/remote-CI-sensitive, browser, workflow, and Firestore gates
+   according to the actual touched boundary graph;
+9. run the solver-research resumption gate above and record the post-naming anchor;
+10. audit the closeout guards themselves with negative fixtures for known blind-spot classes
+    (plural/derived forms, masked property access, current-authority drift, comment-only fake
+    compatibility, and raw-string mixed-era joins);
+11. compare the closeout head with current \`main\` before merge and close/supersede it if another PR
+    has already landed the same patch;
+12. record findings before repairs. Any real current defect found by this pass keeps Phase 15 open
+    until a repair merges green and the hostile closeout is rerun on the repaired tree.
+
+A final audit that merely restates each batch record is not independent evidence.
+
+#### Phase 15J: cleanup completion and archival handoff
+
+Archival is a separate finalization step after the hostile merged-tree closeout has itself merged.
+It must not be combined with the last compatibility implementation batch.
+
+- record immutable Phase-15 implementation and merged-tree closeout PR/head/CI/merge evidence;
+- only then advance \`lastCompletedPhase\` to 15, mark the ledger/program complete, and keep
+  \`activeExecution\` idle;
+- remove temporary aliases only where the recorded retirement condition is satisfied; retain
+  permanent historical readers and stable external identities that still have a real contract;
+- preserve \`docs/naming-and-vocabulary.md\` as permanent authority;
+- archive/freeze the completed plan and ledger without breaking \`naming:status\`, docs links,
+  \`AGENTS.md\`, checker routing, or historical references. If files move, leave intentional
+  tombstones/redirects or update every live consumer atomically;
+- update docs index, \`AGENTS.md\`, change recipes, and current-authority guards so future agents are
+  routed to permanent vocabulary/current implementation rather than an "active" cleanup phase;
+- verify there is no open naming-cleanup PR/branch containing unique unmerged work;
+- rerun documentation links, naming status/ledger checks, current-authority checks, ordinary exact-head CI, and any closeout-specific gate required by the final archive shape.
+
+Completion means the repository can operate, research, and explain itself in the canonical
+vocabulary while still interpreting historical evidence at explicit boundaries. It does not mean
+the repository contains zero historical legacy strings.
+
 
 ## 12. Per-phase propagation checklist
 
@@ -1519,6 +1770,12 @@ Frozen reports are excluded unless they are being actively promoted into current
 
 ## 13. Completion audit
 
+For final Phase-15 closure, the independent Phase 15I hostile merged-tree closeout above is the
+minimum proof standard. This checklist is the repository-wide completion inventory and may not be
+used to weaken that closeout. In particular, zero unclassified lexical residue is necessary but is
+not sufficient: executable compatibility readers, canonical single-write, mixed-era joins, current
+authority routing, and the solver-research resumption gate must also be proven.
+
 The cleanup is complete only when all of the following are true.
 
 1. `ida:` appears only in frozen history, historical fixtures, or explicit legacy-parser documentation.
@@ -1554,7 +1811,7 @@ The cleanup is complete only when all of the following are true.
 31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / `solver:combine-sweep-reports`, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
 32. The pre-Phase-8 process-hardening gate was completed against a recorded current-`main` commit before PR 8 began.
 33. Every Phase-8+ ledger entry has all applicable verification dimensions resolved to `done` or `not-applicable`; no row is `done` with pending verification.
-34. Every maintained command/tool/workflow touched by Phases 8-14 has either executable smoke/contract coverage or an explicit documented structural/manual validation path; aggregate CI is not cited for an unexecuted surface.
+34. Every maintained command/tool/workflow touched by Phases 8-15 has either executable smoke/contract coverage or an explicit documented structural/manual validation path; aggregate CI is not cited for an unexecuted surface.
 35. Each completed Phase 8+ has a consumer-inward closeout audit distinct from the implementation pass.
 36. Every Phase-8+ implementation batch has a checked-in execution record containing its base-main SHA, impact map, validation topology, compatibility ownership, targeted validation, closeout findings, parity result, and pre-merge comparison.
 37. No Phase-8+ implementation batch was stacked on an unmerged predecessor unless the plan recorded a specific exception; the normal sequence is merge -> verify current `main` -> branch next batch.
@@ -1566,9 +1823,37 @@ The cleanup is complete only when all of the following are true.
 43. Canonical-target occupancy has been checked during final reconciliation; no canonical name/path/package alias accidentally denotes two materially different live concepts.
 44. `npm run naming:status` reports no active execution, no incomplete phase before the completion phase, and no unexpected high-risk/compatibility residue.
 45. The ledger checker negative-case self-test remains in the maintained Node test graph and passes, so the completion contract is tested to reject bad states as well as accept the final good state.
-46. Any specification amendments made during Phases 8-14 were landed explicitly in the plan/ledger/phase authorities rather than hidden inside implementation PRs.
+46. Any specification amendments made during Phases 8-15 were landed explicitly in the plan/ledger/phase authorities rather than hidden inside implementation PRs.
 47. Every serial batch has a durable merged PR/commit record in `batchCompletions`; no later batch used predecessor row completion as a substitute for an actual merge barrier.
 48. `activeExecution` is idle on merged `main` between batches; no implementation PR leaves a stale branch-local active claim behind.
+49. Every Phase-15 compatibility claim is backed by an executable real-owner fixture or an explicit
+    evidence-backed retain/remove amendment; comments, allowlists, and token-only fixtures are not
+    counted as readers.
+50. Every real Phase-15 persisted/generated compatibility boundary has canonical-only read,
+    legacy-only read, canonical single-write, and mixed-era collection/join/discovery evidence where
+    its real consumer combines more than one record.
+51. Every generated-schema field migration has an explicit schema-version disposition, and no
+    existing schema version silently acquired contradictory required-field semantics.
+52. New Phase-15 writers, combiners, workflows, and report producers have been executed and do not
+    manufacture retired spellings except for explicitly stable external identities.
+53. Representative frozen Phase-15 historical fixtures retain their pre-migration content/blob
+    identity while current readers still interpret them through the named owner.
+54. The final current-authority audit is semantic and route-based, covering agent guidance, indexes,
+    recipes, architecture/typing authorities, accepted/enforced ADRs, workflow/tooling maps, and
+    solver runbooks rather than a small fixed document allowlist.
+55. The `repairLateProbe` / `REPAIR_LATE_PROBE` derived vocabulary family has a recorded final
+    classification instead of being left as an accidental orphan of the stage rename.
+56. The post-naming solver-research evidence bundle is recorded on the same post-Phase-15 `main`
+    lineage from which decision-bearing solver work resumes.
+57. Phase 15I ran independently on merged `main`; any defect it found was repaired and the hostile
+    closeout was rerun on the repaired merged tree before Phase 15J finalized the program.
+58. Phase 15J changed permanent routing/archival state only after immutable Phase-15 implementation
+    and merged-tree closeout evidence existed.
+59. `phaseExecutionRecords["15"]` points to the checked-in Phase-15 implementation/closeout
+    authority and `phaseClosures["15"]` records the final immutable closure evidence before
+    `lastCompletedPhase` advances to 15.
+60. The Phase-15 batch/gate sequence and predecessor merge barriers are machine-enforced rather than
+    existing only as prose in this plan.
 
 ## 14. Stop conditions
 
@@ -1586,7 +1871,23 @@ Stop an individual rename PR and report the conflict instead of improvising if:
 - a high-risk cross-boundary rename has no credible way to identify or validate a live consumer/transport surface; first improve the inventory/checking substrate or record the blocker rather than declaring the row complete;
 - another naming-cleanup implementation batch is already active or an apparently relevant historical branch has not yet been compared against current `main`;
 - the proposed PR is stacked on an unmerged predecessor without an explicit plan exception;
-- pre-merge comparison shows the intended change is already present on current `main` or the PR diff is empty.
+- pre-merge comparison shows the intended change is already present on current `main` or the PR diff is empty;
+- a Phase-15 row combines CLI, schema, workflow, persistence, source, or artifact identities that
+  have different compatibility owners, lifetimes, or validation topology; split/amend the row
+  before implementation;
+- a Phase-15 `dual-read` claim cannot be demonstrated through a real reader/external caller and an
+  authentic representative legacy fixture; amend the compatibility contract rather than
+  manufacturing an unused normalizer;
+- a generated-schema rename has no explicit versioning decision or would make one schema version
+  mean two incompatible required-field shapes;
+- a legacy-only and canonical-only fixture each parse successfully but a mixed-era collection
+  groups, deduplicates, joins, discovers, or validates them differently;
+- a new writer/combiner emits a retired spelling that should be canonical-single-write;
+- a workflow rename is structurally valid but its real input, matrix, dependency, artifact, or
+  output wiring has not been exercised credibly;
+- the semantic current-authority audit still finds live guidance teaching the retired contract;
+- the Phase 15I hostile closeout finds a real current defect. Repair it and rerun closeout rather
+  than finalizing around an allowlist.
 
 In those cases, preserve the plan's canonical vocabulary, document the concrete blocker in the ledger, and split the schema/behavior problem into a separately reviewed prerequisite. Do not choose a different name locally.
 

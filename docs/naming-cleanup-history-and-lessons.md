@@ -6,7 +6,7 @@ This document records the implementation history that motivated the stronger exe
 
 ## 1. Scope of this retrospective
 
-The original decision-complete plan landed in PR #1544. The retrospective began with the implementation and repair chain through PR #1582 on 2026-08-29 and is amended when later phases expose genuinely new failure classes. Phase 9 added such an amendment after PR #1599 on 2026-08-30.
+The original decision-complete plan landed in PR #1544. The retrospective began with the implementation and repair chain through PR #1582 on 2026-08-29 and is amended when later phases expose genuinely new failure classes. Phase 9 added the first such amendment after PR #1599 on 2026-08-30; the Phase-8-14 closeout and pre-Phase-15 audits added the semantic-closeout lessons in Section 3.8.
 
 The important pattern is not that one implementation was unusually bad. The repository repeatedly produced plausible, green, locally correct migrations that were incomplete at a different boundary. The same classes of omission reappeared across solver APIs, research tooling, generated data, workers, workflows, application state, and documentation authority.
 
@@ -160,6 +160,42 @@ Before editing, an agent must establish one authoritative active batch branch an
 ### 3.7 Independent re-audits were valuable because the implementation context was biased
 
 The later audits found issues that repeated implementation passes did not. A consumer-inward closeout should therefore be a genuinely distinct pass. Prefer a fresh agent/session when available. If the same agent performs it, the phase record must say so and the audit must start from current consumers/surfaces rather than the implementation diff.
+
+### 3.8 Later phases exposed semantic-closeout failures
+
+Phases 8-14 were executed under a much stronger process than Phases 1-7, yet independent audits
+still found new classes of incompleteness. Those failures matter especially for Phase 15 because
+the remaining rows are almost entirely compatibility and persisted-identity boundaries.
+
+- **Comment-only compatibility evidence:** the Phase-8 diagnostics follow-up proved that a legacy
+  token in comments/checker prose had been mistaken for a real dual-read boundary. The right fix was
+  to ban the retired fields, not manufacture a reader for data that never existed.
+- **Remote/sparse-checkout topology:** Phase 10 had a green local aggregate while remote CI failed
+  because closure code assumed registered repository artifacts were materialized in the sparse
+  worktree. Repository identity and worktree presence are different facts.
+- **Guard and trigger incompleteness:** Phase 11's first closeout guard missed plural legacy prose,
+  and its browser workflow path filter omitted source owners that could change the characterized
+  behavior. Structured closure evidence also proved weaker than the claims made in prose.
+- **Masked semantic access:** Phase 13's file-level ownership audit missed two scripts that received
+  a normalized level and then read retired raw metric properties. A stronger property/ownership
+  ratchet found the defect even though the surrounding report schema legitimately retained the old
+  field names.
+- **Current-authority drift after green code closeout:** Phase 14 closed with runtime/browser checks
+  green while architecture, typing, agent-routing, recipes, and accepted/enforced ADRs still taught
+  the retired dependency/state architecture. A two-file doc repair was itself incomplete until a
+  broader semantic current-authority audit found the remaining authorities.
+- **Mixed-era research joins:** the pre-Phase-15 forensic audit found current technique/family
+  analysis and research-status discovery that could parse current identities yet still compare or
+  search historical identities raw. The parser boundary was correct; the join/discovery boundary
+  was not.
+- **Workflow semantics can look scientifically valid while being unwired:** the broader solver
+  history includes confirmation workflows that were green but ran control-vs-control because a
+  matrix field path was wrong. Naming closeout must not use structural workflow validity as proof of
+  argument/result semantics.
+
+The common pattern is that proof has to follow the **semantic operation** performed by the consumer:
+parse, normalize, join, group, deduplicate, discover, dispatch, persist, or render. Lexical absence
+and green aggregate CI remain useful signals, but neither is a complete closeout argument.
 
 ## 4. Rules derived from the history
 
