@@ -28,7 +28,7 @@ export const PHASE11_RUNTIME_FILES = Object.freeze([
 
 const LEGACY_PATTERNS = Object.freeze([
   { label: 'setVariant', re: /\bsetVariant\b/u },
-  { label: 'runtime variant token', re: /\bvariant\b/u },
+  { label: 'runtime variant token', re: /\bvariants?\b/u },
   { label: '.variant property', re: /\.variant\b/u },
 ]);
 
