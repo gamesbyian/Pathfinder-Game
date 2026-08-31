@@ -8,10 +8,22 @@ async function readOrientationRoundTrip(page) {
         const level = eng.level;
         const canvas = window.APP.Renderer.getCanvas();
         const rect = canvas.getBoundingClientRect();
-        const base = window.APP.LevelUtils.UNPACK(level.gateKeys[0]);
-        const transformed = window.APP.LevelUtils.transformPoint(
-            base.x, base.y, eng.orientation, level.grid.w, level.grid.h,
-        );
+        const unpack = (key) => ({ x: key & 0xFFFF, y: key >> 16 });
+        const transformPoint = (x, y, orientation, W, H) => {
+            switch (orientation) {
+                case 0: return { tx: x, ty: y };
+                case 1: return { tx: H - 1 - y, ty: x };
+                case 2: return { tx: W - 1 - x, ty: H - 1 - y };
+                case 3: return { tx: y, ty: W - 1 - x };
+                case 4: return { tx: W - 1 - x, ty: y };
+                case 5: return { tx: x, ty: H - 1 - y };
+                case 6: return { tx: y, ty: x };
+                case 7: return { tx: H - 1 - y, ty: W - 1 - x };
+                default: return { tx: x, ty: y };
+            }
+        };
+        const base = unpack(level.gateKeys[0]);
+        const transformed = transformPoint(base.x, base.y, eng.orientation, level.grid.w, level.grid.h);
         const pointer = {
             clientX: rect.left + (transformed.tx + 0.5) * eng.viewport.cellW * (rect.width / canvas.width),
             clientY: rect.top + (transformed.ty + 0.5) * eng.viewport.cellH * (rect.height / canvas.height),
@@ -19,7 +31,7 @@ async function readOrientationRoundTrip(page) {
         return {
             orientation: eng.orientation,
             base,
-            mapped: window.APP.LevelUtils.getGridCoord(pointer),
+            mapped: window.APP.Input.getGridCoord(pointer),
             swapped: eng.viewport.swapped,
         };
     });
