@@ -8,8 +8,8 @@ import type { TurnDir } from './level-schema.js';
 const AXIS_H = 1;
 const AXIS_V = 2;
 
-/** Variants 4–7 are reflections (mirror ∘ rotation); 0–3 are pure rotations. */
-const REFLECTING_VARIANTS = [4, 5, 6, 7];
+/** Orientations 4–7 are reflections (mirror ∘ rotation); 0–3 are pure rotations. */
+const REFLECTING_ORIENTATIONS = [4, 5, 6, 7];
 
 /**
  * Map a base-orientation point to its position under one of the 8 orientations.
@@ -70,7 +70,7 @@ export function transformAxis(axis: number, orientation: number): number {
  * @param orientation 0–7
  */
 export function transformTurnDir(dir: TurnDir, orientation: number): TurnDir {
-    return REFLECTING_VARIANTS.includes(orientation) ? flipTurnDir(dir) : dir;
+    return REFLECTING_ORIENTATIONS.includes(orientation) ? flipTurnDir(dir) : dir;
 }
 
 /**
