@@ -9,6 +9,7 @@ import { createSolverController }         from './input/solver-controller.js';
 import { createLevelRatingController }    from './input/level-rating-controller.js';
 import { createFalseGoalTriggerScanController }       from './input/false-goal-trigger-scan-controller.js';
 import { setGamepadGridPrimaryAction }     from './state-actions.js';
+import { getGridCoord }                      from './input/grid-coordinates.js';
 
 export function createInput({ state, ui, engine, editor, renderer, themes, data, devCorpus, solverApi, persistence, audioService, reportError }: any) {
     let initialized = false;
@@ -30,5 +31,8 @@ export function createInput({ state, ui, engine, editor, renderer, themes, data,
         createLevelRatingController({ engine });
     };
 
-    return { init };
+    return {
+        init,
+        getGridCoord: (event: { clientX: number; clientY: number }) => getGridCoord(event, state.ENGINE, renderer.getCanvas()),
+    };
 }
