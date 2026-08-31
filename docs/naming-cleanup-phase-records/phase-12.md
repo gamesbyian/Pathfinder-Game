@@ -6,13 +6,13 @@
 | --- | --- |
 | Phase | 12 — runtime command/event vocabulary |
 | Batch | single row-bearing implementation PR; separate merged-tree closeout required |
-| Status | validating |
+| Status | implementation validated; merge pending |
 | Base `main` SHA | `9b9eaa5c329b2f01f4db0a93116577577db96d63` |
 | Branch | `chatgpt/phase12-runtime-events-2026-08-31` |
 | PR | #1617 |
-| Current PR head SHA | pending |
-| Completed GitHub CI run / conclusion | pending |
-| Tested PR merge/ref SHA | pending |
+| Current PR head SHA | behavior-bearing head `9be07095039b2ca5b80c89b81bf687b3f09c9adf`; final evidence-only head requires fresh CI |
+| Completed GitHub CI run / conclusion | CI `33365919597` / success; conservatively triggered Chromium gate `33365919537` / success on behavior-bearing head |
+| Tested PR merge/ref SHA | GitHub PR merge ref for the behavior-bearing revision; final evidence-only head is re-tested before merge |
 | Selected ledger row IDs | NC-P12-001 through NC-P12-004 |
 | Reconciliation mode | delta from the Phase-12 preparation census, with current-main producer/consumer confirmation |
 | Highest risk in batch | medium |
@@ -200,30 +200,125 @@ solver policy, or resource policy was changed.
 
 ## 7. Targeted contract validation
 
-Pending.
+The first validation head exposed only test-type fallout from strengthening `StepEvent`: the test
+suite deliberately compared typed discriminators against impossible raw strings, and one payload
+assertion did not narrow the new union. Production `check:types`, build, lint, deep proofs, and
+coverage were otherwise healthy. The tests were repaired without loosening the production type:
+negative raw-string assertions now compare through `String(event.type)`, while the sound-payload
+assertion keeps its runtime check explicitly.
+
+On behavior-bearing head `9be07095039b2ca5b80c89b81bf687b3f09c9adf`:
+
+| Validation | Boundary proved | Result |
+| --- | --- | --- |
+| GitHub CI run `33365919597` — checks | TypeScript source/tests, docs links, ledger, Phase-12 residue ratchet and other validators | success |
+| same run — node-tests | enrolled Phase-12 negative-fixture guard plus repository Node tests | success |
+| same run — deep-verification / coverage | complete Vitest coverage suite including actions + step processor behavior | success |
+| same run — build | production compilation/bundle | success |
+| same run — checks-lint | lint/style | success |
+| same run — deep-proofs | heavyweight implementation proofs | success |
+| Chromium gate `33365919537` | package-triggered Phase-11 orientation safety graph | success |
+
+The Phase-12 closeout guard reported **691 maintained text surfaces** with no retired `ActionType`
+umbrella or unowned `GameCommandType`. `check:types` and `check:types:tests` both passed on the
+behavior-bearing head after the test repair.
 
 ## 8. Consumer-inward closeout audit
 
-Pending after implementation. The pass will start at the dispatcher, tests, current glossary, and
-direct controller flows and work inward toward the event definition rather than relying on the diff.
+Implementation-branch consumer-inward pass completed before merge:
+
+- `modules/engine/step-dispatcher.ts` consumes only `GameEventType.LOGIC_STATE_CHANGE` and
+  `GameEventType.WIN`, with a typed `StepEvent` parameter; all other descriptors still flow to
+  `runEffects`.
+- `modules/runtime/step-processor.ts` is the only gameplay-event producer and emits exactly those
+  two values. Their string values remain `LOGIC_STATE_CHANGE` and `WIN`, so the runtime payload
+  shape is byte-for-byte compatible at the discriminator level.
+- `modules/input/navigation-controller.ts` still handles previous/next level and undo through
+  direct engine/state-action calls; it imports no runtime event vocabulary.
+- `modules/engine/level-flow.ts` still owns load/reset directly and imports state actions rather
+  than an event/command transport.
+- `modules/engine.ts` still wires `processStep` directly to the step dispatcher and exposes the
+  existing engine ports; no command bus was added.
+- the repository-wide Phase-12 guard scanned 691 maintained code/script/doc/workflow text surfaces
+  and found no live `ActionType` or `GameCommandType`.
+- the updated command glossary describes controller requests, pure outcomes, gameplay events,
+  effects, and state actions separately. Naming-plan/ledger/history files remain intentional legacy
+  mentions because they document the migration.
+- `EffectType.SCHEDULE_TIMER` retains its generic continuation payload; its factory has no current
+  producer and is not a `GameCommandType` transport. A test-only timer fixture was changed from a
+  fake `WIN` event to a neutral continuation object so the tests do not imply otherwise.
+
+No unclassified consumer or compatibility owner was found. The required **merged-tree** consumer
+audit remains a separate post-merge pass and therefore row `closeoutAudit` stays pending here.
 
 ## 9. Behavioral/evidence parity
 
-Pending targeted/full CI.
+| Observable | Before | After | Parity |
+| --- | --- | --- | --- |
+| live gameplay discriminator strings | `LOGIC_STATE_CHANGE`, `WIN` | same strings under `GameEventType` | exact |
+| goose order | jump-scare -> logic-state -> sound | unchanged | exact by step-processor coverage |
+| portal order | sound -> logic-state -> optional win | unchanged | exact by source diff + coverage |
+| plain win order | sound -> win | unchanged | exact by step-processor coverage |
+| dispatcher semantics | logic-state local; win local; effects delegated | unchanged with typed parameter | exact |
+| move/undo/reset/level navigation | direct engine/controller/state-action paths | same paths | exact; no touched controller implementation |
+| persistence/worker/protocol surface | none | none introduced | exact |
+
+The canonical constant object changed, but the two live emitted string values and their payload/order
+did not. Full coverage, build, Node tests, and deep verification are green on the behavior-bearing
+head.
 
 ## 10. Residue and authority reconciliation
 
-Pending post-implementation census. Expected legitimate `ActionType` hits after implementation are
-the naming plan/ledger/execution history that describe the migration itself; no current runtime
-definition or consumer may retain the umbrella.
+- delta reconciliation base: Phase-12 preparation merge `360f9dab...`, then bounded comparisons
+  through Phase 8F/8G/8H, Phase 9, Phase 10, and Phase 11 to implementation base
+  `9b9eaa5c329b2f01f4db0a93116577577db96d63`; no later production owner appeared.
+- target occupancy: `GameEventType` was unoccupied before the change and is now occupied only by
+  the intended definition/producer/consumer/tests/current docs. `GameCommandType` remains
+  deliberately absent because no owner exists.
+- `check:naming-cleanup-phase12-closeout`: pass, 691 maintained surfaces, zero live
+  `ActionType`/`GameCommandType` residue.
+- `check:documentation-links`: pass in CI run `33365919597`.
+- current-main comparison immediately before the evidence update: base remained
+  `9b9eaa5c329b2f01f4db0a93116577577db96d63`; behavior head was 17 commits ahead, 0 behind,
+  with exactly the 12 Phase-12 implementation/evidence files.
+- intentional legacy mentions are confined to naming plan/ledger/execution/history authorities that
+  must describe the old spelling. Frozen artifacts were not rewritten.
+- no new ledger row or specification amendment was required.
 
 ## 11. Pre-merge barrier
 
-Pending implementation, evidence, PR comparison, and exact-head GitHub CI.
+- [x] no predecessor Phase-12 branch/PR or duplicate work exists;
+- [x] branch started from and remains reconciled with current `main` at the behavior checkpoint;
+- [x] intended diff is non-empty and scoped to Phase 12;
+- [x] no next-phase implementation is stacked;
+- [x] behavior-bearing head passed ordinary GitHub CI `33365919597`;
+- [x] behavior-bearing head passed the conservatively triggered Chromium gate `33365919537`;
+- [x] all changed surfaced identities are owned by NC-P12-001–004 or explicitly not-applicable;
+- [x] implementation, targeted validation, consumer audit, and behavioral parity evidence are recorded;
+- [ ] final evidence-only PR head must complete fresh exact-head CI before merge;
+- [ ] merged-tree closeout remains mandatory after #1617 merges.
+
+Rows remain `in-progress` and `activeExecution` remains on #1617 because the established Phase
+10/11 completion model keeps `closeoutAudit` pending until the separate merged-tree pass. The final
+CI run for this evidence-only head is intentionally backfilled during merged-tree closeout rather
+than creating a self-invalidating evidence loop.
 
 ## 12. Closure and merge handoff
 
-Phase 12 will not advance `lastCompletedPhase` in the implementation PR. After its exact-green head
-merges, a fresh branch from merged `main` must perform the distinct consumer-inward merged-tree
-closeout, record implementation/closure evidence in `phaseClosures["12"]`, and only then mark the
-phase closed and advance `lastCompletedPhase` to 12.
+Phase 12 does not advance `lastCompletedPhase` in implementation PR #1617. After its final
+evidence-only head completes fresh exact-head CI and merges, a new closeout branch must start from
+that merge commit, transfer `activeExecution` to the merged-tree pass, rerun the residue/consumer
+audit and ordinary CI, and only then mark row `closeoutAudit` complete. A final evidence PR may
+backfill the closeout merge commit/run before `phaseClosures["12"]` becomes `closed` and
+`lastCompletedPhase` advances to 12.
+
+| Item | Value |
+| --- | --- |
+| Implementation PR | #1617 |
+| Behavior-bearing head | `9be07095039b2ca5b80c89b81bf687b3f09c9adf` |
+| Behavior-head CI | `33365919597` / success |
+| Behavior-head browser gate | `33365919537` / success |
+| Implementation merged? | pending final evidence-head CI |
+| Ledger rows closed | no; NC-P12-001–004 remain in-progress pending merged-tree closeout |
+| Deferred/superseded rows | NC-P12-003 implementation is not-applicable because no command transport exists |
+| Known structural-only surfaces | none in the live gameplay event path |
