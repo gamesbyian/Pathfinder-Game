@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 14 — application facade cleanup |
 | Current batch | 14A core extraction |
-| Status | in progress |
+| Status | 14A validated; merge pending |
 | Base `main` SHA | `8432f175b26934606355b0f4150912fabd84085a` |
 | Branch | `chatgpt/phase14a-core-extraction-2026-08-31` |
 | PR | #1624 |
@@ -110,7 +110,54 @@ fixtures or indirect consumers; those will be repaired rather than allowlisted.
 
 ## 6. 14A validation
 
-Pending.
+The first exact-head CI run `33430106823` was intentionally useful. Build, lint, Node tests,
+deep proofs, deep verification, and Chromium all passed, while the validator lane found three
+classes of 14A fallout:
+
+1. `pointer-input-controller.ts` inherited narrower literal types from direct constant imports, so
+   two `.includes(...)` checks rejected the existing string-typed state fields. The receivers were
+   widened to `readonly string[]` without changing membership or runtime behavior.
+2. `state/actions/rating-actions.test.ts` still passed the retired `core` fixture to
+   `createEngineState`, whose 14A signature no longer accepts it. The stale fixture was removed.
+3. the first Phase-14A residue guard used `core\\s*\\.` broadly enough to mistake qualified
+   retained imports such as `navigation-core.js`, `review-core.js`, and
+   `editor-toolbar-core.js` for the deleted top-level dependency bag. The matcher now excludes
+   hyphen-qualified core filenames. A dedicated Node negative-fixture test pins both sides: real
+   `createCore`, `SOUND_BUS`, `core.*`, and `./core.js` residue fail, while ADR-qualified
+   `*-core.js` imports pass.
+
+A behavior-preservation review also removed a gratuitous `Object.freeze()` introduced on the new
+constant objects. The old `core.ts` objects were ordinary objects; the extracted module now changes
+ownership only, not runtime mutability semantics.
+
+Final behavior/evidence head `49449c295c3ba95d9548366e554992ba7ceb33c7` passed:
+
+- ordinary CI `33431471911`: checks, Node tests, build, lint, deep proofs and deep verification;
+- Chromium gate `33431472195`: success;
+- source and test TypeScript checks;
+- dedicated audio service tests preserving mute-before-synth and one-shot unlock behavior;
+- application composition tests proving direct `audioService`/helper wiring;
+- `check:naming-cleanup-phase14-core-closeout`: deleted top-level facade and retired API residue
+  absent while retained qualified core modules remain legal;
+- the negative-fixture test for the residue guard itself.
+
+### 6.1 Consumer-inward 14A audit
+
+The closeout pass worked from consumers back toward the deleted facade:
+
+- `app.ts` creates `audioService` directly, injects it only into engine/input paths that need
+  sound, supplies the standalone `deepClone` helper to data/diagnostics, and exposes no debug
+  `Core` member;
+- state/UI/debug/renderer/engine/input/editor consumers import only their needed application
+  constants or explicit dependencies;
+- audio-producing engine/input controllers receive `audioService` rather than a generic bag;
+- `modules/core.ts` and `modules/core.test.ts` are absent;
+- no maintained module imports `./core.js`, names `createCore`, or uses `SOUND_BUS`;
+- retained ADR-qualified `*-core.ts` modules and `state/actions/core-actions.ts` are untouched.
+
+NC-P14-001, NC-P14-002, and NC-P14-003 therefore have complete implementation, validation,
+consumer-audit, behavioral-parity, and batch closeout evidence. Phase-wide merged-tree closeout is
+still required in 14D, but these row-level verification dimensions are complete.
 
 ## 7. 14B LevelUtils facade removal
 
