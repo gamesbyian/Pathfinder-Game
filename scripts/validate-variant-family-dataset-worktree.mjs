@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import process from 'node:process';
 
-const DATASET_BRANCH = 'claude/variant-levels-solver-insights-tpk4qg';
+const VARIANT_FAMILY_DATASET_BRANCH = 'claude/variant-levels-solver-insights-tpk4qg';
 const args = new Map(process.argv.slice(2).filter((arg) => arg.startsWith('--')).map((arg) => {
   const [key, ...value] = arg.split('=');
   return [key, value.join('=')];
@@ -42,10 +42,10 @@ const hasHistoricalNotice = existsSync(noticePath)
   && readFileSync(noticePath, 'utf8').includes('historical data branch');
 
 const problems = [];
-if (currentBranch === DATASET_BRANCH) problems.push('current working checkout is the historical variant-family dataset branch; use current main code instead');
+if (currentBranch === VARIANT_FAMILY_DATASET_BRANCH) problems.push('current working checkout is the historical variant-family dataset branch; use current main code instead');
 if (!datasetCommit) problems.push(`variant-family dataset root is not a Git worktree: ${root}`);
 if (missing.length) problems.push(`variant-family dataset root is missing: ${missing.join(', ')}`);
-if (datasetBranch && datasetBranch !== DATASET_BRANCH) problems.push(`variant-family dataset worktree is on ${datasetBranch}, expected ${DATASET_BRANCH}`);
+if (datasetBranch && datasetBranch !== VARIANT_FAMILY_DATASET_BRANCH) problems.push(`variant-family dataset worktree is on ${datasetBranch}, expected ${VARIANT_FAMILY_DATASET_BRANCH}`);
 if (!hasHistoricalNotice) problems.push('variant-family dataset root lacks the current historical-branch AGENTS.md sentinel; fetch/update the dataset branch before relying on branch-local guidance');
 
 const report = {

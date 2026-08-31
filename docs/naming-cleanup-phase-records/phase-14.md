@@ -5,12 +5,12 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14D merged-tree closeout |
-| Status | 14D validated; merge pending |
-| Base `main` SHA | `bd809ed8c3bb55a02757f29868eafe15fb91402d` |
-| Branch | `chatgpt/phase14d-merged-tree-closeout-2026-08-31` |
-| PR | #1628 |
-| Selected ledger row IDs | NC-P14-009, NC-P14-010 retained-term disposition; NC-P14-001–008 re-audited |
+| Current batch | post-14D forensic audit repair |
+| Status | #1628 merged; post-closeout repair PR #1629 pending exact-head green/merge; final immutable closure evidence follows repaired main |
+| Base `main` SHA | `8022c79aa2241be9ed6c8f9aac9380f4896a0cd9` (merge of #1628) |
+| Branch | `chatgpt/phases8-14-audit-repairs-2026-08-31` |
+| PR | #1629 (post-closeout repair); #1628 is the superseded insufficient closeout |
+| Selected ledger row IDs | rowless repair; NC-P14-001–010 re-audited, with current-doc coverage added to the phase-wide guard |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
 | 14A risk | medium |
@@ -399,8 +399,26 @@ merge evidence is recorded.
 This row-closure commit changes only ledger/evidence state. It must pass fresh exact-head ordinary
 CI and Chromium before #1628 may merge.
 
-## 11. Final closure
+## 11. Original 14D closure checkpoint
 
-Phase 14 remains incomplete until 14D is merged, NC-P14-001 through NC-P14-010 have complete
-verification/disposition evidence, structured closure evidence is recorded, and
+PR #1628 subsequently merged and satisfied the original 14D merge barrier, with all
+NC-P14-001 through NC-P14-010 row-complete. The later forensic finding in Section 12 supersedes
+that attempted closure: Phase 14 remains incomplete until the post-closeout repair itself merges
+green, structured final closure evidence is recorded from repaired main, and
 `lastCompletedPhase` advances to 14.
+
+
+## 12. Post-#1628 forensic audit repair
+
+PR #1628 merged as `8022c79aa2241be9ed6c8f9aac9380f4896a0cd9`, but a later independent
+Phases 8-14 audit found that the merged-tree closeout had missed current architecture documentation.
+`docs/architecture.md` still described `SOUND_BUS`, the former `core` dependency bag,
+`levelUtils`, and mutable `ENGINE`; `docs/typing.md` still described `LevelUtils` and
+`ENGINE` writes. These are current authorities, not frozen history, so the phase-wide
+consumer-inward audit was incomplete despite the code/browser checks being green.
+
+This post-closeout repair updates those current authorities to the merged Phase-14 architecture and
+extends the permanent Phase-14 closeout guard with negative fixtures for those exact stale concepts.
+Because this is a real closeout defect discovered after #1628, Phase 14 remains incomplete and
+`lastCompletedPhase` remains 13 until the repair merges green and immutable final closure evidence
+is recorded from the repaired merged tree.

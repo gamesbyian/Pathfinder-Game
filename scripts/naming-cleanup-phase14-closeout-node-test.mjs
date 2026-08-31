@@ -3,6 +3,7 @@ import {
   RETAINED_QUALIFIED_CORES,
   RETAINED_CORE_ACTIONS,
   classifyPhase14CorePath,
+  findPhase14CurrentDocResidue,
 } from './naming-cleanup-phase14-closeout.mjs';
 
 assert.equal(classifyPhase14CorePath('modules/core.ts'), 'retired-top-level-facade');
@@ -11,5 +12,19 @@ assert.equal(classifyPhase14CorePath(RETAINED_CORE_ACTIONS), 'retained-core-stat
 assert.equal(classifyPhase14CorePath('modules/app-constants.ts'), 'unrelated');
 assert.equal(RETAINED_QUALIFIED_CORES.length, 7);
 assert.ok(RETAINED_QUALIFIED_CORES.every(path => path.endsWith('-core.ts')));
+
+assert.deepEqual(
+  findPhase14CurrentDocResidue('docs/architecture.md', ['SOUND_BUS and mutable ', 'ENG', 'INE with levelUtils and `core`'].join('')),
+  [
+    'docs/architecture.md: retired Phase-14 current-doc vocabulary (SOUND_BUS adapter)',
+    'docs/architecture.md: retired Phase-14 current-doc vocabulary (mutable state root)',
+    'docs/architecture.md: retired Phase-14 current-doc vocabulary (LevelUtils facade)',
+    'docs/architecture.md: retired Phase-14 current-doc vocabulary (core dependency bag)',
+  ],
+);
+assert.deepEqual(
+  findPhase14CurrentDocResidue('docs/architecture.md', 'audioService and AppState.engineState with direct domain/input/editor owners'),
+  [],
+);
 
 console.log('Phase-14 retained core terminology classification fixtures passed.');

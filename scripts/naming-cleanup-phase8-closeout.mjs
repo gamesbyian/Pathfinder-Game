@@ -112,6 +112,19 @@ const compatibilityChecks = compatibilityCoverages.map(coverage =>
 const failures = [];
 const compatibilityHits = [];
 
+const phase8DatasetBranchOwner = 'scripts/validate-variant-family-dataset-worktree.mjs';
+try {
+  const datasetBranchSource = readFileSync(phase8DatasetBranchOwner, 'utf8');
+  if (!/\bVARIANT_FAMILY_DATASET_BRANCH\b/u.test(datasetBranchSource)) {
+    failures.push({ label: 'NC-P08-054 canonical target missing', file: phase8DatasetBranchOwner, line: 0, text: 'VARIANT_FAMILY_DATASET_BRANCH' });
+  }
+  if (/\bconst\s+DATASET_BRANCH\b/u.test(datasetBranchSource)) {
+    failures.push({ label: 'NC-P08-054 substituted noncanonical target', file: phase8DatasetBranchOwner, line: 0, text: 'DATASET_BRANCH' });
+  }
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error;
+}
+
 const coverageContractRows = new Map([
   ['typed-scoring-profile-shorthand', new Set(['NC-P08-007'])],
   ['persisted-level-fingerprint-cluster', new Set(['NC-P08-008'])],

@@ -19,6 +19,28 @@ export const RETAINED_QUALIFIED_CORES = Object.freeze([
 
 export const RETAINED_CORE_ACTIONS = 'modules/state/actions/core-actions.ts';
 
+export const PHASE14_CURRENT_DOCS = Object.freeze([
+  'docs/architecture.md',
+  'docs/typing.md',
+]);
+
+const RETIRED_MUTABLE_ROOT = ['ENG', 'INE'].join('');
+
+const RETIRED_CURRENT_DOC_PATTERNS = Object.freeze([
+  { label: 'SOUND_BUS adapter', re: /\bSOUND_BUS\b/u },
+  { label: 'mutable state root', re: new RegExp(`\\b${RETIRED_MUTABLE_ROOT}\\b`, 'u') },
+  { label: 'LevelUtils facade', re: /\b(?:LevelUtils|levelUtils)\b/u },
+  { label: 'core dependency bag', re: /`core`/u },
+]);
+
+export function findPhase14CurrentDocResidue(relativePath, content) {
+  const failures = [];
+  for (const { label, re } of RETIRED_CURRENT_DOC_PATTERNS) {
+    if (re.test(content)) failures.push(`${relativePath}: retired Phase-14 current-doc vocabulary (${label})`);
+  }
+  return failures;
+}
+
 export function classifyPhase14CorePath(relativePath) {
   if (relativePath === 'modules/core.ts') return 'retired-top-level-facade';
   if (relativePath === RETAINED_CORE_ACTIONS) return 'retained-core-state-actions';
@@ -65,6 +87,15 @@ export function checkPhase14Closeout(root = process.cwd()) {
   const vocabulary = fs.readFileSync(path.join(root, 'docs/naming-and-vocabulary.md'), 'utf8');
   if (!/\*-core\.ts/u.test(vocabulary) || !/state\/actions\/core-actions\.ts/u.test(vocabulary)) {
     failures.push('permanent naming authority must document both retained Phase-14 core terminology classes');
+  }
+
+  for (const relativePath of PHASE14_CURRENT_DOCS) {
+    const absolutePath = path.join(root, relativePath);
+    if (!fs.existsSync(absolutePath)) {
+      failures.push(`${relativePath}: required current architecture authority is missing`);
+      continue;
+    }
+    failures.push(...findPhase14CurrentDocResidue(relativePath, fs.readFileSync(absolutePath, 'utf8')));
   }
 
   const app = fs.readFileSync(path.join(root, 'modules/app.ts'), 'utf8');

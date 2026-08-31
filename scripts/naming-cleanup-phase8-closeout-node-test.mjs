@@ -73,6 +73,7 @@ try {
     cpSync(path.join(root, file), destination);
   }
   cpSync(path.join(root, 'scripts/experiment-manifest-lib.mjs'), path.join(fixture, 'scripts/experiment-manifest-lib.mjs'));
+  cpSync(path.join(root, 'scripts/validate-variant-family-dataset-worktree.mjs'), path.join(fixture, 'scripts/validate-variant-family-dataset-worktree.mjs'));
   cpSync(path.join(root, 'scripts/stress/cpsat-explicit-prefix-reference.mjs'), path.join(fixture, 'scripts/stress/cpsat-explicit-prefix-reference.mjs'));
   cpSync(path.join(root, '.github/workflows/collect-prune-gap-labels.yml'), path.join(fixture, '.github/workflows/collect-prune-gap-labels.yml'));
   cpSync(path.join(root, '.github/workflows/cpsat-explicit-prefix-reference.yml'), path.join(fixture, '.github/workflows/cpsat-explicit-prefix-reference.yml'));
@@ -85,6 +86,14 @@ try {
   assert.match(result.stderr, /NC-P08-002 ledger legacy surface/);
   assert.doesNotMatch(result.stderr, /missing canonical 8H contract/);
   unlinkSync(regressionPath);
+
+  const datasetBranchFixture = path.join(fixture, 'scripts/validate-variant-family-dataset-worktree.mjs');
+  const datasetBranchCanonicalSource = readFileSync(datasetBranchFixture, 'utf8');
+  writeFileSync(datasetBranchFixture, datasetBranchCanonicalSource.replaceAll('VARIANT_FAMILY_DATASET_BRANCH', 'DATASET_BRANCH'));
+  result = run(cleanLedgerPath, fixture);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /NC-P08-054 canonical target missing|NC-P08-054 substituted noncanonical target/);
+  writeFileSync(datasetBranchFixture, datasetBranchCanonicalSource);
 
   const fingerprintExpansion = path.join(fixture, 'modules/input/unowned-fingerprint.ts');
   writeFileSync(fingerprintExpansion, 'export interface Unowned { fingerprint: string }\n');
