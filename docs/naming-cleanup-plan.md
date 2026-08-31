@@ -1343,6 +1343,8 @@ This migration is application-wide and high risk. Use a prep/switch/closeout seq
 
 Research level-variant terminology remains unchanged.
 
+**Phase-11 post-closeout specification amendment (2026-08-31):** the 11A persistence audit proved that NC-P11-001 has no raw-level, session, persisted, or stable external runtime compatibility spelling to dual-read. The implemented 11B switch therefore correctly used one canonical runtime field with no alias. Reclassify NC-P11-001 from a `dual-read` compatibility-boundary migration to a direct current-surface rename with `persistence: none`; there is no Phase-15 runtime-orientation compatibility retirement to perform. This amendment reconciles the ledger with the already-recorded Phase-11 evidence and does not change runtime behavior or the permanent vocabulary rule.
+
 ### PR 12: Runtime command/event vocabulary
 
 - split `ActionType`;
