@@ -19,23 +19,33 @@ export const RETAINED_QUALIFIED_CORES = Object.freeze([
 
 export const RETAINED_CORE_ACTIONS = 'modules/state/actions/core-actions.ts';
 
-export const PHASE14_CURRENT_DOCS = Object.freeze([
-  'docs/architecture.md',
-  'docs/typing.md',
-]);
-
 const RETIRED_MUTABLE_ROOT = ['ENG', 'INE'].join('');
 
-const RETIRED_CURRENT_DOC_PATTERNS = Object.freeze([
-  { label: 'SOUND_BUS adapter', re: /\bSOUND_BUS\b/u },
-  { label: 'mutable state root', re: new RegExp(`\\b${RETIRED_MUTABLE_ROOT}\\b`, 'u') },
-  { label: 'LevelUtils facade', re: /\b(?:LevelUtils|levelUtils)\b/u },
-  { label: 'core dependency bag', re: /`core`/u },
+const RETIRED_CURRENT_DOC_PATTERNS = Object.freeze({
+  soundBus: { label: 'SOUND_BUS adapter', re: /\bSOUND_BUS\b/u },
+  mutableRoot: { label: 'mutable state root', re: new RegExp(`\\b${RETIRED_MUTABLE_ROOT}\\b`, 'u') },
+  levelUtils: { label: 'LevelUtils facade', re: /\b(?:LevelUtils|levelUtils)\b/u },
+  coreBag: { label: 'core dependency bag', re: /`core`/u },
+});
+
+export const PHASE14_CURRENT_DOC_RULES = Object.freeze([
+  { path: 'docs/architecture.md', patterns: ['soundBus', 'mutableRoot', 'levelUtils', 'coreBag'] },
+  { path: 'docs/typing.md', patterns: ['soundBus', 'mutableRoot', 'levelUtils', 'coreBag'] },
+  { path: 'AGENTS.md', patterns: ['soundBus', 'mutableRoot', 'levelUtils'] },
+  { path: 'docs/change-recipes.md', patterns: ['soundBus', 'mutableRoot', 'levelUtils'] },
+  { path: 'docs/adr/0002-state-action-boundary.md', patterns: ['mutableRoot'] },
+  { path: 'docs/adr/0006-pure-transition-cores-no-central-dispatcher.md', patterns: ['mutableRoot'] },
+  { path: 'docs/adr/0011-full-typescript-migration.md', patterns: ['levelUtils'] },
 ]);
+
+export const PHASE14_CURRENT_DOCS = Object.freeze(PHASE14_CURRENT_DOC_RULES.map(rule => rule.path));
 
 export function findPhase14CurrentDocResidue(relativePath, content) {
   const failures = [];
-  for (const { label, re } of RETIRED_CURRENT_DOC_PATTERNS) {
+  const rule = PHASE14_CURRENT_DOC_RULES.find(candidate => candidate.path === relativePath);
+  const patternKeys = rule?.patterns ?? Object.keys(RETIRED_CURRENT_DOC_PATTERNS);
+  for (const key of patternKeys) {
+    const { label, re } = RETIRED_CURRENT_DOC_PATTERNS[key];
     if (re.test(content)) failures.push(`${relativePath}: retired Phase-14 current-doc vocabulary (${label})`);
   }
   return failures;
