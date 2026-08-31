@@ -90,11 +90,11 @@ function fail(message) {
   failures.push(message);
 }
 
-if (ledger.schemaVersion !== 4) {
-  fail(`schemaVersion must be 4; found ${JSON.stringify(ledger.schemaVersion)}`);
+if (ledger.schemaVersion !== 5) {
+  fail(`schemaVersion must be 5; found ${JSON.stringify(ledger.schemaVersion)}`);
 }
-if (ledger.completionContractVersion !== 4) {
-  fail(`completionContractVersion must be 4; found ${JSON.stringify(ledger.completionContractVersion)}`);
+if (ledger.completionContractVersion !== 5) {
+  fail(`completionContractVersion must be 5; found ${JSON.stringify(ledger.completionContractVersion)}`);
 }
 if (ledger.processHardeningAuthority !== 'docs/naming-cleanup-process-hardening.md') {
   fail('processHardeningAuthority must point at docs/naming-cleanup-process-hardening.md');
