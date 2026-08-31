@@ -1,4 +1,8 @@
 import type { RequireDeps } from '../state.js';
+import {
+    DRAGGING, EDITOR, EDIT_DRAG, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY,
+    HAZARD_TRIGGERED, HINT_ANIMATING, IDLE, PLAY, RESOLVED, REVIEW, SOLVER_RUNNING,
+} from '../app-constants.js';
 // Pointer-input controller: canvas pointerdown/pointermove/pointerup,
 // drag-ghost update, and the gamepadGridPrimaryAction bridge.
 
