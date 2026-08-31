@@ -32,3 +32,20 @@ export function normalizeRoutingRegime(value) {
         throw new Error(`Unknown solver routing regime: ${value}`);
     return normalized;
 }
+
+
+/**
+ * Return every historical/current spelling that denotes the same routing regime.
+ * Search/discovery tooling may use this without copying the compatibility map.
+ * @param {string} value
+ * @returns {readonly string[]}
+ */
+export function routingRegimeIdentityTerms(value) {
+    const canonical = normalizeRoutingRegime(value);
+    return Object.freeze([
+        canonical,
+        ...Object.entries(LEGACY_ROUTING_REGIME_ALIASES)
+            .filter(([, target]) => target === canonical && target !== value)
+            .map(([legacy]) => legacy),
+    ]);
+}
