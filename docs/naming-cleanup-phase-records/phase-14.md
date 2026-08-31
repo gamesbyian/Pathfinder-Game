@@ -9,7 +9,7 @@
 | Status | post-closeout repair #1629 merged green; structured Phase-14 closure recorded; `lastCompletedPhase` advances to 14 in this evidence PR |
 | Base `main` SHA | `4d31805cd6e1280a39ae3befefa5ed354b3d099b` (merge of audit repair #1629) |
 | Branch | `chatgpt/phase14-final-evidence-after-audit-repair-2026-08-31` |
-| PR | final-evidence PR pending; #1629 is the effective repaired merged-tree closeout; #1628 is superseded |
+| PR | #1630 final evidence; #1629 is the effective repaired merged-tree closeout; #1628 is superseded |
 | Selected ledger row IDs | rowless repair; NC-P14-001–010 re-audited, with current-doc coverage added to the phase-wide guard |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
