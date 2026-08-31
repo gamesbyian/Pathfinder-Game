@@ -4457,11 +4457,11 @@
     "status": "active",
     "phase": 10,
     "batch": null,
-    "branch": "codex/phase-10-complete",
-    "pr": null,
-    "baseMainSha": "c7fcc35d31b7992fbf88121063dde4641b3215a5",
+    "branch": "codex/implement-phase-10-of-naming-cleanup-process",
+    "pr": 1607,
+    "baseMainSha": "c7fcc35d3079ccbc511c92b1255e010adba2c35a",
     "recordPath": "docs/naming-cleanup-phase-records/phase-10.md",
-    "notes": "Implementation and local targeted validation complete; PR, exact-head CI, merge, and merged-tree closeout remain required."
+    "notes": "Implementation and targeted validation complete; PR #1607 is open. Sparse-checkout-safe closeout/ledger fixes have been applied; exact-head CI, merge, and merged-tree closeout remain required."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior.",
   "phaseBatches": {
