@@ -15,7 +15,7 @@ Terse implementation map for `modules/solver/`. Read [`../../docs/solver-archite
 | Profiles/templates/search-family behavior | technique taxonomy, then `policy.ts`, `scoring.ts`, `search.ts`, `admissible-order-search.ts`, `repair-search.ts` |
 | Beam/DFS traversal or candidate expansion | `search.ts`, `search-state.ts`, `prep.ts` |
 | Candidate ranking / badness / ordering | `scoring.ts`, `diversification.ts` |
-| Lower bounds / hard feasibility / prune logic | `lower-bounds.ts`, `prune-gauntlet.ts`, tests |
+| Lower bounds / hard feasibility / prune logic | `lower-bounds.ts`, `hard-prune-pipeline.ts`, tests |
 | Repair | `repair-search.ts`, tests |
 | Admissible-order search | `admissible-order-search.ts` |
 | Geometry/topology/distance | `topology.ts`, `distance.ts` |

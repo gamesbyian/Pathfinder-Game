@@ -158,7 +158,7 @@ const contentionCaveat = (parallelDesc) =>
     'a sequential-official run or treated as an official timing number, for two independent reasons: ' +
     '(1) by design, not a bug — a repair-eligible level (needsRepairFallback) gets 1-2 repair configs ' +
     '(an extra must-turn-biased pass when the level has must-turn cells), each with its OWN fresh clock ' +
-    "and its own full timeBudgetMs*REPAIR_EXTRA_BUDGET_FRACTION (6.0, orchestration.ts) allotment ON TOP " +
+    "and its own full timeBudgetMs*REPAIR_ADDITIVE_BUDGET_MULTIPLIER (6.0, orchestration.ts) allotment ON TOP " +
     "of the main loop's 1x share — up to ~13x timeBudgetMs total, confirmed by reading orchestration.ts/" +
     'attempts.ts, reproducible even at --parallel=1 with zero contention; (2) this subset additionally ran ' +
     'under real worker-thread contention on top of that, adding further, less predictable wall-clock ' +

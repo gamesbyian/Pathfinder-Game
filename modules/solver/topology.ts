@@ -451,7 +451,7 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
     // cells stay open. On `reqInt <= must-cross count` levels that holds from the first move.
     //
     // Gates are already walls (prep.reachBlockedArr) and can never be re-entered; the goal is
-    // terminal (prune-gauntlet.ts answers 'solution' or 'reject' the moment a move enters it), so
+    // terminal (hard-prune-pipeline.ts answers 'solution' or 'reject' the moment a move enters it), so
     // neither of the two intersection-exempt cells (search-state.ts's `wasIntAdded`) can be
     // revisited and the budget arithmetic above covers every remaining case.
     //

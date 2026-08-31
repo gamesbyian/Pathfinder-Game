@@ -232,7 +232,7 @@ Tools: `solver:legacy-latency-portfolio-report`, `solver:legacy-latency-portfoli
 
 ### Repair extra budget
 
-`REPAIR_EXTRA_BUDGET_FRACTION = 6.0`; 30 s can add 180 s. `--node-budget` / top-level `repairBudgetFractionOverride` control it. Corpus1: fraction 0 cut ~51 -> ~18 min while losing six 35–115 s solves. **Testing/benchmarking uses 0; hint discovery keeps 6×; interactive 30 s UIs use 0.** Keep the override outside sparse `ablation`.
+`REPAIR_ADDITIVE_BUDGET_MULTIPLIER = 6.0`; 30 s can add 180 s. `--node-budget` / top-level `repairAdditiveBudgetMultiplierOverride` control it. Corpus1: fraction 0 cut ~51 -> ~18 min while losing six 35–115 s solves. **Testing/benchmarking uses 0; hint discovery keeps 6×; interactive 30 s UIs use 0.** Keep the override outside sparse `ablation`.
 
 `run-repair-search.mjs` calls `repairSearchFromGate` directly; `--races=N` runs salted restarts, `seedSalt` default 0. `--work-budget=<n>` instead runs `restart-continuation-harness.ts`'s equal-canonical-`workSpent` continuation-vs-restart comparison (seed 0 to `n`, versus seed 0 to `n/2` then, only on failure, fresh seed 1 for the remainder) — see [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) item 0 and the 2026-08-24 restart-continuation-value audit; mutually exclusive with `--races`.
 

@@ -31,7 +31,7 @@ test('disableExtraBudgetPasses suppresses late repair probe when no explicit ove
         timeBudgetMs: 1000,
         ablation: { STRATEGY_REPAIR_LATE_PROBE: true },
         repairLateProbeNodeBudgetOverride: 100,
-        repairBudgetFractionOverride: 0,
+        repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         admissibleOrderBudgetFractionOverride: 0,
         dedupNearTieRetryBudgetFractionOverride: 0,

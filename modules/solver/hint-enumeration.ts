@@ -5,7 +5,7 @@ import { applyMove, createState, getNeighbors, undoMove } from './search-state.j
 import { getRealLengthFromState, isSolutionState } from './solution.js';
 import { getDistanceFromArray } from './distance.js';
 import { rankByAdmissibleSlack } from './admissible-order-search.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile, SolverSearchState } from './types.js';
 
@@ -27,7 +27,7 @@ export interface EnumOptions {
     yieldFn?: (() => Promise<void>) | null;
     /** Restrict exhaustive traversal to these actual root children, enabling disjoint first-move shards. */
     rootChildren?: number[];
-    /** `admissible-slack` is a package: slack ordering plus the full admissible prune gauntlet.
+    /** `admissible-slack` is a package: slack ordering plus the full admissible hard-prune pipeline.
      * Pairing matters because the ranking assumes dead constrained branches are rejected promptly.
      * Both modes remain complete when unbounded; default `random` behavior is unchanged. */
     orderBy?: 'random' | 'admissible-slack';

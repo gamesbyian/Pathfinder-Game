@@ -129,7 +129,7 @@ async function solveAndClassify(raw, { mainLoopOnly = false } = {}) {
             timeBudgetMs: TIME_BUDGET_MS,
             nodeBudget: NODE_BUDGET,
             workBudget: WORK_BUDGET,
-            ...(mainLoopOnly ? { repairBudgetFractionOverride: 0 } : {}),
+            ...(mainLoopOnly ? { repairAdditiveBudgetMultiplierOverride: 0 } : {}),
         });
     }
     catch (err) { return { signature: 'error', detail: `solve: ${err?.message}` }; }

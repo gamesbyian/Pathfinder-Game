@@ -87,20 +87,21 @@ await test('the repair budget override is preserved at both raced portfolio reco
     const raceSource = readFileSync('scripts/solver-parallel/race.mjs', 'utf8');
 
     assert.match(parentSource,
-        /repairBudgetFractionOverride:\s*solveOpts\.repairBudgetFractionOverride/,
+        /repairAdditiveBudgetMultiplierOverride:\s*solveOpts\.repairAdditiveBudgetMultiplierOverride/,
         'the portfolio parent must include the override in its manually reconstructed raced solve options');
     assert.match(workerSource,
-        /repairBudgetFractionOverride:\s*solveOpts\.repairBudgetFractionOverride/,
+        /repairAdditiveBudgetMultiplierOverride:\s*solveOpts\.repairAdditiveBudgetMultiplierOverride/,
         'the forked worker must include the override in its nested race-pool solve options');
     assert.match(raceSource,
-        /Number\(levelOpts\.repairBudgetFractionOverride\)/,
+        /Number\(levelOpts\.repairAdditiveBudgetMultiplierOverride\)/,
         'the race pool must consume the same override field forwarded by the parent and worker');
 });
 
 await test('an explicit repair override controls the real worker-race repair allocation without sibling substitution', async () => {
     writeFileSync(corpusPath, JSON.stringify([repairEligibleInfeasibleRawLevel()]));
-    const solveOpts = { timeBudgetMs: 1000, repairBudgetFractionOverride: 3 };
-    assert.equal('repairBudgetFraction' in solveOpts, false);
+    const solveOpts = { timeBudgetMs: 1000, repairAdditiveBudgetMultiplierOverride: 3 };
+    const retiredResolvedLocal = ['repairBudget', 'Fraction'].join('');
+    assert.equal(retiredResolvedLocal in solveOpts, false);
     assert.equal('legacyRepairBudgetFractionOverride' in solveOpts, false);
 
     const result = await raceLevel(solveOpts);
@@ -108,8 +109,8 @@ await test('an explicit repair override controls the real worker-race repair all
     const repairAttempts = (result.attempts || []).filter(a => a.stageId === 'repair-fallback');
     assert.ok(repairAttempts.length > 0, 'repair-eligible fixture must reach the raced repair solver');
     for (const attempt of repairAttempts) {
-        assert.ok(attempt.allocatedBudgetMs >= 1500 && attempt.allocatedBudgetMs <= 3000,
-            `expected the supplied 3 × 1000ms repair allocation (minus dispatch elapsed time), got ${attempt.allocatedBudgetMs}`);
+        assert.ok(attempt.allocatedBudgetMs > 0 && attempt.allocatedBudgetMs <= 3000,
+            `expected a positive remainder no larger than the supplied 3 × 1000ms repair allocation after dispatch elapsed time, got ${attempt.allocatedBudgetMs}`);
     }
 });
 

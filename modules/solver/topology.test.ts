@@ -9,8 +9,8 @@ import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
 import { createState, applyMove } from './search-state.js';
 import { __setReachGenerationForTests, isConnected, isConnectedForFalseGoalTriggerSearch } from './topology.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
-import type { PruneDiagnostics } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 
 const K = (x: number, y: number) => PACK(x - 1, y - 1); // 1-based wire coords
 

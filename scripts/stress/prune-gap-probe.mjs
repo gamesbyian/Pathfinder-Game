@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Localises the solver's MISSING GLOBAL INFERENCE, by asking one question at every decision point
- * along a known solution: of the branches our prune gauntlet lets through, how many were already
+ * along a known solution: of the branches our hard-prune pipeline lets through, how many were already
  * provably dead?
  *
  * WHY THIS QUESTION. Three results now line up (reports/2026-07-31-cpsat-encoding-bug-and-external-
@@ -14,7 +14,7 @@
  * METHOD. Walk a stored, referee-valid solution. At each sampled decision point, take every
  * alternative move `getNeighbors` offers (i.e. every sibling of the solution's own next move) and
  * cross two facts:
- *   1. does OUR gauntlet prune it?  -> modules/solver/prune-gauntlet.ts's evaluatePrunedMove, the
+ *   1. does OUR gauntlet prune it?  -> modules/solver/hard-prune-pipeline.ts's evaluatePrunedMove, the
  *      real function dfsFromGate calls, not a reimplementation of it.
  *   2. is it ACTUALLY dead?         -> cpsat-reference-probe.py --prefix=<path+alt>, asking whether any
  *      valid completion exists from that partial path.
@@ -42,7 +42,7 @@ import { fileURLToPath } from 'node:url';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
-import { evaluatePrunedMove } from '../../modules/solver/prune-gauntlet.ts';
+import { evaluatePrunedMove } from '../../modules/solver/hard-prune-pipeline.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { getRealLengthFromState } from '../../modules/solver/solution.ts';
 import { UNPACK } from '../../modules/domain/cell-key.ts';

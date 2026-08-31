@@ -7,7 +7,7 @@ export interface DistMapOpts {
     /** GUIDANCE-ONLY escape hatch: recreates the pre-6f00baf routing (geese/gates/false-goals
      *  treated as ordinary passable through-nodes, not excluded/sinks at all). This can
      *  UNDERESTIMATE true distance — it is NOT a sound lower bound and must never feed pruning
-     *  (lower-bounds.ts/prune-gauntlet.ts) or an admissible heuristic (admissible-order-search.ts).
+     *  (lower-bounds.ts/hard-prune-pipeline.ts) or an admissible heuristic (admissible-order-search.ts).
      *  It exists only because scoring.ts's move-ordering guidance is not safety-monotonic the way
      *  pruning is: the technically-wrong pre-fix distances empirically routed several budget-
      *  limited searches toward their winning branch by coincidence (see

@@ -25,7 +25,7 @@
  *     ...any extra explanation fields for the report
  *   }
  * `state` is positioned AT `pos` (the alt move already applied) — mirrors exactly how
- * evaluatePrunedMove itself is invoked (prune-gauntlet.ts), so a probe reads state the same way the
+ * evaluatePrunedMove itself is invoked (hard-prune-pipeline.ts), so a probe reads state the same way the
  * real gauntlet would.
  *
  * TELEMETRY. Per probe: catch-on-dead, false-reject-on-live (must be zero to claim "sound"),

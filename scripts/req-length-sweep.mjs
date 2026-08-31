@@ -75,7 +75,7 @@ for (const position of positions) {
                 timeBudgetMs: budgetMs,
                 nodeBudget: nodeBudget ?? undefined,
                 workBudget: workBudget ?? undefined,
-                repairBudgetFractionOverride: repairBudgetFraction ?? undefined,
+                repairAdditiveBudgetMultiplierOverride: repairBudgetFraction ?? undefined,
                 schedulerMode,
             });
             const referee = result.solution ? Solver.validateCandidatePath(level, result.solution) : null;

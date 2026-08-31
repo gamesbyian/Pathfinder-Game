@@ -11,7 +11,7 @@ import { PACK } from './encoding.js';
 import { runAttempt, attemptConfigKey, normalizeAblationConfig } from './orchestration.js';
 import { KnownSolutionPrefixSurvivalObserver, KnownSolutionPrefixIndex } from './known-solution-prefix-survival.js';
 import { beamSearchFromGate } from './search.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { getRealLengthFromState } from './solution.js';
 import { mustCrossLowerBound, mustPassLowerBound } from './lower-bounds.js';
 import { structuralSolutionFamilySignature } from '../domain/path-features.js';

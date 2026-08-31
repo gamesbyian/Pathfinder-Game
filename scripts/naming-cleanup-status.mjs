@@ -82,6 +82,7 @@ if (nextPhase === 8) {
 }
 if (ledger.activeExecution?.status === 'active') {
   nextBatch = ledger.activeExecution.batch ?? nextBatch;
+  if (nextPhase !== 8) nextAction = 'continue-active-phase';
 }
 
 let selected = future;

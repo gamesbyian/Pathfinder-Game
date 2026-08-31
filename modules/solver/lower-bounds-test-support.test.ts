@@ -6,8 +6,8 @@ import { prepLevel } from './prep.js';
 import { createState, applyMove, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
 import { validateCandidatePath } from '../domain/path-validator.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
-import type { PruneDiagnostics, PruneId } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import type { PruneDiagnostics, PruneId } from './hard-prune-pipeline.js';
 import { normalizeAblationConfig } from './orchestration.js';
 import {
   mustTurnDeadlocked,

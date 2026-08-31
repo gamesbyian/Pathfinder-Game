@@ -90,7 +90,7 @@ test('late-repair-search: no-repair-config levels get the flat REPAIR_LATE_PROBE
 test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an explicit per-tier override wins', () => {
     const suppressed = computeStageBudgetPlan({ ...baseInput, nodeBudget: Infinity, opts: { disableExtraBudgetPasses: true } });
     for (const fraction of [
-        suppressed.repairBudgetFraction, suppressed.diversityBudgetFraction, suppressed.coarseStateNearTieRetentionRetryBudgetFraction,
+        suppressed.repairAdditiveBudgetMultiplier, suppressed.diversityBudgetFraction, suppressed.coarseStateNearTieRetentionRetryBudgetFraction,
         suppressed.nonDefaultRetryBudgetFraction, suppressed.connectivityRetryBudgetFraction, suppressed.mcNeighborBudgetRetryBudgetFraction,
         suppressed.admissibleOrderBudgetFraction,
     ]) assert.equal(fraction, 0);
@@ -100,7 +100,7 @@ test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an
         opts: { disableExtraBudgetPasses: true, goalAttractionDisabledRetryBudgetFractionOverride: 2.5 },
     });
     assert.equal(overridden.diversityBudgetFraction, 2.5);
-    assert.equal(overridden.repairBudgetFraction, 0);
+    assert.equal(overridden.repairAdditiveBudgetMultiplier, 0);
 });
 
 test('legacy near-tie budget override option names normalize to the canonical plan fields', () => {
@@ -175,7 +175,7 @@ test('repair-shrink-recovery: no-op when nothing was shrunk, and repays the full
         ...baseInput, nodeBudget,
         opts: { repairShrinkRecoveryNodeReserveFractionOverride: 0.5 },
         // Providing ANY cfg object turns off every OTHER unset flag (the documented ablation-config
-        // gotcha — see SolveOpts's repairBudgetFractionOverride comment), so every flag this tier's
+        // gotcha — see SolveOpts's repairAdditiveBudgetMultiplierOverride comment), so every flag this tier's
         // own eligibility reads must be explicitly set true here.
         cfg: { STRATEGY_REPAIR_SHRINK_RECOVERY: true, STRATEGY_EARLY_REPAIR_SEARCH: true, STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET: true },
     });

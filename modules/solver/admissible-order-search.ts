@@ -23,7 +23,7 @@ import { getDistanceFromArray } from './distance.js';
 import { adjTurnLowerBound, mustCrossLowerBound, mustPassLowerBound, surroundLowerBound } from './lower-bounds.js';
 import { applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { buildCurUrgencyContext, scoreMove } from './scoring.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, ScoringProfile, UndoToken } from './types.js';
@@ -53,7 +53,7 @@ interface AdmissibleFrame { key: number; children: number[]; childIdx: number; u
 
 /** The tightest applicable admissible lower bound on remaining steps from `pos` to a valid finish,
  *  given the state already reflects having just moved there. Mirrors exactly which bounds
- *  evaluatePrunedMove itself checks (prune-gauntlet.ts) — this is the same math, reused as an
+ *  evaluatePrunedMove itself checks (hard-prune-pipeline.ts) — this is the same math, reused as an
  *  ordering signal instead of a pass/reject threshold. Returns Infinity if any bound proves the
  *  position is already a dead end (mirrors evaluatePrunedMove's own Infinity-propagation). */
 function admissibleRemainingBound(pos: number, state: Parameters<typeof mustPassLowerBound>[1], level: NormalizedLevel, prep: PrepLevel): number {

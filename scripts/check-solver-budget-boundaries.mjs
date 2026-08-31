@@ -39,7 +39,7 @@ for (const [path, source] of [
 }
 
 const approvedLegacyTimeDerivedAllocations = new Set([
-    'const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);',
+    'const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairAdditiveBudgetMultiplier);',
     'totalBudgetMs: Math.floor(timeBudgetMs * diversityBudgetFraction),',
     'const admissibleOrderTotalBudget = Math.floor(timeBudgetMs * admissibleOrderBudgetFraction);',
     'const coarseStateNearTieRetentionRetryTotalBudget = Math.floor(timeBudgetMs * coarseStateNearTieRetentionRetryBudgetFraction);',

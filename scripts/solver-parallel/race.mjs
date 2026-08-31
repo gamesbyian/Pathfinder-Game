@@ -25,7 +25,7 @@
 //     honoring each config's minBudgetFraction floor exactly as runInterleavedAttempts does
 //     (just evaluated once, at round 0/elapsed-0, rather than adaptively re-weighted per round —
 //     racing doesn't have "rounds" the same way, since jobs run to completion independently)
-//   - repair jobs: (timeBudgetMs * REPAIR_EXTRA_BUDGET_FRACTION) shared across activeGates only
+//   - repair jobs: (timeBudgetMs * REPAIR_ADDITIVE_BUDGET_MULTIPLIER) shared across activeGates only
 //     (mirrors the repair loop's own repairBudget split — repair configs are NOT divided against
 //     each other, only within one config across gates, same as sequential)
 // Scheduling: two independent queues (repair, main), each in the same priority order the policy
@@ -42,7 +42,7 @@
 // from the start of the search; this last-resort phase only matters for the rare case where
 // EVERYTHING else already failed, so reserving workers for it up front would only ever dilute the
 // common case for no benefit on levels that solve via phase 1 anyway — the same reasoning
-// REPAIR_EXTRA_BUDGET_FRACTION's own additive-after-not-during budget model already uses, just
+// REPAIR_ADDITIVE_BUDGET_MULTIPLIER's own additive-after-not-during budget model already uses, just
 // applied to phase 1 vs. phase 2 rather than main-search vs. repair. Reuses the SAME persistent
 // worker slots (no new spawn cost) — see runOneLevel's phase-2 block below.
 //
@@ -223,7 +223,7 @@ export function createRacePool(opts = {}) {
     async function runOneLevel(rawLevel, levelOpts) {
         if (shutdownCalled) throw new Error('createRacePool: solveLevel() called after shutdown()');
         const { getConfiguredAttemptConfigs, GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } = await import('../../modules/solver/attempts.js');
-        const { getActiveGates, REPAIR_EXTRA_BUDGET_FRACTION, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
+        const { getActiveGates, REPAIR_ADDITIVE_BUDGET_MULTIPLIER, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION } = await import('../../modules/solver/orchestration.js');
         const { createSolver } = await import('../../modules/solver.js');
         const { defaultConfig, canonicalAblationFeatureName } = await import('../../modules/solver/ablation-config.js');
         const Solver = createSolver();
@@ -246,11 +246,11 @@ export function createRacePool(opts = {}) {
                         .map(([key, value]) => [canonicalAblationFeatureName(key), value]),
                 ),
             };
-        // levelOpts.repairBudgetFractionOverride (orchestration.ts's SolveOpts field, added for
+        // levelOpts.repairAdditiveBudgetMultiplierOverride (orchestration.ts's SolveOpts field, added for
         // offline batch-tooling cost control — see docs/solver-architecture.md's cost-gotcha
         // note): read here too so a caller's --repair-budget-fraction keeps working when composed
         // with racing, not just the sequential legacy path. Absent (every existing caller of this
-        // pool) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly, as before.
+        // pool) preserves REPAIR_ADDITIVE_BUDGET_MULTIPLIER exactly, as before.
         //
         // Deliberately NOT read from ablationCfg (a prior version of this did, mirroring
         // orchestration.ts's own prior mistake): every ablation-gated strategy toggle in
@@ -259,12 +259,12 @@ export function createRacePool(opts = {}) {
         // every OTHER unset strategy flag. Caught via a direct reproduction (S00001, a level that
         // solves in ~1s normally, failed outright once a sparse ablation object carried this
         // override) before it could taint a real batch run. See orchestration.ts's
-        // repairBudgetFractionOverride field comment for the full writeup.
-        const repairFractionOverride = Number(levelOpts.repairBudgetFractionOverride);
-        const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
-            ? repairFractionOverride
-            : REPAIR_EXTRA_BUDGET_FRACTION;
-        const overallBudgetMs = levelOpts.overallBudgetMs ?? Math.ceil(timeBudgetMs * (repairBudgetFraction + 1));
+        // repairAdditiveBudgetMultiplierOverride field comment for the full writeup.
+        const repairMultiplierOverride = Number(levelOpts.repairAdditiveBudgetMultiplierOverride);
+        const repairAdditiveBudgetMultiplier = Number.isFinite(repairMultiplierOverride) && repairMultiplierOverride >= 0
+            ? repairMultiplierOverride
+            : REPAIR_ADDITIVE_BUDGET_MULTIPLIER;
+        const overallBudgetMs = levelOpts.overallBudgetMs ?? Math.ceil(timeBudgetMs * (repairAdditiveBudgetMultiplier + 1));
 
         const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
         const baseConfigs = getConfiguredAttemptConfigs(level, ablationCfg);
@@ -272,7 +272,7 @@ export function createRacePool(opts = {}) {
         const activeGates = getActiveGates(level, gateKeys, ablationCfg);
 
         // Two independent queues, not one priority-ordered list. Sequential solveLevel() runs
-        // repair strictly LAST (see orchestration.ts's REPAIR_EXTRA_BUDGET_FRACTION comment) so it
+        // repair strictly LAST (see orchestration.ts's REPAIR_ADDITIVE_BUDGET_MULTIPLIER comment) so it
         // never dilutes the main loop's shared time budget — a real concern on a single thread, but
         // not one that exists here (concurrent jobs run on separate cores, not separate timeslices).
         // A first version of this file kept repair jobs in strict priority order anyway (they sort
@@ -300,7 +300,7 @@ export function createRacePool(opts = {}) {
         // to execute at the same time instead of strictly one after the other.
         const repairJobs = [];
         for (const attemptConfig of repairConfigsList) {
-            const repairState = { totalBudget: timeBudgetMs * repairBudgetFraction, gatesLeft: numGates };
+            const repairState = { totalBudget: timeBudgetMs * repairAdditiveBudgetMultiplier, gatesLeft: numGates };
             for (const gateKey of activeGates) repairJobs.push({ gateKey, attemptConfig, repairState });
         }
 
@@ -510,7 +510,7 @@ export function createRacePool(opts = {}) {
         // sparse `{ ...ablationCfg, FLAG: false }` spread — a sparse object silently reads every
         // OTHER unset STRATEGY_*/PROFILE_*/TEMPLATE_* flag as false under the `(!cfg || cfg.FLAG)`
         // convention every ablation-gated check uses (see orchestration.ts's own near-miss on this
-        // exact bug, and SolveOpts's repairBudgetFractionOverride field comment). Also required
+        // exact bug, and SolveOpts's repairAdditiveBudgetMultiplierOverride field comment). Also required
         // here for a second reason orchestration.ts's Proxy-based fix doesn't have to deal with: a
         // Proxy can't cross the worker postMessage boundary (structured clone drops functions), so
         // this has to be a plain, fully-materialized object regardless.
@@ -675,16 +675,16 @@ export function createRacePool(opts = {}) {
  * @param {object} rawLevel - wire-format level (source:'raw', same shape stress:measure-solver/
  *   solver:regression pass to Solver.prepareLevelForSolver)
  * @param {object} [opts]
- * @param {number} [opts.timeBudgetMs=20000] - per main-search-job budget (repair jobs get this * REPAIR_EXTRA_BUDGET_FRACTION)
+ * @param {number} [opts.timeBudgetMs=20000] - per main-search-job budget (repair jobs get this * REPAIR_ADDITIVE_BUDGET_MULTIPLIER)
  * @param {object|null} [opts.ablation=null] - same shape as Solver.solve's opts.ablation
  * @param {number} [opts.poolSize] - worker count; default availableParallelism()-1 (min 1)
  * @param {number} [opts.overallBudgetMs] - hard wall-clock cap for phase 1 (main+repair) only;
- *   default timeBudgetMs*(REPAIR_EXTRA_BUDGET_FRACTION+1). The goal-attraction-disabled-retry phase (below)
+ *   default timeBudgetMs*(REPAIR_ADDITIVE_BUDGET_MULTIPLIER+1). The goal-attraction-disabled-retry phase (below)
  *   runs AFTER this and has its own separate timer, so the true worst-case wall time is this plus
  *   timeBudgetMs*goalAttractionDisabledRetryBudgetFractionOverride (or *GOAL_ATTRACTION_DISABLED_
  *   RETRY_BUDGET_FRACTION if unset) — not folded into overallBudgetMs itself, mirroring how orchestration.ts's
  *   sequential engine also times its post-repair-loop pass separately from timeBudgetMs.
- * @param {number} [opts.repairBudgetFractionOverride] - overrides REPAIR_EXTRA_BUDGET_FRACTION for
+ * @param {number} [opts.repairAdditiveBudgetMultiplierOverride] - overrides REPAIR_ADDITIVE_BUDGET_MULTIPLIER for
  *   this call only; see orchestration.ts's SolveOpts field of the same name.
  * @param {number} [opts.goalAttractionDisabledRetryBudgetFractionOverride] - overrides
  *   GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION for this call only, independent of the repair override

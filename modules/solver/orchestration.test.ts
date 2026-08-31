@@ -359,7 +359,7 @@ test('repair probe retries the ordinary tier across EARLY_REPAIR_SEARCH_ORDINARY
 test('STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED: false restricts the probe to a single seed', async () => {
     // Must also set STRATEGY_EARLY_REPAIR_SEARCH: true explicitly — passing an ablation object with
     // any field set makes every OTHER unset STRATEGY_* flag read as false (see SolveOpts's
-    // repairBudgetFractionOverride comment), which would otherwise silently skip the probe
+    // repairAdditiveBudgetMultiplierOverride comment), which would otherwise silently skip the probe
     // entirely and make this test pass for the wrong reason.
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
@@ -623,24 +623,24 @@ test('EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP survives real contention, not just an i
 
 // BUG FIXED 2026-07-17 (reports/2026-07-17-goal-attraction-disabled-retry-dose-response.md's flagged
 // "unexplained observation" + the follow-up budget-accounting audit): the probe's cost used to be
-// completely unaffected by repairBudgetFractionOverride, even at 0 — a caller explicitly asking
+// completely unaffected by repairAdditiveBudgetMultiplierOverride, even at 0 — a caller explicitly asking
 // for zero repair-related cost (both interactive UI call sites; any solver-testing sweep following
 // this session's own documented policy) still silently paid the probe's full node-budget cost.
-// Confirmed on a real corpus level (R02401): repairBudgetFractionOverride: 0 correctly zeroed the
+// Confirmed on a real corpus level (R02401): repairAdditiveBudgetMultiplierOverride: 0 correctly zeroed the
 // LATER full-budget fallback loop but the EARLY probe still ran to completion, costing ~10.7s of
 // unaccounted wall time. Fixed by skipping the probe outright whenever the resolved
-// repairBudgetFraction is exactly 0 — same "no repair-related cost, period" signal the later
+// repairAdditiveBudgetMultiplier is exactly 0 — same "no repair-related cost, period" signal the later
 // fallback loop already honored.
-test('repairBudgetFractionOverride: 0 skips the early repair probe entirely', async () => {
+test('repairAdditiveBudgetMultiplierOverride: 0 skips the early repair probe entirely', async () => {
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 50,
-        repairBudgetFractionOverride: 0,
+        repairAdditiveBudgetMultiplierOverride: 0,
     });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.repair), false);
 });
 
-test('repairBudgetFractionOverride: undefined (production default) still runs the probe', async () => {
+test('repairAdditiveBudgetMultiplierOverride: undefined (production default) still runs the probe', async () => {
     // Guards against the fix above accidentally widening beyond exactly-0 (e.g. treating any
     // falsy/undefined override as "skip") — the production default (no override at all) must
     // reach the probe exactly as before this fix.
@@ -731,7 +731,7 @@ test('goal-attraction-disabled-retry pass reruns the main ladder once more after
 test('STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY: false suppresses the pass', async () => {
     // This infeasible level is pruned by distance/parity regardless of search strategy, so the
     // side effect of every OTHER unset STRATEGY_* flag also reading false here (see SolveOpts's
-    // repairBudgetFractionOverride field comment) doesn't change the (still-unsolved) result.
+    // repairAdditiveBudgetMultiplierOverride field comment) doesn't change the (still-unsolved) result.
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -741,13 +741,13 @@ test('STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY: false suppresses the pass', async
     assert.equal(result.attempts.some(a => a.stageId === 'goal-attraction-disabled-retry'), false);
 });
 
-test('goalAttractionDisabledRetryBudgetFractionOverride: 0 suppresses the pass independently of repairBudgetFractionOverride', async () => {
+test('goalAttractionDisabledRetryBudgetFractionOverride: 0 suppresses the pass independently of repairAdditiveBudgetMultiplierOverride', async () => {
     // Both overrides at 0 mirrors solver-controller.ts/review-controller.ts's interactive call
     // sites — confirms the two are independently controllable (not coupled to one flag/override).
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
-        repairBudgetFractionOverride: 0,
+        repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
@@ -1452,7 +1452,7 @@ test('admissible-order-fallback profile reserve is inert by default (cfg=null) e
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false },
-        repairBudgetFractionOverride: 0,
+        repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -1473,7 +1473,7 @@ test('admissible-order-fallback profile reserve gives non-default profiles room 
     const level = makeRepairGatedInfeasibleLevel();
     const opts = {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
-        repairBudgetFractionOverride: 0,
+        repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -1521,7 +1521,7 @@ test('admissible-order-fallback profile reserve is a no-op when admissibleOrderN
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false, STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE: true, STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false },
-        repairBudgetFractionOverride: 0,
+        repairAdditiveBudgetMultiplierOverride: 0,
         goalAttractionDisabledRetryBudgetFractionOverride: 0,
         coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
@@ -1772,9 +1772,9 @@ test('the ordinary repair fallback loop gets fresh work room, not a stale cap le
     // Before the 2026-08-20 fix this was whatever the main loop's last per-attempt slice happened to
     // be (bounded by the external workBudget=100,000). After that fix, and before the 2026-08-28
     // queue #2 step-3 migration (reports/2026-08-28-coarse-state-near-tie-retention-disabled-retry-work-dose-migration.md),
-    // it was REPAIR_EXTRA_BUDGET_FRACTION (6.0) * timeBudgetMs * DEFAULT_WORK_PER_MS, ~100.5M —
+    // it was REPAIR_ADDITIVE_BUDGET_MULTIPLIER (6.0) * timeBudgetMs * DEFAULT_WORK_PER_MS, ~100.5M —
     // ignoring the caller's own explicit workBudget entirely, exactly the bug that migration closed.
-    // After the migration it is REPAIR_EXTRA_BUDGET_FRACTION (6.0) * the solve's own resolved
+    // After the migration it is REPAIR_ADDITIVE_BUDGET_MULTIPLIER (6.0) * the solve's own resolved
     // workBudget (100,000 here, explicit) = 600,000 exactly — three orders of magnitude smaller than
     // the old ms-derived number, but still three orders of magnitude larger than any single
     // main-search per-attempt slice of workBudget=100,000 (bounded by workBudget itself, so at most
@@ -1806,7 +1806,7 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 2000,
         ablation: { STRATEGY_EARLY_REPAIR_SEARCH: false },
-        repairBudgetFractionOverride: 0,
+        repairAdditiveBudgetMultiplierOverride: 0,
         lifecycleTelemetry: true,
         attemptSearchForTesting: dispatch,
     });
