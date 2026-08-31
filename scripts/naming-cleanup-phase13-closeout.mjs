@@ -14,6 +14,7 @@ import { pathToFileURL } from 'node:url';
 const BOUNDARY_PATH = 'docs/naming-cleanup-level-metric-boundaries.json';
 const SOURCE_EXTENSIONS = new Set(['.js', '.cjs', '.mjs', '.ts', '.mts', '.tsx']);
 const ROOTS = Object.freeze(['modules', 'scripts']);
+const SELF_PATHS = new Set(['scripts/naming-cleanup-phase13-closeout.mjs', 'scripts/naming-cleanup-phase13-closeout-node-test.mjs']);
 const NORMALIZED_TYPES = '(?:NormalizedLevel|EngineLevel)';
 const NORMALIZED_FACTORIES = '(?:normalizeRawLevel|parseRawLevel|processRawLevel|normalizeLevel|canonicalCloneLevel|deepCloneLevel|cloneLevelWithReq|prepareLevelForSolver)';
 const MODULE_NORMALIZEDISH_NAMES = /\b(?:level|normalized|norm|parsed|clone|candidateLevel|probeLevel|solverLevel|engineLevel)\??\.(reqLen|reqInt)\b/gu;
@@ -99,6 +100,7 @@ export function checkPhase13Closeout(root = process.cwd()) {
   const files = [];
   for (const relativeRoot of ROOTS) collectSourceFiles(root, relativeRoot, files);
   for (const relativePath of files) {
+    if (SELF_PATHS.has(relativePath)) continue;
     const content = fs.readFileSync(path.join(root, relativePath), 'utf8');
     failures.push(...findPhase13NormalizedMetricResidue(relativePath, content));
   }
