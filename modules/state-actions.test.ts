@@ -367,7 +367,7 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
       isDevMode: false,
       ripples: [{ startTime: 0 }, { startTime: 500 }],
       foundHintsSinceLoad: ['old'],
-      runtime: { pendingAction: null, currentTheme: 'classic' },
+      runtime: { pendingConfirmationAction: null, currentTheme: 'classic' },
       options: {},
       cheatTimer: null,
       cheatActive: false,
