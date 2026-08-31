@@ -6,11 +6,11 @@
 | --- | --- |
 | Phase | 14 — application facade cleanup |
 | Current batch | 14B LevelUtils facade removal |
-| Status | 14A merged; 14B in progress |
+| Status | 14B validated; merge pending |
 | Base `main` SHA | `03a1298669df019d5cbef486890e044fc7f1f07e` |
 | Branch | `chatgpt/phase14b-level-utils-removal-2026-08-31` |
 | PR | #1625 |
-| Selected ledger row IDs | NC-P14-001 through NC-P14-003 |
+| Selected ledger row IDs | NC-P14-004 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
 | 14A risk | medium |
@@ -163,22 +163,44 @@ still required in 14D, but these row-level verification dimensions are complete.
 
 Started from merged 14A main `03a1298669df019d5cbef486890e044fc7f1f07e`.
 
-The facade is being decomposed by ownership, not replaced with another bag:
+The facade was decomposed by ownership, not replaced with another bag:
 
 - pure cell-key, portal, move-rule, geometry, and codec consumers import their domain owners directly;
-- `normalizeLevel` moves to `modules/level-data.ts` as
+- `normalizeLevel` moved to `modules/level-data.ts` as
   `normalizeLevelFromData(data, index, reportError)`, preserving diagnostic validation,
   parsing, and shallow-freeze behavior;
-- `getGridCoord` moves to `modules/input/grid-coordinates.ts`, taking the live engine state and
-  canvas explicitly rather than closing over app/renderer state;
-- `shiftLevelCoords` and `applyCoordMapToLevel` move to
+- `getGridCoord` moved to `modules/input/grid-coordinates.ts`, taking live engine state and
+  canvas explicitly rather than closing over app/renderer state; `createInput` exposes only this
+  input-owned adapter for debug/browser characterization;
+- `shiftLevelCoords` and `applyCoordMapToLevel` moved to
   `modules/editor/level-coordinate-transforms.ts`, keeping coordinate mutation editor-owned;
 - state, controller, engine, and input dependency types no longer expose a `LevelUtils` port;
-- application composition no longer constructs, returns, or exposes `levelUtils`.
+- application composition no longer constructs, returns, or exposes `levelUtils`;
+- the old facade module and its superseded test are deleted.
 
-The old normalize/getGridCoord behavior tests have already been recreated under their new owners.
-The facade file remains temporarily present only while test fixtures and residue are being migrated.
-It may be deleted only after exact consumer/type census reaches zero.
+The first CI pass exposed incomplete migration fallout rather than behavior changes: the old file
+still existed with a removed port type, app tests retained a dead `receivedLevelUtils` assertion,
+one reset test fed an invalid raw level into the new real normalization path, a submission test
+kept an unused facade-era import, and the browser characterization still read
+`window.APP.LevelUtils`. Those were repaired at their new owners rather than by restoring a
+compatibility bag.
+
+The second validator pass then found deeper residue:
+- `modules/domain/domain.test.ts` still bootstrapped `createLevelUtils`; it now imports the
+  cell-key, codec, move-rule, and level-data owners directly;
+- the Phase-11 orientation workflow/closeout inventory still named the deleted file; both now follow
+  `input/grid-coordinates` and editor coordinate transforms;
+- a stale diversification comment named the old facade;
+- the Phase-13 metric ownership ratchet was reconciled for the new raw-fixture test owners;
+- current hardening prose was updated to describe the deleted facade rather than link a dead source.
+
+Final behavior/evidence head `8b1dc88e65e96a869fce12381c20289974e49eeb` passed ordinary CI
+`33435268380` and Chromium gate `33435268353`. The permanent
+`check:naming-cleanup-phase14-level-utils-closeout` scans maintained module surfaces and rejects
+the old import, constructor, type, dependency name, or physical facade reintroduction.
+
+NC-P14-004 therefore has implementation, targeted validation, consumer audit, behavioral parity,
+and row-level closeout evidence complete. Phase-wide merged-tree closeout remains 14D.
 
 ## 8. 14C1 local state/render names
 
