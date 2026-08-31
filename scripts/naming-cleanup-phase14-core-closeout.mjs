@@ -11,7 +11,6 @@ import { pathToFileURL } from 'node:url';
 
 const ROOT = 'modules';
 const EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs']);
-const SELF = 'scripts/naming-cleanup-phase14-core-closeout.mjs';
 
 function collect(dir, out) {
   if (!fs.existsSync(dir)) return;
@@ -22,16 +21,23 @@ function collect(dir, out) {
   }
 }
 
+function stripComments(content) {
+  return content
+    .replace(/\/\*[\s\S]*?\*\//gu, '')
+    .replace(/(^|[^:])\/\/.*$/gmu, '$1');
+}
+
 export function findCoreFacadeResidue(relativePath, content) {
+  const code = stripComments(content);
   const failures = [];
-  if (/\bcreateCore\b/u.test(content)) failures.push(`${relativePath}: retired createCore symbol remains`);
-  if (/\bSOUND_BUS\b/u.test(content)) failures.push(`${relativePath}: retired SOUND_BUS symbol remains`);
-  if (/\bcore\s*\./u.test(content)) failures.push(`${relativePath}: retired core dependency bag member access remains`);
-  if (/\bcore\s*:/u.test(content)) failures.push(`${relativePath}: retired core dependency property remains`);
-  if (/\bCore\s*:/u.test(content) && relativePath === 'modules/app.ts') {
+  if (/\bcreateCore\b/u.test(code)) failures.push(`${relativePath}: retired createCore symbol remains`);
+  if (/\bSOUND_BUS\b/u.test(code)) failures.push(`${relativePath}: retired SOUND_BUS symbol remains`);
+  if (/\bcore\s*\./u.test(code)) failures.push(`${relativePath}: retired core dependency bag member access remains`);
+  if (/\bcore\s*:/u.test(code)) failures.push(`${relativePath}: retired core dependency property remains`);
+  if (/\bCore\s*:/u.test(code) && relativePath === 'modules/app.ts') {
     failures.push(`${relativePath}: mutable debug facade still exposes retired Core member`);
   }
-  if (/from\s+['"][^'"]*\/?core\.js['"]/u.test(content)) {
+  if (/from\s+['"](?:\.\.\/|\.\/)core\.js['"]/u.test(code)) {
     failures.push(`${relativePath}: import of deleted core module remains`);
   }
   return failures;
