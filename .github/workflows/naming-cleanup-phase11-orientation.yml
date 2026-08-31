@@ -20,6 +20,8 @@ on:
       - 'tests/editor.spec.mjs'
       - 'playwright.config.mjs'
       - 'package.json'
+      - 'docs/naming-cleanup-phase-records/phase-11.md'
+      - 'docs/naming-cleanup-ledger.json'
       - '.github/workflows/naming-cleanup-phase11-orientation.yml'
   workflow_dispatch:
 
