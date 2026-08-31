@@ -294,7 +294,35 @@ the runtime migration is implemented rather than still pending.
 
 ### 9.2 Closeout validation
 
-Pending exact-head CI and Chromium execution.
+The first closeout head ran as CI `33426272434` with Chromium gate `33426272233`. Chromium,
+build, lint, Node tests, deep proofs, and full coverage/deep verification all passed. The validator
+lane failed for two categories:
+
+1. expected closeout-tool ownership bookkeeping: the new guard and its negative-fixture file contain
+   legacy spellings as migration/checker evidence and had not yet been added to the retained
+   non-normalized ownership set;
+2. **two real masked normalized accesses** that earlier file-level audits had missed:
+   - `scripts/legacy-latency-portfolio-report.mjs` calls
+     `Solver.prepareLevelForSolver(raw, { source: 'raw' })`, then wrote report fields from
+     `level.reqLen` and `level.reqInt`;
+   - `scripts/stress/analyze-current-missing-attempt-exposure.mjs` does the same before writing
+     its retained `features.reqLen`/`features.reqInt` report schema.
+
+In both files, only the normalized **value-side** access was migrated:
+`level.requiredLength` / `level.requiredIntersections`. The existing report keys remain
+`reqLen` / `reqInt`, because those are independent current report schemas rather than
+`NormalizedLevel` properties.
+
+The ownership manifest was corrected accordingly: both files moved from `rawWireBoundary` to
+`retainedNonNormalizedUse`, and the closeout guard/test are retained checker authorities. The
+post-fix inventory is **86 raw/wire**, **22 retained non-normalized**, **0 normalized**, **0 mixed**,
+and **0 ambiguous**.
+
+The repository-wide closeout scan excludes its own negative-fixture source from self-enforcement;
+the exported detector is still directly exercised by that fixture suite. This prevents deliberately
+bad example strings from becoming false repository residue while keeping the negative tests live.
+
+Fresh exact-head CI and Chromium validation are required after these repairs.
 
 ## 10. Final closure
 
