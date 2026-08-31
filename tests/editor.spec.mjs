@@ -83,7 +83,7 @@ test.describe('Level editor', () => {
         const after = await page.evaluate(() => {
             const eng = window.APP.State.ENGINE;
             const l = eng.editor.workingLevel;
-            const unpack = window.APP.LevelUtils.UNPACK;
+            const unpack = (key) => ({ x: key & 0xFFFF, y: key >> 16 });
             const firstPortal = [...l.portalMap.entries()][0];
             const goal = unpack(l.goalKey);
             const canvas = window.APP.Renderer.getCanvas();
