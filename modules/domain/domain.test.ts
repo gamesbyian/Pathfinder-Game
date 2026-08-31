@@ -8,7 +8,8 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { createCore } from '../core.js';
+import { EDITOR, H, PLAY, V } from '../app-constants.js';
+import { deepClone } from '../deep-clone.js';
 import { createState } from '../state.js';
 import { createLevelUtils } from '../level-utils.js';
 import { createEngine } from '../engine.js';
@@ -35,8 +36,7 @@ import { getLevelFingerprintSource, isSameLevelStructure }   from './level-finge
 // and never called during the pure function tests below.
 
 function buildTestApp() {
-    const core  = createCore();
-    const state = createState({ core });
+    const state = createState();
 
     // Data stub — normalizeLevel(idx) reads from here; processRawLevel does not.
     const data = { getLevels: () => _rawLevels };
@@ -53,14 +53,12 @@ function buildTestApp() {
     const themesStub      = {};
 
     const levelUtils = createLevelUtils({
-        core,
         data,
         getState:    () => state.ENGINE,
         getRenderer: () => rendererStub,
     });
 
     const _engine = createEngine({
-        core,
         state,
         ui:          uiStub,
         renderer:    rendererStub,
@@ -69,15 +67,16 @@ function buildTestApp() {
         data:        data as any,
         persistence: persistenceStub,
         editor:      editorStub,
+        audioService: { play() {} },
     });
 
-    return { core, state, levelUtils, engine: _engine };
+    return { state, levelUtils, engine: _engine };
 }
 
 // Data store for normalizeLevel tests — populated per-test.
 let _rawLevels: any[] = [];
 
-const { core, levelUtils, engine } = buildTestApp();
+const { levelUtils, engine } = buildTestApp();
 const { PACK, UNPACK, inBounds, processRawLevel, denormalizeLevel, normalizeLevel,
         isValidMove } = levelUtils;
 const { areWinMetricsSatisfied, getRealLength } = engine;
@@ -130,10 +129,10 @@ function makeState(opts: any = {}) {
             if (i > 0 && !isPortalJump.has(i)) {
                 const prev = path[i - 1];
                 const p1 = UNPACK(prev), p2 = UNPACK(k);
-                const axis = p2.y === p1.y ? core.H : core.V;
+                const axis = p2.y === p1.y ? H : V;
                 const upd = (key: number) => {
                     const u = cellUsage.get(key) ?? { h: false, v: false };
-                    if (axis === core.H) u.h = true; else u.v = true;
+                    if (axis === H) u.h = true; else u.v = true;
                     cellUsage.set(key, u);
                 };
                 upd(prev); upd(k);
@@ -142,7 +141,7 @@ function makeState(opts: any = {}) {
     }
 
     return {
-        mode:                  opts.mode        ?? core.PLAY,
+        mode:                  opts.mode        ?? PLAY,
         path,
         visitedCounts,
         cellUsage,
@@ -276,7 +275,7 @@ test('gate re-entry blocked in PLAY mode', () => {
     const level = makeLevel({ gateKeys: [gateKey] });
     // Path started at gate and moved on.
     const state = makeState({ path: [gateKey, PACK(3, 0), PACK(4, 0)] });
-    assert.equal(isValidMove(gateKey, state, level, { mode: core.PLAY }), false);
+    assert.equal(isValidMove(gateKey, state, level, { mode: PLAY }), false);
 });
 
 test('gate re-entry permitted in EDITOR mode (only last gate blocked)', () => {
@@ -286,19 +285,19 @@ test('gate re-entry permitted in EDITOR mode (only last gate blocked)', () => {
     const level = makeLevel({ gateKeys: [gateKey] });
     const state = makeState({ path: [PACK(0, 0), PACK(1, 0)] });
     // Entering the gate for the first time is fine in editor mode.
-    assert.ok(isValidMove(gateKey, state, level, { mode: core.EDITOR }));
+    assert.ok(isValidMove(gateKey, state, level, { mode: EDITOR }));
 });
 
 test('filter axis: entering a horizontal-filter cell vertically is blocked', () => {
-    // filterMap: PACK(3,3) → core.H means only H-axis moves permitted through here.
+    // filterMap: PACK(3,3) → H means only H-axis moves permitted through here.
     // Approaching from (3,2)→(3,3) is V-axis → blocked.
-    const level = makeLevel({ filters: [[PACK(3, 3), core.H]] });
+    const level = makeLevel({ filters: [[PACK(3, 3), H]] });
     const state = makeState({ path: [PACK(3, 2)] });   // approaching from above (V axis)
     assert.equal(isValidMove(PACK(3, 3), state, level), false);
 });
 
 test('filter axis: entering a horizontal-filter cell horizontally is valid', () => {
-    const level = makeLevel({ filters: [[PACK(3, 3), core.H]] });
+    const level = makeLevel({ filters: [[PACK(3, 3), H]] });
     const state = makeState({ path: [PACK(2, 3)] });   // approaching from left (H axis)
     assert.ok(isValidMove(PACK(3, 3), state, level));
 });
@@ -314,13 +313,13 @@ test('flipping filter axis: entering on the wrong axis (never yet crossed) is bl
     // current axis is still H; approaching vertically must be rejected exactly like a plain
     // filter would be. Blocking this transitively blocks the turn as well: entry and exit are
     // now both pinned to the same designated axis, so they can never diverge.
-    const level = makeLevel({ flippingFilters: [[PACK(3, 3), core.H]] });
+    const level = makeLevel({ flippingFilters: [[PACK(3, 3), H]] });
     const state = makeState({ path: [PACK(3, 2)] });   // approaching from above (V axis)
     assert.equal(isValidMove(PACK(3, 3), state, level), false);
 });
 
 test('flipping filter axis: entering on the declared axis (never yet crossed) is valid', () => {
-    const level = makeLevel({ flippingFilters: [[PACK(3, 3), core.H]] });
+    const level = makeLevel({ flippingFilters: [[PACK(3, 3), H]] });
     const state = makeState({ path: [PACK(2, 3)] });   // approaching from left (H axis)
     assert.ok(isValidMove(PACK(3, 3), state, level));
 });
@@ -336,7 +335,7 @@ test('flipping filter single-use: re-entering an already-crossed flipping filter
     // once via H (from (2,3) to (4,3)), looped around to (3,2), and now approaches (3,3) again
     // from above -- via V, exactly the now-"required" axis -- which must still be rejected outright
     // by the single-use rule regardless.
-    const level = makeLevel({ flippingFilters: [[PACK(3, 3), core.H]] });
+    const level = makeLevel({ flippingFilters: [[PACK(3, 3), H]] });
     const state = makeState({ path: [PACK(2, 3), PACK(3, 3), PACK(4, 3), PACK(4, 2), PACK(3, 2)], flipCount: 1 });
     assert.equal(isValidMove(PACK(3, 3), state, level), false);
 });
@@ -1359,7 +1358,7 @@ console.log('\nGROUP 12: MoveContext presets and createEditorState');
 test('MoveContext.PLAY: moving to a goose cell is blocked (checkHazards=true)', () => {
     const gooKey = PACK(1, 0);
     const level  = makeLevel({ geese: [gooKey] });
-    const state  = makeState({ path: [PACK(0, 0)], mode: core.PLAY });
+    const state  = makeState({ path: [PACK(0, 0)], mode: PLAY });
     assert.equal(isValidMove(gooKey, state, level, MoveContext.PLAY), false,
         'PLAY context should block goose cell');
 });
@@ -1367,7 +1366,7 @@ test('MoveContext.PLAY: moving to a goose cell is blocked (checkHazards=true)', 
 test('MoveContext.TAP_ROUTE: moving to a goose cell is allowed (checkHazards=false)', () => {
     const gooKey = PACK(1, 0);
     const level  = makeLevel({ geese: [gooKey] });
-    const state  = makeState({ path: [PACK(0, 0)], mode: core.PLAY });
+    const state  = makeState({ path: [PACK(0, 0)], mode: PLAY });
     assert.equal(isValidMove(gooKey, state, level, MoveContext.TAP_ROUTE), true,
         'TAP_ROUTE context should permit goose cell');
 });
@@ -1395,7 +1394,7 @@ test('MoveContext.SOLVER: continuation from armed false-goal cell is allowed (ch
 test('MoveContext.SOLVER: moving to a goose cell is allowed (checkHazards=false)', () => {
     const gooKey = PACK(1, 0);
     const level  = makeLevel({ geese: [gooKey] });
-    const state  = makeState({ path: [PACK(0, 0)], mode: core.PLAY });
+    const state  = makeState({ path: [PACK(0, 0)], mode: PLAY });
     assert.equal(isValidMove(gooKey, state, level, MoveContext.SOLVER), true,
         'SOLVER context should permit goose cell');
 });
@@ -1685,7 +1684,7 @@ console.log('\nGROUP 14: Data ingestion boundary (createData)');
 
 test('createData: can ingest injected levels/themes', () => {
     const dataStore = createData({
-        deepClone: core.deepClone,
+        deepClone: deepClone,
         getThemes: () => ({ base: { label: 'base' } }),
         levels: [{ goal: { x: 1, y: 1 }, gates: [], reqLen: 0 }],
         themes: { injected: { label: 'injected' } },
@@ -1712,7 +1711,7 @@ test('validateDataSources: reports structural errors and warnings without throwi
 
 test('createData: exposes validation diagnostics after ingest', () => {
     const dataStore = createData({
-        deepClone: core.deepClone,
+        deepClone: deepClone,
         levels: [{ grid: { w: 2, h: 2 }, goal: { x: 1, y: 1 }, gates: [] }],
         themes: { injected: { label: 'injected' } },
     });
@@ -1723,7 +1722,7 @@ test('createData: exposes validation diagnostics after ingest', () => {
 
 test('createData: appendLevels refreshes validation diagnostics', () => {
     const dataStore = createData({
-        deepClone: core.deepClone,
+        deepClone: deepClone,
         levels: [{ grid: { w: 2, h: 2 }, goal: { x: 1, y: 1 }, gates: [] }],
         themes: {},
     });
