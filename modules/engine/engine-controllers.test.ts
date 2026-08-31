@@ -8,7 +8,7 @@ import { createLevelFlowController, planResetCheat } from './level-flow.js';
 import { createReviewModeController, planSubmissionAdvance } from './review-mode.js';
 import { createEngineState } from '../state-slices.js';
 import {
-    DRAGGING, EDITOR, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, IDLE,
+    EDITOR, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY,
     OVERLAY_NONE, PLAY, RESOLVED, REVIEW,
 } from '../app-constants.js';
 
