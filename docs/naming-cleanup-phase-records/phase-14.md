@@ -399,10 +399,12 @@ merge evidence is recorded.
 This row-closure commit changes only ledger/evidence state. It must pass fresh exact-head ordinary
 CI and Chromium before #1628 may merge.
 
-## 11. Final closure
+## 11. Original 14D closure checkpoint
 
-Phase 14 remains incomplete until 14D is merged, NC-P14-001 through NC-P14-010 have complete
-verification/disposition evidence, structured closure evidence is recorded, and
+PR #1628 subsequently merged and satisfied the original 14D merge barrier, with all
+NC-P14-001 through NC-P14-010 row-complete. The later forensic finding in Section 12 supersedes
+that attempted closure: Phase 14 remains incomplete until the post-closeout repair itself merges
+green, structured final closure evidence is recorded from repaired main, and
 `lastCompletedPhase` advances to 14.
 
 
