@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { createLevelUtils } from './level-utils.js';
 import { transformPoint } from './domain/geometry.js';
+import { PLAY } from './app-constants.js';
 
 const playableButSchemaDiagnosticLevel = {
   grid: { w: 4, h: 5 },
@@ -42,7 +43,7 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
     getBoundingClientRect: () => ({ left: 11, top: 17, width: 140, height: 140 }),
   };
   const engineState = {
-    mode: 1,
+    mode: PLAY,
     level,
     orientation: 0,
     viewport: { cellW: cellSize, cellH: cellSize, swapped: false },
