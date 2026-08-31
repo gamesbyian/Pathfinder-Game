@@ -7,8 +7,6 @@ import { spawnSync } from 'node:child_process';
 
 import { readRepositoryText } from './repository-file-view.mjs';
 
-import { readRepositoryText } from './repository-file-view.mjs';
-
 const root = process.cwd();
 const fixture = mkdtempSync(path.join(tmpdir(), 'phase10-closeout-'));
 const ledgerPath = path.join(fixture, 'ledger.json');
