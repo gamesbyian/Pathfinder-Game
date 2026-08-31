@@ -159,7 +159,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     const input = f.createInput({
         state, ui,
         engine,
-        levelUtils,
         editor,
         renderer,
         themes,
@@ -194,7 +193,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         themes,
         renderer,
         debug,
-        levelUtils,
         editor,
         persistence,
         engine,
