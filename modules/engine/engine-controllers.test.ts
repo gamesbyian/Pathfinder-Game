@@ -7,6 +7,7 @@ import { createTapRouter } from './tap-router.js';
 import { createLevelFlowController, planResetCheat } from './level-flow.js';
 import { createReviewModeController, planSubmissionAdvance } from './review-mode.js';
 import { createEngineState } from '../state-slices.js';
+import { PACK } from '../domain/cell-key.js';
 import {
     EDITOR, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY,
     OVERLAY_NONE, PLAY, RESOLVED, REVIEW,
@@ -308,7 +309,7 @@ test('applyPlayChallengeOptions strips geese in returned level without mutating 
     state.ENGINE.mode = PLAY;
     state.ENGINE.options = { geese: false, falseGoals: true, deadGates: true } as any;
     const level = { gooseSet: new Set([1, 2]), falseGoalKeys: new Set([3]), gateKeys: [5] };
-    const ctrl = createChallengeOptionsController({ state, ui: {}, levelUtils: {} as any });
+    const ctrl = createChallengeOptionsController({ state, ui: {} });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, true, 'should still be playable');
     assertEqual(result.level.gooseSet.size, 0, 'derived level should have geese cleared');
@@ -320,10 +321,12 @@ test('applyPlayChallengeOptions returns playable:false when all gates are dead',
     const state = makeState();
     state.ENGINE.mode = PLAY;
     state.ENGINE.options = { geese: true, falseGoals: true, deadGates: false } as any;
-    const deadKey = 99;
-    const level = { gooseSet: new Set(), falseGoalKeys: new Set(), gateKeys: [deadKey] };
-    const levelUtils = { getParityInvalidKeys: () => ({ gates: new Set([deadKey]) }) };
-    const ctrl = createChallengeOptionsController({ state, ui: {}, levelUtils: levelUtils as any });
+    const deadKey = PACK(0, 0);
+    const level = {
+        gooseSet: new Set(), falseGoalKeys: new Set(), gateKeys: [deadKey],
+        goalKey: PACK(1, 0), requiredLength: 2, portalVisuals: [],
+    };
+    const ctrl = createChallengeOptionsController({ state, ui: {} });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, false, 'should be unplayable when all gates are dead');
     assertEqual(result.reason, 'dead-gates', 'reason should identify dead-gates');
@@ -335,7 +338,7 @@ test('applyPlayChallengeOptions is no-op outside PLAY mode and returns same leve
     state.ENGINE.mode = EDITOR;
     state.ENGINE.options = { geese: false, falseGoals: false } as any;
     const level = { gooseSet: new Set([1]), falseGoalKeys: new Set([2]) };
-    const ctrl = createChallengeOptionsController({ state, ui: {}, levelUtils: {} as any });
+    const ctrl = createChallengeOptionsController({ state, ui: {} });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(level.gooseSet.size, 1, 'geese should be unchanged in editor mode');
     assert(result.level === level, 'returned level should be the same reference in non-PLAY mode');
@@ -345,7 +348,7 @@ test('showOptionsBlockedModalIfNeeded shows/hides modal based on result', () => 
     const state = makeState();
     const shown: any[] = [];
     const ui = { setOptionsBlockedVisible: (v: any) => shown.push(v) };
-    const ctrl = createChallengeOptionsController({ state, ui, levelUtils: {} as any });
+    const ctrl = createChallengeOptionsController({ state, ui });
     ctrl.showOptionsBlockedModalIfNeeded({ playable: false });
     assertEqual(shown[shown.length - 1], true, 'blocked modal should show when not playable');
     ctrl.showOptionsBlockedModalIfNeeded({ playable: true });
@@ -359,8 +362,7 @@ test('findTapRoute returns null when no nav path is active', () => {
     state.ENGINE.mode = PLAY;
     state.ENGINE.level = { grid: { w: 5, h: 5 } } as any;
     state.ENGINE.nav = { path: [] } as any;
-    const levelUtils = { PACK: (x: any, y: any) => y * 5 + x, UNPACK: (k: any) => ({ x: k % 5, y: Math.floor(k / 5) }) };
-    const router = createTapRouter({ state, levelUtils: levelUtils as any });
+    const router = createTapRouter({ state });
     const result = router.findTapRoute({ x: 2, y: 2 });
     assertEqual(result, null, 'no path → null');
 });
@@ -386,8 +388,7 @@ test('findTapRoute returns empty array when target equals head position', () => 
         isPortalJump: new Set(),
     } as any;
     state.ENGINE.hazards = { armedFalseGoals: new Set(), revealedGeese: new Set(), detonatedFalseGoals: new Set() } as any;
-    const levelUtils = { PACK: (x: any, y: any) => y * 5 + x, UNPACK: (k: any) => ({ x: k % 5, y: Math.floor(k / 5) }) };
-    const router = createTapRouter({ state, levelUtils: levelUtils as any });
+    const router = createTapRouter({ state });
     const result = router.findTapRoute({ x: 1, y: 0 }); // same as head
     assert(Array.isArray(result) && result.length === 0, 'target == head → empty array');
 });
@@ -436,11 +437,9 @@ function makeLevelFlowDeps(overrides: any = {}) {
     return {
         state, ui, uiCalls,
         audioService: silentAudioService,
-        data: { getLevels: () => [{}], getLevel: () => ({}) },
-        levelUtils: {
-            normalizeLevel: (_idx: any) => ({ requiredLength: 3, requiredIntersections: 0, gateKeys: [0], goalKey: 9, grid: { w: 3, h: 3 }, blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), mustPassKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map() }),
-            assertLevelShape: () => {},
-            deepCloneLevel: (l: any) => ({ ...l }),
+        data: {
+            getLevels: () => [{ grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 3, reqInt: 0 }],
+            getLevel: () => ({ grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 }, reqLen: 3, reqInt: 0 }),
         },
         persistence: { persistSessionState: () => {} },
         editor: { syncMetadataFieldsFromLevel: () => {} },
@@ -458,8 +457,6 @@ function makeLevelFlowDeps(overrides: any = {}) {
 test('switchMode to EDITOR sets editor working level from current level', () => {
     const deps = makeLevelFlowDeps();
     deps.state.ENGINE.level = { requiredLength: 5, requiredIntersections: 1 } as any;
-    let cloned = null;
-    deps.levelUtils.deepCloneLevel = (l: any) => { cloned = { ...l }; return cloned; };
     deps.state.ENGINE.editor = { workingLevel: null, isPencilMode: false, emptyClickCount: 0, isModified: false, triggerableFalseGoalCells: new Set(), falseGoalTriggerParityCandidates: new Set(), falseGoalTriggerScanState: 'stale' } as any;
     const ctrl = createLevelFlowController(deps);
     ctrl.switchMode(EDITOR);
@@ -485,7 +482,6 @@ function instrumentEditorInit(deps: any) {
     const recorder = { inputs, syncedLevel: null };
     deps.ui.setInputValue = (id: any, v: any) => inputs.push([id, v]);
     deps.editor.syncMetadataFieldsFromLevel = (l: any) => { recorder.syncedLevel = l; };
-    deps.levelUtils.deepCloneLevel = (l: any) => ({ ...l });
     return recorder;
 }
 
@@ -615,7 +611,6 @@ test('setReviewSubmissions replaces the submissions array', () => {
         state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
                      setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
                      showMessage: () => {} },
-        levelUtils: { processRawLevel: () => null } as any,
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
     });
@@ -630,7 +625,6 @@ test('removeReviewSubmission removes entry by index', () => {
         state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
                      setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
                      showMessage: () => {} },
-        levelUtils: { processRawLevel: () => null } as any,
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
     });
@@ -667,7 +661,6 @@ test('removeAndAdvance removes the submission, loads the next, and reports allDo
         state, ui: { setInputValue: () => {}, renderMetricsPanel: () => {}, updateLevelDisplay: () => {},
                      setButtonLabel: () => {}, setClassState: () => {}, updateAppScale: () => {}, updateViewport: () => {},
                      showMessage: () => {}, applyHintPinState: () => {} },
-        levelUtils: { processRawLevel: (raw: any) => ({ ...raw, requiredLength: 0, requiredIntersections: 0 }) } as any,
         editor: { syncMetadataFieldsFromLevel: () => {} },
         PathNavigator: { clear: () => {} },
     });
