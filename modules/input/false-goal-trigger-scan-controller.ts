@@ -17,10 +17,11 @@ import {
 import { computeParityCandidates } from './false-goal-trigger-scan-core.js';
 import { createSolverWorkerClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';
+import { EDITOR, OVERLAY_NONE } from '../app-constants.js';
 
 const WATCH_INTERVAL_MS = 300;
 
-export function createFalseGoalTriggerScanController({ core, state, ui, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createFalseGoalTriggerScanController({ state, ui, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
     let client: any = null;
     let workerFailed = false;
     let scanToken = 0;              // bump to detach any in-flight scan from state
@@ -143,8 +144,8 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
 
     const shouldAutoScan = () => {
         const eng = state.ENGINE;
-        return eng.mode === core.EDITOR                    // triggerable-cell highlights only render in editor mode
-            && eng.overlayState === core.OVERLAY_NONE      // don't race the modal solver flows
+        return eng.mode === EDITOR                    // triggerable-cell highlights only render in editor mode
+            && eng.overlayState === OVERLAY_NONE      // don't race the modal solver flows
             && !eng.solver.controller
             && activeScans === 0
             && !!eng.editor.workingLevel
