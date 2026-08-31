@@ -481,7 +481,7 @@ jobs:
           dest="logs/typical-budget-baseline/archive/${stamp}"
           mkdir -p "${dest}"
           for f in logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
-                   reports/stress/benchmark-parallel.json reports/stress/benchmark-latest-random.json; do
+                   reports/stress/solver-corpus1-latest.json reports/stress/solver-corpus2-latest.json; do
             [ -f "$f" ] && cp "$f" "${dest}/$(basename "$f")"
           done
           echo "stamp=${stamp}" >> "$GITHUB_ENV"
@@ -494,12 +494,12 @@ jobs:
           # Two explicit --in lists, never --in-dir: this directory holds BOTH corpora's files and
           # the combiner rejects a mixed-corpus input set.
           if [ "${{ steps.select.outputs.corpus1_count }}" -gt 0 ]; then
-            npm run solver:combine-corpus2-batches -- --in="${{ steps.select.outputs.corpus1_files }}" --out=reports/stress/typical-budget-corpus1.json
+            npm run solver:combine-sweep-reports -- --in="${{ steps.select.outputs.corpus1_files }}" --out=reports/stress/typical-budget-corpus1.json
           else
             echo "::warning::No usable corpus-1 shard reports — skipping its combine."
           fi
           if [ "${{ steps.select.outputs.corpus2_count }}" -gt 0 ]; then
-            npm run solver:combine-corpus2-batches -- --in="${{ steps.select.outputs.corpus2_files }}" --out=reports/stress/typical-budget-corpus2.json
+            npm run solver:combine-sweep-reports -- --in="${{ steps.select.outputs.corpus2_files }}" --out=reports/stress/typical-budget-corpus2.json
           else
             echo "::warning::No usable corpus-2 shard reports — skipping its combine."
           fi
@@ -607,8 +607,8 @@ jobs:
           # 434, because 155 of them were patched in from the high-budget unsolved sweep at up to 300M
           # nodes. A typical-budget run cannot reproduce those by construction, so diffing against the
           # merged baseline would report ~155 false regressions and bury any real one.
-          for pair in "corpus1:reports/stress/benchmark-parallel.json:reports/stress/typical-budget-corpus1.json" \
-                      "corpus2:reports/stress/benchmark-latest-random.json:reports/stress/typical-budget-corpus2.json"; do
+          for pair in "corpus1:reports/stress/solver-corpus1-latest.json:reports/stress/typical-budget-corpus1.json" \
+                      "corpus2:reports/stress/solver-corpus2-latest.json:reports/stress/typical-budget-corpus2.json"; do
             name="${pair%%:*}"; rest="${pair#*:}"; base="${rest%%:*}"; cand="${rest#*:}"
             if [ ! -f "$cand" ]; then echo "## ${name}: no combined report produced" >> "$out"; continue; fi
             echo "## ${name}" >> "$out"; echo '```' >> "$out"

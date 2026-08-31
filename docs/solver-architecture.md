@@ -137,9 +137,9 @@ The feature registry lives in `modules/solver/ablation-config.ts`; see [`solver-
 
 > Use esbuild-bundled CLIs, not raw `tsx`; hot solver paths are ~5× slower under raw `tsx`.
 
-### `solver:bench` vs `solver:direct`
+### `solver:regression` vs `solver:direct`
 
-- `solver:bench -- --check`: solved/failed regression truth against `logs/solver-baseline.json` plus order probes. `--update-baseline` only for verified intentional change. Does **not** measure cost.
+- `solver:regression -- --check`: solved/failed regression truth against `logs/solver-baseline.json` plus order probes. `--update-baseline` only for verified intentional change. Does **not** measure cost.
 - `solver:direct`: debugging with `--verbose`/structured `--output`; no baseline comparison.
 
 ```bash
@@ -157,7 +157,7 @@ npm run check:audit-output -- logs/solver-direct/full.json
 
 Audit rows include level/status/ok/elapsed/nodes/solvedBy and per-attempt gate/scoring-profile/ordering-bias/beam/success/elapsed/budget/nodes.
 
-Use `solver:direct` to inspect attempt order/winner/budget/nodes; if policy is at fault change `attempts.ts`, then rerun targets, full audit, `npm run ci`, and `solver:bench -- --check`. `solver:analyze-diagnostics` retains rolling history beside `logs/solver-workflow/latest.json` (`95 MB`, 4000 entries).
+Use `solver:direct` to inspect attempt order/winner/budget/nodes; if policy is at fault change `attempts.ts`, then rerun targets, full audit, `npm run ci`, and `solver:regression -- --check`. `solver:analyze-diagnostics` retains rolling history beside `logs/solver-workflow/latest.json` (`95 MB`, 4000 entries).
 
 ### Speed-only optimization
 
@@ -194,22 +194,22 @@ Complete-mode Find-all alone uses this pool; targeted tiers stay main-thread. Se
 - Raced-only benchmark output must never replace production regression truth.
 - Persistent pools reuse workers across levels; broken/straggling workers are replaced. A short-sequential-then-race hybrid was reverted because shrinking `timeBudgetMs` changed attempt shares.
 
-`stress:benchmark` defaults raced; `--engine=sequential` is production-exact; `--parallel` forces inner sequential mode. `stress:benchmark:raced` uses one persistent pool. `solver:bench`, `stress:regression`, `solver-fingerprint` remain sequential. 2026-07-10 first-50 corpus1: persistent pool kept 49/50 solves and cut 287,180 -> 272,536 ms (**5.1%**).
+`stress:measure-solver` defaults raced; `--engine=sequential` is production-exact; `--parallel` forces inner sequential mode. `stress:measure-solver:raced` uses one persistent pool. `solver:regression`, `stress:regression`, `solver-fingerprint` remain sequential. 2026-07-10 first-50 corpus1: persistent pool kept 49/50 solves and cut 287,180 -> 272,536 ms (**5.1%**).
 
 ## Large-batch tools
 
 | Tool | Engine | Use |
 |---|---|---|
-| `solver:bench -- --check` | sequential | solved-set regression truth |
+| `solver:regression -- --check` | sequential | solved-set regression truth |
 | `stress:regression` / `solver:fingerprint` | sequential | baseline/determinism |
-| `stress:benchmark` | raced default; sequential opt-in | corpus iteration/perf |
-| `stress:benchmark:raced` | persistent race pool | raced-specific output |
+| `stress:measure-solver` | raced default; sequential opt-in | corpus iteration/perf |
+| `stress:measure-solver:raced` | persistent race pool | raced-specific output |
 | `solver:direct` | sequential | few-level debugging |
 | `solver:req-length-sweep` | sequential | controlled `reqLen` scaling |
 | `portfolio-solve-sweep.mjs` | configurable/resumable | repeated hard-population iteration |
 | `run-repair-search.mjs` | direct repair | repair-only; bypasses ladder |
 
-Across-level `--parallel` may beat within-level racing for mostly-fast levels; do not combine them in `stress:benchmark`. Long batch tools must persist per-level progress: benchmark partial output/`--skip-existing-dir`; portfolio JSONL/`--resume`. Use the cheapest population/budget that decides the gate; do not time competing CPU-bound arms concurrently.
+Across-level `--parallel` may beat within-level racing for mostly-fast levels; do not combine them in `stress:measure-solver`. Long batch tools must persist per-level progress: benchmark partial output/`--skip-existing-dir`; portfolio JSONL/`--resume`. Use the cheapest population/budget that decides the gate; do not time competing CPU-bound arms concurrently.
 
 For isolated method research, prefer `method-probe.mjs --work-budget=<units>` with a generously non-binding `--budget-ms`. The work ceiling is cumulative across the level just like its node ceiling; a row whose wall deadline binds first is marked `deadlineTruncated` and the work-bounded run exits non-zero. Omit `--work-budget` only when the question is deliberately about historical wall-bounded behavior.
 
@@ -222,7 +222,7 @@ Shared `level-data-io.mjs` parsers reject bare numeric ambiguity:
 - full ID such as `R00237`: unambiguous.
 - `all` / omitted: all.
 
-`stress:benchmark` accepts both wrapped `{levels:[...]}` corpora and bare-array corpora.
+`stress:measure-solver` accepts both wrapped `{levels:[...]}` corpora and bare-array corpora.
 
 ## Offline portfolio experiment
 

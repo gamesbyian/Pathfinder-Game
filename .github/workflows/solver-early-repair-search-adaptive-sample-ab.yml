@@ -280,7 +280,7 @@ jobs:
           mkdir -p logs/solver-early-repair-search-adaptive-sample reports/stress
           cp -a artifact-staging/downloaded/. logs/solver-early-repair-search-adaptive-sample/
           FILES=$(ls logs/solver-early-repair-search-adaptive-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && npm run solver:combine-corpus2-batches -- --allow-mixed-corpora --in="${FILES}" --out=reports/stress/early-repair-search-adaptive-sample-ab.json
+          [ -n "$FILES" ] && npm run solver:combine-sweep-reports -- --allow-mixed-corpora --in="${FILES}" --out=reports/stress/early-repair-search-adaptive-sample-ab.json
 
       - name: Verify complete coverage
         id: coverage

@@ -317,8 +317,8 @@ jobs:
           cp -a artifact-staging/downloaded/. ./
           C1=$(ls logs/solver-corpus2-batches/corpus1-batch-*.json 2>/dev/null | paste -sd, -)
           C2=$(ls logs/solver-corpus2-batches/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$C1" ] && npm run solver:combine-corpus2-batches -- --in="${C1}" --out=reports/stress/benchmark-parallel.json
-          [ -n "$C2" ] && npm run solver:combine-corpus2-batches -- --in="${C2}" --out=reports/stress/benchmark-latest-random.json
+          [ -n "$C1" ] && npm run solver:combine-sweep-reports -- --in="${C1}" --out=reports/stress/solver-corpus1-latest.json
+          [ -n "$C2" ] && npm run solver:combine-sweep-reports -- --in="${C2}" --out=reports/stress/solver-corpus2-latest.json
 
       - name: Verify complete coverage and level-blind provenance
         id: coverage
@@ -327,7 +327,7 @@ jobs:
         run: |
           node - <<'NODE'
           const fs = require('node:fs');
-          const expected = [['reports/stress/benchmark-parallel.json', 102], ['reports/stress/benchmark-latest-random.json', 1700]];
+          const expected = [['reports/stress/solver-corpus1-latest.json', 102], ['reports/stress/solver-corpus2-latest.json', 1700]];
           let ok = true;
           for (const [file, total] of expected) {
             if (!fs.existsSync(file)) { console.error(`${file}: missing`); ok = false; continue; }
@@ -344,11 +344,11 @@ jobs:
         if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
-          node scripts/stress/rank-levels.mjs --in=reports/stress/benchmark-latest-random.json --status=unsolved --top=30 || true
-          node scripts/stress/classify-stability.mjs --in=reports/stress/benchmark-latest-random.json --out=reports/stress/stability-random.json || true
-          npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/benchmark-latest-random.json || true
-          node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/benchmark-latest-random.json
-          node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/benchmark-parallel.json
+          node scripts/stress/rank-levels.mjs --in=reports/stress/solver-corpus2-latest.json --status=unsolved --top=30 || true
+          node scripts/stress/classify-stability.mjs --in=reports/stress/solver-corpus2-latest.json --out=reports/stress/stability-random.json || true
+          npm run stress:curate-dev-benchmark -- --benchmark=reports/stress/solver-corpus2-latest.json || true
+          node scripts/stress/compile-baseline.mjs --mode=corpus2 --official=reports/stress/solver-corpus2-latest.json
+          node scripts/stress/compile-baseline.mjs --mode=corpus1 --official=reports/stress/solver-corpus1-latest.json
           mkdir -p "reports/stress/capability-runs/${{ github.run_id }}"
           node - <<'NODE'
           const fs = require('node:fs');
@@ -375,8 +375,8 @@ jobs:
             work: projected.rows.reduce((n,x) => n + (x.workSpent || 0), 0),
             commitSha: projected.commitSha,
           });
-          const c1 = project('reports/stress/benchmark-parallel.json');
-          const c2 = project('reports/stress/benchmark-latest-random.json');
+          const c1 = project('reports/stress/solver-corpus1-latest.json');
+          const c2 = project('reports/stress/solver-corpus2-latest.json');
           const record = {
             runId: process.env.RUN_ID,
             solverRef: process.env.SOLVER_REF,
@@ -404,11 +404,11 @@ jobs:
         shell: bash
         run: |
           node scripts/stress/lifecycle-failure-map.mjs \
-            --in=reports/stress/benchmark-parallel.json \
+            --in=reports/stress/solver-corpus1-latest.json \
             --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus1.json" \
             --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus1-summary.md"
           node scripts/stress/lifecycle-failure-map.mjs \
-            --in=reports/stress/benchmark-latest-random.json \
+            --in=reports/stress/solver-corpus2-latest.json \
             --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2.json" \
             --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2-summary.md"
 
@@ -418,7 +418,7 @@ jobs:
         run: |
           node - <<'NODE'
           const fs = require('node:fs');
-          for (const [name, file] of [['corpus-1','reports/stress/benchmark-parallel.json'], ['corpus-2','reports/stress/benchmark-latest-random.json']]) {
+          for (const [name, file] of [['corpus-1','reports/stress/solver-corpus1-latest.json'], ['corpus-2','reports/stress/solver-corpus2-latest.json']]) {
             const r = JSON.parse(fs.readFileSync(file,'utf8'));
             const rows = r.levels ?? [];
             const solved = rows.filter(x => x.ok).length;
@@ -432,8 +432,8 @@ jobs:
         if: steps.coverage.outputs.complete == 'true'
         shell: bash
         run: |
-          node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/benchmark-parallel.json
-          node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/benchmark-latest-random.json
+          node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/solver-corpus1-latest.json
+          node scripts/run-bundled.mjs scripts/stress/early-repair-search-badness-report.mjs -- --in=reports/stress/solver-corpus2-latest.json
 
       - name: Upload combined results
         if: always()
@@ -451,8 +451,8 @@ jobs:
         shell: bash
         run: |
           node scripts/publish-solver-sweep-result.mjs \
-            --primary="reports/stress/benchmark-parallel.json" \
-            --include="reports/stress/benchmark-latest-random.json" \
+            --primary="reports/stress/solver-corpus1-latest.json" \
+            --include="reports/stress/solver-corpus2-latest.json" \
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find logs/solver-corpus2-batches -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
             --provenance-out="reports/stress/capability-runs/${{ github.run_id }}/gha-source-run.json" \

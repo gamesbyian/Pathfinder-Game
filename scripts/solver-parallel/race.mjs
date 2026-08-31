@@ -47,7 +47,7 @@
 // worker slots (no new spawn cost) — see runOneLevel's phase-2 block below.
 //
 // Determinism note: this phase adds a NEW source to the racing-vs-sequential nondeterminism
-// already documented for phase 1 (see stress:benchmark's own CLI warning below and the
+// already documented for phase 1 (see stress:measure-solver's own CLI warning below and the
 // Determinism Report referenced in docs/solver-architecture.md) — not just WHEN a level solves,
 // but sometimes WHICH mechanism gets credit. A level whose phase-1 win is itself timing-sensitive
 // (some runs solve via ordinary main-search scheduling, others need phase 2's flag-disabled rerun)
@@ -672,8 +672,8 @@ export function createRacePool(opts = {}) {
  * and share one pool across every solveLevel() call instead, which avoids paying each worker's
  * Node runtime/V8 isolate startup cost per level (see the module comment above).
  *
- * @param {object} rawLevel - wire-format level (source:'raw', same shape stress:benchmark/
- *   solver:bench pass to Solver.prepareLevelForSolver)
+ * @param {object} rawLevel - wire-format level (source:'raw', same shape stress:measure-solver/
+ *   solver:regression pass to Solver.prepareLevelForSolver)
  * @param {object} [opts]
  * @param {number} [opts.timeBudgetMs=20000] - per main-search-job budget (repair jobs get this * REPAIR_EXTRA_BUDGET_FRACTION)
  * @param {object|null} [opts.ablation=null] - same shape as Solver.solve's opts.ablation

@@ -2691,7 +2691,7 @@ test('adaptive gate weighting cannot claim more than the remaining tier budget (
     // ever being clamped back to budgetLeft -- every OTHER path through attemptBudgetShare (the
     // plain even split, and the minBudgetFraction floor) already respects that bound. Only reachable
     // on >= ADAPTIVE_GATE_THRESHOLD (4) gate levels via runInterleavedAttempts; the published corpus
-    // never has more than 3 gates (CLAUDE.md), so this is a stress-corpus-only path solver:bench
+    // never has more than 3 gates (CLAUDE.md), so this is a stress-corpus-only path solver:regression
     // --check cannot exercise.
     //
     // Many gates (20) so the weight's theoretical ceiling (n**2 when one gate holds ~100% of all

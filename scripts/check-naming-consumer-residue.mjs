@@ -133,8 +133,8 @@ const ALLOWLIST = new Set([
     'modules/solver/testing-api.test.ts::removed symbol `detectArchetype` (ledger: -> classifyRoutingRegime, phase 3)',
     // Descriptive text inside a string literal (a `witnessAccess` provenance note), not a functional
     // call -- naming Solver.solve() by its old name to describe historical equivalence with
-    // stress:benchmark.mjs's own row shape, same as the comment two lines above it does.
-    'scripts/portfolio-sweep-reports-to-benchmark.mjs::removed Solver.solve() facade alias (ledger: -> solveLevel, phase 4)',
+    // scripts/stress/benchmark.mjs's own row shape, same as the comment two lines above it does.
+    'scripts/combine-solver-sweep-reports.mjs::removed Solver.solve() facade alias (ledger: -> solveLevel, phase 4)',
 ]);
 
 // Blanks out block and line comments (keeping line breaks so failure reporting isn't needed at

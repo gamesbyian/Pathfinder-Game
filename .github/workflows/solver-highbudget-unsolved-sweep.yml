@@ -305,7 +305,7 @@ jobs:
           # *.json report files from a PREVIOUS round linger here across dispatches. If a later
           # round changes shard count, index-padding width, or --budget-ms, the stale files don't
           # get overwritten (different filenames) and the merge step below's glob picks up both
-          # generations at once -- portfolio-sweep-reports-to-benchmark.mjs's main() then hard-
+          # generations at once -- combine-solver-sweep-reports.mjs's main() then hard-
           # fails on the resulting budgetMs mismatch, aborting the whole combine before anything
           # commits (hit 2026-07-25: round 2's corpus1-batch-001..005.json, 200000ms, collided
           # with round 1's already-solved corpus1-batch-01..05.json, 125000ms, still sitting in
@@ -331,11 +331,11 @@ jobs:
         run: |
           if ls logs/solver-highbudget-sweep/corpus1-batch-*.json >/dev/null 2>&1; then
             CORPUS1_FILES=$(ls logs/solver-highbudget-sweep/corpus1-batch-*.json | paste -sd, -)
-            npm run solver:combine-corpus2-batches -- --in="${CORPUS1_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json
+            npm run solver:combine-sweep-reports -- --in="${CORPUS1_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json
           fi
           if ls logs/solver-highbudget-sweep/corpus2-batch-*.json >/dev/null 2>&1; then
             CORPUS2_FILES=$(ls logs/solver-highbudget-sweep/corpus2-batch-*.json | paste -sd, -)
-            npm run solver:combine-corpus2-batches -- --in="${CORPUS2_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json
+            npm run solver:combine-sweep-reports -- --in="${CORPUS2_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json
           fi
 
       - name: Fold this round's observed timings into the runtime telemetry file

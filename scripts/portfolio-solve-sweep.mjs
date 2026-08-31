@@ -270,7 +270,7 @@ installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
 // provenanceFromSolveResult / toHint / mergeHints / hintPaths / getLevelFingerprint are deliberately
 // NOT imported here any more — the whole hint-merge path lives in scripts/hint-capture-lib.mjs, so
-// there is exactly one implementation of it shared with run-solverv2-direct.mjs's CI audit pass.
+// there is exactly one implementation of it shared with run-solver-direct.mjs's CI audit pass.
 const { getConfiguredAttemptConfigs } = await import('../modules/solver/attempts.js');
 const Solver = createSolver();
 // readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
@@ -496,7 +496,7 @@ if (attemptCachePath && baselineMap) {
     }
 }
 
-// Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solverv2-direct.mjs (the CI
+// Merge itself lives in scripts/hint-capture-lib.mjs, shared with run-solver-direct.mjs (the CI
 // audit pass). Only the SCHEDULING of writes stays here -- this tool persists incrementally after
 // every level so a killed multi-hour run keeps its finds, which is deliberately different from the
 // capture module's own flush-at-end (see persistHintsIfEnabled below).

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Stress benchmark using persistent worker-thread attempt racing. Output mirrors stress:benchmark
+ * Stress benchmark using persistent worker-thread attempt racing. Output mirrors stress:measure-solver
  * but is NOT the official sequential baseline and must not replace benchmark-latest.json.
- * Across-level `--parallel` is a separate stress:benchmark feature; this races within each level.
+ * Across-level `--parallel` is a separate stress:measure-solver feature; this races within each level.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/solver-parallel/benchmark.mjs
@@ -44,7 +44,7 @@ const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'))
 const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
 const levels = selectLevelsBySpec(corpusLevels, LEVEL_SPEC);
 console.log(`Raced stress benchmark: ${levels.length} levels, budget ${BUDGET_MS}ms, corpus ${CORPUS_FILE} (v${corpus.generatorVersion}).`);
-console.log('  !! this is a worker-thread-racing benchmark, NOT the official sequential solver:bench/stress:benchmark — never compare or commit as the official baseline.');
+console.log('  !! this is a worker-thread-racing benchmark, NOT the official sequential solver:regression/stress:measure-solver — never compare or commit as the official baseline.');
 
 const results = [];
 let solved = 0, failed = 0, errors = 0;
@@ -107,7 +107,7 @@ const out = {
     generatorVersion: corpus.generatorVersion,
     budgetMs: BUDGET_MS,
     engine: 'raced',
-    engineWarning: 'worker-thread attempt racing — NOT the official sequential engine; timings are not comparable to stress:benchmark/solver:bench and must never be committed as their baseline',
+    engineWarning: 'worker-thread attempt racing — NOT the official sequential engine; timings are not comparable to stress:measure-solver/solver:regression and must never be committed as their baseline',
     witnessAccess: 'none — stressMeta stripped before prepareLevelForSolver',
     solved, failed, errors, total: levels.length, totalMs,
     levels: results,

@@ -123,9 +123,9 @@ test('two processes reading the same corpus and each writing back only their own
 });
 
 // ─── --levels spec parsing: pos:/id: prefix disambiguation ────────────────────────────────────
-// A bare number used to mean "array position" in parseLevelPositions callers (solver:bench,
+// A bare number used to mean "array position" in parseLevelPositions callers (solver:regression,
 // solver:direct, ...) and "id-suffix lookup" in parseLevelSelector callers (hint-workbench.mjs,
-// stress:benchmark, ...) -- the exact same spec text silently meant something different depending
+// stress:measure-solver, ...) -- the exact same spec text silently meant something different depending
 // on which tool you typed it into (CLAUDE.md's "--levels selector semantics differ by tool"
 // gotcha). Both parsers now require an explicit pos:/id: prefix on any bare number/range instead.
 

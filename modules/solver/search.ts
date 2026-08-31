@@ -289,7 +289,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
 // runs; 0.55 still failed ~1 in 6; 0.6 is the verified value — clean across 10/10 and 5/5
 // repeated isolated runs on the two stress-corpus levels this was calibrated against, plus a
 // clean run on the published level the floor-only design broke. Don't change either constant
-// without re-running solver:bench --check AND repeated isolated runs on all three reference
+// without re-running solver:regression --check AND repeated isolated runs on all three reference
 // levels (see data/stress/README.md) — full-corpus-vs-full-corpus diffing alone is NOT sufficient
 // verification (it hid a real regression once already; see the same snapshots).
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];

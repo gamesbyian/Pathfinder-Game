@@ -157,7 +157,7 @@ for (const { name, file } of CORPORA) {
 }
 
 function isSolved(corpusName, id) {
-    if (corpusName === 'published') return true; // solver:bench --check invariant: always 160/160
+    if (corpusName === 'published') return true; // solver:regression --check invariant: always 160/160
     return solvedIds[corpusName].has(id);
 }
 

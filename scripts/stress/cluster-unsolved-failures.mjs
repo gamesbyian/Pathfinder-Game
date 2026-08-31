@@ -42,7 +42,7 @@
  *   unclassified    none of the above matched (mixed ladders, zero attempts, etc).
  *
  * Usage:
- *   node scripts/stress/cluster-unsolved-failures.mjs --in=reports/stress/benchmark-latest-random.json
+ *   node scripts/stress/cluster-unsolved-failures.mjs --in=reports/stress/solver-corpus2-latest.json
  *       --corpus=data/stress/stress-levels-random.json [--collapse-threshold=50]
  *       [--repair-close-threshold=5] [--out=reports/stress/unsolved-failure-clusters.json]
  */

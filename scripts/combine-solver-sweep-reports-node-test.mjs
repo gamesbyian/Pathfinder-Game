@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * CLI smoke coverage for scripts/portfolio-sweep-reports-to-benchmark.mjs: combines N
+ * CLI smoke coverage for scripts/combine-solver-sweep-reports.mjs: combines N
  * portfolio-solve-sweep.mjs report files ({summary, levels} shape) into ONE
- * stress:benchmark.mjs-shaped flat report. Uses hand-built synthetic fixtures so budgetMs
+ * scripts/stress/benchmark.mjs-shaped flat report. Uses hand-built synthetic fixtures so budgetMs
  * mismatch/duplicate-id handling is exercised deterministically.
  */
 import assert from 'node:assert/strict';
@@ -17,7 +17,7 @@ const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function run(args) {
-    return execFile('node', ['scripts/portfolio-sweep-reports-to-benchmark.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
+    return execFile('node', ['scripts/combine-solver-sweep-reports.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
 }
 
 function batchReport(overrides = {}) {

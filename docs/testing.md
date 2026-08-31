@@ -147,7 +147,7 @@ For must-cross rejection changes, use `scripts/stress/mc-prune-soundness-check.m
 
 Did a refactor preserve the behavior it claims to preserve?
 
-- `npm run solver:bench -- --check` checks the published solved set; it is not a speed benchmark and not a generalization test;
+- `npm run solver:regression -- --check` checks the published solved set; it is not a speed benchmark and not a generalization test;
 - pure-speed/order-preserving changes should preserve deterministic work/outcomes and, where claimed, decisions;
 - stage/cache lifetime changes should include fresh-vs-preceded characterization if they can affect search history.
 

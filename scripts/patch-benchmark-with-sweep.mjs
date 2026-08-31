@@ -4,12 +4,12 @@
  * an existing full-coverage benchmark.mjs-shaped report, by id, and rewrites the summary counters
  * to match. Needed because compile-baseline.mjs's --verify only patches its batch-derived fallback
  * bucket (for ids the --official file doesn't cover) -- once an --official file already covers the
- * whole corpus (as reports/stress/benchmark-latest-random.json does), --verify has nothing left to
+ * whole corpus (as reports/stress/solver-corpus2-latest.json does), --verify has nothing left to
  * override. Producing a patched "official" file first, then feeding IT to compile-baseline.mjs,
  * reuses that tool's real extension point instead of fighting the --verify bucket it doesn't apply to.
  *
  * Usage:
- *   node scripts/patch-benchmark-with-sweep.mjs --base=reports/stress/benchmark-latest-random.json \
+ *   node scripts/patch-benchmark-with-sweep.mjs --base=reports/stress/solver-corpus2-latest.json \
  *       --sweep=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json \
  *       --out=reports/stress/benchmark-latest-random-patched-2026-07-24.json
  */

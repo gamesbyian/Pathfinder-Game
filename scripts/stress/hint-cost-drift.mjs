@@ -4,7 +4,7 @@
  *
  * WHAT IT ANSWERS, AND WHY NOTHING ELSE DOES
  *
- *   `solver:bench --check` verifies only the SOLVED/FAILED SET. CLAUDE.md's standing warning is
+ *   `solver:regression --check` verifies only the SOLVED/FAILED SET. CLAUDE.md's standing warning is
  *   that a change can pass it cleanly while making the corpus meaningfully slower — the
  *   repair-probe seed-width episode is the worked example (160/160 clean, ~14% slower corpus).
  *   The prescribed guard is a full-corpus before/after `nodesExpanded` sweep, which costs hours and
