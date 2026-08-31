@@ -16,6 +16,7 @@ import {
     findLocalCorpusMatchByFingerprint,
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
+import { OVERLAY_NONE, REVIEW, SOLVER_RUNNING } from '../app-constants.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
 import { hintPaths, makeProvenanceEntry, mergeHints, reconcileHints, toHint, HUMAN_PLAYER_ID } from '../domain/hint-types.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
@@ -31,7 +32,7 @@ function mulberry32(seed: number) {
     };
 }
 
-export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi' | 'data'>) {
+export function createSubmissionController({ state, ui, engine, levelUtils, editor, persistence, solverApi, data, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi' | 'data'>) {
 
     // Fingerprints every level in data.getLevels() (the local corpus — always the published one
     // when submitting normally; see dev-corpus.ts) so a submission can be checked against it, not
@@ -234,7 +235,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             };
             let stopTicker: (() => void) | null = null;
             try {
-                engine.overlays.setOverlayState(core.SOLVER_RUNNING);
+                engine.overlays.setOverlayState(SOLVER_RUNNING);
                 ui.setSolverControlsEnabled(false);
                 ui.setSubmitStep('smStep-solve', 'running', [solveDetail()]);
                 updateCountdown();
@@ -260,7 +261,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 });
                 stopTicker?.(); stopTicker = null;
                 ui.setSubmitStepCountdown('smStep-solve', null);
-                engine.overlays.setOverlayState(core.OVERLAY_NONE);
+                engine.overlays.setOverlayState(OVERLAY_NONE);
                 // Merge whatever was found (including partial results if cancelled) and remember them —
                 // both the plain paths (existing dedup/count logic) and their provenance, captured at
                 // find-time regardless of whether these hints end up submitted.
@@ -276,7 +277,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                     setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 }
             } catch (err: any) {
-                engine.overlays.setOverlayState(core.OVERLAY_NONE);
+                engine.overlays.setOverlayState(OVERLAY_NONE);
                 if (err?.message !== 'Solver:cancelled') reportError('submit.variety-search', err);
             } finally {
                 stopTicker?.();
@@ -405,7 +406,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             ui.showSubmitDismiss();
             setTimeout(() => ui.hideSubmitModal(), 4000);
         };
-        const afterSuccess = state.ENGINE.mode === core.REVIEW ? afterReviewSubmit : null;
+        const afterSuccess = state.ENGINE.mode === REVIEW ? afterReviewSubmit : null;
         // submitWorkingLevel's own top-level catch already reports and surfaces every failure in
         // the modal; this is only a last-resort net for a throw from afterSuccess (outside that
         // catch's scope) or the catch handler itself.
@@ -458,7 +459,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     // Play mode hint: plays saved hints only; solver is not triggered here.
     (document.getElementById('hintBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
+        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
         void showSavedHint(); // never rejects — getHints failures are reported inside
     };
 
@@ -485,7 +486,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
     (document.getElementById('reviewHintBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
+        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
         const wl = state.ENGINE.editor.workingLevel;
         const hints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
         if (!hints.length) { ui.showMessage('No saved hint.', 'info'); return; }

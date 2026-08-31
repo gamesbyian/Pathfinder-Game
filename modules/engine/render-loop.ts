@@ -4,10 +4,11 @@ import { advanceHintAnimationIndex, clearDirty, markDirty,
          setHintBlinkStartMsIfUnset, setHintFadeStartMs,
          setHintHoldStartMsIfUnset, stepVisualFlipCount } from '../state-actions.js';
 import { createRenderModel } from '../render/create-render-model.js';
+import { EDITOR, HINT_ANIMATING, OVERLAY_NONE, REVIEW } from '../app-constants.js';
 
-export function createRenderLoop({ core, state, themes, ui, renderer, setOverlayState }: ControllerDeps) {
+export function createRenderLoop({ state, themes, ui, renderer, setOverlayState }: ControllerDeps) {
     function loop() {
-        if (state.ENGINE.overlayState === core.HINT_ANIMATING && state.ENGINE.hinter.pathList.length) {
+        if (state.ENGINE.overlayState === HINT_ANIMATING && state.ENGINE.hinter.pathList.length) {
             const _h                 = state.ENGINE.hinter;
             const hPath              = _h.pathList[_h.displayIndices?.[_h.currentPathIdx] ?? _h.currentPathIdx];
             const hintNowMs          = Date.now();
@@ -43,7 +44,7 @@ export function createRenderLoop({ core, state, themes, ui, renderer, setOverlay
                 const fadeElapsedMs = hintNowMs - state.ENGINE.hinter.fadeStartMs;
                 setHintAnimationAlpha(state, Math.max(0, 1 - (fadeElapsedMs / hintFadeDurationMs)));
                 if (state.ENGINE.hinter.alpha <= 0) {
-                    setOverlayState(core.OVERLAY_NONE);
+                    setOverlayState(OVERLAY_NONE);
                     ui.showMessage('', '');
                 }
             }
@@ -53,15 +54,15 @@ export function createRenderLoop({ core, state, themes, ui, renderer, setOverlay
         const now = Date.now();
         pruneRipples(state, now);
         const hasContinuousAnimation =
-            state.ENGINE.ripples.length > 0 || state.ENGINE.overlayState === core.HINT_ANIMATING;
+            state.ENGINE.ripples.length > 0 || state.ENGINE.overlayState === HINT_ANIMATING;
         if (hasContinuousAnimation) markDirty(state);
         const shouldRender = state.ENGINE.isDirty || hasContinuousAnimation;
         if (shouldRender) {
             clearDirty(state);
-            const reqLenPreview = (state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
+            const reqLenPreview = (state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW)
                 ? parseInt(ui.getValue('editReqLen'))
                 : null;
-            renderer.render(createRenderModel({ eng: state.ENGINE, core, themes }, reqLenPreview));
+            renderer.render(createRenderModel({ eng: state.ENGINE, themes }, reqLenPreview));
         }
         requestAnimationFrame(loop);
     }

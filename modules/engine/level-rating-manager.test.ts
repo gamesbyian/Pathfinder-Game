@@ -6,8 +6,8 @@ import { test } from 'vitest';
 import { createLevelRatingManager } from './level-rating-manager.js';
 import { createEngineState } from '../state-slices.js';
 import { getLevelFingerprint, getLegacyLevelFingerprints } from '../domain/level-fingerprint.js';
+import { PLAY } from '../app-constants.js';
 
-const core = { PLAY: 0, REVIEW: 2 };
 
 const RAW_LEVEL = {
     grid: { w: 5, h: 5 }, reqLen: 8, reqInt: 0,
@@ -17,9 +17,9 @@ const RAW_LEVEL = {
 };
 
 function createHarness({ ratingsByFingerprint = {} as Record<string, any> } = {}) {
-    const state = { ENGINE: createEngineState({ core } as any) };
+    const state = { ENGINE: createEngineState() };
     state.ENGINE.isDevMode = true;
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 0;
 
     const renderCalls: any[] = [];
@@ -39,7 +39,7 @@ function createHarness({ ratingsByFingerprint = {} as Record<string, any> } = {}
     };
     const reportError = (context: string, err: any) => errors.push({ context, err });
 
-    const manager = createLevelRatingManager({ core, state, ui, data, levelUtils: {} as any, persistence: persistence as any, reportError });
+    const manager = createLevelRatingManager({ state, ui, data, levelUtils: {} as any, persistence: persistence as any, reportError });
     return { state, manager, loadCalls, saveCalls, errors, renderCalls };
 }
 
@@ -89,9 +89,9 @@ test('a failed migration write reports but does not block applying the legacy ra
     const [legacyFingerprint] = await getLegacyLevelFingerprints(RAW_LEVEL);
     const legacyRating = { tags: ['tricky'], customTags: [], difficulty: 1, fun: 1 };
 
-    const state = { ENGINE: createEngineState({ core } as any) };
+    const state = { ENGINE: createEngineState() };
     state.ENGINE.isDevMode = true;
-    state.ENGINE.mode = core.PLAY;
+    state.ENGINE.mode = PLAY;
     state.ENGINE.levelIdx = 0;
     const ui = { renderLevelRatingPane: () => {} };
     const data = { getLevel: () => RAW_LEVEL } as any;
@@ -101,7 +101,7 @@ test('a failed migration write reports but does not block applying the legacy ra
         saveLevelRating: async () => { throw new Error('write failed'); },
     };
     const reportError = (context: string, err: any) => errors.push({ context, err });
-    const manager = createLevelRatingManager({ core, state, ui, data, levelUtils: {} as any, persistence: persistence as any, reportError });
+    const manager = createLevelRatingManager({ state, ui, data, levelUtils: {} as any, persistence: persistence as any, reportError });
 
     await manager.refreshForCurrentLevel();
 

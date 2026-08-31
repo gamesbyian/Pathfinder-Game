@@ -1,3 +1,4 @@
+import { SOLVER_RUNNING } from '../app-constants.js';
 import { getEl, resolveEl, setStyle, setText, setTextContent, setButtonState, showOverlay, hideOverlay } from './dom.js';
 
 let solverAbortRequested = false;
@@ -26,9 +27,9 @@ export const setSolverProgress   = (pct: any = 0) => {
 
 export const setSolverAbortRequested = (requested: any) => { solverAbortRequested = !!requested; };
 
-export const createSolverOverlayUI = ({ core }: any) => {
+export const createSolverOverlayUI = () => {
     const applyOverlayState = (state: any) => {
-        if (state === core.SOLVER_RUNNING) {
+        if (state === SOLVER_RUNNING) {
             setSearchIndicatorVisible(true);
             setButtonState('solverCloseBtn', { enabled: true });
             if (!solverAbortRequested) setTextContent('searchLabel', 'Finding Solutions...');

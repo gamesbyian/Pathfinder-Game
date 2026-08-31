@@ -3,8 +3,9 @@ import type { RequireDeps } from '../state.js';
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
 import { popNavigationUndoStack, setDevCorpus, toggleDevMode } from '../state-actions.js';
 import { defaultReportError } from '../error-reporting.js';
+import { OVERLAY_NONE, PLAY, REVIEW } from '../app-constants.js';
 
-export function createOptionsController({ core, state, ui, engine, themes, data, devCorpus, solverApi, levelUtils, persistence, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
+export function createOptionsController({ state, ui, engine, themes, data, devCorpus, solverApi, levelUtils, persistence, audioService, reportError = defaultReportError }: RequireDeps<'data' | 'levelUtils' | 'solverApi'>, { tryNavigate: _tryNavigate }: any) {
 
     // --- Mute ---
 
@@ -20,7 +21,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         engine.navigation.setOrientation((state.ENGINE.orientation + 1) % 8);
-        core.SOUND_BUS.play('D5', '32n');
+        audioService.play('D5', '32n');
     };
     (document.getElementById('whoaBtn') as any).onclick = perspectiveAction;
 
@@ -28,7 +29,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     (document.getElementById('resetBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
+        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
         engine.handleResetAction();
     };
 
@@ -95,7 +96,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         ui.showMessage(`Corpus: ${corpusId}`, 'info');
         // Review Mode reads submissions from Firestore, never data.getLevels(), so it's untouched
         // by this switch — only reload the Play/Edit level display when that's the active mode.
-        if (state.ENGINE.mode !== core.REVIEW) engine.game.loadLevel(0);
+        if (state.ENGINE.mode !== REVIEW) engine.game.loadLevel(0);
     };
     (document.getElementById('devCorpusSelect') as any).onchange = (e: any) => { void switchDevCorpus(e.target.value); };
 
@@ -118,7 +119,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     (document.getElementById('backToOptionsBtn') as any).onclick   = () => { syncOptionToggles(); showOptionsPage(); };
 
     const reloadForOptions = () => {
-        if (state.ENGINE.mode === core.PLAY) engine.game.loadLevel(state.ENGINE.levelIdx, { keepOrientation: true });
+        if (state.ENGINE.mode === PLAY) engine.game.loadLevel(state.ENGINE.levelIdx, { keepOrientation: true });
     };
     const bindOptionToggle = (id: any, fn: any) => {
         const el = (document.getElementById(id) as any);

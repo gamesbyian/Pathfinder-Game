@@ -1,10 +1,11 @@
 import type { RequireDeps } from '../state.js';
+import { PLAY } from '../app-constants.js';
 import { cloneTapRouteState, simulateTapRouteStep } from '../runtime/path-state.js';
 
-export function createTapRouter({ core, state, levelUtils }: RequireDeps<'levelUtils'>) {
+export function createTapRouter({ state, levelUtils }: RequireDeps<'levelUtils'>) {
     return {
         findTapRoute(target: any, options: any = {}) {
-            const level = state.ENGINE.mode === core.PLAY
+            const level = state.ENGINE.mode === PLAY
                 ? state.ENGINE.level
                 : state.ENGINE.editor.workingLevel;
             if (!level || !state.ENGINE.nav.path.length) return null;

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { createLevelUtils } from './level-utils.js';
 import { transformPoint } from './domain/geometry.js';
+import { PLAY } from './app-constants.js';
 
 const playableButSchemaDiagnosticLevel = {
   grid: { w: 4, h: 5 },
@@ -14,7 +15,6 @@ const playableButSchemaDiagnosticLevel = {
 test('normalizeLevel reports schema diagnostics but still returns a parseable level', () => {
   const reported: any[] = [];
   const levelUtils = createLevelUtils({
-    core: {},
     data: { getLevels: () => [playableButSchemaDiagnosticLevel] },
     getState: () => ({ viewport: {} }),
     getRenderer: () => ({ getCanvas: () => ({ getBoundingClientRect: () => ({ left: 0, top: 0, width: 1, height: 1 }), width: 1, height: 1 }) }),
@@ -43,13 +43,12 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
     getBoundingClientRect: () => ({ left: 11, top: 17, width: 140, height: 140 }),
   };
   const engineState = {
-    mode: 1,
+    mode: PLAY,
     level,
     orientation: 0,
     viewport: { cellW: cellSize, cellH: cellSize, swapped: false },
   } as any;
   const levelUtils = createLevelUtils({
-    core: { PLAY: 1 },
     data: { getLevels: () => [] },
     getState: () => engineState,
     getRenderer: () => ({ getCanvas: () => canvas }),

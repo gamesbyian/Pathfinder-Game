@@ -7,13 +7,14 @@ import { heatmapToCells }           from '../domain/heatmap.js';
 import { hasParitySwitchingPortal } from '../domain/portal-utils.js';
 import { getRealLength }            from '../runtime/game-rules.js';
 import { activeLevel }              from '../state.js';
+import { EDITOR, HINT_ANIMATING, PLAY, REVIEW } from '../app-constants.js';
 
-export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any = null) {
-    const isPlayMode   = eng.mode === core.PLAY;
-    const isEditorMode = eng.mode === core.EDITOR;
-    const isReviewMode = eng.mode === core.REVIEW;
+export function createRenderModel({ eng, themes }: any, reqLenPreview: any = null) {
+    const isPlayMode   = eng.mode === PLAY;
+    const isEditorMode = eng.mode === EDITOR;
+    const isReviewMode = eng.mode === REVIEW;
 
-    const level = activeLevel(eng, core);
+    const level = activeLevel(eng);
     const theme = themes.THEMES[themes.getCurrentTheme()];
 
     const { nav, hazards } = eng;
@@ -33,7 +34,7 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
     }
 
     // --- Hint overlay ---
-    const hintActive = eng.overlayState === core.HINT_ANIMATING && eng.hinter.pathList.length > 0;
+    const hintActive = eng.overlayState === HINT_ANIMATING && eng.hinter.pathList.length > 0;
     const hintCrossedFlippingFilters = new Map();
     let hintDisplayFlipCount = 0;
     let hintPath: any[] = [];

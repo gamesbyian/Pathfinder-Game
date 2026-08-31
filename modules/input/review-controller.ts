@@ -5,6 +5,7 @@ import type { RequireDeps } from '../state.js';
 import { classifyApproval, decideApprovalFallback, revalidateWorkingHints } from './review-core.js';
 import { knownHintCount, hintButtonLabel, mergeUniqueHints } from '../solver/diversification.js';
 import { defaultReportError } from '../error-reporting.js';
+import { OVERLAY_NONE, SOLVER_RUNNING } from '../app-constants.js';
 import { buildWireLevelData } from '../domain/level-codec.js';
 import { mergeHints, reconcileHints, toHint } from '../domain/hint-types.js';
 import { provenanceFromSolveResult } from '../solver/hint-provenance.js';
@@ -12,7 +13,7 @@ import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { SOLVER_VERSION } from '../build-info.js';
 import { appendProvenanceEntry, makeProvenanceEntry as makeLevelProvenanceEntry } from '../domain/level-provenance-types.js';
 
-export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createReviewController({ state, ui, engine, levelUtils, editor, persistence, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Admin sign-in ---
 
@@ -126,7 +127,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
-            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setModalContent('searchLabel', 'Solving level for approval…', 'text');
             ui.setSolverDetailText('Searching…');
@@ -141,7 +142,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             // pass's extra budget would silently break that. Uses the convenience flag so a future
             // new pass is covered automatically.
             const result = await solverApi.solveLevel(solveLevel, { timeBudgetMs: budgetMs, yieldFn, disableExtraBudgetPasses: true });
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
             if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 const levelRevision = await getLevelFingerprint(solveLevel);
                 return { path: result.solution, hint: toHint(result.solution, [provenanceFromSolveResult(result, { solverVersion: SOLVER_VERSION, levelRevision })]) };
@@ -149,7 +150,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             return null;
         } catch (err: any) {
             if (err?.message !== 'Solver:cancelled') reportError('review.solve-for-hint', err);
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
             return null;
         } finally {
             clearInterval(abortPoll);

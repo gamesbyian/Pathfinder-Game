@@ -8,8 +8,7 @@ import {
     setLevelRatingDifficulty, setLevelRatingFun, incrementLevelRatingRequestId,
 } from './rating-actions.js';
 
-const core = { PLAY: 0, IDLE: 'IDLE', OVERLAY_NONE: 'NONE' };
-const engine = () => createEngineState({ core } as any);
+const engine = () => createEngineState();
 
 test('setLevelRatingContext resets the pane to an unloaded blank slate', () => {
     const eng = engine();

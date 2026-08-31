@@ -3,6 +3,7 @@ import { test } from 'vitest';
 import { PACK } from './domain/cell-key.js';
 import { transformPoint } from './domain/geometry.js';
 import { createRenderer } from './renderer.js';
+import { PLAY } from './app-constants.js';
 
 test('renderer path helper uses the same current transform as screen-position lookup', () => {
     const calls: Array<[string, number, number]> = [];
@@ -25,13 +26,12 @@ test('renderer path helper uses the same current transform as screen-position lo
     try {
         const level = { grid: { w: 7, h: 5 } };
         const engineState: any = {
-            mode: 1,
+            mode: PLAY,
             level,
             orientation: 0,
             viewport: { cellW: 20, cellH: 30 },
         };
         const renderer = createRenderer({
-            core: { PLAY: 1 },
             state: { ENGINE: engineState },
             ui: {},
         });

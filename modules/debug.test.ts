@@ -6,7 +6,7 @@ import { createDebug } from './debug.js';
 
 test('createDebug exposes registered values only in DEV mode', () => {
   const fakeWindow: any = {};
-  const debug = createDebug({ core: { DEV: true, AXIS: { H: 1 } }, getWindow: () => fakeWindow });
+  const debug = createDebug({ isDevMode: true, axis: { H: 1 }, getWindow: () => fakeWindow });
   debug.register('TEST_VALUE', 42);
   debug.expose();
   assert.deepEqual(fakeWindow.AXIS, { H: 1 });
@@ -15,7 +15,7 @@ test('createDebug exposes registered values only in DEV mode', () => {
 
 test('createDebug is a no-op outside DEV mode and without a window', () => {
   const fakeWindow: any = {};
-  createDebug({ core: { DEV: false, AXIS: {} }, getWindow: () => fakeWindow }).expose();
+  createDebug({ isDevMode: false, axis: {}, getWindow: () => fakeWindow }).expose();
   assert.deepEqual(fakeWindow, {});
-  createDebug({ core: { DEV: true, AXIS: {} }, getWindow: () => null }).expose();
+  createDebug({ isDevMode: true, axis: {}, getWindow: () => null }).expose();
 });

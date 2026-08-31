@@ -3,17 +3,17 @@ import { test } from 'vitest';
 import { createEngineState } from '../state-slices.js';
 import { PACK } from '../domain/cell-key.js';
 import { createRenderModel } from './create-render-model.js';
+import { EDITOR } from '../app-constants.js';
 
-const core = { PLAY: 0, EDITOR: 1, REVIEW: 2, IDLE: 'idle', OVERLAY_NONE: 'none', HINT_ANIMATING: 'hint_animating' };
 const themes = { THEMES: { classic: { path: '#fff' } }, getCurrentTheme: () => 'classic' };
 
 test('createRenderModel surfaces the editor false-goal-trigger overlay sets from EditorState', () => {
-    const eng = createEngineState({ core }) as any;
-    eng.mode = core.EDITOR;
+    const eng = createEngineState() as any;
+    eng.mode = EDITOR;
     eng.editor.triggerableFalseGoalCells = new Set([PACK(1, 1), PACK(2, 2)]);
     eng.editor.falseGoalTriggerParityCandidates = new Set([PACK(3, 3)]);
 
-    const model = createRenderModel({ eng, core, themes });
+    const model = createRenderModel({ eng, themes });
 
     assert.equal(model.editorTriggerableFalseGoalCells.size, 2);
     assert.ok(model.editorTriggerableFalseGoalCells.has(PACK(1, 1)));
@@ -28,9 +28,9 @@ test('createRenderModel surfaces the editor false-goal-trigger overlay sets from
 
 
 test('createRenderModel snapshots the current runtime transform selector', () => {
-    const eng = createEngineState({ core }) as any;
+    const eng = createEngineState() as any;
     eng.orientation = 6;
-    const model = createRenderModel({ eng, core, themes });
+    const model = createRenderModel({ eng, themes });
 
     assert.equal(model.orientation, 6);
     eng.orientation = 2;

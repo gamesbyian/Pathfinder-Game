@@ -1,3 +1,4 @@
+import { PLAY } from '../app-constants.js';
 import { setRootCssVar } from './dom.js';
 import { markDirty } from '../state-actions.js';
 
@@ -28,7 +29,7 @@ export const syncEditorPalettePlacement = () => {
         gamePane.parentElement.insertBefore(pal, controlsPane);
 };
 
-export const createLayoutUI = ({ core, getState }: any) => {
+export const createLayoutUI = ({ getState }: any) => {
     const updateLayoutMode = () => {
         syncEditorPalettePlacement();
         measureGridModalRect();
@@ -43,7 +44,7 @@ export const createLayoutUI = ({ core, getState }: any) => {
         const rect   = canvas.getBoundingClientRect();
         if (rect.width === 0) return;
         const eng = getState();
-        const l = eng.mode === core.PLAY
+        const l = eng.mode === PLAY
             ? eng.level
             : eng.editor.workingLevel;
         if (!l) return;

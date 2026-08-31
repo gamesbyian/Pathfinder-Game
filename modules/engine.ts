@@ -30,6 +30,7 @@ import {
     setOrientation as setOrientationState,
     toggleMuted as toggleMutedState,
 } from './state-actions.js';
+import { DRAGGING, EDITOR, EDIT_DRAG, IDLE, PORTAL_PAUSE, REVIEW } from './app-constants.js';
 
 // Declarative grouped-facade membership: the single source of truth for which flat engine
 // methods each narrow namespace (game/navigation/overlays/hints/solver/review/ratings) exposes.
@@ -73,12 +74,12 @@ export function buildGroupedFacade(api: Record<string, any>): Record<string, Rec
     return grouped;
 }
 
-export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor, reportError }: RequireDeps<'levelUtils' | 'data'>) {
+export function createEngine({ state, ui, renderer, levelUtils, themes, data, persistence, editor, audioService, reportError }: RequireDeps<'levelUtils' | 'data'>) {
 
     // Wrapper: resolves level from state; pure logic is in runtime/game-rules.js.
     // Accepts either full engineState (with .nav sub-object) or a flat state (for tests).
     function areWinMetricsSatisfied(engineState: any = state.ENGINE, level: any) {
-        const lvl = level !== undefined ? level : activeLevel(engineState, core);
+        const lvl = level !== undefined ? level : activeLevel(engineState);
         return areWinMetricsSatisfiedImpl(engineState.nav ?? engineState, lvl);
     }
 
@@ -98,11 +99,11 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     };
 
     function attemptMoveTo(target: any, _opts: any = {}) {
-        if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW) && !state.ENGINE.editor.isPencilMode) return;
+        if ((state.ENGINE.mode === EDITOR || state.ENGINE.mode === REVIEW) && !state.ENGINE.editor.isPencilMode) return;
         if (!state.ENGINE.nav.path.length) return;
         const headPos = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
-        if (state.ENGINE.logicState === core.PORTAL_PAUSE) {
-            if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(core.DRAGGING);
+        if (state.ENGINE.logicState === PORTAL_PAUSE) {
+            if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING);
             else return;
         }
         if (target.x === headPos.x && target.y === headPos.y) return;
@@ -153,14 +154,14 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     function rebuildDerivedPathState(engineState: any = state.ENGINE) {
         const nav = engineState.nav ?? engineState;
         const oldFlipCount = nav.flipCount;
-        const level = activeLevel(engineState, core);
+        const level = activeLevel(engineState);
         rebuildDerivedState(nav, level);
         if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
     }
 
     function assertStateConsistency(engineState: any = state.ENGINE) {
         if (!engineState.isDevMode) return;
-        const l = activeLevel(engineState, core);
+        const l = activeLevel(engineState);
         if (!l) return;
         const nav = engineState.nav ?? engineState;
         const originalIntersections = nav.intersections;
@@ -175,11 +176,11 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function setLogicState(newState: any) {
-        if (newState !== core.IDLE && !VALID_LOGIC_TRANSITIONS[state.ENGINE.logicState]?.includes(newState)) {
+        if (newState !== IDLE && !VALID_LOGIC_TRANSITIONS[state.ENGINE.logicState]?.includes(newState)) {
             console.warn(`Blocked Logic Transition: ${state.ENGINE.logicState} -> ${newState}`);
             return false;
         }
-        if (state.ENGINE.logicState === core.EDIT_DRAG && newState !== core.EDIT_DRAG) {
+        if (state.ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
             ui.EditorDragGhost.update({ visible: false });
         }
         setLogicStateValue(state, newState);
@@ -189,20 +190,19 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     // --- Controller instantiation chain ---
 
     const PathNavigator = createPathNavigator({
-        core,
-        getLevel: (engineState: any) => activeLevel(engineState, core),
+        getLevel: (engineState: any) => activeLevel(engineState),
         setLogicState,
         rebuildDerivedPathState,
         assertStateConsistency
     });
 
-    const levelRatingManager = createLevelRatingManager({ core, state, ui, data, levelUtils, persistence, reportError });
+    const levelRatingManager = createLevelRatingManager({ state, ui, data, levelUtils, persistence, reportError });
     const { refreshForCurrentLevel: refreshLevelRatingPane } = levelRatingManager;
 
     const { resetEmptyReviewState, loadReviewLevel, setReviewSubmissions, removeReviewSubmission, removeAndAdvance } =
         createReviewModeController({ state, ui, levelUtils, editor, PathNavigator, refreshLevelRatingPane });
 
-    const overlayController = createOverlayController({ core, state, ui });
+    const overlayController = createOverlayController({ state, ui });
     const {
         setOverlayState,
         startHintAnimation,
@@ -214,26 +214,26 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         clearPersistedHeatmap
     } = overlayController;
 
-    const hazardController = createHazardController({ core, state, ui, setOverlayState });
+    const hazardController = createHazardController({ state, ui, setOverlayState, audioService });
     const { triggerJumpScare, triggerFalseGoalDetonation, clearFalseGoalTimers } = hazardController;
 
-    const winController = createWinController({ core, state, ui, data, persistence, reportError, setLogicState });
+    const winController = createWinController({ state, ui, data, persistence, reportError, setLogicState, audioService });
     const { handleWin } = winController;
 
     const { processStep } = createStepDispatcher({
-        core, state, themes, levelUtils,
+        state, themes, levelUtils, audioService,
         setLogicState, rebuildDerivedPathState, createSnapshot,
         onJumpScare: triggerJumpScare,
         onFalseGoalDetonation: triggerFalseGoalDetonation,
         onWin: handleWin,
     });
 
-    const { findTapRoute } = createTapRouter({ core, state, levelUtils });
+    const { findTapRoute } = createTapRouter({ state, levelUtils });
 
     const { applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded } =
-        createChallengeOptionsController({ core, state, ui, levelUtils });
+        createChallengeOptionsController({ state, ui, levelUtils });
 
-    const { loop } = createRenderLoop({ core, state, themes, ui, renderer, setOverlayState });
+    const { loop } = createRenderLoop({ state, themes, ui, renderer, setOverlayState });
 
     const { cancelSolver, startSolverRun, endSolverRun, setHintPaths, isRunning } =
         createSolverManager({ state, ui });
@@ -248,7 +248,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         updatePlayModeLayout,
         updateCompletionUI,
     } = createLevelFlowController({
-        core, state, ui, data, levelUtils, persistence, editor, reportError,
+        state, ui, data, levelUtils, persistence, editor, audioService, reportError,
         PathNavigator,
         clearFalseGoalTimers,
         applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,

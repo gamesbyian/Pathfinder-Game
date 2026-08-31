@@ -5,7 +5,7 @@ import { drawScorchMark }       from './render/draw-assets.js';
 import { markDirty }            from './state-actions.js';
 import { activeLevel }          from './state.js';
 
-export function createRenderer({ core, state, ui }: any) {
+export function createRenderer({ state, ui }: any) {
     const cvs             = (document.getElementById('gameCanvas') as any);
     const ctx             = cvs.getContext('2d');
     const mustPassOverlay = (document.getElementById('mustPassOverlay') as any);
@@ -13,7 +13,7 @@ export function createRenderer({ core, state, ui }: any) {
 
     function getScreenPos(cx: any, cy: any) {
         const eng = state.ENGINE;
-        const l   = activeLevel(eng, core);
+        const l   = activeLevel(eng);
         if (!l) return { sx: 0, sy: 0 };
         const { tx, ty } = transformPoint(cx, cy, eng.orientation, l.grid.w, l.grid.h);
         return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
@@ -39,7 +39,7 @@ export function createRenderer({ core, state, ui }: any) {
     // drawPath and drawScorchMark are kept on the public API for external callers.
     function publicDrawPath(pathArr: any, isJumpSet: any, strokeStyle: any, width: any, isCaution: any = false) {
         const eng = state.ENGINE;
-        const l   = activeLevel(eng, core);
+        const l   = activeLevel(eng);
         if (!l) return;
         const screenPosFn = (cx: any, cy: any) => {
             const { tx, ty } = transformPoint(cx, cy, eng.orientation, l.grid.w, l.grid.h);

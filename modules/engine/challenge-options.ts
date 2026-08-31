@@ -1,10 +1,11 @@
 import type { RequireDeps } from '../state.js';
-export function createChallengeOptionsController({ core, state, ui, levelUtils }: RequireDeps<'levelUtils'>) {
+import { PLAY } from '../app-constants.js';
+export function createChallengeOptionsController({ state, ui, levelUtils }: RequireDeps<'levelUtils'>) {
     return {
         // Returns { playable, level, reason? } where `level` is a derived copy with options
         // applied — the input level is never mutated. Callers must use result.level.
         applyPlayChallengeOptions(level: any) {
-            if (!level || state.ENGINE.mode !== core.PLAY) return { playable: true, level };
+            if (!level || state.ENGINE.mode !== PLAY) return { playable: true, level };
             const opts = state.ENGINE.options || {};
             let derived = level;
 

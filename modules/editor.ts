@@ -1,4 +1,5 @@
 import type { RequireDeps } from './state.js';
+import { EDITOR, REVIEW, OVERLAY_NONE, IDLE, EDIT_DRAG, PLAY } from './app-constants.js';
 import { validateLevelDetailed as validateLevelDetailedImpl } from './domain/level-validation.js';
 import { getOccupant, removeOccupant, placeOccupant }        from './editor/editor-occupancy.js';
 import { saveEditorSnapshot, restoreEditorSnapshot }         from './editor/editor-history.js';
@@ -23,7 +24,7 @@ import {
 } from './state-actions.js';
 import { makeLevelProvenance, makeProvenanceEntry } from './domain/level-provenance-types.js';
 
-export function createEditor({ core, state, ui, levelUtils, solverApi, getEngineRuntime }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createEditor({ state, ui, levelUtils, solverApi, getEngineRuntime }: RequireDeps<'levelUtils' | 'solverApi'>) {
     // The editor drives the engine only through a narrow EditorRuntimePort, resolved lazily on
     // first use via getEngineRuntime() and memoized. Resolving lazily (rather than via a
     // post-construction init() call) means the editor is fully valid the moment it's constructed:
@@ -174,8 +175,8 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
     }
 
     return {
-        enterEditorMode() { runtime().switchMode(core.EDITOR); },
-        exitEditorMode() { runtime().switchMode(core.PLAY); },
+        enterEditorMode() { runtime().switchMode(EDITOR); },
+        exitEditorMode() { runtime().switchMode(PLAY); },
         loadWorkingLevel(fromLevelObjOrBlank: any) {
             setEditorWorkingLevel(state, levelUtils.deepCloneLevel(fromLevelObjOrBlank));
             setEditorModified(state, false);
@@ -232,8 +233,8 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
             setEditorModified(state, true);
         },
         handlePaletteToolPointerDown(toolType: any, options: any = {}) {
-            if (state.ENGINE.mode !== core.EDITOR && state.ENGINE.mode !== core.REVIEW) return;
-            if (state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
+            if (state.ENGINE.mode !== EDITOR && state.ENGINE.mode !== REVIEW) return;
+            if (state.ENGINE.overlayState !== OVERLAY_NONE) return;
             setEditorDraggedFromGrid(state, false);
             setEditorEmptyClickCount(state, 0);
             if (state.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
@@ -245,11 +246,11 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
                 setEditorSelectedTool(state, null);
                 ui.setPaletteSelectedByType(toolType, false);
                 setEditorDraggedObject(state, null);
-                runtime().setLogicState(core.IDLE);
+                runtime().setLogicState(IDLE);
             } else {
                 setEditorSelectedTool(state, toolType);
                 setEditorDraggedObject(state, { type: toolType });
-                runtime().setLogicState(core.EDIT_DRAG);
+                runtime().setLogicState(EDIT_DRAG);
                 ui.clearPaletteSelection();
                 ui.setPaletteSelectedByType(toolType, true);
             }
@@ -257,13 +258,13 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
             runtime().updatePencilState();
         },
         togglePencilMode() {
-            if (state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
+            if (state.ENGINE.overlayState !== OVERLAY_NONE) return;
             toggleEditorPencilMode(state);
             if (state.ENGINE.editor.isPencilMode) {
                 setEditorSelectedTool(state, null);
                 ui.clearPaletteSelection();
             } else {
-                runtime().setLogicState(core.IDLE);
+                runtime().setLogicState(IDLE);
             }
             runtime().updatePencilState();
         },

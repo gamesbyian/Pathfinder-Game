@@ -6,6 +6,7 @@ import { clearEditorTriggerableFalseGoalCells, markDirty, setEditorModified, set
 import { LANDMARK_TOOL_DEFS } from '../editor/editor-occupancy.js';
 import { planGridResize, computeFalseGoalTriggerRetryBudget, decideFalseGoalTriggerReport, computeVariantPopupPosition } from './editor-toolbar-core.js';
 import { defaultReportError } from '../error-reporting.js';
+import { EDITOR, H, OVERLAY_NONE, REVIEW, SOLVER_RUNNING, V } from '../app-constants.js';
 
 export function applyEditorCoordTransform(
     { state, ui, engine, levelUtils, editor }: any,
@@ -28,7 +29,7 @@ export function applyEditorCoordTransform(
     ui.updateViewport();
 }
 
-export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, falseGoalTriggerScan }: any) {
+export function createEditorToolbarController({ state, ui, engine, levelUtils, editor, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>, { tryNavigate, falseGoalTriggerScan }: any) {
 
     // --- Grid transform orchestration ---
     // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
@@ -41,7 +42,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     function changeGridSize(delta: any) {
         const eng = state.ENGINE;
-        if (eng.overlayState !== core.OVERLAY_NONE || !eng.editor.workingLevel) return;
+        if (eng.overlayState !== OVERLAY_NONE || !eng.editor.workingLevel) return;
         const l = eng.editor.workingLevel;
         // Feasibility + shift planning is pure (editor-toolbar-core); the controller applies it.
         const bounds = levelUtils.getLevelBounds(l);
@@ -75,15 +76,15 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     (document.getElementById('gridRotateBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
+        if (state.ENGINE.overlayState !== OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
         const l = state.ENGINE.editor.workingLevel;
-        applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a: any) => a === core.H ? core.V : core.H);
+        applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a: any) => a === H ? V : H);
         ui.showMessage('Rotated', 'info');
     };
 
     (document.getElementById('gridMirrorBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
+        if (state.ENGINE.overlayState !== OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
         const l = state.ENGINE.editor.workingLevel;
         toggleEditorMirrorHorizontal(state);
         ui.setInlineStyle('mirrorIconSvg', 'transform', state.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)');
@@ -109,7 +110,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     let eraserFired = false;
 
     eraserBtn.addEventListener('pointerdown', () => {
-        if (state.ENGINE.mode !== core.EDITOR && state.ENGINE.mode !== core.REVIEW) return;
+        if (state.ENGINE.mode !== EDITOR && state.ENGINE.mode !== REVIEW) return;
         eraserTimer = setTimeout(() => {
             engine.navigation.PathNavigator.clear(state.ENGINE);
             ui.showMessage('Cleared', 'info');
@@ -400,7 +401,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             if (tenths !== lastTenths) { lastTenths = tenths; ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`); }
         }, 50);
         try {
-            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(SOLVER_RUNNING);
             ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
             ui.setSolverDetailText('Scanning from each gate…');
             ui.setSolverTimerText('0.0s');
@@ -416,7 +417,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                 },
             });
             await overlayMinTimer;
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
             if (res) {
                 const decision = decideFalseGoalTriggerReport(res, state.ENGINE.editor.triggerableFalseGoalCells.size);
                 ui.showMessage(decision.message, decision.tone);
@@ -427,7 +428,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         } catch (err: any) {
             reportError('editor.false-goal-trigger-search', err);
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
             clearInterval(timerTicker);

@@ -1,7 +1,8 @@
 import { createEngineState } from './state-slices.js';
-import type { EngineState, EngineCoreConstants } from './state-slices.js';
+import type { EngineState } from './state-slices.js';
 import type { EngineLevel } from './domain/level-schema.js';
 import type { LevelUtils, DataService, SolverApi, ReportError } from './ports.js';
+import { PLAY } from './app-constants.js';
 
 /** The top-level mutable application state container handed to every controller. */
 export type AppState = { ENGINE: EngineState };
@@ -11,7 +12,7 @@ export type AppState = { ENGINE: EngineState };
  * AppState} (so `state.ENGINE.<field>` accesses and state-action calls are checked end-to-end),
  * and the domain-object-bearing bags carry real interfaces (see ports.ts) so level objects, raw
  * data, and solver results stay typed at every call site. The remaining DOM/controller handles
- * (core/ui/engine/editor/renderer/persistence/themes/debug) still arrive via the index signature
+ * (ui/engine/editor/renderer/persistence/themes/debug) still arrive via the index signature
  * — they are the adapter boundary (see docs/typing.md).
  */
 export type ControllerDeps = {
@@ -33,8 +34,8 @@ export type ControllerDeps = {
 export type RequireDeps<K extends 'levelUtils' | 'data' | 'solverApi'> =
     ControllerDeps & Required<Pick<ControllerDeps, K>>;
 
-export function createState({ core }: { core: EngineCoreConstants }): AppState {
-    return { ENGINE: createEngineState({ core }) };
+export function createState(): AppState {
+    return { ENGINE: createEngineState() };
 }
 
 /**
@@ -43,6 +44,6 @@ export function createState({ core }: { core: EngineCoreConstants }): AppState {
  * the render, input, and engine layers — centralize it so the mode→level mapping lives in
  * one place. Optional-chained on `editor` so it is safe before the editor slice exists.
  */
-export function activeLevel(engineState: EngineState, core: { PLAY: number }): EngineLevel | null {
-    return engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel;
+export function activeLevel(engineState: EngineState): EngineLevel | null {
+    return engineState.mode === PLAY ? engineState.level : engineState.editor?.workingLevel;
 }

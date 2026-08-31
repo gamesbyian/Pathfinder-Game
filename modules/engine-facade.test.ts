@@ -4,9 +4,9 @@
  * same function instances as the backward-compatible flat methods, so the two surfaces
  * cannot drift and no grouped entry is a typo'd `undefined`.
  *
- * createEngine wires real sub-controllers, so it can't be constructed with a real `core`
- * (that needs the DOM). We supply a constants-only core plus auto-vivifying Proxy stubs
- * for the remaining deps — enough to construct without exercising DOM/canvas/Firebase.
+ * createEngine wires real sub-controllers. Direct constants no longer travel through a facade,
+ * so this test only supplies auto-vivifying Proxy stubs plus the explicit audio service needed
+ * for construction, without exercising DOM/canvas/Firebase.
  */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
@@ -27,19 +27,7 @@ function deepStub(): any {
 }
 
 function makeDeps() {
-    const core = {
-        PLAY: 0, EDITOR: 1, REVIEW: 2,
-        IDLE: 'IDLE', DRAGGING: 'DRAGGING', PORTAL_PAUSE: 'PORTAL_PAUSE', RESOLVED: 'RESOLVED',
-        HAZARD_TRIGGERED: 'HAZARD_TRIGGERED', EDIT_DRAG: 'EDIT_DRAG',
-        OVERLAY_NONE: 'NONE', HINT_ANIMATING: 'HINT_ANIMATING', FALSE_GOAL_ANIMATING: 'FALSE_GOAL_ANIMATING',
-        GOOSE_OVERLAY: 'GOOSE_OVERLAY', SOLVER_RUNNING: 'SOLVER_RUNNING',
-        AXIS: { NONE: 0, H: 1, V: 2 }, H: 1, V: 2, NONE: 0, DEV: false,
-        SOUND_BUS: { play() {}, armUnlock() {}, setMutedProvider() {} },
-        deepClone: (v: any) => v,
-        $: () => null,
-    };
     return {
-        core,
         state: deepStub(),
         ui: deepStub(),
         renderer: deepStub(),
@@ -48,6 +36,7 @@ function makeDeps() {
         data: deepStub(),
         persistence: deepStub(),
         editor: deepStub(),
+        audioService: { play() {}, armUnlock() {}, setMutedProvider() {} },
     };
 }
 

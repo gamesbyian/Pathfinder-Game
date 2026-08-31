@@ -29,7 +29,7 @@ function harness() {
     } as any;
     const calls = { saved: 0, hintsCleared: 0, viewport: 0 };
     const levelUtils = createLevelUtils({
-        core: {}, data: { getLevels: () => [] }, getState: () => state.ENGINE,
+        data: { getLevels: () => [] }, getState: () => state.ENGINE,
         getRenderer: () => ({ getCanvas: () => null }),
     });
     const deps = {

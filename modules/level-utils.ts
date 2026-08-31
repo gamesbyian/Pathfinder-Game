@@ -12,7 +12,7 @@ import { activeLevel }                                                     from 
 import { defaultReportError }                                              from './error-reporting.js';
 import type { LevelUtils }                                                 from './ports.js';
 
-export function createLevelUtils({ core, data, getState, getRenderer, reportError = defaultReportError }: any): LevelUtils {
+export function createLevelUtils({ data, getState, getRenderer, reportError = defaultReportError }: any): LevelUtils {
     const getRawLevels = () => data.getLevels();
 
     // Index-based accessor — parses raw level data and reports schema diagnostics without
@@ -52,7 +52,7 @@ export function createLevelUtils({ core, data, getState, getRenderer, reportErro
         const canvas = getRenderer().getCanvas();
         const rect   = canvas.getBoundingClientRect();
         const eng    = getState();
-        const l = activeLevel(eng, core);
+        const l = activeLevel(eng);
         if (!l) return { x: 0, y: 0 };
         const gridW = eng.viewport.swapped ? l.grid.h : l.grid.w;
         const gridH = eng.viewport.swapped ? l.grid.w : l.grid.h;
