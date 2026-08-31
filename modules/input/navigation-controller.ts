@@ -1,15 +1,16 @@
 import { activeLevel, type RequireDeps } from '../state.js';
+import { DRAGGING, EDITOR, IDLE, OVERLAY_NONE, PLAY, REVIEW } from '../app-constants.js';
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
 import { popNavigationUndoStack, setGamepadFocusEnabled, setNavigationActiveGateKey, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 import { prevIndexWrap, nextIndexWrap, validIndexWrap, needsUnsavedGuard, clampFocusIndex, nextGroupIndex, wrapWithinGroup } from './navigation-core.js';
 
-export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
+export function createNavigationController({ state, ui, engine, levelUtils, editor, renderer }: RequireDeps<'levelUtils'>) {
 
     // --- Unsaved-changes guard ---
 
     const tryNavigate = (actionFn: any) => {
-        if (needsUnsavedGuard(state.ENGINE.mode, state.ENGINE.editor.isModified, core.EDITOR)) {
+        if (needsUnsavedGuard(state.ENGINE.mode, state.ENGINE.editor.isModified, EDITOR)) {
             engine.setPendingAction(actionFn);
             ui.openModal('unsavedModal');
         } else {
@@ -36,7 +37,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
             { name: 'CONTROLS', elements: Array.from((document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn') as any)).filter((el) => !(el as HTMLElement).classList.contains('hidden') && (el as HTMLElement).offsetParent !== null) },
             { name: 'LEVEL', elements: [(document.getElementById('prevLevelBtn') as any), (document.getElementById('nextLevelBtn') as any)].filter(Boolean) }
         ];
-        if (state.ENGINE.mode === core.EDITOR) {
+        if (state.ENGINE.mode === EDITOR) {
             groups.push({ name: 'METRICS', elements: [(document.getElementById('editReqLen') as any), (document.getElementById('editReqInt') as any)].filter(Boolean) });
         }
         return groups.filter((g: any) => g.elements.length > 0);
@@ -110,8 +111,8 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     (document.getElementById('prevLevelBtn') as any).onclick = () => tryNavigate(() => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
-        if (state.ENGINE.mode === core.REVIEW) {
+        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
+        if (state.ENGINE.mode === REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
             engine.review.loadReviewLevel(prevIndexWrap(state.ENGINE.review.currentIdx, subs.length));
@@ -124,8 +125,8 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     (document.getElementById('nextLevelBtn') as any).onclick = () => tryNavigate(() => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
-        if (state.ENGINE.mode === core.REVIEW) {
+        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
+        if (state.ENGINE.mode === REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
             engine.review.loadReviewLevel(nextIndexWrap(state.ENGINE.review.currentIdx, subs.length));
@@ -152,7 +153,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         const levels = levelUtils.getRawLevels();
         handleWinClose(() => { if (state.ENGINE.levelIdx < levels.length - 1) engine.game.loadLevel(state.ENGINE.levelIdx + 1); });
     };
-    (document.getElementById('dismissWinModalBtn') as any).onclick = () => handleWinClose(() => engine.setLogicState(core.IDLE));
+    (document.getElementById('dismissWinModalBtn') as any).onclick = () => handleWinClose(() => engine.setLogicState(IDLE));
     (document.getElementById('copyWinDataBtn') as any).onclick = async () => {
         const val = (document.getElementById('winSolutionOutput') as any).value;
         if (val) await ui.copyText(val, { fallbackElId: 'winSolutionOutput' });
@@ -170,12 +171,12 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
     // --- Mode toggle ---
 
     (document.getElementById('modeToggleShellBtn') as any).onclick = () => {
-        if (state.ENGINE.mode === core.REVIEW) {
+        if (state.ENGINE.mode === REVIEW) {
             tryNavigate(() => {
                 ui.closeAllModals();
-                engine.switchMode(core.PLAY);
+                engine.switchMode(PLAY);
             });
-        } else if (state.ENGINE.mode === core.EDITOR) {
+        } else if (state.ENGINE.mode === EDITOR) {
             tryNavigate(() => { ui.closeAllModals(); editor.exitEditorMode(); });
         } else {
             ui.closeAllModals();
@@ -193,15 +194,15 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         !!document.querySelector('.screen-modal:not(.hidden), .modal-overlay:not(.hidden)');
 
     function moveGridHead(dx: any, dy: any) {
-        if (anyModalOpen() || state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
-        const level = activeLevel(state.ENGINE, core);
+        if (anyModalOpen() || state.ENGINE.overlayState !== OVERLAY_NONE) return;
+        const level = activeLevel(state.ENGINE);
         if (!level) return;
         if (!state.ENGINE.nav.path.length) {
             const gateKey = level.gateKeys?.length ? level.gateKeys[0] : null;
             if (gateKey == null) return;
             setNavigationActiveGateKey(state, gateKey);
             engine.navigation.PathNavigator.pushStep(state.ENGINE, gateKey, false);
-            engine.setLogicState(core.DRAGGING);
+            engine.setLogicState(DRAGGING);
         }
         const head = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
         engine.game.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
