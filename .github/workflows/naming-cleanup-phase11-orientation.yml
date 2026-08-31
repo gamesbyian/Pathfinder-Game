@@ -1,0 +1,43 @@
+name: Phase 11 orientation browser gate
+
+on:
+  pull_request:
+    paths:
+      - 'modules/domain/geometry.ts'
+      - 'modules/level-utils.ts'
+      - 'modules/state-slices.ts'
+      - 'modules/state-actions.ts'
+      - 'modules/state/actions/core-actions.ts'
+      - 'modules/engine.ts'
+      - 'modules/engine/level-flow.ts'
+      - 'modules/input/options-controller.ts'
+      - 'modules/render/**'
+      - 'modules/renderer.ts'
+      - 'modules/ui/layout-ui.ts'
+      - 'modules/persistence/local-session-store.ts'
+      - 'modules/persistence/local-session-store.test.ts'
+      - 'tests/orientation.spec.mjs'
+      - 'tests/editor.spec.mjs'
+      - 'playwright.config.mjs'
+      - 'package.json'
+      - '.github/workflows/naming-cleanup-phase11-orientation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  orientation-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run Phase 11 orientation characterization
+        run: npm run test:e2e:phase11a

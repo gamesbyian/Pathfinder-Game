@@ -199,7 +199,8 @@
     "check:naming-cleanup-phase8-closeout": "node scripts/naming-cleanup-phase8-closeout.mjs",
     "test:naming-cleanup-phase8-closeout": "node scripts/naming-cleanup-phase8-closeout-node-test.mjs",
     "check:naming-cleanup-phase10-closeout": "node scripts/naming-cleanup-phase10-closeout.mjs",
-    "test:naming-cleanup-phase10-closeout": "node scripts/naming-cleanup-phase10-closeout-node-test.mjs"
+    "test:naming-cleanup-phase10-closeout": "node scripts/naming-cleanup-phase10-closeout-node-test.mjs",
+    "test:e2e:phase11a": "playwright test --project=chromium tests/orientation.spec.mjs tests/editor.spec.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

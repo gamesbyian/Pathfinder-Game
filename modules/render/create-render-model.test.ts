@@ -25,3 +25,14 @@ test('createRenderModel surfaces the editor false-goal-trigger overlay sets from
     eng.editor.triggerableFalseGoalCells.add(PACK(9, 9));
     assert.equal(model.editorTriggerableFalseGoalCells.size, 2);
 });
+
+
+test('createRenderModel snapshots the current runtime transform selector', () => {
+    const eng = createEngineState({ core }) as any;
+    eng.variant = 6;
+    const model = createRenderModel({ eng, core, themes });
+
+    assert.equal(model.variant, 6);
+    eng.variant = 2;
+    assert.equal(model.variant, 6, 'render model is a frame snapshot, not a live state reference');
+});
