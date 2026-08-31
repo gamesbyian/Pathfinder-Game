@@ -9,7 +9,7 @@
 | Status | 14A merged; 14B in progress |
 | Base `main` SHA | `03a1298669df019d5cbef486890e044fc7f1f07e` |
 | Branch | `chatgpt/phase14b-level-utils-removal-2026-08-31` |
-| PR | pending |
+| PR | #1625 |
 | Selected ledger row IDs | NC-P14-001 through NC-P14-003 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
