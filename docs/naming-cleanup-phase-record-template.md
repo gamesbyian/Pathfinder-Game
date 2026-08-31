@@ -14,6 +14,9 @@ Do not use a chat transcript, private scratchpad, or PR body as the only copy of
 | Base `main` SHA | |
 | Branch | |
 | PR | |
+| Current PR head SHA | |
+| Completed GitHub CI run / conclusion | |
+| Tested PR merge/ref SHA, if available | |
 | Selected ledger row IDs | |
 | Reconciliation mode | delta / full |
 | Highest risk in batch | low / medium / high |
@@ -61,6 +64,10 @@ List selected rows by immutable ledger ID, not only by old/new prose. Confirm th
 -
 
 If a newly discovered surface is merely another consumer of an existing fixed mapping, extend this record/impact map. If it changes the canonical target, compatibility owner/lifetime, risk, batch assignment, or allowed change envelope, stop and follow the specification-amendment protocol before implementation continues.
+
+A related/suffixed surfaced identity (for example a `:raced` package command, alternate-engine alias,
+companion workflow, or sibling artifact) is not automatically another consumer of the parent row.
+Classify it explicitly and add/assign a ledger row before renaming it.
 
 Explicit stop conditions for this batch:
 
@@ -125,6 +132,11 @@ Map live surfaces to the check that really exercises them.
 | | native Node / bundled / worker / browser / workflow / parser | | direct / indirect / structural / none | |
 
 A test that reaches a native-Node tool only through a bundler does not prove the native-Node contract. A workflow path-existence check does not prove workflow input/output semantics.
+
+If any required CI job uses sparse checkout, record whether the validation needs physical
+materialization or only tracked-HEAD existence/content. Repository checks must be exercised under the
+same sparse topology. Large tracked artifacts must not be copied into synthetic fixtures merely to
+prove a path contract.
 
 ## 4. Compatibility and frozen-history ownership
 
@@ -227,8 +239,12 @@ No unclassified live hit may remain in the batch scope.
 - [ ] compare branch head against current `main`;
 - [ ] intended diff is non-empty and contains no already-merged duplicate work;
 - [ ] no unrelated next-batch implementation is stacked in this PR;
-- [ ] targeted validation green;
-- [ ] required aggregate CI green;
+- [ ] targeted/local validation green and clearly labelled as local;
+- [ ] required GitHub PR CI for the current head/base pair has completed green; no required job is queued/running;
+- [ ] after any evidence-only commit, the new final head/base pair was revalidated green before merge;
+- [ ] completed CI run ID/conclusion and the head/tested-ref SHA it covered are recorded; the final run may be backfilled post-merge rather than creating a self-invalidating evidence loop;
+- [ ] any sparse-checkout/large-artifact check added or changed here has been exercised in the real CI topology;
+- [ ] every changed surfaced sibling identity has its own ledger row or explicit retained/not-applicable classification;
 - [ ] ledger IDs, risk, compatibility policy, verification fields, and predecessor merge barrier match the evidence in this record;
 - [ ] all predecessor phases/batches required by the ledger are complete;
 - [ ] no specification amendment is being smuggled inside this implementation PR;
@@ -256,6 +272,8 @@ Final status:
 | --- | --- |
 | PR | |
 | Final head SHA | |
+| Final required CI run / conclusion | |
+| Final tested PR merge/ref SHA | |
 | Merged? | |
 | Ledger rows closed | |
 | Deferred/superseded rows | |

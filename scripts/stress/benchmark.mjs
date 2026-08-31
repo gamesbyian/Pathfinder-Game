@@ -74,9 +74,10 @@
  * within-level racing. The two are not combined (nested worker pools would oversubscribe
  * CPU): passing both forces --engine=sequential inside each outer worker. Per-level
  * timings under parallel mode are inflated by CPU contention and MUST NOT be compared
- * against sequential runs or committed as benchmark-latest.json — the output is stamped
- * with `parallel: N` and the default output path is redirected so an official report
- * can't be overwritten by accident. Solve/fail results (the solved set) are
+ * against sequential runs or committed as benchmark-latest.json. The output is stamped
+ * with `parallel: N`; canonical Corpus 1/2 inputs use their corpus-number live paths,
+ * while custom corpora default to solver-parallel-latest.json so they cannot masquerade as
+ * either maintained corpus. Solve/fail results (the solved set) are
  * budget-dependent and can flip near the budget edge under contention; treat parallel
  * failures as "re-check sequentially".
  */
@@ -93,6 +94,7 @@ import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createRacePool } from '../solver-parallel/race.mjs';
 import { selectLevelsBySpec } from '../level-data-io.mjs';
 import { attemptRecord } from '../portfolio-solve-sweep-lib.mjs';
+import { defaultStressMeasurementOutput } from './measurement-output-path.mjs';
 
 const ROOT = process.cwd();
 
@@ -320,8 +322,9 @@ async function main() {
         ? (argMap.get('--parallel') === '' ? Math.max(1, (os.availableParallelism?.() ?? os.cpus().length) - 1) : Number(argMap.get('--parallel')))
         : 1;
     const parallel = Math.max(1, Math.min(parallelArg, levels.length));
-    // Parallel runs must not silently replace the official (sequential) report.
-    const defaultOut = parallel > 1 ? 'reports/stress/solver-corpus1-latest.json' : 'reports/stress/benchmark-latest.json';
+    // Parallel runs must not silently replace the official sequential report, and a custom
+    // corpus must not inherit a maintained corpus-number filename merely because --parallel is on.
+    const defaultOut = defaultStressMeasurementOutput(cfg.corpusFile, parallel > 1);
     const outFile = argMap.get('--out') || defaultOut;
 
     // --engine=raced (within-level worker-thread attempt racing, via a pool shared across the

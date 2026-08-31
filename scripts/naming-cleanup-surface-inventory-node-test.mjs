@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -89,8 +90,10 @@ const rangeRaw = execFileSync(process.execPath, [
   maxBuffer: 32 * 1024 * 1024,
 });
 const rangeInventory = JSON.parse(rangeRaw);
+const ledger = JSON.parse(readFileSync(path.join(root, 'docs', 'naming-cleanup-ledger.json'), 'utf8'));
+const expectedRangeRows = ledger.entries.filter(row => row.phase >= 8 && row.phase <= 15).length;
 assert.deepEqual(rangeInventory.phaseRange, [8, 15]);
-assert.equal(rangeInventory.ledgerEntries.length, 114);
+assert.equal(rangeInventory.ledgerEntries.length, expectedRangeRows);
 assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.reconciliationState === 'string'));
 assert.ok(rangeInventory.ledgerEntries.every(row => typeof row.id === 'string' && /^NC-P\d{2}-\d{3}$/u.test(row.id)));
 assert.ok(rangeInventory.ledgerEntries.filter(row => row.persistence === 'dual-read').every(row => row.compatibility && row.compatibility.owner));

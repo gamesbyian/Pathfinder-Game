@@ -36,7 +36,18 @@ export function prChangedFiles(root) {
 export function readRepositoryText(root, relativePath) {
   const full = path.resolve(root, relativePath);
   if (fs.existsSync(full) && fs.statSync(full).isFile()) return fs.readFileSync(full, 'utf8');
-  return execFileSync('git', ['show', `HEAD:${relativePath}`], { cwd: root, encoding: 'utf8' });
+  const object = `HEAD:${relativePath}`;
+  const blobBytes = Number.parseInt(
+    execFileSync('git', ['cat-file', '-s', object], { cwd: root, encoding: 'utf8' }).trim(),
+    10,
+  );
+  // Node's execFileSync default maxBuffer is far smaller than some tracked report blobs.
+  // Size the buffer from Git's own blob metadata so sparse-checkout readers remain correct
+  // without materializing large reports merely to inspect them.
+  const maxBuffer = Number.isFinite(blobBytes)
+    ? Math.max(1024 * 1024, blobBytes + 1024 * 1024)
+    : 64 * 1024 * 1024;
+  return execFileSync('git', ['show', object], { cwd: root, encoding: 'utf8', maxBuffer });
 }
 
 /** File/directory existence that remains correct under sparse checkout. */

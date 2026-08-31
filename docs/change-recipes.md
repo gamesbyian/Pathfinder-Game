@@ -20,6 +20,12 @@ For Phase-8+ naming-cleanup work:
 
 Before merge, compare the branch head with current `main`. If the intended patch is empty or already present, close/supersede rather than merge a duplicate/no-op PR.
 
+For Phase-8+ work, local validation does not finish the merge barrier. Required GitHub PR CI for the
+current head/base pair must have completed green. Do not merge while it is queued/running, and do not
+treat a green run from an older revision as current evidence. If a CI-relevant check runs under sparse
+checkout, exercise the repository/object semantics in that topology rather than assuming every
+tracked file is physically present.
+
 ### 1. Build the impact map before editing
 
 1. read [`naming-and-vocabulary.md`](naming-and-vocabulary.md), the owning plan, and active row(s) in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json);
@@ -31,6 +37,15 @@ Before merge, compare the branch head with current `main`. If the intended patch
 7. for medium/high-risk behavior-preserving migrations, capture the smallest useful before-change observable that exercises an invariant and can be compared after implementation.
 
 For surfaced tooling, run `node scripts/tooling-census.mjs --compact --query=<term>` for both legacy and canonical terms when applicable. For physical file/workflow renames, separately audit exact-case paths and spawned/imported targets.
+
+Before changing a related surfaced identity, decide whether it is a consumer or a separate contract.
+Suffixed package commands (for example `:raced`), alternate-engine aliases, companion workflows, and
+sibling artifact names require their own ledger row or explicit retained/not-applicable classification.
+
+For output/artifact renames, compare the semantic strength of the old and new names. If a generic
+name becomes corpus-, mode-, engine-, or environment-specific, enumerate every producer/default path.
+A producer that accepts broader inputs must derive the specific name from actual input or retain a
+generic fallback; never let a literal rename silently mislabel another input domain.
 
 ### 2. Fill the contract-migration matrix
 
@@ -277,6 +292,11 @@ Check:
 7. whether the artifact belongs in git, a workflow artifact, `logs/`, `reports/`, or an off-main data resource.
 
 A generated filename is not sufficient authority metadata. Prefer explicit run/schema/provenance fields.
+
+Repository validation for large/latest artifacts must distinguish **tracked in HEAD** from
+**materialized in the working tree**. Sparse CI jobs should use repository-index/object helpers for
+the former. Synthetic tests should create tiny representative files rather than copying large live
+reports, and Git-object readers must not rely on Node's default child-process output buffer.
 
 ## Current documentation / authority change
 

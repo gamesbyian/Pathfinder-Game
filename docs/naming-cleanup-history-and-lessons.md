@@ -6,7 +6,7 @@ This document records the implementation history that motivated the stronger exe
 
 ## 1. Scope of this retrospective
 
-The original decision-complete plan landed in PR #1544. The review below follows the naming-cleanup implementation and repair chain through PR #1582 on 2026-08-29.
+The original decision-complete plan landed in PR #1544. The retrospective began with the implementation and repair chain through PR #1582 on 2026-08-29 and is amended when later phases expose genuinely new failure classes. Phase 9 added such an amendment after PR #1599 on 2026-08-30.
 
 The important pattern is not that one implementation was unusually bad. The repository repeatedly produced plausible, green, locally correct migrations that were incomplete at a different boundary. The same classes of omission reappeared across solver APIs, research tooling, generated data, workers, workflows, application state, and documentation authority.
 
@@ -85,6 +85,34 @@ PR **#1578** consolidated three independent audits and added transport/runtime g
 - **#1581** updated the docs/ledger to record that #1580 had merged.
 - **#1582** carried the **same closeout patch as #1581 and also merged**. That no-op/duplicate merge is useful evidence in its own right: branch and PR authority were still not mechanically or procedurally explicit enough even after the technical hardening work.
 
+### Phase 9: a green-local / red-remote closure failure
+
+PR **#1599** implemented the Phase-9 command/tool/live-report renames and merged only seconds after it
+opened, before GitHub CI finished. The eventual CI run was red even though the checked-in Phase-9
+record claimed aggregate validation and closeout were green.
+
+The failures exposed three new classes:
+
+- **CI topology is part of the contract.** The new closeout checker required renamed report files to
+  exist physically, but the Node-test job intentionally sparse-checks out `reports/`. Its synthetic
+  test also copied the same large files, so both failed under the real CI topology despite passing in
+  a full checkout.
+- **Repository-object readers need repository-scale I/O assumptions.** Incremental text validation
+  tried to `git show` the roughly 29 MB renamed Corpus-2 report through Node's default
+  `execFileSync` buffer and failed with `ENOBUFS`.
+- **A rename can strengthen semantics.** Replacing the generic parallel-report default with
+  `solver-corpus1-latest.json` was unsafe because the producer still accepted Corpus 2 and custom
+  corpora. Literal substitution created a path that could silently mislabel and overwrite another
+  input domain.
+
+The same audit also confirmed a specification-accounting failure the preparation work had explicitly
+warned about: the raced sibling of the old stress-measurement package command was a distinct surfaced package identity, but #1599 renamed it
+without first assigning a ledger row. The repair added NC-P09-009 rather than retroactively pretending
+the parent row had authorized the sibling identity.
+
+Phase 9 was reopened instead of letting its stale completion claim stand. The repair record is
+[`naming-cleanup-phase-records/phase-09-repair.md`](naming-cleanup-phase-records/phase-09-repair.md).
+
 ## 3. What actually went wrong
 
 ### 3.1 Completion was definition-centric
@@ -149,6 +177,10 @@ The plan, hardening document, and change recipe now encode these rules:
 10. **A newly discovered surface expands the impact map before the code patch expands.** Update the plan/ledger/record first when the new surface changes scope or compatibility requirements.
 11. **Historical branches are evidence, not authority.** Recover unique commits explicitly; otherwise ignore them.
 12. **The next phase does not begin merely because CI is green.** It begins after the prior batch is merged, its phase record is closed, and the ledger state is consistent with that record.
+13. **Required GitHub PR CI must finish before merge.** A local aggregate, an older PR revision, or a queued/running workflow is not current merge evidence.
+14. **Sparse checkout is a real execution environment.** Repository-existence/content checks must distinguish tracked HEAD state from working-tree materialization, and synthetic tests should not depend on large live artifacts.
+15. **Specific names require specific producers.** When a generic artifact/default becomes corpus-, mode-, or engine-specific, prove the producer is constrained accordingly or derive the name from actual input with a generic fallback.
+16. **Sibling surfaced identities require explicit ownership.** Suffixed aliases, alternate-engine commands, companion workflows, and sibling artifacts do not inherit authorization from a nearby ledger row.
 
 ## 5. How to use this document
 

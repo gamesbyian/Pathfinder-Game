@@ -334,9 +334,54 @@ Before merge:
 2. compare the PR head to current `main` and verify the intended diff is non-empty and not already present;
 3. verify no next-batch implementation is stacked in the PR;
 4. verify targeted validation, required aggregate CI, ledger state, and the checked-in execution record agree;
-5. record the current-main SHA, head SHA, and comparison result in the batch record.
+5. record the current-main SHA, head SHA, and comparison result in the batch record;
+6. wait for the repository's required GitHub PR CI for the **current head/base pair** to finish and verify every required job is green;
+7. record a completed GitHub CI run ID/conclusion and the head/tested-ref SHA it actually covered; after any evidence-only commit, rerun CI and verify the new final head is green before merge.
+
+The checked-in record does not need to predict the run ID of the CI execution triggered by the commit
+that records prior evidence. That would create a self-invalidating loop. The final-head run is verified
+from GitHub before merge, may be captured in PR/merge metadata, and is backfilled into the durable
+record during the next reconciliation or immediate post-merge closeout when needed.
+
+A local `ci:fast`, a subset of CI, or a green run from an earlier behavior-changing PR revision is not evidence for item 6.
+Do not merge while required CI is queued or running. This rule still applies when branch protection does
+not mechanically prevent the merge.
+
+Evidence records must distinguish **local validation** from **GitHub PR CI**. Never pre-fill a remote
+CI result as passed merely because the same command passed in another environment. If GitHub CI later
+contradicts a checked-in completion claim, reopen the affected phase immediately and make the
+contradiction explicit in the durable record.
 
 If the diff is empty or already applied, close/supersede rather than merge a duplicate/no-op PR.
+
+### Sparse-checkout and large-artifact validation
+
+CI topology is part of the contract. A check enrolled in a sparse-checkout job must work with that
+job's actual materialization rules.
+
+- Use repository-index/object helpers such as `repositoryPathKind()` and `readRepositoryText()`
+  when the question is whether a tracked path exists or what HEAD contains. Do not replace a
+  repository-existence check with `existsSync()` unless physical materialization is itself the
+  contract being tested.
+- Negative/synthetic fixtures should create the smallest representative artifact. Do not copy a
+  maintained multi-megabyte report merely to prove that a pathname exists.
+- Any helper that reads unmaterialized Git blobs must stream them or size subprocess buffers from
+  blob metadata. Node's default child-process buffer is not a safe repository-size assumption.
+- When a batch adds a CI check or renames a large tracked artifact, validate the check in the same
+  sparse topology used by GitHub Actions, not only in a full local checkout.
+
+### Semantic-strength and sibling-surface rule
+
+A rename can strengthen the meaning of a name. Moving from a generic path such as
+`benchmark-parallel.json` to `solver-corpus1-latest.json` is safe only if **every producer that can
+select that default is constrained to Corpus 1**. If the producer accepts multiple corpora or custom
+inputs, derive the specific name from the actual input or retain a generic fallback.
+
+Likewise, related surfaced identities are separate contracts. A suffixed package command, companion
+workflow, `:raced` variant, alternate engine alias, or sibling artifact does not inherit permission
+from a nearby ledger row. Before changing it, add/assign its own ledger row or explicitly classify it
+as retained/not-applicable in the owning phase record. “It obviously follows the parent rename” is
+not an authorization class.
 
 ### Phase-wide merged-tree closeout
 
