@@ -21,7 +21,7 @@ import {
     markDirty,
     remapNavigationKeys,
     reverseNavigationPath,
-    clearRuntimePendingAction as clearRuntimePendingActionState,
+    clearRuntimePendingConfirmationAction as clearRuntimePendingConfirmationActionState,
     setLogicState as setLogicStateValue,
     setMuted as setMutedState,
     setNavigationLastFlipTime,
@@ -284,7 +284,7 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
     function setMuted(muted: any)  { setMutedState(state, muted); }
     function toggleMute()     { toggleMutedState(state); }
     function setPendingConfirmationAction(fn: any)   { setRuntimePendingConfirmationActionState(state, fn); }
-    function clearPendingAction()   { clearRuntimePendingActionState(state); }
+    function clearPendingConfirmationAction()   { clearRuntimePendingConfirmationActionState(state); }
     function executePendingConfirmationAction() { if (state.ENGINE.runtime.pendingConfirmationAction) state.ENGINE.runtime.pendingConfirmationAction(); }
     function setOption(key: any, value: any)  { setOptionValue(state, key, value); }
 
@@ -339,7 +339,7 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
         initReviewMode,
         isRunning,
         setPendingConfirmationAction,
-        clearPendingAction,
+        clearPendingConfirmationAction,
         executePendingConfirmationAction,
         setOption,
         findTapRoute,
