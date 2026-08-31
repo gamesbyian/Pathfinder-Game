@@ -8,6 +8,13 @@ import { spawnSync } from 'node:child_process';
 const root = process.cwd();
 const checker = path.join(root, 'scripts/naming-cleanup-phase8-closeout.mjs');
 const sourceLedger = JSON.parse(readFileSync(path.join(root, 'docs/naming-cleanup-ledger.json'), 'utf8'));
+
+for (const id of ['NC-P08-024', 'NC-P08-025']) {
+  const row = sourceLedger.entries.find(entry => entry.id === id);
+  assert.equal(row?.persistence, 'none', `${id} must not claim persisted compatibility`);
+  assert.equal(row?.compatibility, undefined, `${id} must not claim a historical reader`);
+  assert.equal(sourceLedger.phaseCloseoutCoverage['8'][id]?.kind, 'literal-legacy-surface');
+}
 const temp = mkdtempSync(path.join(tmpdir(), 'phase8-closeout-'));
 
 function run(ledgerPath, scanRoot = root) {
@@ -86,6 +93,16 @@ try {
   assert.match(result.stderr, /NC-P08-002 ledger legacy surface/);
   assert.doesNotMatch(result.stderr, /missing canonical 8H contract/);
   unlinkSync(regressionPath);
+
+  // A retired diagnostic field in an explanatory comment is still residue, not evidence of a
+  // compatibility reader. Construct the token from fragments so this test source remains clean.
+  const diagnosticsCommentPath = path.join(fixture, 'scripts/diagnostics-comment-regression.mjs');
+  const retiredDiagnosticField = ['known', 'Hard', 'Cluster'].join('');
+  writeFileSync(diagnosticsCommentPath, `// historical compatibility read: ${retiredDiagnosticField}\n`);
+  result = run(cleanLedgerPath, fixture);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /NC-P08-024 ledger legacy surface/);
+  unlinkSync(diagnosticsCommentPath);
 
   const datasetBranchFixture = path.join(fixture, 'scripts/validate-variant-family-dataset-worktree.mjs');
   const datasetBranchCanonicalSource = readFileSync(datasetBranchFixture, 'utf8');
