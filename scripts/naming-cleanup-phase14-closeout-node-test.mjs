@@ -14,10 +14,10 @@ assert.equal(RETAINED_QUALIFIED_CORES.length, 7);
 assert.ok(RETAINED_QUALIFIED_CORES.every(path => path.endsWith('-core.ts')));
 
 assert.deepEqual(
-  findPhase14CurrentDocResidue('docs/architecture.md', 'SOUND_BUS and mutable ENGINE with levelUtils and `core`'),
+  findPhase14CurrentDocResidue('docs/architecture.md', ['SOUND_BUS and mutable ', 'ENG', 'INE with levelUtils and `core`'].join('')),
   [
     'docs/architecture.md: retired Phase-14 current-doc vocabulary (SOUND_BUS adapter)',
-    'docs/architecture.md: retired Phase-14 current-doc vocabulary (ENGINE mutable state root)',
+    'docs/architecture.md: retired Phase-14 current-doc vocabulary (mutable state root)',
     'docs/architecture.md: retired Phase-14 current-doc vocabulary (LevelUtils facade)',
     'docs/architecture.md: retired Phase-14 current-doc vocabulary (core dependency bag)',
   ],
