@@ -11,7 +11,7 @@
  *
  * Use --ledger=<path> to validate a mutated fixture in the checker self-test.
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
