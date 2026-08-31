@@ -543,8 +543,6 @@ test('handleResetAction increments reset streak', () => {
     const deps = makeLevelFlowDeps();
     deps.state.ENGINE.resetStreak = 0;
     deps.state.ENGINE.cheatActive = false;
-    deps.data.getLevels = () => [{}];
-    deps.data.getLevel = () => ({});
     const ctrl = createLevelFlowController(deps);
     ctrl.handleResetAction();
     assert(deps.state.ENGINE.resetStreak >= 1, 'reset streak should increment');
