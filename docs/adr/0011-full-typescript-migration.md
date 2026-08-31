@@ -56,8 +56,10 @@ These were evaluated and settled; do not re-open them as TODOs.
 
 - **Typing scope: domain-object seams + DOM wins done; full adapter-layer typing DEFERRED.** The logic
   core (`domain`/`runtime`/`solver`/`state`) is typed, the injected dependency bags that carry domain
-  objects are typed (`modules/ports.ts` — `LevelUtils`/`DataService`/`SolverApi`, so level objects, raw
-  data, and solver results are typed at call sites), and the clean DOM handler/element params are typed.
+  objects are typed (`modules/ports.ts` — `DataService`, `SolverApi`, and the remaining narrow ports,
+  so level objects, raw data, and solver results are typed at call sites). The former shared level-utility
+  facade was later removed in Phase 14; its domain/input/editor responsibilities are imported from their
+  owning modules directly. The clean DOM handler/element params are typed.
   The remaining ~700 `any` are the genuinely-dynamic DOM/controller glue (the `ui`/`engine`/`renderer`
   bags via the `ControllerDeps` index signature, `getElementById(...) as any`, SDK objects, the
   dual-shaped `engineState.nav ?? engineState` helpers, `catch (e)`, and `NormalizedLevel`-typed params —
