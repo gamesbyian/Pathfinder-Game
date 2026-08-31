@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 10 |
-| Status | implementation complete locally; PR/exact-head CI/merged-tree closeout pending |
+| Status | implementation and exact-head CI complete; merge/merged-tree closeout pending |
 | Base `main` SHA | `c7fcc35d3079ccbc511c92b1255e010adba2c35a` |
 | Branch | `codex/implement-phase-10-of-naming-cleanup-process` |
 | PR | `#1607` |
@@ -22,7 +22,7 @@ The plan normally serializes live Phase-10 work as 10A then 10B with a merge bar
 - **10A repair/prune:** NC-P10-001 through NC-P10-004; completion-helper symbol/test seam, hard-prune module/import graph, current prose, and bound/reconstruction/pruning-order parity.
 - **10B budget/time:** NC-P10-005 through NC-P10-008; multiplier constant, SolveOpts/local/worker/race transport, retained CLI/report-schema boundaries, and the already-canonical stage-policy historical-reader audit.
 
-The exception does not close the phase. Exact-head CI and a separate merged-tree consumer-inward closeout remain mandatory before Phase 10 can advance.
+The exception does not close the phase. Exact-head CI is complete; a separate merged-tree consumer-inward closeout remains mandatory before Phase 10 can advance.
 
 ## 1. Latest-main reconciliation and change envelope
 
@@ -49,20 +49,21 @@ Intended deltas are names only. Solver eligibility, attempt order, random seeds,
 - `npm run test:portfolio-solve-sweep-worker`: 5 tests passed, including explicit canonical override through parent -> forked worker -> nested race and real repair allocation without sibling substitution.
 - `npm run test:race-stage-parity`: 3 tests passed; canonical constant ownership and stage subset parity remain intact.
 - `npm run check:types` and `npm run check:lint`: passed.
-- `npm run test:naming-cleanup-phase10-closeout` and `npm run check:naming-cleanup-phase10-closeout`: passed. Negative fixtures reject stale legacy transport, missing propagation, and sibling substitution.
+- `npm run test:naming-cleanup-phase10-closeout` and `npm run check:naming-cleanup-phase10-closeout`: passed. Negative fixtures reject stale legacy transport, missing propagation, sibling substitution, unowned resolved-local residue, and an unowned legacy stage-policy spelling.
+- Exact-head GitHub `CI` run #3397 (`33352943695`) completed successfully on `5c269519144cdf297d63707e4530495367ff820c` before the review-hardening follow-up commits.
 
 Before/after parity is semantic rather than a changed fixture: only identifiers/import paths changed, while the existing executable assertions still prove the same numeric multiplier, zero-override suppression, worker/race allocation, stage eligibility, and 142 orchestration/budget outcomes.
 
 ## 4. Residue and lifecycle classification
 
-The closeout guard scans maintained source, scripts, tests, workflows, and current docs without blanket-excluding mixed current/history roots. It rejects the five retired live spellings and requires the canonical repair, prune, constant, parent-worker, and race surfaces. Remaining legacy hits are restricted to naming authorities, frozen reports/logs/archives, and the intentionally distinct persisted/CLI `repairBudgetFraction` spelling described above.
+The closeout guard scans maintained source, scripts, tests, workflows, and current docs without blanket-excluding mixed current/history roots. It rejects the five direct retired live spellings and requires the canonical repair, prune, constant, parent-worker, and race surfaces. It also treats `repairBudgetFraction` and `additive-fraction` as semantic legacy spellings: the former is permitted only in the ledger-owned persisted report-schema files, while the latter has no live retained file allowance. Remaining legacy hits are restricted to naming authorities, frozen reports/logs/archives, and the explicitly owned compatibility boundaries described above.
 
 ## 5. Open merge barrier
 
 - [x] implementation and targeted runtime validation completed locally;
 - [x] durable negative closeout fixtures added;
 - [x] PR #1607 created and bound to this implementation branch;
-- [ ] exact-head GitHub CI completed green;
+- [x] exact-head GitHub CI completed green on reviewed implementation head `5c269519144cdf297d63707e4530495367ff820c` (run #3397 / `33352943695`);
 - [ ] implementation merged using expected head SHA;
 - [ ] fresh merged-tree closeout branch/PR completed;
 - [ ] `lastCompletedPhase` advanced to 10 and `activeExecution` returned to idle.
@@ -100,3 +101,7 @@ current-artifact registry, with negative fixtures for missing coverage and blank
 ## 8. PR CI follow-up
 
 The first PR CI run (`CI` run 33352369366) had build, lint, coverage, and heavyweight proofs green. Its two failing jobs shared evidence-layer causes rather than solver behavior: `check:naming-cleanup-ledger` rejected `phaseCurrentArtifacts["10"]` because sparse checkout intentionally did not materialize the baseline JSON files, while `test:naming-cleanup-phase10-closeout` attempted to `cpSync` the same absent worktree paths. The ledger checker now resolves registered paths through `repositoryPathKind()`, and the Phase-10 fixture materializes tracked artifact text through `readRepositoryText()`. This preserves the CI sparse-checkout policy while making current-artifact ownership genuinely repository-aware.
+
+## 9. Independent review hardening follow-up
+
+A post-green review found that NC-P10-007 and NC-P10-008 were documented as semantic contracts but were not mechanically residue-checked by the Phase-10 closeout script. That meant a stray live resolved-local `repairBudgetFraction` or `additive-fraction` spelling could theoretically survive while CI stayed green. The guard now derives allowed `repairBudgetFraction` file ownership from `phaseRetainedSurfaces["10"]`, rejects the spelling everywhere else in maintained/current-artifact surfaces, and rejects live `additive-fraction` outright outside excluded naming/history authorities. Negative fixtures cover both failure modes. Because this hardening changed the PR head after run #3397, the new head requires a fresh exact-head CI run before merge; the merge barrier above should be read against the latest head, not the earlier reviewed SHA.
