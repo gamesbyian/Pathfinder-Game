@@ -2,7 +2,7 @@
   "schemaVersion": 5,
   "authority": "docs/naming-cleanup-plan.md",
   "permanentVocabularyAuthority": "docs/naming-and-vocabulary.md",
-  "generatedForPlanRevision": "2026-08-31-phase11-post-closeout-audit-repair",
+  "generatedForPlanRevision": "2026-08-31-phase15-solver-resumption-preparation",
   "status": "active",
   "entries": [
     {
@@ -2624,7 +2624,7 @@
         "behavioralParity": "done",
         "closeoutAudit": "done"
       },
-      "notes": "Heuristic, not known fact. Post-closeout audit correction: the 8G implementation record proved no committed artifact ever contained either spelling and no reader existed, so the earlier permanent-dual-read classification was fictitious; no compatibility boundary is required.",
+      "notes": "Heuristic, not known fact. Post-closeout audit correction: the 8G implementation record proved no committed artifact ever contained either spelling and no reader existed, so the earlier permanent-dual-read classification was fictitious; no compatibility boundary is required. Correction merged via PR #1633 after exact-head CI 33446596466 and Chromium gate 33446596279; merge bae742f3b2e5affc98328fa1e622b6f7698f399d.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8g.md",
       "batch": "8G"
@@ -2646,7 +2646,7 @@
         "behavioralParity": "done",
         "closeoutAudit": "done"
       },
-      "notes": "Generated candidate, not normative recommendation. Post-closeout audit correction: the 8G implementation record proved no committed artifact ever contained either spelling and no reader existed, so the earlier permanent-dual-read classification was fictitious; no compatibility boundary is required.",
+      "notes": "Generated candidate, not normative recommendation. Post-closeout audit correction: the 8G implementation record proved no committed artifact ever contained either spelling and no reader existed, so the earlier permanent-dual-read classification was fictitious; no compatibility boundary is required. Correction merged via PR #1633 after exact-head CI 33446596466 and Chromium gate 33446596279; merge bae742f3b2e5affc98328fa1e622b6f7698f399d.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8g.md",
       "batch": "8G"
@@ -4450,7 +4450,7 @@
     "pr": null,
     "baseMainSha": null,
     "recordPath": null,
-    "notes": "Phase 14 post-closeout audit repair PR #1629 merged green as 4d31805cd6e1280a39ae3befefa5ed354b3d099b. Structured closure evidence now records the repaired exact-head CI/browser/merge facts; naming work is complete through Phase 14."
+    "notes": "Naming cleanup is complete through Phase 14. Post-closeout audit repairs #1632 (Phase-14 current authorities) and #1633 (Phase-8 diagnostics compatibility accounting) are merged green. Phase-15 solver-resumption preparation #1634 is merged green; all NC-P15-001 through NC-P15-007 remain pending and Phase 15 has not started."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior. Post-closeout audit correction (2026-08-31): NC-P08-024/025 are direct current-source renames, not dual-read boundaries; 8G proved no persisted artifact or historical reader existed, and the Phase-8 closeout now bans the retired fields rather than treating comments as compatibility reads.",
   "phaseBatches": {
@@ -5435,7 +5435,19 @@
         "browserConclusion": "success",
         "mergeCommit": "4d31805cd6e1280a39ae3befefa5ed354b3d099b",
         "supersedesAttemptedCloseoutPr": 1628
-      }
+      },
+      "postCloseoutRepairs": [
+        {
+          "kind": "current-authority-reconciliation",
+          "pr": 1632,
+          "finalHeadSha": "2a3ea005b64346b87d1c673a3b1f0a980024b89c",
+          "ciRunId": 33446369967,
+          "ciConclusion": "success",
+          "browserGate": "not-triggered-docs-checker-only",
+          "mergeCommit": "fc1a2253367c377873bd7db817c681b2ba4cf26d",
+          "recordPath": "docs/naming-cleanup-phase-records/phase-14.md"
+        }
+      ]
     }
   }
 }

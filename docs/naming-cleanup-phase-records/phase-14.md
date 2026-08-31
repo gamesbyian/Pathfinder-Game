@@ -440,3 +440,32 @@ Structured `phaseClosures["14"]` therefore uses #1629 as the effective merged-tr
 records #1628 only as the superseded attempted closeout. All Phase-14 rows remain complete,
 `activeExecution` is idle, and `lastCompletedPhase` advances from 13 to 14 only in this
 post-merge evidence step.
+
+
+## 14. Additional current-authority audit repair
+
+A later solver-resumption/Phases-8-14 audit challenged the scope of the current-document repair
+rather than trusting its two-file allowlist. It found additional live authorities still teaching
+the retired Phase-14 architecture:
+
+- `AGENTS.md` and `docs/change-recipes.md` still described the mutable state boundary with the
+  retired all-caps property;
+- accepted/enforced ADR 0002 and accepted ADR 0006 still described the live mutable tree using that
+  retired property;
+- ADR 0011, whose TypeScript migration status is complete, still listed the deleted shared
+  level-utility facade as a current typed port.
+
+PR #1632 migrated those authorities to the current `engineState`/direct-owner architecture and
+expanded the permanent Phase-14 closeout guard from the original architecture/typing pair to the
+full reviewed current-authority set with per-document rules.
+
+Exact-head evidence for this post-closeout repair:
+
+- final head: `2a3ea005b64346b87d1c673a3b1f0a980024b89c`;
+- ordinary CI: run `33446369967`, success;
+- browser gate: not triggered by the docs/checker-only path set;
+- merge commit: `fc1a2253367c377873bd7db817c681b2ba4cf26d`.
+
+This repair does not reopen Phase 14's row completion or change application behavior. It strengthens
+the already-closed phase's current-authority invariant and is recorded in structured closure
+evidence as a post-closeout repair so future audits need not reconstruct it from GitHub history.
