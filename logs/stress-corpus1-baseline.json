@@ -9,7 +9,7 @@
   "sources": [
     {
       "name": "official-contended",
-      "file": "reports/stress/solver-corpus1-latest.json",
+      "file": "reports/stress/benchmark-parallel.json",
       "levels": 102,
       "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 60 batch report(s))",
       "parallel": 1,
@@ -31,7 +31,7 @@
         "logs/solver-randoms-baseline/batch-007.json"
       ],
       "levels": 0,
-      "engine": "stress:measure-solver --parallel (across-level worker threads)",
+      "engine": "stress:benchmark --parallel (across-level worker threads)",
       "parallelObserved": [],
       "budgetMs": 20000,
       "timingTrustworthy": false,
