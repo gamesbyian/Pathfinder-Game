@@ -189,7 +189,7 @@ Phase 11 is therefore closed on merged `main`: NC-P11-001 through NC-P11-005 are
 
 ## 15. Post-closeout suspicious-audit correction
 
-A post-closeout audit of merged `main` found that the runtime implementation itself remained behaviorally sound, but the closure evidence overstated completeness in four ways.
+Post-closeout audit-repair PR #1615, based on `main` `8c2f3d4f2f23f9fc0a31afb30096ee0ed3aa3e60`, addresses a suspicious audit finding that the runtime implementation itself remained behaviorally sound but the closure evidence overstated completeness in four ways.
 
 1. NC-P11-005 still had plural runtime-transform prose (`transposing variants`, `swapping variants`, and `reflecting variants`) in `modules/domain/geometry.test.ts`. The Phase-11 residue ratchet matched singular `variant` only, so it could not detect those hits. The repair changes that prose to `orientations`, expands the ratchet to reject both `variant` and `variants`, and adds a negative fixture for the plural form.
 2. NC-P11-001 remained classified in the ledger as `dual-read` / `runtime-compatibility-transition` even though Sections 3 and 11 proved and implemented a single canonical runtime field with no persisted or stable external legacy boundary. The plan and ledger are amended to `persistence: none` / direct current-surface rename; no Phase-15 orientation compatibility retirement remains.
