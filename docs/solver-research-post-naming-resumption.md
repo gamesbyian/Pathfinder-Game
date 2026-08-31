@@ -21,6 +21,7 @@ When historical prose and current code use different names for the same concept,
 | Historical evidence surface | Current internal form | Owning reader/normalizer |
 | --- | --- | --- |
 | compact attempt identity such as `beam:intersectionHarvest@beam5000(diverse)` | `beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets` | `normalizeAttemptIdentityKey()` in `modules/solver/attempt-identity.mjs` |
+| composite action identity persisted as stage + compact config, such as a historical main-search/beam action or early-repair/repair action | canonical stage + canonical attempt identity, with repair seed explicit | `normalizeAttemptActionKey()` in `modules/solver/attempt-identity.mjs` |
 | historical stage IDs such as `main-loop`, `repair-probe`, `portfolio-pass` | current solver stage IDs | `normalizeSolverStageId()` in `modules/solver/stage-id-normalization.mjs` |
 | historical routing/archetype values such as `high-intersection-burden` or `default` | current routing-regime values | `normalizeRoutingRegime()` in `modules/solver/routing-regime-normalization.mjs` |
 | raw/wire challenge metric keys | normalized `requiredLength` / `requiredIntersections` | `readRawChallengeMetrics()` / `parseRawLevel()` in `modules/domain/level-codec.ts` |
@@ -49,7 +50,7 @@ The Phase-15 closeout must add representative fixtures for these resolved bounda
 - Do not write a five-line replacement parser in a one-off analysis script. Import the owning normalizer. If the owner lacks a case required by real evidence, extend the owner and add a fixture there.
 - Treat historical shell commands, workflow names, source paths, and private helper names as provenance. Resolve them against current `main` before execution.
 - Treat raw level JSON as wire data. Parse it before passing it to normalized/runtime code.
-- Preserve negative knowledge. Before reopening a treatment because its old name is absent from current source, canonicalize the historical identity and check the live workstream/experiment disposition.
+- Preserve negative knowledge. Before reopening a treatment because its old name is absent from current source, canonicalize the historical identity and check the live workstream/experiment disposition. `research-status-index` expands stage/routing aliases through the owning normalizers so current-name queries can still discover frozen evidence written in the prior vocabulary.
 - Do not resume from old `solver-dev-queue-*` branches. Create a new branch from post-Phase-15 `main`.
 
 ## Post-Phase-15 baseline checkpoint

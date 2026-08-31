@@ -1,12 +1,18 @@
 /** Pure joins/aggregates for family-boundary-report.mjs.  This module never invokes the solver. */
 import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 const finite = value => value === null || value === undefined || value === '' ? null : Number.isFinite(Number(value)) ? Number(value) : null;
 const solved = row => row?.ok === true || row?.status === 'success' || row?.solved === true;
-const attemptConfig = attempt => String(attempt?.configKey ?? attempt?.config ?? attemptConfigKey(attempt));
+const canonicalAttemptIdentity = value => {
+    if (value === null || value === undefined || value === '') return null;
+    try { return normalizeAttemptIdentityKey(String(value)); }
+    catch { return String(value); }
+};
+const attemptConfig = attempt => canonicalAttemptIdentity(attempt?.configKey ?? attempt?.config ?? attemptConfigKey(attempt));
 
 export function configOf(row) {
-    if (row?.winningConfig) return String(row.winningConfig);
+    if (row?.winningConfig) return canonicalAttemptIdentity(row.winningConfig);
     const attempts = Array.isArray(row?.attempts) ? row.attempts : [];
     const winner = attempts.find(a => solved(a));
     return winner ? attemptConfig(winner) : null;
@@ -43,7 +49,8 @@ function concentrationEvidence(parent, solvedRows, configs) {
     if (solved(parent) || !solvedRows.length || !Object.keys(configs.counts).length) return null;
     const dominantConfig = Object.entries(configs.counts).sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0]))[0][0];
     const attempts = parent?.attempts ?? [];
-    const matching = attempts.filter(a => attemptConfig(a) === dominantConfig || a.technique === dominantConfig);
+    const matching = attempts.filter(a => attemptConfig(a) === dominantConfig
+        || canonicalAttemptIdentity(a.technique) === dominantConfig);
     const allocationValues = matching.map(a => finite(a.workSpent)).filter(Number.isFinite);
     const allocation = allocationValues.reduce((a,b)=>a+b,0);
     const terminations = [...new Set(matching.map(a => a.timedOut === true ? 'timeout' : a.timedOut === false && !solved(a) ? 'exhausted' : a.termination ?? a.status).filter(Boolean))].sort();

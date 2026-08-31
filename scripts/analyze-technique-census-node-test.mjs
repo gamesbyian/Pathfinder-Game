@@ -154,14 +154,15 @@ assert.equal(widthEconomics.productionUnsolvedEconomics.leftMedianExhaustedNodes
 assert.equal(widthEconomics.productionUnsolvedEconomics.rightMedianExhaustedNodes, 300);
 
 const reverse = analyzeTechniqueCensus({ results: [
-    { tier: 'T1', corpus: 'corpus2', levelId: 'reverse', levelPos: 1, techniqueKeys: ['beam|score=x|bias=none|width=2000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 20 },
+    { tier: 'T1', corpus: 'corpus2', levelId: 'reverse', levelPos: 1, techniqueKeys: ['beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain'], ok: false, status: 'exhausted', nodesExpanded: 20 },
 ] }, [
     { corpus: 'corpus2', levelId: 'reverse', wasSolvedByProduction: true, solvedByT1: [] },
 ], [100], [], [], [
-    { corpus: 'corpus2', id: 'reverse', ok: true, winningConfig: 'beam|score=x|bias=none|width=2000|retention=plain', lifecycleWinningTechnique: 'admissible-order', attemptCount: 3, nodesExpanded: 40 },
+    { corpus: 'corpus2', id: 'reverse', ok: true, winningConfig: 'beam:perimeterSweep/perimeterCW@beam2000', lifecycleWinningTechnique: 'admissible-order', attemptCount: 3, nodesExpanded: 40 },
 ]);
 assert.equal(reverse.reverseOracle.reproducedProductionSolved, 1);
-assert.equal(reverse.reverseOracle.rows[0].matchingIsolatedStatus, 'exhausted');
+assert.equal(reverse.reverseOracle.rows[0].matchingIsolatedStatus, 'exhausted',
+    'historical compact production winningConfig must join the canonical census technique identity');
 assert.deepEqual(reverse.reverseOracle.winnerCounts, [{ technique: 'admissible-order', levels: 1 }]);
 const renderedReverse = renderTechniqueCensusSecondOrder(reverse, 'fixture', {
     productionRun: 'later', frozenProductionRun: 'frozen',

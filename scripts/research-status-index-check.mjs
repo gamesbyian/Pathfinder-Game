@@ -33,12 +33,24 @@ writeFileSync(path.join(root, 'reports/2026-01-01-legacy.md'), `# Legacy report 
 
 ## Orientation anomaly
 Details live here.
+
+## Repair-probe / early-main-loop node starvation
+Historical mechanism evidence used the pre-rename stage vocabulary.
+
+## High-intersection-burden cohort
+Historical routing evidence used the pre-rename routing label.
 `);
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'orientation anomaly' }).map(x => x.id), ['legacy']);
+assert.deepEqual(queryResearchStatusIndex(index, { query: 'early-repair-search' }).map(x => x.id), ['legacy'],
+    'canonical stage query must discover reports written only with the historical repair-probe name');
+assert.deepEqual(queryResearchStatusIndex(index, { query: 'main-search' }).map(x => x.id), ['legacy'],
+    'canonical main-search query must discover reports written only with the historical main-loop name');
+assert.deepEqual(queryResearchStatusIndex(index, { query: 'intersection-heavy' }).map(x => x.id), ['legacy'],
+    'canonical routing query must discover reports written only with the historical high-intersection-burden label');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'legacy-evidence' }).map(x => x.report), ['reports/2026-01-01-legacy.md']);
 assert.deepEqual(queryResearchStatusIndex(index, { status: 'rejected' }).map(x => x.id), ['FLAG_ONE']);
 const compact = compactResearchStatusIndex(index, { query: 'current question' });

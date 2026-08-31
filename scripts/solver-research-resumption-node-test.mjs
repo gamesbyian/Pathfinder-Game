@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
+import { normalizeAttemptActionKey, normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 import { normalizeRoutingRegime } from '../modules/solver/routing-regime-normalization.mjs';
 
@@ -13,6 +13,14 @@ assert.equal(
 assert.equal(
   normalizeAttemptIdentityKey('beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets'),
   'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+);
+assert.equal(
+  normalizeAttemptActionKey('main-loop|beam:perimeterSweep/perimeterCW@beam2000'),
+  'main-search|beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain',
+);
+assert.equal(
+  normalizeAttemptActionKey('repair-probe|dfs:repair:repair|seedSalt=0'),
+  'early-repair-search|repair|score=repair|guidance=standard|seedSalt=0',
 );
 
 assert.equal(normalizeSolverStageId('main-loop'), 'main-search');
@@ -43,6 +51,7 @@ assert.ok(!pkg.scripts['solver:direct'].includes(['run-solver', 'v2-direct.mjs']
 const bridge = readFileSync(new URL('../docs/solver-research-post-naming-resumption.md', import.meta.url), 'utf8');
 for (const required of [
   'normalizeAttemptIdentityKey',
+  'normalizeAttemptActionKey',
   'normalizeSolverStageId',
   'normalizeRoutingRegime',
   'readRawChallengeMetrics',
@@ -58,4 +67,4 @@ for (const required of [
   assert.ok(bridge.includes(required), `resumption bridge missing required contract reference: ${required}`);
 }
 
-console.log('solver research resumption bridge: historical identities normalize and current command vocabulary is live.');
+console.log('solver research resumption smoke: sampled historical attempt/action/stage/routing identities normalize and selected current command vocabulary is live.');

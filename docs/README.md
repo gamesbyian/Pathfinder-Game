@@ -18,8 +18,10 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 | [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md) | PR-by-PR implementation retrospective and the failure patterns that justify the remaining safeguards |
 | [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md) | Phase-1-7 failure analysis, pre-Phase-8 technical gate, batch execution controls, and stronger contract-migration/closeout model |
 | [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md) | Durable per-batch impact-map, validation, parity, audit, and pre-merge evidence template |
-| [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md) | Phase-8 serial batch authority and merged-tree completion gate |
-| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Machine-readable execution status, immutable migration row IDs, compatibility ownership/retirement, active-batch claim, Phase-8 assignments, and Phase-8+ verification evidence pointers |
+| [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md) | Completed Phase-8 implementation evidence: serial batch authority and merged-tree completion gate |
+| [`naming-cleanup-phase-records/pre-phase-15-audit-repairs.md`](naming-cleanup-phase-records/pre-phase-15-audit-repairs.md) | Current post-closeout repair record for confirmed mixed-era research/current-authority defects that must land before Phase 15 starts |
+| [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md) | Current Phase-15 compatibility-boundary preparation and solver-research handoff requirements; Phase 15 remains pending until implementation begins |
+| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Machine-readable execution status, immutable migration row IDs, compatibility ownership/retirement, active execution claim, and verification evidence pointers |
 | [`testing.md`](testing.md) | Validation and finish-line gates |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |

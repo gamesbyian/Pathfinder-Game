@@ -109,5 +109,10 @@ guards. The accepted version keeps the operational bridge lexically canonical wh
 leaves exact historical spellings to the naming authorities/normalizers that own migration
 history. The resumption smoke itself passed in both the rejected and accepted iterations.
 
+A subsequent independent Phases-1-14 forensic audit found additional pre-entry defects in mixed-era
+research joins, historical-evidence discovery, and current authority routing. Those repairs are
+tracked separately in [`pre-phase-15-audit-repairs.md`](pre-phase-15-audit-repairs.md) and must land
+before Phase 15 starts. They do not implement or close any NC-P15 row.
+
 Phase 15 remains entirely pending. This record is preparation authority, not an implementation
 claim.

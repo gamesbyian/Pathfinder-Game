@@ -46,3 +46,20 @@ export function normalizeSolverStageId(id) {
     if (SOLVER_STAGE_IDS.includes(normalized)) return normalized;
     throw new Error(`Unknown solver stage: ${String(id)}`);
 }
+
+
+/**
+ * Return every historical/current spelling that denotes the same stage identity.
+ * Search/discovery tooling may use this to remain bilingual without copying the alias map.
+ * @param {string} id
+ * @returns {readonly string[]}
+ */
+export function solverStageIdentityTerms(id) {
+    const canonical = normalizeSolverStageId(id);
+    return Object.freeze([
+        canonical,
+        ...Object.entries(LEGACY_SOLVER_STAGE_ID_MAP)
+            .filter(([, target]) => target === canonical)
+            .map(([legacy]) => legacy),
+    ]);
+}

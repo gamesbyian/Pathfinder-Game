@@ -1,3 +1,5 @@
+import { normalizeSolverStageId } from './stage-id-normalization.mjs';
+
 /**
  * Canonical solver attempt-identity parser/formatters shared by live AttemptConfig and persisted
  * Attempt consumers. New writers emit structured keys; historical compact keys remain accepted
@@ -152,4 +154,30 @@ export function formatAttemptActionKey(fields) {
         ? '|seedSalt=' + (Number.isFinite(fields.seedSalt) ? Number(fields.seedSalt) : 0)
         : '';
     return fields.stageId + '|' + configKey + seed;
+}
+
+/**
+ * Normalize a persisted composite stage+attempt action key. Historical evidence commonly stores
+ * values such as "repair-probe|dfs:repair:repair|seedSalt=0"; normalize both identity components
+ * before grouping or joining so mixed-era evidence cannot split one logical action.
+ * @param {string} key
+ * @returns {string}
+ */
+export function normalizeAttemptActionKey(key) {
+    if (typeof key !== 'string' || key.length === 0)
+        throw new Error('Attempt action identity must be a non-empty string.');
+    const separator = key.indexOf('|');
+    if (separator <= 0) throw new Error('Attempt action identity must contain a stage and config identity.');
+    const stageId = normalizeSolverStageId(key.slice(0, separator));
+    let configKey = key.slice(separator + 1);
+    let seedSalt;
+    const seedMatch = /\|seedSalt=(-?\d+)$/.exec(configKey);
+    if (seedMatch) {
+        seedSalt = Number(seedMatch[1]);
+        configKey = configKey.slice(0, seedMatch.index);
+    }
+    const fields = parseAttemptIdentityKey(configKey);
+    if (seedMatch && !fields.repair)
+        throw new Error('seedSalt is only valid on repair attempt action identities.');
+    return formatAttemptActionKey({ ...fields, stageId, ...(seedSalt === undefined ? {} : { seedSalt }) });
 }
