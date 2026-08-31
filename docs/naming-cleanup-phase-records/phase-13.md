@@ -112,22 +112,38 @@ rename the raw reads.
 
 ## 6. 13A implementation log
 
-The current-main ambiguous inventory was resolved file-by-file by dataflow rather than directory:
+The current-main inventory was resolved file-by-file by dataflow rather than directory. A second
+inward pass then challenged the inherited `normalizedRuntimeConsumer` list itself. That caught an
+important false premise: several tests appeared in the normalized bucket only because their **raw
+wire fixtures** contain `reqLen`/`reqInt` before being passed through a parser. Requiring those
+files to become textually clean would have rewritten the permanent wire-format fixtures Phase 13 is
+supposed to preserve.
 
-- 57 files are explicit raw/wire owners or raw-corpus tooling;
-- 111 files are normalized-runtime/current-doc consumers that must lose legacy spellings in 13B;
-- 4 files are explicitly mixed and require selective migration/reclassification:
+The refined 13A inventory is therefore:
+
+- **82 raw/wire files**, including raw codec/fingerprint owners, raw-corpus tooling, and tests whose
+  legacy spellings are deliberately raw fixture/output keys;
+- **80 genuinely normalized/current consumers** that must lose legacy spellings in 13B;
+- **10 explicitly mixed files** that contain both a normalized access and a separately retained
+  raw/report spelling and therefore require selective migration/reclassification:
+  - `modules/domain/domain.test.ts`
+  - `modules/solver/admissible-order-search.test.ts`
+  - `modules/solver/lower-bounds-test-support.test.ts`
+  - `modules/solver/lower-bounds.test.ts`
+  - `modules/solver/normalization.test.ts`
+  - `modules/solver/normalization.ts`
   - `scripts/req-length-sweep-lib-node-test.mjs`
   - `scripts/req-length-sweep-lib.mjs`
   - `scripts/stress/query-mustcross-flipper-eligibility.mjs`
   - `scripts/stress/repair-plateau-rollout-classifier.mjs`
-- 14 files are retained non-normalized uses such as naming authorities or independent report/analysis
-  schemas, where `reqLen`/`reqInt` do not denote a `NormalizedLevel` property;
-- `docs/history/**` is now treated as frozen history by the checker, matching `docs/archive/**`.
+- **14 retained non-normalized uses**, such as naming authorities or independent report/analysis
+  schemas where `reqLen`/`reqInt` do not denote a `NormalizedLevel` property;
+- **0 ambiguous/unclassified files**.
+- `docs/history/**` is treated as frozen history, matching `docs/archive/**`.
 
-`docs/naming-cleanup-level-metric-boundaries.json` moved to schema version 2 and has zero
-`ambiguousUnclassified` entries. The checker now understands all four live ownership classes and
-`--require-normalized-clean` fails unless both normalized-runtime and mixed lists are empty.
+`docs/naming-cleanup-level-metric-boundaries.json` is schema version 2. The checker understands
+all four live ownership classes and `--require-normalized-clean` fails unless both the normalized
+and mixed lists are empty.
 
 No runtime field has been renamed in 13A.
 
