@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
 | Current batch | 13A boundary preparation |
-| Status | entry-mapped |
+| Status | 13A validated; merge pending |
 | Base `main` SHA | `efe94db31469f903a42b3921535beb32e1b785fb` |
 | Branch | `chatgpt/phase13a-boundary-prep-2026-08-31` |
 | PR | #1620 |
@@ -149,11 +149,41 @@ No runtime field has been renamed in 13A.
 
 ## 7. 13A validation
 
-Pending.
+The first CI attempt was intentionally useful and failed on two preparation-contract issues, not
+runtime behavior:
+
+1. the new Phase-13 execution record itself contains legacy spellings as migration evidence and had
+   not yet been classified as a retained naming authority;
+2. `activeExecution.batch` was set to `13A`, but the maintained ledger status self-test reserves
+   that machine field for Phase-8 batches. The Phase-13 substep identity now lives in this record and
+   execution notes instead.
+
+Both were repaired without touching runtime code.
+
+Final preparation head `2cfc3a985735e1ec3fd1de9b816d7c78dc3f6e74` passed:
+
+- ordinary CI run `33369137153`: checks, Node tests, build, lint, deep proofs and deep verification;
+- Chromium orientation safety gate `33369137139`: success;
+- `check:level-metric-boundaries`: 82 raw/wire, 80 normalized, 10 mixed, 15 retained,
+  **0 ambiguous/unclassified**;
+- TypeScript source and test type checks;
+- documentation links, ledger contract, corpus/data validators and all prior-phase residue guards.
+
+13A has therefore established the ownership map and stop gate needed for 13B. It does not resolve
+any Phase-13 implementation/behavioral/closeout verification dimension other than
+`surfaceInventory`.
 
 ## 8. 13B atomic normalized migration
 
-Not started. Must begin from merged 13A main, not this branch.
+Not started. Must begin from merged 13A main, not this branch. Entry gate:
+
+- ownership inventory still has zero ambiguous files;
+- `normalizedRuntimeConsumer` is the complete set that should lose legacy spellings;
+- `mixedRawAndNormalized` receives selective edits and must be empty/reclassified before 13B
+  closeout;
+- raw/wire fixtures and independent report schemas are not mechanically rewritten;
+- the duplicate raw metric read in `modules/solver/normalization.ts` is centralized into the
+  domain codec boundary rather than legitimized as a second compatibility owner.
 
 ## 9. 13C merged-tree closeout
 
