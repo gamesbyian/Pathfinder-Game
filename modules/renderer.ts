@@ -15,7 +15,7 @@ export function createRenderer({ core, state, ui }: any) {
         const eng = state.ENGINE;
         const l   = activeLevel(eng, core);
         if (!l) return { sx: 0, sy: 0 };
-        const { tx, ty } = transformPoint(cx, cy, eng.variant, l.grid.w, l.grid.h);
+        const { tx, ty } = transformPoint(cx, cy, eng.orientation, l.grid.w, l.grid.h);
         return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
     }
 
@@ -42,7 +42,7 @@ export function createRenderer({ core, state, ui }: any) {
         const l   = activeLevel(eng, core);
         if (!l) return;
         const screenPosFn = (cx: any, cy: any) => {
-            const { tx, ty } = transformPoint(cx, cy, eng.variant, l.grid.w, l.grid.h);
+            const { tx, ty } = transformPoint(cx, cy, eng.orientation, l.grid.w, l.grid.h);
             return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
         };
         drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution, screenPosFn, eng.viewport.cellW);
