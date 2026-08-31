@@ -66,6 +66,6 @@ Use the cheapest check that answers the iteration question, then the relevant fi
 | Hard prune/cache/correctness | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md) + proof-oriented soundness/referee/differential gates |
 | Documentation | `npm run check:documentation-links` when possible |
 
-`solver:bench --check` protects outcomes, not performance. GitHub Actions is execution infrastructure, not research evidence unless the exact run/protocol is reported.
+`solver:regression --check` protects outcomes, not performance. GitHub Actions is execution infrastructure, not research evidence unless the exact run/protocol is reported.
 
 For the complete current-reference inventory use [`docs/README.md`](docs/README.md). [`docs/command-glossary.md`](docs/command-glossary.md) maps runtime flow names to code; it is not CLI discovery.

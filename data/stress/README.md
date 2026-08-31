@@ -137,7 +137,7 @@ npm run stress:generate-topology
 npm run stress:validate-witnesses
 npm run stress:compare
 npm run stress:smoke
-npm run stress:benchmark
+npm run stress:measure-solver
 npm run stress:regression
 npm run stress:solve-one
 npm run stress:reduce-level

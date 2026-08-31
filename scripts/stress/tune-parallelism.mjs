@@ -10,7 +10,7 @@
  *
  * Deliberately reuses the real benchmark.mjs binary as a subprocess per N (not an in-process
  * refactor) so the sweep measures actual wall-clock startup + worker-pool overhead exactly as
- * `npm run stress:benchmark -- --parallel=N` would incur it in practice.
+ * `npm run stress:measure-solver -- --parallel=N` would incur it in practice.
  *
  * Run via plain node (spawns the bundled benchmark.mjs itself per N):
  *   node scripts/stress/tune-parallelism.mjs

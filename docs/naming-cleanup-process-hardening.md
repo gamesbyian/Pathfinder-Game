@@ -505,6 +505,10 @@ This audit also changes the interpretation of the Phase-10 budget-policy ledger 
 
 Refreshed against `main` commit `5db2769282d690ce7c12bdcd6aebf064ca467476`.
 
+> This section is the recorded pre-implementation reconciliation at that commit. Phase 9 has since
+> been implemented; use [`naming-cleanup-phase-records/phase-09.md`](naming-cleanup-phase-records/phase-09.md)
+> and the ledger for its current disposition rather than the Phase-9 row below.
+
 The mechanically generated phase-range census contains 107 Phase-8-14 ledger rows. After excluding the naming authority documents themselves from implementation-state evidence, the initial classification was:
 
 - 82 **old-live** rows: the planned old/current surface is still live and the future rename remains required;

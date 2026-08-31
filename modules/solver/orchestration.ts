@@ -1183,7 +1183,7 @@ export const EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
  *  Original calibration (pre-elite-splice-fix, repair-search effectively never spliced from a
  *  near-miss — every restart fresh-started from the gate): salts [0,1,2,3,4] (4 retries) were
  *  picked from which single salt rescued each of 4 hand-checked cases (P00146 + 3 rotated
- *  siblings — needed salts 1, 2, 2, 4 respectively). That width passed `solver:bench --check`
+ *  siblings — needed salts 1, 2, 2, 4 respectively). That width passed `solver:regression --check`
  *  (160/160, no regressions) but a full-corpus before/after speed sweep caught what the
  *  solvability check couldn't see: total time went from 42.0s to 47.7s (+14%) at
  *  budgetMs=30000, entirely from one level (P00144) whose probe exhausted all 4 retry seeds
@@ -1217,7 +1217,7 @@ export const EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_MIN_SCALE = 0.35;
  *  budget as the first round — strictly additive: only reached when every active gate has already
  *  failed at every earlier salt, so a level whose probe already succeeds on the first (default)
  *  seed is completely unaffected. Ablation: STRATEGY_EARLY_REPAIR_SEARCH_MULTI_SEED (default enabled).
- *  Re-verify with a full-corpus before/after speed sweep (not just solver:bench --check — see
+ *  Re-verify with a full-corpus before/after speed sweep (not just solver:regression --check — see
  *  CLAUDE.md's gotcha on this and docs/testing.md's "Speed, separately from solvability") before
  *  changing this list again. */
 const EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS = [0, 1];

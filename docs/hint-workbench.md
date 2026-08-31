@@ -123,7 +123,7 @@ Options:
 
 Provenance adds `:admissible-slack` to `solver.technique`; `profile: 'flat'` marks tie-break use. The flags also work in `hint-corpus-expand.mjs` and `hint-complete-enumeration-sharded.mjs` through shared `hint-enumeration.ts`.
 
-A 2026-07-25 audit fixed `rankByAdmissibleSlack` sorting negative-slack dead candidates first. Correctness was unchanged because `evaluatePrunedMove` rejects them; `solver:bench --check` stayed 160/160. History: `reports/2026-07-25-hint-tool-comparison.md`. Broader enumeration validation remains incomplete.
+A 2026-07-25 audit fixed `rankByAdmissibleSlack` sorting negative-slack dead candidates first. Correctness was unchanged because `evaluatePrunedMove` rejects them; `solver:regression --check` stayed 160/160. History: `reports/2026-07-25-hint-tool-comparison.md`. Broader enumeration validation remains incomplete.
 
 ## Current limitations / retained tools
 

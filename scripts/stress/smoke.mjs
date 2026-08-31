@@ -2,7 +2,7 @@
 /**
  * Tiny, deliberately-curated smoke suite (docs/solver-dev-tooling-plan.md Component A) — a
  * near-instant sanity check to run after any solver edit, before reaching for the much larger
- * `stress:regression` (24 levels) or `solver:bench` (156 levels) tiers. Every level in
+ * `stress:regression` (24 levels) or `solver:regression` (156 levels) tiers. Every level in
  * data/stress/smoke-set.json was hand-picked for a specific reason (a mechanic it's the only/
  * cheapest carrier of, or a historical bug repro) — see that file's own `reasons` field per
  * level and docs/solver-dev-tooling-plan.md's Component A for the selection rationale. Do not

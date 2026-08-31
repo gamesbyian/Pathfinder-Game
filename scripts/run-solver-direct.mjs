@@ -2,12 +2,12 @@
 /**
  * Direct Node driver for Solver. Usage mirrors run-solver-direct.mjs.
  *
- *   node scripts/run-solverv2-direct.mjs --levels=pos:92
- *   node scripts/run-solverv2-direct.mjs --levels=all --budget-ms=30000 [--work-budget=<n>]
+ *   node scripts/run-solver-direct.mjs --levels=pos:92
+ *   node scripts/run-solver-direct.mjs --levels=all --budget-ms=30000 [--work-budget=<n>]
  *
  * --work-budget pins the machine-independent bound (modules/solver/work-meter.ts); pass it whenever
  * the run's result needs to be reproducible. Without it, one is derived from --budget-ms.
- *   node scripts/run-solverv2-direct.mjs --levels=pos:1-10
+ *   node scripts/run-solver-direct.mjs --levels=pos:1-10
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 

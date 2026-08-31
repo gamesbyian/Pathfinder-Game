@@ -83,7 +83,7 @@ GitHub code search is not indexed for this repository, so the refreshed live-sur
 | `scripts/stress/select-attempt-exposure-sample.mjs` | retain file, rename interface fields | The filename accurately describes mechanics-only sampling. PR 4 changes `--technique` to `--attempt-config` and generated `technique` to `attemptConfigIdentity`. |
 | former `scripts/stress/analyze-equal-work-census-pilot.mjs` | rename | It is now surfaced durable tooling. Renamed to `scripts/stress/analyze-equal-work-census.mjs` by batch 8D. |
 | `technique-census-cell.mjs` and its new equal-work test/helper surfaces | covered existing taxonomy cleanup | Keep live until PR 8; migrate the whole technique-census tool family together so equal-work additions do not preserve split vocabulary. |
-| `portfolio-sweep-reports-to-benchmark.mjs` / `solver:combine-corpus2-batches` | rename | The helper now combines generic solver-sweep reports and is used outside Corpus 2. Rename to `combine-solver-sweep-reports.mjs` / **solver:combine-sweep-reports** in PR 9. |
+| `portfolio-sweep-reports-to-benchmark.mjs` / **solver:combine-corpus2-batches** | rename | The helper now combines generic solver-sweep reports and is used outside Corpus 2. Rename to `combine-solver-sweep-reports.mjs` / `solver:combine-sweep-reports` in PR 9. |
 | current generated outputs `reports/stress/benchmark-parallel.json` and `reports/stress/benchmark-latest-random.json` | rename live output paths | New workflow output paths become `reports/stress/solver-corpus1-latest.json` and `reports/stress/solver-corpus2-latest.json`; retained historical files are not rewritten. |
 | `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE` and `STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE` | intentional retained experiment IDs | Both tested forms are closed negative in the opt-in ledger. Do not spend compatibility churn renaming dead experiment IDs; retain them only as closed default-off historical controls and ledger exemptions. If removed later, delete rather than rename. |
 | `additive-tier-participation-audit.mjs` | intentional retained tool | Retain: it is a bounded systematic audit of additive-tier participation. |
@@ -818,11 +818,11 @@ The following public/surfaced tool names are canonical.
 
 ### 5.1 Solver regression and performance
 
-- npm `solver:bench` -> **solver:regression**;
+- npm **solver:bench** -> `solver:regression`;
 - underlying solved-set command/file should use "regression" terminology;
-- keep `solver:bench` as a deprecated npm alias during one migration PR only, then remove it after workflows/docs are updated;
-- performance measurement remains `solver:speed-probe` until the tool-convention PR, where it becomes **solver:measure-speed**;
-- `stress:benchmark` -> **stress:measure-solver** because it is actual corpus solver measurement.
+- keep **solver:bench** as a deprecated npm alias during one migration PR only, then remove it after workflows/docs are updated;
+- performance measurement remains **solver:speed-probe** until the tool-convention PR, where it becomes `solver:measure-speed`;
+- **stress:benchmark** -> `stress:measure-solver` because it is actual corpus solver measurement.
 
 Current docs must say explicitly: solved-set regression is not a speed benchmark.
 
@@ -973,11 +973,11 @@ The generic report combiner has outgrown both `portfolio` and `corpus2` in its s
 | Current | Canonical |
 |---|---|
 | `scripts/portfolio-sweep-reports-to-benchmark.mjs` | `scripts/combine-solver-sweep-reports.mjs` |
-| package alias `solver:combine-corpus2-batches` | **solver:combine-sweep-reports** |
+| package alias **solver:combine-corpus2-batches** | `solver:combine-sweep-reports` |
 | live output `reports/stress/benchmark-parallel.json` | `reports/stress/solver-corpus1-latest.json` |
 | live output `reports/stress/benchmark-latest-random.json` | `reports/stress/solver-corpus2-latest.json` |
 
-The combiner may continue to describe its output schema in comments as `stress:benchmark`-shaped until PR 9 renames that measuring command, but its executable identity is generic combination, not portfolio scheduling or benchmarking. Update every maintained workflow, current doc, package alias, and current reader of the live output paths. Do not rename dated/frozen benchmark artifacts.
+The combiner may continue to describe its output schema in comments as **stress:benchmark**-shaped until PR 9 renames that measuring command, but its executable identity is generic combination, not portfolio scheduling or benchmarking. Update every maintained workflow, current doc, package alias, and current reader of the live output paths. Do not rename dated/frozen benchmark artifacts.
 
 ## 6. Data and corpus terminology
 
@@ -1285,10 +1285,10 @@ The former mixed-case solver-facade workflow path-filter defect was already corr
 
 ### PR 9: Regression/performance CLI vocabulary
 
-- `solver:bench` -> **solver:regression**;
-- `solver:speed-probe` -> **solver:measure-speed**;
-- `stress:benchmark` -> **stress:measure-solver**;
-- `portfolio-sweep-reports-to-benchmark.mjs` -> `combine-solver-sweep-reports.mjs` and `solver:combine-corpus2-batches` -> **solver:combine-sweep-reports**;
+- **solver:bench** -> `solver:regression`;
+- **solver:speed-probe** -> `solver:measure-speed`;
+- **stress:benchmark** -> `stress:measure-solver`;
+- `portfolio-sweep-reports-to-benchmark.mjs` -> `combine-solver-sweep-reports.mjs` and **solver:combine-corpus2-batches** -> `solver:combine-sweep-reports`;
 - move maintained live corpus outputs from `benchmark-parallel.json` / `benchmark-latest-random.json` to `solver-corpus1-latest.json` / `solver-corpus2-latest.json` without rewriting frozen artifacts;
 - remove deprecated aliases after all live references are migrated;
 - update `AGENTS.md`, testing docs, tooling catalog, scripts/workflows READMEs, package scripts.
@@ -1484,7 +1484,7 @@ The cleanup is complete only when all of the following are true.
 28. Current solver lifecycle telemetry is named `stageLifecycle`; historical `techniqueLifecycle` JSON remains readable.
 29. Current attempt-exposure tooling uses `routingRegime` and `attemptConfigIdentity`, not `archetype` and `technique`, for those exact concepts.
 30. No surfaced equal-work analysis command retains `pilot` in its permanent name.
-31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / **solver:combine-sweep-reports**, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
+31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / `solver:combine-sweep-reports`, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
 32. The pre-Phase-8 process-hardening gate was completed against a recorded current-`main` commit before PR 8 began.
 33. Every Phase-8+ ledger entry has all applicable verification dimensions resolved to `done` or `not-applicable`; no row is `done` with pending verification.
 34. Every maintained command/tool/workflow touched by Phases 8-14 has either executable smoke/contract coverage or an explicit documented structural/manual validation path; aggregate CI is not cited for an unexecuted surface.

@@ -1,7 +1,7 @@
 // Minimal browser-global stubs for running the solver (and its neighbours) under Node.
 //
 // The solver core is DOM-free, but a few modules it pulls in at import time probe
-// `window`/`document`/`performance`. These CLI harnesses (solver:direct, solver:bench,
+// `window`/`document`/`performance`. These CLI harnesses (solver:direct, solver:regression,
 // ablation, trap-search, hint calibration/diversification) run outside a browser, so
 // they install just enough of those globals to let the modules evaluate.
 //

@@ -309,7 +309,7 @@ jobs:
           mkdir -p reports/stress logs/solver-residual-confirmation-phase1
           cp -a artifact-staging/phase1/. logs/solver-residual-confirmation-phase1/
           FILES=$(ls logs/solver-residual-confirmation-phase1/phase1-batch-*.json 2>/dev/null | paste -sd, -)
-          node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase1-control.json"
+          node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase1-control.json"
 
       - name: Verify complete phase-1 coverage
         shell: bash
@@ -553,7 +553,7 @@ jobs:
             # glob but is {idx,arm,resolvedFlags}, not a {summary,levels} sweep report, and made this
             # combine step fail outright the first time confirm-residual-003 ran against the fix.
             FILES=$(ls logs/solver-residual-confirmation-${arm}/phase2-batch-*.json 2>/dev/null | grep -v -- '-flags\.json$' | paste -sd, -)
-            [ -n "$FILES" ] && node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase2-${arm}.json"
+            [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --in="${FILES}" --out="reports/stress/residual-confirmation-phase2-${arm}.json"
           done
 
       - name: Verify complete coverage, both arms

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Combines N portfolio-solve-sweep.mjs report files (one per corpus-2 GH Actions batch — see
- * .github/workflows/README-solver-corpus2-batches.md) into ONE stress:benchmark.mjs-shaped report
+ * .github/workflows/README-solver-corpus2-batches.md) into ONE scripts/stress/benchmark.mjs-shaped report
  * file, so scripts/stress/rank-levels.mjs, scripts/stress/classify-stability.mjs, and
  * scripts/stress/curate-dev-benchmark.mjs can consume it unmodified.
  *
@@ -11,15 +11,15 @@
  * scripts/stress/benchmark.mjs's solveEntry() row-for-row since both call the identical
  * Solver.solve()). The only real mismatch is the top-level WRAPPER: portfolio-solve-sweep writes
  * `{summary: {budgetMs, ...}, levels: [...]}`, while the three consumer tools read `budgetMs` and
- * `levels` at the top level directly (stress:benchmark's own shape). This tool only flattens that
+ * `levels` at the top level directly (stress:measure-solver's own shape). This tool only flattens that
  * wrapper and concatenates `levels` across input files — no per-row remapping.
  *
  * Usage:
- *   node scripts/portfolio-sweep-reports-to-benchmark.mjs \
+ *   node scripts/combine-solver-sweep-reports.mjs \
  *       --in=logs/solver-corpus2-batches/batch-01.json,logs/solver-corpus2-batches/batch-02.json,... \
- *       --out=reports/stress/benchmark-latest-random.json
+ *       --out=reports/stress/solver-corpus2-latest.json
  *   # or, to pick up every batch-*.json in a directory at once:
- *   node scripts/portfolio-sweep-reports-to-benchmark.mjs --in-dir=logs/solver-corpus2-batches --out=reports/stress/benchmark-latest-random.json
+ *   node scripts/combine-solver-sweep-reports.mjs --in-dir=logs/solver-corpus2-batches --out=reports/stress/solver-corpus2-latest.json
  */
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -37,7 +37,7 @@ function main() {
     const outFile = args.get('--out');
     const allowMixedCorpora = args.has('--allow-mixed-corpora');
     if ((!inDir && !inList) || !outFile) {
-        console.error('Usage: node scripts/portfolio-sweep-reports-to-benchmark.mjs (--in=<file1>,<file2>,... | --in-dir=<dir>) --out=<combined.json>');
+        console.error('Usage: node scripts/combine-solver-sweep-reports.mjs (--in=<file1>,<file2>,... | --in-dir=<dir>) --out=<combined.json>');
         process.exit(2);
     }
 
@@ -124,7 +124,7 @@ function main() {
         workBudget: workBudgets.length === 1 ? workBudgets[0] : (workBudgets.length === 0 ? null : workBudgets),
         ...(repairFractions.length ? { repairBudgetFraction: repairFractions.length === 1 ? repairFractions[0] : repairFractions } : {}),
         ...(adaptive.length ? { adaptiveBudget: adaptive[0], adaptiveBudgetShards: adaptive.length } : {}),
-        witnessAccess: 'none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as stress:benchmark.mjs)',
+        witnessAccess: 'none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as scripts/stress/benchmark.mjs)',
         engine: `legacy-scheduler (portfolio-solve-sweep, combined from ${reports.length} batch report(s))`,
         sourceReports: inputPaths,
         solved,

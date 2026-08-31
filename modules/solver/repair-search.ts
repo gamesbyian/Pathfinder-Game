@@ -66,7 +66,7 @@ const _ELITE_PREFIX_DFS_DEBUG = !!(_proc && _proc.env && _proc.env.PF_ELITE_PREF
 // Deterministic PRNG (mulberry32) — reproducible given the same gate/level, matching this
 // codebase's existing seeded-LCG convention (attempts.ts's shuffleAttemptConfigs) rather than
 // Math.random(): repair's output must be stable across repeated solves of the same level for
-// audits (solver:bench, hint-oracle) to be meaningfully comparable run to run.
+// audits (solver:regression, hint-oracle) to be meaningfully comparable run to run.
 function mulberry32(seed: number): () => number {
     let a = seed >>> 0;
     return function (): number {

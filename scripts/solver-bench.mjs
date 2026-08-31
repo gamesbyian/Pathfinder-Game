@@ -179,7 +179,7 @@ const improvements = [...nowSolved].filter(n => !baseSolved.has(n)).sort((a, b) 
     if (staleWarnings.length) {
         console.log(`\n  [!!] STALE BASELINE — ${staleWarnings.join('; ')}.`);
         console.log(`       Cost/node deltas below may reflect unrelated solver evolution since the baseline was captured, not`);
-        console.log(`       anything about this run's own change. Re-run "npm run solver:bench -- --update-baseline" if the`);
+        console.log(`       anything about this run's own change. Re-run "npm run solver:regression -- --update-baseline" if the`);
         console.log(`       working tree is otherwise clean, or treat the cost numbers below as unreliable until it is.`);
     }
 }

@@ -4,6 +4,10 @@ Status: **research handoff only**. This document does not claim a batch, change 
 compatibility alias, or authorize implementation ahead of the serialized Phase-8 stream. The plan,
 vocabulary authority, ledger, and (once created) phase execution records remain authoritative.
 
+> **Phase-9 disposition (2026-08-31):** Phase 9 has since been implemented. Its current evidence is
+> [`naming-cleanup-phase-records/phase-09.md`](naming-cleanup-phase-records/phase-09.md); the Phase-9
+> inventories below are preserved as pre-implementation audit evidence, not current-state claims.
+
 Audit base: `30cff381` (2026-08-30, current `main` at the start of this audit). Re-run delta
 reconciliation when each batch starts. The census searched both sides of every Phase 9–14 ledger
 mapping across current source, scripts, package commands, workflows, current documentation, tests,

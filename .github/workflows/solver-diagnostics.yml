@@ -40,7 +40,7 @@ jobs:
       - name: Guard audit output
         run: npm run check:audit-output -- logs/solver-workflow/latest.json
 
-      # Cost-regression signal that solver:bench --check structurally cannot give: --check compares
+      # Cost-regression signal that solver:regression --check structurally cannot give: --check compares
       # only the solved/failed set. Wherever the same attempt config found the same solution under
       # the same budget at two different commits, provenance now holds a real before/after. Reported,
       # never enforced — a drift is a lead, not a verdict (a retune legitimately changes cost, and a

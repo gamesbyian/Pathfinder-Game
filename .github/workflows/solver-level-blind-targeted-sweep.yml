@@ -283,7 +283,7 @@ jobs:
             exit 1
           fi
           FILES=$(ls logs/solver-targeted-sweep/batch-*.json | paste -sd, -)
-          node scripts/portfolio-sweep-reports-to-benchmark.mjs --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
+          node scripts/combine-solver-sweep-reports.mjs --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
 
       - name: Print a solved-count summary to the job log
         shell: bash

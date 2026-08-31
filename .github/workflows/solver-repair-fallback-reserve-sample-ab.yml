@@ -258,7 +258,7 @@ jobs:
           mkdir -p logs/solver-repair-fallback-reserve-sample reports/stress
           cp -a artifact-staging/downloaded/. logs/solver-repair-fallback-reserve-sample/
           FILES=$(ls logs/solver-repair-fallback-reserve-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/repair-fallback-reserve-sample-ab.json
+          [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/repair-fallback-reserve-sample-ab.json
 
       - name: Verify complete coverage
         id: coverage

@@ -55,7 +55,7 @@
  * plain node, no run-bundled.mjs wrapper needed, and does zero new solving (all inputs are
  * already-recorded telemetry):
  *   node scripts/stress/curate-dev-benchmark.mjs
- *       [--benchmark=reports/stress/benchmark-latest-random.json]
+ *       [--benchmark=reports/stress/solver-corpus2-latest.json]
  *       [--witness-divergence=reports/stress/witness-divergence-random.json]
  *       [--corpus=data/stress/stress-levels-random.json]
  *       [--target=112] [--floor=8] [--dedup-threshold=0.05]
@@ -75,7 +75,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
     return [k, v.join('=')];
 }));
 
-const BENCHMARK_FILE = args.get('--benchmark') || 'reports/stress/benchmark-latest-random.json';
+const BENCHMARK_FILE = args.get('--benchmark') || 'reports/stress/solver-corpus2-latest.json';
 const WITNESS_DIVERGENCE_FILE = args.get('--witness-divergence') || 'reports/stress/witness-divergence-random.json';
 const CORPUS_FILE = args.get('--corpus') || 'data/stress/stress-levels-random.json';
 const TARGET = Number(args.get('--target') || 112);
@@ -326,7 +326,7 @@ const output = {
 
 writeFileSync(path.resolve(ROOT, OUT_FILE), JSON.stringify(output, null, 1) + '\n');
 
-const levelSpecCommand = `npm run stress:benchmark -- --corpus=${CORPUS_FILE} --levels=${levels.map(l => l.id).join(',')}`;
+const levelSpecCommand = `npm run stress:measure-solver -- --corpus=${CORPUS_FILE} --levels=${levels.map(l => l.id).join(',')}`;
 
 const mdLines = [
     `# Curated development benchmark — Corpus 2`,

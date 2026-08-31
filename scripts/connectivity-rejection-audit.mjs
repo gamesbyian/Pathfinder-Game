@@ -7,7 +7,7 @@
  * sample with modules/solver/topology.ts's isConnected() rejection observer attached
  * (SolveOpts.connectivityRejectionObserver), collecting every already-computed connectivity
  * rejection this search performs. Purely observational: the observer changes no pruning/ordering/
- * budget decision (see topology.ts's own comment; verified byte-identical against solver:bench
+ * budget decision (see topology.ts's own comment; verified byte-identical against solver:regression
  * --check with and without the observer attached).
  *
  * Answers Stage A's four questions:

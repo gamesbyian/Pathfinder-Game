@@ -360,7 +360,7 @@ jobs:
             # solver-residual-confirmation.yml's identical fix (found when confirm-residual-003's
             # combine step failed outright the first time it ran against the fix).
             FILES=$(ls logs/solver-broad-confirmation-${arm}/batch-*.json 2>/dev/null | grep -v -- '-flags\.json$' | paste -sd, -)
-            [ -n "$FILES" ] && node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out="reports/stress/broad-confirmation-${arm}.json"
+            [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --in="${FILES}" --out="reports/stress/broad-confirmation-${arm}.json"
           done
 
       - name: Verify complete coverage, both arms

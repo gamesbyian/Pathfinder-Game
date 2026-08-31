@@ -6,7 +6,7 @@
  * witnessSolution or any stressMeta), records per-level runtime, node expansions,
  * attempt ladders, winning/failed strategies, and referee-validates every returned
  * solution. This is an EXPLORATORY/ITERATION tool, not the regression gate — that's
- * `npm run solver:bench` (scripts/solver-bench.mjs), which stays strictly sequential
+ * `npm run solver:regression` (scripts/solver-bench.mjs), which stays strictly sequential
  * for production-parity and is never touched by the engine choice here.
  *
  * Run via the esbuild wrapper (imports the TS solver):
@@ -66,7 +66,7 @@
  *     winning strategy under racing is "whichever config's worker finished first", not
  *     "first in ladder order that succeeded" — treat winningStrategy/attempt timings as
  *     approximate, and use --engine=sequential when you need exact production numbers
- *     (e.g. before comparing against solver:bench).
+ *     (e.g. before comparing against solver:regression).
  *   - sequential: the exact single-threaded PRODUCTION solveLevel(), one level at a time.
  *
  * --parallel runs levels across N worker threads (default: availableParallelism-1) for
@@ -265,7 +265,7 @@ async function solveEntry(entry, solve) {
 
     // Shared with portfolio-solve-sweep-lib.mjs rather than duplicated here. This file kept its own
     // hand-maintained copy of the same field whitelist, and the two drifted TWICE: it never carried
-    // repairTurnBiased/randomSeed/seedSalt (so a stress:benchmark repair winner was not replayable,
+    // repairTurnBiased/randomSeed/seedSalt (so a stress:measure-solver repair winner was not replayable,
     // and a turn-biased repair winner was indistinguishable from an ordinary one), and neither copy
     // ever carried the admissible-order flags. One projection, one place to update when the solver
     // gains a new diagnostic field.
@@ -321,7 +321,7 @@ async function main() {
         : 1;
     const parallel = Math.max(1, Math.min(parallelArg, levels.length));
     // Parallel runs must not silently replace the official (sequential) report.
-    const defaultOut = parallel > 1 ? 'reports/stress/benchmark-parallel.json' : 'reports/stress/benchmark-latest.json';
+    const defaultOut = parallel > 1 ? 'reports/stress/solver-corpus1-latest.json' : 'reports/stress/benchmark-latest.json';
     const outFile = argMap.get('--out') || defaultOut;
 
     // --engine=raced (within-level worker-thread attempt racing, via a pool shared across the

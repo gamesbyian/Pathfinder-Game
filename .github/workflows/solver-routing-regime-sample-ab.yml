@@ -282,7 +282,7 @@ jobs:
           mkdir -p logs/solver-routing-regime-sample reports/stress
           cp -a artifact-staging/downloaded/. logs/solver-routing-regime-sample/
           FILES=$(ls logs/solver-routing-regime-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && node scripts/portfolio-sweep-reports-to-benchmark.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/routing-regime-sample-ab.json
+          [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/routing-regime-sample-ab.json
 
       - name: Verify complete coverage
         id: coverage

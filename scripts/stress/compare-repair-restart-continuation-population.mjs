@@ -2,7 +2,7 @@
 /**
  * Comparison tool for docs/reports/2026-08-24-restart-continuation-value-audit.md's primary
  * comparison, run over a frozen baseline-failure-conditioned residual population: levels where
- * the raised-cap census run (reports/stress/benchmark-latest-random.json, commit fc625d18,
+ * the raised-cap census run (reports/stress/solver-corpus2-latest.json, commit fc625d18,
  * budgetMs=86400000/nodeBudget=50000000/workBudget=67000000 over Corpus 2) still could not solve
  * the level, AND early-repair-search actually ran on it (so repair genuinely had a chance to act, not
  * merely starved out by earlier tiers) — see that report's own lifecycle breakdown.
@@ -46,7 +46,7 @@
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/compare-repair-restart-continuation-population.mjs -- \
- *     --census=reports/stress/benchmark-latest-random.json --corpus=data/stress/stress-levels-random.json \
+ *     --census=reports/stress/solver-corpus2-latest.json --corpus=data/stress/stress-levels-random.json \
  *     --work-budget=2000000 --sample-every=29 --out=tmp/repair-restart-continuation-comparison.json
  */
 import path from 'node:path';
@@ -59,7 +59,7 @@ const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 
 const root = new URL('..', import.meta.url).pathname;
-const censusPath = argMap.get('--census') || path.join(root, 'reports/stress/benchmark-latest-random.json');
+const censusPath = argMap.get('--census') || path.join(root, 'reports/stress/solver-corpus2-latest.json');
 const corpusPath = argMap.get('--corpus') || path.join(root, 'data/stress/stress-levels-random.json');
 const workBudget = Number(argMap.get('--work-budget') || 2_000_000);
 const sampleEvery = Number(argMap.get('--sample-every') || 29);

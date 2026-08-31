@@ -5,7 +5,7 @@
  *   --mode=corpus1 (default) — the current stress Corpus 1 (data/stress/stress-levels.json),
  *     stitching whichever of these sources exist and cover a given id (official wins ties):
  *       - reports/stress/benchmark-latest.json (or --official=<file>) — an official
- *         `npm run stress:benchmark` run against the corpus. NOT assumed to be sequential/
+ *         `npm run stress:measure-solver` run against the corpus. NOT assumed to be sequential/
  *         trustworthy-timing just because it's "the official file" — the compiled output reads
  *         the run's own self-reported `engine`/`parallel` fields and only tags it
  *         'sequential-official' (timingTrustworthy:true) when they say so; otherwise it's tagged
@@ -80,14 +80,14 @@ const corpusIds = new Set(corpus.levels.map(l => l.id));
 // Not gated by MODE: whichever corpus's official benchmark file is passed via --official (or,
 // for corpus1, the OFFICIAL_FILE default) is used if present. corpus2 originally had no official
 // source at all ("There is no official counterpart for Corpus 2 yet" — see file doc); once one
-// exists (a real stress:benchmark run against the full corpus, not just batch-derived data), pass
+// exists (a real stress:measure-solver run against the full corpus, not just batch-derived data), pass
 // it via --official= and it's used exactly like corpus1's. corpusIds.has(lv.id) already keeps a
 // corpus1-flavored default file from leaking irrelevant ids into a corpus2 compile, and vice versa.
 //
 // The "official" file is NOT trusted as sequential/trustworthy-timing by virtue of its path alone
 // — that was a real gap (any file placed at OFFICIAL_FILE got labeled 'sequential-official'/
 // timingTrustworthy:true unconditionally, regardless of how it was actually produced). Instead,
-// read the run's own self-reported `engine`/`parallel` fields (stress:benchmark's output always
+// read the run's own self-reported `engine`/`parallel` fields (stress:measure-solver's output always
 // carries them — see that file's writeReport) and only claim trustworthy timing when the file
 // actually says engine:'sequential' and no parallel>1. This matters concretely as of 2026-07-18:
 // solver-stress-refresh.yml's corpus-1 job switched from --engine=sequential to --parallel=N for
@@ -169,7 +169,7 @@ const batchSource = {
     name: batchSourceName,
     files: batchFiles.map(f => path.join(RANDOM_BATCHES_DIR, f)),
     levels: randomLevels.length,
-    engine: 'stress:benchmark --parallel (across-level worker threads)',
+    engine: 'stress:measure-solver --parallel (across-level worker threads)',
     parallelObserved: [...new Set(randomLevels.map(lv => lv.sourceParallel))],
     budgetMs: 20000,
     timingTrustworthy: false,
@@ -180,7 +180,7 @@ const verifiedSource = verifiedOverrides.length > 0 ? {
     files: VERIFY_FILES,
     levels: verifiedOverrides.length,
     overriddenIds: verifiedOverrides,
-    engine: 'stress:benchmark, lower --parallel spot-check re-verification',
+    engine: 'stress:measure-solver, lower --parallel spot-check re-verification',
     timingTrustworthy: false,
     caveat: 'Spot-check re-runs of specific ids at reduced contention (still not fully official/sequential) ' +
         'to correct the batch source above where its higher --parallel level may have produced a false ' +
@@ -191,7 +191,7 @@ const officialSource = officialFileExists ? {
     name: officialBaselineSourceName,
     file: OFFICIAL_FILE,
     levels: officialLevels.length,
-    engine: official.engine === 'sequential' ? 'sequential (official stress:benchmark run)' : official.engine,
+    engine: official.engine === 'sequential' ? 'sequential (official stress:measure-solver run)' : official.engine,
     parallel: official.parallel ?? 1,
     budgetMs: official.budgetMs,
     timestamp: official.timestamp,

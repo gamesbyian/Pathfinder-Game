@@ -2,7 +2,7 @@
 /**
  * Solver speed probe — the before/after COST half of the hot-path change gate.
  *
- * CLAUDE.md requires any solver hot-path change to be checked twice: `solver:bench --check` for
+ * CLAUDE.md requires any solver hot-path change to be checked twice: `solver:regression --check` for
  * solvability (which is silent on cost), plus a before/after nodesExpanded/wall-time comparison.
  * This is the tool for the second half; before it existed the instruction ended in "no dedicated
  * tool exists yet."

@@ -35,4 +35,4 @@ Research flags/observers beside production code are not automatically active or 
 
 ## Verification
 
-Use the narrowest relevant test while iterating, then follow [`../../docs/testing.md`](../../docs/testing.md) for solved-set, cost, soundness, referee, and finish-line gates. `solver:bench --check` checks solves, not performance.
+Use the narrowest relevant test while iterating, then follow [`../../docs/testing.md`](../../docs/testing.md) for solved-set, cost, soundness, referee, and finish-line gates. `solver:regression --check` checks solves, not performance.
