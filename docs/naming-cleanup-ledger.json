@@ -1385,12 +1385,12 @@
       "verification": {
         "surfaceInventory": "done",
         "implementation": "done",
-        "targetedValidation": "done",
+        "targetedValidation": "not-applicable",
         "consumerAudit": "done",
-        "behavioralParity": "done",
+        "behavioralParity": "not-applicable",
         "closeoutAudit": "pending"
       },
-      "notes": "Stage budget policy spelling. Pre-Phase-8 current-main reconciliation: the StageBudgetPolicyId definition is already canonical on main; Phase 10 must not recreate this definition rename and only needs to verify/migrate any retained historical-reader compatibility.",
+      "notes": "Stage budget policy spelling. The definition was already canonical before Phase 10. Phase-10 consumer audit found no live reader that parses persisted budgetPolicy values, so there is no executable legacy-reader path to migrate or parity-test in this phase; preserve the permanent historical-read obligation rather than inventing a second normalizer.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-10.md",
       "compatibility": {
