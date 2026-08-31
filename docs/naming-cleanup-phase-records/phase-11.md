@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 11 — application orientation versus level variant |
 | Current batch | 11C merged-tree closeout |
-| Status | 11C closure state prepared in PR #1613; exact-head CI/browser/merge are the remaining barrier |
+| Status | closed; 11A preparation, 11B atomic rename, and 11C merged-tree closeout all merged green |
 | Base `main` SHA | `21cde93a05b251a4682f4aa09f88703d3d9a4d67` |
 | Branch | `chatgpt/phase11a-coverage-preparation-2026-08-30` |
 | Rows | NC-P11-001 through NC-P11-005 |
@@ -180,3 +180,9 @@ The merged-tree audit must rerun the Phase-11 runtime residue ratchet, ordinary 
 PR #1613 is the Phase-11 merged-tree closeout and is based directly on the Phase-11B merge `b2ee0d74cab245c042555516474e1492975b4fd6`. The branch contains no runtime behavior or canonical-name changes. Its final intended ledger state marks NC-P11-001 through NC-P11-005 done, records the structured Phase-11 implementation/closeout evidence, advances `lastCompletedPhase` to 11, and returns `activeExecution` to idle.
 
 That state is deliberately validated before it becomes authoritative: ordinary CI and the dedicated Chromium orientation gate must both pass on the exact final PR head. The browser workflow's path filter now includes this Phase-11 record and the naming ledger, so a pure evidence closeout actually reruns the browser characterization rather than relying on the older 11B run or fabricating a runtime change. If either gate fails, Phase 11 remains open and this closure state must be repaired before merge.
+
+## 14. Phase 11 merged completion
+
+Phase 11C PR #1613 completed ordinary CI run #3421 / `33362227488` successfully and the maintained Chromium orientation gate run #13 / `33362227473` successfully on exact final head `4d95efd0d0501174c13e95a3c7c3507cfb6393d1`. It then merged as `994fa8cebaf5faafd5304026584acde25560e0d2`.
+
+Phase 11 is therefore closed on merged `main`: NC-P11-001 through NC-P11-005 are done, `lastCompletedPhase` is 11, and `activeExecution` is idle. Runtime rotation/reflection state uses the canonical `orientation` vocabulary throughout the reviewed application graph, while research/solver/generated/editor-palette meanings of `variant` remain intentionally retained. Phase 12 is the next incomplete phase.
