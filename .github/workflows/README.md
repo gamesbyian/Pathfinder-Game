@@ -104,7 +104,7 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 
 ## Repository / diagnostic workflows
 
-These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `solver-diagnostics.yml`, `deploy-pages.yml`, and `deploy-firestore-rules.yml`. Completed one-shot diagnostics belong in dated reports, not in the maintained workflow surface.
+These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `solver-diagnostics.yml`, `deploy-pages.yml`, `deploy-firestore-rules.yml`, and `naming-cleanup-phase11-orientation.yml`. The Phase-11 orientation gate is a narrow browser characterization workflow: it installs Chromium and runs the runtime-orientation plus editor-transform Playwright flows whenever the state/geometry/render/input/persistence surfaces involved in Phase 11 change. Completed one-shot diagnostics belong in dated reports, not in the maintained workflow surface.
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
 
