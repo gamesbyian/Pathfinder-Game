@@ -2,7 +2,7 @@
 /**
  * Enforce the prospective completion/specification model for docs/naming-cleanup-ledger.json.
  *
- * Contract v4 adds:
+ * Contract v5 extends v4 with explicit current-artifact ownership and structured Phase-9+ closure evidence:
  * - immutable row IDs so prose edits do not change row identity;
  * - explicit compatibility ownership/retirement for future dual-read rows;
  * - serial phase/batch dependency enforcement;
@@ -116,6 +116,78 @@ if (ledger.phaseExecutionRecords?.['8'] !== 'docs/naming-cleanup-phase-records/p
 }
 if (!repoPathExists(ledger.phaseExecutionRecords?.['8'])) {
   fail(`Phase-8 execution authority does not exist: ${JSON.stringify(ledger.phaseExecutionRecords?.['8'])}`);
+}
+
+const phaseClosures = ledger.phaseClosures;
+if (!phaseClosures || typeof phaseClosures !== 'object' || Array.isArray(phaseClosures)) {
+  fail('phaseClosures must be an object keyed by phase number');
+} else {
+  for (const [phaseKey, closure] of Object.entries(phaseClosures)) {
+    const phase = Number(phaseKey);
+    if (!Number.isInteger(phase) || phase < 9) {
+      fail(`phaseClosures key must be an integer Phase >= 9; found ${JSON.stringify(phaseKey)}`);
+      continue;
+    }
+    if (!closure || typeof closure !== 'object' || Array.isArray(closure) ||
+        !['reopened', 'closed'].includes(closure.status)) {
+      fail(`phaseClosures["${phaseKey}"].status must be "reopened" or "closed"`);
+      continue;
+    }
+    if (typeof closure.recordPath !== 'string' || !repoPathExists(closure.recordPath)) {
+      fail(`phaseClosures["${phaseKey}"].recordPath must identify an existing checked-in phase record`);
+    } else if (ledger.phaseExecutionRecords?.[phaseKey] !== closure.recordPath) {
+      fail(`phaseClosures["${phaseKey}"].recordPath must match phaseExecutionRecords["${phaseKey}"]`);
+    }
+    if (closure.status === 'reopened') {
+      if (phase <= Number(ledger.lastCompletedPhase)) {
+        fail(`Phase ${phase} closure is reopened but lastCompletedPhase is ${ledger.lastCompletedPhase}`);
+      }
+      if (typeof closure.reason !== 'string' || !closure.reason.trim()) {
+        fail(`phaseClosures["${phaseKey}"] reopened state requires a reason`);
+      }
+      continue;
+    }
+
+    const implementation = closure.implementation;
+    if (!implementation || typeof implementation !== 'object' || Array.isArray(implementation)) {
+      fail(`phaseClosures["${phaseKey}"].implementation must contain final merged implementation evidence`);
+    } else {
+      if (!Number.isInteger(implementation.pr) || implementation.pr < 1) {
+        fail(`phaseClosures["${phaseKey}"].implementation.pr must be a positive PR number`);
+      }
+      for (const key of ['finalHeadSha', 'mergeCommit']) {
+        if (typeof implementation[key] !== 'string' || !/^[0-9a-f]{40}$/u.test(implementation[key])) {
+          fail(`phaseClosures["${phaseKey}"].implementation.${key} must be a full commit SHA`);
+        }
+      }
+      if (!Number.isInteger(implementation.ciRunId) || implementation.ciRunId < 1 ||
+          implementation.ciConclusion !== 'success') {
+        fail(`phaseClosures["${phaseKey}"].implementation must record a successful exact-head CI run`);
+      }
+    }
+
+    const closeout = closure.mergedTreeCloseout;
+    if (!closeout || typeof closeout !== 'object' || Array.isArray(closeout)) {
+      fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout must identify the merged-tree closure PR`);
+    } else {
+      if (typeof closeout.baseMainSha !== 'string' || !/^[0-9a-f]{40}$/u.test(closeout.baseMainSha)) {
+        fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout.baseMainSha must be a full commit SHA`);
+      }
+      if (!Number.isInteger(closeout.pr) || closeout.pr < 1) {
+        fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout.pr must be a positive PR number`);
+      }
+      if (closeout.ciPolicy !== 'exact-head-green-before-merge') {
+        fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout.ciPolicy must require exact-head green CI before merge`);
+      }
+    }
+  }
+}
+
+for (let phase = 9; phase <= Number(ledger.lastCompletedPhase); phase += 1) {
+  const closure = phaseClosures?.[String(phase)];
+  if (!closure || closure.status !== 'closed') {
+    fail(`lastCompletedPhase=${ledger.lastCompletedPhase}, but Phase ${phase} lacks a closed structured phaseClosures record`);
+  }
 }
 
 const gate = ledger.phase8Gate;
@@ -494,7 +566,7 @@ const phase8Counts = Object.fromEntries(
   phase8BatchOrder.map(batch => [batch, phase8Entries.filter(entry => entry.batch === batch).length]),
 );
 console.log(
-  `Naming-cleanup ledger contract valid: schema=v4; gate=${gate.status}; active=${active.status}; ` +
+  `Naming-cleanup ledger contract valid: schema=v5; gate=${gate.status}; active=${active.status}; ` +
   `${futureEntries.length} Phase-8+ rows carry verification state/evidence pointers; ` +
   `Phase-8 batches=${JSON.stringify(phase8Counts)}.`,
 );
