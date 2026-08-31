@@ -21,7 +21,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
 
     (document.getElementById('unsavedStayBtn') as any).onclick = () => {
         ui.closeAllModals();
-        engine.clearPendingAction();
+        engine.clearPendingConfirmationAction();
         ui.closeModal('unsavedModal');
     };
     (document.getElementById('unsavedLeaveBtn') as any).onclick = () => {
