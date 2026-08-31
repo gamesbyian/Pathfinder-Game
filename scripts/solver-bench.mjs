@@ -28,7 +28,7 @@
  *   node scripts/solver-bench.mjs --check                # compare default-order run to baseline (exit 1 on regression)
  *   node scripts/solver-bench.mjs --order=reverse        # order-independence probe vs baseline
  *   node scripts/solver-bench.mjs --order=random --seed=7
- *   flags: --budget-ms=30000  --work-budget=<n>  --levels=all|pos:1,...|pos:1-10  --out=path.json
+ *   flags: --budget-ms=30000  --work-budget=<n>  --levels=all|pos:1,...|pos:1-10  --out=path.json\n *          --baseline=path.json (defaults to logs/solver-baseline.json; useful for isolated smoke fixtures)
  *
  * REPRODUCIBILITY: this is the regression gate, so it pins a WORK budget
  * (modules/solver/work-meter.ts) rather than letting the solve be shaped by wall clock. A work
@@ -48,7 +48,7 @@ const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const flags = new Set(args.filter(a => !a.includes('=')));
 
-const BASELINE_PATH = 'logs/solver-baseline.json';
+const BASELINE_PATH = argMap.get('--baseline') || 'logs/solver-baseline.json';
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
 // Default derived from the historical 30s budget at the measured ~3.35M work/s, so the gate keeps
 // its long-standing cost; --budget-ms is then a deadline with generous headroom over it.
