@@ -70,11 +70,11 @@ export function findPhase13NormalizedMetricResidue(relativePath, content) {
   // Explicitly typed normalized object literals may not be referenced by a typed variable before
   // use, so guard the literal itself too.
   const typedLiteral = new RegExp(
-    '\\{[\\s\\S]{0,1600}?\\b(reqLen|reqInt)\\s*:[\\s\\S]{0,1600}?\\}\\s*(?:as|satisfies)\\s*' + NORMALIZED_TYPES,
+    '\\{[^{}]{0,800}\\b(reqLen|reqInt)\\s*:[^{}]{0,800}\\}\\s*(?:as|satisfies)\\s*' + NORMALIZED_TYPES,
     'gu',
   );
   for (const match of content.matchAll(typedLiteral)) {
-    failures.push(`${relativePath}: ${NORMALIZED_TYPES.replaceAll('(?:', '').replaceAll(')', '')} literal contains legacy ${match[1]} key`);
+    failures.push(`${relativePath}: explicitly typed normalized level literal contains legacy ${match[1]} key`);
   }
 
   if (/\b(?:NormalizedLevel|EngineLevel)\s*\[\s*['"]req(?:Len|Int)['"]\s*\]/u.test(content)) {
