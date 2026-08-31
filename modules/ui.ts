@@ -28,16 +28,17 @@ import {
 import { syncEditorPalettePlacement, createLayoutUI } from './ui/layout-ui.js';
 import { EditorDragGhost } from './ui/editor-drag-ghost-ui.js';
 import { renderLevelRatingPane } from './ui/level-rating-ui.js';
+import { EDITOR, REVIEW } from './app-constants.js';
 
-export function createUI({ core, getState }: any) {
-    const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState });
-    const { applyOverlayState }                               = createSolverOverlayUI({ core });
+export function createUI({ getState }: any) {
+    const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ getState });
+    const { applyOverlayState }                               = createSolverOverlayUI();
 
     // Applies all mode-dependent element visibility in one pass.
     // Called by engine.switchMode and engine.updatePlayModeLayout.
     const applyModeLayout = (mode: any, { isDevMode = false }: any = {}) => {
-        const isEd         = mode === core.EDITOR;
-        const isReview     = mode === core.REVIEW;
+        const isEd         = mode === EDITOR;
+        const isReview     = mode === REVIEW;
         const isEdOrReview = isEd || isReview;
         const el     = (id: any) => (document.getElementById(id) as any);
         const toggle = (id: any, hidden: any) => { const e = el(id); if (e) e.classList.toggle('hidden', hidden); };
