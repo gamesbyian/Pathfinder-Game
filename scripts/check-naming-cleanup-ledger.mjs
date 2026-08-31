@@ -166,6 +166,11 @@ if (!phaseClosures || typeof phaseClosures !== 'object' || Array.isArray(phaseCl
           implementation.ciConclusion !== 'success') {
         fail(`phaseClosures["${phaseKey}"].implementation must record a successful exact-head CI run`);
       }
+      if (Number(phaseKey) === 11 &&
+          (!Number.isInteger(implementation.browserRunId) || implementation.browserRunId < 1 ||
+           implementation.browserConclusion !== 'success')) {
+        fail(`phaseClosures["${phaseKey}"].implementation must record the successful exact-head Phase-11 browser run`);
+      }
     }
 
     const closeout = closure.mergedTreeCloseout;
@@ -180,6 +185,22 @@ if (!phaseClosures || typeof phaseClosures !== 'object' || Array.isArray(phaseCl
       }
       if (closeout.ciPolicy !== 'exact-head-green-before-merge') {
         fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout.ciPolicy must require exact-head green CI before merge`);
+      }
+      if (Number(phaseKey) >= 10) {
+        for (const key of ['finalHeadSha', 'mergeCommit']) {
+          if (typeof closeout[key] !== 'string' || !/^[0-9a-f]{40}$/u.test(closeout[key])) {
+            fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout.${key} must be a full commit SHA`);
+          }
+        }
+        if (!Number.isInteger(closeout.ciRunId) || closeout.ciRunId < 1 ||
+            closeout.ciConclusion !== 'success') {
+          fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout must record a successful exact-head CI run`);
+        }
+      }
+      if (Number(phaseKey) === 11 &&
+          (!Number.isInteger(closeout.browserRunId) || closeout.browserRunId < 1 ||
+           closeout.browserConclusion !== 'success')) {
+        fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout must record the successful exact-head Phase-11 browser run`);
       }
     }
   }
