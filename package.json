@@ -174,7 +174,7 @@
     "check:current-level-facts": "node scripts/current-level-facts.mjs --check",
     "test:current-level-facts": "node scripts/current-level-facts-node-test.mjs",
     "check:text-source-files": "node scripts/check-text-source-files.mjs",
-    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:solver-budget-boundaries check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:solver-sweep-results check:workflow-actions check:plain-node-import-boundaries check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:naming-cleanup-ledger check:naming-consumer-residue check:solveopts-transport-parity check:level-metric-boundaries check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting check:naming-cleanup-phase11-closeout check:naming-cleanup-phase12-closeout check:naming-cleanup-phase13-closeout check:naming-cleanup-phase14-core-closeout check:naming-cleanup-phase14-level-utils-closeout check:naming-cleanup-phase14c1-closeout check:naming-cleanup-phase14c2-closeout check:naming-cleanup-phase14-closeout",
+    "check:validators": "node scripts/run-scripts-parallel.mjs check:current-level-facts check:solver-budget-boundaries check:types check:types:tests check:secret-hygiene check:audit-artifacts check:documentation-links check:solver-sweep-results check:workflow-actions check:plain-node-import-boundaries check:browser-external-dependencies check:csp check:modal-a11y check:css-class-coverage check:css-dead-components check:no-solver-level-numbers check:naming-cleanup-ledger check:naming-current-authorities check:naming-consumer-residue check:solveopts-transport-parity check:level-metric-boundaries check:canvas-theme-coverage check:level-data-validity check:level-provenance check:corpus-level-formatting check:naming-cleanup-phase11-closeout check:naming-cleanup-phase12-closeout check:naming-cleanup-phase13-closeout check:naming-cleanup-phase14-core-closeout check:naming-cleanup-phase14-level-utils-closeout check:naming-cleanup-phase14c1-closeout check:naming-cleanup-phase14c2-closeout check:naming-cleanup-phase14-closeout",
     "check:nonlint": "npm run check:dead-scripts && npm run check:text-source-files && npm run check:validators",
     "check:level-data-validity": "tsx scripts/check-level-data-validity.mjs",
     "check:workflow-actions": "node scripts/check-workflow-actions.mjs",
@@ -217,7 +217,8 @@
     "check:naming-cleanup-phase14c2-closeout": "node scripts/naming-cleanup-phase14c2-closeout.mjs",
     "test:naming-cleanup-phase14c2-closeout": "node scripts/naming-cleanup-phase14c2-closeout-node-test.mjs",
     "check:naming-cleanup-phase14-closeout": "node scripts/naming-cleanup-phase14-closeout.mjs",
-    "test:naming-cleanup-phase14-closeout": "node scripts/naming-cleanup-phase14-closeout-node-test.mjs"
+    "test:naming-cleanup-phase14-closeout": "node scripts/naming-cleanup-phase14-closeout-node-test.mjs",
+    "check:naming-current-authorities": "node scripts/check-naming-current-authorities.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
