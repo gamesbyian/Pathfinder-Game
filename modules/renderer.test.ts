@@ -27,7 +27,7 @@ test('renderer path helper uses the same current transform as screen-position lo
         const engineState: any = {
             mode: 1,
             level,
-            variant: 0,
+            orientation: 0,
             viewport: { cellW: 20, cellH: 30 },
         };
         const renderer = createRenderer({
@@ -37,19 +37,19 @@ test('renderer path helper uses the same current transform as screen-position lo
         });
         const path = [PACK(1, 2), PACK(3, 4)];
 
-        for (let variant = 0; variant < 8; variant += 1) {
-            engineState.variant = variant;
+        for (let orientation = 0; orientation < 8; orientation += 1) {
+            engineState.orientation = variant;
             calls.length = 0;
             renderer.drawPath(path, new Set(), '#fff', 2);
 
-            const start = transformPoint(1, 2, variant, level.grid.w, level.grid.h);
-            const end = transformPoint(3, 4, variant, level.grid.w, level.grid.h);
+            const start = transformPoint(1, 2, orientation, level.grid.w, level.grid.h);
+            const end = transformPoint(3, 4, orientation, level.grid.w, level.grid.h);
             const expectedStart = { sx: (start.tx + 0.5) * 20, sy: (start.ty + 0.5) * 30 };
             const expectedEnd = { sx: (end.tx + 0.5) * 20, sy: (end.ty + 0.5) * 30 };
 
-            assert.deepEqual(renderer.getScreenPos(1, 2), expectedStart, `screen position for transform ${variant}`);
-            assert.deepEqual(calls[0], ['moveTo', expectedStart.sx, expectedStart.sy], `path start for transform ${variant}`);
-            assert.deepEqual(calls.at(-1), ['lineTo', expectedEnd.sx, expectedEnd.sy], `path end for transform ${variant}`);
+            assert.deepEqual(renderer.getScreenPos(1, 2), expectedStart, `screen position for transform ${orientation}`);
+            assert.deepEqual(calls[0], ['moveTo', expectedStart.sx, expectedStart.sy], `path start for transform ${orientation}`);
+            assert.deepEqual(calls.at(-1), ['lineTo', expectedEnd.sx, expectedEnd.sy], `path end for transform ${orientation}`);
         }
     } finally {
         (globalThis as any).document = previousDocument;
