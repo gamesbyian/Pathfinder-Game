@@ -70,7 +70,7 @@ test('pending confirmation callbacks survive set, execute, and clear through the
     engine.executePendingConfirmationAction();
     assert.equal(executions, 1, 'execute invokes the queued callback once');
     assert.equal(state.ENGINE.runtime.pendingConfirmationAction, action, 'execute does not implicitly clear the callback');
-    engine.clearPendingAction();
+    engine.clearPendingConfirmationAction();
     assert.equal(state.ENGINE.runtime.pendingConfirmationAction, null, 'clear removes the queued callback');
     engine.executePendingConfirmationAction();
     assert.equal(executions, 1, 'execute is a no-op once the callback is cleared');
