@@ -30,7 +30,7 @@ import {
     setOrientation as setOrientationState,
     toggleMuted as toggleMutedState,
 } from './state-actions.js';
-import { DRAGGING, EDITOR, EDIT_DRAG, IDLE, PLAY, PORTAL_PAUSE, REVIEW } from './app-constants.js';
+import { DRAGGING, EDITOR, EDIT_DRAG, IDLE, PORTAL_PAUSE, REVIEW } from './app-constants.js';
 
 // Declarative grouped-facade membership: the single source of truth for which flat engine
 // methods each narrow namespace (game/navigation/overlays/hints/solver/review/ratings) exposes.
