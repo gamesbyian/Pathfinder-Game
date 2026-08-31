@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14C1 local state/render names |
+| Current batch | 14C2 atomic engine state graph |
 | Status | 14B merged; 14C1 in progress |
-| Base `main` SHA | `a4139cefefb69706e70c1b4e6a637d6280802c6d` |
-| Branch | `chatgpt/phase14c1-local-names-2026-08-31` |
-| PR | #1626 |
+| Base `main` SHA | `17e5668447e8779294c398791cab504114ea873c` |
+| Branch | `chatgpt/phase14c2-engine-state-2026-08-31` |
+| PR | #1627 |
 | Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
@@ -265,8 +265,27 @@ renderer, runtime action, engine, navigation, test, package, or Phase-14 authori
 
 ## 9. 14C2 atomic ENGINE graph
 
-Not started. Must branch from merged 14C1 main. Public/debug `State.ENGINE` migrates atomically with
-the state property; no compatibility alias is authorized.
+Started from merged 14C1 main `17e5668447e8779294c398791cab504114ea873c`.
+
+NC-P14-006 is the high-risk top-level mutable-state root rename:
+
+- `AppState.ENGINE` -> `AppState.engineState`;
+- all state-action wrapper unwrapping migrates to `engineState`;
+- every module/controller/editor/render/input consumer migrates atomically;
+- public/debug `window.APP.State.ENGINE` migrates to `window.APP.State.engineState`;
+- browser tests and startup smoke migrate with the public debug surface;
+- the ESLint mutation-boundary rule changes its AST target/message/fixtures to `state.engineState`;
+- no `ENGINE` compatibility alias is authorized because the facade is debug-only and no published
+  versioned compatibility owner was found during preparation.
+
+Before the source switch, PR #1627 installs `check:naming-cleanup-phase14c2-closeout` and its
+negative fixture. The guard scans modules/tests/scripts and `eslint.config.mjs` for the retired
+exact `ENGINE` token and pins the final `AppState` and debug-facade shapes. Its first CI run is
+used as the executable impact census; the implementation then switches the complete reported graph
+in one source commit.
+
+14D remains a separate merged-tree architecture/browser/residue audit after 14C2 merges.
+
 
 ## 10. 14D merged-tree closeout
 
