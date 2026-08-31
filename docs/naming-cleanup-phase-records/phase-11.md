@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 11 — application orientation versus level variant |
 | Current batch | 11A coverage/impact preparation |
-| Status | preparation in progress; 11B canonical rename has not started |
+| Status | 11A coverage/impact preparation complete in substance; final exact-head CI/browser rerun and merge pending |
 | Base `main` SHA | `21cde93a05b251a4682f4aa09f88703d3d9a4d67` |
 | Branch | `chatgpt/phase11a-coverage-preparation-2026-08-30` |
 | Rows | NC-P11-001 through NC-P11-005 |
@@ -114,3 +114,32 @@ NC-P11-005 applies only to current runtime explanatory prose that calls the eigh
 11B must branch from merged post-11A `main`, rerun the old/canonical term census, and perform
 NC-P11-001 through NC-P11-004 atomically across state/action/geometry/level-utils/engine/render/input/UI.
 NC-P11-005 follows in current runtime prose. 11C remains a separate merged-tree closeout.
+
+## 7. Executed 11A evidence
+
+PR #1610 established the first maintained GitHub browser gate for this boundary. The first workflow
+attempt failed before tests because the new workflow incorrectly referenced a nonexistent `.nvmrc`;
+that harness defect was corrected to the repository's existing Node 20 convention rather than
+weakening or bypassing browser execution. Repository documentation discovery also correctly rejected
+the initially unregistered workflow, and `.github/workflows/README.md` was updated.
+
+On behavior-bearing head `db3970c4c54b7853db20da885d42023b27071025`:
+
+- ordinary CI run #3410 / `33360366828`: **success** across checks, lint, Node tests, build, deep proofs,
+  and deep verification;
+- Phase 11 orientation browser gate run #3 / `33360366839`: **success** after installing Chromium and
+  executing `tests/orientation.spec.mjs` plus `tests/editor.spec.mjs` against the production Vite build.
+
+This closes the preparation gap recorded in `naming-cleanup-future-phase-preparation.md`: the focused
+browser flow has now actually executed in a real maintained environment. This evidence-only record
+update moves the PR head once more, so both workflows must rerun green on the final PR head before
+merge. No runtime rename may be added while doing so.
+
+## 8. 11B handoff
+
+After #1610 merges green, 11A is complete. Phase 11 rows remain pending because preparation gates are
+rowless and do not pretend the canonical migration has happened. The 11B implementation branch must
+start from the resulting current `main`, set the Phase-11 execution lock at that point, rerun the
+runtime-versus-retained variant census, and then migrate NC-P11-001 through NC-P11-004 atomically.
+NC-P11-005 changes current runtime prose only. The dedicated browser gate is intentionally retained so
+the 11B switch cannot pass merely because TypeScript and unit tests accept a half-migrated graph.
