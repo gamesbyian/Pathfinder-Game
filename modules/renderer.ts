@@ -37,7 +37,7 @@ export function createRenderer({ state, ui }: any) {
     }
 
     // drawPath and drawScorchMark are kept on the public API for external callers.
-    function publicDrawPath(pathArr: any, isJumpSet: any, strokeStyle: any, width: any, isCaution: any = false) {
+    function drawPathWithCurrentOrientation(pathArr: any, isJumpSet: any, strokeStyle: any, width: any, isCaution: any = false) {
         const eng = state.ENGINE;
         const l   = activeLevel(eng);
         if (!l) return;
@@ -51,7 +51,7 @@ export function createRenderer({ state, ui }: any) {
     return {
         render,
         getScreenPos,
-        drawPath:      publicDrawPath,
+        drawPath:      drawPathWithCurrentOrientation,
         drawScorchMark,
         getCanvas:     () => cvs,
         getContext:    () => ctx,
