@@ -26,7 +26,7 @@ import {
     setMuted as setMutedState,
     setNavigationLastFlipTime,
     setOptionValue,
-    setRuntimePendingAction as setRuntimePendingActionState,
+    setRuntimePendingConfirmationAction as setRuntimePendingConfirmationActionState,
     setOrientation as setOrientationState,
     toggleMuted as toggleMutedState,
 } from './state-actions.js';
@@ -283,9 +283,9 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
 
     function setMuted(muted: any)  { setMutedState(state, muted); }
     function toggleMute()     { toggleMutedState(state); }
-    function setPendingAction(fn: any)   { setRuntimePendingActionState(state, fn); }
+    function setPendingConfirmationAction(fn: any)   { setRuntimePendingConfirmationActionState(state, fn); }
     function clearPendingAction()   { clearRuntimePendingActionState(state); }
-    function executePendingAction() { if (state.ENGINE.runtime.pendingAction) state.ENGINE.runtime.pendingAction(); }
+    function executePendingConfirmationAction() { if (state.ENGINE.runtime.pendingConfirmationAction) state.ENGINE.runtime.pendingConfirmationAction(); }
     function setOption(key: any, value: any)  { setOptionValue(state, key, value); }
 
     const api = {
@@ -338,9 +338,9 @@ export function createEngine({ state, ui, renderer, themes, data, persistence, e
         removeAndAdvance,
         initReviewMode,
         isRunning,
-        setPendingAction,
+        setPendingConfirmationAction,
         clearPendingAction,
-        executePendingAction,
+        executePendingConfirmationAction,
         setOption,
         findTapRoute,
         refreshLevelRatingPane,
