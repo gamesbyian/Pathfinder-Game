@@ -3,13 +3,10 @@
   "description": "Phase-13 pre-migration ownership baseline. Every non-frozen current hit must be explicitly classified; update only after reviewing its dataflow.",
   "rawWireBoundary": [
     "modules/domain/hint-acceptance-pipeline.test.ts",
-    "modules/domain/level-codec-roundtrip.test.ts",
     "modules/domain/level-codec.test.ts",
-    "modules/domain/level-codec.ts",
     "modules/domain/level-fingerprint.test.ts",
     "modules/domain/level-fingerprint.ts",
     "modules/domain/level-schema.test.ts",
-    "modules/domain/level-schema.ts",
     "modules/domain/level-validation.test.ts",
     "modules/domain/path-validator.test.ts",
     "modules/domain/portal-utils.test.ts",
@@ -170,6 +167,9 @@
   "ambiguousUnclassified": [],
   "mixedRawAndNormalized": [
     "modules/domain/domain.test.ts",
+    "modules/domain/level-codec-roundtrip.test.ts",
+    "modules/domain/level-codec.ts",
+    "modules/domain/level-schema.ts",
     "modules/solver/admissible-order-search.test.ts",
     "modules/solver/lower-bounds-test-support.test.ts",
     "modules/solver/lower-bounds.test.ts",
@@ -197,5 +197,5 @@
     "scripts/stress/nearest-solved-neighbor.mjs",
     "scripts/stress/repair-retreat-binary-search.mjs"
   ],
-  "notes": "Phase 13A ownership inventory, refined after a second inward audit of the inherited normalized list. rawWireBoundary files may legitimately retain permanent wire reqLen/reqInt, including tests whose only legacy spellings are raw fixtures/output assertions; normalizedRuntimeConsumer files must lose legacy spellings in 13B; mixedRawAndNormalized files contain both normalized accesses and separately retained raw/report spellings and must be split/reclassified during 13B; retainedNonNormalizedUse covers naming authorities and independent current report/analysis schemas that are not NormalizedLevel fields. docs/history and archive/report/log/data trees are frozen-history exclusions in the checker."
+  "notes": "Phase 13A ownership inventory, refined through three consumer-inward passes. rawWireBoundary files may legitimately retain permanent wire reqLen/reqInt, including tests whose only legacy spellings are raw fixtures/output assertions; normalizedRuntimeConsumer files must lose legacy spellings in 13B; mixedRawAndNormalized files contain both normalized accesses and separately retained raw/report spellings and must be split/reclassified during 13B. The mixed set deliberately includes the central codec/schema files, preventing their permanent raw ownership from masking stale normalized fields. retainedNonNormalizedUse covers naming authorities and independent current report/analysis schemas that are not NormalizedLevel fields. docs/history and archive/report/log/data trees are frozen-history exclusions in the checker."
 }
