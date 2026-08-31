@@ -826,7 +826,7 @@ Do not add new exports to `LevelUtils` during the cleanup.
 
 These are late-stage application cleanups because they touch broad surfaces but have low persisted-data risk.
 
-The word `core` is not banned globally. The problem with top-level `modules/core.ts` is its mixed-responsibility bag. Retain narrowly qualified `*-core.ts` modules when "core" has a documented architectural meaning, specifically the pure transition/input cores described by ADR 0006. Likewise, `state/actions/core-actions.ts` may retain its name while it specifically means actions on the top-level/core state slice. The permanent naming authority must record this distinction so future agents do not "clean up" intentional `*-core` architecture.
+The word `core` is not banned globally. Phase 14A removes the former top-level mixed-responsibility core facade rather than renaming every qualified use. Retain narrowly qualified `*-core.ts` modules when "core" has a documented architectural meaning, specifically the pure transition/input cores described by ADR 0006. Likewise, `state/actions/core-actions.ts` may retain its name while it specifically means actions on the top-level/core state slice. The permanent naming authority must record this distinction so future agents do not "clean up" intentional `*-core` architecture.
 
 ## 5. Research and tooling rename inventory
 
