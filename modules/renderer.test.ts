@@ -31,7 +31,6 @@ test('renderer path helper uses the same current transform as screen-position lo
             viewport: { cellW: 20, cellH: 30 },
         };
         const renderer = createRenderer({
-            core: { PLAY: 1 },
             state: { ENGINE: engineState },
             ui: {},
         });
