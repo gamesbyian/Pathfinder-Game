@@ -9,11 +9,11 @@ Pathfinder is a Vite-built static GitHub Pages browser game using native ES modu
 | Layer | Lives in | May depend on | Must not depend on |
 |---|---|---|---|
 | **Domain/services** | `modules/domain/`, `modules/solver/`, `modules/runtime/`, pure theme/editor helpers | domain | DOM, canvas, Firebase, Tone, browser globals, timers, network |
-| **Browser adapters** | `modules/render/`, `modules/persistence/`, `modules/ui/`, SOUND_BUS, loader shim | domain | controllers generally |
+| **Browser adapters** | `modules/render/`, `modules/persistence/`, `modules/ui/`, `modules/audio-service.ts`, loader shim | domain | controllers generally |
 | **Controllers/application** | `modules/engine*`, `modules/engine/`, `modules/input/`, `modules/editor.ts`, `modules/boot.ts` | domain + injected adapters | raw browser globals |
 | **Facade/debug** | `modules/app.ts` | everything, built last | — |
 
-ESLint enforces browser-free `domain/runtime/solver`, ENGINE mutation via state actions, and no raw HTML injection; solver workers are explicit browser-boundary exceptions. See [`testing.md`](testing.md).
+ESLint enforces browser-free `domain/runtime/solver`, `engineState` mutation via state actions, and no raw HTML injection; solver workers are explicit browser-boundary exceptions. See [`testing.md`](testing.md).
 
 ### Directory ownership
 
@@ -32,15 +32,15 @@ Use lowercase kebab-case for `modules/` filenames. A package entrypoint may shar
 
 `createApp()` builds acyclic stages without mutable forward declarations/post-init:
 
-- **Stage 1, pure services:** `core`, `state`, `solverApi`, `data`, `debug`, `createErrorReporter`; failure paths use injected `reportError(context, err, meta?)`, tests may use `defaultReportError`; `data` is a leaf.
-- **Stage 2, browser subsystems:** `ui`, `renderer`, `levelUtils`, `persistence`, `themes`; dependencies are one-way. `persistence` validates theme IDs through `data`, then `themes` consumes `persistence`.
+- **Stage 1, foundational services:** `state`, `audioService`, `solverApi`, `data`, `debug`, `createErrorReporter`; failure paths use injected `reportError(context, err, meta?)`, tests may use `defaultReportError`; stable application constants are imported directly from `app-constants.ts`, and `data` is a leaf.
+- **Stage 2, browser subsystems:** `ui`, `renderer`, `persistence`, `themes`; dependencies are one-way. Level normalization lives at `level-data.ts`, input coordinate conversion at `input/grid-coordinates.ts`, and editor coordinate transforms at `editor/level-coordinate-transforms.ts` rather than behind a shared LevelUtils facade. `persistence` validates theme IDs through `data`, then `themes` consumes `persistence`.
 - **Stage 3, controllers:** `editor`, `engine`, `input`, `loader`, `boot`; editor reaches engine lazily through `getEngineRuntime: () => createEditorEnginePort(engine)` to avoid a construction cycle.
 
 `bootstrapApp()` installs SVG sprites/palette/modal icons, builds the app, then exposes diagnostics.
 
 ## State
 
-`state-slices.ts` owns mutable `ENGINE`: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state. All mutations use `state-actions.ts` / `state/actions/*.ts`; the ESLint state-boundary rules run through `npm run check:lint` and reject direct writes in engine/input/ui consumers.
+`state-slices.ts` defines the mutable `EngineState` stored at `AppState.engineState`: `nav`, `hazards`, `solver`, `hinter`, `viewport`, `review`, `ui`, `runtime`, `gamepad`, `flags`, `editor`, `levelRating`, plus top-level state. All mutations use `state-actions.ts` / `state/actions/*.ts`; the ESLint state-boundary rules run through `npm run check:lint` and reject direct writes in engine/input/ui consumers.
 
 ## Runtime commands/effects
 
@@ -74,7 +74,7 @@ Correctness-sensitive flows use pure tested cores (`computeStep`, `PathNavigator
 ## Where new code goes
 
 - puzzle/solver rule or pure transform -> `modules/domain/` or `modules/solver/`;
-- ENGINE field -> state slice + state-action helper;
+- `engineState` field -> state slice + state-action helper;
 - control/flow -> `modules/input/` or `engine/` subcontroller with narrow injected dependencies;
 - browser side effect -> `ui/`, `render/`, `persistence/`, or runtime effect runner;
 - modal/UI primitive -> follow `ui-accessibility.md`; construct DOM nodes, never raw `innerHTML`.
