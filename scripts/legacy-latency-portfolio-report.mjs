@@ -264,8 +264,8 @@ for (const [i, levelNumber] of targets.entries()) {
             // Attempt whitelist and silently lagged every newly-added outcome/dispatch field.
             passAttemptsAlreadyTried: portfolioAttempts.map(attemptRecord),
             featureSummary: {
-                reqLen: level.reqLen,
-                reqInt: level.reqInt,
+                reqLen: level.requiredLength,
+                reqInt: level.requiredIntersections,
                 gates: level.gateKeys?.length ?? 0,
                 mustPass: level.mustPassKeys?.length ?? 0,
                 mustCross: level.mustCrossKeys?.length ?? 0,
