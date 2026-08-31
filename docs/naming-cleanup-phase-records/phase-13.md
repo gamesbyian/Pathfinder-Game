@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
 | Current batch | 13C merged-tree closeout |
-| Status | 13C closeout in progress |
+| Status | 13C validated; merge pending |
 | Base `main` SHA | `9435d6152bbe42a8433c338bba6a52a7f111e31b` |
 | Branch | `chatgpt/phase13c-merged-tree-closeout-2026-08-31` |
 | PR | #1622 |
@@ -322,7 +322,27 @@ The repository-wide closeout scan excludes its own negative-fixture source from 
 the exported detector is still directly exercised by that fixture suite. This prevents deliberately
 bad example strings from becoming false repository residue while keeping the negative tests live.
 
-Fresh exact-head CI and Chromium validation are required after these repairs.
+Fresh repaired behavior/evidence head `074dbaa2309a896aa57582d78dac09bfe0bd4919` passed:
+
+- ordinary CI `33426601483`: checks, Node tests, build, lint, deep proofs and deep
+  verification/coverage all succeeded;
+- Chromium gate `33426601499`: success;
+- `check:level-metric-boundaries`: 86 raw/wire, 22 retained non-normalized, 0 normalized,
+  0 mixed, 0 ambiguous, plus 139 frozen/history surfaces;
+- `check:naming-cleanup-phase13-closeout`: 610 module/script surfaces scanned, zero normalized
+  legacy metric access, raw wire compatibility centralized;
+- source and test TypeScript checks, documentation links, corpus format/provenance, prior-phase
+  residue guards and all other validators passed.
+
+NC-P13-001 through NC-P13-004 now have `closeoutAudit: done` and row status `done`.
+`lastCompletedPhase` intentionally remains 12 until PR #1622 merges and the immutable merge/run
+facts can be written into structured Phase-13 closure evidence.
+
+### 9.3 Row-closure evidence checkpoint
+
+The row-closure bookkeeping changes only the ledger/Phase-13 evidence state. Because it changes the
+PR head after the validated behavior checkpoint, it requires its own exact-head ordinary CI and
+Chromium gate before PR #1622 may merge.
 
 ## 10. Final closure
 
