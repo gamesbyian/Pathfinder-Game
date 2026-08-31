@@ -14,7 +14,6 @@ const playableButSchemaDiagnosticLevel = {
 test('normalizeLevel reports schema diagnostics but still returns a parseable level', () => {
   const reported: any[] = [];
   const levelUtils = createLevelUtils({
-    core: {},
     data: { getLevels: () => [playableButSchemaDiagnosticLevel] },
     getState: () => ({ viewport: {} }),
     getRenderer: () => ({ getCanvas: () => ({ getBoundingClientRect: () => ({ left: 0, top: 0, width: 1, height: 1 }), width: 1, height: 1 }) }),
@@ -49,7 +48,6 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
     viewport: { cellW: cellSize, cellH: cellSize, swapped: false },
   } as any;
   const levelUtils = createLevelUtils({
-    core: { PLAY: 1 },
     data: { getLevels: () => [] },
     getState: () => engineState,
     getRenderer: () => ({ getCanvas: () => canvas }),
