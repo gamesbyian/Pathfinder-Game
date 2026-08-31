@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
-| Current batch | 13B atomic normalized migration |
-| Status | 13B validated; merge pending |
-| Base `main` SHA | `1eb8d80c75e6ae5d02f90df5d8c9daee21b19dd9` |
-| Branch | `chatgpt/phase13b-normalized-metrics-2026-08-31` |
-| PR | #1621 |
+| Current batch | 13C merged-tree closeout |
+| Status | 13C validated; merge pending |
+| Base `main` SHA | `9435d6152bbe42a8433c338bba6a52a7f111e31b` |
+| Branch | `chatgpt/phase13c-merged-tree-closeout-2026-08-31` |
+| PR | #1622 |
 | Selected ledger row IDs | NC-P13-001 through NC-P13-004 |
 | Reconciliation mode | full level-metric ownership census, because Phase 13 is high-risk and broad |
 | Highest risk | high |
@@ -249,7 +249,100 @@ Entry gate for 13B was:
 
 ## 9. 13C merged-tree closeout
 
-Not started. Must begin from merged 13B main.
+Started from current merged `main` `9435d6152bbe42a8433c338bba6a52a7f111e31b`.
+
+The Phase-13B implementation merged as `e3eccc93fa1aa893b412cfe21400a3c4fec38073`.
+Before claiming 13C, current main was reconciled against that implementation merge. Main was one
+commit ahead and zero behind. The intervening commit changed only `data/hints/**`,
+`logs/solver-workflow/**`, and `reports/stress/hint-cost-drift-published.json`; it did not change
+the level schema, codec, solver normalization, metric ownership manifest, checker, or any maintained
+Phase-13 implementation consumer. 13C therefore starts from current main rather than reconstructing
+the older merge tree.
+
+### 9.1 Closeout hardening
+
+13B's first coverage run exposed a weakness in the file-level ownership model:
+`modules/solver/topology.test.ts` legitimately contained raw fixtures and had therefore been
+classified as raw/wire, but its independent reference BFS later accessed normalized
+`level.reqLen`/`level.reqInt`. A file-level allowlist alone could not distinguish those two
+contexts.
+
+13C adds `scripts/naming-cleanup-phase13-closeout.mjs` as a permanent consumer-inward guard. It:
+
+- requires the post-migration boundary manifest to stay marked `normalizedMigrationComplete`;
+- requires `normalizedRuntimeConsumer`, `mixedRawAndNormalized`, and
+  `ambiguousUnclassified` to stay empty;
+- identifies objects produced by normalization/parser/clone factories and rejects legacy metric
+  reads on those identifiers;
+- identifies parameters/variables explicitly typed `NormalizedLevel` or `EngineLevel` and
+  rejects legacy metric reads;
+- rejects `level.reqLen` / `level.reqInt` and equivalent common normalized aliases anywhere in
+  `modules/**`, while still allowing deliberate `raw.*`, `wire.*`, `levelData.*`, and
+  independent report/reference shapes;
+- rejects legacy metric keys in explicitly typed normalized level literals and type-index access;
+- pins `RawLevel.reqLen`/`reqInt`, `EngineLevel.requiredLength`/
+  `requiredIntersections`, codec raw-to-runtime and runtime-to-wire projections, and the absence
+  of a second raw metric reader in `solver/normalization.ts`.
+
+Its negative-fixture test proves raw/wire/report property reads remain accepted while the exact
+topology-style masked normalized read is rejected. The guard is enrolled permanently in
+`check:validators`; its fixtures are enrolled in `test:node`.
+
+The boundary manifest prose was updated from a pre-migration description to the post-13B permanent
+ratchet, and stale current-state prose in `naming-cleanup-process-hardening.md` now records that
+the runtime migration is implemented rather than still pending.
+
+### 9.2 Closeout validation
+
+The first closeout head ran as CI `33426272434` with Chromium gate `33426272233`. Chromium,
+build, lint, Node tests, deep proofs, and full coverage/deep verification all passed. The validator
+lane failed for two categories:
+
+1. expected closeout-tool ownership bookkeeping: the new guard and its negative-fixture file contain
+   legacy spellings as migration/checker evidence and had not yet been added to the retained
+   non-normalized ownership set;
+2. **two real masked normalized accesses** that earlier file-level audits had missed:
+   - `scripts/legacy-latency-portfolio-report.mjs` calls
+     `Solver.prepareLevelForSolver(raw, { source: 'raw' })`, then wrote report fields from
+     `level.reqLen` and `level.reqInt`;
+   - `scripts/stress/analyze-current-missing-attempt-exposure.mjs` does the same before writing
+     its retained `features.reqLen`/`features.reqInt` report schema.
+
+In both files, only the normalized **value-side** access was migrated:
+`level.requiredLength` / `level.requiredIntersections`. The existing report keys remain
+`reqLen` / `reqInt`, because those are independent current report schemas rather than
+`NormalizedLevel` properties.
+
+The ownership manifest was corrected accordingly: both files moved from `rawWireBoundary` to
+`retainedNonNormalizedUse`, and the closeout guard/test are retained checker authorities. The
+post-fix inventory is **86 raw/wire**, **22 retained non-normalized**, **0 normalized**, **0 mixed**,
+and **0 ambiguous**.
+
+The repository-wide closeout scan excludes its own negative-fixture source from self-enforcement;
+the exported detector is still directly exercised by that fixture suite. This prevents deliberately
+bad example strings from becoming false repository residue while keeping the negative tests live.
+
+Fresh repaired behavior/evidence head `074dbaa2309a896aa57582d78dac09bfe0bd4919` passed:
+
+- ordinary CI `33426601483`: checks, Node tests, build, lint, deep proofs and deep
+  verification/coverage all succeeded;
+- Chromium gate `33426601499`: success;
+- `check:level-metric-boundaries`: 86 raw/wire, 22 retained non-normalized, 0 normalized,
+  0 mixed, 0 ambiguous, plus 139 frozen/history surfaces;
+- `check:naming-cleanup-phase13-closeout`: 610 module/script surfaces scanned, zero normalized
+  legacy metric access, raw wire compatibility centralized;
+- source and test TypeScript checks, documentation links, corpus format/provenance, prior-phase
+  residue guards and all other validators passed.
+
+NC-P13-001 through NC-P13-004 now have `closeoutAudit: done` and row status `done`.
+`lastCompletedPhase` intentionally remains 12 until PR #1622 merges and the immutable merge/run
+facts can be written into structured Phase-13 closure evidence.
+
+### 9.3 Row-closure evidence checkpoint
+
+The row-closure bookkeeping changes only the ledger/Phase-13 evidence state. Because it changes the
+PR head after the validated behavior checkpoint, it requires its own exact-head ordinary CI and
+Chromium gate before PR #1622 may merge.
 
 ## 10. Final closure
 
