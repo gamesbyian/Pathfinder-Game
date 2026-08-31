@@ -9,7 +9,7 @@
 | Status | 14B merged; 14C1 in progress |
 | Base `main` SHA | `a4139cefefb69706e70c1b4e6a637d6280802c6d` |
 | Branch | `chatgpt/phase14c1-local-names-2026-08-31` |
-| PR | pending |
+| PR | #1626 |
 | Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
@@ -216,6 +216,12 @@ Authorized scope is deliberately small:
 
 NC-P14-006 (`ENGINE` -> `engineState`) is high risk and explicitly excluded from this branch.
 14C2 may start only after 14C1 merges.
+
+After branch creation, `main` advanced once to
+`96595c01d8bbc4b15359680c7d5c58701b99e4b6`. The delta from the recorded 14C1 base contains only
+published hint refreshes, solver-workflow logs, and the hint-cost-drift report. No state slice,
+renderer, runtime action, engine, navigation, test, package, or Phase-14 authority changed, so the
+14C1 impact map is unchanged.
 
 ## 9. 14C2 atomic ENGINE graph
 
