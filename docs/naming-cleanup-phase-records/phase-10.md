@@ -28,6 +28,8 @@ The exception does not close the phase. Exact-head CI is complete; a separate me
 
 The live graph still matches the ledger. `closeLengthGap`, the `prune-gauntlet.ts` module, the repair additive-budget constant, the `SolveOpts` override, and the resolved multiplier all remained current. The canonical stage-policy value `additive-wall-multiplier` was already occupied by the same concept; no runtime legacy value or historical reader that parses it was found, so NC-P10-008 is verification-only and the old definition was not recreated.
 
+The Section 4.9 time-unit rule was also reconciled rather than silently ignored: its concrete `timeLimit` -> `timeLimitMs` migration is ledger row NC-P07-012 and was already completed in Phase 7. The Phase-10 ledger contains no additional unsuffixed time-valued option/field migration, so this batch does not recreate or duplicate that earlier rename.
+
 Intended deltas are names only. Solver eligibility, attempt order, random seeds, pruning decisions, wall/work allocation formulae, result ordering, errors, and persisted meanings remain invariant. Frozen dated reports, archived snapshots, logs, and historical result schemas were not rewritten.
 
 ## 2. Consumer-inward impact map
