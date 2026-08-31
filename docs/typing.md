@@ -16,7 +16,7 @@ All first-class source under `modules/` is TypeScript and strict-checked, except
 |---|---|
 | `domain/`, `runtime/`, `solver/` | Real domain/search types; avoid `any`. |
 | State core | `EngineState` plus typed slice interfaces; state actions are typed end to end. |
-| Domain-bearing ports | `modules/ports.ts` types `DataService`, `SolverApi`, and domain-object results; former LevelUtils responsibilities now use their owning domain/input/editor modules directly. |
+| Domain-bearing ports | `modules/ports.ts` types `DataService`, `SolverApi`, and domain-object results; former utility-facade responsibilities now use their owning domain/input/editor modules directly. |
 | UI/render/input/controllers/persistence integration | Typed state/domain values, but dynamic DOM handles, subsystem dependencies, third-party SDK objects, and other adapter glue may use `any`. |
 | Worker boundary | `modules/solver/worker.js` remains intentionally outside the normal `.ts` surface. |
 
