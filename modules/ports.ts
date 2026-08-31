@@ -69,9 +69,9 @@ export interface LevelUtils {
     UNPACK(k: PackedKey): { x: number; y: number };
     inBounds(x: number, y: number, w: number, h: number): boolean;
     expCoords(keys: Iterable<number>): { x: number; y: number }[];
-    transformPoint(x: number, y: number, variant: any, w: number, h: number): { tx: number; ty: number };
-    inverseTransformPoint(tx: number, ty: number, variant: any, w: number, h: number): { x: number; y: number };
-    transformAxis(axis: any, variant: any): any;
+    transformPoint(x: number, y: number, orientation: any, w: number, h: number): { tx: number; ty: number };
+    inverseTransformPoint(tx: number, ty: number, orientation: any, w: number, h: number): { x: number; y: number };
+    transformAxis(axis: any, orientation: any): any;
     getGridCoord(e: { clientX: number; clientY: number }): { x: number; y: number };
     canonicalCloneLevel(src: any, options?: { includeHints?: boolean }): EngineLevel;
     deepCloneLevel(src: any): EngineLevel;
