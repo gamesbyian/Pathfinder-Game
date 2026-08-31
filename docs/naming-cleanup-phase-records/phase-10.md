@@ -15,6 +15,15 @@
 
 The required preflight reported Phase 9 complete, Phase 10 next, and `activeExecution` idle. PR #1607 now carries this implementation branch. The first exact-head CI run exposed two sparse-checkout assumptions in the newly added completion evidence: the ledger checker used working-tree existence for registered current artifacts, and the Phase-10 negative fixture copied those artifacts directly from an intentionally sparse worktree. Both checks now use the repository/Git-object view already established for current-artifact scanning, so tracked live artifacts remain verifiable without forcing historical log trees into every CI checkout.
 
+## 0.1 Combined-batch exception
+
+The plan normally serializes live Phase-10 work as 10A then 10B with a merge barrier. This branch had already implemented both families together before PR review, so PR #1607 records the explicit one-time execution exception now documented in the plan rather than inventing two nonexistent merge barriers. The evidence remains separated by family:
+
+- **10A repair/prune:** NC-P10-001 through NC-P10-004; completion-helper symbol/test seam, hard-prune module/import graph, current prose, and bound/reconstruction/pruning-order parity.
+- **10B budget/time:** NC-P10-005 through NC-P10-008; multiplier constant, SolveOpts/local/worker/race transport, retained CLI/report-schema boundaries, and the already-canonical stage-policy historical-reader audit.
+
+The exception does not close the phase. Exact-head CI and a separate merged-tree consumer-inward closeout remain mandatory before Phase 10 can advance.
+
 ## 1. Latest-main reconciliation and change envelope
 
 The live graph still matches the ledger. `closeLengthGap`, the `prune-gauntlet.ts` module, the repair additive-budget constant, the `SolveOpts` override, and the resolved multiplier all remained current. The canonical stage-policy value `additive-wall-multiplier` was already occupied by the same concept; no runtime legacy value or historical reader that parses it was found, so NC-P10-008 is verification-only and the old definition was not recreated.
