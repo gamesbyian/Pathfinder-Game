@@ -1,5 +1,5 @@
-import { computeStep } from '../runtime/step-processor.js';
-import { ActionType } from '../runtime/actions.js';
+import { computeStep, type StepEvent } from '../runtime/step-processor.js';
+import { GameEventType } from '../runtime/actions.js';
 import { runEffects } from '../runtime/effect-runner.js';
 import { MoveContext } from '../domain/move-context.js';
 import { areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
@@ -81,9 +81,9 @@ export function createStepDispatcher({
         showFalseGoalDetonation: (fx: any)   => onFalseGoalDetonation(fx.key),
     };
 
-    function dispatchStepEvent(event: any) {
-        if (event.type === ActionType.LOGIC_STATE_CHANGE) { setLogicState(event.value); return; }
-        if (event.type === ActionType.WIN)                { onWin(); return; }
+    function dispatchStepEvent(event: StepEvent) {
+        if (event.type === GameEventType.LOGIC_STATE_CHANGE) { setLogicState(event.value); return; }
+        if (event.type === GameEventType.WIN)                { onWin(); return; }
         runEffects([event], stepEffectAdapters);
     }
 
