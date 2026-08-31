@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | post-14D forensic audit repair |
-| Status | #1628 merged; post-closeout repair PR #1629 pending exact-head green/merge; final immutable closure evidence follows repaired main |
-| Base `main` SHA | `8022c79aa2241be9ed6c8f9aac9380f4896a0cd9` (merge of #1628) |
-| Branch | `chatgpt/phases8-14-audit-repairs-2026-08-31` |
-| PR | #1629 (post-closeout repair); #1628 is the superseded insufficient closeout |
+| Current batch | final immutable closure evidence |
+| Status | post-closeout repair #1629 merged green; structured Phase-14 closure recorded; `lastCompletedPhase` advances to 14 in this evidence PR |
+| Base `main` SHA | `4d31805cd6e1280a39ae3befefa5ed354b3d099b` (merge of audit repair #1629) |
+| Branch | `chatgpt/phase14-final-evidence-after-audit-repair-2026-08-31` |
+| PR | #1630 final evidence; #1629 is the effective repaired merged-tree closeout; #1628 is superseded |
 | Selected ledger row IDs | rowless repair; NC-P14-001–010 re-audited, with current-doc coverage added to the phase-wide guard |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
@@ -422,3 +422,21 @@ extends the permanent Phase-14 closeout guard with negative fixtures for those e
 Because this is a real closeout defect discovered after #1628, Phase 14 remains incomplete and
 `lastCompletedPhase` remains 13 until the repair merges green and immutable final closure evidence
 is recorded from the repaired merged tree.
+
+
+## 13. Final immutable closure after audit repair
+
+The post-closeout repair PR #1629 passed exact-head ordinary CI run `33443261826` and the
+Phase-11 orientation/Chromium gate `33443261860` on final head
+`6ec2cd8dd838a6091c51f533d97e4f3fc5f00003`, then merged as
+`4d31805cd6e1280a39ae3befefa5ed354b3d099b`.
+
+That repaired merged tree includes the missing current architecture/typing migration, exact-target
+Phase-8 hardening, the Phase-9 closure-evidence backfill, and the Phase-13 real-corpus CI coverage
+hardening. The permanent Phase-14 closeout guard now rejects the stale current-doc concepts that
+#1628 failed to detect.
+
+Structured `phaseClosures["14"]` therefore uses #1629 as the effective merged-tree closeout and
+records #1628 only as the superseded attempted closeout. All Phase-14 rows remain complete,
+`activeExecution` is idle, and `lastCompletedPhase` advances from 13 to 14 only in this
+post-merge evidence step.

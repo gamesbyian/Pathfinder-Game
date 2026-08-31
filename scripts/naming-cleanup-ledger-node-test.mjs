@@ -160,10 +160,18 @@ try {
     const ledger = clone(source);
     const nextIncompletePhase = Number(source.lastCompletedPhase) + 1;
     const skippedPhase = nextIncompletePhase + 1;
-    const row = ledger.entries.find(entry => entry.phase === skippedPhase);
-    if (!row) throw new Error(`skip-phase fixture needs a row after Phase ${nextIncompletePhase}`);
-    row.status = 'in-progress';
-    row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-08.md';
+    const template = ledger.entries.find(entry => entry.phase === nextIncompletePhase)
+      ?? ledger.entries.find(entry => entry.phase >= 8);
+    if (!template) throw new Error('skip-phase fixture needs at least one Phase-8+ ledger row');
+    const row = {
+      ...clone(template),
+      id: `NC-TEST-P${skippedPhase}-SKIP`,
+      phase: skippedPhase,
+      batch: null,
+      status: 'in-progress',
+      verificationRecord: 'docs/naming-cleanup-phase-records/phase-08.md',
+    };
+    ledger.entries.push(row);
     ledger.activeExecution = {
       status: 'active',
       phase: skippedPhase,
