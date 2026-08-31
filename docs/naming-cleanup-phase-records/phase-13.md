@@ -121,12 +121,15 @@ supposed to preserve.
 
 The refined 13A inventory is therefore:
 
-- **82 raw/wire files**, including raw codec/fingerprint owners, raw-corpus tooling, and tests whose
+- **79 raw/wire files**, including raw codec/fingerprint owners, raw-corpus tooling, and tests whose
   legacy spellings are deliberately raw fixture/output keys;
 - **80 genuinely normalized/current consumers** that must lose legacy spellings in 13B;
-- **10 explicitly mixed files** that contain both a normalized access and a separately retained
+- **13 explicitly mixed files** that contain both a normalized access and a separately retained
   raw/report spelling and therefore require selective migration/reclassification:
   - `modules/domain/domain.test.ts`
+  - `modules/domain/level-codec-roundtrip.test.ts`
+  - `modules/domain/level-codec.ts`
+  - `modules/domain/level-schema.ts`
   - `modules/solver/admissible-order-search.test.ts`
   - `modules/solver/lower-bounds-test-support.test.ts`
   - `modules/solver/lower-bounds.test.ts`
@@ -164,7 +167,7 @@ Final preparation head `2cfc3a985735e1ec3fd1de9b816d7c78dc3f6e74` passed:
 
 - ordinary CI run `33369137153`: checks, Node tests, build, lint, deep proofs and deep verification;
 - Chromium orientation safety gate `33369137139`: success;
-- `check:level-metric-boundaries`: 82 raw/wire, 80 normalized, 10 mixed, 15 retained,
+- `check:level-metric-boundaries`: 79 raw/wire, 80 normalized, 13 mixed, 15 retained,
   **0 ambiguous/unclassified**;
 - TypeScript source and test type checks;
 - documentation links, ledger contract, corpus/data validators and all prior-phase residue guards.
@@ -193,3 +196,19 @@ Not started. Must begin from merged 13B main.
 
 Phase 13 remains incomplete until 13C is merged, structured closure evidence is backfilled, and
 `lastCompletedPhase` advances to 13.
+
+
+### 7.1 Third-pass boundary correction
+
+While preparing the 13B edit plan, the raw allowlist itself was challenged. Three central files were
+found to be intentionally mixed rather than raw-only:
+
+- `modules/domain/level-codec.ts`: raw reads/writes plus normalized EngineLevel projection/clone;
+- `modules/domain/level-schema.ts`: RawLevel and EngineLevel declarations in one module;
+- `modules/domain/level-codec-roundtrip.test.ts`: raw fixtures/wire assertions plus normalized
+  parsed/clone assertions.
+
+They were moved from `rawWireBoundary` to `mixedRawAndNormalized`. This is important because
+otherwise their legitimate permanent raw spellings would exempt stale normalized spellings in the
+same files after 13B. The final 13A ownership target is therefore 79 raw, 80 normalized, 13 mixed,
+15 retained, and zero ambiguous.
