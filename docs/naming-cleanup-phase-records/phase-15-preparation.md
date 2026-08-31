@@ -1,8 +1,8 @@
 # Phase 15 preparation: compatibility boundaries and solver-research handoff
 
-> **Status:** preparation/audit only. No Phase-15 canonical rename is implemented by this document.
+> **Status:** preparation/audit accepted via PR #1634. No Phase-15 canonical rename is implemented by this document.
 >
-> **Audit base:** current `main` after Phase 14 closure.
+> **Audit base:** `bae742f3b2e5affc98328fa1e622b6f7698f399d` (main after the Phase-14 current-authority repair and Phase-8 diagnostics-accounting repair).
 >
 > **Rows:** NC-P15-001 through NC-P15-007.
 
@@ -91,3 +91,23 @@ A compatibility row with no real current/historical reader must be amended hones
 ## 4. Change envelope
 
 This preparation may add documentation, fixtures, and checks required to make Phase-15/handoff verification executable. It must not rename the seven deferred Phase-15 boundaries, change solver policy, alter artifact schemas, modify Firestore identity, change CP-SAT eligibility, or rewrite historical evidence.
+
+
+## 5. Preparation acceptance evidence
+
+The preparation/handoff was rebuilt from repaired `main` after PRs #1632 and #1633 rather than
+reusing its earlier stale-base run. PR #1634 then passed on exact final head
+`8cdfc84e20da0bc4ef2088d1d1d394df55df4a09`:
+
+- ordinary CI run `33446982983`: all six lanes successful;
+- Phase-11 orientation/Chromium gate `33446982929`: successful;
+- merge commit `9fb2818566b6645d1b46135c63c5f5f545691489`.
+
+The first version of the handoff had intentionally embedded several retired spellings and CI
+correctly rejected those new current-document/test occurrences under the Phase-8/9/13 residue
+guards. The accepted version keeps the operational bridge lexically canonical where possible and
+leaves exact historical spellings to the naming authorities/normalizers that own migration
+history. The resumption smoke itself passed in both the rejected and accepted iterations.
+
+Phase 15 remains entirely pending. This record is preparation authority, not an implementation
+claim.
