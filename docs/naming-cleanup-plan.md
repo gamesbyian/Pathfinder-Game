@@ -1329,6 +1329,8 @@ Use two serial batches if both families remain live at Phase-10 entry:
 - **10A repair/prune terminology:** `closeLengthGap` rename plus hard-prune pipeline rename, with bound/reconstruction/pruning-order parity;
 - **10B budget/time vocabulary:** budget multiplier/time-unit names. The `StageBudgetPolicyId` spelling `additive-wall-multiplier` is already canonical on current main, so do not recreate that definition rename; audit only its historical-reader compatibility while migrating the still-live repair budget option/local names.
 
+**Phase-10 execution amendment (PR #1607, 2026-08-30):** both 10A and 10B remained live, but the implementation was already carried together on one Phase-10 branch before review. Do not fabricate a serial history after the fact. PR #1607 is a one-time exception to the normal 10A -> merge -> 10B sequence only if its checked-in phase record keeps the two impact/validation families distinguishable, exact-head CI passes, no solver/resource-policy behavior changes are introduced, and Phase 10 still receives a separate merged-tree consumer-inward closeout before `lastCompletedPhase` advances. This exception does not relax the serial-batch rule for later phases.
+
 Do not combine a newly discovered resource-policy correction with the naming batch. Coordinate with the active budget-model workstream so a symbol already removed by budget rationalization is marked superseded rather than recreated.
 
 ### Phase 11 milestone: Orientation vs variant
