@@ -23,7 +23,7 @@ export function applyEditorCoordTransform(
         return PACK(tp.x, tp.y);
     };
     applyCoordMapToLevel(l, coordMap, newW, newH, axisMap, reflect);
-    const eng = state.ENGINE;
+    const eng = state.engineState;
     if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
     engine.navigation.remapNavKeys(mapKey);
     engine.hints.clearHintPaths();
@@ -43,7 +43,7 @@ export function createEditorToolbarController({ state, ui, engine, editor, solve
     }
 
     function changeGridSize(delta: any) {
-        const eng = state.ENGINE;
+        const eng = state.engineState;
         if (eng.overlayState !== OVERLAY_NONE || !eng.editor.workingLevel) return;
         const l = eng.editor.workingLevel;
         // Feasibility + shift planning is pure (editor-toolbar-core); the controller applies it.
@@ -78,19 +78,19 @@ export function createEditorToolbarController({ state, ui, engine, editor, solve
 
     (document.getElementById('gridRotateBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
-        const l = state.ENGINE.editor.workingLevel;
+        if (state.engineState.overlayState !== OVERLAY_NONE || !state.engineState.editor.workingLevel) return;
+        const l = state.engineState.editor.workingLevel;
         applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a: any) => a === H ? V : H);
         ui.showMessage('Rotated', 'info');
     };
 
     (document.getElementById('gridMirrorBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
-        const l = state.ENGINE.editor.workingLevel;
+        if (state.engineState.overlayState !== OVERLAY_NONE || !state.engineState.editor.workingLevel) return;
+        const l = state.engineState.editor.workingLevel;
         toggleEditorMirrorHorizontal(state);
-        ui.setInlineStyle('mirrorIconSvg', 'transform', state.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)');
-        if (state.ENGINE.editor.mirrorHorizontal) {
+        ui.setInlineStyle('mirrorIconSvg', 'transform', state.engineState.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)');
+        if (state.engineState.editor.mirrorHorizontal) {
             applyCoordTransform(l, (x: any, y: any) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, (a: any) => a, true);
         } else {
             applyCoordTransform(l, (x: any, y: any) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a: any) => a, true);
@@ -112,9 +112,9 @@ export function createEditorToolbarController({ state, ui, engine, editor, solve
     let eraserFired = false;
 
     eraserBtn.addEventListener('pointerdown', () => {
-        if (state.ENGINE.mode !== EDITOR && state.ENGINE.mode !== REVIEW) return;
+        if (state.engineState.mode !== EDITOR && state.engineState.mode !== REVIEW) return;
         eraserTimer = setTimeout(() => {
-            engine.navigation.PathNavigator.clear(state.ENGINE);
+            engine.navigation.PathNavigator.clear(state.engineState);
             ui.showMessage('Cleared', 'info');
             eraserFired = true;
         }, 1500);
@@ -123,10 +123,10 @@ export function createEditorToolbarController({ state, ui, engine, editor, solve
         if (eraserTimer) {
             clearTimeout(eraserTimer);
             if (!eraserFired) {
-                if (state.ENGINE.nav.path.length > 1) {
-                    engine.navigation.PathNavigator.truncateTo(state.ENGINE, state.ENGINE.nav.path.length - 2);
+                if (state.engineState.nav.path.length > 1) {
+                    engine.navigation.PathNavigator.truncateTo(state.engineState, state.engineState.nav.path.length - 2);
                 } else {
-                    engine.navigation.PathNavigator.clear(state.ENGINE);
+                    engine.navigation.PathNavigator.clear(state.engineState);
                 }
             }
             eraserTimer = null;
@@ -160,9 +160,9 @@ export function createEditorToolbarController({ state, ui, engine, editor, solve
 
     (document.getElementById('editCopyMetrics') as any).onclick = () => {
         ui.closeAllModals();
-        if (!state.ENGINE.nav.path.length) return;
+        if (!state.engineState.nav.path.length) return;
         ui.setInputValue('editReqLen', engine.game.getRealLength());
-        ui.setInputValue('editReqInt', state.ENGINE.nav.intersections);
+        ui.setInputValue('editReqInt', state.engineState.nav.intersections);
         editor.applyMetricsFromUI();
         ui.showMessage('Metrics Set', 'info');
     };
@@ -369,33 +369,33 @@ export function createEditorToolbarController({ state, ui, engine, editor, solve
         const isHelpOpen = ui.isModalOpen('editorHelpModal');
         if (isHelpOpen) ui.closeModal('editorHelpModal');
         ui.closeAllModals();
-        if (engine.solver.isRunning() || state.ENGINE.solver.controller) {
+        if (engine.solver.isRunning() || state.engineState.solver.controller) {
             ui.showSolverAlreadyRunning();
             return;
         }
         engine.overlays.stopHintAnimation();
         editor.applyMetricsFromUI();
-        const l          = state.ENGINE.editor.workingLevel;
+        const l          = state.engineState.editor.workingLevel;
         const validation = editor.validateWorkingLevel();
         if (!validation?.ok) {
             ui.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'error');
             return;
         }
         // A complete sweep of this exact level state is already on screen — restate it.
-        if (state.ENGINE.editor.falseGoalTriggerScanState === 'complete') {
-            const decision = decideFalseGoalTriggerReport({ status: 'complete' }, state.ENGINE.editor.triggerableFalseGoalCells.size);
+        if (state.engineState.editor.falseGoalTriggerScanState === 'complete') {
+            const decision = decideFalseGoalTriggerReport({ status: 'complete' }, state.engineState.editor.triggerableFalseGoalCells.size);
             ui.showMessage(decision.message, decision.tone);
             return;
         }
         const baseBudgetMs = solverApi.getFalseGoalTriggerSearchBudgetMs(l);
-        const budgetMs = (state.ENGINE.editor.falseGoalTriggerScanState === 'partial' && falseGoalTriggerScan.getLastBudgetMs() > 0)
+        const budgetMs = (state.engineState.editor.falseGoalTriggerScanState === 'partial' && falseGoalTriggerScan.getLastBudgetMs() > 0)
             ? computeFalseGoalTriggerRetryBudget(falseGoalTriggerScan.getLastBudgetMs(), baseBudgetMs)
             : baseBudgetMs;
 
         let _cancelled = false;
         const cancelFalseGoalTriggerScan = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
         engine.solver.startSolverRun({ cancel: cancelFalseGoalTriggerScan, abort: cancelFalseGoalTriggerScan });
-        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelFalseGoalTriggerScan(); }, 100);
+        const abortPoll = setInterval(() => { if (state.engineState.solver.abortRequested) cancelFalseGoalTriggerScan(); }, 100);
         const falseGoalTriggerScanT0 = Date.now();
         let lastTenths = -1;
         const timerTicker = setInterval(() => {
@@ -421,7 +421,7 @@ export function createEditorToolbarController({ state, ui, engine, editor, solve
             await overlayMinTimer;
             engine.overlays.setOverlayState(OVERLAY_NONE);
             if (res) {
-                const decision = decideFalseGoalTriggerReport(res, state.ENGINE.editor.triggerableFalseGoalCells.size);
+                const decision = decideFalseGoalTriggerReport(res, state.engineState.editor.triggerableFalseGoalCells.size);
                 ui.showMessage(decision.message, decision.tone);
             } else if (!_cancelled) {
                 // scan() reported the failure through reportError; tell the user here.

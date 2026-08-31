@@ -102,11 +102,11 @@ import {
 
 
 test('markDirty and clearDirty accept the app state wrapper', () => {
-  const state = { ENGINE: { isDirty: false } } as any;
-  assert.equal(markDirty(state), state.ENGINE);
-  assert.equal(state.ENGINE.isDirty, true);
-  assert.equal(clearDirty(state), state.ENGINE);
-  assert.equal(state.ENGINE.isDirty, false);
+  const state = { engineState: { isDirty: false } } as any;
+  assert.equal(markDirty(state), state.engineState);
+  assert.equal(state.engineState.isDirty, true);
+  assert.equal(clearDirty(state), state.engineState);
+  assert.equal(state.engineState.isDirty, false);
 });
 
 test('markDirty and clearDirty accept the raw engine state', () => {
@@ -118,16 +118,16 @@ test('markDirty and clearDirty accept the raw engine state', () => {
 });
 
 test('setMuted normalizes values and toggleMuted returns the next state', () => {
-  const state = { ENGINE: { muted: false } } as any;
+  const state = { engineState: { muted: false } } as any;
   assert.equal(setMuted(state, 'yes'), true);
-  assert.equal(state.ENGINE.muted, true);
+  assert.equal(state.engineState.muted, true);
   assert.equal(toggleMuted(state), false);
-  assert.equal(state.ENGINE.muted, false);
+  assert.equal(state.engineState.muted, false);
 });
 
 test('navigation snapshot helpers replace path, jumps, and active gate', () => {
   const state = {
-    ENGINE: {
+    engineState: {
       nav: {
         path: [1],
         isPortalJump: new Set([1]),
@@ -140,36 +140,36 @@ test('navigation snapshot helpers replace path, jumps, and active gate', () => {
     isPortalJump: new Set([0]),
     activeGateKey: 2
   });
-  assert.equal(nav, state.ENGINE.nav);
-  assert.deepEqual(state.ENGINE.nav.path, [2, 3]);
-  assert.deepEqual([...state.ENGINE.nav.isPortalJump], [0]);
-  assert.equal(state.ENGINE.nav.activeGateKey, 2);
+  assert.equal(nav, state.engineState.nav);
+  assert.deepEqual(state.engineState.nav.path, [2, 3]);
+  assert.deepEqual([...state.engineState.nav.isPortalJump], [0]);
+  assert.equal(state.engineState.nav.activeGateKey, 2);
   clearNavigation(state);
-  assert.deepEqual(state.ENGINE.nav.path, []);
-  assert.deepEqual([...state.ENGINE.nav.isPortalJump], []);
-  assert.equal(state.ENGINE.nav.activeGateKey, null);
+  assert.deepEqual(state.engineState.nav.path, []);
+  assert.deepEqual([...state.engineState.nav.isPortalJump], []);
+  assert.equal(state.engineState.nav.activeGateKey, null);
   setNavigationSnapshot(state, { path: [1, 2, 3], isPortalJump: [1], activeGateKey: 1 });
-  assert.equal(reverseNavigationPath(state), state.ENGINE.nav);
-  assert.deepEqual(state.ENGINE.nav.path, [3, 2, 1]);
-  assert.deepEqual([...state.ENGINE.nav.isPortalJump], [1]);
-  assert.equal(remapNavigationKeys(state, key => key + 10), state.ENGINE.nav);
-  assert.deepEqual(state.ENGINE.nav.path, [13, 12, 11]);
-  assert.equal(state.ENGINE.nav.activeGateKey, 11);
+  assert.equal(reverseNavigationPath(state), state.engineState.nav);
+  assert.deepEqual(state.engineState.nav.path, [3, 2, 1]);
+  assert.deepEqual([...state.engineState.nav.isPortalJump], [1]);
+  assert.equal(remapNavigationKeys(state, key => key + 10), state.engineState.nav);
+  assert.deepEqual(state.engineState.nav.path, [13, 12, 11]);
+  assert.equal(state.engineState.nav.activeGateKey, 11);
   assert.equal(setNavigationActiveGateKey(state, 9), 9);
   assert.equal(setNavigationLastFlipTime(state, 12345), 12345);
-  assert.equal(state.ENGINE.nav.lastFlipTime, 12345);
+  assert.equal(state.engineState.nav.lastFlipTime, 12345);
   setNavigationSnapshot(state, { path: [1, 2, 3, 4], isPortalJump: [1, 3], activeGateKey: 1 });
-  assert.equal(truncateNavigationPath(state, 1), state.ENGINE.nav);
-  assert.deepEqual(state.ENGINE.nav.path, [1, 2]);
-  assert.deepEqual([...state.ENGINE.nav.isPortalJump], [1]);
-  assert.equal(truncateNavigationPath(state, -1), state.ENGINE.nav);
-  assert.deepEqual(state.ENGINE.nav.path, []);
-  assert.equal(state.ENGINE.nav.activeGateKey, null);
+  assert.equal(truncateNavigationPath(state, 1), state.engineState.nav);
+  assert.deepEqual(state.engineState.nav.path, [1, 2]);
+  assert.deepEqual([...state.engineState.nav.isPortalJump], [1]);
+  assert.equal(truncateNavigationPath(state, -1), state.engineState.nav);
+  assert.deepEqual(state.engineState.nav.path, []);
+  assert.equal(state.engineState.nav.activeGateKey, null);
 });
 
 test('hazard helpers replace revealed geese and false-goal sets', () => {
   const state = {
-    ENGINE: {
+    engineState: {
       hazards: {
         revealedGeese: new Set([1]),
         armedFalseGoals: new Set([2]),
@@ -180,23 +180,23 @@ test('hazard helpers replace revealed geese and false-goal sets', () => {
   assert.deepEqual([...(setRevealedGeese(state, [4, 5]) ?? [])], [4, 5]);
   assert.deepEqual([...(setArmedFalseGoals(state, [6]) ?? [])], [6]);
   assert.deepEqual([...(setDetonatedFalseGoals(state, [7]) ?? [])], [7]);
-  assert.equal(detonateFalseGoal(state, 6), state.ENGINE.hazards);
-  assert.deepEqual([...state.ENGINE.hazards.armedFalseGoals], []);
-  assert.deepEqual([...state.ENGINE.hazards.detonatedFalseGoals], [7, 6]);
+  assert.equal(detonateFalseGoal(state, 6), state.engineState.hazards);
+  assert.deepEqual([...state.engineState.hazards.armedFalseGoals], []);
+  assert.deepEqual([...state.engineState.hazards.detonatedFalseGoals], [7, 6]);
 
   const level = { falseGoalKeys: new Set([10, 11, 12]) } as any;
-  assert.equal(resetFalseGoalHazardsForLevel(state, level), state.ENGINE.hazards);
-  assert.deepEqual([...state.ENGINE.hazards.armedFalseGoals], [10, 11, 12]);
-  assert.deepEqual([...state.ENGINE.hazards.detonatedFalseGoals], []);
+  assert.equal(resetFalseGoalHazardsForLevel(state, level), state.engineState.hazards);
+  assert.deepEqual([...state.engineState.hazards.armedFalseGoals], [10, 11, 12]);
+  assert.deepEqual([...state.engineState.hazards.detonatedFalseGoals], []);
 
-  assert.equal(restoreFalseGoalHazardsForLevel(state, level, [11]), state.ENGINE.hazards);
-  assert.deepEqual([...state.ENGINE.hazards.armedFalseGoals], [10, 12]);
-  assert.deepEqual([...state.ENGINE.hazards.detonatedFalseGoals], [11]);
+  assert.equal(restoreFalseGoalHazardsForLevel(state, level, [11]), state.engineState.hazards);
+  assert.deepEqual([...state.engineState.hazards.armedFalseGoals], [10, 12]);
+  assert.deepEqual([...state.engineState.hazards.detonatedFalseGoals], [11]);
 });
 
 test('hinter helpers reset animation, paths, and persisted hint state', () => {
   const state = {
-    ENGINE: {
+    engineState: {
       hinter: {
         pathList: [[1, 2], [3, 4]],
         currentPathIdx: 1,
@@ -211,12 +211,12 @@ test('hinter helpers reset animation, paths, and persisted hint state', () => {
       }
     }
   } as any;
-  assert.equal(resetHintAnimationClock(state, { alpha: 1, index: 0 }), state.ENGINE.hinter);
-  assert.equal(state.ENGINE.hinter.alpha, 1);
-  assert.equal(state.ENGINE.hinter.index, 0);
-  assert.equal(state.ENGINE.hinter.holdStartMs, 0);
-  assert.equal(state.ENGINE.hinter.blinkStartMs, 0);
-  assert.equal(state.ENGINE.hinter.fadeStartMs, 0);
+  assert.equal(resetHintAnimationClock(state, { alpha: 1, index: 0 }), state.engineState.hinter);
+  assert.equal(state.engineState.hinter.alpha, 1);
+  assert.equal(state.engineState.hinter.index, 0);
+  assert.equal(state.engineState.hinter.holdStartMs, 0);
+  assert.equal(state.engineState.hinter.blinkStartMs, 0);
+  assert.equal(state.engineState.hinter.fadeStartMs, 0);
   assert.equal(setHintAnimationIndex(state, 2), 2);
   assert.equal(advanceHintAnimationIndex(state, 0.5), 2.5);
   assert.equal(setHintAnimationAlpha(state, 0.75), 0.75);
@@ -226,57 +226,57 @@ test('hinter helpers reset animation, paths, and persisted hint state', () => {
   assert.equal(setHintBlinkStartMsIfUnset(state, 400), 300);
   assert.equal(setHintFadeStartMs(state, 500), 500);
 
-  assert.equal(setHintPaths(state, [[5]], 'manual', 0), state.ENGINE.hinter);
-  assert.deepEqual(state.ENGINE.hinter.pathList, [[5]]);
-  assert.equal(state.ENGINE.hinter.source, 'manual');
+  assert.equal(setHintPaths(state, [[5]], 'manual', 0), state.engineState.hinter);
+  assert.deepEqual(state.engineState.hinter.pathList, [[5]]);
+  assert.equal(state.engineState.hinter.source, 'manual');
   assert.equal(pinCurrentHint(state), true);
-  assert.deepEqual(state.ENGINE.hinter.persistedPath, [5]);
-  assert.equal(state.ENGINE.hinter.persistedHintIdx, 0);
+  assert.deepEqual(state.engineState.hinter.persistedPath, [5]);
+  assert.equal(state.engineState.hinter.persistedHintIdx, 0);
 
-  assert.equal(clearHintPaths(state), state.ENGINE.hinter);
-  assert.deepEqual(state.ENGINE.hinter.pathList, []);
-  assert.equal(state.ENGINE.hinter.source, 'none');
-  assert.equal(clearPersistedHint(state), state.ENGINE.hinter);
-  assert.deepEqual(state.ENGINE.hinter.persistedPath, []);
-  assert.equal(state.ENGINE.hinter.persistedHintIdx, -1);
+  assert.equal(clearHintPaths(state), state.engineState.hinter);
+  assert.deepEqual(state.engineState.hinter.pathList, []);
+  assert.equal(state.engineState.hinter.source, 'none');
+  assert.equal(clearPersistedHint(state), state.engineState.hinter);
+  assert.deepEqual(state.engineState.hinter.persistedPath, []);
+  assert.equal(state.engineState.hinter.persistedHintIdx, -1);
 
   setHintPaths(state, [[8]], 'solver', 0);
   pinCurrentHint(state);
   resetHinterForLevel(state);
-  assert.deepEqual(state.ENGINE.hinter.pathList, []);
-  assert.equal(state.ENGINE.hinter.currentPathIdx, 0);
-  assert.equal(state.ENGINE.hinter.source, 'none');
-  assert.equal(state.ENGINE.hinter.alpha, 0);
-  assert.equal(state.ENGINE.hinter.index, 0);
-  assert.deepEqual(state.ENGINE.hinter.persistedPath, []);
-  assert.equal(state.ENGINE.hinter.persistedHintIdx, -1);
+  assert.deepEqual(state.engineState.hinter.pathList, []);
+  assert.equal(state.engineState.hinter.currentPathIdx, 0);
+  assert.equal(state.engineState.hinter.source, 'none');
+  assert.equal(state.engineState.hinter.alpha, 0);
+  assert.equal(state.engineState.hinter.index, 0);
+  assert.deepEqual(state.engineState.hinter.persistedPath, []);
+  assert.equal(state.engineState.hinter.persistedHintIdx, -1);
 });
 
 test('solver run helpers start, request abort, and end solver state', () => {
   const controller = { abort() {} };
   const state = {
-    ENGINE: {
+    engineState: {
       solver: {
         controller: null,
         abortRequested: true
       }
     }
   } as any;
-  assert.equal(startSolverRun(state, controller), state.ENGINE.solver);
-  assert.equal(state.ENGINE.solver.controller, controller);
-  assert.equal(state.ENGINE.solver.abortRequested, false);
-  assert.equal(requestSolverAbort(state), state.ENGINE.solver);
-  assert.equal(state.ENGINE.solver.abortRequested, true);
-  assert.equal(endSolverRun(state), state.ENGINE.solver);
-  assert.equal(state.ENGINE.solver.controller, null);
-  assert.equal(state.ENGINE.solver.abortRequested, false);
+  assert.equal(startSolverRun(state, controller), state.engineState.solver);
+  assert.equal(state.engineState.solver.controller, controller);
+  assert.equal(state.engineState.solver.abortRequested, false);
+  assert.equal(requestSolverAbort(state), state.engineState.solver);
+  assert.equal(state.engineState.solver.abortRequested, true);
+  assert.equal(endSolverRun(state), state.engineState.solver);
+  assert.equal(state.engineState.solver.controller, null);
+  assert.equal(state.engineState.solver.abortRequested, false);
   assert.equal(requestSolverAbort(state), null);
 });
 
 test('review helpers set saved index, current index, and submissions', () => {
   const submissions = [{ id: 'a' }, { id: 'b' }];
   const state = {
-    ENGINE: {
+    engineState: {
       review: {
         submissions: [],
         currentIdx: 0,
@@ -288,14 +288,14 @@ test('review helpers set saved index, current index, and submissions', () => {
   assert.equal(setReviewIndex(state, 1), 1);
   assert.equal(setReviewSubmissions(state, submissions), submissions);
   assert.deepEqual(removeReviewSubmission(state, 0), [{ id: 'b' }]);
-  assert.equal(resetReviewSubmissions(state), state.ENGINE.review);
-  assert.deepEqual(state.ENGINE.review.submissions, []);
-  assert.equal(state.ENGINE.review.currentIdx, 0);
+  assert.equal(resetReviewSubmissions(state), state.engineState.review);
+  assert.deepEqual(state.engineState.review.submissions, []);
+  assert.equal(state.engineState.review.currentIdx, 0);
 });
 
 test('editor helpers update session fields and reset transient editor state', () => {
   const state = {
-    ENGINE: {
+    engineState: {
       editor: {
         workingLevel: null,
         isPencilMode: true,
@@ -322,11 +322,11 @@ test('editor helpers update session fields and reset transient editor state', ()
   assert.equal(level.goalKey, -1);
   assert.deepEqual([...level.blockSet], []);
   assert.deepEqual(level.hints, []);
-  state.ENGINE.editor.undoStack = [{ id: 'undo' }] as any;
+  state.engineState.editor.undoStack = [{ id: 'undo' }] as any;
   assert.deepEqual(popEditorUndoStack(state), { id: 'undo' });
   assert.deepEqual(clearEditorUndoStack(state), []);
-  assert.equal(clearEditorTriggerableFalseGoalCells(state), state.ENGINE.editor.triggerableFalseGoalCells);
-  assert.deepEqual([...state.ENGINE.editor.triggerableFalseGoalCells], []);
+  assert.equal(clearEditorTriggerableFalseGoalCells(state), state.engineState.editor.triggerableFalseGoalCells);
+  assert.deepEqual([...state.engineState.editor.triggerableFalseGoalCells], []);
   assert.equal(setEditorDraggedFromGrid(state, true), true);
   assert.equal(setEditorPendingPortal(state, 'portal-a' as any), 'portal-a');
   const draggedObject = { type: 'gate' };
@@ -337,29 +337,29 @@ test('editor helpers update session fields and reset transient editor state', ()
   assert.deepEqual([...(setEditorFalseGoalTriggerParityCandidates(state, new Set([5]) as any) ?? [])], [5]);
   // Clearing the spots resets the whole scan lifecycle (stale + no candidates).
   clearEditorTriggerableFalseGoalCells(state);
-  assert.equal(state.ENGINE.editor.falseGoalTriggerScanState, 'stale');
-  assert.equal(state.ENGINE.editor.falseGoalTriggerParityCandidates.size, 0);
+  assert.equal(state.engineState.editor.falseGoalTriggerScanState, 'stale');
+  assert.equal(state.engineState.editor.falseGoalTriggerParityCandidates.size, 0);
   assert.equal(setEditorSelectedTool(state, 'block'), 'block');
   assert.equal(toggleEditorPencilMode(state), true);
   assert.equal(toggleEditorMirrorHorizontal(state), true);
 
-  state.ENGINE.editor.undoStack = [{ id: 'redo' }] as any;
-  state.ENGINE.editor.triggerableFalseGoalCells.add('2,2');
+  state.engineState.editor.undoStack = [{ id: 'redo' }] as any;
+  state.engineState.editor.triggerableFalseGoalCells.add('2,2');
   const nextLevel = { id: 'next-draft' };
-  assert.equal(resetEditorSession(state, { workingLevel: nextLevel }), state.ENGINE.editor);
-  assert.equal(state.ENGINE.editor.workingLevel, nextLevel);
-  assert.equal(state.ENGINE.editor.isPencilMode, false);
-  assert.equal(state.ENGINE.editor.isModified, false);
-  assert.equal(state.ENGINE.editor.emptyClickCount, 0);
-  assert.deepEqual(state.ENGINE.editor.undoStack, []);
-  assert.deepEqual([...state.ENGINE.editor.triggerableFalseGoalCells], []);
+  assert.equal(resetEditorSession(state, { workingLevel: nextLevel }), state.engineState.editor);
+  assert.equal(state.engineState.editor.workingLevel, nextLevel);
+  assert.equal(state.engineState.editor.isPencilMode, false);
+  assert.equal(state.engineState.editor.isModified, false);
+  assert.equal(state.engineState.editor.emptyClickCount, 0);
+  assert.deepEqual(state.engineState.editor.undoStack, []);
+  assert.deepEqual([...state.engineState.editor.triggerableFalseGoalCells], []);
 });
 
 test('transient runtime helpers update nav, ripple, hint, option, and cheat state', () => {
   const timer = { id: 'timer' };
   const pending = () => {};
   const state = {
-    ENGINE: {
+    engineState: {
       nav: { undoStack: ['move'], visualFlipCount: 0, flipCount: 0.2 },
       ui: { focusGroup: 'GRID', focusIndex: 0, gamepadFocusEnabled: false, gamepadGridPrimaryAction: null, bLastPressTime: 0, bSingleTimer: null },
       gamepad: { hasPad: false, nextMoveAt: 0, lastButtons: [false], rafId: null, rafActive: false },
@@ -376,12 +376,12 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
   } as any;
 
   assert.equal(popNavigationUndoStack(state), 'move');
-  state.ENGINE.nav.undoStack = ['move-2'] as any;
+  state.engineState.nav.undoStack = ['move-2'] as any;
   assert.deepEqual(clearNavigationUndoStack(state), []);
   assert.equal(stepVisualFlipCount(state, 0.15), true);
-  assert.equal(state.ENGINE.nav.visualFlipCount, 0.15);
+  assert.equal(state.engineState.nav.visualFlipCount, 0.15);
   assert.equal(stepVisualFlipCount({ nav: { visualFlipCount: 1, flipCount: 1 } } as any), false);
-  assert.equal(addRipple(state, { startTime: 900 } as any), state.ENGINE.ripples);
+  assert.equal(addRipple(state, { startTime: 900 } as any), state.engineState.ripples);
   assert.deepEqual(pruneRipples(state, 1000, 600), [{ startTime: 500 }, { startTime: 900 }]);
   assert.deepEqual(clearRipples(state), []);
   assert.deepEqual(setFoundHintsSinceLoad(state, ['hint'] as any), ['hint']);
@@ -394,15 +394,15 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
   assert.equal(setGamepadHasPad(state, true), true);
   assert.equal(setGamepadNextMoveAt(state, 123), 123);
   assert.deepEqual(setGamepadLastButtons(state, [true, false]), [true, false]);
-  assert.equal(setGamepadRafState(state, { rafId: 7, rafActive: true }), state.ENGINE.gamepad);
-  assert.equal(state.ENGINE.gamepad.rafId, 7);
-  assert.equal(state.ENGINE.gamepad.rafActive, true);
+  assert.equal(setGamepadRafState(state, { rafId: 7, rafActive: true }), state.engineState.gamepad);
+  assert.equal(state.engineState.gamepad.rafId, 7);
+  assert.equal(state.engineState.gamepad.rafActive, true);
   assert.equal(setUiBLastPressTime(state, 321), 321);
   assert.equal(setUiBSingleTimer(state, timer as any), timer);
-  assert.equal(resetGamepadConnectionState(state), state.ENGINE.gamepad);
-  assert.equal(state.ENGINE.gamepad.hasPad, false);
-  assert.deepEqual(state.ENGINE.gamepad.lastButtons, []);
-  assert.equal(setUiFocusGroupState(state, 'CONTROLS', 2), state.ENGINE.ui);
+  assert.equal(resetGamepadConnectionState(state), state.engineState.gamepad);
+  assert.equal(state.engineState.gamepad.hasPad, false);
+  assert.deepEqual(state.engineState.gamepad.lastButtons, []);
+  assert.equal(setUiFocusGroupState(state, 'CONTROLS', 2), state.engineState.ui);
   assert.equal(setUiFocusIndex(state, 1), 1);
   assert.equal(toggleDevMode(state), true);
   assert.equal(toggleFlag(state, 'useRefereeSolver'), true);
@@ -416,7 +416,7 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
 });
 
 test('mode, logic, overlay, level index, orientation, and level setters update engine state', () => {
-  const state = { ENGINE: {} } as any;
+  const state = { engineState: {} } as any;
   assert.equal(setMode(state, 'PLAY' as any), 'PLAY');
   assert.equal(setLogicState(state, 'IDLE'), 'IDLE');
   assert.equal(setOverlayState(state, 'NONE'), 'NONE');
@@ -424,5 +424,5 @@ test('mode, logic, overlay, level index, orientation, and level setters update e
   assert.equal(setOrientation(state, 7), 7);
   const level = { id: 'level' } as any;
   assert.equal(setLevel(state, level), level);
-  assert.deepEqual(state.ENGINE, { mode: 'PLAY', logicState: 'IDLE', overlayState: 'NONE', levelIdx: 3, orientation: 7, level });
+  assert.deepEqual(state.engineState, { mode: 'PLAY', logicState: 'IDLE', overlayState: 'NONE', levelIdx: 3, orientation: 7, level });
 });

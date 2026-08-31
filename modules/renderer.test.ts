@@ -32,7 +32,7 @@ test('renderer path helper uses the same current transform as screen-position lo
             viewport: { cellW: 20, cellH: 30 },
         };
         const renderer = createRenderer({
-            state: { ENGINE: engineState },
+            state: { engineState: engineState },
             ui: {},
         });
         const path = [PACK(1, 2), PACK(3, 4)];

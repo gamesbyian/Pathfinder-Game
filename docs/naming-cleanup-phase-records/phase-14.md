@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14C1 local state/render names |
+| Current batch | 14C2 atomic engine state graph |
 | Status | 14B merged; 14C1 in progress |
-| Base `main` SHA | `a4139cefefb69706e70c1b4e6a637d6280802c6d` |
-| Branch | `chatgpt/phase14c1-local-names-2026-08-31` |
-| PR | #1626 |
+| Base `main` SHA | `17e5668447e8779294c398791cab504114ea873c` |
+| Branch | `chatgpt/phase14c2-engine-state-2026-08-31` |
+| PR | #1627 |
 | Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
@@ -265,8 +265,76 @@ renderer, runtime action, engine, navigation, test, package, or Phase-14 authori
 
 ## 9. 14C2 atomic ENGINE graph
 
-Not started. Must branch from merged 14C1 main. Public/debug `State.ENGINE` migrates atomically with
-the state property; no compatibility alias is authorized.
+Started from merged 14C1 main `17e5668447e8779294c398791cab504114ea873c`.
+
+NC-P14-006 is the high-risk top-level mutable-state root rename:
+
+- `AppState.ENGINE` -> `AppState.engineState`;
+- state-action wrapper unwrapping migrates to `engineState`;
+- every controller/editor/render/input/runtime consumer migrates atomically;
+- public/debug `window.APP.State.ENGINE` migrates to `window.APP.State.engineState`;
+- browser tests and startup smoke migrate with the debug surface;
+- the ESLint mutation-boundary rule changes its AST target and fixtures to `state.engineState`;
+- no compatibility alias is retained.
+
+### 9.1 Executable pre-switch census
+
+PR #1627 first enrolled `check:naming-cleanup-phase14c2-closeout` while the old graph was still
+intact. Initial CI `33437744022` deliberately failed only that future-state guard while source/test
+TypeScript, Node tests, build, lint, deep proofs, and deep verification remained green.
+
+The guard reported **53 live code/test/tool/config files** containing the exact `ENGINE` token,
+covering:
+
+- AppState construction and state-action wrapper unwrapping;
+- app composition and debug facade;
+- engine/controller/editor/input/renderer/runtime consumers;
+- state/action tests and engine facade tests;
+- Playwright a11y/editor/orientation/security/theme assertions;
+- startup smoke;
+- the ESLint mutation-boundary implementation and its unit fixtures.
+
+This list became the atomic implementation graph. No source file was migrated before the census was
+captured.
+
+### 9.2 Atomic implementation
+
+All 53 reported surfaces were transformed in a detached Git tree with an exact-token
+`ENGINE` -> `engineState` switch. The tree was audited before its commit became the branch head.
+The resulting atomic source commit is
+`46a35b79339d927177060da7d7e16c802f636104`.
+
+Consumer-inward checks at the architecture choke points confirmed:
+
+- `AppState = { engineState: EngineState }` and `createState()` constructs that property;
+- `StateOrEngine` and `unwrapEngineState` recognize `.engineState` rather than an alias;
+- the mutable debug facade exposes exactly `State.engineState`;
+- read-only diagnostics clone/read `app.state.engineState`;
+- the local ESLint rule still has stable rule identity `engine-state-boundary` but its AST selector
+  now protects `state.engineState.*`, including computed-access mutation;
+- no compatibility getter/property named `ENGINE` was introduced.
+
+### 9.3 Validation and parity
+
+Atomic implementation head `46a35b79339d927177060da7d7e16c802f636104` passed:
+
+- ordinary CI `33438809719`: validators, source/test TypeScript, Node tests, build, lint,
+  deep proofs, and full deep verification/coverage;
+- Chromium gate `33438809798`: success;
+- `check:naming-cleanup-phase14c2-closeout`: **632 code/test/tool surfaces** scanned with zero
+  retired `ENGINE` mutable-root spelling;
+- app-facade unit tests for live mutable debug-state identity and read-only diagnostic copies;
+- state/action and controller suites across the complete mutable graph;
+- startup smoke and browser consumers using `window.APP.State.engineState`;
+- ESLint rule fixtures proving direct and computed `state.engineState` mutation remains rejected.
+
+No persistence, gameplay, solver, rendering, input, orientation, callback, or state-mutation behavior
+change was introduced. The external/debug spelling changes because that surface is the rename target;
+there is no stable serialized or published compatibility owner.
+
+NC-P14-006 is therefore row-complete. This evidence-only closure head must pass fresh exact-head CI
+before #1627 merges. Phase-wide closeout remains a separate 14D pass from merged main.
+
 
 ## 10. 14D merged-tree closeout
 

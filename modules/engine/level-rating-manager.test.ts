@@ -17,10 +17,10 @@ const RAW_LEVEL = {
 };
 
 function createHarness({ ratingsByFingerprint = {} as Record<string, any> } = {}) {
-    const state = { ENGINE: createEngineState() };
-    state.ENGINE.isDevMode = true;
-    state.ENGINE.mode = PLAY;
-    state.ENGINE.levelIdx = 0;
+    const state = { engineState: createEngineState() };
+    state.engineState.isDevMode = true;
+    state.engineState.mode = PLAY;
+    state.engineState.levelIdx = 0;
 
     const renderCalls: any[] = [];
     const ui = { renderLevelRatingPane: (r: any) => renderCalls.push(r) };
@@ -52,9 +52,9 @@ test('a hit on the current fingerprint applies the rating without touching legac
 
     assert.deepEqual(loadCalls, [currentFingerprint], 'only the current fingerprint should be queried');
     assert.equal(saveCalls.length, 0, 'no migration write when there is nothing to migrate');
-    assert.deepEqual([...state.ENGINE.levelRating.tags], ['fun']);
-    assert.equal(state.ENGINE.levelRating.difficulty, 3);
-    assert.equal(state.ENGINE.levelRating.loaded, true);
+    assert.deepEqual([...state.engineState.levelRating.tags], ['fun']);
+    assert.equal(state.engineState.levelRating.difficulty, 3);
+    assert.equal(state.engineState.levelRating.loaded, true);
 });
 
 test('a miss on the current fingerprint falls back to a legacy key, applies it, and migrates it forward', async () => {
@@ -69,8 +69,8 @@ test('a miss on the current fingerprint falls back to a legacy key, applies it, 
     assert.equal(saveCalls.length, 1, 'the found legacy rating is copied forward to the current key');
     assert.equal(saveCalls[0].fingerprint, currentFingerprint);
     assert.deepEqual(saveCalls[0].rating, legacyRating);
-    assert.deepEqual([...state.ENGINE.levelRating.tags], ['geese'], 'the legacy rating is applied to the UI');
-    assert.equal(state.ENGINE.levelRating.difficulty, 5);
+    assert.deepEqual([...state.engineState.levelRating.tags], ['geese'], 'the legacy rating is applied to the UI');
+    assert.equal(state.engineState.levelRating.difficulty, 5);
 });
 
 test('a miss on every fingerprint (current and legacy) resolves to a blank, loaded rating', async () => {
@@ -79,9 +79,9 @@ test('a miss on every fingerprint (current and legacy) resolves to a blank, load
     await manager.refreshForCurrentLevel();
 
     assert.equal(saveCalls.length, 0);
-    assert.equal(state.ENGINE.levelRating.tags.size, 0);
-    assert.equal(state.ENGINE.levelRating.difficulty, 0);
-    assert.equal(state.ENGINE.levelRating.loaded, true);
+    assert.equal(state.engineState.levelRating.tags.size, 0);
+    assert.equal(state.engineState.levelRating.difficulty, 0);
+    assert.equal(state.engineState.levelRating.loaded, true);
 });
 
 test('a failed migration write reports but does not block applying the legacy rating', async () => {
@@ -89,10 +89,10 @@ test('a failed migration write reports but does not block applying the legacy ra
     const [legacyFingerprint] = await getLegacyLevelFingerprints(RAW_LEVEL);
     const legacyRating = { tags: ['tricky'], customTags: [], difficulty: 1, fun: 1 };
 
-    const state = { ENGINE: createEngineState() };
-    state.ENGINE.isDevMode = true;
-    state.ENGINE.mode = PLAY;
-    state.ENGINE.levelIdx = 0;
+    const state = { engineState: createEngineState() };
+    state.engineState.isDevMode = true;
+    state.engineState.mode = PLAY;
+    state.engineState.levelIdx = 0;
     const ui = { renderLevelRatingPane: () => {} };
     const data = { getLevel: () => RAW_LEVEL } as any;
     const errors: any[] = [];
@@ -105,7 +105,7 @@ test('a failed migration write reports but does not block applying the legacy ra
 
     await manager.refreshForCurrentLevel();
 
-    assert.equal(state.ENGINE.levelRating.fingerprint, currentFingerprint);
-    assert.deepEqual([...state.ENGINE.levelRating.tags], ['tricky'], 'still applies despite the failed migration write');
+    assert.equal(state.engineState.levelRating.fingerprint, currentFingerprint);
+    assert.deepEqual([...state.engineState.levelRating.tags], ['tricky'], 'still applies despite the failed migration write');
     assert.ok(errors.some((e) => e.context === 'level-rating.migrate'), 'the migration failure is reported');
 });

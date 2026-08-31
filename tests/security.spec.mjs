@@ -3,7 +3,7 @@ import { test, expect } from './fixtures.mjs';
 // Debug-surface security invariant (modernization-plan §4 Phase 4 / ADR 0004):
 // default boot must NOT expose a mutation-capable global. Default boot exposes only the
 // read-only, snapshot-only `window.PATHFINDER`; the full mutable `window.APP` facade (which
-// hands out the live ENGINE) is opt-in via the `?debug` query param alone — on any host,
+// hands out the live engineState) is opt-in via the `?debug` query param alone — on any host,
 // including production, so the documented debugging workflow (load the live site with
 // `?debug`) needs no extra opt-in step. See modules/app.js bootstrapApp() /
 // shouldExposeMutableFacade().
@@ -62,21 +62,21 @@ test.describe('Debug-surface security', () => {
         expect(hasAppFacade).toBe(true);
     });
 
-    test('?debug facade keeps the live ENGINE identity across a real reset', async ({ page }) => {
+    test('?debug facade keeps the live engineState identity across a real reset', async ({ page }) => {
         await page.goto('/?debug=1');
         await waitForBoot(page);
         const result = await page.evaluate(() => {
-            const before = window.APP.State.ENGINE;
+            const before = window.APP.State.engineState;
             const beforeLevel = before.level;
             const beforeVariant = before.variant;
             const beforeStreak = before.resetStreak;
             window.APP.Engine.handleResetAction();
             return {
-                sameEngine: window.APP.State.ENGINE === before,
-                levelReloaded: window.APP.State.ENGINE.level !== beforeLevel,
-                variantPreserved: window.APP.State.ENGINE.variant === beforeVariant,
-                streakAdvanced: window.APP.State.ENGINE.resetStreak === beforeStreak + 1,
-                pathLength: window.APP.State.ENGINE.nav.path.length,
+                sameEngine: window.APP.State.engineState === before,
+                levelReloaded: window.APP.State.engineState.level !== beforeLevel,
+                variantPreserved: window.APP.State.engineState.variant === beforeVariant,
+                streakAdvanced: window.APP.State.engineState.resetStreak === beforeStreak + 1,
+                pathLength: window.APP.State.engineState.nav.path.length,
             };
         });
         expect(result).toEqual({

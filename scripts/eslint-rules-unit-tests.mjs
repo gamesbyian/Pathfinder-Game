@@ -18,14 +18,14 @@ async function lint(code, filePath) {
 const hasRule = (msgs, ruleId) => msgs.some(m => m.ruleId === ruleId);
 
 // ── engine-state-boundary (was check-engine-state-boundary.mjs) ──────────────
-test('engine-state-boundary flags a direct state.ENGINE assignment', async () => {
-    const msgs = await lint('function f(state) { state.ENGINE.mode = 3; }', 'modules/engine/_fixture.ts');
+test('engine-state-boundary flags a direct state.engineState assignment', async () => {
+    const msgs = await lint('function f(state) { state.engineState.mode = 3; }', 'modules/engine/_fixture.ts');
     assert.ok(hasRule(msgs, 'local/engine-state-boundary'), JSON.stringify(msgs));
 });
 
 test('engine-state-boundary catches computed-access evasion the regex missed', async () => {
-    // state.ENGINE['nav'].path.push(x) — the old regex keyed on the literal "state.ENGINE." text.
-    const msgs = await lint("function f(state, x) { state.ENGINE['nav'].path.push(x); }", 'modules/input/_fixture.ts');
+    // state.engineState['nav'].path.push(x) — the old regex keyed on the literal "state.engineState." text.
+    const msgs = await lint("function f(state, x) { state.engineState['nav'].path.push(x); }", 'modules/input/_fixture.ts');
     assert.ok(hasRule(msgs, 'local/engine-state-boundary'), JSON.stringify(msgs));
 });
 

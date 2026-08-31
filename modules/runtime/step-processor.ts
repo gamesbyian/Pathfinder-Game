@@ -1,10 +1,10 @@
-// Pure step computation: no DOM, no sound bus, no timers, no ENGINE-level state access.
+// Pure step computation: no DOM, no sound bus, no timers, no engineState-level state access.
 //
 // Mutates `nav` and `hazards` in-place (path push, undo stack, goose reveal).
 // Returns { outcome, events, mutations } where:
 //   outcome  — 'backtrack' | 'valid' | 'portal' | 'goose' | 'detonate' | null
 //   events   — gameplay-event / side-effect descriptors using GameEventType / EffectType constants
-//   mutations.ripples — { x, y, color }[] the engine must append (with startTime) to ENGINE.ripples
+//   mutations.ripples — { x, y, color }[] the engine must append (with startTime) to engineState.ripples
 //
 // Callers restore `outcome === 'backtrack'` to 'valid' if they need the old interface.
 

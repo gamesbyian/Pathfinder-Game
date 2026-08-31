@@ -17,7 +17,7 @@ function makeFactories(events: any[] = []) {
     },
     play() {},
   };
-  const state = { ENGINE: { muted: true, isDirty: false } };
+  const state = { engineState: { muted: true, isDirty: false } };
   const solverApi = { name: 'solver' };
   const data = {
     getLevels: () => [{ id: 'level-1' }],
@@ -63,7 +63,7 @@ function makeFactories(events: any[] = []) {
       return data;
     },
     createUI: ({ getState, getRenderer }: any) => {
-      assert.equal(getState(), state.ENGINE);
+      assert.equal(getState(), state.engineState);
       // ui no longer depends on renderer (ui↔renderer cycle removed) — no getRenderer is passed.
       assert.equal(getRenderer, undefined);
       return ui;
@@ -91,14 +91,14 @@ function makeFactories(events: any[] = []) {
       return editor;
     },
     createPersistence: ({ getState, themeExists, getRawLevels, onProgressChanged }: any) => {
-      assert.equal(getState(), state.ENGINE);
+      assert.equal(getState(), state.engineState);
       // persistence validates theme ids via a predicate sourced from data (not the themes
       // registry), so it no longer depends on themes.
       assert.equal(themeExists('classic'), true);
       assert.equal(themeExists('nope'), false);
       assert.deepEqual(getRawLevels(), [{ id: 'level-1' }]);
       onProgressChanged();
-      assert.equal(state.ENGINE.isDirty, true);
+      assert.equal(state.engineState.isDirty, true);
       return persistence;
     },
     createEngine: ({ state: receivedState, ui: receivedUi, renderer: receivedRenderer, themes: receivedThemes, data: receivedData, persistence: receivedPersistence, editor: receivedEditor, audioService: receivedAudioService }: any) => {
@@ -195,9 +195,9 @@ test('createAppFacade exposes live state and subsystem references', () => {
   const facade = createAppFacade(app);
   assert.equal(facade.Engine, app.engine);
   assert.equal(facade.Editor, app.editor);
-  assert.equal(facade.State.ENGINE, app.state.ENGINE);
-  app.state.ENGINE.muted = false;
-  assert.equal(facade.State.ENGINE.muted, false);
+  assert.equal(facade.State.engineState, app.state.engineState);
+  app.state.engineState.muted = false;
+  assert.equal(facade.State.engineState.muted, false);
 });
 
 test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', () => {
@@ -205,12 +205,12 @@ test('createReadOnlyDiagnostics exposes a frozen, snapshot-only surface', () => 
   const diagnostics = createReadOnlyDiagnostics(app);
   assert.equal(Object.isFrozen(diagnostics), true);
 
-  // Snapshot is a copy: mutating it must not affect live ENGINE.
-  app.state.ENGINE.muted = true;
+  // Snapshot is a copy: mutating it must not affect live engineState.
+  app.state.engineState.muted = true;
   const snapshot = diagnostics.getStateSnapshot();
   assert.equal(snapshot.muted, true);
   snapshot.muted = false;
-  assert.equal(app.state.ENGINE.muted, true);
+  assert.equal(app.state.engineState.muted, true);
 
   // Diagnostics expose no live subsystem references and no mutators.
   assert.equal((diagnostics as any).State, undefined);

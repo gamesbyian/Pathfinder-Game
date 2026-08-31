@@ -10,7 +10,7 @@ export function createThemes({ state, data, persistence, getUI, getWindow }: any
     const THEMES = {};  // local fallback when data is not yet loaded
 
     const { getThemeRegistry, getCurrentTheme, getTheme } = createThemeRegistry(
-        { getData: () => data, getState: () => state.ENGINE, getWindow },
+        { getData: () => data, getState: () => state.engineState, getWindow },
         THEMES
     );
 

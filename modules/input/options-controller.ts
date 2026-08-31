@@ -13,15 +13,15 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
     (document.getElementById('muteBtn') as any).onclick = () => {
         ui.closeAllModals();
         engine.toggleMute();
-        ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none');
+        ui.setInlineStyle('muteSlash', 'display', state.engineState.muted ? 'block' : 'none');
     };
 
     // --- Perspective ---
 
     const perspectiveAction = () => {
         ui.closeAllModals();
-        if (state.ENGINE.solver.controller) return;
-        engine.navigation.setOrientation((state.ENGINE.orientation + 1) % 8);
+        if (state.engineState.solver.controller) return;
+        engine.navigation.setOrientation((state.engineState.orientation + 1) % 8);
         audioService.play('D5', '32n');
     };
     (document.getElementById('whoaBtn') as any).onclick = perspectiveAction;
@@ -30,7 +30,7 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
 
     (document.getElementById('resetBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
+        if (state.engineState.overlayState !== OVERLAY_NONE || state.engineState.solver.controller) return;
         engine.handleResetAction();
     };
 
@@ -46,8 +46,8 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
 
     (document.getElementById('devGenBtn') as any).onclick = async () => {
         ui.closeAllModals();
-        const hints = (state.ENGINE.foundHintsSinceLoad || []).filter((path: any) =>
-            solverApi.validateCandidatePath(deepCloneLevel(state.ENGINE.level), path)?.ok
+        const hints = (state.engineState.foundHintsSinceLoad || []).filter((path: any) =>
+            solverApi.validateCandidatePath(deepCloneLevel(state.engineState.level), path)?.ok
         );
         if (!hints.length) { ui.showMessage('No valid hints found yet.', ''); return; }
         const hintText = JSON.stringify(hints).replace(/\s/g, '');
@@ -59,16 +59,16 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
     // --- Theme / options modal ---
 
     const syncOptionToggles = () => {
-        const opts = state.ENGINE.options || {};
+        const opts = state.engineState.options || {};
         const set = (id: any, checked: any) => { const el = (document.getElementById(id) as any); if (el) el.checked = !!checked; };
-        set('optionMuteToggle',       state.ENGINE.muted);
+        set('optionMuteToggle',       state.engineState.muted);
         set('optionGeeseToggle',      opts.geese      !== false);
         set('optionFalseGoalsToggle', opts.falseGoals !== false);
         set('optionDeadGatesToggle',  opts.deadGates  !== false);
         const label = (document.getElementById('currentThemeOptionLabel') as any);
         if (label) label.textContent = themes.getCurrentTheme
             ? themes.getCurrentTheme()
-            : (state.ENGINE.runtime.currentTheme || 'classic');
+            : (state.engineState.runtime.currentTheme || 'classic');
         syncDevCorpusControl();
     };
 
@@ -78,9 +78,9 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
 
     const syncDevCorpusControl = () => {
         const section = (document.getElementById('devCorpusSection') as any);
-        if (section) section.classList.toggle('hidden', !state.ENGINE.isDevMode);
+        if (section) section.classList.toggle('hidden', !state.engineState.isDevMode);
         const select = (document.getElementById('devCorpusSelect') as any);
-        if (select) select.value = state.ENGINE.runtime.devCorpus || 'published';
+        if (select) select.value = state.engineState.runtime.devCorpus || 'published';
     };
 
     const switchDevCorpus = async (corpusId: any) => {
@@ -90,14 +90,14 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
         } catch (err: any) {
             reportError('options.dev-corpus-switch', err);
             ui.showMessage(err?.message || 'Failed to load corpus.', 'error');
-            if (select) select.value = state.ENGINE.runtime.devCorpus || 'published';
+            if (select) select.value = state.engineState.runtime.devCorpus || 'published';
             return;
         }
         setDevCorpus(state, corpusId);
         ui.showMessage(`Corpus: ${corpusId}`, 'info');
         // Review Mode reads submissions from Firestore, never data.getLevels(), so it's untouched
         // by this switch — only reload the Play/Edit level display when that's the active mode.
-        if (state.ENGINE.mode !== REVIEW) engine.game.loadLevel(0);
+        if (state.engineState.mode !== REVIEW) engine.game.loadLevel(0);
     };
     (document.getElementById('devCorpusSelect') as any).onchange = (e: any) => { void switchDevCorpus(e.target.value); };
 
@@ -120,13 +120,13 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
     (document.getElementById('backToOptionsBtn') as any).onclick   = () => { syncOptionToggles(); showOptionsPage(); };
 
     const reloadForOptions = () => {
-        if (state.ENGINE.mode === PLAY) engine.game.loadLevel(state.ENGINE.levelIdx, { keepOrientation: true });
+        if (state.engineState.mode === PLAY) engine.game.loadLevel(state.engineState.levelIdx, { keepOrientation: true });
     };
     const bindOptionToggle = (id: any, fn: any) => {
         const el = (document.getElementById(id) as any);
         if (el) el.onchange = () => { fn(el.checked); reloadForOptions(); };
     };
-    bindOptionToggle('optionMuteToggle',       (checked: any) => { engine.setMuted(checked); ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none'); });
+    bindOptionToggle('optionMuteToggle',       (checked: any) => { engine.setMuted(checked); ui.setInlineStyle('muteSlash', 'display', state.engineState.muted ? 'block' : 'none'); });
     bindOptionToggle('optionGeeseToggle',      (checked: any) => engine.setOption('geese', checked));
     bindOptionToggle('optionFalseGoalsToggle', (checked: any) => engine.setOption('falseGoals', checked));
     bindOptionToggle('optionDeadGatesToggle',  (checked: any) => engine.setOption('deadGates', checked));
@@ -134,16 +134,16 @@ export function createOptionsController({ state, ui, engine, themes, data, devCo
     (document.getElementById('optionsBlockedNextBtn') as any).onclick = () => {
         ui.closeModal('playOptionsBlockedModal');
         const total = data.getLevels().length;
-        if (total) engine.game.loadLevel((state.ENGINE.levelIdx + 1) % total);
+        if (total) engine.game.loadLevel((state.engineState.levelIdx + 1) % total);
     };
 
     // --- Dev mode toggle (gated behind the same admin Google login as Review Mode) ---
 
     (document.getElementById('devToggleBtn') as any).onclick = async () => {
-        if (state.ENGINE.isDevMode) {
+        if (state.engineState.isDevMode) {
             // A non-published corpus is a dev-only affordance — never leave Play/Edit pointed at
             // one once Dev Mode is off.
-            if (state.ENGINE.runtime.devCorpus !== 'published') await switchDevCorpus('published');
+            if (state.engineState.runtime.devCorpus !== 'published') await switchDevCorpus('published');
             toggleDevMode(state);
             engine.updatePlayModeLayout();
             ui.showMessage('Player Enabled', 'info');

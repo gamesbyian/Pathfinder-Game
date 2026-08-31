@@ -5,7 +5,7 @@ import type { EngineLevel } from './domain/level-schema.js';
 import { PLAY, IDLE, OVERLAY_NONE } from './app-constants.js';
 
 /**
- * Runtime state slice factories for the top-level ENGINE object.
+ * Runtime state slice factories for the top-level engineState object.
  *
  * Ownership convention (see docs/refactor-notes/2026-06-20-app-architecture-refactor.md §#5): each slice has
  * an owning controller; all writes route through modules/state-actions.js helpers
@@ -317,7 +317,7 @@ export interface GameOptions {
 }
 
 /**
- * Top-level ENGINE object — the single mutable runtime state tree. Each nested slice has
+ * Top-level engineState object — the single mutable runtime state tree. Each nested slice has
  * its own owner/interface above; the scalar fields here are owned as follows:
  *   mode/logicState/overlayState — engine state machine + overlay-controller (authoritative)
  *   isDevMode/cheatActive/cheatTimer — options-controller / level-flow (authoritative)
@@ -403,7 +403,7 @@ export function createEngineState(): EngineState {
 }
 
 // ── Anti-regression guard (compile-time) ─────────────────────────────────────
-// The whole point of Initiative A is that ENGINE is a *real* type, not `any`. If a future
+// The whole point of Initiative A is that engineState is a *real* type, not `any`. If a future
 // edit lets `createEngineState`'s return type collapse back to `any` (e.g. a `: any` return
 // annotation, or a slice factory degrading to `any`), `IsAny` resolves `true`, the conditional
 // resolves to `never`, and the assignment below fails `check:types` — so the regression cannot

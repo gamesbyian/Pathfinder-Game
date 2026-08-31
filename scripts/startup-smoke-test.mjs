@@ -222,7 +222,7 @@ const bootHarness         = stateActionsHarness + '\n' + errorReportingHarness +
       async loadPublishedLevels() { return []; },
       async initAuth() { throw new Error('auth rejected'); }
     },
-    state: { ENGINE: { runtime: { currentTheme: 'classic' } } },
+    state: { engineState: { runtime: { currentTheme: 'classic' } } },
     // getLevel is required: boot.ts's initialLevelIdx re-validation calls data.getLevel(idx) to
     // confirm the persisted level index is still valid against the loaded corpus. Without it,
     // start() throws mid-boot and the outer catch calls loader.fail() instead of loader.finish(),

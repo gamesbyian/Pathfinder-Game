@@ -4,7 +4,7 @@ const LOAD_TIMEOUT = 15000;
 
 async function readOrientationRoundTrip(page) {
     return page.evaluate(() => {
-        const eng = window.APP.State.ENGINE;
+        const eng = window.APP.State.engineState;
         const level = eng.level;
         const canvas = window.APP.Renderer.getCanvas();
         const rect = canvas.getBoundingClientRect();

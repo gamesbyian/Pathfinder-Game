@@ -32,7 +32,7 @@ test('boot falls back to level 1 when persisted level index is outside the loade
       getLevel: (idx: number) => [{ id: 'one' }, { id: 'two' }][idx],
       appendLevels() {},
     },
-    state: { ENGINE: { runtime: { currentTheme: 'classic' } } },
+    state: { engineState: { runtime: { currentTheme: 'classic' } } },
   });
 
   const oldWindow = (globalThis as any).window;

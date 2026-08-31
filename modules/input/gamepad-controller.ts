@@ -29,7 +29,7 @@ export function createGamepadController({ state }: ControllerDeps, navController
     } = navController;
 
     function handleGamepadDirection(dir: any) {
-        if (state.ENGINE.ui.focusGroup === 'GRID') {
+        if (state.engineState.ui.focusGroup === 'GRID') {
             if (dir === 'UP')    moveGridHead(0, -1);
             if (dir === 'DOWN')  moveGridHead(0,  1);
             if (dir === 'LEFT')  moveGridHead(-1, 0);
@@ -41,9 +41,9 @@ export function createGamepadController({ state }: ControllerDeps, navController
 
     function handleBPress() {
         const now = Date.now();
-        if (now - state.ENGINE.ui.bLastPressTime <= 320) {
-            if (state.ENGINE.ui.bSingleTimer) {
-                clearTimeout(state.ENGINE.ui.bSingleTimer);
+        if (now - state.engineState.ui.bLastPressTime <= 320) {
+            if (state.engineState.ui.bSingleTimer) {
+                clearTimeout(state.engineState.ui.bSingleTimer);
                 setUiBSingleTimer(state, null);
             }
             cycleFocusGroup();
@@ -66,7 +66,7 @@ export function createGamepadController({ state }: ControllerDeps, navController
         const now = Date.now();
 
         const pressed    = (idx: any) => !!pad.buttons[idx] && pad.buttons[idx].pressed;
-        const wasPressed = (idx: any) => !!state.ENGINE.gamepad.lastButtons[idx];
+        const wasPressed = (idx: any) => !!state.engineState.gamepad.lastButtons[idx];
         const anyPressed = pad.buttons.some((b: any) => !!b && b.pressed);
         if (anyPressed) setGamepadHasPad(state, true);
 
@@ -85,7 +85,7 @@ export function createGamepadController({ state }: ControllerDeps, navController
                 }
             }
         }
-        if (activeDir && now >= state.ENGINE.gamepad.nextMoveAt) {
+        if (activeDir && now >= state.engineState.gamepad.nextMoveAt) {
             handleGamepadDirection(activeDir);
             setGamepadNextMoveAt(state, now + GAMEPAD_REPEAT_RATE);
         }
@@ -99,7 +99,7 @@ export function createGamepadController({ state }: ControllerDeps, navController
     }
 
     function stopGamepadPollingLoop() {
-        if (state.ENGINE.gamepad.rafId !== null) cancelAnimationFrame(state.ENGINE.gamepad.rafId);
+        if (state.engineState.gamepad.rafId !== null) cancelAnimationFrame(state.engineState.gamepad.rafId);
         setGamepadRafState(state, { rafId: null, rafActive: false });
     }
 
@@ -114,7 +114,7 @@ export function createGamepadController({ state }: ControllerDeps, navController
     }
 
     function startGamepadPollingLoop() {
-        if (state.ENGINE.gamepad.rafActive) return;
+        if (state.engineState.gamepad.rafActive) return;
         setGamepadRafState(state, { rafActive: true, rafId: requestAnimationFrame(gamepadPollingTick) });
     }
 
@@ -122,7 +122,7 @@ export function createGamepadController({ state }: ControllerDeps, navController
         setGamepadHasPad(state, true);
         pollGamepadInput();
         startGamepadPollingLoop();
-        setFocusGroup(state.ENGINE.ui.focusGroup || 'GRID', state.ENGINE.ui.focusIndex || 0);
+        setFocusGroup(state.engineState.ui.focusGroup || 'GRID', state.engineState.ui.focusIndex || 0);
     });
     window.addEventListener('gamepaddisconnected', () => {
         if (hasConnectedGamepad()) return;

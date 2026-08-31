@@ -6,13 +6,13 @@ import { PACK, UNPACK } from '../domain/cell-key.js';
 export function createTapRouter({ state }: RequireDeps<never>) {
     return {
         findTapRoute(target: any, options: any = {}) {
-            const level = state.ENGINE.mode === PLAY
-                ? state.ENGINE.level
-                : state.ENGINE.editor.workingLevel;
-            if (!level || !state.ENGINE.nav.path.length) return null;
+            const level = state.engineState.mode === PLAY
+                ? state.engineState.level
+                : state.engineState.editor.workingLevel;
+            if (!level || !state.engineState.nav.path.length) return null;
 
             const targetKey = PACK(target.x, target.y);
-            const startState = cloneTapRouteState(state.ENGINE);
+            const startState = cloneTapRouteState(state.engineState);
             const startKey = startState.path[startState.path.length - 1];
             if (targetKey === startKey) return [];
 

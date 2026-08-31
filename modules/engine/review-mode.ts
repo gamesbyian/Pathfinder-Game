@@ -30,7 +30,7 @@ export function createReviewModeController({ state, ui, editor, PathNavigator, r
         clearEditorUndoStack(state);
         setEditorModified(state, false);
         clearEditorTriggerableFalseGoalCells(state);
-        PathNavigator.clear(state.ENGINE);
+        PathNavigator.clear(state.engineState);
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
         setDetonatedFalseGoals(state);
@@ -50,7 +50,7 @@ export function createReviewModeController({ state, ui, editor, PathNavigator, r
     }
 
     function loadReviewLevel(idx: any) {
-        const subs = state.ENGINE.review.submissions;
+        const subs = state.engineState.review.submissions;
         if (!subs || !subs.length) {
             resetEmptyReviewState();
             return;
@@ -73,7 +73,7 @@ export function createReviewModeController({ state, ui, editor, PathNavigator, r
         setEditorWorkingLevel(state, normalized);
         clearEditorUndoStack(state);
         setEditorModified(state, false);
-        PathNavigator.clear(state.ENGINE);
+        PathNavigator.clear(state.engineState);
         clearNavigationUndoStack(state);
         setRevealedGeese(state);
         setDetonatedFalseGoals(state);
@@ -83,7 +83,7 @@ export function createReviewModeController({ state, ui, editor, PathNavigator, r
         ui.setInputValue('editReqInt', normalized.requiredIntersections || 0);
         editor.syncMetadataFieldsFromLevel(normalized);
         ui.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
-        ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(normalized.hints, state.ENGINE.foundHintsSinceLoad)));
+        ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(normalized.hints, state.engineState.foundHintsSinceLoad)));
         ui.setClassState('reviewEmptyMsg', 'hidden', true);
         const isHintAddition = subs[safeIdx].type === 'hintAddition' && !!subs[safeIdx].targetPublishedLevelId;
         ui.setClassState('reviewHintAdditionBadge', 'hidden', !isHintAddition);
@@ -101,7 +101,7 @@ export function createReviewModeController({ state, ui, editor, PathNavigator, r
     // { loadReviewIdx, allDone } so the caller can pick the appropriate user message.
     function removeAndAdvance(idx: any) {
         removeReviewSubmission(idx);
-        const plan = planSubmissionAdvance(state.ENGINE.review.submissions.length, idx);
+        const plan = planSubmissionAdvance(state.engineState.review.submissions.length, idx);
         loadReviewLevel(plan.loadReviewIdx);
         return plan;
     }

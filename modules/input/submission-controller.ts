@@ -59,7 +59,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
 
     const submitWorkingLevel = async (triggerBtnId: any, afterSuccess: any) => {
         ui.closeAllModals();
-        if (state.ENGINE.solver.controller) {
+        if (state.engineState.solver.controller) {
             ui.showMessage('Solver is running, please wait.', 'warning');
             return;
         }
@@ -82,7 +82,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
         ui.setSubmitStep('smStep-validate', 'running');
         await new Promise((r: any) => setTimeout(r, 0));
         editor.applyMetricsFromUI();
-        const l          = state.ENGINE.editor.workingLevel;
+        const l          = state.engineState.editor.workingLevel;
         const validation = editor.validateWorkingLevel();
         const requiredLength     = parseInt(ui.getValue('editReqLen')) || 0;
         const requiredIntersections     = parseInt(ui.getValue('editReqInt')) || 0;
@@ -190,14 +190,14 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
         };
         const candidatePaths = [
             ...(Array.isArray(l.hints) ? l.hints : []),
-            ...(Array.isArray(state.ENGINE.foundHintsSinceLoad) ? state.ENGINE.foundHintsSinceLoad : []),
-            ...(state.ENGINE.nav.path.length > 1 ? [state.ENGINE.nav.path] : []),
+            ...(Array.isArray(state.engineState.foundHintsSinceLoad) ? state.engineState.foundHintsSinceLoad : []),
+            ...(state.engineState.nav.path.length > 1 ? [state.engineState.nav.path] : []),
         ];
         let normalizedHints = collectValidatedUniqueHints(candidatePaths, validateHintPath);
         // The player's own drawn path (if any) isn't solver output — tag it distinctly so it's
         // never mistaken for a solver-found hint when the corpus is later analyzed.
-        const manualHintRecords = state.ENGINE.nav.path.length > 1
-            ? [toHint(state.ENGINE.nav.path, [makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved', levelRevision: levelFingerprint })])]
+        const manualHintRecords = state.engineState.nav.path.length > 1
+            ? [toHint(state.engineState.nav.path, [makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved', levelRevision: levelFingerprint })])]
             : [];
 
         // Spend up to 10s finding as many additional distinct solutions as possible (on top of any
@@ -210,7 +210,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
             let _cancelled = false;
             const cancelSolve = () => { _cancelled = true; };
             engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
-            const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+            const abortPoll = setInterval(() => { if (state.engineState.solver.abortRequested) cancelSolve(); }, 100);
             const deadlineAt = Date.now() + budgetMs;
             const baseCount = normalizedHints.length;
             let foundSoFar = 0;
@@ -268,14 +268,14 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
                 // find-time regardless of whether these hints end up submitted.
                 if (res.newlySaved.length > 0) {
                     normalizedHints = collectValidatedUniqueHints([...candidatePaths, ...res.newlySaved], validateHintPath);
-                    setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
+                    setFoundHintsSinceLoad(state, mergeUniqueHints(state.engineState.foundHintsSinceLoad || [], res.newlySaved));
                     const newlyFoundRecords = hintsFromVarietyResult(res, {
                         levelRevision: levelFingerprint,
                         usedExistingHints: normalizedHints.length > 0,
                         randomSeed: varietySeed,
                         solverVersion: SOLVER_VERSION,
                     });
-                    setFoundHintsSinceLoadRecords(state, mergeHints(state.ENGINE.foundHintsSinceLoadRecords || [], newlyFoundRecords));
+                    setFoundHintsSinceLoadRecords(state, mergeHints(state.engineState.foundHintsSinceLoadRecords || [], newlyFoundRecords));
                 }
             } catch (err: any) {
                 engine.overlays.setOverlayState(OVERLAY_NONE);
@@ -340,7 +340,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
         // its previously-saved records, this session's solver-found records, and the player's own
         // drawn path — so whichever paths made the final novelty-filtered cut still carry whatever
         // provenance is known for them, without re-deriving anything from scratch.
-        const knownHintRecords = mergeHints(mergeHints(l.hintRecords || [], manualHintRecords), state.ENGINE.foundHintsSinceLoadRecords || []);
+        const knownHintRecords = mergeHints(mergeHints(l.hintRecords || [], manualHintRecords), state.engineState.foundHintsSinceLoadRecords || []);
         const hints = reconcileHints(hintPathsToSubmit, knownHintRecords);
         const submittedProvenance = appendProvenanceEntry(l.provenance, makeLevelProvenanceEntry('human', 'submitted'));
         const levelData = buildLevelData(hints, submittedProvenance);
@@ -392,7 +392,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
             try {
                 const subs = await persistence.loadSubmissions();
                 engine.review.setReviewSubmissions(subs);
-                const safeIdx = clampReviewIndex(state.ENGINE.review.currentIdx, subs.length);
+                const safeIdx = clampReviewIndex(state.engineState.review.currentIdx, subs.length);
                 if (subs.length > 0) {
                     engine.review.loadReviewLevel(safeIdx);
                 } else {
@@ -407,7 +407,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
             ui.showSubmitDismiss();
             setTimeout(() => ui.hideSubmitModal(), 4000);
         };
-        const afterSuccess = state.ENGINE.mode === REVIEW ? afterReviewSubmit : null;
+        const afterSuccess = state.engineState.mode === REVIEW ? afterReviewSubmit : null;
         // submitWorkingLevel's own top-level catch already reports and surfaces every failure in
         // the modal; this is only a last-resort net for a throw from afterSuccess (outside that
         // catch's scope) or the catch handler itself.
@@ -421,8 +421,8 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
 
     (document.getElementById('devCopyBtn') as any).onclick = async () => {
         ui.closeAllModals();
-        if (!state.ENGINE.nav.path.length) return;
-        const pathStr = JSON.stringify(state.ENGINE.nav.path).replace(/\s/g, '');
+        if (!state.engineState.nav.path.length) return;
+        const pathStr = JSON.stringify(state.engineState.nav.path).replace(/\s/g, '');
         ui.setSolutionOutput(pathStr);
         await ui.copyText(pathStr, { fallbackElId: 'solutionOutput' });
         ui.showMessage('Path Copied', 'info');
@@ -433,7 +433,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
     const showSavedHint = async () => {
         // Hints live in the lazily-fetched split artifact, not on the rest-state level
         // object (hardening plan §2); data.getHints caches after the first fetch.
-        const levelIdx = state.ENGINE.levelIdx;
+        const levelIdx = state.engineState.levelIdx;
         const levelNumber = levelIdx + 1;
         const rawLevel = data.getLevel(levelIdx);
         let hints: import('../domain/hint-types.js').Hint[] = [];
@@ -443,13 +443,13 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
             reportError('hints.load', err, { levelNumber });
         }
         // The fetch yielded — bail if the player moved to another level meanwhile.
-        if (state.ENGINE.levelIdx !== levelIdx) return;
+        if (state.engineState.levelIdx !== levelIdx) return;
         if (hints.length > 0) {
             const paths = hintPaths(hints);
             // Play mode cycles a curated, mutually-distinct subset (displayIndices); the cycle count
             // is that subset's size (falls back to the full list on the very first request).
-            const count = state.ENGINE.hinter.displayIndices?.length || paths.length;
-            const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, count);
+            const count = state.engineState.hinter.displayIndices?.length || paths.length;
+            const nextIdx = nextHintCycleIndex(state.engineState.hinter.source, state.engineState.hinter.currentPathIdx, count);
             engine.hints.setHintPaths(paths, 'saved', nextIdx, { curate: true });
             engine.overlays.startHintAnimation();
         } else {
@@ -460,7 +460,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
     // Play mode hint: plays saved hints only; solver is not triggered here.
     (document.getElementById('hintBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
+        if (state.engineState.overlayState !== OVERLAY_NONE || state.engineState.solver.controller) return;
         void showSavedHint(); // never rejects — getHints failures are reported inside
     };
 
@@ -487,11 +487,11 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
 
     (document.getElementById('reviewHintBtn') as any).onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== OVERLAY_NONE || state.ENGINE.solver.controller) return;
-        const wl = state.ENGINE.editor.workingLevel;
-        const hints = mergeUniqueHints(wl?.hints || [], state.ENGINE.foundHintsSinceLoad || []);
+        if (state.engineState.overlayState !== OVERLAY_NONE || state.engineState.solver.controller) return;
+        const wl = state.engineState.editor.workingLevel;
+        const hints = mergeUniqueHints(wl?.hints || [], state.engineState.foundHintsSinceLoad || []);
         if (!hints.length) { ui.showMessage('No saved hint.', 'info'); return; }
-        const nextIdx = nextHintCycleIndex(state.ENGINE.hinter.source, state.ENGINE.hinter.currentPathIdx, hints.length);
+        const nextIdx = nextHintCycleIndex(state.engineState.hinter.source, state.engineState.hinter.currentPathIdx, hints.length);
         engine.hints.setHintPaths(hints, 'saved', nextIdx);
         engine.overlays.startHintAnimation();
         ui.setButtonLabel('reviewHintBtn', `Hints (${nextIdx + 1}/${hints.length})`);

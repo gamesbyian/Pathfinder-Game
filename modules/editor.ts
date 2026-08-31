@@ -36,13 +36,13 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
     const runtime = () => (_port ??= getEngineRuntime());
 
     function pickUpObject(k: any) {
-        if (state.ENGINE.editor.isPencilMode) return null;
+        if (state.engineState.editor.isPencilMode) return null;
         saveEditorState();
         setEditorDraggedFromGrid(state, true);
         clearEditorTriggerableFalseGoalCells(state);
-        const l = state.ENGINE.editor.workingLevel;
+        const l = state.engineState.editor.workingLevel;
         setEditorWorkingHints(state, []);
-        const result = removeOccupant(l, k, state.ENGINE.editor.pendingPortal);
+        const result = removeOccupant(l, k, state.engineState.editor.pendingPortal);
         if (!result) {
             popEditorUndoStack(state);
             setEditorDraggedFromGrid(state, false);
@@ -55,12 +55,12 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
     }
 
     function placeEditorObject(k: any) {
-        const l = state.ENGINE.editor.workingLevel;
-        const toolType = state.ENGINE.editor.draggedObject
-            ? state.ENGINE.editor.draggedObject.type
-            : state.ENGINE.editor.selectedTool;
+        const l = state.engineState.editor.workingLevel;
+        const toolType = state.engineState.editor.draggedObject
+            ? state.engineState.editor.draggedObject.type
+            : state.engineState.editor.selectedTool;
         if (!toolType) return;
-        const pendingPortal = state.ENGINE.editor.pendingPortal;
+        const pendingPortal = state.engineState.editor.pendingPortal;
 
         if (pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
             ui.showMessage('Finish portal pair first!', 'error');
@@ -91,7 +91,7 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
 
     // Wrapper: passes editor's pendingPortal context; pure logic is in domain/level-validation.js.
     function validateLevelDetailed(l: any, opts: any = {}) {
-        return validateLevelDetailedImpl(l, opts, state.ENGINE.editor.pendingPortal);
+        return validateLevelDetailedImpl(l, opts, state.engineState.editor.pendingPortal);
     }
 
     function validateLevel(l: any) {
@@ -102,21 +102,21 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
 
     function saveEditorState() {
         saveEditorSnapshot(
-            state.ENGINE.editor,
-            state.ENGINE.hinter,
+            state.engineState.editor,
+            state.engineState.hinter,
             deepCloneLevel
         );
     }
 
     function restoreEditorState() {
-        const result = restoreEditorSnapshot(state.ENGINE.editor, state.ENGINE.hinter);
+        const result = restoreEditorSnapshot(state.engineState.editor, state.engineState.hinter);
         if (!result) return;
         markDirty(state);
         ui.showMessage('Undo Grid Action', 'muted');
     }
 
     async function generateLevelString() {
-        const l = state.ENGINE.editor.workingLevel;
+        const l = state.engineState.editor.workingLevel;
         const isValid = validateLevel(l);
         const requiredLength = parseInt(ui.getValue('editReqLen')) || 0;
         const requiredIntersections = parseInt(ui.getValue('editReqInt')) || 0;
@@ -141,10 +141,10 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
         const savedHints = Array.isArray(l.hints) ? l.hints : [];
         savedHints.forEach(pushUniqueHint);
 
-        const liveHints = Array.isArray(state.ENGINE.foundHintsSinceLoad) ? state.ENGINE.foundHintsSinceLoad : [];
+        const liveHints = Array.isArray(state.engineState.foundHintsSinceLoad) ? state.engineState.foundHintsSinceLoad : [];
         liveHints.forEach(pushUniqueHint);
 
-        if (state.ENGINE.nav.path.length > 1) pushUniqueHint(state.ENGINE.nav.path);
+        if (state.engineState.nav.path.length > 1) pushUniqueHint(state.engineState.nav.path);
 
         const exportedHints = normalizedHints.slice(0, 5);
         applyMetadataFromUI(l);
@@ -160,7 +160,7 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
         }
     }
 
-    function applyMetadataFromUI(level: any = state.ENGINE?.editor?.workingLevel) {
+    function applyMetadataFromUI(level: any = state.engineState?.editor?.workingLevel) {
         if (!level) return;
         level.designerName = (ui.getValue('levelDesignerInput', '') || '').trim();
         level.description = (ui.getValue('levelDescriptionInput', '') || '').trim();
@@ -169,7 +169,7 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
         level.difficulty = Number.isFinite(n) ? Math.max(1, Math.min(10, n)) : null;
     }
 
-    function syncMetadataFieldsFromLevel(level: any = state.ENGINE?.editor?.workingLevel) {
+    function syncMetadataFieldsFromLevel(level: any = state.engineState?.editor?.workingLevel) {
         ui.setInputValue('levelDesignerInput', level?.designerName || '');
         ui.setInputValue('levelDescriptionInput', level?.description || '');
         ui.setInputValue('levelDifficultyInput', level?.difficulty ?? '');
@@ -183,17 +183,17 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
             setEditorModified(state, false);
         },
         commitWorkingLevel() {
-            setLevel(state, deepCloneLevel(state.ENGINE.editor.workingLevel));
+            setLevel(state, deepCloneLevel(state.engineState.editor.workingLevel));
             setEditorModified(state, false);
         },
         applyMetricsFromUI() {
-            if (!state.ENGINE?.editor?.workingLevel) return;
+            if (!state.engineState?.editor?.workingLevel) return;
             const clampMetric = (n: any) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
             setEditorMetrics(state, {
                 requiredLength: clampMetric(parseInt(ui.getValue('editReqLen'), 10)),
                 requiredIntersections: clampMetric(parseInt(ui.getValue('editReqInt'), 10))
             });
-            applyMetadataFromUI(state.ENGINE.editor.workingLevel);
+            applyMetadataFromUI(state.engineState.editor.workingLevel);
         },
         setObjectAt(k: any, obj: any) {
             setEditorDraggedObject(state, obj);
@@ -204,17 +204,17 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
             return pickUpObject(k);
         },
         validateWorkingLevel() {
-            return validateLevelDetailed(state.ENGINE.editor.workingLevel);
+            return validateLevelDetailed(state.engineState.editor.workingLevel);
         },
         resetWorkingGrid() {
             this.saveEditorState();
             resetEditorWorkingGrid(state);
-            runtime().PathNavigator.clear(state.ENGINE);
+            runtime().PathNavigator.clear(state.engineState);
             markDirty(state);
         },
         createNewLevel() {
             setEditorWorkingLevel(state, { grid: { w: 10, h: 10 }, requiredLength: 0, requiredIntersections: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], surroundKeys: [], adjacentTurnKeys: [], adjacentTurnDirs: [], mustPassTurnDirs: new Map(), landmarkMeta: new Map(), hints: [], designerName: '', description: '', difficulty: null, provenance: makeLevelProvenance([makeProvenanceEntry('human', 'authored')]) });
-            runtime().PathNavigator.clear(state.ENGINE);
+            runtime().PathNavigator.clear(state.engineState);
             ui.setSolutionOutput('');
             runtime().clearHintPaths();
             setEditorPendingPortal(state, null);
@@ -222,7 +222,7 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
             ui.setModalContent('levelTitle', '??', 'text');
             ui.setInputValue('editReqLen', 0);
             ui.setInputValue('editReqInt', 0);
-            syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
+            syncMetadataFieldsFromLevel(state.engineState.editor.workingLevel);
             setEditorPencilMode(state, false);
             runtime().updatePencilState();
             setEditorModified(state, true);
@@ -234,16 +234,16 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
             setEditorModified(state, true);
         },
         handlePaletteToolPointerDown(toolType: any, options: any = {}) {
-            if (state.ENGINE.mode !== EDITOR && state.ENGINE.mode !== REVIEW) return;
-            if (state.ENGINE.overlayState !== OVERLAY_NONE) return;
+            if (state.engineState.mode !== EDITOR && state.engineState.mode !== REVIEW) return;
+            if (state.engineState.overlayState !== OVERLAY_NONE) return;
             setEditorDraggedFromGrid(state, false);
             setEditorEmptyClickCount(state, 0);
-            if (state.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
+            if (state.engineState.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
                 ui.showMessage('Finish portal pair!', 'info');
                 return;
             }
             const forceActivate = !!options.forceActivate;
-            if (state.ENGINE.editor.selectedTool === toolType && !forceActivate) {
+            if (state.engineState.editor.selectedTool === toolType && !forceActivate) {
                 setEditorSelectedTool(state, null);
                 ui.setPaletteSelectedByType(toolType, false);
                 setEditorDraggedObject(state, null);
@@ -259,9 +259,9 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
             runtime().updatePencilState();
         },
         togglePencilMode() {
-            if (state.ENGINE.overlayState !== OVERLAY_NONE) return;
+            if (state.engineState.overlayState !== OVERLAY_NONE) return;
             toggleEditorPencilMode(state);
-            if (state.ENGINE.editor.isPencilMode) {
+            if (state.engineState.editor.isPencilMode) {
                 setEditorSelectedTool(state, null);
                 ui.clearPaletteSelection();
             } else {
@@ -282,9 +282,9 @@ export function createEditor({ state, ui, solverApi, getEngineRuntime }: Require
         // Engine delegates — direct passthrough for modules that still call these via editor
         setLogicState(newState: any)  { return runtime().setLogicState(newState); },
         setOverlayState(newState: any){ return runtime().setOverlayState(newState); },
-        getRealLength(engineState: any = state.ENGINE) { return runtime().getRealLength(engineState); },
-        rebuildDerivedPathState(engineState: any = state.ENGINE) { return runtime().rebuildDerivedPathState(engineState); },
-        assertStateConsistency(engineState: any = state.ENGINE) { return runtime().assertStateConsistency(engineState); },
+        getRealLength(engineState: any = state.engineState) { return runtime().getRealLength(engineState); },
+        rebuildDerivedPathState(engineState: any = state.engineState) { return runtime().rebuildDerivedPathState(engineState); },
+        assertStateConsistency(engineState: any = state.engineState) { return runtime().assertStateConsistency(engineState); },
         updatePencilState()      { return runtime().updatePencilState(); },
         applyMetadataFromUI,
         syncMetadataFieldsFromLevel
