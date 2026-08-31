@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14C2 atomic engine state graph |
-| Status | 14B merged; 14C1 in progress |
-| Base `main` SHA | `17e5668447e8779294c398791cab504114ea873c` |
-| Branch | `chatgpt/phase14c2-engine-state-2026-08-31` |
-| PR | #1627 |
+| Current batch | 14D merged-tree closeout |
+| Status | 14D in progress |
+| Base `main` SHA | `bd809ed8c3bb55a02757f29868eafe15fb91402d` |
+| Branch | `chatgpt/phase14d-merged-tree-closeout-2026-08-31` |
+| PR | pending |
 | Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
@@ -338,7 +338,29 @@ before #1627 merges. Phase-wide closeout remains a separate 14D pass from merged
 
 ## 10. 14D merged-tree closeout
 
-Not started. Must branch from merged 14C2 main.
+Started from merged 14C2 main `bd809ed8c3bb55a02757f29868eafe15fb91402d`.
+
+14D is rowless implementation-wise. Its job is to prove the merged architecture, close the two
+intentional retained-term rows, and prevent future agents from confusing those retained uses with
+the deleted top-level facades.
+
+Current retained architecture surfaces are:
+
+- `modules/input/editor-toolbar-core.ts`
+- `modules/input/false-goal-trigger-scan-core.ts`
+- `modules/input/navigation-core.ts`
+- `modules/input/pointer-input-core.ts`
+- `modules/input/review-core.ts`
+- `modules/input/solver-core.ts`
+- `modules/input/submission-core.ts`
+- `modules/state/actions/core-actions.ts`
+
+The seven qualified input `*-core.ts` files are the pure transition/input cores described by ADR
+0006. `core-actions.ts` is the action owner for the top-level/core engine-state slice. They are
+intentional vocabulary, not residue from the deleted `modules/core.ts` dependency bag.
+
+14D will compose the permanent 14A, 14B, 14C1 and 14C2 guards, pin these retained files, and rerun
+ordinary CI plus Chromium on the merged tree before Phase 14 is closed.
 
 ## 11. Final closure
 
