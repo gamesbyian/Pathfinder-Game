@@ -23,7 +23,7 @@ import {
     setResetStreak,
     setRevealedGeese,
     setReviewSavedPlayLevelIndex,
-    setVariant as setVariantState,
+    setOrientation as setOrientationState,
 } from '../state-actions.js';
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { hintPaths } from '../domain/hint-types.js';
@@ -128,7 +128,7 @@ export function createLevelFlowController({
             .catch((err: any) => { reportError('hints.editor-load', err, { levelNumber }); });
     }
 
-    function _loadLevelByIndex(idx: any, keepVariant: any = false) {
+    function _loadLevelByIndex(idx: any, keepOrientation: any = false) {
         clearFalseGoalTimers();
         if (state.ENGINE.solver.controller) return;
 
@@ -138,8 +138,8 @@ export function createLevelFlowController({
         setLevelIndex(state, idx);
 
         const isEditor = state.ENGINE.mode === core.EDITOR;
-        if (isEditor) setVariantState(state, 0);
-        else if (!keepVariant) setVariantState(state, Math.floor(Math.random() * 8));
+        if (isEditor) setOrientationState(state, 0);
+        else if (!keepOrientation) setOrientationState(state, Math.floor(Math.random() * 8));
 
         setLogicState(core.IDLE);
         setOverlayState(core.OVERLAY_NONE);
@@ -181,7 +181,7 @@ export function createLevelFlowController({
     }
 
     function loadLevel(levelObjOrIdx: any, options: any = {}) {
-        if (typeof levelObjOrIdx === 'number') return _loadLevelByIndex(levelObjOrIdx, !!options.keepVariant);
+        if (typeof levelObjOrIdx === 'number') return _loadLevelByIndex(levelObjOrIdx, !!options.keepOrientation);
         const mode = options.mode || state.ENGINE.mode;
         if (mode === core.PLAY) setLevel(state, levelObjOrIdx);
         else setEditorWorkingLevel(state, levelObjOrIdx);
@@ -209,7 +209,7 @@ export function createLevelFlowController({
         setDetonatedFalseGoals(state);
         ui.applyModeLayout(newMode, { isDevMode: state.ENGINE.isDevMode });
         if (isEd) {
-            setVariantState(state, 0);
+            setOrientationState(state, 0);
             _initEditorWorkingCopy();
         } else if (isReview) {
             setReviewSavedPlayLevelIndex(state, state.ENGINE.levelIdx);
