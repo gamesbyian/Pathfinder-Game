@@ -18,8 +18,12 @@ try {
   cpSync(path.join(root, 'package.json'), path.join(temp, 'package.json'));
   for (const file of [
     'scripts/run-solver-direct.mjs', 'scripts/combine-solver-sweep-reports.mjs',
-    'reports/stress/solver-corpus1-latest.json', 'reports/stress/solver-corpus2-latest.json',
   ]) cpSync(path.join(root, file), path.join(temp, file));
+  // The closeout contract only requires these canonical report paths to exist. Keep the negative
+  // fixture tiny so Node-test CI does not depend on reports/ being materialized by sparse checkout.
+  for (const file of [
+    'reports/stress/solver-corpus1-latest.json', 'reports/stress/solver-corpus2-latest.json',
+  ]) writeFileSync(path.join(temp, file), '{}\n');
 
   let result = run(temp);
   assert.equal(result.status, 0, result.stderr);
