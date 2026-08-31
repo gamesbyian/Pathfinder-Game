@@ -1664,8 +1664,7 @@ It must not be combined with the last compatibility implementation batch.
 - update docs index, \`AGENTS.md\`, change recipes, and current-authority guards so future agents are
   routed to permanent vocabulary/current implementation rather than an "active" cleanup phase;
 - verify there is no open naming-cleanup PR/branch containing unique unmerged work;
-- rerun documentation links, naming status/ledger checks, current-authority checks, ordinary exact-
-  head CI, and any closeout-specific gate required by the final archive shape.
+- rerun documentation links, naming status/ledger checks, current-authority checks, ordinary exact-head CI, and any closeout-specific gate required by the final archive shape.
 
 Completion means the repository can operate, research, and explain itself in the canonical
 vocabulary while still interpreting historical evidence at explicit boundaries. It does not mean
@@ -1767,6 +1766,12 @@ Frozen reports are excluded unless they are being actively promoted into current
 
 ## 13. Completion audit
 
+For final Phase-15 closure, the independent Phase 15I hostile merged-tree closeout above is the
+minimum proof standard. This checklist is the repository-wide completion inventory and may not be
+used to weaken that closeout. In particular, zero unclassified lexical residue is necessary but is
+not sufficient: executable compatibility readers, canonical single-write, mixed-era joins, current
+authority routing, and the solver-research resumption gate must also be proven.
+
 The cleanup is complete only when all of the following are true.
 
 1. `ida:` appears only in frozen history, historical fixtures, or explicit legacy-parser documentation.
@@ -1802,7 +1807,7 @@ The cleanup is complete only when all of the following are true.
 31. Maintained solver-sweep report combination uses `combine-solver-sweep-reports` / `solver:combine-sweep-reports`, and current Corpus 1/2 output paths do not use `parallel`, `random`, or unqualified `benchmark` as corpus identity.
 32. The pre-Phase-8 process-hardening gate was completed against a recorded current-`main` commit before PR 8 began.
 33. Every Phase-8+ ledger entry has all applicable verification dimensions resolved to `done` or `not-applicable`; no row is `done` with pending verification.
-34. Every maintained command/tool/workflow touched by Phases 8-14 has either executable smoke/contract coverage or an explicit documented structural/manual validation path; aggregate CI is not cited for an unexecuted surface.
+34. Every maintained command/tool/workflow touched by Phases 8-15 has either executable smoke/contract coverage or an explicit documented structural/manual validation path; aggregate CI is not cited for an unexecuted surface.
 35. Each completed Phase 8+ has a consumer-inward closeout audit distinct from the implementation pass.
 36. Every Phase-8+ implementation batch has a checked-in execution record containing its base-main SHA, impact map, validation topology, compatibility ownership, targeted validation, closeout findings, parity result, and pre-merge comparison.
 37. No Phase-8+ implementation batch was stacked on an unmerged predecessor unless the plan recorded a specific exception; the normal sequence is merge -> verify current `main` -> branch next batch.
@@ -1814,9 +1819,32 @@ The cleanup is complete only when all of the following are true.
 43. Canonical-target occupancy has been checked during final reconciliation; no canonical name/path/package alias accidentally denotes two materially different live concepts.
 44. `npm run naming:status` reports no active execution, no incomplete phase before the completion phase, and no unexpected high-risk/compatibility residue.
 45. The ledger checker negative-case self-test remains in the maintained Node test graph and passes, so the completion contract is tested to reject bad states as well as accept the final good state.
-46. Any specification amendments made during Phases 8-14 were landed explicitly in the plan/ledger/phase authorities rather than hidden inside implementation PRs.
+46. Any specification amendments made during Phases 8-15 were landed explicitly in the plan/ledger/phase authorities rather than hidden inside implementation PRs.
 47. Every serial batch has a durable merged PR/commit record in `batchCompletions`; no later batch used predecessor row completion as a substitute for an actual merge barrier.
 48. `activeExecution` is idle on merged `main` between batches; no implementation PR leaves a stale branch-local active claim behind.
+49. Every Phase-15 compatibility claim is backed by an executable real-owner fixture or an explicit
+    evidence-backed retain/remove amendment; comments, allowlists, and token-only fixtures are not
+    counted as readers.
+50. Every real Phase-15 persisted/generated compatibility boundary has canonical-only read,
+    legacy-only read, canonical single-write, and mixed-era collection/join/discovery evidence where
+    its real consumer combines more than one record.
+51. Every generated-schema field migration has an explicit schema-version disposition, and no
+    existing schema version silently acquired contradictory required-field semantics.
+52. New Phase-15 writers, combiners, workflows, and report producers have been executed and do not
+    manufacture retired spellings except for explicitly stable external identities.
+53. Representative frozen Phase-15 historical fixtures retain their pre-migration content/blob
+    identity while current readers still interpret them through the named owner.
+54. The final current-authority audit is semantic and route-based, covering agent guidance, indexes,
+    recipes, architecture/typing authorities, accepted/enforced ADRs, workflow/tooling maps, and
+    solver runbooks rather than a small fixed document allowlist.
+55. The `repairLateProbe` / `REPAIR_LATE_PROBE` derived vocabulary family has a recorded final
+    classification instead of being left as an accidental orphan of the stage rename.
+56. The post-naming solver-research evidence bundle is recorded on the same post-Phase-15 `main`
+    lineage from which decision-bearing solver work resumes.
+57. Phase 15I ran independently on merged `main`; any defect it found was repaired and the hostile
+    closeout was rerun on the repaired merged tree before Phase 15J finalized the program.
+58. Phase 15J changed permanent routing/archival state only after immutable Phase-15 implementation
+    and merged-tree closeout evidence existed.
 
 ## 14. Stop conditions
 
@@ -1834,7 +1862,23 @@ Stop an individual rename PR and report the conflict instead of improvising if:
 - a high-risk cross-boundary rename has no credible way to identify or validate a live consumer/transport surface; first improve the inventory/checking substrate or record the blocker rather than declaring the row complete;
 - another naming-cleanup implementation batch is already active or an apparently relevant historical branch has not yet been compared against current `main`;
 - the proposed PR is stacked on an unmerged predecessor without an explicit plan exception;
-- pre-merge comparison shows the intended change is already present on current `main` or the PR diff is empty.
+- pre-merge comparison shows the intended change is already present on current `main` or the PR diff is empty;
+- a Phase-15 row combines CLI, schema, workflow, persistence, source, or artifact identities that
+  have different compatibility owners, lifetimes, or validation topology; split/amend the row
+  before implementation;
+- a Phase-15 `dual-read` claim cannot be demonstrated through a real reader/external caller and an
+  authentic representative legacy fixture; amend the compatibility contract rather than
+  manufacturing an unused normalizer;
+- a generated-schema rename has no explicit versioning decision or would make one schema version
+  mean two incompatible required-field shapes;
+- a legacy-only and canonical-only fixture each parse successfully but a mixed-era collection
+  groups, deduplicates, joins, discovers, or validates them differently;
+- a new writer/combiner emits a retired spelling that should be canonical-single-write;
+- a workflow rename is structurally valid but its real input, matrix, dependency, artifact, or
+  output wiring has not been exercised credibly;
+- the semantic current-authority audit still finds live guidance teaching the retired contract;
+- the Phase 15I hostile closeout finds a real current defect. Repair it and rerun closeout rather
+  than finalizing around an allowlist.
 
 In those cases, preserve the plan's canonical vocabulary, document the concrete blocker in the ledger, and split the schema/behavior problem into a separately reviewed prerequisite. Do not choose a different name locally.
 
