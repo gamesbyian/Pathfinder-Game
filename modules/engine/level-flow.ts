@@ -28,6 +28,7 @@ import {
 import { knownHintCount, hintButtonLabel } from '../solver/diversification.js';
 import { hintPaths } from '../domain/hint-types.js';
 import { defaultReportError } from '../error-reporting.js';
+import { EDITOR, IDLE, OVERLAY_NONE, PLAY, REVIEW } from '../app-constants.js';
 
 /**
  * Pure decision for the reset-streak cheat easter egg: 5 consecutive resets briefly reveal
@@ -55,7 +56,7 @@ export function planResetCheat({ cheatActive, resetStreak }: any) {
 }
 
 export function createLevelFlowController({
-    core, state, ui, data, levelUtils, persistence, editor, reportError = defaultReportError,
+    state, ui, data, levelUtils, persistence, editor, audioService, reportError = defaultReportError,
     PathNavigator,
     clearFalseGoalTimers,
     applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
@@ -75,8 +76,8 @@ export function createLevelFlowController({
     function updateCompletionUI() {
         const eng        = state.ENGINE;
         const isComplete = eng.progressSet.has(eng.levelIdx);
-        const isPlayMode = eng.mode === core.PLAY;
-        const isReview   = eng.mode === core.REVIEW;
+        const isPlayMode = eng.mode === PLAY;
+        const isReview   = eng.mode === REVIEW;
         let reviewDisplay = null;
         if (isReview) {
             const subs = eng.review.submissions;
@@ -137,12 +138,12 @@ export function createLevelFlowController({
 
         setLevelIndex(state, idx);
 
-        const isEditor = state.ENGINE.mode === core.EDITOR;
+        const isEditor = state.ENGINE.mode === EDITOR;
         if (isEditor) setOrientationState(state, 0);
         else if (!keepOrientation) setOrientationState(state, Math.floor(Math.random() * 8));
 
-        setLogicState(core.IDLE);
-        setOverlayState(core.OVERLAY_NONE);
+        setLogicState(IDLE);
+        setOverlayState(OVERLAY_NONE);
 
         const baseLevel = levelUtils.normalizeLevel(idx);
         const optionsResult = applyPlayChallengeOptions(baseLevel);
@@ -183,24 +184,24 @@ export function createLevelFlowController({
     function loadLevel(levelObjOrIdx: any, options: any = {}) {
         if (typeof levelObjOrIdx === 'number') return _loadLevelByIndex(levelObjOrIdx, !!options.keepOrientation);
         const mode = options.mode || state.ENGINE.mode;
-        if (mode === core.PLAY) setLevel(state, levelObjOrIdx);
+        if (mode === PLAY) setLevel(state, levelObjOrIdx);
         else setEditorWorkingLevel(state, levelObjOrIdx);
         resetRunState({ keepLevel: true });
     }
 
     function switchMode(newMode: any) {
-        if (newMode === core.PLAY && state.ENGINE.mode === core.REVIEW) {
+        if (newMode === PLAY && state.ENGINE.mode === REVIEW) {
             setLevelIndex(state, state.ENGINE.review.savedPlayLevelIdx);
         }
-        const isEd     = newMode === core.EDITOR;
-        const isReview = newMode === core.REVIEW;
+        const isEd     = newMode === EDITOR;
+        const isReview = newMode === REVIEW;
         setModeState(state, newMode);
-        if (newMode !== core.PLAY) ui.closeModal('playOptionsBlockedModal');
+        if (newMode !== PLAY) ui.closeModal('playOptionsBlockedModal');
         if (!isReview) ui.setClassState('reviewEmptyMsg', 'hidden', true);
         if (!isReview) ui.setClassState('reviewHintAdditionBadge', 'hidden', true);
         ui.setSolutionOutput('');
-        setLogicState(core.IDLE);
-        setOverlayState(core.OVERLAY_NONE);
+        setLogicState(IDLE);
+        setOverlayState(OVERLAY_NONE);
         resetHinterForLevel(state);
         ui.applyHintPinState(false, false);
         PathNavigator.clear(state.ENGINE);
@@ -236,7 +237,7 @@ export function createLevelFlowController({
         });
         setResetStreak(state, plan.nextResetStreak);
         if (plan.activateCheat) setCheatActive(state, true);
-        if (plan.playSound) core.SOUND_BUS.play('F5', '8n');
+        if (plan.playSound) audioService.play('F5', '8n');
         if (plan.rescheduleExpiry) {
             if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
             setCheatTimer(state, scheduleTimer(() => {
@@ -249,7 +250,7 @@ export function createLevelFlowController({
 
     function initReviewMode() {
         resetReviewSubmissions(state);
-        switchMode(core.REVIEW);
+        switchMode(REVIEW);
     }
 
     return {
