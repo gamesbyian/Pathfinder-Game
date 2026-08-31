@@ -4457,12 +4457,12 @@
   "activeExecution": {
     "status": "active",
     "phase": 11,
-    "batch": null,
-    "branch": "chatgpt/phase11b-atomic-orientation-rename-2026-08-30",
-    "pr": 1612,
-    "baseMainSha": "53c32911e840a342c9eb6d90ecd0d26fd59052ae",
+    "batch": "11C",
+    "branch": "chatgpt/phase11c-merged-tree-closeout-2026-08-30",
+    "pr": null,
+    "baseMainSha": "b2ee0d74cab245c042555516474e1492975b4fd6",
     "recordPath": "docs/naming-cleanup-phase-records/phase-11.md",
-    "notes": "Phase 11B atomic runtime orientation rename is implementation-complete on PR #1612. Runtime residue census is clean; ordinary CI #3416 and the dedicated Chromium orientation gate #8 passed on behavior-bearing head e1090eed361fed37def0d1b574d954cc5575025b. Record/ledger evidence updates move the final head, so fresh exact-head CI/browser success is still required before merge; 11C remains separate merged-tree closeout."
+    "notes": "Phase 11B merged green as b2ee0d74cab245c042555516474e1492975b4fd6. Phase 11C now owns the merged-tree evidence/closure pass; rows remain in-progress until exact-head ordinary CI and the Chromium orientation gate pass on this closeout PR."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior.",
   "phaseBatches": {
