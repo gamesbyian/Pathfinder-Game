@@ -4,7 +4,7 @@
  * orchestration/ladder (DFS/beam main loop, other gates, the probe) entirely. For fast iteration
  * when a change is scoped to repair-search.ts: the main ladder's own budget is often "pure
  * scheduling tax" ahead of repair on the repair-gated feature cluster (see
- * REPAIR_EXTRA_BUDGET_FRACTION's comment in orchestration.ts), so testing repair in isolation
+ * REPAIR_ADDITIVE_BUDGET_MULTIPLIER's comment in orchestration.ts), so testing repair in isolation
  * skips straight to the part that actually matters for that iteration.
  *
  * Three modes:

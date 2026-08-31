@@ -327,14 +327,14 @@ const T1_PROMOTED_VARIANTS = [
 // constructs its AttemptConfig directly and calls runAttempt. So the toggle is not merely unlikely to
 // matter here, it is PROVABLY inert on every cell it would have generated -- verified by tracing every
 // read site of the flag (grep across modules/solver/*.ts) and confirming none of them sit in the
-// runAttempt/attempt-dispatch.ts/dfsFromGate/beamSearchFromGate/repairSearchFromGate/prune-gauntlet.ts
+// runAttempt/attempt-dispatch.ts/dfsFromGate/beamSearchFromGate/repairSearchFromGate/hard-prune-pipeline.ts
 // call graph this census actually exercises. Left as an empty list (not deleted structurally) so a
 // FUTURE flag confirmed to be read from prep._cfg inside that call graph has a place to go, and so
 // the "what belongs in group 3 but hasn't earned a slot yet" framing above stays meaningful. See
 // reports/2026-08-19-technique-census-design.md's "Is anything else provably wasted" section for the
 // full writeup, including the general check this failure mode implies: EVERY flag promoted anywhere
 // in this file must be traced to a live prep._cfg read inside the actual search functions
-// (search.ts/prune-gauntlet.ts/topology.ts/repair-search.ts), not merely "the flag exists and sounds
+// (search.ts/hard-prune-pipeline.ts/topology.ts/repair-search.ts), not merely "the flag exists and sounds
 // relevant" -- the three flags in T1_PROMOTED_VARIANTS above were re-verified against exactly this
 // standard the same day this was found, and all three passed.
 const FLAG_EXPERIMENTS = [];

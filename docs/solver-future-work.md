@@ -44,7 +44,7 @@ Candidate forms include exact boundary/interface state, restricted representativ
 
 ### Residual opportunity beyond current prunes
 
-Among states already passing the prune gauntlet, can a cheap safe quantity separate exact-live from exact-dead earlier?
+Among states already passing the hard-prune pipeline, can a cheap safe quantity separate exact-live from exact-dead earlier?
 
 Prespecified families worth considering only when a ranked question needs them:
 

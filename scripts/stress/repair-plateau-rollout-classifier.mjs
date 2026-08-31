@@ -17,7 +17,7 @@
  * once run for results.
  *
  * Original motivation, for context: reports/2026-08-12-repair-retreat-cpsat.md's own n=2 finding
- * (R00648 vs. R03176) found repair's own `closeLengthGap` and 2,000 randomized rollouts both fail
+ * (R00648 vs. R03176) found repair's own `searchCompletionFromPartialPath` and 2,000 randomized rollouts both fail
  * to close R00648's residual from a CP-SAT-VERIFIED feasible point (0/2000 solved, avg 4.3
  * nodes/trial, best depth 60/141) while the *same* diagnostic on R03176's own verified point gets
  * much further (best depth 134/141) despite neither one closing — i.e. the two levels' near-miss
@@ -53,11 +53,11 @@
  * future CP-SAT-anchored version, not because a population sweep is currently recommended.
  *
  * `--close-gap-node-budget=<n>` (default 0 = skip, --retreat-file mode only): also invokes the
- * real closeLengthGap operator directly from each elite's verified-feasible depth (floor=0, the
+ * real searchCompletionFromPartialPath operator directly from each elite's verified-feasible depth (floor=0, the
  * full backtrack range to the gate) — the same named-operator reconstruction question the
  * 2026-08-12 R00648/R03176 diagnostic asked by hand (reports/2026-08-12-repair-retreat-cpsat.md),
  * now reusable for any other CP-SAT-verified boundary this file's --retreat-file already reads.
- * The original diagnostic used 2,000,000 (500x closeLengthGap's own production 4,000-node budget).
+ * The original diagnostic used 2,000,000 (500x searchCompletionFromPartialPath's own production 4,000-node budget).
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/repair-plateau-rollout-classifier.mjs -- \
@@ -87,10 +87,10 @@ const eliteNodeBudget = Number(args.get('--elite-node-budget') ?? 500000);
 const rolloutTrials = Number(args.get('--rollout-trials') ?? 100);
 const rolloutNodeCap = Number(args.get('--rollout-node-cap') ?? 5000);
 const retreatFile = args.get('--retreat-file') || null;
-// 0 (default) = skip. When set (--retreat-file mode only), also invokes the real closeLengthGap
+// 0 (default) = skip. When set (--retreat-file mode only), also invokes the real searchCompletionFromPartialPath
 // operator directly from each elite's verified-feasible depth (floor=0, full backtrack range) —
 // see closeGapAtDepth's own comment. The 2026-08-12 R00648/R03176 diagnostic used 2,000,000 (500x
-// closeLengthGap's own production LENGTH_GAP_CLOSE_NODE_BUDGET of 4,000).
+// searchCompletionFromPartialPath's own production LENGTH_GAP_CLOSE_NODE_BUDGET of 4,000).
 const closeGapNodeBudget = Number(args.get('--close-gap-node-budget') ?? 0);
 const defaultBackoffs = retreatFile ? '0,1,2,3' : '1,2,3,5,8,13,21,34';
 const backoffs = (args.get('--backoffs') ?? defaultBackoffs).split(',').map(Number).filter(n => Number.isFinite(n) && n >= 0);
@@ -179,14 +179,14 @@ if (!retreatFile) console.error(`Sampled ${targetIds.length} levels: ${targetIds
 // ─── Solver internals ───
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
-const { repairSearchFromGate, __takePlyForTests: takePly, __closeLengthGapForTests: closeLengthGap } = await import('../../modules/solver/repair-search.ts');
+const { repairSearchFromGate, __takePlyForTests: takePly, __searchCompletionFromPartialPathForTests: searchCompletionFromPartialPath } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
 
 const EPSILON_CHOICES = [0.15, 0.35, 0.6]; // same values as repair-search.ts's own EPSILON_LADDER
 
 /** Replays `pathKeys` (gate-first) onto a freshly created state via the real applyMove, mirroring
  *  repair-search.ts's own (module-private) replayToPrefix's portal-jump determination exactly.
- *  Returns the live undo stack too (needed by closeLengthGap, which backtracks by popping it). */
+ *  Returns the live undo stack too (needed by searchCompletionFromPartialPath, which backtracks by popping it). */
 function buildStateAtPath(pathKeys, level, prep) {
     const state = api.createState(pathKeys[0], level, prep);
     const liveUndo = [];
@@ -199,7 +199,7 @@ function buildStateAtPath(pathKeys, level, prep) {
     return { state, liveUndo };
 }
 
-/** Invokes the real closeLengthGap operator directly from a frozen CP-SAT-verified-feasible
+/** Invokes the real searchCompletionFromPartialPath operator directly from a frozen CP-SAT-verified-feasible
  *  prefix, with floor=0 (full backtrack range, all the way to the gate) — the same "does an
  *  existing native reconstruction operator solve from this exact-live prefix" question the
  *  2026-08-12 R00648/R03176 diagnostic asked (reports/2026-08-12-repair-retreat-cpsat.md), reused
@@ -207,7 +207,7 @@ function buildStateAtPath(pathKeys, level, prep) {
 function closeGapAtDepth(elitePath, depth, level, prep, nodeBudget) {
     const branchPrefix = elitePath.slice(0, depth + 1);
     const { state, liveUndo } = buildStateAtPath(branchPrefix, level, prep);
-    return closeLengthGap(state, level, prep, api.SCORING_PROFILES.repair, null, prep._cfg, liveUndo, 0, nodeBudget);
+    return searchCompletionFromPartialPath(state, level, prep, api.SCORING_PROFILES.repair, null, prep._cfg, liveUndo, 0, nodeBudget);
 }
 
 /** Runs `trials` rollouts from ONE fixed branch point (elitePath truncated to `depth` cells). */
@@ -297,15 +297,15 @@ if (retreatFile) {
             console.error(`  depth=${row.branchDepth} (verified-boundary backoff=${r.low - row.branchDepth}) residual=${row.residual} `
                 + `progressMax=${row.progressMax} progressFractionMax=${row.progressFractionOfResidualMax?.toFixed(2)} solvedInRollout=${row.solvedInRollout}/${rolloutTrials}`);
         }
-        let closeLengthGapResult = null;
+        let searchCompletionFromPartialPathResult = null;
         if (closeGapNodeBudget > 0) {
-            closeLengthGapResult = closeGapAtDepth(elite.path, r.low, level, prep, closeGapNodeBudget);
-            console.error(`  closeLengthGap(floor=0, nodeBudget=${closeGapNodeBudget}) from depth=${r.low}: `
-                + `${closeLengthGapResult.solved ? 'SOLVED' : 'failed'} (${closeLengthGapResult.nodes} nodes)`);
+            searchCompletionFromPartialPathResult = closeGapAtDepth(elite.path, r.low, level, prep, closeGapNodeBudget);
+            console.error(`  searchCompletionFromPartialPath(floor=0, nodeBudget=${closeGapNodeBudget}) from depth=${r.low}: `
+                + `${searchCompletionFromPartialPathResult.solved ? 'SOLVED' : 'failed'} (${searchCompletionFromPartialPathResult.nodes} nodes)`);
         }
         levelResults.push({
             ...levelBase(id, raw, level), eliteId, verifiedFeasibleDepth: r.low, verifiedInfeasibleDepth: r.high,
-            eliteLength: elite.eliteLength, badness: elite.badness, rolloutLadder: ladder, closeLengthGapResult,
+            eliteLength: elite.eliteLength, badness: elite.badness, rolloutLadder: ladder, searchCompletionFromPartialPathResult,
         });
     }
 } else {

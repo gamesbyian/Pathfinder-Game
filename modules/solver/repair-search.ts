@@ -10,7 +10,7 @@
 //
 // SOUNDNESS: this file adds no new game-mechanics logic. Every move goes through the exact
 // same applyMove/getNeighbors/isSolutionState primitives DFS and beam already use (isSolutionState
-// via the shared evaluatePrunedMove gauntlet, see prune-gauntlet.ts), so legality is guaranteed
+// via the shared evaluatePrunedMove gauntlet, see hard-prune-pipeline.ts), so legality is guaranteed
 // by construction — this strategy can only ever return a path that already passes
 // isSolutionState, giving it the same correctness guarantee as the rest of the search core. The
 // only things "local search" about it are (a) which legal move is picked at each step
@@ -26,7 +26,7 @@ import { AXIS_H, AXIS_V, popcount } from './encoding.js';
 import { STATE_BUF_REPAIR, applyMove, createState, getNeighbors, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, structuralDeficit } from './solution.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { createNogoodCache } from './nogood-cache.js';
 import { beamSearchFromGate } from './search.js';
 import { turnDirection } from '../domain/geometry.js';
@@ -42,7 +42,7 @@ export type RepairStopReason = 'wall-clock' | 'node-budget' | 'work-budget';
 // deficit term (length/intersections/must-pass/must-cross/…) a stuck level plateaus on.
 const _proc = (globalThis as any).process as { env?: Record<string, string | undefined> } | undefined;
 const _REPAIR_DEBUG = !!(_proc && _proc.env && _proc.env.PF_REPAIR_DEBUG === '1');
-// Added 2026-07-18 to measure closeLengthGap's own invocation/success rate post-shipping (see
+// Added 2026-07-18 to measure searchCompletionFromPartialPath's own invocation/success rate post-shipping (see
 // reports/2026-07-18-length-gap-close-invocation-rate.md) — same env-gated, zero-overhead-when-
 // unset convention as _REPAIR_DEBUG above, kept (not reverted) for future re-diagnosis of this
 // operator.
@@ -314,7 +314,7 @@ type PlyOutcome = 'solved' | 'continue' | 'deadend' | 'goalInvalid';
 //
 // A genuine win (next === goal && isSolutionState) always short-circuits immediately, exactly
 // like DFS/beam. A goal cell reached WITHOUT satisfying the win condition is rejected outright
-// by the shared evaluatePrunedMove gauntlet (prune-gauntlet.ts) before it can ever reach the
+// by the shared evaluatePrunedMove gauntlet (hard-prune-pipeline.ts) before it can ever reach the
 // survivors list below — matching dfsFromGate/beamSearchFromGate's identical rule, and the real
 // game rule that touching goal always ends the path (domain/move-rules.ts). A non-winning goal
 // candidate therefore never becomes `chosen`; see the goalInvalid comment near the end of this
@@ -375,9 +375,9 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
         // allowNeighborBudgetPrune=false: this loop picks its next move uniformly at random over
         // the surviving candidates below (`Math.floor(rand() * survivors.length)`) — shrinking
         // that candidate list here reindexes the same rand() draw onto a different move, silently
-        // diverging the entire rest of this seeded walk (see prune-gauntlet.ts's own comment on
+        // diverging the entire rest of this seeded walk (see hard-prune-pipeline.ts's own comment on
         // this parameter for the 2026-08-08 full-corpus evidence: 28 previously-repair-solved
-        // levels lost). closeLengthGap/boundedDfsFromHere/relinkPaths below are all deterministic
+        // levels lost). searchCompletionFromPartialPath/boundedDfsFromHere/relinkPaths below are all deterministic
         // (no rand()) and keep this check at its default (true) — pruning dead branches there can
         // only free more budget for live ones, same as dfsFromGate/beam.
         const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, false,
@@ -455,7 +455,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
 
 /** Direct seam for caller-policy regression tests. Production code uses the private function. */
 export const __takePlyForTests = takePly;
-export const __closeLengthGapForTests = closeLengthGap;
+export const __searchCompletionFromPartialPathForTests = searchCompletionFromPartialPath;
 
 // Diffs ws's current live path against `targetPrefix`, undoing the divergent suffix and
 // applying only the new prefix — same technique as beamSearchFromGate's `_liveUndo` diffing
@@ -477,13 +477,13 @@ function replayToPrefix(ws: SolverSearchState, liveUndo: UndoToken[], targetPref
     }
 }
 
-/** Node budget for one closeLengthGap call (see below) — deliberately small: this is a quick,
+/** Node budget for one searchCompletionFromPartialPath call (see below) — deliberately small: this is a quick,
  *  targeted look at the current dead end's own local neighborhood, not a second full search.
  *  Unmeasured/uncalibrated starting value — see the operator's own verification report before
  *  relying on this number meaning anything beyond "bounded." */
 const LENGTH_GAP_CLOSE_NODE_BUDGET = 4000;
 
-/** How much residual structuralDeficit closeLengthGap's near-miss trigger tolerates (see
+/** How much residual structuralDeficit searchCompletionFromPartialPath's near-miss trigger tolerates (see
  *  STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS below) — 1 covers the single-pending-object case
  *  found empirically to be common among the closest repair-close near-misses (e.g. one pending
  *  mustTurn cell alongside a length deficit of 1); see
@@ -513,7 +513,7 @@ const LENGTH_GAP_CLOSE_STRUCTURAL_SLACK = 1;
 // here. On failure, ws/liveUndo are restored to the exact state they had on entry (via
 // replayToPrefix) so the caller's existing near-miss bookkeeping is unaffected either way.
 // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE (see repairSearchFromGate's call site).
-function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number } {
+function searchCompletionFromPartialPath(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, orderingBias: StructuralOrderingBias | null, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], floor: number, nodeBudget: number): { solved: boolean; nodes: number } {
     const originalPath = ws.path.slice();
     const suffixLen = originalPath.length - 1 - floor; // steps between floor and the dead end
     // The reconstruction below (rebuilding one DFS frame per already-taken step) costs roughly
@@ -579,7 +579,7 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
         const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === next);
         const undo = applyMove(next, ws, level, prep, isJump);
         const realLen = getRealLengthFromState(ws);
-        // rSteps <= 10 mirrors dfsFromGate's own connectivity throttle (prune-gauntlet.ts's
+        // rSteps <= 10 mirrors dfsFromGate's own connectivity throttle (hard-prune-pipeline.ts's
         // caller-decides contract) — cheap early in the residual, thorough near the end where
         // it matters most.
         const rSteps = level.reqLen - realLen;
@@ -607,7 +607,7 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
 // investigation-synthesis.md) diagnosed the wall precisely: repair's search is append-only (extends
 // a spliced prefix, never edits it), and the terminal residual of a stuck plateau needs
 // prefix-level restructuring no bounded operator reaching only the CURRENT restart's own tip can
-// supply — closeLengthGap (above) proved bounded deterministic DFS-from-a-point is a real, working
+// supply — searchCompletionFromPartialPath (above) proved bounded deterministic DFS-from-a-point is a real, working
 // technique (not just theory), but scoped it to exactly one point (this restart's own dead end);
 // its own follow-up report found that single point's neighborhood "just rarely contains a rescue"
 // (R02655: 6,727 triggers, 0 solves). This generalizes the SAME proven technique (deterministic,
@@ -625,11 +625,11 @@ function closeLengthGap(ws: SolverSearchState, level: NormalizedLevel, prep: Pre
 
 /** Deterministic, score-ordered, bounded backtracking DFS from ws's CURRENT state (already
  *  positioned by the caller, e.g. via replayToPrefix) toward a solution, never backtracking below
- *  `floor` (a liveUndo.length checkpoint). Shares its inner-loop shape with closeLengthGap's own
+ *  `floor` (a liveUndo.length checkpoint). Shares its inner-loop shape with searchCompletionFromPartialPath's own
  *  tail loop (same evaluatePrunedMove gauntlet, same scoreAndSort ordering, same connectivity
  *  throttle) but starts completely fresh — no reconstruction of an already-taken suffix — since
  *  every caller here is starting from a genuinely NEW position (an elite's own earlier prefix, not
- *  this restart's own history), unlike closeLengthGap which resumes exactly where a restart's own
+ *  this restart's own history), unlike searchCompletionFromPartialPath which resumes exactly where a restart's own
  *  walk just dead-ended. On success, ws holds the solved path and liveUndo reflects it (caller
  *  reads ws.path). On failure, ws/liveUndo end wherever the search's own backtracking left them —
  *  at or above `floor`, never below — so a caller MUST NOT assume ws is back at any particular
@@ -714,7 +714,7 @@ const ELITE_PREFIX_DFS_ELITE_COUNT = 3;
  *  calibrate by A/B, not a tuned number. */
 const ELITE_PREFIX_DFS_FRACTIONS = [0.5, 0.65, 0.8, 0.9];
 /** Node budget per (elite, destroy point) attempt — many small shots, not one large one, mirroring
- *  closeLengthGap's own "bounded, targeted look" philosophy. */
+ *  searchCompletionFromPartialPath's own "bounded, targeted look" philosophy. */
 const ELITE_PREFIX_DFS_NODE_BUDGET_PER_ATTEMPT = 15000;
 /** Total node budget across ALL (elite, destroy-point) attempts in one stagnation-triggered call —
  *  a ceiling independent of ELITE_PREFIX_DFS_NODE_BUDGET_PER_ATTEMPT × the attempt count, so a
@@ -783,7 +783,7 @@ const RELINK_NODE_BUDGET = 20000;
 // the returned bestPath (the best intermediate on the relinking trajectory — the whole point of
 // relinking is that these intermediates become new search material, not that a single copy solves).
 // liveUndo stays consistent throughout (only committed 'pass'/'solution' moves are pushed, exactly
-// like takePly/closeLengthGap). Exported for direct unit testing of the operator.
+// like takePly/searchCompletionFromPartialPath). Exported for direct unit testing of the operator.
 export function relinkPaths(ws: SolverSearchState, base: number[], guide: number[], level: NormalizedLevel, prep: PrepLevel, cfg: AblationConfig | null | undefined, liveUndo: UndoToken[], startKey: number, nodeBudget: number): { solved: boolean; nodes: number; bestPath: number[] | null; bestBadness: number; bestPend: ElitePending | null } {
     // guide cell -> its earliest index (longest copyable suffix from that anchor).
     const guideIndex = new Map<number, number>();
@@ -1187,15 +1187,15 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         }
         nogoodCache?.recordDead(ws);
 
-        // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE — see closeLengthGap's doc comment above.
+        // Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE — see searchCompletionFromPartialPath's doc comment above.
         // Base trigger fires once every non-length/non-intersection objective is already
         // satisfied (structuralDeficit === 0); a monotone property of this walk, so this
         // reliably targets exactly the frozen-signature population without needing to know WHEN
         // it became true. Ablation: STRATEGY_REPAIR_LENGTH_GAP_CLOSE_NEAR_MISS additionally
         // allows a small residual structuralDeficit (see LENGTH_GAP_CLOSE_STRUCTURAL_SLACK) —
         // NOT a "will stay true forever" guarantee like the ===0 case (a backtrack inside
-        // closeLengthGap's own bounded search can re-open an already-cleared structural bit), but
-        // that's fine for correctness: closeLengthGap only ever returns solved=true via the same
+        // searchCompletionFromPartialPath's own bounded search can re-open an already-cleared structural bit), but
+        // that's fine for correctness: searchCompletionFromPartialPath only ever returns solved=true via the same
         // isSolutionState() check the rest of this file relies on, so a returned path is sound
         // regardless of what triggered the attempt. This just widens WHEN the (cheap, bounded)
         // attempt is worth making — see reports/2026-07-18-length-gap-close-invocation-rate.md
@@ -1208,7 +1208,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
                 && deficit <= slack && nodesExpandedLocal < nodeBudget) {
             const closeBudget = Math.min(LENGTH_GAP_CLOSE_NODE_BUDGET, nodeBudget - nodesExpandedLocal);
             const _lgcLenDeficit = _LENGTH_GAP_DEBUG ? computeBadness(ws, level) : 0;
-            const closeResult = closeLengthGap(ws, level, prep, profile, orderingBias, cfg, liveUndo, spliceFloor, closeBudget);
+            const closeResult = searchCompletionFromPartialPath(ws, level, prep, profile, orderingBias, cfg, liveUndo, spliceFloor, closeBudget);
             nodesExpandedLocal += closeResult.nodes;
             if (prep._metrics) prep._metrics.nodesExpanded += closeResult.nodes;
             if (_LENGTH_GAP_DEBUG) {
@@ -1226,7 +1226,7 @@ export async function repairSearchFromGate(startKey: number, level: NormalizedLe
         // History: 'goalInvalid' used to be the common case (a walk stalling out at/near goal
         // without satisfying the win condition), so this bookkeeping ran often. Since
         // evaluatePrunedMove started rejecting a non-winning goal-cell candidate outright
-        // (prune-gauntlet.ts — a real correctness fix, not a regression to revert: see this
+        // (hard-prune-pipeline.ts — a real correctness fix, not a regression to revert: see this
         // file's SOUNDNESS comment and takePly's), that candidate never reaches `survivors`
         // anymore, so 'goalInvalid' can no longer fire (see takePly's dead-code comment on its
         // `chosen === level.goalKey` check) — the exact same stall now surfaces as an ordinary

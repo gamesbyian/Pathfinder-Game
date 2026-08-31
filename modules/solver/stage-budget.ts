@@ -46,9 +46,9 @@ import type { AblationConfig } from './types.js';
  *  isolated-vs-orchestration slowdown margin still applies on top. 6.0 (120s at the standard
  *  20s test budget) covers this with room to spare without changing anything about the main
  *  DFS/beam loop's own budget or timing on any level. */
-export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
+export const REPAIR_ADDITIVE_BUDGET_MULTIPLIER = 6.0;
 
-/** Strictly-additional budget (same shape as REPAIR_EXTRA_BUDGET_FRACTION above, just a separate,
+/** Strictly-additional budget (same shape as REPAIR_ADDITIVE_BUDGET_MULTIPLIER above, just a separate,
  *  much smaller fraction) for one extra pass of the SAME main-search attempt ladder (mainConfigs),
  *  with attempts.ts's GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS disabled for the whole pass — tried only
  *  after BOTH the main loop AND the repair fallback have already failed on every active gate.
@@ -77,7 +77,7 @@ export const REPAIR_EXTRA_BUDGET_FRACTION = 6.0;
  *  R00156/R02960 case the diagnosis proved rescuable. Raising the fraction to 1.0 gives the pass
  *  the SAME size budget the diagnosis itself used, not a smaller one — see reports/2026-07-16-
  *  phase-d-goal-attraction-disabled-retry-implementation.md for the verification numbers this was checked
- *  against. Still far smaller than REPAIR_EXTRA_BUDGET_FRACTION's 6.0 (an iterated-local-search
+ *  against. Still far smaller than REPAIR_ADDITIVE_BUDGET_MULTIPLIER's 6.0 (an iterated-local-search
  *  retry loop that benefits from more time in a way a single fixed-budget ladder rerun does not),
  *  and this pass only ever runs on a level that has ALREADY spent 1x + up to 6x timeBudgetMs
  *  failing everything else — the goal is a bounded last check, not another expensive tier. */
@@ -510,7 +510,7 @@ export const ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  mechanism, and this one is the root flag this whole investigation started from:
  *  `PRUNE_CONNECTIVITY_AXIS_EXHAUSTED` (topology.ts's `isConnected`/`isConnectedForFalseGoalTriggerSearch`, read via
  *  `prep._cfg` at the connectivity-flood-fill call site shared by DFS, beam, repair, and
- *  admissible-order-fallback search through `prune-gauntlet.ts`'s move-pruning gauntlet). Default-ON, it
+ *  admissible-order-fallback search through `hard-prune-pipeline.ts`'s move-pruning gauntlet). Default-ON, it
  *  treats both-axes-spent cells as walls in the flood-fill reachability check — a legitimate,
  *  usually-correct tightening, but the exact beam-width-threshold timing artifact this report traces
  *  (see "The mechanism, fully traced" above) means it occasionally prunes away the eventual winning
@@ -691,7 +691,7 @@ export const REPAIR_ELITE_PREFIX_DFS_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  59 gains are never at risk, because this tier never runs on a level that solved.
  *
  *  THE ELIGIBILITY GATE — the one thing this tier does that its four predecessors do not.
- *  `prune-gauntlet.ts` only ever reaches `PRUNE_MC_NEIGHBOR_BUDGET` when `state.mustCrossMask !== 0`.
+ *  `hard-prune-pipeline.ts` only ever reaches `PRUNE_MC_NEIGHBOR_BUDGET` when `state.mustCrossMask !== 0`.
  *  A level whose `prep.initialMustCrossMask` is 0 therefore can never have had a single move rejected
  *  by this prune, so rerunning the ladder with it disabled is provably BIT-IDENTICAL to the ladder
  *  that already ran and failed — pure waste, not a second chance. Gating on that is sound (a
@@ -767,7 +767,7 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  win or lose. Its own code comments document the resulting cost on a level where repair never
  *  succeeds: "the probe instead burns its FULL node budget as pure dead search every single
  *  solve" (confirmed on R02401, ~10.7s of unconditional overhead, the exact bug
- *  `repairBudgetFractionOverride: 0` was supposed to prevent). Naively widening THAT probe's
+ *  `repairAdditiveBudgetMultiplierOverride: 0` was supposed to prevent). Naively widening THAT probe's
  *  eligibility would import the identical tax onto every newly-eligible level's EVERY solve, not
  *  just its failures. A dead-last placement instead means a level that already solves via any
  *  earlier technique — the overwhelming majority of any corpus — never reaches this tier at all,
@@ -883,7 +883,7 @@ import type { SolveOpts } from './orchestration.js';
 
 export interface StageBudgetPlanInput {
     opts: Pick<SolveOpts,
-        | 'repairBudgetFractionOverride' | 'disableExtraBudgetPasses'
+        | 'repairAdditiveBudgetMultiplierOverride' | 'disableExtraBudgetPasses'
         | 'goalAttractionDisabledRetryBudgetFractionOverride' | 'attractionDiversityBudgetFractionOverride'
         | 'coarseStateNearTieRetentionRetryBudgetFractionOverride' | 'coarseStateNearTieRetentionRetryNodeReserveFractionOverride'
         | 'dedupNearTieRetryBudgetFractionOverride' | 'dedupNearTieRetryNodeReserveFractionOverride'
@@ -922,14 +922,14 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // need it for the envelope's `wall` currency.
     const { opts, cfg, nodeBudget, repairConfigsCount, admissibleOrderConfigsCount,
         admissibleOrderNonDefaultConfigsCount, mainConfigsCount, initialMustCrossMask } = input;
-    const repairFractionOverride = Number(opts.repairBudgetFractionOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
-    const repairBudgetFraction = Number.isFinite(repairFractionOverride) && repairFractionOverride >= 0
-        ? repairFractionOverride
-        : REPAIR_EXTRA_BUDGET_FRACTION;
+    const repairMultiplierOverride = Number(opts.repairAdditiveBudgetMultiplierOverride ?? (opts.disableExtraBudgetPasses ? 0 : undefined));
+    const repairAdditiveBudgetMultiplier = Number.isFinite(repairMultiplierOverride) && repairMultiplierOverride >= 0
+        ? repairMultiplierOverride
+        : REPAIR_ADDITIVE_BUDGET_MULTIPLIER;
 
-    // opts.goalAttractionDisabledRetryBudgetFractionOverride — same shape/rationale as repairBudgetFraction's
+    // opts.goalAttractionDisabledRetryBudgetFractionOverride — same shape/rationale as repairAdditiveBudgetMultiplier's
     // own resolution just above. Hoisted here (rather than only just before the diversity pass itself
-    // runs, much further down) for the SAME reason repairBudgetFraction was hoisted before the probe:
+    // runs, much further down) for the SAME reason repairAdditiveBudgetMultiplier was hoisted before the probe:
     // GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's own eligibility check, below, needs to know whether
     // the diversity pass would run at all before deciding whether reserving nodes for it is real or a
     // strand.
@@ -1159,7 +1159,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // for the full mechanism and the R02422 non-recovery caveat.
     //
     // `initialMustCrossMask !== 0` is this tier's SOUNDNESS-BASED eligibility gate, and the one
-    // structural difference from its four predecessors. prune-gauntlet.ts reaches
+    // structural difference from its four predecessors. hard-prune-pipeline.ts reaches
     // PRUNE_MC_NEIGHBOR_BUDGET only when `state.mustCrossMask !== 0`, which can never hold on a level
     // that starts with no must-cross obligations — so on such a level the prune rejected exactly zero
     // moves, and rerunning the ladder with it disabled is provably BIT-IDENTICAL to the ladder that
@@ -1417,7 +1417,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // independent floor computation) per CLAUDE.md's smallest-change guidance — flagged, not solved.
     //
     // Gated on the SAME real-run condition the fallback loop's own `for` loop below already checks
-    // (repairConfigsCount > 0 && repairBudgetFraction !== 0) — no separate ablation flag guards
+    // (repairConfigsCount > 0 && repairAdditiveBudgetMultiplier !== 0) — no separate ablation flag guards
     // that loop today, so this reserve's eligibility mirrors it exactly. Reserving for a level with
     // no repair fallback to protect would strand nodes, shrinking every disableExtraBudgetPasses
     // caller's effective budget for nothing — the same reasoning the admissible-order-fallback reserve's own
@@ -1438,7 +1438,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     const repairFallbackNodeReserveEligible = repairFallbackNodeReserveEnabled
         && repairFallbackNodeReserveFraction > 0
         && repairConfigsCount > 0
-        && repairBudgetFraction !== 0
+        && repairAdditiveBudgetMultiplier !== 0
         && mainSearchLateReserve > 0;
     const repairFallbackNodeReserve = repairFallbackNodeReserveEligible
         ? Math.floor(mainSearchLateReserve * repairFallbackNodeReserveFraction)
@@ -1451,7 +1451,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // construction (both fractions clamped to [0,1]) — no clamp needed, same soundness argument as
     // the reserve it nests inside. Same opt-in convention and same real-run-condition eligibility
     // shape (diversityBudgetFraction/STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY mirror repairConfigsCount>0/
-    // repairBudgetFraction!==0 above) so a level where the diversity pass would never run doesn't
+    // repairAdditiveBudgetMultiplier!==0 above) so a level where the diversity pass would never run doesn't
     // strand nodes reserving for it.
     const goalAttractionDisabledRetryNodeReserveEnabled = !!(cfg && cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE === true);
     const goalAttractionDisabledRetryNodeReserveFractionRaw = Number(opts.goalAttractionDisabledRetryNodeReserveFractionOverride ?? opts.attractionDiversityNodeReserveFractionOverride);
@@ -1477,7 +1477,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // in modules/solver/ablation-config.ts's OPT_IN_FEATURES, so it must stay OFF whenever `cfg` is null.
     const shrinkRecoveryEnabled = !!(cfg && cfg.STRATEGY_REPAIR_SHRINK_RECOVERY === true)
         && repairConfigsCount > 0
-        && repairBudgetFraction !== 0
+        && repairAdditiveBudgetMultiplier !== 0
         && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH)
         && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BUDGET);
     const shrinkRecoveryFractionRaw = Number(opts.repairShrinkRecoveryNodeReserveFractionOverride);
@@ -1506,13 +1506,13 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // Early, strictly-additive probe of the repair fallback — see EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET
     // / EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET. Absent (and free) on every level outside the repair
     // feature gate, since repairConfigs is empty there. Also skipped when the caller has explicitly
-    // asked for zero repair-related cost (repairBudgetFractionOverride: 0).
+    // asked for zero repair-related cost (repairAdditiveBudgetMultiplierOverride: 0).
     //
     // BUG FIXED 2026-07-17 (see reports/2026-07-17-goal-attraction-disabled-retry-dose-response.md's flagged
     // "unexplained observation" and the follow-up audit report): the probe's real cost is bounded
     // by its own fixed NODE budgets (EARLY_REPAIR_SEARCH_ORDINARY_NODE_BUDGET, up to
     // EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS.length times, plus EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET on
-    // must-turn levels) — NOT by timeBudgetMs and NOT by repairBudgetFractionOverride, which was
+    // must-turn levels) — NOT by timeBudgetMs and NOT by repairAdditiveBudgetMultiplierOverride, which was
     // only ever wired into the LATER full-budget fallback loop below. Those node budgets were
     // calibrated against levels where the probe WINS quickly (see their own comment's "observed
     // winners" data); on a level where repair never succeeds at all, the probe instead burns its
@@ -1522,10 +1522,10 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // directly on R02401 (repair-gated, mustCross:6/mustPass:8, never solved by repair): both
     // ordinary-tier probe attempts (2,000,000 nodes each, one per EARLY_REPAIR_SEARCH_ORDINARY_SEED_SALTS
     // entry) ran to completion, ~5.5s + ~5.2s, entirely unaffected by
-    // repairBudgetFractionOverride: 0 — the exact ~10.7s this dose-response run's overshoot traced
+    // repairAdditiveBudgetMultiplierOverride: 0 — the exact ~10.7s this dose-response run's overshoot traced
     // to. This silently broke the documented cost guarantee for the two interactive UI callers too
     // (solver-controller.ts's "Find 1 Hint", review-controller.ts's review-approval solve, both of
-    // which pass repairBudgetFractionOverride: 0 specifically to bound their ~30s progress-bar
+    // which pass repairAdditiveBudgetMultiplierOverride: 0 specifically to bound their ~30s progress-bar
     // promise) — the probe was never covered by that override at all, on any repair-gated level a
     // real player could hit. Fixed by skipping the probe outright when the resolved fraction is
     // exactly 0, the same "no repair-related cost, period" signal the later fallback loop already
@@ -1537,13 +1537,13 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // Named eligibility for the three stages whose real dispatch condition (orchestration.ts) is a
     // simple boolean rather than a node-reserve cascade — extracted verbatim from that condition so
     // telemetry (orchestration.ts's `finish()`) can read the SAME value instead of re-deriving it.
-    const earlyRepairSearchTierWillRun = repairConfigsCount > 0 && repairBudgetFraction !== 0 && !!(!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH);
-    const repairFallbackTierWillRun = repairConfigsCount > 0 && repairBudgetFraction !== 0;
+    const earlyRepairSearchTierWillRun = repairConfigsCount > 0 && repairAdditiveBudgetMultiplier !== 0 && !!(!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH);
+    const repairFallbackTierWillRun = repairConfigsCount > 0 && repairAdditiveBudgetMultiplier !== 0;
     const diversityTierWillRun = diversityBudgetFraction > 0 && !!(!cfg || cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY);
 
     return {
         earlyRepairSearchTierWillRun, repairFallbackTierWillRun, diversityTierWillRun,
-        repairBudgetFraction, diversityBudgetFraction, coarseStateNearTieRetentionRetryBudgetFraction, coarseStateNearTieRetentionRetryNodeReserveFraction,
+        repairAdditiveBudgetMultiplier, diversityBudgetFraction, coarseStateNearTieRetentionRetryBudgetFraction, coarseStateNearTieRetentionRetryNodeReserveFraction,
         nonDefaultRetryBudgetFraction, nonDefaultRetryNodeReserveFraction, connectivityRetryBudgetFraction,
         connectivityRetryNodeReserveFraction, repairElitePrefixDfsRetryBudgetFraction, repairElitePrefixDfsRetryNodeReserveFraction,
         mcNeighborBudgetRetryBudgetFraction, mcNeighborBudgetRetryNodeReserveFraction, admissibleOrderBudgetFraction,
@@ -1620,7 +1620,7 @@ export function buildStageBudgetEnvelopes(plan: StageBudgetPlan, input: { timeBu
     const none: BudgetEnvelope['headroom'] = { kind: 'none', amount: 0, sourceStageId: null };
     return {
         'main-search': envelope('main-search', timeBudgetMs, plan.mainSearchEarlyNodeBudget, none),
-        'repair-fallback': envelope('repair-fallback', Math.floor(timeBudgetMs * plan.repairBudgetFraction), plan.repairFallbackNodeCeilingBase, none),
+        'repair-fallback': envelope('repair-fallback', Math.floor(timeBudgetMs * plan.repairAdditiveBudgetMultiplier), plan.repairFallbackNodeCeilingBase, none),
         'goal-attraction-disabled-retry': envelope('goal-attraction-disabled-retry', Math.floor(timeBudgetMs * plan.diversityBudgetFraction), plan.earlyTierNodeBudget,
             plan.goalAttractionDisabledRetryNodeReserve > 0 ? { kind: 'withheld', amount: plan.goalAttractionDisabledRetryNodeReserve, sourceStageId: 'main-search' } : none),
         'admissible-order-fallback': envelope('admissible-order-fallback', Math.floor(timeBudgetMs * plan.admissibleOrderBudgetFraction), nodeBudget,

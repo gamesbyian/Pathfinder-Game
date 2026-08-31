@@ -94,6 +94,10 @@ try {
       if (parsed.nextBatch !== null) {
         throw new Error(`non-Phase-8 status must not expose a Phase-8 batch, got ${parsed.nextBatch}`);
       }
+      const expectedAction = parsed.activeExecution?.status === 'active' ? 'continue-active-phase' : 'start-phase';
+      if (parsed.nextAction !== expectedAction) {
+        throw new Error(`non-Phase-8 status expected ${expectedAction}, got ${parsed.nextAction}`);
+      }
       if (!parsed.nextScope.rows.every(row => row.phase === parsed.nextPhase && typeof row.id === 'string')) {
         throw new Error('naming status nextScope does not match the next incomplete phase');
       }
@@ -212,6 +216,19 @@ try {
     expectFail('verification record must exist', ledger, /existing checked-in record|recordPath must be an existing file/u);
   }
 
+
+  {
+    const ledger = clone(source);
+    delete ledger.phaseCloseoutCoverage['10']['NC-P10-006'];
+    expectFail('Phase-10 closeout coverage must own every row', ledger, /keys must exactly match Phase-10 rows/u);
+  }
+
+  {
+    const ledger = clone(source);
+    ledger.phaseCurrentArtifacts['10'] = [];
+    expectFail('Phase-10 current artifacts cannot be blanket-excluded', ledger, /unique non-empty registry/u);
+  }
+
   {
     const ledger = clone(source);
     for (const row of ledger.entries.filter(entry => entry.phase === 9)) {
@@ -219,6 +236,8 @@ try {
       row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-09-final-audit.md';
       for (const key of Object.keys(row.verification)) row.verification[key] = 'done';
     }
+    // Isolate the closed-Phase-9 fixture from whichever later phase is active in the source ledger.
+    for (const row of ledger.entries.filter(entry => entry.phase > 9)) row.status = 'pending';
     ledger.lastCompletedPhase = 9;
     ledger.activeExecution = {
       status: 'idle', phase: null, batch: null, branch: null, pr: null,

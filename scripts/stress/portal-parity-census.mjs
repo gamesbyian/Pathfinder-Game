@@ -2,7 +2,7 @@
 // Portal-parity census -- Stage 0 of the historical portal-parity gap analysis: before writing any
 // new prune, measure whether the candidate necessary condition actually holds on real stored solutions.
 //
-// BACKGROUND. On a portal-free grid, every move flips (x+y)%2, so prune-gauntlet.ts's existing
+// BACKGROUND. On a portal-free grid, every move flips (x+y)%2, so hard-prune-pipeline.ts's existing
 // PRUNE_PARITY check rejects a state whose parity can't reach the goal in exactly the remaining
 // step count -- but it's gated on `level.portalMap.size === 0` and never fires on portal levels.
 // A portal jump is a free (zero-length) teleport; if its two terminals have DIFFERENT parity
@@ -23,7 +23,7 @@
 //
 // METHOD. Replay every stored (referee-valid) solution on every level with >=1 twist portal pair.
 // At each step, compute the naive portal-free parity mismatch test. Whenever it says "mismatch"
-// (which prune-gauntlet.ts's own logic would reject on a portal-free level), check whether the
+// (which hard-prune-pipeline.ts's own logic would reject on a portal-free level), check whether the
 // existence-only conjecture ("some twist portal pair remains fully unused") ever comes back FALSE
 // on a real solution's own path (i.e. would the naive existence-only prune have wrongly rejected
 // a valid step of a real solution -- this MUST be 0/0 for the design to be sound, since it means
@@ -91,7 +91,7 @@ function persist() {
             `Corpus: ${CORPUS_FILE} -- ${levels.length} level(s), ${levelsWithTwistPortal} with >=1 twist portal pair, ${levelsChecked} checked (had a stored solution), ${levelsWithNoHint} skipped (no hint).`,
             '',
             `Total replayed steps: ${totalSteps}`,
-            `Naive portal-free parity MISMATCH (would be rejected by prune-gauntlet.ts's own PRUNE_PARITY logic if it ran on this portal level): ${mismatchSteps} (${pct(mismatchSteps, totalSteps)})`,
+            `Naive portal-free parity MISMATCH (would be rejected by hard-prune-pipeline.ts's own PRUNE_PARITY logic if it ran on this portal level): ${mismatchSteps} (${pct(mismatchSteps, totalSteps)})`,
             `...of those, >=1 twist portal pair still fully unused (existence-only conjecture says "don't reject"): ${mismatchWithUnusedTwist} (${pct(mismatchWithUnusedTwist, mismatchSteps)})`,
             `...of those, the nearest such portal's BFS distance from pos looks plausibly reachable within rSteps (loose proxy, not a rigorous bound): ${mismatchWithPlausiblyReachableTwist} (${pct(mismatchWithPlausiblyReachableTwist, mismatchWithUnusedTwist)})`,
             '',
@@ -123,7 +123,7 @@ for (let i = 0; i < levels.length; i++) {
     const goalP = keyParity(level.goalKey);
     const lvl = { id: raw.id ?? null, twistPairs: twistPairs.length, steps: 0, mismatches: 0, mismatchesWithUnusedTwist: 0, violations: 0 };
 
-    // PRODUCTION-SHAPE check being validated here (see prune-gauntlet.ts's real PRUNE_PARITY for
+    // PRODUCTION-SHAPE check being validated here (see hard-prune-pipeline.ts's real PRUNE_PARITY for
     // the pattern this mirrors): skip the mismatch check ENTIRELY whenever `pos` is itself ANY
     // portal cell (entry about to be force-jumped, OR the landing cell just arrived at via a
     // jump) -- both are transient/pass-through snapshots, not stable decision points, so a

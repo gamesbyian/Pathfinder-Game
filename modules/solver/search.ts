@@ -2,8 +2,8 @@ import { STATE_BUF_BEAM, STATE_BUF_DFS, applyMove, createState, getNeighbors, un
 import { KEY_SPACE } from './encoding.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { computeBadness, getRealLengthFromState, isSolutionState } from './solution.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
-import type { PruneDiagnostics } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias } from './types.js';
 
@@ -207,7 +207,7 @@ async function dfsFromGate(startKey: number, level: NormalizedLevel, prep: PrepL
         const rSteps = level.reqLen - realLen;
         // Connectivity + volume check: every 64 nodes and always near end. Passed as a resolved
         // boolean since the throttle schedule (nodesExpanded) is DFS-loop-local — see
-        // prune-gauntlet.ts's file doc for why this differs per caller.
+        // hard-prune-pipeline.ts's file doc for why this differs per caller.
         const runConnectivity = rSteps <= 10 || (nodesExpanded & 63) === 0;
         const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity);
 

@@ -410,6 +410,51 @@ if (!Array.isArray(phase8RetainedSurfaces) || phase8RetainedSurfaces.length === 
   }
 }
 
+
+/* Phase 10 records the intentionally retained external CLI/report spellings separately from the
+ * retired internal local/transport identities, and registers live baseline artifacts explicitly. */
+const phase10Entries = futureEntries.filter(entry => entry.phase === 10);
+const phase10Coverage = ledger.phaseCloseoutCoverage?.['10'];
+if (!phase10Coverage || typeof phase10Coverage !== 'object' || Array.isArray(phase10Coverage)) {
+  fail('phaseCloseoutCoverage["10"] must be an object keyed by every Phase-10 row');
+} else {
+  const expected = phase10Entries.map(entry => entry.id).sort();
+  const actual = Object.keys(phase10Coverage).sort();
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) fail('phaseCloseoutCoverage["10"] keys must exactly match Phase-10 rows');
+  for (const entry of phase10Entries) {
+    const coverage = phase10Coverage[entry.id];
+    if (!coverage || !allowedCloseoutCoverageKinds.has(coverage.kind) || coverage.legacy !== entry.old) {
+      fail(`${entry.id}: missing/drifted Phase-10 closeout coverage`);
+    }
+  }
+}
+const phase10Retained = ledger.phaseRetainedSurfaces?.['10'];
+if (!Array.isArray(phase10Retained) || phase10Retained.length !== 2) {
+  fail('phaseRetainedSurfaces["10"] must register the distinct CLI and report-schema boundaries');
+} else {
+  const retainedIds = new Set(phase10Retained.map(entry => entry.id));
+  for (const retained of phase10Retained) {
+    if (!/^NC-RET-P10-\d{3}$/u.test(retained.id) || !allowedRetainedOwnerClasses.has(retained.ownerClass) ||
+        !Array.isArray(retained.ownerRowIds) || !retained.ownerRowIds.includes('NC-P10-007') ||
+        !Array.isArray(retained.matches) || retained.matches.length === 0) {
+      fail(`${retained.id}: invalid Phase-10 retained-surface ownership`);
+    }
+    for (const match of retained.matches ?? []) {
+      if (typeof match.term !== 'string' || !Array.isArray(match.files) || match.files.length === 0 ||
+          match.files.some(file => !repoPathExists(file))) fail(`${retained.id}: retained match files must exist`);
+    }
+  }
+  for (const id of phase10Coverage?.['NC-P10-007']?.retainedSurfaceIds ?? []) {
+    if (!retainedIds.has(id)) fail(`NC-P10-007: unknown retained Phase-10 surface ${id}`);
+  }
+}
+const phase10CurrentArtifacts = ledger.phaseCurrentArtifacts?.['10'];
+if (!Array.isArray(phase10CurrentArtifacts) || phase10CurrentArtifacts.length === 0 ||
+    new Set(phase10CurrentArtifacts).size !== phase10CurrentArtifacts.length ||
+    phase10CurrentArtifacts.some(file => !repoPathExists(file))) {
+  fail('phaseCurrentArtifacts["10"] must be a unique non-empty registry of existing paths');
+}
+
 if (gate?.status === 'blocked' && Number(ledger.lastCompletedPhase) >= 8) {
   fail(`lastCompletedPhase is ${ledger.lastCompletedPhase} while the Phase-8 gate is blocked`);
 }

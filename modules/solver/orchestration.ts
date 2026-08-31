@@ -296,7 +296,7 @@ export interface SolveOpts {
     legacyLatencyPortfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
     /** @deprecated Historical option name; read for compatibility, never emitted. */
     portfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
-    /** Overrides REPAIR_EXTRA_BUDGET_FRACTION for this solve only — offline batch tooling's cost
+    /** Overrides REPAIR_ADDITIVE_BUDGET_MULTIPLIER for this solve only — offline batch tooling's cost
      *  control (see docs/solver-architecture.md's cost-gotcha note). A DEDICATED top-level option,
      *  deliberately NOT an ablation flag: every existing ablation-gated strategy toggle in this
      *  file and repair-search.ts checks `(!cfg || cfg.STRATEGY_X)` — "no ablation config at all"
@@ -309,17 +309,17 @@ export interface SolveOpts {
      *  scripts/solver-parallel/race.mjs, not by the original change's own testing, since that
      *  testing happened to only exercise levels that were going to stay unsolved either way. Fixed
      *  by moving it out of `ablation` entirely, same as `nodeBudget` above. Undefined (every
-     *  existing/production caller) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly. */
-    repairBudgetFractionOverride?: number;
+     *  existing/production caller) preserves REPAIR_ADDITIVE_BUDGET_MULTIPLIER exactly. */
+    repairAdditiveBudgetMultiplierOverride?: number;
     /** Overrides GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION for this solve only — same dedicated
-     *  top-level-option shape as repairBudgetFractionOverride above, and for the same reason (NOT
-     *  an ablation flag). Deliberately a SEPARATE override from repairBudgetFractionOverride, not
+     *  top-level-option shape as repairAdditiveBudgetMultiplierOverride above, and for the same reason (NOT
+     *  an ablation flag). Deliberately a SEPARATE override from repairAdditiveBudgetMultiplierOverride, not
      *  reusing it: they gate two independently-costed extensions (repair's iterated-local-search
      *  retry loop vs. this pass's single fixed-budget ladder rerun), and a batch-tooling caller may
      *  legitimately want one without the other — e.g. testing/calibrating THIS mechanism cheaply
-     *  requires disabling repair's 6x extension (repairBudgetFractionOverride: 0) while still
+     *  requires disabling repair's 6x extension (repairAdditiveBudgetMultiplierOverride: 0) while still
      *  letting this pass run at its normal size, which an earlier version of this field (gating
-     *  the pass on repairBudgetFraction > 0 instead of its own override) made impossible: a solver-
+     *  the pass on repairAdditiveBudgetMultiplier > 0 instead of its own override) made impossible: a solver-
      *  testing sweep trying to isolate this pass's own contribution ended up re-triggering the full
      *  6x repair extension too, reintroducing exactly the multi-minute-per-level cost this
      *  session's repair-budget-fraction policy (docs/solver-architecture.md) was written to avoid
@@ -477,7 +477,7 @@ export interface SolveOpts {
     earlyRepairSearchAdaptiveBiasedMinScaleOverride?: number;
     /** @deprecated Historical option name accepted on read only. */
     repairProbeAdaptiveBiasedMinScaleOverride?: number;
-    /** Convenience for offline batch tooling: sets repairBudgetFractionOverride,
+    /** Convenience for offline batch tooling: sets repairAdditiveBudgetMultiplierOverride,
      *  goalAttractionDisabledRetryBudgetFractionOverride, coarseStateNearTieRetentionRetryBudgetFractionOverride,
      *  admissibleOrderBudgetFractionOverride, admissibleOrderNonDefaultRetryBudgetFractionOverride,
      *  connectivityAxisExhaustedRetryBudgetFractionOverride,
@@ -943,7 +943,7 @@ async function runGateSerialAttempts(
 // here so existing external consumers (scripts/solver-parallel/race.mjs) keep importing them from
 // this module's public surface unchanged.
 export {
-    REPAIR_EXTRA_BUDGET_FRACTION, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_BUDGET_FRACTION,
+    REPAIR_ADDITIVE_BUDGET_MULTIPLIER, GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION, ADMISSIBLE_ORDER_BUDGET_FRACTION,
     ADMISSIBLE_ORDER_NODE_RESERVE_FRACTION, ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION,
     MAIN_SEARCH_LATE_RESERVE_FRACTION, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT, REPAIR_FALLBACK_NODE_RESERVE_FRACTION,
     GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION, REPAIR_SHRINK_RECOVERY_NODE_RESERVE_FRACTION,
@@ -964,7 +964,7 @@ import { computeStageBudgetPlan, computeShrinkRecoveryBudget, buildStageBudgetEn
 import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js';
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
- *  REPAIR_EXTRA_BUDGET_FRACTION's own later allotment) given to a cheap early probe of the
+ *  REPAIR_ADDITIVE_BUDGET_MULTIPLIER's own later allotment) given to a cheap early probe of the
  *  repair fallback, tried BEFORE the ordinary DFS/beam main loop — see runEarlyRepairSearch.
  *
  *  Stress-corpus finding: on the repair-gated feature regime (attempts.ts's
@@ -977,7 +977,7 @@ import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js
  *  search space on their own) — i.e. for most of this regime, the main loop's own budget is
  *  pure scheduling tax on top of repair's real work, not search that matters. A bonus, not the
  *  design basis: repairSearchFromGate also measurably degrades in throughput when run after the
- *  main loop's own ~20s of work (REPAIR_EXTRA_BUDGET_FRACTION's own comment, S033/S043
+ *  main loop's own ~20s of work (REPAIR_ADDITIVE_BUDGET_MULTIPLIER's own comment, S033/S043
  *  writeups), so probing it cold, before that contention, can only help.
  *
  *  Deliberately small and strictly additive: repairSearchFromGate is a pure function of
@@ -987,7 +987,7 @@ import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js
  *  compute on levels where the probe fails to solve, never a correctness or effective-
  *  search-depth cost. This is the same reasoning that ruled out the earlier, reverted design
  *  that shrank the pool a later attempt's own budget was computed against (regressed S017 — see
- *  REPAIR_EXTRA_BUDGET_FRACTION's comment): this probe shrinks nothing, it only ever adds an
+ *  REPAIR_ADDITIVE_BUDGET_MULTIPLIER's comment): this probe shrinks nothing, it only ever adds an
  *  extra chance to exit early. Levels outside the repair feature gate never see this code path
  *  at all (repairConfigs is empty, checked before the probe runs), so it is provably a no-op on
  *  the published corpus, exactly as the full-budget repair loop already is.
@@ -1026,7 +1026,7 @@ import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js
  *  covers the largest observed case with ~58% headroom. Biased-tier: S043 972,527 nodes
  *  (~2179ms) is the only known must-turn-biased win that should be caught this early; S033
  *  needs 10,190,617 nodes (~25s) even cold and is NOT meant to be caught by this probe (it's
- *  caught later by the full REPAIR_EXTRA_BUDGET_FRACTION fallback loop today, same as before
+ *  caught later by the full REPAIR_ADDITIVE_BUDGET_MULTIPLIER fallback loop today, same as before
  *  this change) — 6,000,000 clears S043 with a large margin while staying safely below S033's
  *  true cost, preserving which level falls through to the full fallback vs. gets caught early.
  *  Re-measure (repairSearchFromGate called directly per the recipe above, NOT the full
@@ -1053,8 +1053,8 @@ export const EARLY_REPAIR_SEARCH_BIASED_NODE_BUDGET = 6_000_000;
  *  >100x below nominal uncontended throughput (~650,000 nodes/sec, measured on the same host) —
  *  generous enough to survive materially worse contention than what was measured, while staying a
  *  genuinely bounded backstop. Safe for the ~30s interactive latency promise (Play's "Find a
- *  Hint", Review's approval solve): both pass `repairBudgetFractionOverride: 0`, which skips the
- *  probe outright (see its call site's own `repairBudgetFraction !== 0` gate) rather than relying
+ *  Hint", Review's approval solve): both pass `repairAdditiveBudgetMultiplierOverride: 0`, which skips the
+ *  probe outright (see its call site's own `repairAdditiveBudgetMultiplier !== 0` gate) rather than relying
  *  on this cap to bound it. */
 export const EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP = 1_200_000;
 
@@ -1401,13 +1401,13 @@ function legacyLatencyPortfolioFeatureGateMatches(level: NormalizedLevel, gate: 
  * Normalizes an externally-supplied ablation config into the one shape every downstream read
  * site can safely assume: either `null` (no ablation — the production/default fast path,
  * preserved byte-for-byte via `!cfg` checks throughout this file/repair-search.ts/scoring.ts/
- * prune-gauntlet.ts) or a fully-defaulted object where every flag not explicitly set by the
+ * hard-prune-pipeline.ts) or a fully-defaulted object where every flag not explicitly set by the
  * caller reads at its production default (most enabled, registered opt-ins disabled).
  *
  * Every one of those `(!cfg || cfg.SOME_FLAG)` read sites treats "no ablation config at all" as
  * the ONLY way an unset flag defaults to `true` — so a caller-supplied PARTIAL object (e.g.
  * `{ STRATEGY_EARLY_REPAIR_SEARCH: true }`) makes every OTHER unset flag read as `undefined` (falsy),
- * silently disabling it. This is exactly the bug SolveOpts's repairBudgetFractionOverride field
+ * silently disabling it. This is exactly the bug SolveOpts's repairAdditiveBudgetMultiplierOverride field
  * comment documents shipping to production once already, and the reason this file's own
  * goal-attraction-disabled-retry pass below builds its overlay config through a hand-rolled Proxy instead
  * of a plain `{ ...cfg }` spread. Both of `solveLevel`/`runPortfolioExperiment` funnel every
@@ -1665,7 +1665,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // The repair fallback(s) (attempts.ts's needsRepairFallback / repairMustTurnBiasedAttempt) and
     // the admissible-order-fallback-search tier (attempts.ts's ADMISSIBLE_ORDER_PROFILES) are both pulled out
     // of the normal per-config loop and run afterward, each with its own extra budget
-    // (REPAIR_EXTRA_BUDGET_FRACTION / ADMISSIBLE_ORDER_BUDGET_FRACTION) — mainConfigs excludes both
+    // (REPAIR_ADDITIVE_BUDGET_MULTIPLIER / ADMISSIBLE_ORDER_BUDGET_FRACTION) — mainConfigs excludes both
     // so neither competes for a share of timeBudgetMs. repairConfigs is absent on every level outside
     // its feature gate; admissibleOrderConfigs is present on every level (see that tier's own
     // unconditional-placement comment) unless STRATEGY_ADMISSIBLE_ORDER is explicitly disabled.
@@ -1678,10 +1678,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const admissibleOrderNonDefaultConfigs = admissibleOrderConfigs.filter(c => c.scoringProfileId !== 'default');
     const mainConfigs = baseConfigs.filter(c => !c.repair && !c.admissibleOrder);
 
-    // opts.repairBudgetFractionOverride (NOT an ablation flag — see SolveOpts's field comment for
+    // opts.repairAdditiveBudgetMultiplierOverride (NOT an ablation flag — see SolveOpts's field comment for
     // why) lets offline batch tooling shrink/grow the repair fallback's extra budget for a
     // faster/bounded dev-loop run, without touching the tuned production constant — absent (the
-    // common case) preserves REPAIR_EXTRA_BUDGET_FRACTION exactly. Resolved here, before the early
+    // common case) preserves REPAIR_ADDITIVE_BUDGET_MULTIPLIER exactly. Resolved here, before the early
     // probe below, rather than only just before the full-budget fallback loop further down: an
     // explicit 0 override means "no repair-related cost at all," and the probe is a repair-related
     // cost too (see its gate's own comment for why this matters).
@@ -1703,7 +1703,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // straight off stageBudgetPlan) stays reachable on stageBudgetPlan itself without a redundant
     // local alias.
     const {
-        repairBudgetFraction, diversityBudgetFraction, coarseStateNearTieRetentionRetryBudgetFraction, nonDefaultRetryBudgetFraction,
+        repairAdditiveBudgetMultiplier, diversityBudgetFraction, coarseStateNearTieRetentionRetryBudgetFraction, nonDefaultRetryBudgetFraction,
         connectivityRetryBudgetFraction, repairElitePrefixDfsRetryBudgetFraction, mcNeighborBudgetRetryBudgetFraction,
         admissibleOrderBudgetFraction, admissibleOrderTierWillRun, admissibleOrderNodeReserve,
         coarseStateNearTieRetentionRetryTierWillRun, coarseStateNearTieRetentionRetryNodeCeiling,
@@ -1863,7 +1863,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     }
     const probeAttempts: Attempt[] = primeMissAttempt ? [primeMissAttempt] : [];
     let shrunkBiasedTiers: ShrunkBiasedTier[] = [];
-    if (repairConfigs.length > 0 && repairBudgetFraction !== 0 && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH)) {
+    if (repairConfigs.length > 0 && repairAdditiveBudgetMultiplier !== 0 && (!cfg || cfg.STRATEGY_EARLY_REPAIR_SEARCH)) {
         // No `prep._workCap` override here, deliberately: this probe runs BEFORE the main ladder
         // (`runInterleavedAttempts`/`runGateSerialAttempts`, below) ever executes, so — unlike every
         // tier further down this function — there is no earlier attempt that could have left a stale
@@ -1923,7 +1923,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // runners compute each attempt's share as timeBudgetMs minus elapsed-since-start, so
     // timing them from the original levelStartTime would let the probe's wall-clock silently
     // shrink the main loop's own budget — reintroducing exactly the "reserve budget up front"
-    // regression mechanism REPAIR_EXTRA_BUDGET_FRACTION's own comment documents (S017). A
+    // regression mechanism REPAIR_ADDITIVE_BUDGET_MULTIPLIER's own comment documents (S017). A
     // first version of this probe used levelStartTime here and was caught by a full-corpus
     // regression sweep: several fast main-search solves (S038, S050, S026, S027, S110, S023,
     // S018) lost just enough of their first attempt's budget to fail it, cascading into the
@@ -1938,7 +1938,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     const mainSearchEarlyTiersHitNodeCeiling = result.earlyNodeBudgetReached === true;
     const mainSearchEarlyTiersHitWorkCeiling = result.earlyWorkBudgetReached === true;
 
-    // repairBudgetFraction was already resolved above (before the early probe) — reused here
+    // repairAdditiveBudgetMultiplier was already resolved above (before the early probe) — reused here
     // unchanged for the full-budget fallback loop, same as before this fix. Checks against
     // `repairFallbackNodeCeiling`, NOT `earlyTierNodeBudget` directly, so this loop cannot spend the
     // goal-attraction-disabled-retry pass's own reserved slice — see GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's
@@ -1955,16 +1955,16 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // this pattern does and does not preserve), not re-derived from `timeBudgetMs` a second time.
     // Behavior-preserving for live play (this loop never runs there — repairConfigs is empty unless
     // a repair-eligible level reaches it, and both real interactive callers still zero
-    // `repairBudgetFraction` via `disableExtraBudgetPasses`) and for the plain-default no-override
-    // call shape (`REPAIR_EXTRA_BUDGET_FRACTION` is the integer `6.0`, so `legacyMsToWork` linearity
+    // `repairAdditiveBudgetMultiplier` via `disableExtraBudgetPasses`) and for the plain-default no-override
+    // call shape (`REPAIR_ADDITIVE_BUDGET_MULTIPLIER` is the integer `6.0`, so `legacyMsToWork` linearity
     // makes the two formulas produce the identical number there). NOT behavior-preserving for the
     // offline capability-sweep call shape (explicit `workBudget` disproportionate to a huge
     // non-binding `timeBudgetMs`) — same genuine, deliberate dose correction as the first site.
     // `repairFallbackTotalBudget` (ms) is kept: it still sizes the per-gate wall-deadline slice
     // (`repairBudget` below) passed to `runAttempt`, a genuine latency safety bound subordinate to
     // `prep._workCap` for actual allocation, not a work-sizing input in its own right.
-    const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairBudgetFraction);
-    const repairFallbackWorkBudget = scaledStageWorkBudget(workBudget, repairBudgetFraction, MIN_ATTEMPT_WORK);
+    const repairFallbackTotalBudget = Math.floor(timeBudgetMs * repairAdditiveBudgetMultiplier);
+    const repairFallbackWorkBudget = scaledStageWorkBudget(workBudget, repairAdditiveBudgetMultiplier, MIN_ATTEMPT_WORK);
     await withWorkCapScope(prep, prep._workMeter.units + repairFallbackWorkBudget, async () => {
         for (const repairConfig of repairConfigs) {
             if (result.solution) break;
@@ -1999,14 +1999,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // is small and strictly additive, same pattern as the repair loop just above.
     //
     // opts.goalAttractionDisabledRetryBudgetFractionOverride is its OWN dedicated override, deliberately
-    // separate from repairBudgetFractionOverride (see that field's own comment on SolveOpts for
+    // separate from repairAdditiveBudgetMultiplierOverride (see that field's own comment on SolveOpts for
     // why) — solver-controller.ts / review-controller.ts pass 0 for both, to keep their interactive
     // progress bar's ~30s promise; a solver-testing sweep can pass 0 for just this one to isolate
     // repair's own cost, or 0 for repair's while leaving this one at its default to isolate this
     // pass's own cost. opts.disableExtraBudgetPasses is a purely-additive convenience that sets
     // 0 for both at once (see its own comment on SolveOpts) — prefer it over remembering both
     // individual overrides unless a sweep specifically needs to isolate just one.
-    // (diversityBudgetFraction itself is resolved earlier, alongside repairBudgetFraction — see that
+    // (diversityBudgetFraction itself is resolved earlier, alongside repairAdditiveBudgetMultiplier — see that
     // resolution's own comment for why GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE_FRACTION's eligibility check
     // needs it before this point.)
     if (!result.solution && diversityBudgetFraction > 0 && (!cfg || cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY) && prep._metrics.nodesExpanded < earlyTierNodeBudget) {
@@ -2197,7 +2197,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // (diverse), needs ~5.1M nodes) got only 3.7M WORK units under the shared pool (vs. 10.9M
         // when the ordinary main loop tries the identical config with a full pool), well short given
         // a node costs more than 1 work unit. Same "extend, don't carve from the existing pool"
-        // philosophy REPAIR_EXTRA_BUDGET_FRACTION's own comment documents for wall time, applied to
+        // philosophy REPAIR_ADDITIVE_BUDGET_MULTIPLIER's own comment documents for wall time, applied to
         // work: a fresh `prep._workMeter.units` mark plus a work budget sized off this tier's own
         // fraction of the solve's own resolved `workBudget` (queue #2 step-3 migration, 2026-08-28
         // — see docs/solver-budget-determinism.md's additive-tier debt inventory). Previously this

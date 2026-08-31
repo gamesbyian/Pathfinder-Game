@@ -62,7 +62,7 @@ installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
 const { prepLevel } = await import('../../modules/solver/prep.js');
 const { createState, applyMove, undoMove } = await import('../../modules/solver/search-state.js');
-const { evaluatePrunedMove } = await import('../../modules/solver/prune-gauntlet.js');
+const { evaluatePrunedMove } = await import('../../modules/solver/hard-prune-pipeline.js');
 const { getRealLengthFromState } = await import('../../modules/solver/solution.js');
 const { popcount } = await import('../../modules/solver/encoding.js');
 

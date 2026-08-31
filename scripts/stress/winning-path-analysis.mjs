@@ -21,9 +21,9 @@
  * A low local rank does not guarantee beam survival, and a high local rank does not guarantee beam
  * death. This is a heuristic-preference proxy, not a beam-survival simulator.
  *
- * Candidates come straight from getNeighbors (move legality only), not post-prune-gauntlet
+ * Candidates come straight from getNeighbors (move legality only), not post-hard-prune-pipeline
  * survivors. The tool therefore asks "does the heuristic like the right move?" rather than
- * re-implementing the full prune gauntlet outside search.ts.
+ * re-implementing the full hard-prune pipeline outside search.ts.
  *
  * BUDGET. The cold-solve check uses a modest, fixed budget (see COLD_SOLVE_* below) purely to
  * bucket results into solved/unsolved for THIS report. It is explicitly NOT the corpus's

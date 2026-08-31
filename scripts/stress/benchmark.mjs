@@ -17,9 +17,9 @@
  *       [--filter-mechanic=mustCross,portalPairs] [--sample=N] [--seed=<value>]
  *       [--repair-budget-fraction=<n>] [--goal-attraction-disabled-retry-budget-fraction=<n>]
  *
- * --repair-budget-fraction=<n> overrides REPAIR_EXTRA_BUDGET_FRACTION (default 6x, the repair
+ * --repair-budget-fraction=<n> overrides REPAIR_ADDITIVE_BUDGET_MULTIPLIER (default 6x, the repair
  * fallback's extra wall-clock allowance ON TOP of --budget-ms) via SolveOpts.
- * repairBudgetFractionOverride for this whole run. Solver-TESTING workflows (this tool's usual
+ * repairAdditiveBudgetMultiplierOverride for this whole run. Solver-TESTING workflows (this tool's usual
  * job) should pass 0 here — a full corpus-1 sweep measured the default 6x costing ~2.8x the total
  * wall time (51min -> 18min at fraction=0) for solves that only ever land at 35-115s anyway (well
  * past any interactive-use threshold), while previously-multi-minute failures resolve just as
@@ -221,7 +221,7 @@ const attemptLabel = a => formatAttemptIdentityKey({
 const solveSequential = (raw, level) => Solver.solveLevel(level, {
     timeBudgetMs: cfg.budgetMs,
     ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
-    ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
+    ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairAdditiveBudgetMultiplierOverride: cfg.repairBudgetFraction } : {}),
     ...(Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction) ? { goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction } : {}),
 });
 
@@ -339,7 +339,7 @@ async function main() {
             timeBudgetMs: cfg.budgetMs,
             ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
     ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
-            ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairBudgetFractionOverride: cfg.repairBudgetFraction } : {}),
+            ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairAdditiveBudgetMultiplierOverride: cfg.repairBudgetFraction } : {}),
             ...(Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction) ? { goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction } : {}),
         })
         : solveSequential;

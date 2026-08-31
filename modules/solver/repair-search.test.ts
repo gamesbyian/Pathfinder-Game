@@ -9,8 +9,8 @@ import { prepLevel } from './prep.js';
 import { repairSearchFromGate, repairStreamSeeds, computePlateauPenaltyCells, selectGuideCells, relinkPaths, preferredTurnExit, __takePlyForTests } from './repair-search.js';
 import { createState, applyMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
-import type { PruneDiagnostics } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 import {
     replayAndValidate,
 } from './repair-search-test-support.test.js';
@@ -547,7 +547,7 @@ test('STRATEGY_REPAIR_EXIT_GUIDANCE_BOOST=false disables the must-turn exit nudg
 // Determinism is owned by the small synthetic repairSearchFromGate tests above. Do not use the
 // historical R02560 rescue witness merely to prove identical inputs produce identical outputs.
 
-test('closeLengthGap never returns an unsound path on a level with must-pass/must-cross objectives (soundness spot-check)', async () => {
+test('searchCompletionFromPartialPath never returns an unsound path on a level with must-pass/must-cross objectives (soundness spot-check)', async () => {
     // Reuses the existing must-pass/must-cross soundness-check shape (see the earlier
     // "every path repairSearchFromGate returns satisfies isSolutionState" test) — confirms the
     // new operator doesn't regress soundness once structuralDeficit briefly touches 0 mid-walk
@@ -561,7 +561,7 @@ test('closeLengthGap never returns an unsound path on a level with must-pass/mus
         reqLen: 16, reqInt: 3,
     });
     const prep = prepLevel(level);
-    // No _cfg — closeLengthGap is default-enabled, so this already exercises it.
+    // No _cfg — searchCompletionFromPartialPath is default-enabled, so this already exercises it.
     prep._metrics = { nodesExpanded: 0 };
     const path = await repairSearchFromGate(K(1, 1), level, prep, SCORING_PROFILES.repair, 3000, Date.now(), null);
     if (path) assert.equal(replayAndValidate(path, level, prep), true);

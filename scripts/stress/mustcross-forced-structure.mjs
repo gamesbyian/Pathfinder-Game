@@ -12,7 +12,7 @@
  *   2. FORCED STRAIGHT SEGMENTS. A cell orthogonally adjacent to two must-cross cells has both of
  *      its path edges forced, so no other edge at that cell is available.
  *   3. RESERVED-INTERSECTION ACCOUNTING. Each pending must-cross cell reserves one future
- *      intersection (already the basis of prune-gauntlet.ts's PRUNE_MC_CEILING). The FREE
+ *      intersection (already the basis of hard-prune-pipeline.ts's PRUNE_MC_CEILING). The FREE
  *      intersection budget is therefore `reqInt - ints - popcount(mustCrossMask)`, and when that is
  *      zero no cell except a pending must-cross cell can ever be revisited — the visited path
  *      becomes a wall. `reqInt <= mustCross count` puts a level in that regime from its first move.

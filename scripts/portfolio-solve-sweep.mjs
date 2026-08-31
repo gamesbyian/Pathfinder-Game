@@ -299,7 +299,7 @@ const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
 if (schedulerMode === 'legacy-latency-portfolio-experiment') solveOpts.legacyLatencyPortfolioExperiment = legacyLatencyPortfolioExperiment;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
-if (Number.isFinite(repairBudgetFraction)) solveOpts.repairBudgetFractionOverride = repairBudgetFraction;
+if (Number.isFinite(repairBudgetFraction)) solveOpts.repairAdditiveBudgetMultiplierOverride = repairBudgetFraction;
 if (Number.isFinite(goalAttractionDisabledRetryBudgetFraction)) solveOpts.goalAttractionDisabledRetryBudgetFractionOverride = goalAttractionDisabledRetryBudgetFraction;
 if (Number.isFinite(admissibleOrderBudgetFraction)) solveOpts.admissibleOrderBudgetFractionOverride = admissibleOrderBudgetFraction;
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
@@ -693,7 +693,7 @@ if (workerCount <= 1) {
             result = racePool
                 ? await racePool.solveLevel(raw, {
                     timeBudgetMs: budgetMs,
-                    repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
+                    repairAdditiveBudgetMultiplierOverride: solveOpts.repairAdditiveBudgetMultiplierOverride,
                     goalAttractionDisabledRetryBudgetFractionOverride: solveOpts.goalAttractionDisabledRetryBudgetFractionOverride,
                     // NOT threaded here, deliberately: race.mjs reimplements the attempt ladder and
                     // has no admissible-order tier and no nodeBudget handling at all (grep it — the

@@ -13,8 +13,8 @@ import { parseRawLevel } from '../domain/level-codec.js';
 import { PACK } from './encoding.js';
 import { prepLevel } from './prep.js';
 import { applyMove, createState } from './search-state.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
-import type { PruneDiagnostics } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 
 const solver = createSolver();
 const K = (x: number, y: number) => PACK(x - 1, y - 1);

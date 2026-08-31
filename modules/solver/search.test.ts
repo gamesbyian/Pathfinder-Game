@@ -4,14 +4,14 @@ import { test, vi } from 'vitest';
 import { PACK } from './encoding.js';
 import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
-import { evaluatePrunedMove } from './prune-gauntlet.js';
+import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { __pruneFirstStepNeighborsForTests, __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
 import { applyMove, createState } from './search-state.js';
 import { findTriggerableFalseGoalCells, classifyFalseGoalTriggerability, isParityCompatibleEndpoint } from './false-goal-trigger-search.js';
 import { isConnected } from './topology.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PruneDiagnostics } from './prune-gauntlet.js';
-import type { PruneId } from './prune-gauntlet.js';
+import type { PruneDiagnostics } from './hard-prune-pipeline.js';
+import type { PruneId } from './hard-prune-pipeline.js';
 import { validateCandidatePath } from '../domain/path-validator.js';
 
 function makeLevel(overrides = {}) {

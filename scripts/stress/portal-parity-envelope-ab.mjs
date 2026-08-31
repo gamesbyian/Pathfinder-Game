@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// A/B for PRUNE_PORTAL_PARITY_ENVELOPE (prune-gauntlet.ts). Full Solver.solveLevel() ladder (not an
+// A/B for PRUNE_PORTAL_PARITY_ENVELOPE (hard-prune-pipeline.ts). Full Solver.solveLevel() ladder (not an
 // isolated attempt config) since this is a general search prune used by both dfsFromGate and
 // repair's takePly, not a repair-only mechanism. Node-budget-pinned, non-binding wall clock.
 //

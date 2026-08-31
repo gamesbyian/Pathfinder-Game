@@ -39,7 +39,7 @@ runWorkerMain(async (task) => {
             const pool = getRacePool(racePoolSize);
             result = await pool.solveLevel(raw, {
                 timeBudgetMs: solveOpts.timeBudgetMs,
-                repairBudgetFractionOverride: solveOpts.repairBudgetFractionOverride,
+                repairAdditiveBudgetMultiplierOverride: solveOpts.repairAdditiveBudgetMultiplierOverride,
                 attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
                 goalAttractionDisabledRetryBudgetFractionOverride: solveOpts.goalAttractionDisabledRetryBudgetFractionOverride,
                 ablation: solveOpts.ablation, // race.mjs consumes levelOpts.ablation; thread it explicitly.
