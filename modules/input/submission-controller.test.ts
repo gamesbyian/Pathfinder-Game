@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'vitest';
 import { PACK } from '../domain/cell-key.js';
-import { cloneLevelWithReq, parseRawLevel } from '../domain/level-codec.js';
+import { parseRawLevel } from '../domain/level-codec.js';
 import { getLevelFingerprint } from '../domain/level-fingerprint.js';
 import { createSubmissionController } from './submission-controller.js';
 
