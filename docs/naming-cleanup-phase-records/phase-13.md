@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
-| Current batch | 13C merged-tree closeout |
-| Status | 13C validated; merge pending |
-| Base `main` SHA | `9435d6152bbe42a8433c338bba6a52a7f111e31b` |
-| Branch | `chatgpt/phase13c-merged-tree-closeout-2026-08-31` |
-| PR | #1622 |
+| Current batch | final closure evidence |
+| Status | closed; final evidence PR pending |
+| Base `main` SHA | `fc569655b5d715b88839458c23ff77fe4c0b9d3c` |
+| Branch | `chatgpt/phase13-final-evidence-2026-08-31` |
+| PR | pending |
 | Selected ledger row IDs | NC-P13-001 through NC-P13-004 |
 | Reconciliation mode | full level-metric ownership census, because Phase 13 is high-risk and broad |
 | Highest risk | high |
@@ -346,8 +346,43 @@ Chromium gate before PR #1622 may merge.
 
 ## 10. Final closure
 
-Phase 13 remains incomplete until 13C is merged, structured closure evidence is backfilled, and
-`lastCompletedPhase` advances to 13.
+Phase 13 is complete through all required stages:
+
+- preparation PR #1620 established the raw/normalized ownership map and closeout gates;
+- implementation PR #1621 atomically migrated normalized runtime metrics and merged as
+  `e3eccc93fa1aa893b412cfe21400a3c4fec38073`;
+- implementation final head `9d36c57c9a4b2f69fb502e176c81520a227ef3b3` passed exact-head
+  CI `33371487506` and Chromium `33371487527`;
+- merged-tree closeout PR #1622 started from current main
+  `9435d6152bbe42a8433c338bba6a52a7f111e31b`, found and repaired two additional masked
+  normalized accesses, then merged as `fc569655b5d715b88839458c23ff77fe4c0b9d3c`;
+- closeout final head `9d1fed9e1c833c2e6e78ea27cac39f6729610c0d` passed exact-head CI
+  `33426821850` and Chromium `33426821847`;
+- NC-P13-001 through NC-P13-004 are `done` with every verification dimension, including
+  `closeoutAudit`, complete;
+- `phaseClosures["13"]` is `closed`, `activeExecution` is idle, and
+  `lastCompletedPhase` advances to 13.
+
+### 10.1 Final compatibility disposition
+
+| Surface | Final disposition |
+| --- | --- |
+| `NormalizedLevel.requiredLength` | canonical runtime field |
+| `NormalizedLevel.requiredIntersections` | canonical runtime field |
+| `EngineLevel.requiredLength` | canonical runtime field |
+| `EngineLevel.requiredIntersections` | canonical runtime field |
+| raw/wire `reqLen` | retained permanently |
+| raw/wire `reqInt` | retained permanently |
+| report/result schemas independently using `reqLen`/`reqInt` | retained where explicitly inventoried; not runtime level properties |
+| second solver raw metric reader | removed; codec owns projection |
+
+The permanent boundary ratchet now records 86 raw/wire owners, 22 retained non-normalized owners,
+zero normalized legacy owners, zero mixed owners, and zero ambiguous owners. The consumer-inward
+Phase-13 closeout guard scans modules/scripts and prevents a raw-file exemption from masking a stale
+normalized member read.
+
+This final evidence branch changes only naming evidence/ledger state. It requires its own exact-head
+CI before merge; no Phase-14 implementation is included.
 
 
 ### 7.1 Third-pass boundary correction
@@ -364,3 +399,13 @@ They were moved from `rawWireBoundary` to `mixedRawAndNormalized`. This is impor
 otherwise their legitimate permanent raw spellings would exempt stale normalized spellings in the
 same files after 13B. The final 13A ownership target is therefore 79 raw, 80 normalized, 13 mixed,
 15 retained, and zero ambiguous.
+
+
+### 9.4 Closeout merge checkpoint
+
+The row-closure evidence head `9d1fed9e1c833c2e6e78ea27cac39f6729610c0d` passed exact-head
+CI `33426821850` and Chromium `33426821847`. PR #1622 then merged without base drift as
+`fc569655b5d715b88839458c23ff77fe4c0b9d3c`.
+
+The final evidence branch starts exactly from that closeout merge and carries only the machine-readable
+Phase-13 closure facts and this record update.
