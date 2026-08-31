@@ -1,5 +1,5 @@
 // Runtime slice state actions (engineState.runtime.*): pointer/tap tracking, the active
-// theme name, and the queued pending action.
+// theme name, and the queued confirmation action.
 import { resolveEngineState } from './shared.js';
 import type { StateOrEngine } from './shared.js';
 
@@ -51,6 +51,6 @@ export function setRuntimePendingConfirmationAction(stateOrEngine: StateOrEngine
     return runtime.pendingConfirmationAction;
 }
 
-export function clearRuntimePendingAction(stateOrEngine: StateOrEngine) {
+export function clearRuntimePendingConfirmationAction(stateOrEngine: StateOrEngine) {
     return setRuntimePendingConfirmationAction(stateOrEngine, null);
 }
