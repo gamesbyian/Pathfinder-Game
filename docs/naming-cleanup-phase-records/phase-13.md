@@ -9,7 +9,7 @@
 | Status | 13C closeout in progress |
 | Base `main` SHA | `9435d6152bbe42a8433c338bba6a52a7f111e31b` |
 | Branch | `chatgpt/phase13c-merged-tree-closeout-2026-08-31` |
-| PR | pending |
+| PR | #1622 |
 | Selected ledger row IDs | NC-P13-001 through NC-P13-004 |
 | Reconciliation mode | full level-metric ownership census, because Phase 13 is high-risk and broad |
 | Highest risk | high |
