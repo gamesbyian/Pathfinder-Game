@@ -39,7 +39,7 @@ Intended deltas are names only. Solver eligibility, attempt order, random seeds,
 | budget definition/resolution | constant, `SolveOpts`, stage plan, orchestration local migrated | stage-budget/orchestration tests |
 | parent/worker/race transport | canonical field forwarded through both reconstruction hops | real portfolio worker -> nested race repair-allocation fixture |
 | CLI/report schema | retained distinct compatibility surface | `--repair-budget-fraction` and persisted `repairBudgetFraction` remain input/report identities; they translate into the canonical internal option and are not NC-P10-006/007 |
-| stage-policy historical read | permanent obligation, no reader found | repository census; canonical runtime definition remains unchanged |
+| stage-policy historical read | permanent obligation, no live reader found | repository census; canonical runtime definition remains unchanged; targeted validation and behavioral parity are `not-applicable` rather than fabricated |
 | current docs/comments | migrated | documentation-link check pending aggregate gate |
 | frozen evidence | retained | `reports/`, `logs/`, and `docs/archive/` preserve historical spellings |
 
