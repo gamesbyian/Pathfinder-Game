@@ -146,7 +146,11 @@ rules, or validation topology. This is a specification correction, not implement
 The default implementation sequence is 15B NC-P15-006, 15C NC-P15-001, 15D NC-P15-002,
 15E NC-P15-003, 15F NC-P15-004, 15G NC-P15-005, and 15H NC-P15-007, followed by 15I hostile
 merged-tree closeout and 15J archival/finalization. Every batch starts from the merged predecessor.
-15A must extend the serial merge barrier to the final Phase-15 batch list before 15B begins.
+15A must create and register `docs/naming-cleanup-phase-records/phase-15.md` as the live
+implementation/closeout authority, then extend the ledger/checker/status machinery to
+machine-enforce the final Phase-15 batch/gate order and predecessor merge barriers before 15B
+begins. The existing preparation record remains historical preparation authority and is referenced
+from the new execution record rather than repurposed as it.
 
 Each real compatibility boundary now has a stronger proof contract: authentic historical fixture,
 one owning normalizer, canonical-only read, legacy-only read, explicit dual-form conflict behavior,
