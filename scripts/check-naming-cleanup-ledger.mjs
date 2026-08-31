@@ -173,6 +173,29 @@ if (!phaseClosures || typeof phaseClosures !== 'object' || Array.isArray(phaseCl
       }
     }
 
+    if (Number(phaseKey) === 11) {
+      const repair = closure.postCloseoutAuditRepair;
+      if (!repair || typeof repair !== 'object' || Array.isArray(repair)) {
+        fail(`phaseClosures["${phaseKey}"].postCloseoutAuditRepair must record the merged Phase-11 audit repair`);
+      } else {
+        if (!Number.isInteger(repair.pr) || repair.pr < 1) {
+          fail(`phaseClosures["${phaseKey}"].postCloseoutAuditRepair.pr must be a positive PR number`);
+        }
+        for (const key of ['baseMainSha', 'finalHeadSha', 'mergeCommit']) {
+          if (typeof repair[key] !== 'string' || !/^[0-9a-f]{40}$/u.test(repair[key])) {
+            fail(`phaseClosures["${phaseKey}"].postCloseoutAuditRepair.${key} must be a full commit SHA`);
+          }
+        }
+        if (!Number.isInteger(repair.ciRunId) || repair.ciRunId < 1 || repair.ciConclusion !== 'success') {
+          fail(`phaseClosures["${phaseKey}"].postCloseoutAuditRepair must record successful exact-head CI`);
+        }
+        if (!Number.isInteger(repair.browserRunId) || repair.browserRunId < 1 ||
+            repair.browserConclusion !== 'success') {
+          fail(`phaseClosures["${phaseKey}"].postCloseoutAuditRepair must record the successful exact-head Phase-11 browser run`);
+        }
+      }
+    }
+
     const closeout = closure.mergedTreeCloseout;
     if (!closeout || typeof closeout !== 'object' || Array.isArray(closeout)) {
       fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout must identify the merged-tree closure PR`);
