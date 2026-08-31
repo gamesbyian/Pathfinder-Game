@@ -19,7 +19,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     const perspectiveAction = () => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
-        engine.navigation.setVariant((state.ENGINE.variant + 1) % 8);
+        engine.navigation.setOrientation((state.ENGINE.orientation + 1) % 8);
         core.SOUND_BUS.play('D5', '32n');
     };
     (document.getElementById('whoaBtn') as any).onclick = perspectiveAction;
@@ -118,7 +118,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     (document.getElementById('backToOptionsBtn') as any).onclick   = () => { syncOptionToggles(); showOptionsPage(); };
 
     const reloadForOptions = () => {
-        if (state.ENGINE.mode === core.PLAY) engine.game.loadLevel(state.ENGINE.levelIdx, { keepVariant: true });
+        if (state.ENGINE.mode === core.PLAY) engine.game.loadLevel(state.ENGINE.levelIdx, { keepOrientation: true });
     };
     const bindOptionToggle = (id: any, fn: any) => {
         const el = (document.getElementById(id) as any);

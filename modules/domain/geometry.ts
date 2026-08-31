@@ -1,6 +1,6 @@
 // Grid geometry: coordinate transforms, axis transforms, turn-direction transforms.
 // These values must stay in sync with APP.Core.AXIS (H=1, V=2) and
-// the 8 level-variant orientations used throughout the app.
+// the 8 runtime orientations used throughout the app.
 
 import { flipTurnDir } from './landmark-rules.js';
 import type { TurnDir } from './level-schema.js';
@@ -8,15 +8,15 @@ import type { TurnDir } from './level-schema.js';
 const AXIS_H = 1;
 const AXIS_V = 2;
 
-/** Variants 4–7 are reflections (mirror ∘ rotation); 0–3 are pure rotations. */
-const REFLECTING_VARIANTS = [4, 5, 6, 7];
+/** Orientations 4–7 are reflections (mirror ∘ rotation); 0–3 are pure rotations. */
+const REFLECTING_ORIENTATIONS = [4, 5, 6, 7];
 
 /**
- * Map a base-orientation point to its position under one of the 8 variant orientations.
- * @param variant 0–7 @param W grid width @param H grid height
+ * Map a base-orientation point to its position under one of the 8 orientations.
+ * @param orientation 0–7 @param W grid width @param H grid height
  */
-export function transformPoint(x: number, y: number, variant: number, W: number, H: number): { tx: number; ty: number } {
-    switch (variant) {
+export function transformPoint(x: number, y: number, orientation: number, W: number, H: number): { tx: number; ty: number } {
+    switch (orientation) {
         case 0: return { tx: x,         ty: y         };
         case 1: return { tx: H - 1 - y, ty: x         };
         case 2: return { tx: W - 1 - x, ty: H - 1 - y };
@@ -31,10 +31,10 @@ export function transformPoint(x: number, y: number, variant: number, W: number,
 
 /**
  * Inverse of {@link transformPoint}: map a transformed point back to base orientation.
- * @param variant 0–7 @param W grid width @param H grid height
+ * @param orientation 0–7 @param W grid width @param H grid height
  */
-export function inverseTransformPoint(tx: number, ty: number, variant: number, W: number, H: number): { x: number; y: number } {
-    switch (variant) {
+export function inverseTransformPoint(tx: number, ty: number, orientation: number, W: number, H: number): { x: number; y: number } {
+    switch (orientation) {
         case 0: return { x: tx,         y: ty         };
         case 1: return { x: ty,         y: H - 1 - tx };
         case 2: return { x: W - 1 - tx, y: H - 1 - ty };
@@ -48,12 +48,12 @@ export function inverseTransformPoint(tx: number, ty: number, variant: number, W
 }
 
 /**
- * Map an axis (H=1, V=2) through a variant orientation (some variants swap H↔V).
- * @param variant 0–7
+ * Map an axis (H=1, V=2) through a orientation (some orientations swap H↔V).
+ * @param orientation 0–7
  */
-export function transformAxis(axis: number, variant: number): number {
+export function transformAxis(axis: number, orientation: number): number {
     const swaps = [1, 3, 6, 7];
-    if (swaps.includes(variant)) {
+    if (swaps.includes(orientation)) {
         if (axis === AXIS_H) return AXIS_V;
         if (axis === AXIS_V) return AXIS_H;
     }
@@ -62,15 +62,15 @@ export function transformAxis(axis: number, variant: number): number {
 
 /**
  * Map a base-orientation turn-direction requirement (cw/ccw/either) to how it must read under
- * one of the 8 variant orientations. The canonical level data is never rotated/mirrored at
+ * one of the 8 orientations. The canonical level data is never rotated/mirrored at
  * runtime (only the display and click-input mapping are — see transformPoint); this is the
  * render-only counterpart to transformAxis, for the mustTurn/adjacentTurn landmark visual cue.
- * A reflection (variants 4–7) reverses chirality, so cw↔ccw flip; a pure rotation (0–3)
+ * A reflection (orientations 4–7) reverses chirality, so cw↔ccw flip; a pure rotation (0–3)
  * preserves it, so the direction is shown unchanged.
- * @param variant 0–7
+ * @param orientation 0–7
  */
-export function transformTurnDir(dir: TurnDir, variant: number): TurnDir {
-    return REFLECTING_VARIANTS.includes(variant) ? flipTurnDir(dir) : dir;
+export function transformTurnDir(dir: TurnDir, orientation: number): TurnDir {
+    return REFLECTING_ORIENTATIONS.includes(orientation) ? flipTurnDir(dir) : dir;
 }
 
 /**

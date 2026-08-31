@@ -1407,18 +1407,18 @@
       "risk": "high",
       "persistence": "dual-read",
       "phase": 11,
-      "status": "pending",
+      "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
         "closeoutAudit": "pending"
       },
       "notes": "Runtime rotation/reflection only; research level variant retained.",
       "migrationClass": "compatibility-boundary-migration",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-11.md",
       "compatibility": {
         "mode": "runtime-compatibility-transition",
         "retireWhen": "phase-15-review",
@@ -1433,18 +1433,18 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 11,
-      "status": "pending",
+      "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
         "closeoutAudit": "pending"
       },
       "notes": "Runtime orientation setter.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-11.md"
     },
     {
       "id": "NC-P11-003",
@@ -1454,18 +1454,18 @@
       "risk": "medium",
       "persistence": "none",
       "phase": 11,
-      "status": "pending",
+      "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
         "closeoutAudit": "pending"
       },
       "notes": "Runtime engine state.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-11.md"
     },
     {
       "id": "NC-P11-004",
@@ -1475,18 +1475,18 @@
       "risk": "low",
       "persistence": "none",
       "phase": 11,
-      "status": "pending",
+      "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
         "closeoutAudit": "pending"
       },
       "notes": "Rotation/reflection argument.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-11.md"
     },
     {
       "id": "NC-P11-005",
@@ -1496,18 +1496,18 @@
       "risk": "low",
       "persistence": "frozen-history",
       "phase": 11,
-      "status": "pending",
+      "status": "in-progress",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
         "closeoutAudit": "pending"
       },
       "notes": "Current runtime docs only.",
       "migrationClass": "current-surface-rename-preserve-frozen-history",
-      "verificationRecord": null
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-11.md"
     },
     {
       "id": "NC-P08-001",
@@ -4455,14 +4455,14 @@
     "11": "docs/naming-cleanup-phase-records/phase-11.md"
   },
   "activeExecution": {
-    "status": "idle",
-    "phase": null,
+    "status": "active",
+    "phase": 11,
     "batch": null,
-    "branch": null,
-    "pr": null,
-    "baseMainSha": null,
-    "recordPath": null,
-    "notes": "Phase 11A coverage/impact preparation is complete and merged through PR #1610 (merge 7789fa0260ad44442f078a596812adcc87864dfb), including real Chromium browser execution. Phase 11 rows remain pending and activeExecution is idle. 11B is the next authorized work and must start from current main with the atomic runtime state/geometry/render/input migration."
+    "branch": "chatgpt/phase11b-atomic-orientation-rename-2026-08-30",
+    "pr": 1612,
+    "baseMainSha": "53c32911e840a342c9eb6d90ecd0d26fd59052ae",
+    "recordPath": "docs/naming-cleanup-phase-records/phase-11.md",
+    "notes": "Phase 11B atomic runtime orientation rename is implementation-complete on PR #1612. Runtime residue census is clean; ordinary CI #3416 and the dedicated Chromium orientation gate #8 passed on behavior-bearing head e1090eed361fed37def0d1b574d954cc5575025b. Record/ledger evidence updates move the final head, so fresh exact-head CI/browser success is still required before merge; 11C remains separate merged-tree closeout."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior.",
   "phaseBatches": {

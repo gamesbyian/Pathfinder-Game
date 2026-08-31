@@ -60,7 +60,7 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
             if (level.landmarkMeta?.has(k)) return;
             const p    = UNPACK(k);
             const isHit = (nav.visitedCounts.get(k) || 0) > 0;
-            const { ty } = transformPoint(p.x, p.y, eng.variant, level.grid.w, level.grid.h);
+            const { ty } = transformPoint(p.x, p.y, eng.orientation, level.grid.w, level.grid.h);
             if (ty === 0) {
                 mustPassInOverlay.push({ x: p.x, y: p.y, isHit });
             } else {
@@ -147,7 +147,7 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
         isPlayMode, isEditorMode, isReviewMode,
         // level and transform
         level,
-        variant: eng.variant,
+        orientation: eng.orientation,
         // theme
         theme,
         // path state

@@ -45,7 +45,7 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
   const engineState = {
     mode: 1,
     level,
-    variant: 0,
+    orientation: 0,
     viewport: { cellW: cellSize, cellH: cellSize, swapped: false },
   } as any;
   const levelUtils = createLevelUtils({
@@ -55,12 +55,12 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
     getRenderer: () => ({ getCanvas: () => canvas }),
   });
 
-  for (let variant = 0; variant < 8; variant += 1) {
-    engineState.variant = variant;
-    engineState.viewport.swapped = [1, 3, 6, 7].includes(variant);
+  for (let orientation = 0; orientation < 8; orientation += 1) {
+    engineState.orientation = orientation;
+    engineState.viewport.swapped = [1, 3, 6, 7].includes(orientation);
     for (let x = 0; x < level.grid.w; x += 1) {
       for (let y = 0; y < level.grid.h; y += 1) {
-        const { tx, ty } = transformPoint(x, y, variant, level.grid.w, level.grid.h);
+        const { tx, ty } = transformPoint(x, y, orientation, level.grid.w, level.grid.h);
         const pointer = {
           clientX: 11 + (tx + 0.5) * cellSize,
           clientY: 17 + (ty + 0.5) * cellSize,
@@ -68,7 +68,7 @@ test('getGridCoord inverts rendered canvas cells for every runtime transform', (
         assert.deepEqual(
           levelUtils.getGridCoord(pointer),
           { x, y },
-          `transform ${variant} rendered cell (${tx},${ty}) maps back to (${x},${y})`,
+          `transform ${orientation} rendered cell (${tx},${ty}) maps back to (${x},${y})`,
         );
       }
     }

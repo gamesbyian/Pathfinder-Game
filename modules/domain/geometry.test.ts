@@ -1,4 +1,4 @@
-/** Behavior tests for the 8 grid-variant orientation transforms (hardening plan §1). */
+/** Behavior tests for the 8 runtime orientation transforms (hardening plan §1). */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { transformPoint, inverseTransformPoint, transformAxis, transformTurnDir, turnDirection } from './geometry.js';
@@ -7,13 +7,13 @@ import { PACK, UNPACK } from './cell-key.js';
 const AXIS_H = 1, AXIS_V = 2;
 const W = 7, H = 5;
 
-test('inverseTransformPoint undoes transformPoint for every variant and cell', () => {
-    for (let variant = 0; variant <= 7; variant++) {
+test('inverseTransformPoint undoes transformPoint for every orientation and cell', () => {
+    for (let orientation = 0; orientation <= 7; orientation++) {
         for (let x = 0; x < W; x++) {
             for (let y = 0; y < H; y++) {
-                const { tx, ty } = transformPoint(x, y, variant, W, H);
-                const back = inverseTransformPoint(tx, ty, variant, W, H);
-                assert.deepEqual(back, { x, y }, `variant ${variant} cell (${x},${y})`);
+                const { tx, ty } = transformPoint(x, y, orientation, W, H);
+                const back = inverseTransformPoint(tx, ty, orientation, W, H);
+                assert.deepEqual(back, { x, y }, `orientation ${orientation} cell (${x},${y})`);
             }
         }
     }
@@ -26,19 +26,19 @@ test('specific orientations land where expected', () => {
     assert.deepEqual(transformPoint(1, 2, 4, W, H), { tx: W - 2, ty: 2 }, 'mirror X');
     assert.deepEqual(transformPoint(1, 2, 5, W, H), { tx: 1, ty: H - 3 }, 'mirror Y');
     assert.deepEqual(transformPoint(1, 2, 6, W, H), { tx: 2, ty: 1 }, 'transpose');
-    // Out-of-range variant falls back to identity (both directions).
+    // Out-of-range orientation falls back to identity (both directions).
     assert.deepEqual(transformPoint(3, 4, 99, W, H), { tx: 3, ty: 4 });
     assert.deepEqual(inverseTransformPoint(3, 4, 99, W, H), { x: 3, y: 4 });
 });
 
 test('transformAxis swaps H/V exactly for the transposing variants', () => {
     const swapping = [1, 3, 6, 7];
-    for (let variant = 0; variant <= 7; variant++) {
-        const h = transformAxis(AXIS_H, variant);
-        const v = transformAxis(AXIS_V, variant);
-        if (swapping.includes(variant)) {
-            assert.equal(h, AXIS_V, `variant ${variant} swaps H→V`);
-            assert.equal(v, AXIS_H, `variant ${variant} swaps V→H`);
+    for (let orientation = 0; orientation <= 7; orientation++) {
+        const h = transformAxis(AXIS_H, orientation);
+        const v = transformAxis(AXIS_V, orientation);
+        if (swapping.includes(orientation)) {
+            assert.equal(h, AXIS_V, `orientation ${orientation} swaps H→V`);
+            assert.equal(v, AXIS_H, `orientation ${orientation} swaps V→H`);
         } else {
             assert.equal(h, AXIS_H);
             assert.equal(v, AXIS_V);
@@ -50,15 +50,15 @@ test('transformAxis swaps H/V exactly for the transposing variants', () => {
 
 test('transformTurnDir flips cw/ccw exactly for the reflecting variants (4-7), never for rotations (0-3)', () => {
     const reflecting = [4, 5, 6, 7];
-    for (let variant = 0; variant <= 7; variant++) {
-        if (reflecting.includes(variant)) {
-            assert.equal(transformTurnDir('cw', variant), 'ccw', `variant ${variant} reflects cw→ccw`);
-            assert.equal(transformTurnDir('ccw', variant), 'cw', `variant ${variant} reflects ccw→cw`);
+    for (let orientation = 0; orientation <= 7; orientation++) {
+        if (reflecting.includes(orientation)) {
+            assert.equal(transformTurnDir('cw', orientation), 'ccw', `orientation ${orientation} reflects cw→ccw`);
+            assert.equal(transformTurnDir('ccw', orientation), 'cw', `orientation ${orientation} reflects ccw→cw`);
         } else {
-            assert.equal(transformTurnDir('cw', variant), 'cw', `variant ${variant} preserves cw`);
-            assert.equal(transformTurnDir('ccw', variant), 'ccw', `variant ${variant} preserves ccw`);
+            assert.equal(transformTurnDir('cw', orientation), 'cw', `orientation ${orientation} preserves cw`);
+            assert.equal(transformTurnDir('ccw', orientation), 'ccw', `orientation ${orientation} preserves ccw`);
         }
-        assert.equal(transformTurnDir('either', variant), 'either', `variant ${variant} leaves 'either' unchanged`);
+        assert.equal(transformTurnDir('either', orientation), 'either', `orientation ${orientation} leaves 'either' unchanged`);
     }
 });
 
@@ -89,5 +89,5 @@ test('turnDirection: reflecting a bend (mirroring x) flips cw/ccw, matching tran
     const prev = PACK(1, 1), from = PACK(2, 1), target = PACK(2, 2);
     const dir = turnDirection(prev, from, target)!;
     const mirroredDir = turnDirection(mirrorX(prev), mirrorX(from), mirrorX(target))!;
-    assert.equal(mirroredDir, transformTurnDir(dir, 4), 'mirroring the three points flips the same way variant 4 does');
+    assert.equal(mirroredDir, transformTurnDir(dir, 4), 'mirroring the three points flips the same way orientation 4 does');
 });

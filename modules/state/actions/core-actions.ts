@@ -148,10 +148,10 @@ export function setLevelIndex(stateOrEngine: StateOrEngine, levelIdx: number) {
     return engineState?.levelIdx;
 }
 
-export function setVariant(stateOrEngine: StateOrEngine, variant: number) {
+export function setOrientation(stateOrEngine: StateOrEngine, orientation: number) {
     const engineState = resolveEngineState(stateOrEngine);
-    if (engineState) engineState.variant = variant;
-    return engineState?.variant;
+    if (engineState) engineState.orientation = orientation;
+    return engineState?.orientation;
 }
 
 export function setLevel(stateOrEngine: StateOrEngine, level: EngineLevel | null) {

@@ -512,22 +512,22 @@ test('loadLevel(idx) in EDITOR mode initializes the editor working copy', () => 
     assertEditorWorkingCopyInitialized(deps, rec, 3, 0);
 });
 
-test('level load chooses a runtime transform, reset preserves it, and editor load returns to base transform', () => {
+test('level load chooses a runtime orientation, reset preserves it, and editor load returns to base transform', () => {
     const deps = makeLevelFlowDeps();
-    deps.state.ENGINE.variant = 2;
+    deps.state.ENGINE.orientation = 2;
     const originalRandom = Math.random;
     Math.random = () => 0.875; // floor(0.875 * 8) = 7
     try {
         const ctrl = createLevelFlowController(deps);
         ctrl.loadLevel(0);
-        assertEqual(deps.state.ENGINE.variant, 7, 'play-mode level load chooses the current runtime transform');
+        assertEqual(deps.state.ENGINE.orientation, 7, 'play-mode level load chooses the current runtime orientation');
 
         ctrl.handleResetAction();
-        assertEqual(deps.state.ENGINE.variant, 7, 'reset reload keeps the current runtime transform');
+        assertEqual(deps.state.ENGINE.orientation, 7, 'reset reload keeps the current runtime orientation');
 
         deps.state.ENGINE.mode = core.EDITOR;
         ctrl.loadLevel(0);
-        assertEqual(deps.state.ENGINE.variant, 0, 'editor level load uses canonical coordinates');
+        assertEqual(deps.state.ENGINE.orientation, 0, 'editor level load uses canonical coordinates');
     } finally {
         Math.random = originalRandom;
     }

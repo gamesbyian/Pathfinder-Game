@@ -27,7 +27,7 @@ import {
     setNavigationLastFlipTime,
     setOptionValue,
     setRuntimePendingAction as setRuntimePendingActionState,
-    setVariant as setVariantState,
+    setOrientation as setOrientationState,
     toggleMuted as toggleMutedState,
 } from './state-actions.js';
 
@@ -44,7 +44,7 @@ export const ENGINE_FACADE_GROUPS: Record<string, string[] | Record<string, stri
         'wouldCreateBlockedTIntersection', 'attemptMoveTo', 'handlePrimaryGridInput', 'createSnapshot',
         'applySnapshot', 'getRealLength', 'getPackedPath', 'getIntersections', 'rebuildDerivedPathState',
         'assertStateConsistency'],
-    navigation: ['PathNavigator', 'reversePathDirection', 'remapNavKeys', 'findTapRoute', 'setVariant'],
+    navigation: ['PathNavigator', 'reversePathDirection', 'remapNavKeys', 'findTapRoute', 'setOrientation'],
     overlays: ['setOverlayState', 'startHintAnimation', 'stopHintAnimation'],
     hints: ['setHintPaths', 'clearHintPaths', 'pinCurrentHint', 'clearPersistedHint', 'pinCurrentHeatmap',
         'clearPersistedHeatmap'],
@@ -259,8 +259,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
 
     // --- Thin wrappers over state-actions ---
 
-    function setVariant(v: any) {
-        setVariantState(state, v);
+    function setOrientation(v: any) {
+        setOrientationState(state, v);
         ui.updateViewport();
         rebuildDerivedPathState(state.ENGINE);
         markDirty(state);
@@ -321,7 +321,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         startSolverRun,
         endSolverRun,
         setHintPaths,
-        setVariant,
+        setOrientation,
         reversePathDirection,
         clearHintPaths,
         pinCurrentHint,

@@ -320,7 +320,7 @@ export interface GameOptions {
  * its own owner/interface above; the scalar fields here are owned as follows:
  *   mode/logicState/overlayState — engine state machine + overlay-controller (authoritative)
  *   isDevMode/cheatActive/cheatTimer — options-controller / level-flow (authoritative)
- *   levelIdx/variant — level-flow (authoritative); level — level-flow (derived from data+variant)
+ *   levelIdx/orientation — level-flow (authoritative); level — level-flow (derived from data+orientation)
  *   ripples — renderer (derived/visual); isDirty — render-loop (derived signal)
  *   muted/options — options-controller (authoritative, persisted)
  *   resetStreak — level-flow (derived counter); foundHintsSinceLoad — submission-controller
@@ -335,7 +335,7 @@ export interface EngineState {
     isDevMode: boolean;
     cheatActive: boolean;
     levelIdx: number;
-    variant: number;
+    orientation: number;
     /** the active normalized level, or null before the first load */
     level: EngineLevel | null;
     nav: NavigationState;
@@ -382,7 +382,7 @@ export function createEngineState({ core }: { core: EngineCoreConstants }): Engi
         isDevMode: false,
         cheatActive: false,
         levelIdx: 0,
-        variant: 0,
+        orientation: 0,
         level: null,
         nav: createNavigationState(),
         hazards: createHazardState(),

@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 11 — application orientation versus level variant |
-| Current batch | 11A coverage/impact preparation |
-| Status | 11A complete and merged; 11B not started |
+| Current batch | 11B atomic runtime rename |
+| Status | 11A complete; 11B atomic runtime rename in progress |
 | Base `main` SHA | `21cde93a05b251a4682f4aa09f88703d3d9a4d67` |
 | Branch | `chatgpt/phase11a-coverage-preparation-2026-08-30` |
 | Rows | NC-P11-001 through NC-P11-005 |
@@ -149,3 +149,22 @@ the 11B switch cannot pass merely because TypeScript and unit tests accept a hal
 PR #1610's exact final head `31ce45812569f3184f9f9e63f691c4745f6ec82f` completed ordinary CI run #3412 / `33360515431` successfully and the Phase 11 orientation browser gate run #5 / `33360515437` successfully. The PR then merged as `7789fa0260ad44442f078a596812adcc87864dfb`.
 
 11A is therefore complete on merged `main`. No Phase-11 runtime naming row has been implemented yet. The next authorized work is 11B: branch from current `main`, rerun the target/retained census, acquire the execution lock, and perform the atomic runtime rename without splitting state from geometry/render/input.
+
+## 10. 11B entry reconciliation
+
+11B starts from current `main` `53c32911e840a342c9eb6d90ecd0d26fd59052ae`, after 11A and its evidence hygiene are merged. The current runtime target remains the graph documented in Sections 2-5: engine state/default, state action and engine facade, level-flow load/reset preservation, geometry transform parameters, inverse pointer adapter, viewport swapping, render-model projection, renderer position/path reads, and perspective UI. No competing Phase-11 PR is active at entry.
+
+Canonical-target occupancy remains compatible: `orientation` is already vocabulary for this concept, but `EngineState.orientation`, `setOrientation`, and the runtime render-model field are unoccupied. Retained research/generator/solver/editor-palette uses of `variant` are explicitly outside the switch.
+
+## 11. 11B implementation and parity evidence
+
+PR #1612 performs the runtime switch atomically across the reviewed application graph. The implementation uses one canonical runtime spelling only: state/defaults, state action, engine facade, level-flow keep/reset semantics, geometry parameters, inverse pointer mapping, render-model projection, render layers, renderer, viewport/layout, and perspective control all use `orientation` / `setOrientation`. No dual runtime field or persistence alias was introduced.
+
+A post-switch consumer census covered all non-solver application modules, with every surviving `variant` use classified. Retained survivors are research/solver/provenance terminology, editor palette object variants, and unrelated descriptive variants; stale runtime findings were repaired, including the render-layer projection consumer, geometry port parameter names, and a play-mode landmark comment. A durable `scripts/naming-cleanup-phase11-closeout.mjs` ratchet now scans 21 exact runtime surfaces and rejects `setVariant`, `.variant`, or runtime/geometry `variant` residue; its negative fixtures are enrolled in the maintained Node-test graph.
+
+On behavior-bearing head `e1090eed361fed37def0d1b574d954cc5575025b`:
+
+- ordinary CI run #3416 / `33361495965`: **success** across checks, lint, Node tests, build, deep proofs, and deep verification;
+- Phase 11 orientation browser gate run #8 / `33361495896`: **success**, including real Chromium execution of the all-eight perspective cycle, render/input agreement, viewport swapping, reset preservation, and editor rotate/mirror flow.
+
+This is before/after observable parity evidence for the behavior-preserving rename. The 11A characterization passed before the switch and the same maintained browser characterization passes after it. This evidence update itself moves the PR head, so both gates must rerun green on the exact final head before merge. Phase 11 remains incomplete until the separate 11C merged-tree closeout.

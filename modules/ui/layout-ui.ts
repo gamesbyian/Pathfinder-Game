@@ -48,7 +48,7 @@ export const createLayoutUI = ({ core, getState }: any) => {
             : eng.editor.workingLevel;
         if (!l) return;
         const swaps = [1, 3, 6, 7];
-        eng.viewport.swapped = swaps.includes(eng.variant);
+        eng.viewport.swapped = swaps.includes(eng.orientation);
         const gridW = eng.viewport.swapped ? l.grid.h : l.grid.w;
         const gridH = eng.viewport.swapped ? l.grid.w : l.grid.h;
         eng.viewport.cellW = canvas.width  / gridW;

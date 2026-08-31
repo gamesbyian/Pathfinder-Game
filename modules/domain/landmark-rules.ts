@@ -49,7 +49,7 @@ export function baseLandmarkRole(role: string): string {
  * (mirror) reverses handedness, so any stored turn-direction requirement must flip when the
  * coordinate transform applied to a level is a reflection — a pure rotation preserves chirality
  * and must NOT flip it. Used by level-codec's remapLevelKeys (editor Rotate/Mirror, permanent)
- * and domain/geometry's transformTurnDir (play-mode variant display, render-only).
+ * and domain/geometry's transformTurnDir (play-mode orientation display, render-only).
  */
 export function flipTurnDir(dir: TurnDir): TurnDir {
     return dir === 'cw' ? 'ccw' : dir === 'ccw' ? 'cw' : dir;
