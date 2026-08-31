@@ -4,11 +4,11 @@ Status: **research handoff only**. This document does not claim a batch, change 
 compatibility alias, or authorize implementation ahead of the serialized Phase-8 stream. The plan,
 vocabulary authority, ledger, and (once created) phase execution records remain authoritative.
 
-> **Phase-9 disposition (2026-08-31):** Phase 9 has been implemented and repaired, and is currently
-> reopened for the final adversarial-audit corrections recorded in
-> [`naming-cleanup-phase-records/phase-09-final-audit.md`](naming-cleanup-phase-records/phase-09-final-audit.md).
-> The ledger owns the live execution state; the Phase-9 inventories below are preserved as
-> pre-implementation audit evidence, not current-state claims.
+> **Phase-9 disposition (2026-08-31):** Phase 9 has been implemented, repaired, and final-audited.
+> Its closure authority is
+> [`naming-cleanup-phase-records/phase-09-final-audit.md`](naming-cleanup-phase-records/phase-09-final-audit.md),
+> with machine state in the ledger. The Phase-9 inventories below are preserved as pre-implementation
+> audit evidence, not current-state claims.
 
 Audit base: `30cff381` (2026-08-30, current `main` at the start of this audit). Re-run delta
 reconciliation when each batch starts. The census searched both sides of every Phase 9–14 ledger
@@ -672,7 +672,7 @@ so workflow-local inline shell/JavaScript paths remain part of consumer-inward c
 
 | Phase | Readiness | Remaining blocker | New guardrail | Risk after prep |
 | --- | --- | --- | --- | --- |
-| 9 | implemented; final-audit repair active | exact-head repair CI + merged-tree re-close | all surfaced npm entrypoints execute; explicit current-artifact registry; structured closure evidence | low |
+| 9 | completed / final-audited | none; external GitHub merge enforcement remains #1604 | all surfaced npm entrypoints execute; explicit current-artifact registry; structured closure evidence | low |
 | 10 | 10A ownership-ready; 10B behaviorally prepared | implementation-time current-main reconciliation | real worker-hop allocation proof; recommend 10A1 repair / 10A2 prune separation | medium-low |
 | 11 | prepared pending browser execution | run the checked-in focused flow where Chromium is available | load/reset, editor path/portal/axis/chirality, and render/input browser flow | medium |
 | 12 | specification-ready | implementation-time dead-member API-owner census | amended plan/ledger plus exact member-set ratchet | medium-low |
