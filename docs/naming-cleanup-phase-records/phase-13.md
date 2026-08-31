@@ -112,7 +112,24 @@ rename the raw reads.
 
 ## 6. 13A implementation log
 
-Pending.
+The current-main ambiguous inventory was resolved file-by-file by dataflow rather than directory:
+
+- 57 files are explicit raw/wire owners or raw-corpus tooling;
+- 111 files are normalized-runtime/current-doc consumers that must lose legacy spellings in 13B;
+- 4 files are explicitly mixed and require selective migration/reclassification:
+  - `scripts/req-length-sweep-lib-node-test.mjs`
+  - `scripts/req-length-sweep-lib.mjs`
+  - `scripts/stress/query-mustcross-flipper-eligibility.mjs`
+  - `scripts/stress/repair-plateau-rollout-classifier.mjs`
+- 14 files are retained non-normalized uses such as naming authorities or independent report/analysis
+  schemas, where `reqLen`/`reqInt` do not denote a `NormalizedLevel` property;
+- `docs/history/**` is now treated as frozen history by the checker, matching `docs/archive/**`.
+
+`docs/naming-cleanup-level-metric-boundaries.json` moved to schema version 2 and has zero
+`ambiguousUnclassified` entries. The checker now understands all four live ownership classes and
+`--require-normalized-clean` fails unless both normalized-runtime and mixed lists are empty.
+
+No runtime field has been renamed in 13A.
 
 ## 7. 13A validation
 
