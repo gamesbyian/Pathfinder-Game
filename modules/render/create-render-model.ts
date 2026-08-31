@@ -7,6 +7,7 @@ import { heatmapToCells }           from '../domain/heatmap.js';
 import { hasParitySwitchingPortal } from '../domain/portal-utils.js';
 import { getRealLength }            from '../runtime/game-rules.js';
 import { activeLevel }              from '../state.js';
+import { EDITOR, HINT_ANIMATING, PLAY, REVIEW } from '../app-constants.js';
 
 export function createRenderModel({ eng, themes }: any, reqLenPreview: any = null) {
     const isPlayMode   = eng.mode === PLAY;
