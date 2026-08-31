@@ -4,9 +4,11 @@ Status: **research handoff only**. This document does not claim a batch, change 
 compatibility alias, or authorize implementation ahead of the serialized Phase-8 stream. The plan,
 vocabulary authority, ledger, and (once created) phase execution records remain authoritative.
 
-> **Phase-9 disposition (2026-08-31):** Phase 9 has since been implemented. Its current evidence is
-> [`naming-cleanup-phase-records/phase-09.md`](naming-cleanup-phase-records/phase-09.md); the Phase-9
-> inventories below are preserved as pre-implementation audit evidence, not current-state claims.
+> **Phase-9 disposition (2026-08-31):** Phase 9 has been implemented and repaired, and is currently
+> reopened for the final adversarial-audit corrections recorded in
+> [`naming-cleanup-phase-records/phase-09-final-audit.md`](naming-cleanup-phase-records/phase-09-final-audit.md).
+> The ledger owns the live execution state; the Phase-9 inventories below are preserved as
+> pre-implementation audit evidence, not current-state claims.
 
 Audit base: `30cff381` (2026-08-30, current `main` at the start of this audit). Re-run delta
 reconciliation when each batch starts. The census searched both sides of every Phase 9–14 ledger
@@ -660,17 +662,17 @@ post-merge repair owns that mapping as NC-P09-009 and preserves this as a worked
 related surfaced identities cannot inherit authorization from a parent row.
 
 The enrolled `naming-cleanup-phase9-command-smoke-node-test.mjs` pins the canonical package
-identities and invokes the real speed-measurement npm alias with a zero-work temporary report. The
-combiner node test provides synthetic shard writer -> combiner -> report-reader execution. The
-post-merge repair additionally tests sparse large-blob repository reads and corpus-aware default
-output naming. Structural workflow checks still do not prove remote semantic argument/output
-agreement, so workflow-local inline shell/JavaScript paths remain part of consumer-inward closeout.
+identities and executes every surfaced Phase-9 npm entrypoint with zero-work/synthetic fixtures,
+including the combiner alias. The closeout also reads ledger-registered current stress artifacts
+through Git objects under sparse checkout, rather than treating all of `logs/` and `reports/` as
+history. Structural workflow checks still do not prove remote semantic argument/output agreement,
+so workflow-local inline shell/JavaScript paths remain part of consumer-inward closeout.
 
 ## Updated cross-phase status
 
 | Phase | Readiness | Remaining blocker | New guardrail | Risk after prep |
 | --- | --- | --- | --- | --- |
-| 9 | mechanically prepared | implementation-time inline workflow reconciliation | real npm invocation, distinct-identity ratchet, synthetic combiner flow | low |
+| 9 | implemented; final-audit repair active | exact-head repair CI + merged-tree re-close | all surfaced npm entrypoints execute; explicit current-artifact registry; structured closure evidence | low |
 | 10 | 10A ownership-ready; 10B behaviorally prepared | implementation-time current-main reconciliation | real worker-hop allocation proof; recommend 10A1 repair / 10A2 prune separation | medium-low |
 | 11 | prepared pending browser execution | run the checked-in focused flow where Chromium is available | load/reset, editor path/portal/axis/chirality, and render/input browser flow | medium |
 | 12 | specification-ready | implementation-time dead-member API-owner census | amended plan/ledger plus exact member-set ratchet | medium-low |
