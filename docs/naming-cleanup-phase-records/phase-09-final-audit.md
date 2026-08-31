@@ -8,7 +8,7 @@
 | Status | active; Phase 9 reopened pending exact-head GitHub CI and merged-tree closure |
 | Base `main` SHA | `aa6370dedbaffcc361ba6982aafa86808275da6b` (post-#1603 main) |
 | Branch | `chatgpt/phase9-final-audit-closeout-repair-2026-08-30` |
-| PR | pending creation |
+| PR | #1605 |
 | Prior implementation PR | #1599 |
 | Prior repair PR | #1600 |
 | Prior merged-tree closeout PR | #1601 |\n| Partial final-audit repair PR | #1603, head `a548e05dbe7286e6170c827de7b3e1c5e6d27f7f`, exact-head CI run `33348457544`: **failure**, merged as `aa6370dedbaffcc361ba6982aafa86808275da6b` |\n| External merge-enforcement follow-up | #1604 |
@@ -90,7 +90,7 @@ Out of scope:
 
 ## 4. Artifact parity rule
 
-The four live artifact edits are provenance-only string substitutions. No level row, solution,
+Across partial repair #1603 and final repair #1605, the four maintained artifact corrections are provenance-only string substitutions. No level row, solution,
 attempt, budget, corpus identity, count, timestamp, commit SHA, or schema field may otherwise change.
 
 Canonical substitutions:
