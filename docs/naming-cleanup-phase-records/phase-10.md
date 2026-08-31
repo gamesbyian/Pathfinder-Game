@@ -6,14 +6,14 @@
 | --- | --- |
 | Phase | 10 |
 | Status | implementation complete locally; PR/exact-head CI/merged-tree closeout pending |
-| Base `main` SHA | `c7fcc35d31b7992fbf88121063dde4641b3215a5` |
-| Branch | `codex/phase-10-complete` |
-| PR | pending creation |
+| Base `main` SHA | `c7fcc35d3079ccbc511c92b1255e010adba2c35a` |
+| Branch | `codex/implement-phase-10-of-naming-cleanup-process` |
+| PR | `#1607` |
 | Selected ledger rows | `NC-P10-001` through `NC-P10-008` |
 | Highest risk | high (`NC-P10-006`) |
 | Compatibility owner | stage-policy/report historical reader (`NC-P10-008`) |
 
-The required preflight reported Phase 9 complete, Phase 10 next, and `activeExecution` idle. This checkout has no Git remote and `gh auth status` reports no authenticated host, so open-PR, remote-branch, exact-head CI, and merge evidence cannot be fabricated; those gates remain explicitly open.
+The required preflight reported Phase 9 complete, Phase 10 next, and `activeExecution` idle. PR #1607 now carries this implementation branch. The first exact-head CI run exposed two sparse-checkout assumptions in the newly added completion evidence: the ledger checker used working-tree existence for registered current artifacts, and the Phase-10 negative fixture copied those artifacts directly from an intentionally sparse worktree. Both checks now use the repository/Git-object view already established for current-artifact scanning, so tracked live artifacts remain verifiable without forcing historical log trees into every CI checkout.
 
 ## 1. Latest-main reconciliation and change envelope
 
@@ -52,7 +52,7 @@ The closeout guard scans maintained source, scripts, tests, workflows, and curre
 
 - [x] implementation and targeted runtime validation completed locally;
 - [x] durable negative closeout fixtures added;
-- [ ] PR created and bound to its final head;
+- [x] PR #1607 created and bound to this implementation branch;
 - [ ] exact-head GitHub CI completed green;
 - [ ] implementation merged using expected head SHA;
 - [ ] fresh merged-tree closeout branch/PR completed;
@@ -87,3 +87,7 @@ machine-readable retained-surface ownership and lifecycle records rather than re
 allowlist. Current solver authorities no longer use the retired local spelling. The ledger checker
 requires all eight Phase-10 closeout coverage entries, both retained boundaries, and a non-empty
 current-artifact registry, with negative fixtures for missing coverage and blanket artifact omission.
+
+## 8. PR CI follow-up
+
+The first PR CI run (`CI` run 33352369366) had build, lint, coverage, and heavyweight proofs green. Its two failing jobs shared evidence-layer causes rather than solver behavior: `check:naming-cleanup-ledger` rejected `phaseCurrentArtifacts["10"]` because sparse checkout intentionally did not materialize the baseline JSON files, while `test:naming-cleanup-phase10-closeout` attempted to `cpSync` the same absent worktree paths. The ledger checker now resolves registered paths through `repositoryPathKind()`, and the Phase-10 fixture materializes tracked artifact text through `readRepositoryText()`. This preserves the CI sparse-checkout policy while making current-artifact ownership genuinely repository-aware.
