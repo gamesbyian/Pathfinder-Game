@@ -16,6 +16,14 @@ assert.equal(
   'reports/stress/solver-corpus2-latest.json',
 );
 assert.equal(
+  defaultStressMeasurementOutput(
+    new URL('../../data/stress/stress-levels.json', import.meta.url).pathname,
+    true,
+    new URL('../../', import.meta.url).pathname,
+  ),
+  'reports/stress/solver-corpus1-latest.json',
+);
+assert.equal(
   defaultStressMeasurementOutput('tmp/custom-stress-corpus.json', true),
   'reports/stress/solver-parallel-latest.json',
 );
