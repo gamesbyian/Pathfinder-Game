@@ -6,10 +6,10 @@
 | --- | --- |
 | Phase | 12 — runtime command/event vocabulary |
 | Batch | single row-bearing implementation PR; separate merged-tree closeout required |
-| Status | entry-mapped |
+| Status | validating |
 | Base `main` SHA | `9b9eaa5c329b2f01f4db0a93116577577db96d63` |
 | Branch | `chatgpt/phase12-runtime-events-2026-08-31` |
-| PR | pending |
+| PR | #1617 |
 | Current PR head SHA | pending |
 | Completed GitHub CI run / conclusion | pending |
 | Tested PR merge/ref SHA | pending |
@@ -176,7 +176,27 @@ meaning after the vocabulary switch.
 
 ## 6. Implementation log
 
-Pending.
+PR #1617 implements the reconciled disposition without adding a command transport:
+
+- `modules/runtime/actions.ts` now exports `GameEventType` with exactly `WIN` and
+  `LOGIC_STATE_CHANGE`; the seven command-shaped and four definition-only outcome/hazard members
+  were removed.
+- `computeStep` emits the same event/effect sequence under `GameEventType`; its exported
+  `StepEvent` union now distinguishes the two gameplay events from `EffectType` descriptors.
+- `createStepDispatcher` consumes `StepEvent` instead of `any`, handles the two
+  `GameEventType` cases in the same order/branches as before, then delegates effects unchanged.
+- runtime tests were migrated and strengthened to assert the exact two-member event vocabulary and
+  explicit absence of the superseded members.
+- `docs/command-glossary.md` now distinguishes direct controller requests, core outcomes,
+  `GameEventType` events, `EffectType` effects, and state actions; ADR 0006 terminology was
+  reconciled accordingly.
+- `scripts/naming-cleanup-phase12-closeout.mjs` scans maintained modules/scripts/docs/workflows for
+  retired `ActionType` or unowned `GameCommandType`, excluding only naming-migration/history
+  authorities that must describe the legacy term. Its negative-fixture test is enrolled in
+  `test:node`, and the guard itself is enrolled in `check:validators`.
+
+No event value, payload, ordering branch, controller route, persistence boundary, worker protocol,
+solver policy, or resource policy was changed.
 
 ## 7. Targeted contract validation
 
