@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 12 — runtime command/event vocabulary |
 | Batch | single row-bearing implementation PR; separate merged-tree closeout required |
-| Status | merged-tree closeout validated; merge pending |
+| Status | complete |
 | Base `main` SHA | `9b9eaa5c329b2f01f4db0a93116577577db96d63` |
 | Branch | `chatgpt/phase12-runtime-events-2026-08-31` |
 | PR | #1617 |
@@ -297,20 +297,16 @@ head.
 - [x] implementation, targeted validation, consumer audit, and behavioral parity evidence are recorded;
 - [x] final implementation evidence head `c4bc05f...` passed CI `33366189265` and Chromium `33366189238` before merge;
 - [x] implementation PR #1617 merged as `c78b43ca1130b8e233e176abc5ea6f447089484b`;
-- [ ] merged-tree closeout PR must complete a fresh consumer/residue pass and exact-head CI.
+- [x] merged-tree closeout PR #1618 completed the fresh consumer/residue pass and passed exact-head CI `33366596861` plus Chromium `33366596848`.
 
-Rows remain `in-progress`; execution authority has moved from merged implementation PR #1617 to the
-fresh closeout branch rooted at `c78b43ca...`. The implementation final-head CI evidence is now
-backfilled without altering the merged implementation tree.
+Rows are complete and execution authority is idle. Implementation PR #1617 merged as `c78b43ca...`;
+merged-tree closeout PR #1618 passed its final exact-head gates and merged as `b1db6ebb...`.
 
 ## 12. Closure and merge handoff
 
-Phase 12 does not advance `lastCompletedPhase` in implementation PR #1617. After its final
-evidence-only head completes fresh exact-head CI and merges, a new closeout branch must start from
-that merge commit, transfer `activeExecution` to the merged-tree pass, rerun the residue/consumer
-audit and ordinary CI, and only then mark row `closeoutAudit` complete. A final evidence PR may
-backfill the closeout merge commit/run before `phaseClosures["12"]` becomes `closed` and
-`lastCompletedPhase` advances to 12.
+Phase 12 completed through implementation PR #1617 and merged-tree closeout PR #1618. This final
+evidence update records their immutable merge/run facts in `phaseClosures["12"]` and advances
+`lastCompletedPhase` to 12. Phase 13 is next; no Phase-13 implementation is included here.
 
 | Item | Value |
 | --- | --- |
@@ -319,7 +315,7 @@ backfill the closeout merge commit/run before `phaseClosures["12"]` becomes `clo
 | Behavior-head CI | `33365919597` / success |
 | Behavior-head browser gate | `33365919537` / success |
 | Implementation merged? | yes — #1617 / `c78b43ca1130b8e233e176abc5ea6f447089484b` |
-| Ledger rows closed | yes at row level after merged-tree validation; phase-level closure still awaits #1618 merge evidence |
+| Ledger rows closed | yes — NC-P12-001 through NC-P12-004 |
 | Deferred/superseded rows | NC-P12-003 implementation is not-applicable because no command transport exists |
 | Known structural-only surfaces | none in the live gameplay event path |
 
@@ -346,7 +342,7 @@ implementation diff:
 - `engine.ts` still wires `processStep` directly, with no command bus;
 - the current glossary matches those implementation roles.
 
-Closeout validation head `9be6d13a7c88bfb75a80744e31685c68adcffd95` passed ordinary CI
+Closeout behavior/evidence head `9be6d13a7c88bfb75a80744e31685c68adcffd95` passed ordinary CI
 run `33366422603` and the conservatively triggered Chromium gate `33366422662`. The checks log
 records `check:naming-cleanup-phase12-closeout` passing over **691 maintained text surfaces** with
 zero retired `ActionType` umbrella or unowned `GameCommandType` hits; `check:types:tests`,
@@ -354,14 +350,36 @@ documentation links, ledger validation, build, Node tests, deep proofs, coverage
 and lint all passed.
 
 NC-P12-001 through NC-P12-004 therefore have their row-level `closeoutAudit` evidence and are marked
-`done`. `activeExecution` is idle. Phase-level completion is still withheld: this PR must itself
-complete fresh exact-head CI after the evidence-only row-closure commit, merge, and have its actual
-merge evidence backfilled before `lastCompletedPhase` can advance.
+`done`. The row-closure evidence head `cc191ba283e58985e0ec9aa8bf5a1d5902c2e2ed` then passed fresh
+exact-head CI `33366596861` and Chromium gate `33366596848` before PR #1618 merged as
+`b1db6ebb68cc1abfe1a7c58508950c77c7f23b9d`. `activeExecution` is idle and the ledger's structured
+Phase-12 closure now records both implementation and merged-tree evidence.
 
 
 ### 13.1 Row-closure evidence checkpoint
 
-The row-closure bookkeeping commit follows a green closeout behavior/evidence head. Because changing
-the ledger/record changes the PR head, **fresh exact-head CI is required again before #1618 merges**.
-No runtime/source file is changed by the row-closure checkpoint. The exact final run IDs and #1618
-merge commit will be backfilled in the final Phase-12 evidence PR.
+The row-closure bookkeeping commit changed only ledger/record evidence. Its final head
+`cc191ba283e58985e0ec9aa8bf5a1d5902c2e2ed` passed exact-head CI `33366596861` and Chromium gate
+`33366596848`, then PR #1618 merged as `b1db6ebb68cc1abfe1a7c58508950c77c7f23b9d`. No runtime/source
+file changed between the validated closeout behavior checkpoint and the final row-closure evidence
+checkpoint.
+
+
+## 14. Final phase closure evidence
+
+The final evidence branch starts from merged closeout commit
+`b1db6ebb68cc1abfe1a7c58508950c77c7f23b9d` and changes only the naming ledger/Phase-12 record.
+
+Structured closure facts now recorded in `docs/naming-cleanup-ledger.json`:
+
+- implementation PR #1617, final head `c4bc05f317c6fb48ece03b827f487b177fdf5be1`,
+  CI `33366189265` success, Chromium `33366189238` success, merge
+  `c78b43ca1130b8e233e176abc5ea6f447089484b`;
+- merged-tree closeout PR #1618, base `c78b43ca1130b8e233e176abc5ea6f447089484b`,
+  final head `cc191ba283e58985e0ec9aa8bf5a1d5902c2e2ed`, CI `33366596861` success,
+  Chromium `33366596848` success, merge
+  `b1db6ebb68cc1abfe1a7c58508950c77c7f23b9d`.
+
+`phaseClosures["12"]` is `closed`, `lastCompletedPhase` is 12, and Phase 13 is the next
+incomplete phase. This final evidence PR requires its own ordinary exact-head CI before merge because
+it changes the machine-readable ledger, but it does not reopen Phase 12 behavior or runtime scope.
