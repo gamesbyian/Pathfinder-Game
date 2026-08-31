@@ -243,6 +243,22 @@ Phase closure has five stages: impact map, implementation, targeted contract val
 
 Every Phase-8+ batch must create a checked-in execution record from `docs/naming-cleanup-phase-record-template.md` before implementation. The record must contain the base-main SHA, selected ledger rows, pre-edit impact map, validation topology, compatibility ownership, before-change baseline where applicable, exact targeted validation, consumer-inward closeout, parity evidence, residue census, and pre-merge comparison. A ledger verification field may move to `done` only when the corresponding record identifies the concrete evidence supporting it.
 
+**Phase completion is post-implementation evidence, not implementation bookkeeping.** From Phase 9
+forward, an implementation PR may finish its owned rows but must not advance `lastCompletedPhase`
+until the implementation is merged, the merged tree is reconciled, and required GitHub PR/closure CI
+for the current revision has completed green. For a single-PR phase, use a narrow merged-tree closure
+PR/commit if necessary rather than declaring the phase complete inside an implementation PR whose
+remote CI has not finished. Local `ci:fast` is never a substitute for the GitHub CI state.
+
+A newly discovered sibling surface does not inherit authorization from a nearby row. Suffixed package
+commands, alternate-engine aliases, companion workflows, and sibling artifact names must receive an
+explicit ledger row or a documented retained/not-applicable classification before they are changed.
+
+When a rename strengthens semantic specificity, validate the producer domain rather than performing a
+literal substitution. In particular, a generic output path may become a corpus-/mode-specific path
+only if the producer is constrained to that corpus/mode; otherwise derive the specific path from the
+actual input or keep a generic fallback.
+
 ### 3.0 Risk, batch atomicity, and evidence minimums
 
 The ledger's `risk` field is not a vibe score. Use this rubric and raise risk when the impact map reveals a stronger condition:
@@ -1288,8 +1304,9 @@ The former mixed-case solver-facade workflow path-filter defect was already corr
 - **solver:bench** -> `solver:regression`;
 - **solver:speed-probe** -> `solver:measure-speed`;
 - **stress:benchmark** -> `stress:measure-solver`;
+- distinct raced package identity **stress:benchmark:raced** -> `stress:measure-solver:raced` (NC-P09-009; do not treat suffixed aliases as implicitly covered by the parent row);
 - `portfolio-sweep-reports-to-benchmark.mjs` -> `combine-solver-sweep-reports.mjs` and **solver:combine-corpus2-batches** -> `solver:combine-sweep-reports`;
-- move maintained live corpus outputs from `benchmark-parallel.json` / `benchmark-latest-random.json` to `solver-corpus1-latest.json` / `solver-corpus2-latest.json` without rewriting frozen artifacts;
+- move maintained live corpus outputs from `benchmark-parallel.json` / `benchmark-latest-random.json` to `solver-corpus1-latest.json` / `solver-corpus2-latest.json` without rewriting frozen artifacts; generic/custom parallel measurement must not default to a corpus-number path unless the actual corpus identity matches;
 - remove deprecated aliases after all live references are migrated;
 - update `AGENTS.md`, testing docs, tooling catalog, scripts/workflows READMEs, package scripts.
 
