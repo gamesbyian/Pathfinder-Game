@@ -26,7 +26,7 @@ export function createPointerInputController({ state, ui, engine, levelUtils, ed
     const handleDown = (e: { clientX: number; clientY: number }) => {
         if (state.ENGINE.solver.controller
             || state.ENGINE.logicState === RESOLVED
-            || [HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING].includes(state.ENGINE.overlayState)) return;
+            || ([HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING] as readonly string[]).includes(state.ENGINE.overlayState)) return;
 
         const p           = levelUtils.getGridCoord(e);
         const k           = levelUtils.PACK(p.x, p.y);
@@ -169,7 +169,7 @@ export function createPointerInputController({ state, ui, engine, levelUtils, ed
             setRuntimeTapMoved(state, true);
         }
         e.preventDefault();
-        if ([DRAGGING, HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
+        if (([DRAGGING, HAZARD_TRIGGERED] as readonly string[]).includes(state.ENGINE.logicState)) {
             engine.game.handlePrimaryGridInput(dragCoord, { inputType: 'drag' });
         }
     });
