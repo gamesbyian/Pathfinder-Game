@@ -6,7 +6,7 @@
 | --- | --- |
 | Phase | 14 — application facade cleanup |
 | Current batch | 14D merged-tree closeout |
-| Status | 14D in progress |
+| Status | 14D validated; merge pending |
 | Base `main` SHA | `bd809ed8c3bb55a02757f29868eafe15fb91402d` |
 | Branch | `chatgpt/phase14d-merged-tree-closeout-2026-08-31` |
 | PR | #1628 |
@@ -359,8 +359,45 @@ The seven qualified input `*-core.ts` files are the pure transition/input cores 
 0006. `core-actions.ts` is the action owner for the top-level/core engine-state slice. They are
 intentional vocabulary, not residue from the deleted `modules/core.ts` dependency bag.
 
-14D will compose the permanent 14A, 14B, 14C1 and 14C2 guards, pin these retained files, and rerun
+14D composes the permanent 14A, 14B, 14C1 and 14C2 guards, pins these retained files, and reruns
 ordinary CI plus Chromium on the merged tree before Phase 14 is closed.
+
+### 10.1 Closeout findings and validation
+
+The first 14D CI run exposed two closeout-authority problems rather than runtime regressions:
+
+1. the execution lock was active while every Phase-14 row was already either done or pending. The
+   maintained ledger contract correctly rejected that state. NC-P14-009 and NC-P14-010 were made the
+   explicit in-progress rows owned by 14D until their retained-term disposition was proven;
+2. the future-phase preparation and naming plan documented both retained core terminology classes,
+   but the **permanent** naming authority documented only qualified `*-core.ts` modules, not
+   `state/actions/core-actions.ts`. The latter is now explicitly canonical there as the action owner
+   for the top-level/core engine-state slice.
+
+Corrected behavior/evidence head `efac451061e5a97488582ea25cf980f23ba43ad4` passed:
+
+- ordinary CI `33439683295`: validators, source/test TypeScript, Node tests, build, lint,
+  deep proofs, and full deep verification/coverage;
+- Chromium gate `33439683284`: success;
+- composed `check:naming-cleanup-phase14-closeout`: all four batch guards green;
+- exact retained architecture inventory: seven ADR-qualified input `*-core.ts` modules plus
+  `modules/state/actions/core-actions.ts`;
+- permanent naming authority proof for both retained terminology classes;
+- consumer-inward spot audit of app composition/debug facade, AppState, state slices, renderer,
+  state actions, and browser characterization surfaces.
+
+NC-P14-009 and NC-P14-010 are therefore `done`. Their implementation and behavioral-parity
+dimensions are `not-applicable` because the intended result is deliberate retention, while
+targeted validation, consumer audit, and closeout audit are complete.
+
+All ten Phase-14 rows are now row-complete. `lastCompletedPhase` intentionally remains 13 until
+PR #1628 itself passes fresh exact-head CI after this bookkeeping update, merges, and its immutable
+merge evidence is recorded.
+
+### 10.2 Row-closure checkpoint
+
+This row-closure commit changes only ledger/evidence state. It must pass fresh exact-head ordinary
+CI and Chromium before #1628 may merge.
 
 ## 11. Final closure
 
