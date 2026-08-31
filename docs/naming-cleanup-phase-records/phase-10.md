@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 10 |
-| Status | merged-tree closeout state prepared in PR #1608; exact-head CI/merge are the remaining barrier |
+| Status | closed; implementation and merged-tree closeout both merged green |
 | Base `main` SHA | `c7fcc35d3079ccbc511c92b1255e010adba2c35a` |
 | Branch | `codex/implement-phase-10-of-naming-cleanup-process` |
 | PR | `#1607` |
@@ -67,8 +67,8 @@ The closeout guard scans maintained source, scripts, tests, workflows, and curre
 - [x] PR #1607 created and bound to this implementation branch;
 - [x] latest implementation head `31487748f987d63d335e783f7eb5045b3412c402` completed CI run #3403 / `33353826968` successfully;
 - [x] implementation merged using expected head SHA as `4a03350967fcfe4d0d2e649d9c460a45e0085544`;
-- [x] fresh merged-tree closeout branch/PR #1608 created directly from implementation merge `4a03350967fcfe4d0d2e649d9c460a45e0085544`;
-- [x] closeout branch advances `lastCompletedPhase` to 10 and returns `activeExecution` to idle; this becomes authoritative only when PR #1608 merges green.
+- [x] merged-tree closeout PR #1608 was created directly from implementation merge `4a03350967fcfe4d0d2e649d9c460a45e0085544`, completed CI run #3406 / `33354117054` green on final head `9e76c0ccb26647155648916a5889a520546cf5a0`, and merged as `d7d12ab6b79b559b4f21ba6728883bb2e50e1046`;
+- [x] merged `main` has `lastCompletedPhase: 10` and `activeExecution: idle`.
 
 Until every unchecked item is complete, Phase 10 is not closed and Phase 11 must not begin.
 
@@ -116,4 +116,4 @@ This closeout is evidence-only. It must not change solver behavior, resource all
 
 ### Closeout PR state
 
-PR #1608 is the Phase-10 merged-tree closeout. Its diff is intentionally limited to closure/evidence state. The ledger records Phase 10 as closed on this branch so the contract checker can validate the final intended repository state; that state is not authoritative on `main` until #1608's exact final head completes CI successfully and the PR merges. If CI finds any consumer residue, ownership mismatch, ledger inconsistency, or runtime regression, Phase 10 remains open and this closure state must be repaired before merge.
+PR #1608 was the Phase-10 merged-tree closeout. Its exact final head `9e76c0ccb26647155648916a5889a520546cf5a0` completed CI run #3406 / `33354117054` successfully and merged as `d7d12ab6b79b559b4f21ba6728883bb2e50e1046`. Its diff was intentionally limited to closure/evidence state. Phase 10 is therefore closed on merged `main`, and Phase 11 is the next incomplete phase.
