@@ -6,20 +6,20 @@
 | --- | --- |
 | Phase | 12 — runtime command/event vocabulary |
 | Batch | single row-bearing implementation PR; separate merged-tree closeout required |
-| Status | implementation validated; merge pending |
+| Status | merged-tree closeout validated; merge pending |
 | Base `main` SHA | `9b9eaa5c329b2f01f4db0a93116577577db96d63` |
 | Branch | `chatgpt/phase12-runtime-events-2026-08-31` |
 | PR | #1617 |
-| Current PR head SHA | behavior-bearing head `9be07095039b2ca5b80c89b81bf687b3f09c9adf`; final evidence-only head requires fresh CI |
-| Completed GitHub CI run / conclusion | CI `33365919597` / success; conservatively triggered Chromium gate `33365919537` / success on behavior-bearing head |
-| Tested PR merge/ref SHA | GitHub PR merge ref for the behavior-bearing revision; final evidence-only head is re-tested before merge |
+| Current PR head SHA | implementation final head `c4bc05f317c6fb48ece03b827f487b177fdf5be1`; closeout head pending |
+| Completed GitHub CI run / conclusion | implementation final-head CI `33366189265` / success; Chromium gate `33366189238` / success |
+| Tested PR merge/ref SHA | implementation merged as `c78b43ca1130b8e233e176abc5ea6f447089484b`; closeout CI pending |
 | Selected ledger row IDs | NC-P12-001 through NC-P12-004 |
 | Reconciliation mode | delta from the Phase-12 preparation census, with current-main producer/consumer confirmation |
 | Highest risk in batch | medium |
 | Primary compatibility owner | none; no command transport, persistence boundary, or external owner found |
 | Canonical mapping | live `ActionType.WIN` / `ActionType.LOGIC_STATE_CHANGE` -> `GameEventType.WIN` / `GameEventType.LOGIC_STATE_CHANGE`; superseded definition-only members removed |
 | Implementation agent/session | ChatGPT GitHub session, 2026-08-31 |
-| Closeout auditor | implementation session for PR closeout; merged-tree closeout must be a distinct pass |
+| Closeout auditor | same ChatGPT GitHub session, distinct post-merge consumer-inward pass on a fresh branch |
 
 ### Branch/PR authority preflight
 
@@ -295,13 +295,13 @@ head.
 - [x] behavior-bearing head passed the conservatively triggered Chromium gate `33365919537`;
 - [x] all changed surfaced identities are owned by NC-P12-001–004 or explicitly not-applicable;
 - [x] implementation, targeted validation, consumer audit, and behavioral parity evidence are recorded;
-- [ ] final evidence-only PR head must complete fresh exact-head CI before merge;
-- [ ] merged-tree closeout remains mandatory after #1617 merges.
+- [x] final implementation evidence head `c4bc05f...` passed CI `33366189265` and Chromium `33366189238` before merge;
+- [x] implementation PR #1617 merged as `c78b43ca1130b8e233e176abc5ea6f447089484b`;
+- [ ] merged-tree closeout PR must complete a fresh consumer/residue pass and exact-head CI.
 
-Rows remain `in-progress` and `activeExecution` remains on #1617 because the established Phase
-10/11 completion model keeps `closeoutAudit` pending until the separate merged-tree pass. The final
-CI run for this evidence-only head is intentionally backfilled during merged-tree closeout rather
-than creating a self-invalidating evidence loop.
+Rows remain `in-progress`; execution authority has moved from merged implementation PR #1617 to the
+fresh closeout branch rooted at `c78b43ca...`. The implementation final-head CI evidence is now
+backfilled without altering the merged implementation tree.
 
 ## 12. Closure and merge handoff
 
@@ -318,7 +318,50 @@ backfill the closeout merge commit/run before `phaseClosures["12"]` becomes `clo
 | Behavior-bearing head | `9be07095039b2ca5b80c89b81bf687b3f09c9adf` |
 | Behavior-head CI | `33365919597` / success |
 | Behavior-head browser gate | `33365919537` / success |
-| Implementation merged? | pending final evidence-head CI |
-| Ledger rows closed | no; NC-P12-001–004 remain in-progress pending merged-tree closeout |
+| Implementation merged? | yes — #1617 / `c78b43ca1130b8e233e176abc5ea6f447089484b` |
+| Ledger rows closed | yes at row level after merged-tree validation; phase-level closure still awaits #1618 merge evidence |
 | Deferred/superseded rows | NC-P12-003 implementation is not-applicable because no command transport exists |
 | Known structural-only surfaces | none in the live gameplay event path |
+
+
+## 13. Merged-tree closeout pass
+
+Closeout PR: **#1618**.
+
+Closeout base is implementation merge `c78b43ca1130b8e233e176abc5ea6f447089484b`. Comparing
+implementation final head `c4bc05f317c6fb48ece03b827f487b177fdf5be1` to that merge commit
+shows one merge commit and **zero file differences**, so the merged runtime/doc tree is exactly the
+validated implementation tree.
+
+The fresh merged-tree consumer-inward pass then re-read the actual closeout branch rather than the
+implementation diff:
+
+- `step-dispatcher.ts` imports `GameEventType`, handles only `LOGIC_STATE_CHANGE` and `WIN`,
+  and delegates remaining descriptors to `runEffects`;
+- `step-processor.ts` emits only those two `GameEventType` values;
+- `actions.ts` contains exactly the two live event constants;
+- `navigation-controller.ts` still performs level navigation and undo through direct engine/state
+  action ports;
+- `level-flow.ts` still owns load/reset directly;
+- `engine.ts` still wires `processStep` directly, with no command bus;
+- the current glossary matches those implementation roles.
+
+Closeout validation head `9be6d13a7c88bfb75a80744e31685c68adcffd95` passed ordinary CI
+run `33366422603` and the conservatively triggered Chromium gate `33366422662`. The checks log
+records `check:naming-cleanup-phase12-closeout` passing over **691 maintained text surfaces** with
+zero retired `ActionType` umbrella or unowned `GameCommandType` hits; `check:types:tests`,
+documentation links, ledger validation, build, Node tests, deep proofs, coverage/deep verification,
+and lint all passed.
+
+NC-P12-001 through NC-P12-004 therefore have their row-level `closeoutAudit` evidence and are marked
+`done`. `activeExecution` is idle. Phase-level completion is still withheld: this PR must itself
+complete fresh exact-head CI after the evidence-only row-closure commit, merge, and have its actual
+merge evidence backfilled before `lastCompletedPhase` can advance.
+
+
+### 13.1 Row-closure evidence checkpoint
+
+The row-closure bookkeeping commit follows a green closeout behavior/evidence head. Because changing
+the ledger/record changes the PR head, **fresh exact-head CI is required again before #1618 merges**.
+No runtime/source file is changed by the row-closure checkpoint. The exact final run IDs and #1618
+merge commit will be backfilled in the final Phase-12 evidence PR.
