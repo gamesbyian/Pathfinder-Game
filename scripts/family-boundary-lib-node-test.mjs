@@ -42,6 +42,16 @@ assert.equal(report.families[2].evidence.fragilitySolveRate,.5);
 assert.equal(report.families[2].winningConfigs.concentration,1);
 assert.equal(report.families[2].configConcentrationEvidence.dominantConfig,'repair:z');
 assert.equal(report.families[2].configConcentrationEvidence.canonicalAttempted,true);assert.equal(report.families[2].configConcentrationEvidence.canonicalAllocationWork,40);assert.deepEqual(report.families[2].configConcentrationEvidence.canonicalTermination,['timeout']);
+
+const mixedIdentityReport = buildBoundaryReport({
+ manifests:[{familyId:'mixed',parentLevelId:'M',familyMode:'swap',variants:[{variantId:'M1',mutationManifest:{operation:'swap'}}]}],
+ canonicalResults:[{id:'M',ok:false,attempts:[{config:'beam:intersectionHarvest@beam5000(diverse)',workSpent:25,status:'timeout'}]}],
+ variantResults:[{id:'M1',ok:true,workSpent:10,winningConfig:'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets'}],
+});
+assert.deepEqual(mixedIdentityReport.families[0].winningConfigs.counts,
+ {'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets':1});
+assert.equal(mixedIdentityReport.families[0].configConcentrationEvidence.canonicalAttempted,true,
+ 'historical compact parent attempts and canonical sibling winners must compare as one identity');
 assert.equal(report.families[3].evidence.robustFailureRate,1);
 assert.match(report.metadata.schedulerCensoringWarning,/scheduler-censored/);
 assert.ok(report.mutationSummaries.some(x=>x.relation==='local-mutant'&&x.rescueRate===.5&&x.solveStatusFlipRate===.5));
