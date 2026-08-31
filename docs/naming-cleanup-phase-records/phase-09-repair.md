@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 9 repair / reopened closeout |
-| Status | repair merged; merged-tree closeout in progress |
+| Status | first repair and merged-tree closeout completed; superseded as current closure authority by the later final-adversarial-audit repair |
 | Base `main` SHA | `3f980ec54147441e3922c990e272fdfe413170fb` |
 | Branch | `chatgpt/phase9-repair-and-plan-hardening-2026-08-30` |
 | Original implementation PR | #1599 |
@@ -16,10 +16,10 @@
 | Repair CI | run `33346142339`: success after rerunning one pre-existing flaky orchestration test |
 | Repair merge commit | `2bf6b040ea2128bc3e4ec2a6039733238433d4fa` |
 | Merged-tree closeout base | `2bf6b040ea2128bc3e4ec2a6039733238433d4fa` |
-| Merged-tree closeout PR | #1601 |
+| Merged-tree closeout PR | #1601 |\n| Merged-tree closeout final head | `88ea1a6cb12ea4291e0f05a94c99c8d8b1b5e921` |\n| Merged-tree closeout CI | run `33346333115`: success |\n| Merged-tree closeout merge | `a3bcf28b7b38178e052a6a5765c82bcd8e90dc57` |
 | Reopened rows | NC-P09-007, NC-P09-008, and new accounting row NC-P09-009 |
 | PR head at PR creation | `c5cb19a10d89aaf8e9e051d6cc22011ad8637310` |
-| Closure authority | this repair record plus the amended Phase-9 record |
+| Closure authority | historical authority for the #1600/#1601 repair cycle; later superseded by `phase-09-final-audit.md` after new live/evidence gaps were found |
 
 ## 1. Why Phase 9 was reopened
 
@@ -82,10 +82,13 @@ orchestration parity test. The two jobs that had exposed the Phase-9 defects in 
 `node-tests` and `checks`, both passed with the repaired sparse-checkout/large-blob paths. The
 repair merged as `2bf6b040ea2128bc3e4ec2a6039733238433d4fa`.
 
-Phase 9 is re-closed only through the dedicated merged-tree closeout based on that merge commit. That
-closeout changes no implementation. It marks NC-P09-007 through NC-P09-009 fully verified, points the
-phase-level execution authority at this record, restores `lastCompletedPhase` to 9, and returns
-`activeExecution` to idle. Its own final GitHub CI must complete green before merge.
+The dedicated merged-tree closeout was PR #1601. Its final head
+`88ea1a6cb12ea4291e0f05a94c99c8d8b1b5e921` completed GitHub CI run `33346333115`
+successfully and merged as `a3bcf28b7b38178e052a6a5765c82bcd8e90dc57`. That completed this
+first repair cycle and, at the time, restored Phase 9 to closed state.
 
-The original Phase-9 record remains useful implementation history, but its original pre-merge
-validation claims are superseded by this repair record where they conflict with GitHub CI evidence.
+A later adversarial audit found additional live-artifact and verification-system gaps, so this
+record is no longer the current Phase-9 closure authority. Those later findings and repairs are
+owned by `phase-09-final-audit.md`. The original Phase-9 record remains useful implementation
+history, but its original pre-merge validation claims are superseded by this repair record where
+they conflict with GitHub CI evidence.

@@ -242,8 +242,8 @@ No unclassified live hit may remain in the batch scope.
 - [ ] targeted/local validation green and clearly labelled as local;
 - [ ] required GitHub PR CI for the current head/base pair has completed green; no required job is queued/running;
 - [ ] after any evidence-only commit, the new final head/base pair was revalidated green before merge;
-- [ ] completed CI run ID/conclusion and the head/tested-ref SHA it covered are recorded; the final run may be backfilled post-merge rather than creating a self-invalidating evidence loop;
-- [ ] any sparse-checkout/large-artifact check added or changed here has been exercised in the real CI topology;
+- [ ] completed CI run ID/conclusion and the head/tested-ref SHA it covered are recorded; the final run may be backfilled post-merge rather than creating a self-invalidating evidence loop;\n- [ ] if GitHub branch/ruleset protection is unavailable, the record links the external enforcement issue and the exact-head CI state was queried manually immediately before merge;
+- [ ] any sparse-checkout/large-artifact check added or changed here has been exercised in the real CI topology;\n- [ ] current artifacts under history-heavy trees are explicitly registered/scanned; no `logs/`/`reports/` blanket exclusion is standing in for lifecycle classification;\n- [ ] temporary one-shot repair workflows have been removed before closeout, or retained workflows are documented and pass ordinary workflow checks;
 - [ ] every changed surfaced sibling identity has its own ledger row or explicit retained/not-applicable classification;
 - [ ] ledger IDs, risk, compatibility policy, verification fields, and predecessor merge barrier match the evidence in this record;
 - [ ] all predecessor phases/batches required by the ledger are complete;

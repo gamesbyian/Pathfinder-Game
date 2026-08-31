@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Direct Node driver for Solver. Usage mirrors run-solver-direct.mjs.
+ * Direct Node driver for Solver.
  *
  *   node scripts/run-solver-direct.mjs --levels=pos:92
  *   node scripts/run-solver-direct.mjs --levels=all --budget-ms=30000 [--work-budget=<n>]

@@ -1,6 +1,6 @@
 # Naming cleanup implementation plan
 
-Status: **active implementation plan; volatile execution state is owned by `docs/naming-cleanup-ledger.json` and `npm run naming:status`, not by this sentence**. At the completion-contract-v4 revision, Phases 1-7 were implemented/repeatedly audited and the pre-Phase-8 technical gate was complete. The remaining work is serialized into evidence-backed batches. The original latest-`main` preflight was completed at `e236a51d3af9` (2026-08-28); every future implementation batch must reconcile again against current `main`. The canonical naming decisions in this document remain authoritative, but no implementation PR may outrank newer implementation on `main`.
+Status: **active implementation plan; volatile execution state is owned by `docs/naming-cleanup-ledger.json` and `npm run naming:status`, not by this sentence**. At the completion-contract-v5 revision, Phases 1-7 were implemented/repeatedly audited and the pre-Phase-8 technical gate was complete. The remaining work is serialized into evidence-backed batches. The original latest-`main` preflight was completed at `e236a51d3af9` (2026-08-28); every future implementation batch must reconcile again against current `main`. The canonical naming decisions in this document remain authoritative, but no implementation PR may outrank newer implementation on `main`.
 
 This is a **behavior-preserving naming and vocabulary migration** unless a section explicitly says that an obsolete compatibility surface is removed after its consumers are migrated. Do not change solver policy, attempt order, scoring weights, eligibility, budgets, pruning behavior, random seeds, corpus contents, or evidence disposition as part of this work.
 
@@ -43,7 +43,7 @@ Every reconciliation must:
 
 1. update the implementation branch from the current `main`;
 2. compare the relevant recorded reconciliation point with current `main` and inspect newer changes touching selected concepts, owners, or consumers;
-3. rerun the live-surface naming census over code, package aliases, workflows, current docs, generated-schema readers/writers, telemetry/provenance, environment-variable contracts, and workflow artifact/concurrency identifiers;
+3. rerun the live-surface naming census over code, package aliases, workflows, current docs, generated-schema readers/writers, telemetry/provenance, environment-variable contracts, workflow artifact/concurrency identifiers, and every ledger-registered current artifact even when it lives under a history-heavy `logs/` or `reports/` tree; directory location alone never proves an artifact is frozen;
 4. search the **canonical target** as well as the legacy term and classify any existing target use as same concept, unrelated use, collision, or already-implemented migration;
 5. classify every live confusing-name hit as **rename**, **intentional retained term**, **frozen history**, or **superseded by newer architecture**;
 6. add any newly discovered live rename to this document and `docs/naming-cleanup-ledger.json` before changing code;
@@ -1068,7 +1068,7 @@ Batch 8A replaced the former `producer -> receptor` vocabulary in `solver-future
 
 ## 9. Machine-readable rename ledger
 
-PR 1 created `docs/naming-cleanup-ledger.json` beside this plan. It is a temporary execution ledger, not a runtime schema. Completion contract v4 gives every row an immutable machine identity so later wording changes do not change what the row *is*.
+PR 1 created `docs/naming-cleanup-ledger.json` beside this plan. It is a temporary execution ledger, not a runtime schema. Completion contract v5 gives every row an immutable machine identity so later wording changes do not change what the row *is*.
 
 Ledger IDs use `NC-P##-###` and are never renumbered or reused. New rows receive the next unused sequence number for their phase; moving/rewording a row does not change its ID. PR descriptions and batch records should cite IDs rather than relying on old/new prose as identity.
 
@@ -1090,7 +1090,7 @@ Each entry contains:
 
 Populate it with every explicit mapping in Sections 4-8 before implementing code renames, including workflow/package/env/protocol mappings. Also add an entry for each potentially confusing live term that the final census intentionally retains; for retained terms, set `old` and `new` to the same canonical spelling and explain the contextual justification in `notes` (for example the ADR-0006 `*-core` convention or genuine bounded `method-probe`). The ledger is the checklist of record. A rename PR marks only its own entries `done`.
 
-For Phase 8 onward, completion contract v4 adds durable execution evidence and explicit compatibility policy:
+For Phase 8 onward, completion contract v5 adds durable execution evidence and explicit compatibility policy:
 
 ```json
 {
@@ -1111,6 +1111,18 @@ For Phase 8 onward, completion contract v4 adds durable execution evidence and e
   }
 }
 ```
+
+Completion contract v5 also separates two concepts that earlier checks conflated:
+
+- `phaseCurrentArtifacts[phase]` is the explicit list of maintained artifacts whose current
+  provenance/naming must be scanned even when their surrounding directory is mostly frozen history;
+- `phaseClosures[phase]` is the machine-readable phase-level closure state. For Phase 9+, a phase
+  at or below `lastCompletedPhase` must have a closed record pointing at the same execution
+  authority as `phaseExecutionRecords`, with successful final implementation CI/merge evidence
+  and a merged-tree closeout PR bound to the exact-head-green-before-merge policy.
+
+Do not solve artifact classification by blanket-excluding `logs/` or `reports/`. Register current
+reader inputs/producers explicitly and leave genuinely frozen siblings out of that registry.
 
 `batch` is mandatory for Phase 8 and is fixed to 8A-8H by [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md). The ordered list is mirrored once in ledger `phaseBatches` as the machine projection consumed by status/checker tooling; scripts must derive it from there rather than hard-code the sequence. Before any later phase whose plan contains **multiple row-bearing implementation batches**, that phase's entry reconciliation must create/update its phase execution authority, assign each live ledger row to exactly one row-bearing batch, add the batch order/merge-completion records to the ledger, and extend the checker/status machinery generically or for that phase before implementation begins. Preparation or merged-tree closeout gates that contain no migration rows remain gates; do not invent fake ledger rows merely to make them look like implementation batches. `verificationRecord` is `null` while a row is merely pending; as soon as a Phase-8+ row becomes `in-progress`, it must point at the checked-in batch record created from [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md), and the pointer remains after the row becomes `done`. The example `compatibility` object applies only to `persistence: "dual-read"` rows; other rows omit it. Every future dual-read row carries a `mode`, `retireWhen`, and `owner` following Section 3.4.
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Combines N portfolio-solve-sweep.mjs report files (one per corpus-2 GH Actions batch — see
- * .github/workflows/README-solver-corpus2-batches.md) into ONE scripts/stress/benchmark.mjs-shaped report
- * file, so scripts/stress/rank-levels.mjs, scripts/stress/classify-stability.mjs, and
+ * Combines N compatible portfolio-solve-sweep.mjs shard reports into ONE
+ * scripts/stress/benchmark.mjs-shaped report. Corpus-2 GH Actions batches are one maintained producer,
+ * but the combiner is corpus-generic and can also combine Corpus 1, custom, or explicitly mixed inputs,
+ * so scripts/stress/rank-levels.mjs, scripts/stress/classify-stability.mjs, and
  * scripts/stress/curate-dev-benchmark.mjs can consume it unmodified.
  *
  * Why this is needed at all: portfolio-solve-sweep.mjs's own per-level row already carries every
