@@ -12,7 +12,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
 
     const tryNavigate = (actionFn: any) => {
         if (needsUnsavedGuard(state.ENGINE.mode, state.ENGINE.editor.isModified, EDITOR)) {
-            engine.setPendingAction(actionFn);
+            engine.setPendingConfirmationAction(actionFn);
             ui.openModal('unsavedModal');
         } else {
             actionFn();
@@ -27,7 +27,7 @@ export function createNavigationController({ state, ui, engine, data, editor, re
     (document.getElementById('unsavedLeaveBtn') as any).onclick = () => {
         ui.closeAllModals();
         ui.closeModal('unsavedModal');
-        engine.executePendingAction();
+        engine.executePendingConfirmationAction();
     };
 
     // --- Gamepad focus groups ---
