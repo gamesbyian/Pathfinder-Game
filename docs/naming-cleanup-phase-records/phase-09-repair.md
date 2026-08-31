@@ -16,6 +16,7 @@
 | Repair CI | run `33346142339`: success after rerunning one pre-existing flaky orchestration test |
 | Repair merge commit | `2bf6b040ea2128bc3e4ec2a6039733238433d4fa` |
 | Merged-tree closeout base | `2bf6b040ea2128bc3e4ec2a6039733238433d4fa` |
+| Merged-tree closeout PR | #1601 |
 | Reopened rows | NC-P09-007, NC-P09-008, and new accounting row NC-P09-009 |
 | PR head at PR creation | `c5cb19a10d89aaf8e9e051d6cc22011ad8637310` |
 | Closure authority | this repair record plus the amended Phase-9 record |
