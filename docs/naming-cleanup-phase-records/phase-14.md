@@ -217,6 +217,46 @@ Authorized scope is deliberately small:
 NC-P14-006 (`ENGINE` -> `engineState`) is high risk and explicitly excluded from this branch.
 14C2 may start only after 14C1 merges.
 
+### 8.1 14C1 validation and closeout
+
+The first exact-head run on implementation head `2fd1e7e4e1035879319a7454eaf45cdecb62593c`
+passed build, lint, Node tests, deep proofs, and Chromium but exposed one stale broad integration
+test:
+
+- `modules/state-actions.test.ts` still imported and called
+  `setRuntimePendingAction` / `clearRuntimePendingAction`, even though the runtime action
+  implementation and all production consumers had moved to
+  `setRuntimePendingConfirmationAction` / `clearRuntimePendingConfirmationAction`.
+
+That test surface was migrated rather than allowlisted. Repaired behavior head
+`8d98ccc6990c55ba682883f09738a1bbd9f052d2` then passed:
+
+- ordinary CI `33437133572`: checks, source/test TypeScript, Node tests, build, lint, deep proofs
+  and full deep verification/coverage;
+- Chromium orientation/browser gate `33437133574`: success;
+- permanent `check:naming-cleanup-phase14c1-closeout`: no retired `HinterState`,
+  `createHinterState`, renderer-local `publicDrawPath`, `pendingAction`, engine pending-action
+  methods, or runtime pending-action state helpers remain in module/test surfaces;
+- its negative-fixture Node test;
+- engine facade behavior proving set/execute/clear retains exact callback identity and execute does
+  not implicitly clear it;
+- renderer tests retain the public `drawPath` port while its private implementation is
+  `drawPathWithCurrentOrientation`.
+
+Consumer-inward audit:
+
+- `EngineState.hinter` remains the slice name, but its type/factory are
+  `HintDisplayState` / `createHintDisplayState`;
+- runtime state owns `pendingConfirmationAction`;
+- runtime state actions, engine facade methods, navigation controller and tests all use the
+  expanded confirmation terminology;
+- `renderer.ts` keeps the external `drawPath` port and only renames the local orientation-aware
+  implementation helper;
+- NC-P14-006 `ENGINE` is untouched.
+
+NC-P14-005, NC-P14-007 and NC-P14-008 are therefore row-complete. The evidence-only row-closure
+head must pass fresh exact-head CI before #1626 merges.
+
 After branch creation, `main` advanced once to
 `96595c01d8bbc4b15359680c7d5c58701b99e4b6`. The delta from the recorded 14C1 base contains only
 published hint refreshes, solver-workflow logs, and the hint-cost-drift report. No state slice,
