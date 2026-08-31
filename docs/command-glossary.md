@@ -1,77 +1,88 @@
-# Engine Flow Command Glossary
+# Engine Flow Vocabulary Glossary
 
-> **Status:** current-state reference: a canonical glossary of flow/command names mapped to
-> their **actual implementation locations**. Per ADR 0006, this is a documentation/testability
-> tool — there is deliberately
-> **no** central dispatcher or app-wide reducer that these names route through. Each name is
-> implemented as an existing runtime `ActionType`, a state-action helper, a controller method, a
-> pure decision/effect core, or a small flow-local object.
+> **Status:** current-state reference mapping gameplay requests, emitted events/effects, state
+> actions, pure cores, and controller flows to their **actual implementation locations**. Per ADR
+> 0006, there is deliberately no central gameplay command dispatcher or app-wide reducer.
+>
+> Gameplay/navigation requests call engine/controller/state-action ports directly. The only runtime
+> gameplay-event discriminators are `GameEventType.WIN` and
+> `GameEventType.LOGIC_STATE_CHANGE`; side effects use `EffectType`.
 
-Implementation-location key: **A** = runtime `ActionType` constant (`modules/runtime/actions.ts`);
-**SA** = state-action helper (`modules/state/actions/*.ts`); **core** = pure transition/decision
-core; **ctrl** = controller method (orchestration).
+Implementation-location key: **E** = emitted runtime `GameEventType`;
+**FX** = emitted `EffectType`; **SA** = state-action helper
+(`modules/state/actions/*.ts`); **core** = pure transition/decision core;
+**ctrl** = controller/orchestration request path.
 
 ## Gameplay (engine)
 
-| Command / flow | Implementation | Kind |
+| Request / outcome / event | Implementation | Kind |
 |---|---|---|
-| `MOVE` / add path step | `computeStep` (`modules/runtime/step-processor.ts`) → effects via `effect-runner`; `pushStep` (`modules/runtime/path-state.ts`); dispatched by `modules/engine/step-dispatcher.ts` | A + core |
-| `BACKTRACK` | `computeStep` backtrack branch (`truncateNavTo`) | A + core |
-| `PORTAL_TRAVERSE` | `computeStep` portal branch (`resolvePortal`) | A + core |
-| `UNDO` | `PathNavigator.applySnapshot` (`modules/engine/path-navigator.ts`) + `popNavigationUndoStack` (SA); snapshot built by `createSnapshot` (`modules/engine.ts`) | core + SA |
-| `RESET` | `handleResetAction` (`modules/engine/level-flow.ts`) + pure `planResetCheat`; reloads via `_loadLevelByIndex` | A + core + ctrl |
-| `WIN` | `computeWinEffects` (`modules/engine/win-controller.ts`) → `effect-runner`; metrics in `modules/runtime/game-rules.ts` | A + core |
-| `GOOSE_TRIGGERED` | `computeStep` goose branch + `computeJumpScareEffects` (`modules/engine/hazard-controller.ts`) | A + core |
-| `FALSE_GOAL_DETONATED` | `computeStep` detonate branch + `computeFalseGoalDetonationEffects` (`modules/engine/hazard-controller.ts`) | A + core |
-| `LOGIC_STATE_CHANGE` | `setLogicState` (`modules/engine.ts`); legal transitions in `modules/runtime/state-machine.ts` | A + ctrl |
+| Move / add path step | input/tap flow -> `processStep` -> `computeStep` (`modules/runtime/step-processor.ts`); path mutation via `pushStep` (`modules/runtime/path-state.ts`) | ctrl + core + SA |
+| Backtrack | `computeStep` returns the `backtrack` outcome after `truncateNavTo`; it is not a gameplay-event discriminator | core outcome |
+| Portal traversal | `computeStep` returns the `portal` outcome after `resolvePortal`; it is not a gameplay-event discriminator | core outcome |
+| Undo | `PathNavigator.applySnapshot` (`modules/engine/path-navigator.ts`) + `popNavigationUndoStack` (SA); snapshot built by `createSnapshot` (`modules/engine.ts`) | core + SA |
+| Reset | `handleResetAction` (`modules/engine/level-flow.ts`) + pure `planResetCheat`; reloads via `_loadLevelByIndex` | ctrl + core + SA |
+| Win event | `computeStep` emits `GameEventType.WIN`; `modules/engine/step-dispatcher.ts` invokes `onWin`, whose win controller produces effects | E + core |
+| Goose trigger | `computeStep` returns the `goose` outcome and emits jump-scare/sound effects plus a logic-state event; there is no separate `GOOSE_TRIGGERED` gameplay event | core outcome + FX + E |
+| False-goal detonation | `computeStep` returns the `detonate` outcome and emits `EffectType.SHOW_FALSE_GOAL_DETONATION`; there is no separate `FALSE_GOAL_DETONATED` gameplay event | core outcome + FX |
+| Logic-state change event | `computeStep` emits `GameEventType.LOGIC_STATE_CHANGE`; `step-dispatcher.ts` applies it through `setLogicState` | E + ctrl |
+
+The step dispatcher consumes the event/effect array in order. It handles the two `GameEventType`
+values locally and sends remaining `EffectType` descriptors to `runEffects`.
 
 ## Level / mode (engine)
 
-| Command / flow | Implementation | Kind |
+These are direct controller requests, not members of a gameplay command transport.
+
+| Request / flow | Implementation | Kind |
 |---|---|---|
-| `LEVEL_LOAD` | `loadLevel` / `_loadLevelByIndex` (`modules/engine/level-flow.ts`); state via `setLevel`/`setLevelIndex` (SA) + `resetRunState` (the single nav-reset primitive) | A + ctrl |
-| `LEVEL_ADVANCE` / `LEVEL_PREV` | `engine.game.loadLevel(levelIdx ± 1)` from `modules/input/navigation-controller.ts` (no separate method — the `ActionType` names the intent) | A + ctrl |
-| `LEVEL_RESTART` | `handleResetAction` → `_loadLevelByIndex(levelIdx, true)` | A + ctrl |
-| `SWITCH_MODE` | `switchMode` (`modules/engine/level-flow.ts`); `setMode` (SA) + shared `_initEditorWorkingCopy` | ctrl |
+| Load level | `loadLevel` / `_loadLevelByIndex` (`modules/engine/level-flow.ts`); state via `setLevel`/`setLevelIndex` (SA) + `resetRunState` | ctrl + SA |
+| Advance / previous level | `engine.game.loadLevel(levelIdx ± 1)` from `modules/input/navigation-controller.ts` | ctrl |
+| Restart level | `handleResetAction` -> `_loadLevelByIndex(levelIdx, true)` | ctrl |
+| Switch mode | `switchMode` (`modules/engine/level-flow.ts`); `setMode` (SA) + shared `_initEditorWorkingCopy` | ctrl + SA |
 
 ## Editor
 
-| Command / flow | Implementation | Kind |
+| Request / flow | Implementation | Kind |
 |---|---|---|
 | Edit snapshot (undo/redo) | `saveEditorSnapshot` / `restoreEditorSnapshot` (`modules/editor/editor-history.ts`) | core |
 | Editor working-copy init | `_initEditorWorkingCopy` (`modules/engine/level-flow.ts`) | ctrl |
 
 ## Review
 
-| Command / flow | Implementation | Kind |
+| Request / flow | Implementation | Kind |
 |---|---|---|
-| `REVIEW_APPROVE` / `REVIEW_REJECT` advance | pure `planSubmissionAdvance` + `removeAndAdvance` (`modules/engine/review-mode.ts`); handlers in `modules/input/review-controller.ts` choose the message | core + ctrl |
+| Approve / reject and advance | pure `planSubmissionAdvance` + `removeAndAdvance` (`modules/engine/review-mode.ts`); handlers in `modules/input/review-controller.ts` choose the message | core + ctrl |
 | Load review level | `loadReviewLevel` (`modules/engine/review-mode.ts`) | ctrl |
 | Set / remove submissions | `setReviewSubmissions` / `removeReviewSubmission` (SA via review-mode) | SA |
 
 ## Solver lifecycle
 
-| Command / flow | Implementation | Kind |
+| Request / flow | Implementation | Kind |
 |---|---|---|
-| `SOLVER_STARTED` | `startSolverRun` (SA) via `modules/engine/solver-manager.ts` | SA |
-| `SOLVER_COMPLETED` | `endSolverRun` (SA) | SA |
+| Solver started | `startSolverRun` (SA) via `modules/engine/solver-manager.ts` | SA |
+| Solver completed | `endSolverRun` (SA) | SA |
 | Solver cancelled | `cancelSolver` (`modules/engine/solver-manager.ts`) + `requestSolverAbort` (SA) | SA + ctrl |
 | Set hint paths | `setHintPaths` (SA) | SA |
 
 ## Persistence
 
-| Command / flow | Implementation | Kind |
+| Request / flow | Implementation | Kind |
 |---|---|---|
-| `SUBMIT_LEVEL_REQUESTED` | `submitWorkingLevel` (`modules/input/submission-controller.ts`) | ctrl |
-| Approve submission / hint-addition | `persistence.approveSubmission` / `approveHintAddition` (`modules/persistence/review-repository.ts`) | ctrl |
-| `REVIEW_APPROVE_CONFIRMED` (reject) | `persistence.rejectSubmission` | ctrl |
+| Submit level | `submitWorkingLevel` (`modules/input/submission-controller.ts`) | ctrl |
+| Approve submission / hint addition | `persistence.approveSubmission` / `approveHintAddition` (`modules/persistence/review-repository.ts`) | ctrl |
+| Reject submission | `persistence.rejectSubmission` | ctrl |
 | Progress persistence | `persistSessionState` (`modules/persistence/progress-store.ts`) | ctrl |
 
 ## Testability
 
-- Pure cores (`computeStep`, `computeWinEffects`, `compute{JumpScare,FalseGoalDetonation}Effects`,
-  `planResetCheat`, `planSubmissionAdvance`, `PathNavigator.applySnapshot`) are unit-tested without
-  the DOM.
-- `replayMoves(baseState, targetKeys, level)` (`modules/runtime/path-state.ts`) replays a `MOVE` sequence
-  through the real transition for declarative tests.
-- Runtime/navigation behavior, including rebuild and replay paths, is covered by the Vitest unit suite (`npm run test:unit`).
+- Pure cores (`computeStep`, `computeWinEffects`,
+  `compute{JumpScare,FalseGoalDetonation}Effects`, `planResetCheat`,
+  `planSubmissionAdvance`, `PathNavigator.applySnapshot`) are unit-tested without the DOM.
+- `modules/runtime/actions.test.ts` locks the runtime event vocabulary to the two live emitted
+  gameplay events and rejects the superseded command/outcome constants.
+- `modules/runtime/step-processor.test.ts` locks event/effect shapes and observable step behavior.
+- `replayMoves(baseState, targetKeys, level)` (`modules/runtime/path-state.ts`) replays a move
+  sequence through the real transition for declarative tests.
+- Runtime/navigation behavior, including rebuild and replay paths, is covered by the Vitest unit
+  suite (`npm run test:unit`).

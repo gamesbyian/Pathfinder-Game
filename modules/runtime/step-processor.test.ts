@@ -1,7 +1,7 @@
 /**
  * Behaviour-locking unit tests for modules/runtime/step-processor.js (computeStep).
  *
- * These tests verify that step events use ActionType / EffectType constants
+ * These tests verify that step events use GameEventType / EffectType constants
  * (not raw strings) and that all outcomes produce the correct event shapes.
  * Run: npx vitest run step-processor
  */
@@ -11,7 +11,7 @@ import type { NormalizedLevel } from '../domain/types.js';
 
 (globalThis as any).window = globalThis;
 const { computeStep } = await import('./step-processor.js');
-const { ActionType }  = await import('./actions.js');
+const { GameEventType }  = await import('./actions.js');
 const { EffectType }  = await import('./effects.js');
 const { PACK, UNPACK } = await import('../domain/cell-key.js');
 const { isValidMove }            = await import('../domain/move-rules.js');
@@ -169,7 +169,7 @@ test('backtrack step does NOT use raw string "sound"', () => {
     });
     const h = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(0, 0), h);
-    assert.ok(!events.some(e => e.type === 'sound'), 'event type should not be raw "sound" string');
+    assert.ok(!events.some(e => String(e.type) === 'sound'), 'event type should not be raw "sound" string');
 });
 
 // ─── Outcome: valid ───────────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ test('valid step emits PLAY_SOUND with G4', () => {
     const { events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(1, 0), h);
     const soundEvt = events.find(e => e.type === EffectType.PLAY_SOUND)!;
     assert.ok(soundEvt, 'should emit PLAY_SOUND event');
-    assert.equal(soundEvt.note, 'G4', 'normal step sound should be G4');
+    assert.equal((soundEvt as any).note, 'G4', 'normal step sound should be G4');
 });
 
 // ─── Outcome: win ─────────────────────────────────────────────────────────────
@@ -204,11 +204,11 @@ test('step to goal after correct path emits WIN event', () => {
     const h = makeStepHelpers(level, nav);
     const { outcome, events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(4, 0), h);
     assert.equal(outcome, 'valid');
-    const winEvt = events.find(e => e.type === ActionType.WIN)!;
-    assert.ok(winEvt, 'should emit ActionType.WIN event');
+    const winEvt = events.find(e => e.type === GameEventType.WIN)!;
+    assert.ok(winEvt, 'should emit GameEventType.WIN event');
 });
 
-test('win event type is ActionType.WIN (not raw string "win")', () => {
+test('win event type is GameEventType.WIN (not raw string "win")', () => {
     const level = makeLevel({ reqLen: 4, reqInt: 0, goalKey: PACK(4, 0) });
     const nav   = makeNav({
         path:          [PACK(0, 0), PACK(1, 0), PACK(2, 0), PACK(3, 0)],
@@ -216,8 +216,8 @@ test('win event type is ActionType.WIN (not raw string "win")', () => {
     });
     const h = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(4, 0), h);
-    assert.ok(!events.some(e => e.type === 'win'), 'event type should not be raw "win" string');
-    assert.ok(events.some(e => e.type === ActionType.WIN), 'should use ActionType.WIN constant');
+    assert.ok(!events.some(e => String(e.type) === 'win'), 'event type should not be raw "win" string');
+    assert.ok(events.some(e => e.type === GameEventType.WIN), 'should use GameEventType.WIN constant');
 });
 
 // ─── Outcome: goose ───────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ test('stepping on a goose emits SHOW_GOOSE_JUMP_SCARE + LOGIC_STATE_CHANGE + PLA
     assert.equal(outcome, 'goose');
     assert.ok(events.some(e => e.type === EffectType.SHOW_GOOSE_JUMP_SCARE),
         'goose outcome should emit SHOW_GOOSE_JUMP_SCARE');
-    assert.ok(events.some(e => e.type === ActionType.LOGIC_STATE_CHANGE),
+    assert.ok(events.some(e => e.type === GameEventType.LOGIC_STATE_CHANGE),
         'goose outcome should emit LOGIC_STATE_CHANGE');
     assert.ok(events.some(e => e.type === EffectType.PLAY_SOUND),
         'goose outcome should emit PLAY_SOUND');
@@ -241,9 +241,9 @@ test('goose event types are NOT raw strings', () => {
     const nav   = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
     const h     = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(1, 0), h);
-    assert.ok(!events.some(e => e.type === 'goose_jumpscare'), 'should not use raw "goose_jumpscare" string');
-    assert.ok(!events.some(e => e.type === 'logic_state'),     'should not use raw "logic_state" string');
-    assert.ok(!events.some(e => e.type === 'sound'),           'should not use raw "sound" string');
+    assert.ok(!events.some(e => String(e.type) === 'goose_jumpscare'), 'should not use raw "goose_jumpscare" string');
+    assert.ok(!events.some(e => String(e.type) === 'logic_state'),     'should not use raw "logic_state" string');
+    assert.ok(!events.some(e => String(e.type) === 'sound'),           'should not use raw "sound" string');
 });
 
 test('LOGIC_STATE_CHANGE event value is HAZARD_TRIGGERED', () => {
@@ -251,7 +251,7 @@ test('LOGIC_STATE_CHANGE event value is HAZARD_TRIGGERED', () => {
     const nav   = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
     const h     = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, makeHazards(), PLAY, IDLE, level, PACK(1, 0), h);
-    const stateEvt = events.find(e => e.type === ActionType.LOGIC_STATE_CHANGE)!;
+    const stateEvt = events.find(e => e.type === GameEventType.LOGIC_STATE_CHANGE)!;
     assert.equal(stateEvt.value, HAZARD_TRIGGERED);
 });
 
@@ -277,7 +277,7 @@ test('detonate event type is NOT raw string "false_goal_detonation"', () => {
     const hazards = makeHazards({ armedFalseGoals: new Set([falseGoal]) });
     const h = makeStepHelpers(level, nav);
     const { events } = computeStep(nav, hazards, PLAY, IDLE, level, falseGoal, h);
-    assert.ok(!events.some(e => e.type === 'false_goal_detonation'), 'should not use raw "false_goal_detonation" string');
+    assert.ok(!events.some(e => String(e.type) === 'false_goal_detonation'), 'should not use raw "false_goal_detonation" string');
     assert.ok(events.some(e => e.type === EffectType.SHOW_FALSE_GOAL_DETONATION), 'should use EffectType.SHOW_FALSE_GOAL_DETONATION');
 });
 
@@ -303,7 +303,7 @@ test('stepping through portal onto armed false goal emits SHOW_FALSE_GOAL_DETONA
     assert.equal(outcome, 'detonate', 'stepping through portal onto armed false goal should detonate');
     assert.ok(events.some(e => e.type === EffectType.SHOW_FALSE_GOAL_DETONATION),
         'portal detonation should emit EffectType.SHOW_FALSE_GOAL_DETONATION (not raw string)');
-    assert.ok(!events.some(e => e.type === 'false_goal_detonation'),
+    assert.ok(!events.some(e => String(e.type) === 'false_goal_detonation'),
         'portal detonation should NOT use raw string "false_goal_detonation"');
 });
 

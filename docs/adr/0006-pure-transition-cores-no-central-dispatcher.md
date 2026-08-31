@@ -14,7 +14,7 @@ plan's own guiding principles push back on that: "Use commands only for signific
 small local UI state may remain imperative," and "Extend the existing runtime action/effect
 vocabulary rather than inventing a parallel system."
 
-> This matches the clarified modernization-plan §2 (commit `213b7b6`): the command vocabulary is a
+> This matches the clarified modernization-plan §2 (commit `213b7b6`): the flow vocabulary is a
 > documentation/testability tool mapped to existing implementations (see `docs/command-glossary.md`),
 > not a mandate for a global dispatcher/reducer. (Note: that clarification was later reverted on
 > `main` by an unrelated merge — see the journal — and is restored on this branch.)
@@ -33,7 +33,7 @@ or a global transition log.
 - **Thin slice updates** for the rest (solver lifecycle `startSolverRun`/`endSolverRun`, level/mode
   orchestration): state goes through state-action helpers (ADR 0002); shared sub-steps are factored
   (`_initEditorWorkingCopy`, `resetRunState`).
-- **Inspectability/testability:** the move pipeline returns its `Action`/`Effect` event sequence;
+- **Inspectability/testability:** the move pipeline returns its gameplay-event/effect sequence;
   `replayMoves(baseState, targetKeys, level)` replays a move sequence through the pure transition so
   tests read as behavior specs. `test:path-state-invariants` guarantees incremental vs. recomputed
   derived nav state can't diverge.

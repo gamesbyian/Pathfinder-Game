@@ -3,18 +3,26 @@
 // Mutates `nav` and `hazards` in-place (path push, undo stack, goose reveal).
 // Returns { outcome, events, mutations } where:
 //   outcome  — 'backtrack' | 'valid' | 'portal' | 'goose' | 'detonate' | null
-//   events   — side-effect descriptors using ActionType / EffectType constants
+//   events   — gameplay-event / side-effect descriptors using GameEventType / EffectType constants
 //   mutations.ripples — { x, y, color }[] the engine must append (with startTime) to ENGINE.ripples
 //
 // Callers restore `outcome === 'backtrack'` to 'valid' if they need the old interface.
 
-import { ActionType } from './actions.js';
+import { GameEventType } from './actions.js';
 import { EffectType }  from './effects.js';
 import type { MoveOptions, MoveState, NormalizedLevel, PathMetricsState, PortalExit } from '../domain/types.js';
 import type { HazardState, NavSnapshot, NavigationState } from '../state-slices.js';
 
-/** A step event descriptor (carries an ActionType/EffectType `type` + payload). */
-type StepEvent = { type: string } & Record<string, any>;
+type EffectTypeValue = (typeof EffectType)[keyof typeof EffectType];
+
+type StepGameEvent =
+    | { type: typeof GameEventType.WIN }
+    | { type: typeof GameEventType.LOGIC_STATE_CHANGE; value: string };
+
+/** A typed descriptor emitted by computeStep, either a gameplay event or an effect. */
+export type StepEvent =
+    | StepGameEvent
+    | ({ type: EffectTypeValue } & Record<string, any>);
 interface Ripple { x: number; y: number; color: string; }
 interface ComputeStepResult { outcome: string | null; events: StepEvent[]; mutations: { ripples: Ripple[] }; }
 
@@ -111,7 +119,7 @@ export function computeStep(nav: NavigationState, hazards: HazardState, mode: nu
         if (justCreatedIntersection) truncateNavTo(nav, nav.path.length - 2);
         hazards.revealedGeese.add(targetKey);
         events.push({ type: EffectType.SHOW_GOOSE_JUMP_SCARE });
-        events.push({ type: ActionType.LOGIC_STATE_CHANGE, value: HAZARD_TRIGGERED });
+        events.push({ type: GameEventType.LOGIC_STATE_CHANGE, value: HAZARD_TRIGGERED });
         events.push({ type: EffectType.PLAY_SOUND, note: 'C2', duration: '8n' });
         return { outcome: 'goose', events, mutations: { ripples } };
     }
@@ -145,13 +153,13 @@ export function computeStep(nav: NavigationState, hazards: HazardState, mode: nu
         ripples.push({ x: src.x, y: src.y, color });
         ripples.push({ x: dst.x, y: dst.y, color });
         events.push({ type: EffectType.PLAY_SOUND, note: 'A5', duration: '16n' });
-        events.push({ type: ActionType.LOGIC_STATE_CHANGE, value: PORTAL_PAUSE });
-        if (checkWinCondition(nav, level, mode, PORTAL_PAUSE)) events.push({ type: ActionType.WIN });
+        events.push({ type: GameEventType.LOGIC_STATE_CHANGE, value: PORTAL_PAUSE });
+        if (checkWinCondition(nav, level, mode, PORTAL_PAUSE)) events.push({ type: GameEventType.WIN });
         return { outcome: 'portal', events, mutations: { ripples } };
     }
 
     // Plain valid move
     events.push({ type: EffectType.PLAY_SOUND, note: 'G4', duration: '32n' });
-    if (checkWinCondition(nav, level, mode, logicState)) events.push({ type: ActionType.WIN });
+    if (checkWinCondition(nav, level, mode, logicState)) events.push({ type: GameEventType.WIN });
     return { outcome: 'valid', events, mutations: { ripples } };
 }
