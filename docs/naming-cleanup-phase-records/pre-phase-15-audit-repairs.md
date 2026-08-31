@@ -6,7 +6,7 @@
 >
 > **Branch:** `chatgpt/pre-phase15-audit-repairs-2026-08-31`.
 >
-> **PR:** pending at record creation.
+> **PR:** #1636.
 >
 > **Scope:** confirmed Phase-1-14 research-continuity/current-authority defects found by the 2026-08-31 forensic audit. No NC-P15 row is implemented here.
 
