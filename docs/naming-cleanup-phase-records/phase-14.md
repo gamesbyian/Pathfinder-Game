@@ -404,3 +404,19 @@ CI and Chromium before #1628 may merge.
 Phase 14 remains incomplete until 14D is merged, NC-P14-001 through NC-P14-010 have complete
 verification/disposition evidence, structured closure evidence is recorded, and
 `lastCompletedPhase` advances to 14.
+
+
+## 12. Post-#1628 forensic audit repair
+
+PR #1628 merged as `8022c79aa2241be9ed6c8f9aac9380f4896a0cd9`, but a later independent
+Phases 8-14 audit found that the merged-tree closeout had missed current architecture documentation.
+`docs/architecture.md` still described `SOUND_BUS`, the former `core` dependency bag,
+`levelUtils`, and mutable `ENGINE`; `docs/typing.md` still described `LevelUtils` and
+`ENGINE` writes. These are current authorities, not frozen history, so the phase-wide
+consumer-inward audit was incomplete despite the code/browser checks being green.
+
+This post-closeout repair updates those current authorities to the merged Phase-14 architecture and
+extends the permanent Phase-14 closeout guard with negative fixtures for those exact stale concepts.
+Because this is a real closeout defect discovered after #1628, Phase 14 remains incomplete and
+`lastCompletedPhase` remains 13 until the repair merges green and immutable final closure evidence
+is recorded from the repaired merged tree.
