@@ -106,7 +106,7 @@ The failures exposed three new classes:
   input domain.
 
 The same audit also confirmed a specification-accounting failure the preparation work had explicitly
-warned about: `stress:benchmark:raced` was a distinct surfaced package identity, but #1599 renamed it
+warned about: the raced sibling of the old stress-measurement package command was a distinct surfaced package identity, but #1599 renamed it
 without first assigning a ledger row. The repair added NC-P09-009 rather than retroactively pretending
 the parent row had authorized the sibling identity.
 
