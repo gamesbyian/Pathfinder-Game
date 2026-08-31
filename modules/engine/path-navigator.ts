@@ -1,5 +1,6 @@
 import { pushStep as pushStepImpl } from '../runtime/path-state.js';
 import type { EngineState, NavSnapshot } from '../state-slices.js';
+import { DRAGGING, EDITOR, HAZARD_TRIGGERED, IDLE, PORTAL_PAUSE } from '../app-constants.js';
 import {
     clearNavigation,
     markDirty,
@@ -11,21 +12,20 @@ import {
 } from '../state-actions.js';
 
 export function createPathNavigator({
-    core,
-    getLevel,
+        getLevel,
     setLogicState,
     rebuildDerivedPathState,
     assertStateConsistency,
     now = () => Date.now()
 }: any) {
     const resetActiveLogicState = (engineState: EngineState) => {
-        if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(engineState.logicState)) {
-            setLogicState(core.IDLE);
+        if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(engineState.logicState)) {
+            setLogicState(IDLE);
         }
     };
 
     const finishPathMutation = (engineState: EngineState) => {
-        if (engineState.mode === core.EDITOR) setEditorModified(engineState, true);
+        if (engineState.mode === EDITOR) setEditorModified(engineState, true);
         markDirty(engineState);
         rebuildDerivedPathState(engineState);
         assertStateConsistency(engineState);
@@ -60,9 +60,9 @@ export function createPathNavigator({
             // Route the logic-state restore through IDLE: the state machine may forbid a direct
             // current→restored transition, and an undo never lands back in the transient
             // HAZARD_TRIGGERED lock — IDLE is always a permitted hop, and IDLE→restored is legal.
-            const restored = snapshot.logicState === core.HAZARD_TRIGGERED ? core.IDLE : snapshot.logicState;
-            setLogicState(core.IDLE);
-            if (restored !== core.IDLE) setLogicState(restored);
+            const restored = snapshot.logicState === HAZARD_TRIGGERED ? IDLE : snapshot.logicState;
+            setLogicState(IDLE);
+            if (restored !== IDLE) setLogicState(restored);
             restoreFalseGoalHazardsForLevel(engineState, getLevel(engineState), snapshot.detonatedFalseGoals);
             rebuildDerivedPathState(engineState);
             markDirty(engineState);
