@@ -5,13 +5,18 @@
 | Field | Value |
 | --- | --- |
 | Phase | 9 repair / reopened closeout |
-| Status | active; exact PR revision CI required before re-closing Phase 9 |
+| Status | repair merged; merged-tree closeout in progress |
 | Base `main` SHA | `3f980ec54147441e3922c990e272fdfe413170fb` |
 | Branch | `chatgpt/phase9-repair-and-plan-hardening-2026-08-30` |
 | Original implementation PR | #1599 |
 | Original merge commit | `15cbf90a4b1f2bda5037ab4f6ef6584f45dc8154` |
 | Original failing CI run | `33345175850` |
 | Repair PR | #1600 |
+| Repair final head | `d545bcd0e81cddf16af8ba168f525d63200044d4` |
+| Repair CI | run `33346142339`: success after rerunning one pre-existing flaky orchestration test |
+| Repair merge commit | `2bf6b040ea2128bc3e4ec2a6039733238433d4fa` |
+| Merged-tree closeout base | `2bf6b040ea2128bc3e4ec2a6039733238433d4fa` |
+| Merged-tree closeout PR | #1601 |
 | Reopened rows | NC-P09-007, NC-P09-008, and new accounting row NC-P09-009 |
 | PR head at PR creation | `c5cb19a10d89aaf8e9e051d6cc22011ad8637310` |
 | Closure authority | this repair record plus the amended Phase-9 record |
@@ -69,12 +74,18 @@ artifact bytes are changed.
 | ledger/accounting | `check:naming-cleanup-ledger` and Phase-9 closeout |
 | aggregate repository behavior | complete PR CI for the final head/base pair |
 
-## 4. Closure rule
+## 4. Repair validation and merged-tree closure
 
-Phase 9 remains reopened while this repair PR is active. Do not advance to Phase 10 merely because
-local or synthetic checks pass. Re-close Phase 9 only after GitHub reports the complete required CI
-suite green for the final PR revision against its current base, and then record the PR number, final
-head SHA, tested merge/ref SHA when available, CI run ID/conclusion, and merge commit here.
+PR #1600's final head was `d545bcd0e81cddf16af8ba168f525d63200044d4`. GitHub CI run
+`33346142339` completed successfully for that revision after a rerun of one pre-existing flaky
+orchestration parity test. The two jobs that had exposed the Phase-9 defects in PR #1599,
+`node-tests` and `checks`, both passed with the repaired sparse-checkout/large-blob paths. The
+repair merged as `2bf6b040ea2128bc3e4ec2a6039733238433d4fa`.
+
+Phase 9 is re-closed only through the dedicated merged-tree closeout based on that merge commit. That
+closeout changes no implementation. It marks NC-P09-007 through NC-P09-009 fully verified, points the
+phase-level execution authority at this record, restores `lastCompletedPhase` to 9, and returns
+`activeExecution` to idle. Its own final GitHub CI must complete green before merge.
 
 The original Phase-9 record remains useful implementation history, but its original pre-merge
 validation claims are superseded by this repair record where they conflict with GitHub CI evidence.
