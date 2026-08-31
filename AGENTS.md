@@ -34,7 +34,7 @@ Compact entry point for coding/research agents. Load task-specific docs, not the
 6. **Prefer branch/PR validation.** Merge to `main` before evidence collection only when the needed workflow/data path cannot exercise the branch; record why. Do not use `main` as experiment scratch space.
 7. **Do not weaken validation to pass.** Root-cause unexpected `null`, invariant, CSP, architecture-lint, referee, and type failures.
 8. **Source is TypeScript.** `modules/` source is `.ts`; imports intentionally use `.js`. See [`docs/typing.md`](docs/typing.md).
-9. **Respect architecture boundaries.** `domain/`, `runtime/`, and `solver/` are browser-free logic; ENGINE mutations use state actions. Fix boundary violations rather than relaxing checks.
+9. **Respect architecture boundaries.** `domain/`, `runtime/`, and `solver/` are browser-free logic; `engineState` mutations use state actions. Fix boundary violations rather than relaxing checks.
 
 ## Solver research invariants
 
