@@ -56,7 +56,6 @@
     "scripts/import-published-levels-unit-tests.mjs",
     "scripts/import-published-levels.mjs",
     "scripts/legacy-latency-portfolio-report-cli-node-test.mjs",
-    "scripts/legacy-latency-portfolio-report.mjs",
     "scripts/level-blind-capability-sweep-cli-node-test.mjs",
     "scripts/level-blind-capability-sweep.mjs",
     "scripts/level-data-io-unit-tests.mjs",
@@ -68,7 +67,6 @@
     "scripts/solver-oracle/oracle.mjs",
     "scripts/solver-parallel-unit-tests.mjs",
     "scripts/solver-worker-unit-tests.mjs",
-    "scripts/stress/analyze-current-missing-attempt-exposure.mjs",
     "scripts/stress/analyze.mjs",
     "scripts/stress/audit-candidate-eligibility-and-participation.mjs",
     "scripts/stress/collect-known-solution-prefix-survival-cli-node-test.mjs",
@@ -104,8 +102,12 @@
     "scripts/analyze-technique-census.mjs",
     "scripts/family-analyze.mjs",
     "scripts/family-boundary-lib.mjs",
+    "scripts/legacy-latency-portfolio-report.mjs",
+    "scripts/naming-cleanup-phase13-closeout-node-test.mjs",
+    "scripts/naming-cleanup-phase13-closeout.mjs",
     "scripts/req-length-sweep-lib-node-test.mjs",
     "scripts/req-length-sweep-lib.mjs",
+    "scripts/stress/analyze-current-missing-attempt-exposure.mjs",
     "scripts/stress/cluster-unsolved-failures.mjs",
     "scripts/stress/cpsat-explicit-prefix-round-builder.mjs",
     "scripts/stress/feature-solvability-analysis.mjs",
@@ -114,6 +116,6 @@
     "scripts/stress/query-mustcross-flipper-eligibility.mjs",
     "scripts/stress/repair-retreat-binary-search.mjs"
   ],
-  "notes": "Post-Phase-13B ownership ratchet. Normalized/runtime code uses requiredLength/requiredIntersections and must never re-enter this legacy-token inventory. rawWireBoundary is the reviewed permanent reqLen/reqInt compatibility surface, including raw fixtures and the codec/schema owner; retainedNonNormalizedUse contains naming authorities and independent report/result schemas whose legacy labels are not NormalizedLevel properties. The default boundary checker permanently requires normalized and mixed legacy ownership to stay empty. Phase 13C additionally performs consumer-inward normalized-object access checks so a raw-file allowlist cannot mask stale runtime property reads.",
+  "notes": "Post-Phase-13B/13C ownership ratchet. Normalized/runtime code uses requiredLength/requiredIntersections and must never re-enter this legacy-token inventory. rawWireBoundary is the reviewed permanent reqLen/reqInt compatibility surface for actual raw fixtures/corpus/wire data; retainedNonNormalizedUse contains naming/checker authorities and independent report/result schemas whose legacy labels are not NormalizedLevel properties. Phase 13C consumer-inward checks prevent a raw-file allowlist from masking stale runtime property reads.",
   "normalizedMigrationComplete": true
 }
