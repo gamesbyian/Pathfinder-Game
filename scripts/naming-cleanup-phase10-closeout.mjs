@@ -19,6 +19,18 @@ const legacy = [
   'closeLengthGap', 'prune-gauntlet', 'prune gauntlet',
   'REPAIR_EXTRA_BUDGET_FRACTION', 'repairBudgetFractionOverride',
 ];
+const semanticLegacy = ['repairBudgetFraction', 'additive-fraction'];
+const retainedTermFiles = new Map();
+for (const retained of ledger.phaseRetainedSurfaces?.['10'] ?? []) {
+  for (const match of retained.matches ?? []) {
+    const files = retainedTermFiles.get(match.term) ?? new Set();
+    for (const file of match.files ?? []) files.add(file);
+    retainedTermFiles.set(match.term, files);
+  }
+}
+function semanticLegacyAllowed(file, spelling) {
+  return retainedTermFiles.get(spelling)?.has(file) ?? false;
+}
 function walk(relative) {
   const absolute = path.join(root, relative);
   if (!existsSync(absolute)) return [];
@@ -44,10 +56,20 @@ for (const file of currentArtifacts) {
   if (repositoryPathKind(root, file) !== 'file') { failures.push(`${file}: registered current artifact missing`); continue; }
   const source = readRepositoryText(root, file);
   for (const spelling of legacy) if (source.includes(spelling)) failures.push(`${file}: current artifact contains legacy ${spelling}`);
+  for (const spelling of semanticLegacy) {
+    if (source.includes(spelling) && !semanticLegacyAllowed(file, spelling)) {
+      failures.push(`${file}: current artifact contains unowned legacy ${spelling}`);
+    }
+  }
 }
 for (const file of files) {
   const source = readFileSync(path.join(root, file), 'utf8');
   for (const spelling of legacy) if (source.includes(spelling)) failures.push(`${file}: legacy ${spelling}`);
+  for (const spelling of semanticLegacy) {
+    if (source.includes(spelling) && !semanticLegacyAllowed(file, spelling)) {
+      failures.push(`${file}: unowned legacy ${spelling}`);
+    }
+  }
 }
 for (const file of ['modules/solver/hard-prune-pipeline.ts', 'modules/solver/repair-search.ts', 'modules/solver/stage-budget.ts']) {
   if (!existsSync(path.join(root, file))) failures.push(`${file}: canonical surface missing`);
@@ -68,4 +90,4 @@ if (failures.length) {
   console.error(`Phase-10 closeout failed (${failures.length} issue(s)):\n  - ${failures.join('\n  - ')}`);
   process.exit(1);
 }
-console.log(`Phase-10 closeout clean: ${files.length} maintained surfaces plus ${currentArtifacts.length} registered current artifacts scanned; canonical definition, worker, and race boundaries present.`);
+console.log(`Phase-10 closeout clean: ${files.length} maintained surfaces plus ${currentArtifacts.length} registered current artifacts scanned; canonical definition, worker, race, and retained-boundary ownership checks present.`);
