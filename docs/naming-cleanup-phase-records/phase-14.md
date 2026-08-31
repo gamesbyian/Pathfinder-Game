@@ -5,12 +5,12 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14C2 atomic engine state graph |
-| Status | 14B merged; 14C1 in progress |
-| Base `main` SHA | `17e5668447e8779294c398791cab504114ea873c` |
-| Branch | `chatgpt/phase14c2-engine-state-2026-08-31` |
-| PR | #1627 |
-| Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
+| Current batch | 14D merged-tree closeout |
+| Status | 14D validated; merge pending |
+| Base `main` SHA | `bd809ed8c3bb55a02757f29868eafe15fb91402d` |
+| Branch | `chatgpt/phase14d-merged-tree-closeout-2026-08-31` |
+| PR | #1628 |
+| Selected ledger row IDs | NC-P14-009, NC-P14-010 retained-term disposition; NC-P14-001–008 re-audited |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
 | 14A risk | medium |
@@ -338,7 +338,66 @@ before #1627 merges. Phase-wide closeout remains a separate 14D pass from merged
 
 ## 10. 14D merged-tree closeout
 
-Not started. Must branch from merged 14C2 main.
+Started from merged 14C2 main `bd809ed8c3bb55a02757f29868eafe15fb91402d`.
+
+14D is rowless implementation-wise. Its job is to prove the merged architecture, close the two
+intentional retained-term rows, and prevent future agents from confusing those retained uses with
+the deleted top-level facades.
+
+Current retained architecture surfaces are:
+
+- `modules/input/editor-toolbar-core.ts`
+- `modules/input/false-goal-trigger-scan-core.ts`
+- `modules/input/navigation-core.ts`
+- `modules/input/pointer-input-core.ts`
+- `modules/input/review-core.ts`
+- `modules/input/solver-core.ts`
+- `modules/input/submission-core.ts`
+- `modules/state/actions/core-actions.ts`
+
+The seven qualified input `*-core.ts` files are the pure transition/input cores described by ADR
+0006. `core-actions.ts` is the action owner for the top-level/core engine-state slice. They are
+intentional vocabulary, not residue from the deleted `modules/core.ts` dependency bag.
+
+14D composes the permanent 14A, 14B, 14C1 and 14C2 guards, pins these retained files, and reruns
+ordinary CI plus Chromium on the merged tree before Phase 14 is closed.
+
+### 10.1 Closeout findings and validation
+
+The first 14D CI run exposed two closeout-authority problems rather than runtime regressions:
+
+1. the execution lock was active while every Phase-14 row was already either done or pending. The
+   maintained ledger contract correctly rejected that state. NC-P14-009 and NC-P14-010 were made the
+   explicit in-progress rows owned by 14D until their retained-term disposition was proven;
+2. the future-phase preparation and naming plan documented both retained core terminology classes,
+   but the **permanent** naming authority documented only qualified `*-core.ts` modules, not
+   `state/actions/core-actions.ts`. The latter is now explicitly canonical there as the action owner
+   for the top-level/core engine-state slice.
+
+Corrected behavior/evidence head `efac451061e5a97488582ea25cf980f23ba43ad4` passed:
+
+- ordinary CI `33439683295`: validators, source/test TypeScript, Node tests, build, lint,
+  deep proofs, and full deep verification/coverage;
+- Chromium gate `33439683284`: success;
+- composed `check:naming-cleanup-phase14-closeout`: all four batch guards green;
+- exact retained architecture inventory: seven ADR-qualified input `*-core.ts` modules plus
+  `modules/state/actions/core-actions.ts`;
+- permanent naming authority proof for both retained terminology classes;
+- consumer-inward spot audit of app composition/debug facade, AppState, state slices, renderer,
+  state actions, and browser characterization surfaces.
+
+NC-P14-009 and NC-P14-010 are therefore `done`. Their implementation and behavioral-parity
+dimensions are `not-applicable` because the intended result is deliberate retention, while
+targeted validation, consumer audit, and closeout audit are complete.
+
+All ten Phase-14 rows are now row-complete. `lastCompletedPhase` intentionally remains 13 until
+PR #1628 itself passes fresh exact-head CI after this bookkeeping update, merges, and its immutable
+merge evidence is recorded.
+
+### 10.2 Row-closure checkpoint
+
+This row-closure commit changes only ledger/evidence state. It must pass fresh exact-head ordinary
+CI and Chromium before #1628 may merge.
 
 ## 11. Final closure
 
