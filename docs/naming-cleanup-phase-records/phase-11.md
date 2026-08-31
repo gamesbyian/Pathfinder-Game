@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | 11 — application orientation versus level variant |
-| Current batch | 11B atomic runtime rename |
-| Status | 11A complete; 11B atomic runtime rename in progress |
+| Current batch | 11C merged-tree closeout |
+| Status | 11C closure state prepared in PR #1613; exact-head CI/browser/merge are the remaining barrier |
 | Base `main` SHA | `21cde93a05b251a4682f4aa09f88703d3d9a4d67` |
 | Branch | `chatgpt/phase11a-coverage-preparation-2026-08-30` |
 | Rows | NC-P11-001 through NC-P11-005 |
@@ -168,3 +168,15 @@ On behavior-bearing head `e1090eed361fed37def0d1b574d954cc5575025b`:
 - Phase 11 orientation browser gate run #8 / `33361495896`: **success**, including real Chromium execution of the all-eight perspective cycle, render/input agreement, viewport swapping, reset preservation, and editor rotate/mirror flow.
 
 This is before/after observable parity evidence for the behavior-preserving rename. The 11A characterization passed before the switch and the same maintained browser characterization passes after it. This evidence update itself moves the PR head, so both gates must rerun green on the exact final head before merge. Phase 11 remains incomplete until the separate 11C merged-tree closeout.
+
+## 12. 11C merged-tree closeout entry
+
+Phase 11B PR #1612 merged exact green head `eca9887937f27fb68c0d75b71f25468bbbf65dc3` as `b2ee0d74cab245c042555516474e1492975b4fd6`. 11C starts directly from that merge commit and is evidence/closure-only.
+
+The merged-tree audit must rerun the Phase-11 runtime residue ratchet, ordinary CI, and the maintained Chromium orientation characterization against what actually landed on `main`. It must also confirm retained research/editor-palette `variant` terminology remains intentionally untouched, no dual runtime compatibility alias was introduced, and the public debug state exposes the canonical runtime field. Only after this closeout head is green may NC-P11-001 through NC-P11-005 be marked done, `lastCompletedPhase` advance to 11, and `activeExecution` return to idle.
+
+## 13. 11C closure state
+
+PR #1613 is the Phase-11 merged-tree closeout and is based directly on the Phase-11B merge `b2ee0d74cab245c042555516474e1492975b4fd6`. The branch contains no runtime behavior or canonical-name changes. Its final intended ledger state marks NC-P11-001 through NC-P11-005 done, records the structured Phase-11 implementation/closeout evidence, advances `lastCompletedPhase` to 11, and returns `activeExecution` to idle.
+
+That state is deliberately validated before it becomes authoritative: ordinary CI and the dedicated Chromium orientation gate must both pass on the exact final PR head. The browser workflow's path filter now includes this Phase-11 record and the naming ledger, so a pure evidence closeout actually reruns the browser characterization rather than relying on the older 11B run or fabricating a runtime change. If either gate fails, Phase 11 remains open and this closure state must be repaired before merge.
