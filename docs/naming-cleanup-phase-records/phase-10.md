@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 10 |
-| Status | implementation merged green; merged-tree closeout in progress |
+| Status | merged-tree closeout state prepared in PR #1608; exact-head CI/merge are the remaining barrier |
 | Base `main` SHA | `c7fcc35d3079ccbc511c92b1255e010adba2c35a` |
 | Branch | `codex/implement-phase-10-of-naming-cleanup-process` |
 | PR | `#1607` |
@@ -67,8 +67,8 @@ The closeout guard scans maintained source, scripts, tests, workflows, and curre
 - [x] PR #1607 created and bound to this implementation branch;
 - [x] latest implementation head `31487748f987d63d335e783f7eb5045b3412c402` completed CI run #3403 / `33353826968` successfully;
 - [x] implementation merged using expected head SHA as `4a03350967fcfe4d0d2e649d9c460a45e0085544`;
-- [ ] fresh merged-tree closeout branch/PR completed;
-- [ ] `lastCompletedPhase` advanced to 10 and `activeExecution` returned to idle.
+- [x] fresh merged-tree closeout branch/PR #1608 created directly from implementation merge `4a03350967fcfe4d0d2e649d9c460a45e0085544`;
+- [x] closeout branch advances `lastCompletedPhase` to 10 and returns `activeExecution` to idle; this becomes authoritative only when PR #1608 merges green.
 
 Until every unchecked item is complete, Phase 10 is not closed and Phase 11 must not begin.
 
@@ -113,3 +113,7 @@ A post-green review found that NC-P10-007 and NC-P10-008 were documented as sema
 Implementation PR #1607 merged from exact green head `31487748f987d63d335e783f7eb5045b3412c402` as `4a03350967fcfe4d0d2e649d9c460a45e0085544`. The required merged-tree closeout starts directly from that commit on branch `chatgpt/phase10-merged-tree-closeout-2026-08-30`.
 
 This closeout is evidence-only. It must not change solver behavior, resource allocation, canonical names, compatibility policy, or current artifacts. Its job is to rerun the Phase-10 consumer-inward residue/ownership guard, the ledger contract and negative fixtures, the real worker/race transport tests, and aggregate CI against the tree that actually landed on `main`. Once its exact final head is green, the ledger may mark NC-P10-001 through NC-P10-008 done, set every remaining Phase-10 closeout verification dimension to done, record the structured Phase-10 closure, advance `lastCompletedPhase` to 10, and return `activeExecution` to idle. Phase 11 must not begin before this closeout PR itself merges.
+
+### Closeout PR state
+
+PR #1608 is the Phase-10 merged-tree closeout. Its diff is intentionally limited to closure/evidence state. The ledger records Phase 10 as closed on this branch so the contract checker can validate the final intended repository state; that state is not authoritative on `main` until #1608's exact final head completes CI successfully and the PR merges. If CI finds any consumer residue, ownership mismatch, ledger inconsistency, or runtime regression, Phase 10 remains open and this closure state must be repaired before merge.
