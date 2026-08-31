@@ -5,12 +5,12 @@
 | Field | Value |
 | --- | --- |
 | Phase | 14 — application facade cleanup |
-| Current batch | 14B LevelUtils facade removal |
-| Status | 14B validated; merge pending |
-| Base `main` SHA | `03a1298669df019d5cbef486890e044fc7f1f07e` |
-| Branch | `chatgpt/phase14b-level-utils-removal-2026-08-31` |
-| PR | #1625 |
-| Selected ledger row IDs | NC-P14-004 |
+| Current batch | 14C1 local state/render names |
+| Status | 14B merged; 14C1 in progress |
+| Base `main` SHA | `a4139cefefb69706e70c1b4e6a637d6280802c6d` |
+| Branch | `chatgpt/phase14c1-local-names-2026-08-31` |
+| PR | #1626 |
+| Selected ledger row IDs | NC-P14-005, NC-P14-007, NC-P14-008 |
 | Phase batch order | 14A -> 14B -> 14C1 -> 14C2 -> 14D |
 | Highest phase risk | high (NC-P14-006 in 14C2) |
 | 14A risk | medium |
@@ -204,7 +204,64 @@ and row-level closeout evidence complete. Phase-wide merged-tree closeout remain
 
 ## 8. 14C1 local state/render names
 
-Not started. Must branch from merged 14B main.
+Started from merged 14B main `a4139cefefb69706e70c1b4e6a637d6280802c6d`.
+
+Authorized scope is deliberately small:
+
+- NC-P14-005: `HinterState` -> `HintDisplayState`;
+- NC-P14-007: renderer-local `publicDrawPath` -> `drawPathWithCurrentOrientation`; the renderer
+  port remains named `drawPath`;
+- NC-P14-008: runtime confirmation callback field `pendingAction` ->
+  `pendingConfirmationAction` atomically across state/actions/controller/tests.
+
+NC-P14-006 (`ENGINE` -> `engineState`) is high risk and explicitly excluded from this branch.
+14C2 may start only after 14C1 merges.
+
+### 8.1 14C1 validation and closeout
+
+The first exact-head run on implementation head `2fd1e7e4e1035879319a7454eaf45cdecb62593c`
+passed build, lint, Node tests, deep proofs, and Chromium but exposed one stale broad integration
+test:
+
+- `modules/state-actions.test.ts` still imported and called
+  `setRuntimePendingAction` / `clearRuntimePendingAction`, even though the runtime action
+  implementation and all production consumers had moved to
+  `setRuntimePendingConfirmationAction` / `clearRuntimePendingConfirmationAction`.
+
+That test surface was migrated rather than allowlisted. Repaired behavior head
+`8d98ccc6990c55ba682883f09738a1bbd9f052d2` then passed:
+
+- ordinary CI `33437133572`: checks, source/test TypeScript, Node tests, build, lint, deep proofs
+  and full deep verification/coverage;
+- Chromium orientation/browser gate `33437133574`: success;
+- permanent `check:naming-cleanup-phase14c1-closeout`: no retired `HinterState`,
+  `createHinterState`, renderer-local `publicDrawPath`, `pendingAction`, engine pending-action
+  methods, or runtime pending-action state helpers remain in module/test surfaces;
+- its negative-fixture Node test;
+- engine facade behavior proving set/execute/clear retains exact callback identity and execute does
+  not implicitly clear it;
+- renderer tests retain the public `drawPath` port while its private implementation is
+  `drawPathWithCurrentOrientation`.
+
+Consumer-inward audit:
+
+- `EngineState.hinter` remains the slice name, but its type/factory are
+  `HintDisplayState` / `createHintDisplayState`;
+- runtime state owns `pendingConfirmationAction`;
+- runtime state actions, engine facade methods, navigation controller and tests all use the
+  expanded confirmation terminology;
+- `renderer.ts` keeps the external `drawPath` port and only renames the local orientation-aware
+  implementation helper;
+- NC-P14-006 `ENGINE` is untouched.
+
+NC-P14-005, NC-P14-007 and NC-P14-008 are therefore row-complete. The evidence-only row-closure
+head must pass fresh exact-head CI before #1626 merges.
+
+After branch creation, `main` advanced once to
+`96595c01d8bbc4b15359680c7d5c58701b99e4b6`. The delta from the recorded 14C1 base contains only
+published hint refreshes, solver-workflow logs, and the hint-cost-drift report. No state slice,
+renderer, runtime action, engine, navigation, test, package, or Phase-14 authority changed, so the
+14C1 impact map is unchanged.
 
 ## 9. 14C2 atomic ENGINE graph
 

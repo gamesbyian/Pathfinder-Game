@@ -59,19 +59,19 @@ test('grouped namespaces reference the same instances as the flat methods', () =
 
 test('pending confirmation callbacks survive set, execute, and clear through the engine facade', () => {
     const deps = makeDeps();
-    const state = { ENGINE: { runtime: { pendingAction: null as (() => void) | null } } };
+    const state = { ENGINE: { runtime: { pendingConfirmationAction: null as (() => void) | null } } };
     deps.state = state as any;
     const engine = createEngine(deps);
     let executions = 0;
     const action = () => { executions += 1; };
 
-    engine.setPendingAction(action);
-    assert.equal(state.ENGINE.runtime.pendingAction, action, 'set stores the exact callback identity');
-    engine.executePendingAction();
+    engine.setPendingConfirmationAction(action);
+    assert.equal(state.ENGINE.runtime.pendingConfirmationAction, action, 'set stores the exact callback identity');
+    engine.executePendingConfirmationAction();
     assert.equal(executions, 1, 'execute invokes the queued callback once');
-    assert.equal(state.ENGINE.runtime.pendingAction, action, 'execute does not implicitly clear the callback');
-    engine.clearPendingAction();
-    assert.equal(state.ENGINE.runtime.pendingAction, null, 'clear removes the queued callback');
-    engine.executePendingAction();
+    assert.equal(state.ENGINE.runtime.pendingConfirmationAction, action, 'execute does not implicitly clear the callback');
+    engine.clearPendingConfirmationAction();
+    assert.equal(state.ENGINE.runtime.pendingConfirmationAction, null, 'clear removes the queued callback');
+    engine.executePendingConfirmationAction();
     assert.equal(executions, 1, 'execute is a no-op once the callback is cleared');
 });

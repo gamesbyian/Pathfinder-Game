@@ -14,7 +14,7 @@ import {
   popNavigationUndoStack,
   clearPersistedHint,
   clearRipples,
-  clearRuntimePendingAction,
+  clearRuntimePendingConfirmationAction,
   detonateFalseGoal,
   endSolverRun,
   incrementEditorEmptyClickCount,
@@ -77,7 +77,7 @@ import {
   setReviewSavedPlayLevelIndex,
   setResetStreak,
   setReviewSubmissions,
-  setRuntimePendingAction,
+  setRuntimePendingConfirmationAction,
   resetGamepadConnectionState,
   setGamepadFocusEnabled,
   setGamepadGridPrimaryAction,
@@ -367,7 +367,7 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
       isDevMode: false,
       ripples: [{ startTime: 0 }, { startTime: 500 }],
       foundHintsSinceLoad: ['old'],
-      runtime: { pendingAction: null, currentTheme: 'classic' },
+      runtime: { pendingConfirmationAction: null, currentTheme: 'classic' },
       options: {},
       cheatTimer: null,
       cheatActive: false,
@@ -406,8 +406,8 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
   assert.equal(setUiFocusIndex(state, 1), 1);
   assert.equal(toggleDevMode(state), true);
   assert.equal(toggleFlag(state, 'useRefereeSolver'), true);
-  assert.equal(setRuntimePendingAction(state, pending), pending);
-  assert.equal(clearRuntimePendingAction(state), null);
+  assert.equal(setRuntimePendingConfirmationAction(state, pending), pending);
+  assert.equal(clearRuntimePendingConfirmationAction(state), null);
   assert.equal(setOptionValue(state, 'geese', false), false);
   assert.equal(setCheatTimer(state, timer as any), timer);
   assert.equal(setCheatActive(state, true), true);

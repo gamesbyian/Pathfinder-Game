@@ -103,7 +103,7 @@ export const createSolverState = (): SolverState => ({
  * `source`/`persisted*` are authoritative; `heatmap` is derived (built from pathList by
  * buildPathListHeatmap); the `*StartMs`/`alpha`/`index` fields are animation-clock state.
  */
-export interface HinterState {
+export interface HintDisplayState {
     /** authoritative — list of hint paths (packed cell keys). Full set — the heat-map builds from it. */
     pathList: number[][];
     /** authoritative — indices into pathList the player cycles through (curated subset in play mode,
@@ -137,7 +137,7 @@ export interface HinterState {
     persistedHeatmapPathCount: number;
 }
 
-export const createHinterState = (): HinterState => ({
+export const createHintDisplayState = (): HintDisplayState => ({
     pathList: [],                  // authoritative (full set)
     displayIndices: [],            // authoritative (cycled subset; heat-map still uses pathList)
     moreSolutionsSimilar: false,   // authoritative
@@ -216,13 +216,13 @@ export const createUiSessionState = (): UiSessionState => ({
 
 /**
  * Runtime slice — owner: runtime/step-processor + theme-engine. `currentTheme` and
- * `pendingAction` are authoritative; the pointer/tap fields are transient input state.
+ * `pendingConfirmationAction` are authoritative; the pointer/tap fields are transient input state.
  */
 export interface RuntimeState {
     /** authoritative (persisted via session state) */
     currentTheme: string;
     /** authoritative — queued confirm action, invoked on confirm */
-    pendingAction: (() => void) | null;
+    pendingConfirmationAction: (() => void) | null;
     /** transient input — active pointer id during a drag */
     activePointerId: number | null;
     /** transient input — pointer coord where the current tap began */
@@ -238,7 +238,7 @@ export interface RuntimeState {
 
 export const createRuntimeState = (): RuntimeState => ({
     currentTheme: 'classic',       // authoritative (persisted via session state)
-    pendingAction: null,           // authoritative (queued confirm action)
+    pendingConfirmationAction: null,           // authoritative (queued confirm action)
     activePointerId: null,         // transient input
     tapStartCoord: null,           // transient input
     tapMoved: false,               // transient input
@@ -349,7 +349,7 @@ export interface EngineState {
     resetStreak: number;
     /** browser timer handle for the dev cheat overlay, or null */
     cheatTimer: number | null;
-    hinter: HinterState;
+    hinter: HintDisplayState;
     viewport: ViewportState;
     /** completed level indices */
     progressSet: Set<number>;
@@ -387,7 +387,7 @@ export function createEngineState(): EngineState {
         options: { geese: true, falseGoals: true, deadGates: true },
         resetStreak: 0,
         cheatTimer: null,
-        hinter: createHinterState(),
+        hinter: createHintDisplayState(),
         viewport: createViewportState(),
         progressSet: new Set(),
         foundHintsSinceLoad: [],
