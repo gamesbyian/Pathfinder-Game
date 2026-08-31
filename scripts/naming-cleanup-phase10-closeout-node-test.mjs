@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+
+import { readRepositoryText } from './repository-file-view.mjs';
 
 const root = process.cwd();
 const fixture = mkdtempSync(path.join(tmpdir(), 'phase10-closeout-'));
@@ -13,7 +15,9 @@ try {
   const ledger = JSON.parse(readFileSync(path.join(root, 'docs/naming-cleanup-ledger.json'), 'utf8'));
   writeFileSync(ledgerPath, JSON.stringify(ledger));
   for (const artifact of ledger.phaseCurrentArtifacts['10']) {
-    cpSync(path.join(root, artifact), path.join(fixture, artifact), { recursive: true });
+    const target = path.join(fixture, artifact);
+    mkdirSync(path.dirname(target), { recursive: true });
+    writeFileSync(target, readRepositoryText(root, artifact));
   }
   for (const file of ['modules/solver/hard-prune-pipeline.ts','modules/solver/repair-search.ts','modules/solver/stage-budget.ts','modules/solver/orchestration.ts','scripts/portfolio-solve-sweep-worker.mjs','scripts/solver-parallel/race.mjs']) {
     cpSync(path.join(root, file), path.join(fixture, file), { recursive: true });
