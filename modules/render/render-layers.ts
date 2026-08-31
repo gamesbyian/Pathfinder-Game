@@ -10,9 +10,9 @@ import {
 import { drawPath } from './draw-path.js';
 
 function makeScreenPosFn(model: any) {
-    const { viewport, variant, level } = model;
+    const { viewport, orientation, level } = model;
     return function screenPos(cx: any, cy: any) {
-        const { tx, ty } = transformPoint(cx, cy, variant, level.grid.w, level.grid.h);
+        const { tx, ty } = transformPoint(cx, cy, orientation, level.grid.w, level.grid.h);
         return { sx: (tx + 0.5) * viewport.cellW, sy: (ty + 0.5) * viewport.cellH };
     };
 }
@@ -106,7 +106,7 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
     // --- Filters ---
     level.filterMap.forEach((axis: any, k: any) => {
         const p = UNPACK(k);
-        drawAsset('filter', p.x, p.y, { axis: transformAxis(axis, model.variant), color: th.colors.filter });
+        drawAsset('filter', p.x, p.y, { axis: transformAxis(axis, model.orientation), color: th.colors.filter });
     });
 
     // --- Flipping filters ---
@@ -122,7 +122,7 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
             ? model.visualFlipCount
             : targetFlips;
         drawAsset('flippingFilter', p.x, p.y, {
-            axis:     transformAxis(baseAxis, model.variant),
+            axis:     transformAxis(baseAxis, model.orientation),
             color:    th.colors.filter,
             rotation: currentVisualFlips * (Math.PI / 2),
             crossed,
@@ -170,7 +170,7 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
             const turnDir = adjTurnDirByKey.get(k) as any;
             drawAsset('landmark', p.x, p.y, {
-                objectType, role, isSatisfied, turnDir: transformTurnDir(turnDir, model.variant), color: th.colors.block,
+                objectType, role, isSatisfied, turnDir: transformTurnDir(turnDir, model.orientation), color: th.colors.block,
                 themeColors: th.colors, burst: th.burst, check: th.check,
             });
         });
@@ -311,7 +311,7 @@ export function renderScene(ctx: any, model: any, { cvs, mustPassOverlay }: any)
             const p = UNPACK(k);
             const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
             drawAsset('mustTurnLandmark', p.x, p.y, {
-                dir: transformTurnDir(dir, model.variant), isSatisfied,
+                dir: transformTurnDir(dir, model.orientation), isSatisfied,
                 themeColors: th.colors, burst: th.burst, check: th.check,
             });
         });
