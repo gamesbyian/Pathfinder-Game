@@ -9,7 +9,7 @@
 | Status | entry-mapped |
 | Base `main` SHA | `efe94db31469f903a42b3921535beb32e1b785fb` |
 | Branch | `chatgpt/phase13a-boundary-prep-2026-08-31` |
-| PR | pending |
+| PR | #1620 |
 | Selected ledger row IDs | NC-P13-001 through NC-P13-004 |
 | Reconciliation mode | full level-metric ownership census, because Phase 13 is high-risk and broad |
 | Highest risk | high |
