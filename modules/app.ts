@@ -1,5 +1,4 @@
 import { createSolver }    from './solver.js';
-import { createCore }        from './core.js';
 import { createDebug }       from './debug.js';
 import { createUI }          from './ui.js';
 import { createData }        from './data.js';
@@ -14,6 +13,8 @@ import { createThemes }      from './themes.js';
 import { createInput }       from './input.js';
 import { createBoot, createOnloadHandler } from './boot.js';
 import { createErrorReporter } from './error-reporting.js';
+import { createAudioService } from './audio-service.js';
+import { deepClone } from './deep-clone.js';
 import { injectSvgDefs } from './ui/svg-defs.js';
 import { renderEditorPaletteItems } from './ui/editor-palette.js';
 import { renderGuideCards } from './ui/guide-cards.js';
@@ -63,7 +64,7 @@ export function createEditorEnginePort(engine: any) {
 
 const DEFAULT_FACTORIES = {
     createSolver,
-    createCore,
+    createAudioService,
     createDebug,
     createUI,
     createData,
@@ -89,17 +90,17 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // `reportError`; pointing the app at a real sink later means changing only this line.
     const errorReporter = f.createErrorReporter();
     const reportError = errorReporter.report;
-    const core  = f.createCore({ reportError });
-    const state = f.createState({ core });
-    // Wire muted provider so SOUND_BUS reads the live state flag.
-    core.SOUND_BUS.setMutedProvider(() => state.ENGINE.muted);
+    const state = f.createState();
+    const audioService = f.createAudioService({ reportError });
+    // Wire the audio adapter to the live mute flag after state exists.
+    audioService.setMutedProvider(() => state.ENGINE.muted);
     const solverApi = f.createSolver();
     // `data` no longer reads the theme registry. Themes flow one way at runtime
     // (loader → data.ingest({ themes }) → theme-registry reads data.getThemes()), so the
     // old data↔themes construction cycle is gone and `data` is a leaf service. (The
     // createData `getThemes` base-theme hook still exists for tests; app just omits it.)
-    const data = f.createData({ deepClone: core.deepClone, hintsSource, ...dataSources });
-    const debug = f.createDebug({ core });
+    const data = f.createData({ deepClone, hintsSource, ...dataSources });
+    const debug = f.createDebug();
 
     // ── Stage 2: browser-facing subsystems ────────────────────────────────────────
     // Both former construction cycles are gone — everything below flows one way (ADR 0008):
@@ -107,13 +108,11 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     //   • persistence → themes — persistence validates theme ids via a data-sourced predicate,
     //                            so it's built before themes, which takes persistence directly.
     const ui = f.createUI({
-        core,
         getState: () => state.ENGINE,
     });
-    const renderer = f.createRenderer({ core, state, ui });
+    const renderer = f.createRenderer({ state, ui });
 
     const levelUtils = f.createLevelUtils({
-        core,
         data,
         getState:    () => state.ENGINE,
         getRenderer: () => renderer,
@@ -152,22 +151,23 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
     // lazily via getEngineRuntime() — `engine` is a const declared just below, only dereferenced
     // when an editor method actually runs (long after both exist). See ADR 0008.
     const editor = f.createEditor({
-        core, state, ui, levelUtils, solverApi,
+        state, ui, levelUtils, solverApi,
         getEngineRuntime: () => createEditorEnginePort(engine),
     });
     const engine = f.createEngine({
-        core, state, ui,
+        state, ui,
         renderer,
         levelUtils,
         themes,
         data,
         persistence,
         editor,
+        audioService,
         reportError,
     });
 
     const input = f.createInput({
-        core, state, ui,
+        state, ui,
         engine,
         levelUtils,
         editor,
@@ -177,10 +177,11 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         devCorpus,
         solverApi,
         persistence,
+        audioService,
         reportError,
     });
 
-    const loader = f.createLoader({ ui, data, themes, core, dataAssetLoader, reportError });
+    const loader = f.createLoader({ ui, data, themes, dataAssetLoader, reportError });
 
     const boot = f.createBoot({
         ui, debug,
@@ -189,13 +190,12 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
         themes,
         engine,
         data,
-        core,
         state,
         reportError,
     });
 
     return {
-        core,
+        audioService,
         errorReporter,
         state,
         solverApi,
@@ -216,7 +216,6 @@ export function createApp({ factories = {}, dataSources = {}, persistenceSources
 
 export function createAppFacade(app: any) {
     return {
-        Core:        app.core,
         State:       { get ENGINE() { return app.state.ENGINE; } },
         Engine:      app.engine,
         Editor:      app.editor,
@@ -241,13 +240,13 @@ export function createAppFacade(app: any) {
 export function createReadOnlyDiagnostics(app: any) {
     return Object.freeze({
         getStateSnapshot() {
-            try { return app.core.deepClone(app.state.ENGINE); }
+            try { return deepClone(app.state.ENGINE); }
             catch (e: any) { app.errorReporter?.report('diagnostics.state-snapshot', e); return null; }
         },
         getCurrentLevel() {
             const level = app.state.ENGINE?.level;
             if (!level) return null;
-            try { return app.core.deepClone(level); }
+            try { return deepClone(level); }
             catch (e: any) { app.errorReporter?.report('diagnostics.current-level', e); return null; }
         },
         getCurrentLevelIndex() { return app.state.ENGINE?.levelIdx ?? null; },
