@@ -1449,9 +1449,13 @@ must:
 8. classify the known deferred \`repairLateProbe\` / \`REPAIR_LATE_PROBE\` derived vocabulary
    family as canonical-retained, separately deferred debt, or a newly authorized Phase-15 mapping.
    Do not mass-rename it without a specification amendment and compatibility review;
-9. extend the existing serial batch/merge barrier to the actual Phase-15 batch list before the first
-   row implementation, so a later batch cannot be stacked on an unmerged predecessor;
-10. check for overlapping Phase-15 branches/PRs and recover or supersede them before claiming the
+9. create `docs/naming-cleanup-phase-records/phase-15.md` as the implementation/closeout authority,
+   register it in `phaseExecutionRecords["15"]`, and make it reference this preparation record
+   rather than overwriting preparation history;
+10. extend the ledger/checker/status machinery to a machine-readable Phase-15 serial order covering
+    the actual 15B-15J lifecycle gates (or any amended split), with predecessor merge completion
+    required before the next gate can become active; do not leave this as prose-only discipline;
+11. check for overlapping Phase-15 branches/PRs and recover or supersede them before claiming the
     first implementation batch.
 
 If 15A changes a target name, persistence classification, compatibility owner, retirement rule, or
@@ -1845,6 +1849,11 @@ The cleanup is complete only when all of the following are true.
     closeout was rerun on the repaired merged tree before Phase 15J finalized the program.
 58. Phase 15J changed permanent routing/archival state only after immutable Phase-15 implementation
     and merged-tree closeout evidence existed.
+59. `phaseExecutionRecords["15"]` points to the checked-in Phase-15 implementation/closeout
+    authority and `phaseClosures["15"]` records the final immutable closure evidence before
+    `lastCompletedPhase` advances to 15.
+60. The Phase-15 batch/gate sequence and predecessor merge barriers are machine-enforced rather than
+    existing only as prose in this plan.
 
 ## 14. Stop conditions
 
