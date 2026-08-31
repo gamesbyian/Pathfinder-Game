@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | 9 final adversarial audit / reopened closeout |
-| Status | repair #1605 merged green; merged-tree final closeout active |
+| Status | final closure state; merge only after #1606 exact-head CI is green |
 | Base `main` SHA | `aa6370dedbaffcc361ba6982aafa86808275da6b` (post-#1603 main) |
 | Branch | `chatgpt/phase9-final-audit-closeout-repair-2026-08-30` |
 | PR | #1605 |
@@ -16,7 +16,7 @@
 | Final repair PR | #1605, head `357af018cfbb9a6373583bef87f0ce8302978feb`, exact-head CI run `33349362190`: **success**, merged as `235b82c8063c153a78da589e17e0d17f4dcbd79f` |
 | Merged-tree final closeout base | `235b82c8063c153a78da589e17e0d17f4dcbd79f` |
 | Merged-tree final closeout branch | `chatgpt/phase9-merged-tree-final-closeout-2026-08-30` |
-| Merged-tree final closeout PR | pending creation |
+| Merged-tree final closeout PR | #1606 |
 | External merge-enforcement follow-up | #1604 |
 | Prior closeout merge | `a3bcf28b7b38178e052a6a5765c82bcd8e90dc57` |
 | Reopened rows | NC-P09-001 through NC-P09-009 |
@@ -123,3 +123,19 @@ The prior records remain historical evidence:
 - `phase-09.md`: original #1599 implementation and failed remote CI;
 - `phase-09-repair.md`: #1600/#1601 first repair and closeout;
 - this file: final adversarial audit and closure authority.
+
+## 6. Final closure state
+
+Repair PR #1605 is the final implementation-bearing Phase-9 repair. Its exact final head
+`357af018cfbb9a6373583bef87f0ce8302978feb` completed GitHub CI run `33349362190` successfully
+and merged as `235b82c8063c153a78da589e17e0d17f4dcbd79f`.
+
+Merged-tree closeout PR #1606 is based directly on that merge and contains no implementation
+changes. It closes NC-P09-001 through NC-P09-009 only after the repaired merged tree again passes
+the Phase-9 live-artifact census, all surfaced npm-entrypoint smokes, ledger negative fixtures, and
+aggregate repository CI. The ledger records this as a structured Phase-9 closure and returns
+`activeExecution` to idle with Phase 10 next.
+
+External GitHub enforcement remains separate: issue #1604 tracks required PR/status-check protection
+for `main`. Until that setting is enabled, the exact-head-green-before-merge rule remains a manual
+operator barrier even though the repository now records the required evidence mechanically.
