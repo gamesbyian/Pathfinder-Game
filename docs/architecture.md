@@ -33,7 +33,7 @@ Use lowercase kebab-case for `modules/` filenames. A package entrypoint may shar
 `createApp()` builds acyclic stages without mutable forward declarations/post-init:
 
 - **Stage 1, foundational services:** `state`, `audioService`, `solverApi`, `data`, `debug`, `createErrorReporter`; failure paths use injected `reportError(context, err, meta?)`, tests may use `defaultReportError`; stable application constants are imported directly from `app-constants.ts`, and `data` is a leaf.
-- **Stage 2, browser subsystems:** `ui`, `renderer`, `persistence`, `themes`; dependencies are one-way. Level normalization lives at `level-data.ts`, input coordinate conversion at `input/grid-coordinates.ts`, and editor coordinate transforms at `editor/level-coordinate-transforms.ts` rather than behind a shared LevelUtils facade. `persistence` validates theme IDs through `data`, then `themes` consumes `persistence`.
+- **Stage 2, browser subsystems:** `ui`, `renderer`, `persistence`, `themes`; dependencies are one-way. Level normalization lives at `level-data.ts`, input coordinate conversion at `input/grid-coordinates.ts`, and editor coordinate transforms at `editor/level-coordinate-transforms.ts` rather than behind a shared utility facade. `persistence` validates theme IDs through `data`, then `themes` consumes `persistence`.
 - **Stage 3, controllers:** `editor`, `engine`, `input`, `loader`, `boot`; editor reaches engine lazily through `getEngineRuntime: () => createEditorEnginePort(engine)` to avoid a construction cycle.
 
 `bootstrapApp()` installs SVG sprites/palette/modal icons, builds the app, then exposes diagnostics.
