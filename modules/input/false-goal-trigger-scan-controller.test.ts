@@ -6,8 +6,8 @@ import { createFalseGoalTriggerScanController } from './false-goal-trigger-scan-
 function makeLevel() {
     return {
         grid: { w: 4, h: 4 },
-        reqLen: 6,
-        reqInt: 0,
+        requiredLength: 6,
+        requiredIntersections: 0,
         gateKeys: [PACK(0, 0)],
         goalKey: PACK(3, 3),
         falseGoalKeys: new Set<number>(),

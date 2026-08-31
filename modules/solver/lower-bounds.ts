@@ -153,7 +153,7 @@ export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSear
     }
     if (extraNeeded === 0) return false;
 
-    const freeInt = level.reqInt - state.ints - popcount(state.mustCrossMask);
+    const freeInt = level.requiredIntersections - state.ints - popcount(state.mustCrossMask);
     return freeInt < extraNeeded;
 }
 

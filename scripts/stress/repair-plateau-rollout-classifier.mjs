@@ -229,8 +229,8 @@ function rolloutsAtDepth(elitePath, depth, level, prep, trials, seedBase, nodeCa
     return results;
 }
 
-function summarizeAtDepth(depth, results, reqLen) {
-    const residual = reqLen - depth;
+function summarizeAtDepth(depth, results, requiredLength) {
+    const residual = requiredLength - depth;
     const depths = results.map(r => r.depthReached - depth).sort((a, b) => a - b);
     const nodes = results.map(r => r.nodes).sort((a, b) => a - b);
     const q = (arr, p) => arr.length ? arr[Math.floor(p * (arr.length - 1))] : null;
@@ -256,14 +256,14 @@ function rolloutLadder(elitePath, anchorDepth, level, prep, trials, seedBase, no
     const depths = [...new Set(backoffList.map(b => anchorDepth - b).filter(d => d >= 1))].sort((a, b) => a - b);
     return depths.map(depth => {
         const results = rolloutsAtDepth(elitePath, depth, level, prep, trials, seedBase ^ depth, nodeCap);
-        return summarizeAtDepth(depth, results, level.reqLen);
+        return summarizeAtDepth(depth, results, level.requiredLength);
     });
 }
 
 function levelBase(id, raw, level) {
     const features = levelFeatures(raw);
     return {
-        id, provenance: provenance[id] ?? 'unknown', reqLen: level.reqLen,
+        id, provenance: provenance[id] ?? 'unknown', reqLen: level.requiredLength,
         blocks: features.blocks, blocksFraction: Number((features.blocks / features.area).toFixed(4)),
         mustCross: features.mustCross, reqInt: features.reqInt, requiredPathCoverageRatio: Number(features.requiredPathCoverageRatio.toFixed(4)),
     };

@@ -751,7 +751,7 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  losses across both corpora). Priority 7 (docs/solver-
  *  optimization-current-queue.md): the census found 94 of 158 currently-unsolved Corpus-2 levels
  *  where repair wins in isolation are structurally excluded from EVER trying repair, because
- *  `needsRepairFallback` (`mustCross >= 2 AND mustPass >= 3`, or very-high reqInt) never matches
+ *  `needsRepairFallback` (`mustCross >= 2 AND mustPass >= 3`, or very-high requiredIntersections) never matches
  *  them — `repairConfigs` is empty for the whole level, so neither the early probe
  *  (runEarlyRepairSearch) nor the ordinary fallback loop below ever run, regardless of budget or
  *  ordering. Widening `needsRepairFallback` itself was rejected (matched-comparison analysis found

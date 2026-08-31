@@ -23,6 +23,24 @@ export const normalizeMetadata = (raw: any = {}) => ({
     persistentId: typeof raw.id === 'string' ? raw.id : null,
 });
 
+/**
+ * Sole raw-wire reader for the two challenge metrics. Runtime callers receive expanded names;
+ * wire callers keep reqLen/reqInt at serialization boundaries. The solver historically coerces
+ * loose numeric inputs in direct tooling, so that behavior is explicit rather than duplicated.
+ */
+export function readRawChallengeMetrics(raw: any, options: { coerce?: boolean } = {}): { requiredLength: any; requiredIntersections: any } {
+    if (options.coerce) {
+        return {
+            requiredLength: Number(raw?.reqLen) || 0,
+            requiredIntersections: Number(raw?.reqInt) || 0,
+        };
+    }
+    return {
+        requiredLength: raw?.reqLen,
+        requiredIntersections: raw?.reqInt,
+    };
+}
+
 // Shared parser for raw-level data. Both normalizeLevel(idx) and processRawLevel(raw, id)
 // delegate here. Input uses 1-based coordinates; output uses 0-based packed keys.
 /** @param raw  1-based wire-format level */
@@ -32,8 +50,7 @@ export function parseRawLevel(raw: any, id: number | null = null): EngineLevel |
     const l = {
         id,
         grid:            { ...raw.grid },
-        reqLen:          raw.reqLen,
-        reqInt:          raw.reqInt,
+        ...readRawChallengeMetrics(raw),
         ...normalizeMetadata(raw),
         goalKey:         PACK(adj(raw.goal.x), adj(raw.goal.y)),
         gateKeys:        (raw.gates || []).map((g: any) => PACK(adj(g.x), adj(g.y))),
@@ -124,8 +141,8 @@ export function denormalizeLevel(level: any): any {
         grid:       { w: level.grid.w, h: level.grid.h },
         gates:      sortCoords((level.gateKeys || []).map(toCoord)),
         goal:       typeof level.goalKey === 'number' && level.goalKey >= 0 ? toCoord(level.goalKey) : null,
-        reqLen:     level.reqLen  || 0,
-        reqInt:     level.reqInt  || 0,
+        reqLen:     level.requiredLength  || 0,
+        reqInt:     level.requiredIntersections  || 0,
         designerName: level.designerName || '',
         description:  level.description  || '',
         difficulty:   level.difficulty   ?? null,
@@ -146,8 +163,8 @@ export function denormalizeLevel(level: any): any {
 
 
 export interface WireLevelDataOptions {
-    reqLen?: number;
-    reqInt?: number;
+    requiredLength?: number;
+    requiredIntersections?: number;
     hints?: any[];
     provenance?: any;
     includeLevelId?: boolean;
@@ -164,8 +181,8 @@ export function buildWireLevelData(level: any, options: WireLevelDataOptions = {
     const { levelId: _levelId, ...withoutLevelId } = wire;
     const out: any = options.includeLevelId ? { ...wire } : { ...withoutLevelId };
 
-    if (options.reqLen !== undefined) out.reqLen = options.reqLen;
-    if (options.reqInt !== undefined) out.reqInt = options.reqInt;
+    if (options.requiredLength !== undefined) out.reqLen = options.requiredLength;
+    if (options.requiredIntersections !== undefined) out.reqInt = options.requiredIntersections;
     if (options.hints !== undefined) out.hints = options.hints;
     if (options.provenance !== undefined) out.provenance = options.provenance;
 
@@ -179,8 +196,8 @@ export function canonicalCloneLevel(src: any, options: { includeHints?: boolean 
     const clone: any = {
         id:      typeof src?.id === 'number' ? src.id : 0,
         grid:    { w: Number(src?.grid?.w) || 0, h: Number(src?.grid?.h) || 0 },
-        reqLen:  Number(src?.reqLen) || 0,
-        reqInt:  Number(src?.reqInt) || 0,
+        requiredLength:  Number(src?.requiredLength) || 0,
+        requiredIntersections:  Number(src?.requiredIntersections) || 0,
         ...normalizeMetadata(src),
         goalKey:  _goalKey,
         goal:     src?.goal
@@ -231,13 +248,13 @@ export function deepCloneLevel(src: any): EngineLevel {
 }
 
 // Deep-clone a level and override its length/intersection requirements. The
-// review/submission flows solve or validate against the *challenge* reqLen/reqInt
-// rather than the level's own values, so they need a mutable copy with those two
-// fields swapped in — this is that idiom in one place.
-export function cloneLevelWithReq(src: any, reqLen: any, reqInt: any): EngineLevel {
+// review/submission flows solve or validate against the *challenge* requiredLength/
+// requiredIntersections rather than the level's own values, so they need a mutable copy with
+// those two fields swapped in — this is that idiom in one place.
+export function cloneLevelWithReq(src: any, requiredLength: any, requiredIntersections: any): EngineLevel {
     const l = deepCloneLevel(src);
-    l.reqLen = reqLen;
-    l.reqInt = reqInt;
+    l.requiredLength = requiredLength;
+    l.requiredIntersections = requiredIntersections;
     return l;
 }
 

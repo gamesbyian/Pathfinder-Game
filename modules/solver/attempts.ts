@@ -11,13 +11,13 @@ import { canonicalAblationFeatureName, defaultConfig } from './ablation-config.j
  * motivation, in code or comments.)
  */
 const POLICY = {
-    /** reqInt ≥ this needs a wide beam first — DFS can't harvest enough crossings greedily. */
+    /** requiredIntersections ≥ this needs a wide beam first — DFS can't harvest enough crossings greedily. */
     VERY_HIGH_REQINT: 7,
     /** portal pairs ≥ this → objectiveFirst guides the beam through portal transitions better than pure harvest. */
     PORTAL_DENSE_PAIRS: 2,
     /** requiredPathCoverageRatio ≥ this is near-Hamiltonian: beams collapse over the long dense walk, so DFS-perimeter leads. */
     NEAR_HAMILTONIAN_COVERAGE_THRESHOLD: 0.82,
-    /** reqLen ≥ this is a "long" path (a perimeter beam needs seconds to walk it). */
+    /** requiredLength ≥ this is a "long" path (a perimeter beam needs seconds to walk it). */
     LONG_PATH_REQLEN: 90,
     /** gate count ≥ this can starve a long-path beam via per-gate budget division (→ give it a floor). */
     MULTI_GATE: 2,
@@ -25,7 +25,7 @@ const POLICY = {
     LONG_MULTIGATE_BEAM_FLOOR: 0.45,
     /** must-pass count ≥ this: objective-directed profiles must lead (scattered objectives perimeter sweeps miss). */
     OBJECTIVE_HEAVY_MUSTPASS: 3,
-    /** reqInt ≤ this (with no must-pass): try a CCW sweep before CW. */
+    /** requiredIntersections ≤ this (with no must-pass): try a CCW sweep before CW. */
     LOW_REQINT: 4,
     /** must-cross count ≥ this (paired with COMBO_MUSTPASS): beam leads over DFS-perimeter templates. */
     COMBO_MUSTCROSS: 3,
@@ -70,8 +70,8 @@ const BEAM = { STANDARD: 2000, WIDE: 5000 } as const;
 interface LevelFeatures {
     routingRegime: string;
     requiredPathCoverageRatio: number;
-    reqInt: number;
-    reqLen: number;
+    requiredIntersections: number;
+    requiredLength: number;
     gates: number;
     mustPass: number;
     mustCross: number;
@@ -85,8 +85,8 @@ export function extractFeatures(level: NormalizedLevel): LevelFeatures {
         routingRegime: classifyRoutingRegime(level),
         // Required path coverage uses the historical non-gate path-cell denominator.
         requiredPathCoverageRatio: getRequiredPathCoverageRatio(level),
-        reqInt: level.reqInt,
-        reqLen: level.reqLen,
+        requiredIntersections: level.requiredIntersections,
+        requiredLength: level.requiredLength,
         gates: level.gateKeys?.length ?? 0,
         mustPass: level.mustPassKeys.length,
         mustCross: level.mustCrossKeys.length,
@@ -117,13 +117,13 @@ function profilesFirst(lead: string[]): AttemptConfig[] {
     ];
 }
 
-/** High-intersection medium-reqInt DFS ordering: objective-directed vs perimeter-first, by feature. */
+/** High-intersection medium-requiredIntersections DFS ordering: objective-directed vs perimeter-first, by feature. */
 function mediumHighIntDfsOrder(f: LevelFeatures): AttemptConfig[] {
     if (f.mustPass >= POLICY.OBJECTIVE_HEAVY_MUSTPASS)
         // Scattered objectives perimeter sweeps can't find → objective-directed DFS before perimeter timeouts.
         return [dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW), dfs('knotBuilder')];
-    if (f.reqInt <= POLICY.LOW_REQINT && f.mustPass === 0)
-        // Low reqInt, no must-pass: CCW sweep first (wins on layouts where CW times out).
+    if (f.requiredIntersections <= POLICY.LOW_REQINT && f.mustPass === 0)
+        // Low requiredIntersections, no must-pass: CCW sweep first (wins on layouts where CW times out).
         return [dfs('perimeterSweep', perimeterCCW), dfs('perimeterSweep', perimeterCW), dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder')];
     return [dfs('perimeterSweep', perimeterCW), dfs('perimeterSweep', perimeterCCW), dfs('objectiveFirst'), dfs('intersectionHarvest'), dfs('knotBuilder')];
 }
@@ -178,7 +178,7 @@ const mcDiverseThread = (f: LevelFeatures): AttemptConfig[] => f.mustCross >= PO
  *  do not repeat this unchanged broad form. */
 const needsRepairFallback = (f: LevelFeatures, cfg: AblationConfig | null = null): boolean =>
     (f.mustCross >= POLICY.REPAIR_MC_MIN && f.mustPass >= POLICY.REPAIR_MP_MIN)
-    || (isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT)
+    || (isHighInt(f) && f.requiredIntersections >= POLICY.VERY_HIGH_REQINT)
     || (!!(cfg && cfg.STRATEGY_REPAIR_FALLBACK_GATE_WIDEN === true) && (isHighInt(f) || f.routingRegime === 'multi-portal'));
 // Exported for orchestration.ts's STRATEGY_REPAIR_LATE_PROBE tier, which needs to build a plain
 // repair AttemptConfig itself when repairConfigs is empty (needsRepairFallback was false) — see
@@ -240,24 +240,24 @@ const admissibleOrderAttempt = (scoringProfileId: string): AttemptConfig => scor
  *  underlying classifier's real-world accuracy (~74% on the 31-level training sample below) means a
  *  meaningful fraction of levels get the WRONG technique picked, and exclusive selection gives a
  *  misclassified level zero chance via the technique it actually needed — confirmed directly: 5 of
- *  the measured losses were levels with reqInt 7-12 that needed mustTurnBiased despite the heuristic
- *  (correctly, by the numbers) predicting turnBiased for high-reqInt levels. This priority-ordered,
+ *  the measured losses were levels with requiredIntersections 7-12 that needed mustTurnBiased despite the heuristic
+ *  (correctly, by the numbers) predicting turnBiased for high-requiredIntersections levels. This priority-ordered,
  *  non-exclusive version keeps the same feature signal but always tries BOTH: the predicted one first
  *  (larger budget share, and its own documented latency benefit if it's turnBiased), the other one
  *  still gets a real, smaller fallback shot rather than none.
  *
  *  Threshold derived from a 31-level sample of historical mustTurnBiased/turnBiased winners across
  *  all 3 corpora (script not committed — one-off analysis, see the report above): of every single
- *  LevelFeatures field checked, `reqInt <= 3` was the best single-feature predictor of a
+ *  LevelFeatures field checked, `requiredIntersections <= 3` was the best single-feature predictor of a
  *  mustTurnBiased win (74% accuracy vs. a 58% majority-class baseline). This is a small-sample
  *  heuristic, not a proven causal mechanism — mechanistically plausible (mustTurnBiased's narrower
  *  exit-guidance nudge suffices on simpler, low-crossing-count levels; turnBiased's more aggressive
- *  single-move bias earns its keep on more tangled, higher-reqInt ones) but NOT independently
+ *  single-move bias earns its keep on more tangled, higher-requiredIntersections ones) but NOT independently
  *  verified beyond the threshold search itself. Needs its own corpus-2 A/B before promotion — see
  *  the report's standing verification bar for this class of change. */
 const REQINT_MUSTTURNBIASED_THRESHOLD = 3;
 function predictLikelyBiasedRepairTechnique(f: LevelFeatures): 'mustTurnBiased' | 'turnBiased' {
-    return f.reqInt <= REQINT_MUSTTURNBIASED_THRESHOLD ? 'mustTurnBiased' : 'turnBiased';
+    return f.requiredIntersections <= REQINT_MUSTTURNBIASED_THRESHOLD ? 'mustTurnBiased' : 'turnBiased';
 }
 
 /** The small family of position/attraction-dependent scoring terms found (2026-07-16, reports/
@@ -310,8 +310,8 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // until a portal-dense + must-cross-threaded stress level (S049) surfaced it. No-op on
         // levels below POLICY.HIGHINT_MC_DIVERSE (mcDiverseThread returns [] there), so their
         // config list — and therefore their timing — is unchanged.
-        why: 'very-high reqInt + portal-dense: objectiveFirst beam guides through portal transitions',
-        when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT && f.portals >= POLICY.PORTAL_DENSE_PAIRS,
+        why: 'very-high requiredIntersections + portal-dense: objectiveFirst beam guides through portal transitions',
+        when: f => isHighInt(f) && f.requiredIntersections >= POLICY.VERY_HIGH_REQINT && f.portals >= POLICY.PORTAL_DENSE_PAIRS,
         build: (f, cfg) => [
             ...mcDiverseThread(f),
             // Reserve-preserving descendant: insert the experimental STANDARD-IH beam before
@@ -332,7 +332,7 @@ const ATTEMPT_POLICY: PolicyRule[] = [
             // already solve.
             beam('perimeterSweep', BEAM.STANDARD, perimeterCCW),
             // Current-residual missing-exposure pilot (2026-08-28): the frozen T1 census still
-            // contains cheap STANDARD intersectionHarvest wins in this very-high-reqInt regime,
+            // contains cheap STANDARD intersectionHarvest wins in this very-high-requiredIntersections regime,
             // while production offers only the WIDE form. Keep it trailing and opt-in so the
             // strict-total-work development pilot charges any displacement it causes.
             ...(cfg && cfg.STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE === true
@@ -345,8 +345,8 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         // routing regime (the plain WIDE beams never do — stress-corpus finding) — put them first so
         // the 0.35/0.25 minBudgetFraction floors are computed against the full remaining budget
         // instead of being squeezed by two non-mechanic-bucket beams that each burn a full even share first.
-        why: 'very-high reqInt, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
-        when: f => isHighInt(f) && f.reqInt >= POLICY.VERY_HIGH_REQINT,
+        why: 'very-high requiredIntersections, non-portal: intersectionHarvest beam wins directly, DFS fallbacks follow',
+        when: f => isHighInt(f) && f.requiredIntersections >= POLICY.VERY_HIGH_REQINT,
         build: (f, cfg) => [
             ...mcDiverseThread(f),
             beam('intersectionHarvest', BEAM.WIDE),
@@ -396,12 +396,12 @@ const ATTEMPT_POLICY: PolicyRule[] = [
         ],
     },
     {
-        why: 'medium-high reqInt: perimeter/objective beams first (budget-floored on long multi-gate levels), then feature-ordered DFS',
+        why: 'medium-high requiredIntersections: perimeter/objective beams first (budget-floored on long multi-gate levels), then feature-ordered DFS',
         when: isHighInt,
         build: f => {
             // Long multi-gate levels starve the leading perimeter beam (gate budget ÷ gates ÷ configs);
             // floor the two perimeter beams so the proven winner completes without squeezing DFS fallbacks.
-            const beamFloor = (f.reqLen >= POLICY.LONG_PATH_REQLEN && f.gates >= POLICY.MULTI_GATE) ? POLICY.LONG_MULTIGATE_BEAM_FLOOR : 0;
+            const beamFloor = (f.requiredLength >= POLICY.LONG_PATH_REQLEN && f.gates >= POLICY.MULTI_GATE) ? POLICY.LONG_MULTIGATE_BEAM_FLOOR : 0;
             return [
                 beam('perimeterSweep', BEAM.STANDARD, perimeterCW, { minBudgetFraction: beamFloor }),
                 beam('perimeterSweep', BEAM.STANDARD, perimeterCCW, { minBudgetFraction: beamFloor }),

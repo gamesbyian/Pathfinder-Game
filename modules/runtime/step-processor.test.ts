@@ -34,8 +34,8 @@ function makeLevel(opts: any = {}): any {
         grid:            opts.grid ?? { w: 5, h: 5 },
         gateKeys:        opts.gateKeys ?? [PACK(0, 0)],
         goalKey:         opts.goalKey ?? PACK(4, 0),
-        reqLen:          opts.reqLen ?? 4,
-        reqInt:          opts.reqInt ?? 0,
+        requiredLength:          opts.requiredLength ?? 4,
+        requiredIntersections:          opts.requiredIntersections ?? 0,
         blockSet:        opts.blockSet ?? new Set(),
         gooseSet:        opts.gooseSet ?? new Set(),
         falseGoalKeys:   opts.falseGoalKeys ?? new Set(),
@@ -195,8 +195,8 @@ test('valid step emits PLAY_SOUND with G4', () => {
 // ─── Outcome: win ─────────────────────────────────────────────────────────────
 
 test('step to goal after correct path emits WIN event', () => {
-    // 5-node path: (0,0)→(1,0)→(2,0)→(3,0)→(4,0) = reqLen=4, reqInt=0
-    const level = makeLevel({ reqLen: 4, reqInt: 0, goalKey: PACK(4, 0) });
+    // 5-node path: (0,0)→(1,0)→(2,0)→(3,0)→(4,0) = requiredLength=4, requiredIntersections=0
+    const level = makeLevel({ requiredLength: 4, requiredIntersections: 0, goalKey: PACK(4, 0) });
     const nav   = makeNav({
         path:          [PACK(0, 0), PACK(1, 0), PACK(2, 0), PACK(3, 0)],
         visitedCounts: new Map([[PACK(0, 0), 1], [PACK(1, 0), 1], [PACK(2, 0), 1], [PACK(3, 0), 1]]),
@@ -209,7 +209,7 @@ test('step to goal after correct path emits WIN event', () => {
 });
 
 test('win event type is GameEventType.WIN (not raw string "win")', () => {
-    const level = makeLevel({ reqLen: 4, reqInt: 0, goalKey: PACK(4, 0) });
+    const level = makeLevel({ requiredLength: 4, requiredIntersections: 0, goalKey: PACK(4, 0) });
     const nav   = makeNav({
         path:          [PACK(0, 0), PACK(1, 0), PACK(2, 0), PACK(3, 0)],
         visitedCounts: new Map([[PACK(0, 0), 1], [PACK(1, 0), 1], [PACK(2, 0), 1], [PACK(3, 0), 1]]),
@@ -259,8 +259,8 @@ test('LOGIC_STATE_CHANGE event value is HAZARD_TRIGGERED', () => {
 
 test('stepping on armed false goal emits SHOW_FALSE_GOAL_DETONATION event', () => {
     const falseGoal = PACK(1, 0);
-    // reqLen=1 so metrics are satisfied at that position
-    const level = makeLevel({ reqLen: 1, reqInt: 0, goalKey: PACK(4, 0), falseGoalKeys: new Set([falseGoal]) });
+    // requiredLength=1 so metrics are satisfied at that position
+    const level = makeLevel({ requiredLength: 1, requiredIntersections: 0, goalKey: PACK(4, 0), falseGoalKeys: new Set([falseGoal]) });
     const nav   = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
     const hazards = makeHazards({ armedFalseGoals: new Set([falseGoal]) });
     const h = makeStepHelpers(level, nav);
@@ -272,7 +272,7 @@ test('stepping on armed false goal emits SHOW_FALSE_GOAL_DETONATION event', () =
 
 test('detonate event type is NOT raw string "false_goal_detonation"', () => {
     const falseGoal = PACK(1, 0);
-    const level = makeLevel({ reqLen: 1, reqInt: 0, goalKey: PACK(4, 0), falseGoalKeys: new Set([falseGoal]) });
+    const level = makeLevel({ requiredLength: 1, requiredIntersections: 0, goalKey: PACK(4, 0), falseGoalKeys: new Set([falseGoal]) });
     const nav   = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
     const hazards = makeHazards({ armedFalseGoals: new Set([falseGoal]) });
     const h = makeStepHelpers(level, nav);
@@ -285,13 +285,13 @@ test('detonate event type is NOT raw string "false_goal_detonation"', () => {
 
 test('stepping through portal onto armed false goal emits SHOW_FALSE_GOAL_DETONATION', () => {
     // Path: gate(0,0) → portal-src(1,0) → [jump] → portal-dest(3,0) = false goal
-    // Counted length = 3 nodes - 1 start - 1 portal jump = 1, so reqLen=1 satisfies metrics.
+    // Counted length = 3 nodes - 1 start - 1 portal jump = 1, so requiredLength=1 satisfies metrics.
     const portalSrc  = PACK(1, 0);
     const portalDest = PACK(3, 0);
     const falseGoal  = portalDest;
     const portalMap  = new Map([[portalSrc, { dest: portalDest }], [portalDest, { dest: portalSrc }]]);
     const level = makeLevel({
-        reqLen: 1, reqInt: 0,
+        requiredLength: 1, requiredIntersections: 0,
         goalKey: PACK(4, 0),
         falseGoalKeys: new Set([falseGoal]),
         portalMap,

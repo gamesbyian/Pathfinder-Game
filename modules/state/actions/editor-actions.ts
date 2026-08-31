@@ -50,12 +50,12 @@ export function incrementEditorEmptyClickCount(stateOrEngine: StateOrEngine) {
     return editor.emptyClickCount;
 }
 
-export function setEditorMetrics(stateOrEngine: StateOrEngine, metrics: { reqLen?: number; reqInt?: number } = {}) {
+export function setEditorMetrics(stateOrEngine: StateOrEngine, metrics: { requiredLength?: number; requiredIntersections?: number } = {}) {
     const engineState = resolveEngineState(stateOrEngine);
     const workingLevel = engineState?.editor?.workingLevel;
     if (!workingLevel) return null;
-    if (Object.hasOwn(metrics, 'reqLen')) workingLevel.reqLen = metrics.reqLen;
-    if (Object.hasOwn(metrics, 'reqInt')) workingLevel.reqInt = metrics.reqInt;
+    if (Object.hasOwn(metrics, 'requiredLength')) workingLevel.requiredLength = metrics.requiredLength;
+    if (Object.hasOwn(metrics, 'requiredIntersections')) workingLevel.requiredIntersections = metrics.requiredIntersections;
     return workingLevel;
 }
 

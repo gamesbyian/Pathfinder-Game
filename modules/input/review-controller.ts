@@ -100,14 +100,14 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
 
     // Validates the given hint paths against the current working level state.
     // Returns the array of still-valid, de-duplicated hint paths (pure core does the dedupe).
-    const revalidateHints = (hints: any, wl: any, reqLen: any, reqInt: any) =>
+    const revalidateHints = (hints: any, wl: any, requiredLength: any, requiredIntersections: any) =>
         revalidateWorkingHints(hints, (candidatePath: any) => {
-            const lv = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
+            const lv = levelUtils.cloneLevelWithReq(wl, requiredLength, requiredIntersections);
             return solverApi.validateCandidatePath(lv, candidatePath);
         });
 
     // Runs the solver on the working level and returns up to 1 solution path, or null.
-    const runSolverForHint = async (wl: any, reqLen: any, reqInt: any) => {
+    const runSolverForHint = async (wl: any, requiredLength: any, requiredIntersections: any) => {
         let _cancelled = false;
         const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
         const budgetMs = 30000;
@@ -133,7 +133,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             ui.setSolverTimerText('0.0s');
             ui.setSolverProgress(0);
             await new Promise((r: any) => setTimeout(r, 0));
-            const solveLevel = levelUtils.cloneLevelWithReq(wl, reqLen, reqInt);
+            const solveLevel = levelUtils.cloneLevelWithReq(wl, requiredLength, requiredIntersections);
             _t0 = Date.now();
             _lastTenths = -1;
             // disableExtraBudgetPasses -- see solver-controller.ts's identical comment: this is an
@@ -185,8 +185,8 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         const { isHintAddition, isLocal } = classifyApproval(sub);
 
         const wl     = state.ENGINE.editor.workingLevel;
-        const reqLen = parseInt(ui.getValue('editReqLen')) || 0;
-        const reqInt = parseInt(ui.getValue('editReqInt')) || 0;
+        const requiredLength = parseInt(ui.getValue('editReqLen')) || 0;
+        const requiredIntersections = parseInt(ui.getValue('editReqInt')) || 0;
         editor.applyMetricsFromUI();
 
         // Fold in any solutions the reviewer discovered this session (via the Solve button) so they
@@ -195,7 +195,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         // Re-validate the full set if the level was modified during review.
         if (state.ENGINE.editor.isModified && hints.length > 0) {
             ui.showMessage('Re-validating hints…', 'warning');
-            hints = revalidateHints(hints, wl, reqLen, reqInt);
+            hints = revalidateHints(hints, wl, requiredLength, requiredIntersections);
         }
         wl.hints = hints;
         updateReviewHintBtn();
@@ -204,7 +204,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         let solverFallbackHint: any = null;
         if (hints.length === 0) {
             ui.showMessage('Solving for hint…', 'warning');
-            const solved = await runSolverForHint(wl, reqLen, reqInt);
+            const solved = await runSolverForHint(wl, requiredLength, requiredIntersections);
             const fallback = decideApprovalFallback(isHintAddition, !!solved);
             if (fallback === 'use-solution' && solved) {
                 hints = [solved.path];

@@ -21,8 +21,8 @@ import type { AblationConfig, AttemptConfig, PrepLevel } from './types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 3, h: 1 },
-    reqLen: 2,
-    reqInt: 0,
+    requiredLength: 2,
+    requiredIntersections: 0,
     goalKey: PACK(2, 0),
     gateKeys: [PACK(0, 0)],
     blockSet: new Set(),
@@ -60,10 +60,10 @@ test('beam branch (beamWidth set) runs the beam search and solves', async () => 
 });
 
 test('repair branch routes to repair search — distinguishable from DFS by its repair-only `out` fields', async () => {
-  // reqLen:5 is unreachable on a 3-cell line, so every search fails and only the `out` shape
+  // requiredLength:5 is unreachable on a 3-cell line, so every search fails and only the `out` shape
   // reveals which one ran. bestBadness is written ONLY by repairSearchFromGate (see its
   // signature); dfsFromGateLDS never sets it. This is what makes the routing observable.
-  const level = makeLevel({ reqLen: 5 });
+  const level = makeLevel({ requiredLength: 5 });
 
   const repairOut: { bestBadness?: number } = {};
   const repairCfg: AttemptConfig = { scoringProfileId: 'repair', orderingBias: null, repair: true };
@@ -84,7 +84,7 @@ test('STRATEGY_REPAIR_BEAM_SEED threads through to repairSearchFromGate\'s enabl
   // the beam-seed step (when enabled) calls it BEFORE any restart -- restart:0 on at least one
   // arrival is therefore observable only when the flag genuinely reached repairSearchFromGate, not
   // just when the repair branch ran at all (the OTHER repair test above already covers that).
-  const level = makeLevel({ reqLen: 5 }); // unreachable, so the search runs its full budget
+  const level = makeLevel({ requiredLength: 5 }); // unreachable, so the search runs its full budget
   const prep = prepFor(level);
   const arrivals: { restart: number }[] = [];
   prep._repairEliteResearchObserver = { observe: record => arrivals.push(record) };

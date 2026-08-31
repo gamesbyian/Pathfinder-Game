@@ -3,8 +3,8 @@
  * Guard: the solver must never be tuned to specific level *identities*.
  *
  * The solver's routing regime classification and attempt-config selection (modules/solver/) branch
- * on level *features* — reqInt, requiredPathCoverageRatio, must-pass/must-cross counts,
- * portal/flipper counts, gates, reqLen — never on which numbered level is being solved. Historically
+ * on level *features* — requiredIntersections, requiredPathCoverageRatio, must-pass/must-cross counts,
+ * portal/flipper counts, gates, requiredLength — never on which numbered level is being solved. Historically
  * the comments cited specific levels ("L130 wins via perimeterCW", "saves ~11s on L130") as the
  * motivation for thresholds, which made the policy read as overfit to the 156-level corpus and
  * invited identity-keyed special-casing.

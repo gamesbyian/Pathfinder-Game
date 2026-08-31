@@ -1,13 +1,14 @@
 #!/usr/bin/env node
-/** Phase-13 reqLen/reqInt ownership ratchet. Rename-neutral today; zero-leakage gate in 13B. */
+/** Phase-13 reqLen/reqInt ownership ratchet. Permanent raw-wire allowlist after the 13B runtime migration. */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
-const requireNormalizedClean = process.argv.includes('--require-normalized-clean');
+const requestedNormalizedClean = process.argv.includes('--require-normalized-clean');
 const BASELINE_PATH = 'docs/naming-cleanup-level-metric-boundaries.json';
 const SELF = 'scripts/audit-level-metric-boundaries.mjs';
 const baseline = JSON.parse(readFileSync(BASELINE_PATH, 'utf8'));
 if (baseline.schemaVersion !== 2) throw new Error(`Unsupported ${BASELINE_PATH} schemaVersion`);
+const requireNormalizedClean = requestedNormalizedClean || baseline.normalizedMigrationComplete === true;
 
 const categories = [
   ['raw/wire-boundary', 'rawWireBoundary'],

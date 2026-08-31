@@ -57,7 +57,7 @@ levels.forEach((raw, i) => {
     const mustPass = level.mustPassKeys.length;
     const flippers = level.flippingFilterMap?.size ?? 0;
     const eligible = routingRegime === 'must-cross-heavy' && mustPass >= OBJECTIVE_HEAVY_MUSTPASS && flippers >= FLIPPER_HEAVY;
-    rows.push({ id: raw.id, pos: i + 1, routingRegime, mustPass, flippers, mustCross: level.mustCrossKeys.length, reqInt: level.reqInt, eligible });
+    rows.push({ id: raw.id, pos: i + 1, routingRegime, mustPass, flippers, mustCross: level.mustCrossKeys.length, reqInt: level.requiredIntersections, eligible });
 });
 
 const eligible = rows.filter(r => r.eligible);

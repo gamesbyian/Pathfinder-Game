@@ -157,7 +157,7 @@ export function createFalseGoalTriggerScanController({ core, state, ui, levelUti
         // A structurally-invalid or metric-less level has no meaningful spot set;
         // stay 'stale' and re-check next tick (edits change the answer).
         const l = state.ENGINE.editor.workingLevel;
-        if (!(l.reqLen > 0) || !editor.validateWorkingLevel()?.ok) return;
+        if (!(l.requiredLength > 0) || !editor.validateWorkingLevel()?.ok) return;
         void scan(solverApi.getFalseGoalTriggerSearchBudgetMs(l)).then((res: any) => {
             // Background completion is silent — the highlights are the signal, and the
             // lingering faint candidate layer already says "incomplete" (full enumeration

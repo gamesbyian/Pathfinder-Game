@@ -166,8 +166,8 @@ for (const f of readdirSync(path.join(ROOT, 'reports/stress')).filter(x => /^pru
             let undo;
             try { undo = applyMove(alt, state, level, prep, false); } catch { continue; }
 
-            const rSteps = level.reqLen - getRealLengthFromState(state);
-            const intNeeded = level.reqInt - state.ints;
+            const rSteps = level.requiredLength - getRealLengthFromState(state);
+            const intNeeded = level.requiredIntersections - state.ints;
             const freeInt = intNeeded - popcount(state.mustCrossMask);
             const needFresh = rSteps - intNeeded;
 

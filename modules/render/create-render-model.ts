@@ -19,15 +19,15 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
     const { nav, hazards } = eng;
 
     // --- Parity warnings ---
-    let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
+    let requiredLength = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
     if ((isEditorMode || isReviewMode || eng.cheatActive) && level && level.goalKey !== -1) {
-        reqLen = (isEditorMode || isReviewMode)
-            ? (reqLenPreview || level.reqLen || 0)
-            : level.reqLen;
-        if (reqLen > 0 || nav.path.length > 0 || eng.cheatActive) {
+        requiredLength = (isEditorMode || isReviewMode)
+            ? (reqLenPreview || level.requiredLength || 0)
+            : level.requiredLength;
+        if (requiredLength > 0 || nav.path.length > 0 || eng.cheatActive) {
             showParityWarnings = true;
             const gp = UNPACK(level.goalKey);
-            targetParity    = (gp.x + gp.y + reqLen) % 2;
+            targetParity    = (gp.x + gp.y + requiredLength) % 2;
             hasFlippingPortal = hasParitySwitchingPortal(level);
         }
     }
@@ -168,7 +168,7 @@ export function createRenderModel({ eng, core, themes }: any, reqLenPreview: any
         // path stroke style resolved here so canvas layer needs no state read
         strokeStyle: themes.getCurrentTheme() === 'classic' ? 'rainbow' : (theme ? theme.path : '#ffffff'), // theme-exempt: last-resort fallback if the theme object itself failed to load
         // parity
-        reqLen, showParityWarnings, targetParity, hasFlippingPortal,
+        requiredLength, showParityWarnings, targetParity, hasFlippingPortal,
         // hint
         hintActive,
         hintPath,

@@ -37,9 +37,9 @@ test('summarizeRuns reports solve rate, medians, and winning techniques', () => 
 test('portalFreeParityReason identifies impossible parity but exempts portals', () => {
     // Packed keys use x in the low 16 bits and y in the high 16 bits. Both coordinates are odd
     // here, specifically guarding against accidentally inspecting only x parity.
-    const base = { goalKey: 0x00010001, gateKeys: [0], reqLen: 5, portalMap: new Map() };
+    const base = { goalKey: 0x00010001, gateKeys: [0], requiredLength: 5, portalMap: new Map() };
     assert.match(portalFreeParityReason(base), /parity mismatch/);
-    assert.equal(portalFreeParityReason({ ...base, reqLen: 4 }), null);
+    assert.equal(portalFreeParityReason({ ...base, requiredLength: 4 }), null);
     assert.equal(portalFreeParityReason({ ...base, portalMap: new Map([[1, 2]]) }), null);
 });
 

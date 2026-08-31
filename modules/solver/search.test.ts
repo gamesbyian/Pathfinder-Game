@@ -17,8 +17,8 @@ import { validateCandidatePath } from '../domain/path-validator.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 3, h: 1 },
-    reqLen: 2,
-    reqInt: 0,
+    requiredLength: 2,
+    requiredIntersections: 0,
     goalKey: PACK(2, 0),
     gateKeys: [PACK(0, 0)],
     blockSet: new Set(),
@@ -53,34 +53,34 @@ test('isConnected reports reachable goal and blocks disconnected regions', () =>
 });
 
 test('prune diagnostics prove the distance-bound branch passes a feasible control and fires first for an infeasible control', () => {
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2 }), 'PRUNE_DISTANCE_BOUND'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 2 }), 'PRUNE_DISTANCE_BOUND'),
     { verdict: 'pass', reached: 1, rejected: 0 }, 'oracle path 0→1→2 fits exactly');
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 1 }), 'PRUNE_DISTANCE_BOUND'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 1 }), 'PRUNE_DISTANCE_BOUND'),
     { verdict: 'reject', reached: 1, rejected: 1 }, 'distance is the isolated first firing prune');
 });
 
 test('parity, MC-ceiling, and intersection-deficit diagnostics have isolated positive and feasible controls', () => {
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2 }), 'PRUNE_PARITY'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 2 }), 'PRUNE_PARITY'),
     { verdict: 'pass', reached: 1, rejected: 0 }, 'exact two-edge path has compatible parity');
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 3 }), 'PRUNE_PARITY'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 3 }), 'PRUNE_PARITY'),
     { verdict: 'reject', reached: 1, rejected: 1 }, 'odd extra budget has impossible endpoint parity');
 
   const mc = PACK(1, 0);
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 4, reqInt: 1, mustCrossKeys: [mc] }), 'PRUNE_MC_CEILING'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 4, requiredIntersections: 1, mustCrossKeys: [mc] }), 'PRUNE_MC_CEILING'),
     { verdict: 'pass', reached: 1, rejected: 0 }, 'one reserved crossing fits one intersection');
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 4, reqInt: 0, mustCrossKeys: [mc] }), 'PRUNE_MC_CEILING'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 4, requiredIntersections: 0, mustCrossKeys: [mc] }), 'PRUNE_MC_CEILING'),
     { verdict: 'reject', reached: 1, rejected: 1 }, 'reserved crossing exceeds the zero-intersection ceiling');
 
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2, reqInt: 1 }), 'PRUNE_INTERSECTION_DEFICIT'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 2, requiredIntersections: 1 }), 'PRUNE_INTERSECTION_DEFICIT'),
     { verdict: 'pass', reached: 1, rejected: 0 }, 'one remaining step can supply one intersection');
-  assert.deepEqual(diagnoseCandidate(makeLevel({ reqLen: 2, reqInt: 2 }), 'PRUNE_INTERSECTION_DEFICIT'),
+  assert.deepEqual(diagnoseCandidate(makeLevel({ requiredLength: 2, requiredIntersections: 2 }), 'PRUNE_INTERSECTION_DEFICIT'),
     { verdict: 'reject', reached: 1, rejected: 1 }, 'one step cannot supply a two-intersection deficit');
 });
 
 test('portal-parity envelope only fires after every parity-twisting portal is consumed', () => {
   const a = PACK(1, 0), b = PACK(3, 1);
   const level = makeLevel({
-    grid: { w: 5, h: 2 }, gateKeys: [PACK(0, 1)], goalKey: PACK(4, 0), reqLen: 2,
+    grid: { w: 5, h: 2 }, gateKeys: [PACK(0, 1)], goalKey: PACK(4, 0), requiredLength: 2,
     portalMap: new Map([[a, { dest: b }], [b, { dest: a }]]),
   });
   const prep = prepLevel(level);
@@ -130,20 +130,20 @@ test('dfsFromGateLDS solves a simple line level through the extracted search mod
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
 
-test('getLdsProbeNodeBudget scales with area/reqLen/special within bounds', () => {
-  const tiny = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 1, h: 1 }, reqLen: 0 });
+test('getLdsProbeNodeBudget scales with area/requiredLength/special within bounds', () => {
+  const tiny = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 1, h: 1 }, requiredLength: 0 });
   assert.equal(tiny, 30000);
 
   const large = makeLevel();
   large.grid = { w: 100, h: 100 };
-  large.reqLen = 5000;
+  large.requiredLength = 5000;
   large.mustPassKeys = [PACK(1, 0), PACK(2, 0)];
   large.portalMap = new Map([[PACK(0, 0), { dest: PACK(1, 0) }]]);
   const capped = getLdsProbeNodeBudget(large);
   assert.equal(capped, 4000000);
 
-  const midA = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 10, h: 10 }, reqLen: 20 });
-  const midB = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 20, h: 20 }, reqLen: 20 });
+  const midA = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 10, h: 10 }, requiredLength: 20 });
+  const midB = getLdsProbeNodeBudget({ ...makeLevel(), grid: { w: 20, h: 20 }, requiredLength: 20 });
   assert.ok(midB > midA, `expected larger area to grow the budget: ${midB} > ${midA}`);
 });
 
@@ -189,7 +189,7 @@ test('beam reconstruction scratch handles long, tiny, shifted, then long paths l
   const line = (length: number, reversed = false) => {
     const start = PACK(reversed ? length - 1 : 0, 0);
     const goal = PACK(reversed ? 0 : length - 1, 0);
-    return makeLevel({ grid: { w: length, h: 1 }, gateKeys: [start], goalKey: goal, reqLen: length - 1 });
+    return makeLevel({ grid: { w: length, h: 1 }, gateKeys: [start], goalKey: goal, requiredLength: length - 1 });
   };
   for (const [length, reversed] of [[15, false], [2, false], [7, true], [15, false]] as const) {
     const level = line(length, reversed);
@@ -212,7 +212,7 @@ test('beam reconstruction scratch handles long, tiny, shifted, then long paths l
 test('beamSearchFromGate credits nodesExpanded even when it times out mid-search', async () => {
   const level = makeLevel({
     grid: { w: 9, h: 9 },
-    reqLen: 40,
+    requiredLength: 40,
     goalKey: PACK(8, 8),
     gateKeys: [PACK(0, 0)],
   });
@@ -239,14 +239,14 @@ test('beamSearchFromGate credits nodesExpanded even when it times out mid-search
 // covered above). Beam credited only the CURRENT phase's frontierIndex and reset it each phase, so a
 // multi-phase solve that finished early in its last phase reported a near-zero node count despite
 // seconds of real work (observed on corpus level R02052: a 7.5 s beam solve recorded nodesExpanded=4).
-// The fix accumulates every completed phase into nodesExpandedTotal. A wandering solve (reqLen far
-// above the Manhattan distance) needs ~reqLen phases, each processing >=1 frontier node, so the
+// The fix accumulates every completed phase into nodesExpandedTotal. A wandering solve (requiredLength far
+// above the Manhattan distance) needs ~requiredLength phases, each processing >=1 frontier node, so the
 // credited count must far exceed any single phase's frontier (bounded here by beamWidth). Beam is
 // deterministic (no RNG without mechanicBucketRetention), so this is a stable lower bound, not a timing guess.
 test('beamSearchFromGate credits all phases nodesExpanded on a multi-phase success (not just the last)', async () => {
   const level = makeLevel({
     grid: { w: 9, h: 9 },
-    reqLen: 40, // Manhattan distance (0,0)->(8,8) is 16 -- 24 steps of slack forces many phases
+    requiredLength: 40, // Manhattan distance (0,0)->(8,8) is 16 -- 24 steps of slack forces many phases
     goalKey: PACK(8, 8),
     gateKeys: [PACK(0, 0)],
   });
@@ -256,7 +256,7 @@ test('beamSearchFromGate credits all phases nodesExpanded on a multi-phase succe
   const beamWidth = 16;
   const path = await beamSearchFromGate(PACK(0, 0), level, prep, SCORING_PROFILES.default, 5000, Date.now(), null, beamWidth, null, false);
   assert.ok(path, 'expected the beam to solve within the generous budget');
-  assert.equal(path!.length, level.reqLen + 1);
+  assert.equal(path!.length, level.requiredLength + 1);
   // A 41-node solution required >=40 completed phases; pre-fix credited only the final phase
   // (<= beamWidth + neighbors), so anything comfortably above beamWidth proves multi-phase accrual.
   assert.ok(prep._metrics!.nodesExpanded > beamWidth * 2,
@@ -269,7 +269,7 @@ test('beamSearchFromGate credits all phases nodesExpanded on a multi-phase succe
 test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it times out', async () => {
   const level = makeLevel({
     grid: { w: 9, h: 9 },
-    reqLen: 40,
+    requiredLength: 40,
     goalKey: PACK(8, 8),
     gateKeys: [PACK(0, 0)],
   });
@@ -297,7 +297,7 @@ test('dfsFromGateLDS (STRATEGY_LDS bypassed) credits nodesExpanded even when it 
 // which is why production (nodeBudget defaults to Infinity) is byte-for-byte unchanged. Both
 // searches are deterministic here (no mechanicBucketRetention / no RNG), so the node counts are stable bounds.
 test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop it; caps above are inert)', async () => {
-  const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
+  const level = makeLevel({ grid: { w: 9, h: 9 }, requiredLength: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
   const base = prepLevel(level); base._cfg = null; base._metrics = { nodesExpanded: 0 };
   const basePath = await beamSearchFromGate(PACK(0, 0), level, base, SCORING_PROFILES.default, 5000, Date.now(), null, 40, null, false, {}, Infinity);
   assert.ok(basePath, 'unbudgeted baseline should solve');
@@ -329,7 +329,7 @@ test('beamSearchFromGate honors a finite nodeBudget (caps below solve cost stop 
 // comment in search.ts and reports/2026-08-23-beam-dedup-numeric-key-arena.md.
 test('beamSearchFromGate numeric coarse-state key reproduces the string-key fallback exactly (mechanicBucketRetention off)', async () => {
   const level = makeLevel({
-    grid: { w: 9, h: 9 }, reqLen: 40, reqInt: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
+    grid: { w: 9, h: 9 }, requiredLength: 40, requiredIntersections: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
     mustPassKeys: [PACK(2, 2), PACK(4, 4), PACK(6, 6)],
     flippingFilterMap: new Map([[PACK(3, 3), 1], [PACK(5, 5), 2]]),
   });
@@ -352,7 +352,7 @@ test('beamSearchFromGate numeric coarse-state key reproduces the string-key fall
 // mustCrossMask) bucketing key together with the coarse-state key in the same run.
 test('beamSearchFromGate numeric coarse-state key reproduces the string-key fallback exactly (mechanicBucketRetention on)', async () => {
   const level = makeLevel({
-    grid: { w: 9, h: 9 }, reqLen: 40, reqInt: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
+    grid: { w: 9, h: 9 }, requiredLength: 40, requiredIntersections: 0, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
     mustPassKeys: [PACK(2, 2), PACK(4, 4), PACK(6, 6)],
     flippingFilterMap: new Map([[PACK(3, 3), 1], [PACK(5, 5), 2]]),
   });
@@ -372,7 +372,7 @@ test('beamSearchFromGate numeric coarse-state key reproduces the string-key fall
 });
 
 test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {
-  const level = makeLevel({ grid: { w: 9, h: 9 }, reqLen: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
+  const level = makeLevel({ grid: { w: 9, h: 9 }, requiredLength: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
 
   // Prove independently that the fixture is genuinely solvable without spending ~2M DFS nodes
   // merely to establish that prerequisite. This fixed simple path has exactly 40 ordinary moves,
@@ -398,7 +398,7 @@ test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbound
 });
 
 test('findTriggerableFalseGoalCells returns valid one-step false-goal cells', async () => {
-  const level = makeLevel({ reqLen: 1 });
+  const level = makeLevel({ requiredLength: 1 });
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
   assert.equal(result.status, 'complete');
   assert.equal(result.triggerableCells.has(PACK(1, 0)), true);
@@ -408,7 +408,7 @@ test('findTriggerableFalseGoalCells returns valid one-step false-goal cells', as
 
 test('findTriggerableFalseGoalCells highlights an already-placed false goal when it is a valid endpoint', async () => {
   const falseGoal = PACK(1, 0);
-  const level = makeLevel({ reqLen: 1, falseGoalKeys: new Set([falseGoal]) });
+  const level = makeLevel({ requiredLength: 1, falseGoalKeys: new Set([falseGoal]) });
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
   assert.equal(result.status, 'complete');
   assert.equal(result.triggerableCells.has(falseGoal), true);
@@ -419,7 +419,7 @@ test('findTriggerableFalseGoalCells does not route through existing false goals 
   const beyondFalseGoal = PACK(2, 0);
   const level = makeLevel({
     grid: { w: 4, h: 1 },
-    reqLen: 2,
+    requiredLength: 2,
     goalKey: PACK(3, 0),
     falseGoalKeys: new Set([falseGoal]),
   });
@@ -430,17 +430,17 @@ test('findTriggerableFalseGoalCells does not route through existing false goals 
 
 test('findTriggerableFalseGoalCells rejects a length/intersection-matching endpoint that leaves a surround landmark unsatisfied', async () => {
   // 3x3 grid, surround object at the center (1,1) — impassable, all 8 neighbors must be visited.
-  // Gate at (0,0); a single step to (1,0) matches reqLen/reqInt but visits only 1 of 8 required
+  // Gate at (0,0); a single step to (1,0) matches requiredLength/requiredIntersections but visits only 1 of 8 required
   // neighbors, so it must NOT be certified as a triggerable false-goal cell.
   const center = PACK(1, 1);
   const baseline = makeLevel({
-    grid: { w: 3, h: 3 }, reqLen: 1, reqInt: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
+    grid: { w: 3, h: 3 }, requiredLength: 1, requiredIntersections: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
   });
   const baselineResult = await findTriggerableFalseGoalCells(baseline, { timeLimitMs: 1000 });
   assert.equal(baselineResult.triggerableCells.has(PACK(1, 0)), true, 'sanity: (1,0) is a triggerable one-step false-goal cell without the landmark');
 
   const withSurround = makeLevel({
-    grid: { w: 3, h: 3 }, reqLen: 1, reqInt: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
+    grid: { w: 3, h: 3 }, requiredLength: 1, requiredIntersections: 0, goalKey: PACK(2, 2), gateKeys: [PACK(0, 0)],
     blockSet: new Set([center]), surroundKeys: [center],
   });
   const result = await findTriggerableFalseGoalCells(withSurround, { timeLimitMs: 1000 });
@@ -450,7 +450,7 @@ test('findTriggerableFalseGoalCells rejects a length/intersection-matching endpo
 
 test('findTriggerableFalseGoalCells attempts every gate (per-gate budget, no break on a slow gate)', async () => {
   // Two gates; with even a tiny per-gate slice both are reached and fully enumerated.
-  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
+  const level = makeLevel({ grid: { w: 5, h: 1 }, requiredLength: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
   assert.equal(result.totalGates, 2);
   assert.equal(result.gatesProcessed, 2);
@@ -459,7 +459,7 @@ test('findTriggerableFalseGoalCells attempts every gate (per-gate budget, no bre
 });
 
 test('findTriggerableFalseGoalCells emits canonical per-gate progress', async () => {
-  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
+  const level = makeLevel({ grid: { w: 5, h: 1 }, requiredLength: 2, goalKey: PACK(2, 0), gateKeys: [PACK(0, 0), PACK(4, 0)] });
   const progress: any[] = [];
   await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000, onProgress: (p: any) => { progress.push(p); } });
   assert.equal(progress.length, 2);
@@ -468,21 +468,21 @@ test('findTriggerableFalseGoalCells emits canonical per-gate progress', async ()
 });
 
 test('isParityCompatibleEndpoint rules out wrong-parity cells on portal-free levels', () => {
-  // gate (0,0) parity 0, reqLen 1 (odd) => endpoints must have parity 1.
-  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), gateKeys: [PACK(0, 0)] });
+  // gate (0,0) parity 0, requiredLength 1 (odd) => endpoints must have parity 1.
+  const level = makeLevel({ grid: { w: 5, h: 1 }, requiredLength: 1, goalKey: PACK(4, 0), gateKeys: [PACK(0, 0)] });
   assert.equal(isParityCompatibleEndpoint(level, PACK(1, 0)), true);  // parity 1 — possible
   assert.equal(isParityCompatibleEndpoint(level, PACK(2, 0)), false); // parity 0 — impossible
 });
 
 test('isParityCompatibleEndpoint is conservative (returns true) for a parity-flipping portal', () => {
   // Portal connects opposite-parity cells (1,0)↔(2,0) — a jump can flip end parity.
-  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), portalMap: new Map([[PACK(1, 0), { dest: PACK(2, 0) }]]) });
+  const level = makeLevel({ grid: { w: 5, h: 1 }, requiredLength: 1, goalKey: PACK(4, 0), portalMap: new Map([[PACK(1, 0), { dest: PACK(2, 0) }]]) });
   assert.equal(isParityCompatibleEndpoint(level, PACK(2, 0)), true);
 });
 
 test('isParityCompatibleEndpoint still rules cells out when all portals are parity-preserving', () => {
   // Portal connects same-parity cells (1,0)↔(3,0) — cannot change end parity.
-  const level = makeLevel({ grid: { w: 7, h: 1 }, reqLen: 1, goalKey: PACK(6, 0), portalMap: new Map([[PACK(1, 0), { dest: PACK(3, 0) }]]) });
+  const level = makeLevel({ grid: { w: 7, h: 1 }, requiredLength: 1, goalKey: PACK(6, 0), portalMap: new Map([[PACK(1, 0), { dest: PACK(3, 0) }]]) });
   assert.equal(isParityCompatibleEndpoint(level, PACK(2, 0)), false); // wrong parity, ruled out despite the portal
   assert.equal(isParityCompatibleEndpoint(level, PACK(5, 0)), true);  // correct parity
 });
@@ -492,7 +492,7 @@ test('classifyFalseGoalTriggerability: triggerable, parity-dead, and distance-de
   const parityDeadFG = PACK(2, 0);  // parity 0 — wrong parity, never an endpoint
   const distanceDeadFG = PACK(3, 0); // parity 1 but unreachable in exactly 1 step
   const level = makeLevel({
-    grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0),
+    grid: { w: 5, h: 1 }, requiredLength: 1, goalKey: PACK(4, 0),
     falseGoalKeys: new Set([triggerableFG, parityDeadFG, distanceDeadFG]),
   });
   const result = await findTriggerableFalseGoalCells(level, { timeLimitMs: 1000 });
@@ -505,7 +505,7 @@ test('classifyFalseGoalTriggerability: triggerable, parity-dead, and distance-de
 
 test('classifyFalseGoalTriggerability: a parity-compatible miss is "unknown" when the search is incomplete', () => {
   const fg = PACK(3, 0); // parity 1 — parity-compatible, so parity can't rule it out
-  const level = makeLevel({ grid: { w: 5, h: 1 }, reqLen: 1, goalKey: PACK(4, 0), falseGoalKeys: new Set([fg]) });
+  const level = makeLevel({ grid: { w: 5, h: 1 }, requiredLength: 1, goalKey: PACK(4, 0), falseGoalKeys: new Set([fg]) });
   // Simulate a partial sweep: not all gates completed, triggerable cell not found.
   const partial = { status: 'partial' as const, triggerableCells: new Set<number>(), gatesCompleted: 0, totalGates: 1 };
   assert.equal(classifyFalseGoalTriggerability(level, partial).get(fg), 'unknown');

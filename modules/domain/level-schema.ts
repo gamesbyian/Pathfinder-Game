@@ -89,8 +89,8 @@ export interface EngineLevel {
      *  at a call site. */
     persistentId: string | null;
     grid: { w: number; h: number };
-    reqLen: number;
-    reqInt: number;
+    requiredLength: number;
+    requiredIntersections: number;
     goalKey: number;
     gateKeys: number[];
     /** 1-based coordinate mirrors of goalKey/gateKeys — present on editor working copies

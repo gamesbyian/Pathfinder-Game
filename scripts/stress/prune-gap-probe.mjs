@@ -90,13 +90,13 @@ const xy = k => { const p = UNPACK(k); return [p.x + 1, p.y + 1]; };   // probe 
  * Deliberately weighted toward NON-budget-comparative quantities. Every existing lower-bound prune
  * is of the form `bound > rSteps`, which is vacuous when rSteps is ~90 — and that is exactly where
  * the misses are (see the report). `slack` below is the interesting one: these levels are
- * near-Hamiltonian (reqInt is small, so the path must visit reqLen+1-reqInt DISTINCT cells), which
+ * near-Hamiltonian (requiredIntersections is small, so the path must visit requiredLength+1-requiredIntersections DISTINCT cells), which
  * makes "are enough unvisited cells still reachable" a counting argument rather than a length one.
  */
 function features(pos, st) {
     const W = level.grid.w, H = level.grid.h;
     const distinctVisited = new Set(st.path).size;
-    const needFresh = (level.reqLen + 1 - level.reqInt) - distinctVisited;
+    const needFresh = (level.requiredLength + 1 - level.requiredIntersections) - distinctVisited;
 
     // Flood fill from pos over cells the path could still enter. A cell is enterable if it is
     // passable and has at least one axis left (edgeUsage 3 == both axes spent, so it is finished).
@@ -153,7 +153,7 @@ function features(pos, st) {
         if ((st.mustCrossMask >> i) & 1 && !seen.has(level.mustCrossKeys[i])) stranded++;
 
     return {
-        rSteps: level.reqLen - getRealLengthFromState(st),
+        rSteps: level.requiredLength - getRealLengthFromState(st),
         needFresh, reachableFresh,
         slack: reachableFresh - needFresh,       // < 0 ⇒ provably cannot gather enough new cells
         freshComponents: components, largestFreshComponent: largest,
@@ -174,7 +174,7 @@ function oracle(prefixKeys) {
     } catch { return 'unknown'; }
 }
 
-console.log(`${levelId}: reqLen=${level.reqLen} reqInt=${level.reqInt} solution=${solution.length} nodes; sampling every ${every} steps, oracle limit ${oracleLimit}s`);
+console.log(`${levelId}: requiredLength=${level.requiredLength} requiredIntersections=${level.requiredIntersections} solution=${solution.length} nodes; sampling every ${every} steps, oracle limit ${oracleLimit}s`);
 
 const state = createState(solution[0], level, prep);
 const tally = { deadPruned: 0, deadPassed: 0, alivePruned: 0,alivePassed: 0, unknown: 0 };

@@ -54,9 +54,9 @@ for (const raw of selected) {
     const selectedElites = [...unique.values()].sort((a, b) => a.badness - b.badness || b.path.length - a.path.length).slice(0, eliteLimit)
         .map((record, i) => ({ id: `${raw.id}:elite:${i}`, path: record.path, badness: record.badness,
             arrivalNodes: record.arrivalNodes, restart: record.restart }));
-    const census = rollbackCensus(selectedElites, knownSolutions, level.reqLen);
+    const census = rollbackCensus(selectedElites, knownSolutions, level.requiredLength);
     levels.push({
-        levelId: raw.id, reqLen: level.reqLen, gateKey,
+        levelId: raw.id, requiredLength: level.requiredLength, gateKey,
         elites: selectedElites.map((elite, i) => ({
             id: elite.id, badness: elite.badness, arrivalNodes: elite.arrivalNodes,
             path: elite.path, eliteLength: elite.path.length - 1,

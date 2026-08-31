@@ -14,8 +14,8 @@ import type { NormalizedLevel } from '../domain/types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 10, h: 10 },
-    reqLen: 50,
-    reqInt: 2,
+    requiredLength: 50,
+    requiredIntersections: 2,
     gateKeys: [PACK(0, 0)],
     blockSet: new Set(),
     gooseSet: new Set(),
@@ -35,17 +35,17 @@ test('getNonGateWinningPathCellCount preserves the historical denominator exactl
     falseGoalKeys: new Set([PACK(0, 1)]),
   });
   assert.equal(getNonGateWinningPathCellCount(level), 11);
-  assert.equal(getRequiredPathCoverageRatio({ ...level, reqLen: 5 }), 5 / 11);
+  assert.equal(getRequiredPathCoverageRatio({ ...level, requiredLength: 5 }), 5 / 11);
 });
 
 test('classifyRoutingRegime preserves the historical first-match routing buckets', () => {
-  assert.equal(classifyRoutingRegime(makeLevel({ reqLen: 10, reqInt: 1 })), 'sparse-low-intersection');
-  assert.equal(classifyRoutingRegime(makeLevel({ reqLen: 60, reqInt: 5 })), 'intersection-heavy');
+  assert.equal(classifyRoutingRegime(makeLevel({ requiredLength: 10, requiredIntersections: 1 })), 'sparse-low-intersection');
+  assert.equal(classifyRoutingRegime(makeLevel({ requiredLength: 60, requiredIntersections: 5 })), 'intersection-heavy');
   assert.equal(classifyRoutingRegime(makeLevel({
-    reqLen: 40, reqInt: 2, mustCrossKeys: [PACK(1, 1), PACK(2, 2)],
+    requiredLength: 40, requiredIntersections: 2, mustCrossKeys: [PACK(1, 1), PACK(2, 2)],
   })), 'must-cross-heavy');
   assert.equal(classifyRoutingRegime(makeLevel({
-    reqLen: 40, reqInt: 2,
+    requiredLength: 40, requiredIntersections: 2,
     portalMap: new Map([
       [PACK(1, 1), { dest: PACK(2, 2) }],
       [PACK(2, 2), { dest: PACK(1, 1) }],
@@ -53,7 +53,7 @@ test('classifyRoutingRegime preserves the historical first-match routing buckets
       [PACK(4, 4), { dest: PACK(3, 3) }],
     ]),
   })), 'multi-portal');
-  assert.equal(classifyRoutingRegime(makeLevel({ reqLen: 40, reqInt: 2 })), 'general');
+  assert.equal(classifyRoutingRegime(makeLevel({ requiredLength: 40, requiredIntersections: 2 })), 'general');
 });
 
 test('normalizeRoutingRegime dual-reads every historical persisted value', () => {
@@ -67,7 +67,7 @@ test('normalizeRoutingRegime dual-reads every historical persisted value', () =>
 });
 
 test('SOLVER_TESTING_API exposes canonical routing helpers', () => {
-  const level = makeLevel({ reqLen: 10, reqInt: 1 });
+  const level = makeLevel({ requiredLength: 10, requiredIntersections: 1 });
   assert.equal(SOLVER_TESTING_API.classifyRoutingRegime, classifyRoutingRegime);
   assert.equal(SOLVER_TESTING_API.classifyRoutingRegime(level), 'sparse-low-intersection');
   assert.equal(SOLVER_TESTING_API.normalizeRoutingRegime('near-closure'), 'sparse-low-intersection');

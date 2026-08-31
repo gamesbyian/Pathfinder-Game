@@ -117,7 +117,7 @@ const semanticAt = (level, prep, selectedPath, depth, keyMap = key => key) => {
         pruneVerdicts[keyMap(child)] = api.evaluatePrunedMove(child, api.getRealLengthFromState(candidateState), candidateState,
             level, prep, prep._cfg, false);
         scores[keyMap(child)] = api.scoreMove(child, pos, candidateState, level, prep, scoringProfile,
-            level.reqLen - api.getRealLengthFromState(candidateState), orderingBias, curCtx);
+            level.requiredLength - api.getRealLengthFromState(candidateState), orderingBias, curCtx);
     }
     const goalDistance = prep.distMap.get(pos) ?? null;
     const orderedPruneVerdicts = Object.fromEntries(Object.entries(pruneVerdicts).sort(([a], [b]) => Number(a) - Number(b)));

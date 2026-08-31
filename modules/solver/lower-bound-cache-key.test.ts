@@ -37,8 +37,8 @@ function makeTwentyFiveObjectiveLevel(): NormalizedLevel {
 
     return {
         grid: { w: 15, h: 15 },
-        reqLen: 100,
-        reqInt: 0,
+        requiredLength: 100,
+        requiredIntersections: 0,
         goalKey: PACK(0, 14),
         gateKeys: [PACK(0, 0)],
         blockSet: new Set(),
@@ -60,8 +60,8 @@ function makeMustCrossLevel(n: number): NormalizedLevel {
     const mustCrossKeys = Array.from({ length: n }, (_, i) => PACK(2 + i, 7));
     return {
         grid: { w: 15, h: 15 },
-        reqLen: 100,
-        reqInt: n,
+        requiredLength: 100,
+        requiredIntersections: n,
         goalKey: PACK(14, 14),
         gateKeys: [PACK(0, 0)],
         blockSet: new Set(),

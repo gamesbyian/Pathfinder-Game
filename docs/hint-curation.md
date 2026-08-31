@@ -51,7 +51,7 @@ Coverage overrides the distance floor and may exceed the display cap if mandator
 | `NEAR_HAMILTONIAN_COVERAGE_THRESHOLD` | 0.82 | Enables crossing-location distance. |
 | `MUSTCROSS_ORDER_MIN` | 0.66 | Minimum distance for differing must-cross order. |
 
-`requiredPathCoverageRatio = reqLen / nonGateWinningPathCellCount`, where `nonGateWinningPathCellCount = w*h - blocks - geese - falseGoals - gates`.
+`requiredPathCoverageRatio = requiredLength / nonGateWinningPathCellCount`, where `nonGateWinningPathCellCount = w*h - blocks - geese - falseGoals - gates`.
 
 ## Display behavior
 

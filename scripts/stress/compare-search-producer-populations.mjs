@@ -64,7 +64,7 @@ const projection = (pathKeys, level, unpack) => {
         if (level.mustCrossKeys.includes(key)) obligations.push(`mc:${level.mustCrossKeys.indexOf(key)}`);
         if (level.mustTurnKeys?.includes(key)) obligations.push(`mt:${level.mustTurnKeys.indexOf(key)}`);
     }
-    return { depthBucket: Math.floor(10 * (pathKeys.length - 1) / Math.max(1, level.reqLen)),
+    return { depthBucket: Math.floor(10 * (pathKeys.length - 1) / Math.max(1, level.requiredLength)),
         uniqueCells: visits.size, revisits: pathKeys.length - visits.size, turns, obligationOrder: obligations };
 };
 
@@ -86,7 +86,7 @@ for (const raw of selected) {
     const beamPrep = api.prepLevel(level); beamPrep._cfg = null; beamPrep._metrics = { nodesExpanded: 0 };
     beamPrep._beamResearchObserver = { observe: record => {
         if (!['post-score-width-cull', 'post-mechanic-bucket-selection'].includes(record.stage)) return;
-        const bucket = Math.floor(10 * record.depth / Math.max(1, level.reqLen));
+        const bucket = Math.floor(10 * record.depth / Math.max(1, level.requiredLength));
         if (seenDepthBucket.has(bucket)) return;
         seenDepthBucket.add(bucket);
         for (const candidate of record.paths.slice(0, 5)) beamArtifacts.push({ producer: 'beam', path: candidate,

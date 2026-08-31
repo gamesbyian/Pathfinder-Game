@@ -8,7 +8,7 @@ import { PACK } from '../domain/cell-key.js';
 function makeLevel(overrides: any = {}) {
     return {
         grid: { w: 4, h: 4 },
-        reqLen: 6,
+        requiredLength: 6,
         gateKeys: [PACK(0, 0)],
         goalKey: PACK(3, 3),
         falseGoalKeys: new Set<number>(),
@@ -27,7 +27,7 @@ function makeLevel(overrides: any = {}) {
 test('computeParityCandidates: keeps empty parity-matching cells, drops occupied and off-parity ones', () => {
     const level = makeLevel({ blockSet: new Set([PACK(2, 0)]) });
     const candidates = computeParityCandidates(level);
-    // Gate parity 0, reqLen 6 (even) → endpoints must have parity 0 (x+y even).
+    // Gate parity 0, requiredLength 6 (even) → endpoints must have parity 0 (x+y even).
     assert.ok(candidates.has(PACK(1, 1)), 'empty even-parity cell is a candidate');
     assert.ok(!candidates.has(PACK(1, 0)), 'odd-parity cell is ruled out');
     assert.ok(!candidates.has(PACK(0, 0)), 'the gate is occupied');

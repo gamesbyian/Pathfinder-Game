@@ -173,14 +173,14 @@ export function prepLevel(level: NormalizedLevel, opts: { allowFalseGoalNeighbor
 
     // Portal-parity guidance: which portal pairs have MISMATCHED cell parity ("twist" portals).
     // Every regular (non-portal) move flips grid parity by construction, so a portal-less path of
-    // EXACTLY reqLen moves can only reach a cell whose parity is fixed by gate parity ⊕ (reqLen
+    // EXACTLY requiredLength moves can only reach a cell whose parity is fixed by gate parity ⊕ (requiredLength
     // mod 2) — if that doesn't match the goal's actual parity, no portal-less path of that exact
     // length exists, full stop (not a heuristic — see data/stress/README.md's S043 derivation). Using
     // a portal whose two terminals have DIFFERENT parity injects exactly the one extra flip such
     // a level needs; a same-parity portal (twist=0) can't help fix a mismatch at all. Only twist
     // portals are recorded here — scoreMove uses this only to guide (never to hard-prune, so an
     // error here can only cost missed guidance, never unsoundness) the search toward one of them
-    // when the level's own gate/goal/reqLen parity relationship requires it. Flattened to
+    // when the level's own gate/goal/requiredLength parity relationship requires it. Flattened to
     // Uint16Array (distMapToArray) — same "typed array beats Map.get()" pattern as the other
     // dist maps above; low call-frequency in isolation (once per move, only on twist-portal
     // levels) but the same mechanical, zero-risk win, so no reason to leave it as the odd one out.

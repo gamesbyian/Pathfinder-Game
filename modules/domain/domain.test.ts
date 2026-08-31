@@ -107,8 +107,8 @@ function makeLevel(opts: any = {}) {
         adjacentTurnKeys: opts.adjacentTurnKeys || [],
         adjacentTurnDirs: opts.adjacentTurnDirs || [],
         mustPassTurnDirs: new Map(opts.mustPassTurnDirs || []),
-        reqLen:          opts.reqLen    ?? 0,
-        reqInt:          opts.reqInt    ?? 0,
+        requiredLength:          opts.requiredLength    ?? 0,
+        requiredIntersections:          opts.requiredIntersections    ?? 0,
         hints:           []
     } as any;
 }
@@ -381,7 +381,7 @@ test('isValidMove with checkWinMetrics: mustPass key absent blocks reaching goal
     // checkWinMetrics's must-pass check at all. Verified via diagnostics before fixing.
     const mustPassKey = PACK(4, 4);
     const goalKey = PACK(7, 7);
-    const level = makeLevel({ goalKey, mustPass: [mustPassKey], reqLen: 3, reqInt: 0 });
+    const level = makeLevel({ goalKey, mustPass: [mustPassKey], requiredLength: 3, requiredIntersections: 0 });
     // Path has length 3 steps (4 nodes) but mustPass key not visited.
     const path = [PACK(4,7), PACK(5,7), PACK(6,7), goalKey];
     const state = makeState({ path: path.slice(0, -1) });
@@ -398,7 +398,7 @@ test('isValidMove with checkWinMetrics: must-turn cell never turned blocks reach
     // but this function's own answer was incomplete for any caller that DOES supply turnsAtMap.
     const turnKey = PACK(4, 4);
     const goalKey = PACK(7, 7);
-    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'either']], reqLen: 3, reqInt: 0 });
+    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'either']], requiredLength: 3, requiredIntersections: 0 });
     const path = [PACK(4, 7), PACK(5, 7), PACK(6, 7), goalKey];
     const state = makeState({ path: path.slice(0, -1), turnsAtMap: [] }); // no turn ever recorded at turnKey
     assert.equal(
@@ -410,7 +410,7 @@ test('isValidMove with checkWinMetrics: must-turn cell never turned blocks reach
 test('isValidMove with checkWinMetrics: must-turn cell turned in the required direction is valid', () => {
     const turnKey = PACK(4, 4);
     const goalKey = PACK(7, 7);
-    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'cw']], reqLen: 3, reqInt: 0 });
+    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'cw']], requiredLength: 3, requiredIntersections: 0 });
     const path = [PACK(4, 7), PACK(5, 7), PACK(6, 7), goalKey];
     const state = makeState({ path: path.slice(0, -1), turnsAtMap: [[turnKey, 'cw']] });
     assert.ok(isValidMove(goalKey, state, level, { checkWinMetrics: true }));
@@ -422,7 +422,7 @@ test('isValidMove with checkWinMetrics: no turnsAtMap in state conservatively sk
     // simply absent -- the referee enforces must-turn itself, independently, after the loop.
     const turnKey = PACK(4, 4);
     const goalKey = PACK(7, 7);
-    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'cw']], reqLen: 3, reqInt: 0 });
+    const level = makeLevel({ goalKey, mustPassTurnDirs: [[turnKey, 'cw']], requiredLength: 3, requiredIntersections: 0 });
     const path = [PACK(4, 7), PACK(5, 7), PACK(6, 7), goalKey];
     const state = makeState({ path: path.slice(0, -1) }); // no turnsAtMap supplied at all
     assert.ok(isValidMove(goalKey, state, level, { checkWinMetrics: true }));
@@ -449,26 +449,26 @@ test('getRealLength: 4-node path with 1 portal jump returns 2', () => {
 });
 
 test('areWinMetricsSatisfied: false when path is empty', () => {
-    const level = makeLevel({ reqLen: 3, reqInt: 0 });
+    const level = makeLevel({ requiredLength: 3, requiredIntersections: 0 });
     assert.equal(areWinMetricsSatisfied({ path: [], isPortalJump: new Set(), intersections: 0, visitedCounts: new Map(), mustPassKeys: [], mustCrossKeys: [] }, level), false);
 });
 
-test('areWinMetricsSatisfied: correct reqLen and reqInt with no mustPass/mustCross', () => {
-    const level = makeLevel({ reqLen: 3, reqInt: 0 });
+test('areWinMetricsSatisfied: correct requiredLength and requiredIntersections with no mustPass/mustCross', () => {
+    const level = makeLevel({ requiredLength: 3, requiredIntersections: 0 });
     const path = [PACK(0,0), PACK(1,0), PACK(2,0), PACK(3,0)];   // 4 nodes = 3 steps
     const state = makeState({ path });
     assert.ok(areWinMetricsSatisfied(state, level));
 });
 
-test('areWinMetricsSatisfied: wrong reqLen fails', () => {
-    const level = makeLevel({ reqLen: 5, reqInt: 0 });
+test('areWinMetricsSatisfied: wrong requiredLength fails', () => {
+    const level = makeLevel({ requiredLength: 5, requiredIntersections: 0 });
     const path = [PACK(0,0), PACK(1,0), PACK(2,0), PACK(3,0)];   // 3 steps, not 5
     const state = makeState({ path });
     assert.equal(areWinMetricsSatisfied(state, level), false);
 });
 
-test('areWinMetricsSatisfied: wrong reqInt fails', () => {
-    const level = makeLevel({ reqLen: 3, reqInt: 1 });
+test('areWinMetricsSatisfied: wrong requiredIntersections fails', () => {
+    const level = makeLevel({ requiredLength: 3, requiredIntersections: 1 });
     const path = [PACK(0,0), PACK(1,0), PACK(2,0), PACK(3,0)];   // 0 intersections
     const state = makeState({ path });
     assert.equal(areWinMetricsSatisfied(state, level), false);
@@ -476,7 +476,7 @@ test('areWinMetricsSatisfied: wrong reqInt fails', () => {
 
 test('areWinMetricsSatisfied: mustPass key not visited fails', () => {
     const mustKey = PACK(5, 5);
-    const level = makeLevel({ reqLen: 3, reqInt: 0, mustPass: [mustKey] });
+    const level = makeLevel({ requiredLength: 3, requiredIntersections: 0, mustPass: [mustKey] });
     const path = [PACK(0,0), PACK(1,0), PACK(2,0), PACK(3,0)];
     const state = makeState({ path });
     assert.equal(areWinMetricsSatisfied(state, level), false);
@@ -484,7 +484,7 @@ test('areWinMetricsSatisfied: mustPass key not visited fails', () => {
 
 test('areWinMetricsSatisfied: mustCross key visited only once fails', () => {
     const crossKey = PACK(1, 0);
-    const level = makeLevel({ reqLen: 3, reqInt: 0, mustCross: [crossKey] });
+    const level = makeLevel({ requiredLength: 3, requiredIntersections: 0, mustCross: [crossKey] });
     // crossKey is visited once in this path
     const path = [PACK(0,0), PACK(1,0), PACK(2,0), PACK(3,0)];
     const state = makeState({ path });
@@ -493,7 +493,7 @@ test('areWinMetricsSatisfied: mustCross key visited only once fails', () => {
 
 test('areWinMetricsSatisfied: mustPass satisfied', () => {
     const mustKey = PACK(1, 0);
-    const level = makeLevel({ reqLen: 3, reqInt: 0, mustPass: [mustKey] });
+    const level = makeLevel({ requiredLength: 3, requiredIntersections: 0, mustPass: [mustKey] });
     const path = [PACK(0,0), mustKey, PACK(2,0), PACK(3,0)];
     const state = makeState({ path });
     assert.ok(areWinMetricsSatisfied(state, level));
@@ -540,7 +540,7 @@ test('portal pair round-trips (endpoints become x1/y1/x2/y2 ≥1)', () => {
     assert.ok(has(2, 1, 7, 6), `portal endpoints not preserved: ${JSON.stringify(p)}`);
 });
 
-test('reqLen and reqInt round-trip through normalization', () => {
+test('requiredLength and requiredIntersections round-trip through normalization', () => {
     const raw = makeRaw({ reqLen: 12, reqInt: 3 });
     const norm = processRawLevel(raw);
     const denorm = denormalizeLevel(norm);
@@ -562,7 +562,7 @@ test('normalizeLevel(idx) produces same structure as processRawLevel for same da
     const viaDirect = processRawLevel(raw, 0)!;
     // Compare a few key fields
     assert.equal(viaIdx!.goalKey, viaDirect.goalKey);
-    assert.equal(viaIdx!.reqLen,  viaDirect.reqLen);
+    assert.equal(viaIdx!.requiredLength,  viaDirect.requiredLength);
     assert.deepEqual([...viaIdx!.blockSet], [...viaDirect.blockSet]);
     _rawLevels = [];
 });
@@ -824,7 +824,7 @@ test('replayMoves: backtracking within a sequence shortens the path', () => {
 console.log('\nGROUP 9: checkWinConditionImpl (game-rules.js)');
 
 test('checkWinConditionImpl: returns false in EDITOR mode (mode=1)', () => {
-    const level  = makeLevel({ reqLen: 2, reqInt: 0 });
+    const level  = makeLevel({ requiredLength: 2, requiredIntersections: 0 });
     const path   = [PACK(0,0), PACK(1,0), PACK(2,0)];
     assert.equal(
         checkWinConditionImplDirect(path, level, 1, 'IDLE', new Set(), new Map([[PACK(0,0),1],[PACK(1,0),1],[PACK(2,0),1]]), 0),
@@ -833,7 +833,7 @@ test('checkWinConditionImpl: returns false in EDITOR mode (mode=1)', () => {
 });
 
 test('checkWinConditionImpl: returns false when last key ≠ goalKey', () => {
-    const level  = makeLevel({ goalKey: PACK(7,7), reqLen: 2, reqInt: 0 });
+    const level  = makeLevel({ goalKey: PACK(7,7), requiredLength: 2, requiredIntersections: 0 });
     const path   = [PACK(0,0), PACK(1,0), PACK(2,0)];
     assert.equal(
         checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), new Map([[PACK(0,0),1],[PACK(1,0),1],[PACK(2,0),1]]), 0),
@@ -843,7 +843,7 @@ test('checkWinConditionImpl: returns false when last key ≠ goalKey', () => {
 
 test('checkWinConditionImpl: returns false when HAZARD_TRIGGERED', () => {
     const goalKey = PACK(2,0);
-    const level   = makeLevel({ goalKey, reqLen: 2, reqInt: 0 });
+    const level   = makeLevel({ goalKey, requiredLength: 2, requiredIntersections: 0 });
     const path    = [PACK(0,0), PACK(1,0), goalKey];
     const vc      = new Map([[PACK(0,0),1],[PACK(1,0),1],[goalKey,1]]);
     assert.equal(checkWinConditionImplDirect(path, level, 0, 'HAZARD_TRIGGERED', new Set(), vc, 0), false);
@@ -851,7 +851,7 @@ test('checkWinConditionImpl: returns false when HAZARD_TRIGGERED', () => {
 
 test('checkWinConditionImpl: returns true when path ends at goal and metrics match', () => {
     const goalKey = PACK(2,0);
-    const level   = makeLevel({ goalKey, reqLen: 2, reqInt: 0 });
+    const level   = makeLevel({ goalKey, requiredLength: 2, requiredIntersections: 0 });
     const path    = [PACK(0,0), PACK(1,0), goalKey];
     const vc      = new Map([[PACK(0,0),1],[PACK(1,0),1],[goalKey,1]]);
     assert.ok(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0));
@@ -863,7 +863,7 @@ test('checkWinConditionImpl: returns true when path ends at goal and metrics mat
 test('checkWinConditionImpl: must-turn level needs turnsAtMap (regression)', () => {
     const goalKey = PACK(2,1);
     const turnKey = PACK(1,0);
-    const level   = makeLevel({ goalKey, reqLen: 3, reqInt: 0 });
+    const level   = makeLevel({ goalKey, requiredLength: 3, requiredIntersections: 0 });
     level.mustPassTurnDirs! = new Map([[turnKey, 'either']]);
     // Path turns at turnKey (enters horizontally, leaves vertically).
     const path    = [PACK(0,0), turnKey, PACK(1,1), goalKey];
@@ -897,7 +897,7 @@ function makeValidEditorLevel(opts: any = {}) {
         flippingFilterMap: new Map(opts.flipping      ?? []),
         mustPassKeys:      opts.mustPass              ?? [],
         mustCrossKeys:     opts.mustCross             ?? [],
-        reqLen: 0, reqInt: 0, hints: []
+        requiredLength: 0, requiredIntersections: 0, hints: []
     } as any;
 }
 
@@ -1030,7 +1030,7 @@ function makeOccupancyLevel(opts: any = {}) {
         adjacentTurnDirs:  opts.adjacentTurnDirs    ?? [],
         mustPassTurnDirs:  new Map(opts.mustPassTurnDirs ?? []),
         landmarkMeta:      new Map(opts.landmarkMeta ?? []),
-        hints: [], reqLen: 0, reqInt: 0,
+        hints: [], requiredLength: 0, requiredIntersections: 0,
     } as any;
 }
 

@@ -19,8 +19,8 @@ export function evaluate({ level, prep, state, pos }) {
         return { verdict: 'pass', abstained: true, reason: 'no in-scope mandatory pendant chamber', chambers: 0 };
     }
 
-    const rSteps = level.reqLen - getRealLengthFromState(state);
-    const rInts = level.reqInt - state.ints;
+    const rSteps = level.requiredLength - getRealLengthFromState(state);
+    const rInts = level.requiredIntersections - state.ints;
     const spectra = [];
     let anyTruncated = false;
     let anyProvenEmpty = false;

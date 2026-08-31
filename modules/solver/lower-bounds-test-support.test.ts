@@ -120,7 +120,7 @@ function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targe
   const path = state.path.slice();
   const initial = referenceAccounting(path, level);
   const prefixCost = initial.cost;
-  const maxCost = level.grid.w * level.grid.h - 1 + level.reqInt;
+  const maxCost = level.grid.w * level.grid.h - 1 + level.requiredIntersections;
   // On a single-gate, mechanics-free grid, an unseen orthogonal neighbor cannot violate blocks,
   // hazards, portal/filter rules, gate re-entry, edge reuse, or intersection limits. A must-cross
   // cell on its first visit is the one remaining case where departure-axis legality can reject a
@@ -143,14 +143,14 @@ function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targe
   ) => {
     const pos = path[path.length - 1];
     const ints = goalAdjustedIntersections(nonGateRevisits, initial.counts, initial.gateSet, level.goalKey);
-    if (ints > level.reqInt || cost > maxCost || cost - prefixCost >= best) return;
+    if (ints > level.requiredIntersections || cost > maxCost || cost - prefixCost >= best) return;
     if (targetOnly !== undefined && pos === targetOnly) {
       best = cost - prefixCost;
       return;
     }
     if (pos === level.goalKey) {
       if (targetOnly !== undefined) return;
-      const candidateLevel = { ...level, reqLen: cost, reqInt: ints } as NormalizedLevel;
+      const candidateLevel = { ...level, requiredLength: cost, requiredIntersections: ints } as NormalizedLevel;
       if (validateCandidatePath(candidateLevel, path).ok) best = cost - prefixCost;
       return;
     }
@@ -180,8 +180,8 @@ function referenceSearch(state: SolverSearchState, level: NormalizedLevel, targe
         surroundKeys: [],
         mustPassTurnDirs: new Map(),
         adjacentTurnKeys: [],
-        reqLen: nextCost,
-        reqInt: probeInts,
+        requiredLength: nextCost,
+        requiredIntersections: probeInts,
       } as unknown as NormalizedLevel;
 
       const firstVisitIsTriviallyLegal =
@@ -352,7 +352,7 @@ export function runDeadlockSoundnessRoot(rootBranch: 0 | 1) {
       for (let neighborIndex = 0; neighborIndex < neighbors.length; neighborIndex++) {
         if (partitionRoot && neighborIndex !== rootBranch) continue;
         const undo = applyMove(neighbors[neighborIndex], state, level, prep, false);
-        if (state.ints <= level.reqInt) walk();
+        if (state.ints <= level.requiredIntersections) walk();
         undoMove(undo, state);
       }
     };

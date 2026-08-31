@@ -19,8 +19,8 @@ function makeLineLevel() {
         grid: { w: 3, h: 1 },
         gateKeys: [PACK(0, 0)],
         goalKey: PACK(2, 0),
-        reqLen: 2,
-        reqInt: 0,
+        requiredLength: 2,
+        requiredIntersections: 0,
         blockSet: new Set(),
         portalMap: new Map(),
         filterMap: new Map(),
@@ -184,7 +184,7 @@ test('fault injection is scoped to one solve and cannot contaminate a concurrent
 });
 
 test('an admissible-order-fallback search that drains its space is marked exhausted, not budget-starved', async () => {
-    const level = { ...makeLineLevel(), reqLen: 4 } as NormalizedLevel;
+    const level = { ...makeLineLevel(), requiredLength: 4 } as NormalizedLevel;
     const prep = prepLevel(level);
     prep._metrics = { nodesExpanded: 0 };
     const config = { scoringProfileId: 'default', orderingBias: null, admissibleOrder: true };
@@ -208,7 +208,7 @@ test('a hostile non-Error throw is safely recorded instead of escaping error ser
 });
 
 test('portfolio errors remain visible when its ordinary fallback is also unsuccessful', async () => {
-    const level = { ...makeLineLevel(), reqLen: 4 } as NormalizedLevel;
+    const level = { ...makeLineLevel(), requiredLength: 4 } as NormalizedLevel;
     let calls = 0;
     const dispatch = ((...args: Parameters<typeof runAttemptSearch>) => {
         if (++calls === 1) throw new Error('portfolio technique failed');
@@ -237,8 +237,8 @@ function makePortalBranchLevel() {
         grid: { w: 3, h: 3 },
         gateKeys: [PACK(0, 0)],
         goalKey: PACK(2, 2),
-        reqLen: 2, // only reachable via the portal: direct Manhattan distance is 4
-        reqInt: 0,
+        requiredLength: 2, // only reachable via the portal: direct Manhattan distance is 4
+        requiredIntersections: 0,
         blockSet: new Set(),
         portalMap: new Map([
             [portalA, { dest: portalB, color: '#fff' }],
@@ -279,7 +279,7 @@ test('getFalseGoalTriggerSearchBudgetMs scales with area and special mechanics w
 
     const large = makeLineLevel();
     large.grid = { w: 100, h: 100 };
-    large.reqLen = 5000;
+    large.requiredLength = 5000;
     large.mustPassKeys = [PACK(1, 0), PACK(2, 0)];
     large.portalMap = new Map([[PACK(0, 0), { dest: PACK(1, 0) }]]);
     const capped = getFalseGoalTriggerSearchBudgetMs(large);
@@ -291,14 +291,14 @@ test('getFalseGoalTriggerSearchBudgetMs scales the search-dependent cost with ga
     // budget (until the cap), preventing later gates from being starved.
     const base = makeLineLevel();
     base.grid = { w: 10, h: 10 };
-    base.reqLen = 30;
+    base.requiredLength = 30;
     const oneGate = getFalseGoalTriggerSearchBudgetMs({ ...base, gateKeys: [PACK(0, 0)] });
     const threeGates = getFalseGoalTriggerSearchBudgetMs({ ...base, gateKeys: [PACK(0, 0), PACK(9, 0), PACK(0, 9)] });
     assert.ok(threeGates > oneGate, `expected ${threeGates} > ${oneGate}`);
 });
 
 // Repair-gated (mustCross >= POLICY.REPAIR_MC_MIN, mustPass >= POLICY.REPAIR_MP_MIN — see
-// attempts.ts's needsRepairFallback) and deterministically infeasible (reqLen: 1 vs. a
+// attempts.ts's needsRepairFallback) and deterministically infeasible (requiredLength: 1 vs. a
 // gate/goal Manhattan distance of 10), so the ordinary repair probe exhausts its node budget on
 // every seed rather than winning — a fast, reliable way to exercise runEarlyRepairSearch's multi-seed
 // retry mechanism itself (attempt count, recorded seedSalt values, ablation gating) without
@@ -308,8 +308,8 @@ function makeRepairGatedInfeasibleLevel() {
         grid: { w: 6, h: 6 },
         gateKeys: [PACK(0, 0)],
         goalKey: PACK(5, 5),
-        reqLen: 1,
-        reqInt: 0,
+        requiredLength: 1,
+        requiredIntersections: 0,
         blockSet: new Set(),
         portalMap: new Map(),
         filterMap: new Map(),
@@ -680,11 +680,11 @@ deepTest('the repair probe caps itself to a small external nodeBudget instead of
     assert.ok(result.nodesExpanded < 300_000, `expected nodesExpanded close to the 250,000 external ceiling (the old uncapped first round could spend ~2,000,000), got ${result.nodesExpanded}`);
 });
 
-// Not repair-gated (no mustCross/mustPass, low reqInt — needsRepairFallback in attempts.ts stays
+// Not repair-gated (no mustCross/mustPass, low requiredIntersections — needsRepairFallback in attempts.ts stays
 // false, so repairConfigs is empty and the repair loop never runs) but deterministically
-// infeasible (reqLen: 2 vs. a gate/goal Manhattan distance of 6 — same PARITY as the true distance,
+// infeasible (requiredLength: 2 vs. a gate/goal Manhattan distance of 6 — same PARITY as the true distance,
 // so STRATEGY_PARITY_GATE_FILTER doesn't drop the gate entirely and every config actually gets to
-// run, unlike an odd reqLen here which empties activeGates before any attempt starts), so every
+// run, unlike an odd requiredLength here which empties activeGates before any attempt starts), so every
 // main-search attempt is pruned near-instantly by the distance-bound check regardless of search
 // strategy — a fast, reliable way to reach the 2026-07-16 goal-attraction-disabled-retry last-resort pass
 // (orchestration.ts's solveLevel, after the main loop AND the empty repair loop both "fail")
@@ -694,8 +694,8 @@ function makeGoalAttractionDisabledRetryGatedInfeasibleLevel() {
         grid: { w: 4, h: 4 },
         gateKeys: [PACK(0, 0)],
         goalKey: PACK(3, 3),
-        reqLen: 2,
-        reqInt: 0,
+        requiredLength: 2,
+        requiredIntersections: 0,
         blockSet: new Set(),
         portalMap: new Map(),
         filterMap: new Map(),
@@ -2576,7 +2576,7 @@ test('connectivity-axis-prune-disabled-retry pass can solve a level the main loo
 // budget with it on). Unlike the three sibling suites above, this reruns `repairConfigs` (the
 // same per-config/per-gate manual loop shape as the ordinary repair fallback loop), not
 // `mainConfigs`, and ENABLES a flag via its Proxy override rather than disabling one. Reuses
-// makeRepairGatedInfeasibleLevel() (genuinely unsolvable: reqLen=1 with 3 must-pass + 2 must-cross
+// makeRepairGatedInfeasibleLevel() (genuinely unsolvable: requiredLength=1 with 3 must-pass + 2 must-cross
 // on a 6x6 grid) since it carries a real repair config, unlike the mainConfigs-only fixture the
 // three sibling suites use.
 
@@ -2722,7 +2722,7 @@ test('adaptive gate weighting cannot claim more than the remaining tier budget (
         attemptBudgetTelemetry: true,
         disableExtraBudgetPasses: true,
         // Otherwise STRATEGY_PARITY_GATE_FILTER (getActiveGates) drops every gate whose parity
-        // relative to the goal/reqLen doesn't match, silently shrinking activeGates below what
+        // relative to the goal/requiredLength doesn't match, silently shrinking activeGates below what
         // this test constructed — irrelevant to the scheduling behavior under test.
         ablation: { STRATEGY_PARITY_GATE_FILTER: false },
         attemptSearchForTesting: dispatch,

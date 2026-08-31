@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Phase | 13 — normalized level metric fields |
-| Current batch | 13A boundary preparation |
-| Status | 13A validated; merge pending |
-| Base `main` SHA | `efe94db31469f903a42b3921535beb32e1b785fb` |
-| Branch | `chatgpt/phase13a-boundary-prep-2026-08-31` |
-| PR | #1620 |
+| Current batch | 13B atomic normalized migration |
+| Status | 13B validated; merge pending |
+| Base `main` SHA | `1eb8d80c75e6ae5d02f90df5d8c9daee21b19dd9` |
+| Branch | `chatgpt/phase13b-normalized-metrics-2026-08-31` |
+| PR | #1621 |
 | Selected ledger row IDs | NC-P13-001 through NC-P13-004 |
 | Reconciliation mode | full level-metric ownership census, because Phase 13 is high-risk and broad |
 | Highest risk | high |
@@ -178,7 +178,66 @@ any Phase-13 implementation/behavioral/closeout verification dimension other tha
 
 ## 8. 13B atomic normalized migration
 
-Not started. Must begin from merged 13A main, not this branch. Entry gate:
+Started from merged 13A main `1eb8d80c75e6ae5d02f90df5d8c9daee21b19dd9`.
+
+The implementation is assembled as one atomic source tree. The 80 normalized-only files were
+mechanically migrated with word-boundary replacements only after 13A established that every
+`reqLen`/`reqInt` hit in those files referred to normalized/current vocabulary. The 13 mixed
+files were then edited selectively so raw fixture/wire/report keys remain legacy while
+`EngineLevel`/`NormalizedLevel` properties use `requiredLength`/`requiredIntersections`.
+
+Boundary changes:
+
+- `RawLevel.reqLen` and `RawLevel.reqInt` remain unchanged.
+- `EngineLevel` and `NormalizedLevel` expose `requiredLength` and
+  `requiredIntersections`.
+- `parseRawLevel` maps the raw fields to the expanded runtime names.
+- `denormalizeLevel` and `buildWireLevelData` continue emitting raw `reqLen`/`reqInt`.
+- the writer option API is canonicalized to `requiredLength`/`requiredIntersections` while its
+  serialized output remains unchanged.
+- `canonicalCloneLevel` and `cloneLevelWithReq` operate only on expanded runtime fields.
+- `modules/solver/normalization.ts` no longer reads either raw metric directly. It delegates to
+  `readRawChallengeMetrics` in `modules/domain/level-codec.ts`, preserving the solver's
+  historical numeric coercion while leaving one compatibility owner.
+- the post-migration ownership inventory has 88 raw/wire files, 18 retained non-normalized files,
+  zero normalized legacy consumers, zero mixed files, and zero ambiguous files.
+- `normalizedMigrationComplete: true` makes the ordinary CI checker permanently enforce the
+  zero-normalized/zero-mixed invariant without a special command-line flag.
+
+### 8.1 13B validation and audit findings
+
+The first full coverage run exposed one real 13A classification miss rather than a solver behavior
+regression. `modules/solver/topology.test.ts` was classified raw-only because most of its legacy
+tokens are raw fixtures passed through `normalizeRawLevel`, but its independent reference BFS later
+read `level.reqInt` and `level.reqLen` from the normalized result. Production topology had
+correctly migrated, so the randomized equivalence test compared canonical production behavior
+against `undefined` legacy reference fields and failed on trial 3 / step 3.
+
+Those two reference reads were migrated to `requiredIntersections` and `requiredLength`.
+The raw fixture keys in the same file remain unchanged.
+
+Because this demonstrated that a raw-file allowlist can hide a normalized read deeper in the same
+file, every one of the 88 post-migration raw/wire allowlisted files was then re-audited for property
+accesses of the form `*.reqLen` / `*.reqInt`. Every remaining access was traced to an actual raw
+corpus/wire object, wire assertion, raw generator shape, or an independent retained reference/report
+schema. The 18 retained non-normalized files received the same pass. No second normalized legacy
+read was found.
+
+Exact implementation head `91d9975e6bf0e8b36f44c57e017d4d52824e33d4` passed:
+
+- ordinary CI run `33371146129` (CI run 3452): success;
+- Chromium orientation/browser gate `33371146219`: success;
+- Node suite and full Vitest coverage, including codec round-trip, fingerprint, domain, solver,
+  worker, editor-export, and topology reference tests;
+- source and test TypeScript checks;
+- build, lint, deep proofs and deep verification;
+- the permanent level-metric ownership ratchet with 88 raw/wire, 18 retained, zero normalized,
+  zero mixed, and zero ambiguous legacy-token owners.
+
+13B therefore satisfies implementation, targeted validation, consumer audit, and behavioral parity.
+Merged-tree closeout remains deliberately pending for 13C.
+
+Entry gate for 13B was:
 
 - ownership inventory still has zero ambiguous files;
 - `normalizedRuntimeConsumer` is the complete set that should lose legacy spellings;

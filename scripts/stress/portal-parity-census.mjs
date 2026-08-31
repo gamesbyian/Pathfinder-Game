@@ -136,7 +136,7 @@ for (let i = 0; i < levels.length; i++) {
     let realLen = 0; // COUNTED length so far (portal jumps are free / don't count).
     for (let step = 0; step < solution.length; step++) {
         const pos = solution[step];
-        const rSteps = level.reqLen - realLen;
+        const rSteps = level.requiredLength - realLen;
         if (!level.portalMap.has(pos)) {
             const posP = keyParity(pos);
             const mismatch = (posP ^ goalP ^ (rSteps & 1)) !== 0;

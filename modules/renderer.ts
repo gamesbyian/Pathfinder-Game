@@ -27,9 +27,9 @@ export function createRenderer({ core, state, ui }: any) {
         if (model.isPlayMode && model.level) {
             ui.renderMetricsPanel({
                 currentLen: model.currentLen,
-                reqLen:     model.level.reqLen,
+                requiredLength:     model.level.requiredLength,
                 currentInt: model.intersections,
-                reqInt:     model.level.reqInt,
+                requiredIntersections:     model.level.requiredIntersections,
             });
         } else if (model.isEditorMode) {
             ui.setEditorMetrics(model.currentLen, model.intersections);

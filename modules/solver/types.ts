@@ -140,7 +140,7 @@ export interface ScoringProfile {
      *  repair-search.ts instead. */
     mustTurnExitGuidanceWeight?: number;
     /** Guidance toward the nearer terminal of a mismatched-parity ("twist") portal when the
-     *  level's gate/goal/reqLen parity relationship makes a portal-less path of exactly reqLen
+     *  level's gate/goal/requiredLength parity relationship makes a portal-less path of exactly requiredLength
      *  moves combinatorially impossible (see scoring.ts's portal-parity guidance term and
      *  prep.ts / data/stress/README.md's S043 writeup). Defaults to 1 like every other weight. */
     portalParityGuidanceWeight?: number;

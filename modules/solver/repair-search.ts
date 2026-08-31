@@ -96,8 +96,8 @@ export function repairStreamSeeds(startKey: number, seedSalt = 0, researchSeed?:
 // Debug-only breakdown of computeBadness's terms (see _REPAIR_DEBUG) — never called on the
 // hot path, only when a restart's badness beats the previous best.
 function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel): string {
-    const lenDeficit = Math.abs(getRealLengthFromState(state) - level.reqLen);
-    const intDeficit = Math.abs(state.ints - level.reqInt);
+    const lenDeficit = Math.abs(getRealLengthFromState(state) - level.requiredLength);
+    const intDeficit = Math.abs(state.ints - level.requiredIntersections);
     const n = level.mustPassKeys.length;
     const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
     const mpDeficit = n - popcount(state.mpVisitedMask & mpFullMask);
@@ -113,8 +113,8 @@ function debugBadnessBreakdown(state: SolverSearchState, level: NormalizedLevel)
 // pending cell — not merely "N pending" — is what recurs (reports/2026-07-17-repair-stagnation-
 // frozen-signature-diagnosis.md).
 function deadEndSignatureRecord(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): { sigKey: string; features: string[] } {
-    const lenResidual = getRealLengthFromState(ws) - level.reqLen; // SIGNED, not Math.abs'd
-    const intResidual = ws.ints - level.reqInt;                    // SIGNED, not Math.abs'd
+    const lenResidual = getRealLengthFromState(ws) - level.requiredLength; // SIGNED, not Math.abs'd
+    const intResidual = ws.ints - level.requiredIntersections;                    // SIGNED, not Math.abs'd
     const n = level.mustPassKeys.length;
     const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
     const mpDeficit = n - popcount(ws.mpVisitedMask & mpFullMask);
@@ -213,8 +213,8 @@ export function computePlateauPenaltyCells(shapeCellCounts: Map<number, number> 
  *  not the exact length residual) and the attractor cells (dead-end tip + every revisited cell) for
  *  one restart's dead-ended state. Cells are deduped; the tip is always first. */
 function plateauShapeAndCells(ws: SolverSearchState, level: NormalizedLevel): { shape: string; cells: number[] } {
-    const lenSgn = Math.sign(getRealLengthFromState(ws) - level.reqLen);
-    const intSgn = Math.sign(ws.ints - level.reqInt);
+    const lenSgn = Math.sign(getRealLengthFromState(ws) - level.requiredLength);
+    const intSgn = Math.sign(ws.ints - level.requiredIntersections);
     const n = level.mustPassKeys.length;
     const mpFullMask = n > 0 ? ((1 << n) - 1) : 0;
     const mpDeficit = n - popcount(ws.mpVisitedMask & mpFullMask);
@@ -389,7 +389,7 @@ function takePly(ws: SolverSearchState, level: NormalizedLevel, prep: PrepLevel,
         }
 
         if (verdict === 'pass') {
-            const rStepsForScore = level.reqLen - realLen;
+            const rStepsForScore = level.requiredLength - realLen;
             let sc = scoreMove(next, pos, ws, level, prep, profile, rStepsForScore, orderingBias, curCtx);
             if (penaltyCells !== null) { const pen = penaltyCells.get(next); if (pen !== undefined) sc -= pen; }
             if (guideCells !== null && guideCells.has(next)) sc += GUIDE_REWARD;
@@ -496,7 +496,7 @@ const LENGTH_GAP_CLOSE_STRUCTURAL_SLACK = 1;
 // other objective (must-pass/must-cross/must-turn/adjacent-turn/surround) is already satisfied —
 // see reports/2026-07-17-repair-stagnation-frozen-signature-diagnosis.md and its generalization
 // follow-up: repair's epsilon-greedy random walk converges fast to a near-miss whose ONLY
-// remaining gap is hitting reqLen/reqInt exactly, then plateaus for the rest of the budget
+// remaining gap is hitting requiredLength/requiredIntersections exactly, then plateaus for the rest of the budget
 // because a fresh/spliced random restart essentially never lands that exact integer target by
 // chance. Once every other objective is clear, this stops being a hard combinatorial search:
 // search-state.ts's applyMove only ever CLEARS a mustMask/mpVisitedMask/mustCrossMask/
@@ -582,7 +582,7 @@ function searchCompletionFromPartialPath(ws: SolverSearchState, level: Normalize
         // rSteps <= 10 mirrors dfsFromGate's own connectivity throttle (hard-prune-pipeline.ts's
         // caller-decides contract) — cheap early in the residual, thorough near the end where
         // it matters most.
-        const rSteps = level.reqLen - realLen;
+        const rSteps = level.requiredLength - realLen;
         const runConnectivity = rSteps <= 10 || (nodes & 63) === 0;
         const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
         if (verdict === 'solution') {
@@ -679,7 +679,7 @@ function boundedDfsFromHere(ws: SolverSearchState, level: NormalizedLevel, prep:
         const isJump = !!(portalAtPos && !ws.lastWasPortalJump && portalAtPos.dest === next);
         const undo = applyMove(next, ws, level, prep, isJump);
         const realLen = getRealLengthFromState(ws);
-        const rSteps = level.reqLen - realLen;
+        const rSteps = level.requiredLength - realLen;
         const runConnectivity = rSteps <= 10 || (nodes & 63) === 0;
         const verdict = evaluatePrunedMove(next, realLen, ws, level, prep, cfg, runConnectivity);
         if (verdict === 'solution') {
@@ -820,7 +820,7 @@ export function relinkPaths(ws: SolverSearchState, base: number[], guide: number
             const undo = applyMove(c, ws, level, prep, isJump);
             copied++;
             const realLen = getRealLengthFromState(ws);
-            const runConnectivity = (level.reqLen - realLen) <= 10 || (nodes & 63) === 0;
+            const runConnectivity = (level.requiredLength - realLen) <= 10 || (nodes & 63) === 0;
             const verdict = evaluatePrunedMove(c, realLen, ws, level, prep, cfg, runConnectivity);
             if (verdict === 'solution') { liveUndo.push(undo); return { solved: true, nodes, bestPath: null, bestBadness: 0, bestPend: null }; }
             if (verdict === 'pass') { liveUndo.push(undo); continue; }

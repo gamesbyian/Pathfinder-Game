@@ -35,8 +35,8 @@ export interface NormalizedLevel {
     flippingFilterMap: Map<number, any>;
     mustPassKeys: number[];
     mustCrossKeys: number[];
-    reqLen: number;
-    reqInt: number;
+    requiredLength: number;
+    requiredIntersections: number;
     surroundKeys?: number[];
     /** must-turn cell → 'either'|'cw'|'ccw' */
     mustPassTurnDirs?: Map<number, TurnDir>;

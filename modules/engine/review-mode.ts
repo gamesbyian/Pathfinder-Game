@@ -36,7 +36,7 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         resetHinterForLevel(state);
         ui.setInputValue('editReqLen', 0);
         ui.setInputValue('editReqInt', 0);
-        ui.renderMetricsPanel({ currentLen: 0, reqLen: 0, currentInt: 0, reqInt: 0 });
+        ui.renderMetricsPanel({ currentLen: 0, requiredLength: 0, currentInt: 0, requiredIntersections: 0 });
         ui.updateLevelDisplay(0, false, '0/0');
         ui.setButtonLabel('reviewHintBtn', 'Hints');
         ui.setClassState('reviewEmptyMsg', 'hidden', false);
@@ -78,8 +78,8 @@ export function createReviewModeController({ state, ui, levelUtils, editor, Path
         setDetonatedFalseGoals(state);
         setFoundHintsSinceLoad(state); // reset per-submission so the count/cycle don't leak across levels
         resetHinterForLevel(state);
-        ui.setInputValue('editReqLen', normalized.reqLen || 0);
-        ui.setInputValue('editReqInt', normalized.reqInt || 0);
+        ui.setInputValue('editReqLen', normalized.requiredLength || 0);
+        ui.setInputValue('editReqInt', normalized.requiredIntersections || 0);
         editor.syncMetadataFieldsFromLevel(normalized);
         ui.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
         ui.setButtonLabel('reviewHintBtn', hintButtonLabel(knownHintCount(normalized.hints, state.ENGINE.foundHintsSinceLoad)));

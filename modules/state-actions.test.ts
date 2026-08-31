@@ -306,15 +306,15 @@ test('editor helpers update session fields and reset transient editor state', ()
       }
     }
   } as any;
-  const level = { id: 'draft', reqLen: 0, reqInt: 0, hints: [] } as any;
+  const level = { id: 'draft', requiredLength: 0, requiredIntersections: 0, hints: [] } as any;
   assert.equal(setEditorWorkingLevel(state, level), level);
   assert.equal(setEditorPencilMode(state, false), false);
   assert.equal(setEditorModified(state, true), true);
   assert.equal(setEditorEmptyClickCount(state, 3), 3);
   assert.equal(incrementEditorEmptyClickCount(state), 4);
-  assert.equal(setEditorMetrics(state, { reqLen: 7, reqInt: 2 }), level);
-  assert.equal(level.reqLen, 7);
-  assert.equal(level.reqInt, 2);
+  assert.equal(setEditorMetrics(state, { requiredLength: 7, requiredIntersections: 2 }), level);
+  assert.equal(level.requiredLength, 7);
+  assert.equal(level.requiredIntersections, 2);
   assert.deepEqual(setEditorWorkingHints(state, [[1, 2]]), [[1, 2]]);
   Object.assign(level, { gateKeys: [1], goalKey: 2, falseGoalKeys: new Set([3]), blockSet: new Set([4]), gooseSet: new Set([5]), mustPassKeys: [6], mustCrossKeys: [7], filterMap: new Map([[8, 1]]), flippingFilterMap: new Map([[9, 2]]), portalMap: new Map([[10, 11]]), portalVisuals: [{ a: 1 }] });
   assert.equal(resetEditorWorkingGrid(state), level);

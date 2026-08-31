@@ -85,9 +85,9 @@ for (const raw of selected) {
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
     const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath) && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded;
     if (!behaviorIdentical) throw new Error(`${raw.id}: observer changed path or nodes`);
-    const survival = observer.summary(level.reqLen);
+    const survival = observer.summary(level.requiredLength);
     rows.push({ runId, solverRef, levelId: raw.id, coldSolved: metadataColdById?.get(String(raw.id)) ?? null,
-        gateKey, validLabels: labels.length, reqLen: level.reqLen, beamWidth, nodeBudget,
+        gateKey, validLabels: labels.length, requiredLength: level.requiredLength, beamWidth, nodeBudget,
         producer: 'beam', scoringProfileId: 'default', seed: null, controlTreatment: 'observation-on',
         solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded, behaviorIdentical, survival });
     console.error(`${raw.id}: labels=${labels.length} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded}`);
@@ -109,7 +109,7 @@ const forensic = rows.map(row => {
         poolSize: removal?.details?.poolCandidateCount ?? 0, beamWidth,
         bestRank: ranks.length ? Math.min(...ranks) : Number.POSITIVE_INFINITY });
     return { levelId: row.levelId, solved: row.solved, depth: loss.depth,
-        normalizedDepth: loss.depth / Math.max(1, row.reqLen),
+        normalizedDepth: loss.depth / Math.max(1, row.requiredLength),
         beamWidth, candidatePoolSize: removal?.details?.poolCandidateCount ?? null,
         knownSupportedCandidates: supported.length,
         structuralWinningFamilies: removal?.details?.supportedPoolFamilies ?? 0,

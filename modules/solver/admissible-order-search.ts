@@ -11,7 +11,7 @@
 // is historical now. It is wired through AttemptConfig/admissible-order dispatch and production
 // orchestration as a late dedicated-budget tier, and it has substantial corpus validation recorded
 // in reports/2026-07-24-admissible-order-search-corpus2-validation.md and later scheduler/research
-// reports. Do not infer from the "IDA" action-family name that this is textbook IDA*: reqLen is an
+// reports. Do not infer from the "IDA" action-family name that this is textbook IDA*: requiredLength is an
 // exact target rather than a minimize-cost objective, so the useful transfer is admissible-bound
 // ordering rather than iterative f-threshold deepening.
 //
@@ -118,12 +118,12 @@ export function rankByAdmissibleSlack(candidates: number[], level: NormalizedLev
     const ranked: { key: number; slack: number; score: number }[] = [];
     for (const next of candidates) {
         const isJump = !!(portalFromHere && !state.lastWasPortalJump && portalFromHere.dest === next);
-        const nRSteps = level.reqLen - preRealLen - (isJump ? 0 : 1);
+        const nRSteps = level.requiredLength - preRealLen - (isJump ? 0 : 1);
         const score = tieBreakProfile !== null ? scoreMove(next, fromKey, state, level, prep, tieBreakProfile, nRSteps, null, curCtx) : 0;
 
         const undo = applyMove(next, state, level, prep, isJump);
         const realLen = getRealLengthFromState(state);
-        const rSteps = level.reqLen - realLen;
+        const rSteps = level.requiredLength - realLen;
         const h = admissibleRemainingBound(next, state, level, prep);
         const slack = Number.isFinite(h) ? rSteps - h : Number.POSITIVE_INFINITY;
         undoMove(undo, state);
@@ -148,7 +148,7 @@ export function rankByAdmissibleSlack(candidates: number[], level: NormalizedLev
             const ctx = policy.scoringProfile ? buildCurUrgencyContext(fromKey, state, level, prep, true, policy.scoringProfile) : null;
             const rows = ranked.map(row => ({ ...row, index: candidates.indexOf(row.key),
                 policyScore: policy.scoringProfile ? scoreMove(row.key, fromKey, state, level, prep,
-                    policy.scoringProfile, level.reqLen - preRealLen - (portalFromHere?.dest === row.key ? 0 : 1), null, ctx) : 0 }));
+                    policy.scoringProfile, level.requiredLength - preRealLen - (portalFromHere?.dest === row.key ? 0 : 1), null, ctx) : 0 }));
             rows.sort((a, b) => {
                 const aDead = a.slack < 0, bDead = b.slack < 0;
                 if (aDead !== bDead) return aDead ? 1 : -1;
@@ -241,7 +241,7 @@ export async function admissibleOrderSearch(
         const undo = applyMove(next, state, level, prep, isPortalJump);
 
         const realLen = getRealLengthFromState(state);
-        const rSteps = level.reqLen - realLen;
+        const rSteps = level.requiredLength - realLen;
         const runConnectivity = rSteps <= 10 || (nodesExpanded & 63) === 0;
         const verdict = evaluatePrunedMove(next, realLen, state, level, prep, cfg, runConnectivity);
 

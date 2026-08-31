@@ -14,8 +14,8 @@ import type { SolverSearchState } from './types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 5, h: 3 },
-    reqLen: 4,
-    reqInt: 1,
+    requiredLength: 4,
+    requiredIntersections: 1,
     goalKey: PACK(4, 1),
     gateKeys: [PACK(0, 1)],
     blockSet: new Set(),
@@ -296,7 +296,7 @@ test('adjTurnLowerBound: zero when satisfied, positive when remaining, and rejec
     reqLen: 5,
   });
   const sealedPrep = prepLevel(sealed), sealedState = createState(W(1, 1), sealed, sealedPrep);
-  assert.ok(adjTurnLowerBound(W(1, 1), sealedState, sealed, sealedPrep) > sealed.reqLen);
+  assert.ok(adjTurnLowerBound(W(1, 1), sealedState, sealed, sealedPrep) > sealed.requiredLength);
   assert.deepEqual(diagnoseRule('PRUNE_ADJ_TURN_LB', W(1, 1), sealedState, sealed, sealedPrep),
     { verdict: 'reject', reached: 1, rejected: 1 });
   assert.deepEqual(diagnoseRule('PRUNE_ADJ_TURN_LB', W(1, 1), st, l, prep),
@@ -579,7 +579,7 @@ test('property: every lower bound underestimates the exact legal completion cost
         const p = level.portalMap.get(pos);
         const jump = !!(p && !state.lastWasPortalJump && p.dest === next);
         const undo = applyMove(next, state, level, prep, jump);
-        if (state.ints <= level.reqInt) visit();
+        if (state.ints <= level.requiredIntersections) visit();
         undoMove(undo, state);
       }
     };
@@ -630,7 +630,7 @@ test('property: topology connectivity over-approximates every truly reachable re
       // Ask the connectivity model about this cell alone, avoiding unrelated objectives and
       // making its volume condition exactly fit the independently found witness length.
       const probeLevel = { ...level, goalKey: target, mustPassKeys: [], mustCrossKeys: [],
-        reqLen: getRealLengthFromState(state) + exact } as NormalizedLevel;
+        requiredLength: getRealLengthFromState(state) + exact } as NormalizedLevel;
       const probePrep = prepLevel(probeLevel);
       assert.equal(isConnected(pos, state, probeLevel, probePrep), true,
         `connectivity model omitted truly reachable required cell ${target}`);
@@ -639,7 +639,7 @@ test('property: topology connectivity over-approximates every truly reachable re
     for (const next of getNeighbors(pos, state, level, prep)) {
       const p = level.portalMap.get(pos), jump = !!(p && !state.lastWasPortalJump && p.dest === next);
       const undo = applyMove(next, state, level, prep, jump);
-      if (state.ints <= level.reqInt) walk();
+      if (state.ints <= level.requiredIntersections) walk();
       undoMove(undo, state);
     }
   };

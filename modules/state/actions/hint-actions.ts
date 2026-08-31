@@ -12,7 +12,7 @@ function requiredPathCoverageRatio(level: EngineLevel | null | undefined): numbe
     if (!level) return 0;
     const nonGateWinningPathCellCount = Math.max(1, level.grid.w * level.grid.h
         - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size - level.gateKeys.length);
-    return level.reqLen / nonGateWinningPathCellCount;
+    return level.requiredLength / nonGateWinningPathCellCount;
 }
 
 export function resetHintAnimationClock(stateOrEngine: StateOrEngine, { alpha = 0, index }: { alpha?: number; index?: number } = {}) {

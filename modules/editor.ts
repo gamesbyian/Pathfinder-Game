@@ -116,12 +116,12 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
     async function generateLevelString() {
         const l = state.ENGINE.editor.workingLevel;
         const isValid = validateLevel(l);
-        const reqLen = parseInt(ui.getValue('editReqLen')) || 0;
-        const reqInt = parseInt(ui.getValue('editReqInt')) || 0;
+        const requiredLength = parseInt(ui.getValue('editReqLen')) || 0;
+        const requiredIntersections = parseInt(ui.getValue('editReqInt')) || 0;
         const validateHintPath = (candidatePath: any) => {
             const levelForValidation = levelUtils.deepCloneLevel(l);
-            levelForValidation.reqLen = reqLen;
-            levelForValidation.reqInt = reqInt;
+            levelForValidation.requiredLength = requiredLength;
+            levelForValidation.requiredIntersections = requiredIntersections;
             return solverApi.validateCandidatePath(levelForValidation, candidatePath);
         };
         const normalizedHints: any[] = [];
@@ -147,7 +147,7 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
         const exportedHints = normalizedHints.slice(0, 5);
         applyMetadataFromUI(l);
 
-        const json = serializeLevel(l, reqLen, reqInt, exportedHints);
+        const json = serializeLevel(l, requiredLength, requiredIntersections, exportedHints);
         ui.setSolutionOutput(json);
         await ui.copyText(json, { fallbackElId: 'solutionOutput' });
         setEditorModified(state, false);
@@ -188,8 +188,8 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
             if (!state.ENGINE?.editor?.workingLevel) return;
             const clampMetric = (n: any) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
             setEditorMetrics(state, {
-                reqLen: clampMetric(parseInt(ui.getValue('editReqLen'), 10)),
-                reqInt: clampMetric(parseInt(ui.getValue('editReqInt'), 10))
+                requiredLength: clampMetric(parseInt(ui.getValue('editReqLen'), 10)),
+                requiredIntersections: clampMetric(parseInt(ui.getValue('editReqInt'), 10))
             });
             applyMetadataFromUI(state.ENGINE.editor.workingLevel);
         },
@@ -211,7 +211,7 @@ export function createEditor({ core, state, ui, levelUtils, solverApi, getEngine
             markDirty(state);
         },
         createNewLevel() {
-            setEditorWorkingLevel(state, { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], surroundKeys: [], adjacentTurnKeys: [], adjacentTurnDirs: [], mustPassTurnDirs: new Map(), landmarkMeta: new Map(), hints: [], designerName: '', description: '', difficulty: null, provenance: makeLevelProvenance([makeProvenanceEntry('human', 'authored')]) });
+            setEditorWorkingLevel(state, { grid: { w: 10, h: 10 }, requiredLength: 0, requiredIntersections: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], surroundKeys: [], adjacentTurnKeys: [], adjacentTurnDirs: [], mustPassTurnDirs: new Map(), landmarkMeta: new Map(), hints: [], designerName: '', description: '', difficulty: null, provenance: makeLevelProvenance([makeProvenanceEntry('human', 'authored')]) });
             runtime().PathNavigator.clear(state.ENGINE);
             ui.setSolutionOutput('');
             runtime().clearHintPaths();

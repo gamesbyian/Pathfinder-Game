@@ -15,8 +15,8 @@ import type { SolverSearchState } from './types.js';
 function makeLevel(overrides = {}) {
   return {
     grid: { w: 5, h: 5 },
-    reqLen: 4,
-    reqInt: 0,
+    requiredLength: 4,
+    requiredIntersections: 0,
     goalKey: PACK(4, 2),
     gateKeys: [PACK(0, 2)],
     blockSet: new Set(),
@@ -78,7 +78,7 @@ test('scoreMove applies orderingBias bonus without depending on Solver globals',
 
 test('ordering research observer compares profiles and ordering biases without changing survivor order', () => {
   const pos = PACK(0, 0);
-  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 0), reqLen: 8 });
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 0), requiredLength: 8 });
   const prep = prepLevel(level);
   const state = makeState(pos);
   const original = [PACK(0, 1), PACK(1, 0), PACK(1, 1)];
@@ -105,7 +105,7 @@ test('ordering research observer compares profiles and ordering biases without c
 test('ordering divergence contribution sum reproduces the ordinary score-margin change', () => {
   const pos = PACK(1, 2);
   const objective = PACK(4, 2);
-  const level = makeLevel({ gateKeys: [pos], goalKey: objective, mustPassKeys: [objective], reqLen: 8, reqInt: 1 });
+  const level = makeLevel({ gateKeys: [pos], goalKey: objective, mustPassKeys: [objective], requiredLength: 8, requiredIntersections: 1 });
   const prep = prepLevel(level);
   const records: import('./types.js').OrderingResearchRecord[] = [];
   prep._orderingResearchObserver = {
@@ -130,7 +130,7 @@ test('scoreMove rewards moving toward an unsatisfied must-turn cell, and stops o
   const K = (x: number, y: number) => PACK(x - 1, y - 1);
   const level = normalizeRawLevel({
     grid: { w: 5, h: 1 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 1 },
-    reqLen: 4, reqInt: 0,
+    requiredLength: 4, requiredIntersections: 0,
     blocks: [], geese: [], falseGoals: [], mustPass: [], mustCross: [],
     filters: [], flippingFilters: [], portals: [],
     landmarks: [{ x: 3, y: 1, objectType: 'library', role: 'mustTurn', turn: 'either' }],
@@ -166,7 +166,7 @@ test('scoreMove must-turn exit guidance is gated by its own SCORE_MUST_TURN_EXIT
   const K = (x: number, y: number) => PACK(x - 1, y - 1);
   const level = normalizeRawLevel({
     grid: { w: 5, h: 3 }, gates: [{ x: 1, y: 2 }], goal: { x: 5, y: 2 },
-    reqLen: 10, reqInt: 0,
+    requiredLength: 10, requiredIntersections: 0,
     blocks: [], geese: [], falseGoals: [], mustPass: [], mustCross: [],
     filters: [], flippingFilters: [], portals: [],
     landmarks: [{ x: 3, y: 2, objectType: 'library', role: 'mustTurn', turn: 'either' }],
@@ -208,7 +208,7 @@ test('scoreAndSort orders neighbors by extracted score function', () => {
   const pos = PACK(0, 2);
   const towardGoal = PACK(1, 2);
   const awayFromGoal = PACK(0, 1);
-  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), reqLen: 6 });
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), requiredLength: 6 });
   const prep = prepLevel(level);
   const state = makeState(pos);
   const neighbors = [awayFromGoal, towardGoal];
@@ -219,7 +219,7 @@ test('scoreAndSort orders neighbors by extracted score function', () => {
 test('buildCurUrgencyContext.mpCur matches the distance scoreMove computes inline for pos', () => {
   const pos = PACK(0, 2);
   const mp = PACK(3, 2);
-  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), reqLen: 6, mustPassKeys: [mp] });
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), requiredLength: 6, mustPassKeys: [mp] });
   const prep = prepLevel(level);
   const ctx = buildCurUrgencyContext(pos, makeState(pos), level, prep);
   // mpCur is a pooled capacity-sized buffer, so assert the populated slot, not `.length` —
@@ -231,7 +231,7 @@ test('scoreMove returns an identical score with and without a precomputed curCtx
   const pos = PACK(0, 2);
   const target = PACK(1, 2);
   const mp = PACK(3, 2);
-  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), reqLen: 6, mustPassKeys: [mp] });
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 2), requiredLength: 6, mustPassKeys: [mp] });
   const prep = prepLevel(level);
   const state = makeState(pos, { mustMask: 1 });
   const withoutCtx = scoreMove(target, pos, state, level, prep, SCORING_PROFILES.default, 5, null);
@@ -245,7 +245,7 @@ test('scoreAndSort still orders neighbors correctly using its internally-built c
   const mp = PACK(3, 2);
   const towardMp = PACK(1, 2);
   const awayFromMp = PACK(0, 1);
-  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 4), reqLen: 8, mustPassKeys: [mp] });
+  const level = makeLevel({ gateKeys: [pos], goalKey: PACK(4, 4), requiredLength: 8, mustPassKeys: [mp] });
   const prep = prepLevel(level);
   const state = makeState(pos, { mustMask: 1 });
   const neighbors = [awayFromMp, towardMp];
@@ -263,7 +263,7 @@ test('buildCurUrgencyContext selects the must-cross approach axis from ENTRY sta
   // bit) would wrongly flip the axis selection for itself. buildCurUrgencyContext reads
   // edgeUsage[mcKey] once, from the pre-loop entry state, so it can only ever see AXIS_V here.
   const mcKey = PACK(2, 2);
-  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), reqLen: 8, mustCrossKeys: [mcKey] });
+  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), requiredLength: 8, mustCrossKeys: [mcKey] });
   const prep = prepLevel(level);
   const edgeUsage = new Uint8Array(KEY_SPACE);
   edgeUsage[mcKey] = AXIS_V;
@@ -280,7 +280,7 @@ test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling
   const mcKey = PACK(2, 2);
   const exitH = PACK(3, 2); // this candidate's OWN exit axis is H
   const exitV = PACK(2, 3); // this candidate's OWN exit axis is V
-  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), reqLen: 8, mustCrossKeys: [mcKey] });
+  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), requiredLength: 8, mustCrossKeys: [mcKey] });
   const prep = prepLevel(level);
 
   // Entry-only state (before either candidate is applied) — what a real batch caller has.
@@ -340,7 +340,7 @@ test('scoreMove must-cross urgency: curCtx keeps the same axis for every sibling
 test('buildCurUrgencyContext(includeMcAxisFix=false) still populates mpCur but nulls out must-cross fields', () => {
   const mcKey = PACK(2, 2);
   const mp = PACK(3, 3);
-  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), reqLen: 8, mustPassKeys: [mp], mustCrossKeys: [mcKey] });
+  const level = makeLevel({ gateKeys: [PACK(2, 0)], goalKey: PACK(4, 4), requiredLength: 8, mustPassKeys: [mp], mustCrossKeys: [mcKey] });
   const prep = prepLevel(level);
   const edgeUsage = new Uint8Array(KEY_SPACE);
   edgeUsage[mcKey] = AXIS_V;

@@ -113,7 +113,7 @@ for (const f of readdirSync(path.join(ROOT, 'reports/stress')).filter(x => /^pru
             prep._cfg = FULL;
             const prunedNow = evaluatePrunedMove(alt, getRealLengthFromState(state), state, level, prep, FULL, true) === 'reject';
             prep._cfg = null;
-            const rSteps = level.reqLen - getRealLengthFromState(state);
+            const rSteps = level.requiredLength - getRealLengthFromState(state);
             const row = achievable.get(alt);
             const fires = rSteps >= 0 && rSteps <= MAX_K && (!row || row[rSteps] === 0);
             undoMove(undo, state);

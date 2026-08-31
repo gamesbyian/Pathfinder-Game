@@ -125,7 +125,7 @@ for (const { raw, idx } of sample) {
             const isJump = !!(pAtPos && !state.lastWasPortalJump && pAtPos.dest === cand);
             const undo = applyMove(cand, state, prodLevel, prep, isJump);
             const realLen = getRealLengthFromState(state);
-            const rSteps = prodLevel.reqLen - realLen;
+            const rSteps = prodLevel.requiredLength - realLen;
             const score = scoreMove(cand, pos, state, prodLevel, prep, SCORING_PROFILES.default, rSteps, null, null);
             scored.push({ cand, score });
             undoMove(undo, state);
