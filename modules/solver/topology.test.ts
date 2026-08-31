@@ -466,7 +466,7 @@ function referenceIsConnected(
     // Deliberately naive: a plain Set-based BFS re-derived from the game rules, sharing no code
     // (and no scratch buffers) with topology.ts.
     const { w, h } = level.grid;
-    const intNeeded = level.reqInt - state.ints;
+    const intNeeded = level.requiredIntersections - state.ints;
     const maxVisit = intNeeded > 0 ? 2 : 0;
     const canEnter = (k: number) => {
         const fi = prep.flipperIndexMap[k] - 1;
@@ -521,7 +521,7 @@ function referenceIsConnected(
         if ((state.mustCrossMask & (1 << i)) !== 0 && !seen.has(level.mustCrossKeys[i])) return false;
     }
     if (level.portalMap.size === 0) {
-        const rSteps = level.reqLen - (state.path.length - 1 - state.portalJumps);
+        const rSteps = level.requiredLength - (state.path.length - 1 - state.portalJumps);
         if (freshVolume + intNeeded < rSteps) return false;
     }
     return true;
