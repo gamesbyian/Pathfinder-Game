@@ -1,7 +1,7 @@
 import { createEngineState } from './state-slices.js';
 import type { EngineState } from './state-slices.js';
 import type { EngineLevel } from './domain/level-schema.js';
-import type { LevelUtils, DataService, SolverApi, ReportError } from './ports.js';
+import type { DataService, SolverApi, ReportError } from './ports.js';
 import { PLAY } from './app-constants.js';
 
 /** The top-level mutable application state container handed to every controller. */
@@ -17,7 +17,6 @@ export type AppState = { ENGINE: EngineState };
  */
 export type ControllerDeps = {
     state: AppState;
-    levelUtils?: LevelUtils;
     data?: DataService;
     solverApi?: SolverApi;
     reportError?: ReportError;
@@ -28,10 +27,10 @@ export type ControllerDeps = {
  * `ControllerDeps` with a chosen subset of the typed bags made **required**. Construction is
  * piecemeal (different controllers get different bags), so the bags are optional on the base type;
  * a factory that genuinely uses one declares it required, e.g.
- * `({ … }: RequireDeps<'levelUtils' | 'solverApi'>)`. The destructured bag is then non-optional
+ * `({ … }: RequireDeps<'data' | 'solverApi'>)`. The destructured bag is then non-optional
  * (no `?.`/`!` noise) and the composition root is checked to actually pass it.
  */
-export type RequireDeps<K extends 'levelUtils' | 'data' | 'solverApi'> =
+export type RequireDeps<K extends 'data' | 'solverApi'> =
     ControllerDeps & Required<Pick<ControllerDeps, K>>;
 
 export function createState(): AppState {
