@@ -62,7 +62,7 @@
       "artifactSchemaVersion": null,
       "sourceCommitOrRunId": "source benchmark metadata embedded in artifact",
       "consumers": ["scripts/stress/diff-baseline.mjs", "new-solve detection"],
-      "regenerationCommand": "npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/benchmark-latest-random.json",
+      "regenerationCommand": "npm run stress:compile-baseline -- --mode=corpus2 --official=reports/stress/solver-corpus2-latest.json",
       "supersededBy": null,
       "safeToDelete": false,
       "safeToRegenerate": true
