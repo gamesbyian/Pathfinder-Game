@@ -277,7 +277,7 @@ Check:
 7. cancellation/invalidation behavior for derived async work;
 8. browser/e2e tests for user-visible state.
 
-Do not mutate ENGINE-owned state around the action boundary to save plumbing.
+Do not mutate `engineState`-owned state around the action boundary to save plumbing.
 
 ## Generated artifact schema or "latest" output
 

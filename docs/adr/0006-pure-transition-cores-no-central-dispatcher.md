@@ -3,7 +3,7 @@
 **Status:** Accepted (modernization-plan §2 realized).
 
 ## Context
-`ENGINE` is one mutable tree. ADR 0002 confined mutation to state-action helpers, but correctness
+`engineState` is one mutable tree. ADR 0002 confines mutation to state-action helpers, but correctness
 of complex flows (movement, undo, reset, win, hazard, level-load, review) still lived in imperative
 controller code that was hard to test without booting the DOM. modernization-plan §2 asked to make
 these flows inspectable and testable as transitions.
