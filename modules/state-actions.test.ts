@@ -91,7 +91,7 @@ import {
   setUiFocusIndex,
   startSolverRun,
   stepVisualFlipCount,
-  setVariant,
+  setOrientation,
   toggleDevMode,
   toggleFlag,
   toggleEditorMirrorHorizontal,
@@ -415,14 +415,14 @@ test('transient runtime helpers update nav, ripple, hint, option, and cheat stat
   assert.equal(setResetStreak(state, 0), 0);
 });
 
-test('mode, logic, overlay, level index, variant, and level setters update engine state', () => {
+test('mode, logic, overlay, level index, orientation, and level setters update engine state', () => {
   const state = { ENGINE: {} } as any;
   assert.equal(setMode(state, 'PLAY' as any), 'PLAY');
   assert.equal(setLogicState(state, 'IDLE'), 'IDLE');
   assert.equal(setOverlayState(state, 'NONE'), 'NONE');
   assert.equal(setLevelIndex(state, 3), 3);
-  assert.equal(setVariant(state, 7), 7);
+  assert.equal(setOrientation(state, 7), 7);
   const level = { id: 'level' } as any;
   assert.equal(setLevel(state, level), level);
-  assert.deepEqual(state.ENGINE, { mode: 'PLAY', logicState: 'IDLE', overlayState: 'NONE', levelIdx: 3, variant: 7, level });
+  assert.deepEqual(state.ENGINE, { mode: 'PLAY', logicState: 'IDLE', overlayState: 'NONE', levelIdx: 3, orientation: 7, level });
 });
