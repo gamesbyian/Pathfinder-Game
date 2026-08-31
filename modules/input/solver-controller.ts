@@ -13,14 +13,15 @@ import { getRequiredPathCoverageRatio } from '../solver/routing-regime.js';
 import { DENSE_LEVEL_COVERAGE_THRESHOLD } from '../solver/prep.js';
 import { createEnumerationPoolClient } from '../solver/solver-worker-client.js';
 import { defaultReportError } from '../error-reporting.js';
+import { OVERLAY_NONE, SOLVER_RUNNING } from '../app-constants.js';
 
-export function createSolverController({ core, state, ui, engine, levelUtils, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
+export function createSolverController({ state, ui, engine, levelUtils, solverApi, reportError = defaultReportError }: RequireDeps<'levelUtils' | 'solverApi'>) {
 
     // --- Solver close / abort ---
 
     (document.getElementById('solverCloseBtn') as any).onclick = () => {
         if (!engine.solver.isRunning()) {
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
             return;
         }
         ui.showMessage('Stopping solver…', 'warning');
@@ -85,7 +86,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         engine.solver.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
-            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setSolverTimerText('0.0s');
             ui.setSolverDetailText('Searching…');
@@ -113,7 +114,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 engine.hints.setHintPaths([result.solution], 'solver', 0);
                 engine.overlays.startHintAnimation();
             } else {
-                engine.overlays.setOverlayState(core.OVERLAY_NONE);
+                engine.overlays.setOverlayState(OVERLAY_NONE);
                 ui.showMessage('No solution found within time limit.', 'warning');
             }
         } catch (err: any) {
@@ -121,7 +122,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 reportError('solver.solve', err);
                 ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
             clearInterval(_progressTicker);
@@ -228,7 +229,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         extendActiveRun = (extraMs: any) => { if (bounded) { deadlineAt += extraMs; _lastTenths = -1; updateProgressDisplay(); } };
 
         try {
-            engine.overlays.setOverlayState(core.SOLVER_RUNNING);
+            engine.overlays.setOverlayState(SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
             ui.setSolverTimerText('0.0s');
             ui.setSolverDetailText(tier.complete ? 'Finding every solution…' : 'Searching for varied hints…');
@@ -331,7 +332,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
             if (_progressTicker) { clearInterval(_progressTicker); _progressTicker = null; }
             ui.setSolverProgress(100);
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
             if (res.newlySaved.length > 0) {
                 setFoundHintsSinceLoad(state, mergeUniqueHints(state.ENGINE.foundHintsSinceLoad || [], res.newlySaved));
                 const levelRevision = await getLevelFingerprint(level);
@@ -347,7 +348,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
                 reportError('solver.variety-search', err);
                 ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'error');
             }
-            engine.overlays.setOverlayState(core.OVERLAY_NONE);
+            engine.overlays.setOverlayState(OVERLAY_NONE);
         } finally {
             extendActiveRun = null;
             ui.setClassState('solverBudgetLabel', 'hidden', true);
