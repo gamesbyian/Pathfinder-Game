@@ -246,11 +246,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          # Keep the two stress level documents used by the codec's real-data
+          # published/corpus1/corpus2 parity test while excluding the much larger stress hint tree.
           sparse-checkout: |
             /*
             !/logs/
             !/reports/
-            !/data/stress/
+            !/data/stress/*
+            /data/stress/stress-levels.json
+            /data/stress/stress-levels-random.json
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@v7
         with:
