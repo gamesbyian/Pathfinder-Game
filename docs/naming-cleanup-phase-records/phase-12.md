@@ -326,6 +326,8 @@ backfill the closeout merge commit/run before `phaseClosures["12"]` becomes `clo
 
 ## 13. Merged-tree closeout pass
 
+Closeout PR: **#1618**.
+
 Closeout base is implementation merge `c78b43ca1130b8e233e176abc5ea6f447089484b`. Comparing
 implementation final head `c4bc05f317c6fb48ece03b827f487b177fdf5be1` to that merge commit
 shows one merge commit and **zero file differences**, so the merged runtime/doc tree is exactly the
