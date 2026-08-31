@@ -60,7 +60,7 @@ export function createLevelUtils({ core, data, getState, getRenderer, reportErro
             Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / eng.viewport.cellW)));
         const ty = Math.max(0, Math.min(gridH - 1,
             Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / eng.viewport.cellH)));
-        return inverseTransformPoint(tx, ty, eng.variant, l.grid.w, l.grid.h);
+        return inverseTransformPoint(tx, ty, eng.orientation, l.grid.w, l.grid.h);
     }
 
     // Pure: applies a (dx, dy) shift to all coordinate keys in a level object.
