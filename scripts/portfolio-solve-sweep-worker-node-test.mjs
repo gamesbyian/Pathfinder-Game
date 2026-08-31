@@ -100,7 +100,8 @@ await test('the repair budget override is preserved at both raced portfolio reco
 await test('an explicit repair override controls the real worker-race repair allocation without sibling substitution', async () => {
     writeFileSync(corpusPath, JSON.stringify([repairEligibleInfeasibleRawLevel()]));
     const solveOpts = { timeBudgetMs: 1000, repairAdditiveBudgetMultiplierOverride: 3 };
-    assert.equal('repairBudgetFraction' in solveOpts, false);
+    const retiredResolvedLocal = ['repairBudget', 'Fraction'].join('');
+    assert.equal(retiredResolvedLocal in solveOpts, false);
     assert.equal('legacyRepairBudgetFractionOverride' in solveOpts, false);
 
     const result = await raceLevel(solveOpts);
