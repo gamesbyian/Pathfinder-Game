@@ -162,3 +162,5 @@ Lifecycle labels such as `pilot`, dates, experiment origin, and generic `legacy`
 ## Historical evidence
 
 Frozen dated reports, archived snapshots, historical logs, old workflow-run artifacts, and retained experiment evidence preserve their original names. Current authorities may annotate a legacy term with its canonical successor, but do not mass-rewrite evidence to make history look current.
+
+For solver research, the operational boundary between frozen historical vocabulary and current executable identities is documented in [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md). Historical machine identities must enter current analysis through their named compatibility normalizer; removed command/file/helper names are provenance, not permanent aliases.

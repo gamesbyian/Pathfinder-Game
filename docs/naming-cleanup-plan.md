@@ -1380,11 +1380,45 @@ writers, external/persisted identities, historical fixtures, and all readers, th
 normalization before any canonical single-write change. A no-migration retain decision must amend
 the row and permanent vocabulary authority with evidence rather than silently marking it done.
 
+Preparation authority: [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md)
+records the current boundary audit and the solver-research handoff risks found after Phases 8-14.
+Implementation-time reconciliation still wins over that snapshot.
+
+For Phase 15, a claimed historical reader must be **executable evidence**, not a lexical hit. A
+representative historical fixture must pass through the named owner to the canonical internal form.
+A comment, allowlisted legacy token, or future-looking compatibility promise does not establish a
+dual-read boundary. If implementation-time census finds no real reader/external caller for a row
+currently marked `dual-read`, amend the compatibility contract honestly rather than manufacturing
+unused normalization code.
+
+### Phase 15 solver-research resumption gate
+
+The naming cleanup is not ready for archival merely because all seven Phase-15 rows are lexically
+migrated. Before final completion:
+
+1. finalize [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md)
+   as the bridge from frozen historical evidence to current solver tooling;
+2. keep attempt, stage, and routing-regime historical translation centralized in
+   `normalizeAttemptIdentityKey()`, `normalizeSolverStageId()`, and `normalizeRoutingRegime()`;
+3. extend `test:solver-research-resumption` with representative Phase-15 historical fixtures or
+   named stronger tests that prove the same end-to-end property;
+4. for every real persisted/generated compatibility boundary, prove legacy read -> canonical
+   internal form -> canonical single-write as separate assertions;
+5. prove current solver authorities and executable recipes use current vocabulary while frozen
+   evidence remains unchanged;
+6. capture one small post-Phase-15 solver-research anchor using the current regression/preflight
+   and equal-work/census tooling before the next decision-bearing solver experiment.
+
+This gate preserves negative research knowledge across renamed identities. It does not authorize
+rewriting old reports or rerunning closed experiments.
+
 ### PR 15: Cleanup completion
 
 - run repository-wide legacy-term audit;
 - remove temporary aliases whose removal rule is satisfied;
-- verify historical fixtures still parse;
+- verify historical fixtures still parse through their actual owning readers;
+- pass `npm run test:solver-research-resumption` after extending it for the resolved Phase-15 boundaries;
+- complete the post-naming solver research resumption gate above;
 - mark ledger complete;
 - archive this plan and the completed ledger;
 - keep `docs/naming-and-vocabulary.md` as permanent authority;
