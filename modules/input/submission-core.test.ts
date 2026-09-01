@@ -9,7 +9,7 @@ import {
     resolveHintAdditionVerdict,
     pendingDuplicateNovelCount,
     clampReviewIndex,
-    findLocalCorpusMatchByFingerprint,
+    findLocalCorpusMatchByLevelFingerprint,
 } from './submission-core.js';
 
 // --- nextHintCycleIndex (hint cycling / wrap) ---
@@ -113,30 +113,30 @@ test('resolveHintAdditionVerdict: target with id but no hints field → all hint
     assert.equal(v.targetPublishedLevelId, 'pub2');
 });
 
-// --- findLocalCorpusMatchByFingerprint ---
+// --- findLocalCorpusMatchByLevelFingerprint ---
 
-test('findLocalCorpusMatchByFingerprint: no match → null', () => {
-    const match = findLocalCorpusMatchByFingerprint([{ levelNumber: 1, fingerprint: 'a' }], 'b');
+test('findLocalCorpusMatchByLevelFingerprint: no match → null', () => {
+    const match = findLocalCorpusMatchByLevelFingerprint([{ levelNumber: 1, levelFingerprint: 'a' }], 'b');
     assert.equal(match, null);
 });
 
-test('findLocalCorpusMatchByFingerprint: null target fingerprint → null', () => {
-    const match = findLocalCorpusMatchByFingerprint([{ levelNumber: 1, fingerprint: 'a' }], null);
+test('findLocalCorpusMatchByLevelFingerprint: null target fingerprint → null', () => {
+    const match = findLocalCorpusMatchByLevelFingerprint([{ levelNumber: 1, levelFingerprint: 'a' }], null);
     assert.equal(match, null);
 });
 
-test('findLocalCorpusMatchByFingerprint: match → level number and fingerprint', () => {
-    const match = findLocalCorpusMatchByFingerprint(
-        [{ levelNumber: 1, fingerprint: 'a' }, { levelNumber: 42, fingerprint: 'b' }],
+test('findLocalCorpusMatchByLevelFingerprint: match → level number and fingerprint', () => {
+    const match = findLocalCorpusMatchByLevelFingerprint(
+        [{ levelNumber: 1, levelFingerprint: 'a' }, { levelNumber: 42, levelFingerprint: 'b' }],
         'b',
     );
-    assert.deepEqual(match, { levelNumber: 42, fingerprint: 'b' });
+    assert.deepEqual(match, { levelNumber: 42, levelFingerprint: 'b' });
 });
 
 // --- resolveHintAdditionVerdict: local-corpus match ---
 
 test('resolveHintAdditionVerdict: local match with novel hints → contribute the novel subset', () => {
-    const localMatch = { levelNumber: 42, fingerprint: 'fp-42' };
+    const localMatch = { levelNumber: 42, levelFingerprint: 'fp-42' };
     const v = resolveHintAdditionVerdict([[1, 2], [3, 4]], null, localMatch, [[1, 2]]);
     assert.equal(v.ok, true);
     assert.deepEqual(v.hintsToSubmit, [[3, 4]]);
@@ -146,7 +146,7 @@ test('resolveHintAdditionVerdict: local match with novel hints → contribute th
 });
 
 test('resolveHintAdditionVerdict: local match already has all hints → blocked', () => {
-    const localMatch = { levelNumber: 42, fingerprint: 'fp-42' };
+    const localMatch = { levelNumber: 42, levelFingerprint: 'fp-42' };
     const v = resolveHintAdditionVerdict([[1, 2]], null, localMatch, [[1, 2]]);
     assert.equal(v.ok, false);
     assert.deepEqual(v.hintsToSubmit, []);
@@ -155,7 +155,7 @@ test('resolveHintAdditionVerdict: local match already has all hints → blocked'
 });
 
 test('resolveHintAdditionVerdict: local match takes precedence over a Firestore target', () => {
-    const localMatch = { levelNumber: 42, fingerprint: 'fp-42' };
+    const localMatch = { levelNumber: 42, levelFingerprint: 'fp-42' };
     const v = resolveHintAdditionVerdict([[1, 2]], { id: 'pub1', hints: [] }, localMatch, []);
     assert.equal(v.targetPublishedLevelId, null);
     assert.deepEqual(v.targetLocalLevelMatch, localMatch);
@@ -191,8 +191,8 @@ import { describeDuplicateCheck } from './submission-core.js';
 
 test('describeDuplicateCheck: pending-queue match defers with a pending handle', () => {
   const dup = { id: 'sub1', source: 'pending', hints: [[1]] };
-  const v = describeDuplicateCheck({ fingerprint: 'fp', duplicate: dup });
-  assert.equal(v.fingerprint, 'fp');
+  const v = describeDuplicateCheck({ levelFingerprint: 'fp', duplicate: dup });
+  assert.equal(v.levelFingerprint, 'fp');
   assert.equal(v.pendingDuplicateMatch, dup);
   assert.equal(v.hintAdditionTarget, null);
   assert.equal(v.step.state, 'warn');
@@ -201,7 +201,7 @@ test('describeDuplicateCheck: pending-queue match defers with a pending handle',
 
 test('describeDuplicateCheck: published match becomes a hint-addition target', () => {
   const dup = { id: 'pub1', source: 'approved', hints: [] };
-  const v = describeDuplicateCheck({ fingerprint: 'fp2', duplicate: dup });
+  const v = describeDuplicateCheck({ levelFingerprint: 'fp2', duplicate: dup });
   assert.equal(v.pendingDuplicateMatch, null);
   assert.equal(v.hintAdditionTarget, dup);
   assert.equal(v.step.state, 'warn');
@@ -209,16 +209,16 @@ test('describeDuplicateCheck: published match becomes a hint-addition target', (
 });
 
 test('describeDuplicateCheck: clean result is ok; unchecked collections degrade to a warning', () => {
-  const clean = describeDuplicateCheck({ fingerprint: 'fp3', warnings: [] });
+  const clean = describeDuplicateCheck({ levelFingerprint: 'fp3', warnings: [] });
   assert.deepEqual(clean.step, { state: 'ok', details: 'No duplicate found in pending or approved levels' });
   assert.equal(clean.pendingDuplicateMatch, null);
   assert.equal(clean.hintAdditionTarget, null);
 
-  const partial = describeDuplicateCheck({ fingerprint: null, warnings: ['approved', 'pending'] });
+  const partial = describeDuplicateCheck({ levelFingerprint: null, warnings: ['approved', 'pending'] });
   assert.equal(partial.step.state, 'warn');
   assert.match((partial.step.details as string[])[1], /Could not check: approved levels, pending queue/);
 
   const missing = describeDuplicateCheck(undefined);
-  assert.equal(missing.fingerprint, null);
+  assert.equal(missing.levelFingerprint, null);
   assert.equal(missing.step.state, 'ok');
 });

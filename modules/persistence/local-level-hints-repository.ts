@@ -3,7 +3,7 @@
 // Provenance section. Keyed by the level's fingerprint (domain/level-fingerprint.ts), the same
 // identity mechanism already used for submission/publish duplicate detection and Dev-Mode level
 // ratings. One Firestore doc per distinct discovered path, under
-// artifacts/{appId}/local_level_hints/{fingerprint}/entries/{entryId}.
+// artifacts/{appId}/local_level_hints/{levelFingerprint}/entries/{entryId}.
 import { collection, doc, getDocs, getCountFromServer, setDoc, Timestamp } from 'firebase/firestore';
 import { toHint, mergeHints, upgradeProvenanceEntry, type Hint, type HintProvenanceEntry } from '../domain/hint-types.js';
 
@@ -24,15 +24,15 @@ function hashPathSignature(signature: string): string {
 
 export function createLocalLevelHintsRepository(client: any) {
     const { appId } = client;
-    const entries = (fingerprint: string) =>
-        collection(doc(client.db, 'artifacts', appId), 'local_level_hints', fingerprint, 'entries');
+    const entries = (levelFingerprint: string) =>
+        collection(doc(client.db, 'artifacts', appId), 'local_level_hints', levelFingerprint, 'entries');
 
     /** All saved entries for a level, hydrated into canonical Hint[] (one provenance entry per
      *  Firestore doc, grouped by path signature — mirrors how the local per-level hint files
      *  store multiple discovery events for the same path). */
-    async function getLocalLevelHints(fingerprint: string): Promise<Hint[]> {
-        if (!client.db || !fingerprint) return [];
-        const snapshot = await getDocs(entries(fingerprint));
+    async function getLocalLevelHints(levelFingerprint: string): Promise<Hint[]> {
+        if (!client.db || !levelFingerprint) return [];
+        const snapshot = await getDocs(entries(levelFingerprint));
         const hints: Hint[] = [];
         snapshot.forEach((snap: any) => {
             const data = snap.data() || {};
@@ -51,18 +51,18 @@ export function createLocalLevelHintsRepository(client: any) {
      *  flow already surfacing its own errors) are responsible for catching and reporting rather
      *  than letting a rejected promise go unhandled. */
     async function saveLocalLevelHintIfNovel(
-        fingerprint: string,
+        levelFingerprint: string,
         path: number[],
         pathSignature: string,
         provenance: HintProvenanceEntry,
         alreadyKnownSignatures: ReadonlySet<string>,
     ): Promise<boolean> {
-        if (!client.db || !fingerprint) return false;
+        if (!client.db || !levelFingerprint) return false;
         if (alreadyKnownSignatures.has(pathSignature)) return false;
-        const count = await getCountFromServer(entries(fingerprint));
+        const count = await getCountFromServer(entries(levelFingerprint));
         if (count.data().count >= MAX_HINTS_PER_LEVEL) return false;
         const entryId = hashPathSignature(pathSignature);
-        await setDoc(doc(entries(fingerprint), entryId), {
+        await setDoc(doc(entries(levelFingerprint), entryId), {
             path,
             pathSignature,
             provenance,

@@ -36,14 +36,19 @@ assert.equal(phase15.find(row => row.id === 'NC-P15-002')?.status, 'done');
 assert.equal(ledger.batchCompletions?.['15D']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15D']?.pr, 1641);
 assert.equal(ledger.batchCompletions?.['15D']?.mergeCommit, 'b00c68f3495ec6591f3846ac0bf2e519f2613a1e');
-for (const id of ['NC-P15-003', 'NC-P15-009']) {
-  assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === id)?.status),
-    `15E row ${id} must be active or done while this source guard owns the 15E cutover`);
-}
+assert.equal(phase15.find(row => row.id === 'NC-P15-003')?.status, 'done');
+assert.equal(phase15.find(row => row.id === 'NC-P15-009')?.status, 'done');
+assert.equal(ledger.batchCompletions?.['15E']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15E']?.pr, 1642);
+assert.equal(ledger.batchCompletions?.['15E']?.mergeCommit, '502dd2c610cd36b5ecea656b655ae570e068cbb9');
+assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === 'NC-P15-004')?.status),
+  '15F row NC-P15-004 must be active or done while this source guard owns the application rename');
 assert.ok(
-  phase15.filter(row => !['NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-006', 'NC-P15-008', 'NC-P15-009'].includes(row.id))
-    .every(row => row.status === 'pending'),
-  '15E must leave later implementation rows pending until their serial batch begins',
+  phase15.filter(row => ![
+    'NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-004',
+    'NC-P15-006', 'NC-P15-008', 'NC-P15-009',
+  ].includes(row.id)).every(row => row.status === 'pending'),
+  '15F must leave 15G/15H implementation rows pending until their serial batch begins',
 );
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
@@ -133,7 +138,8 @@ assert.match(submissionRepo, /levelFingerprint/u);
 assert.match(submissionRepo, /fingerprintVersion/u);
 
 const ratingManager = readFileSync('modules/engine/level-rating-manager.ts', 'utf8');
-assert.match(ratingManager, /fingerprint/u);
+assert.match(ratingManager, /levelFingerprint/u);
+assert.doesNotMatch(ratingManager, /rating\.fingerprint/u);
 
 const orchestration = readFileSync('modules/solver/orchestration.ts', 'utf8');
 assert.match(orchestration, /repairLateProbe/u);

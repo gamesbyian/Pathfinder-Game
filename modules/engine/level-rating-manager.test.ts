@@ -16,7 +16,7 @@ const RAW_LEVEL = {
     filters: [], flippingFilters: [], portals: [], geese: [], landmarks: [],
 };
 
-function createHarness({ ratingsByFingerprint = {} as Record<string, any> } = {}) {
+function createHarness({ ratingsByLevelFingerprint = {} as Record<string, any> } = {}) {
     const state = { engineState: createEngineState() };
     state.engineState.isDevMode = true;
     state.engineState.mode = PLAY;
@@ -29,12 +29,12 @@ function createHarness({ ratingsByFingerprint = {} as Record<string, any> } = {}
     const saveCalls: any[] = [];
     const errors: any[] = [];
     const persistence = {
-        loadLevelRating: async (fingerprint: string) => {
-            loadCalls.push(fingerprint);
-            return ratingsByFingerprint[fingerprint] ?? null;
+        loadLevelRating: async (levelFingerprint: string) => {
+            loadCalls.push(levelFingerprint);
+            return ratingsByLevelFingerprint[levelFingerprint] ?? null;
         },
-        saveLevelRating: async (fingerprint: string, levelNumber: number | null, rating: any) => {
-            saveCalls.push({ fingerprint, levelNumber, rating });
+        saveLevelRating: async (levelFingerprint: string, levelNumber: number | null, rating: any) => {
+            saveCalls.push({ levelFingerprint, levelNumber, rating });
         },
     };
     const reportError = (context: string, err: any) => errors.push({ context, err });
@@ -44,13 +44,13 @@ function createHarness({ ratingsByFingerprint = {} as Record<string, any> } = {}
 }
 
 test('a hit on the current fingerprint applies the rating without touching legacy keys', async () => {
-    const currentFingerprint = await getLevelFingerprint(RAW_LEVEL);
+    const currentLevelFingerprint = await getLevelFingerprint(RAW_LEVEL);
     const rating = { tags: ['fun'], customTags: ['cool'], difficulty: 3, fun: 4 };
-    const { state, manager, loadCalls, saveCalls } = createHarness({ ratingsByFingerprint: { [currentFingerprint]: rating } });
+    const { state, manager, loadCalls, saveCalls } = createHarness({ ratingsByLevelFingerprint: { [currentLevelFingerprint]: rating } });
 
     await manager.refreshForCurrentLevel();
 
-    assert.deepEqual(loadCalls, [currentFingerprint], 'only the current fingerprint should be queried');
+    assert.deepEqual(loadCalls, [currentLevelFingerprint], 'only the current fingerprint should be queried');
     assert.equal(saveCalls.length, 0, 'no migration write when there is nothing to migrate');
     assert.deepEqual([...state.engineState.levelRating.tags], ['fun']);
     assert.equal(state.engineState.levelRating.difficulty, 3);
@@ -58,16 +58,16 @@ test('a hit on the current fingerprint applies the rating without touching legac
 });
 
 test('a miss on the current fingerprint falls back to a legacy key, applies it, and migrates it forward', async () => {
-    const currentFingerprint = await getLevelFingerprint(RAW_LEVEL);
-    const [legacyFingerprint] = await getLegacyLevelFingerprints(RAW_LEVEL);
+    const currentLevelFingerprint = await getLevelFingerprint(RAW_LEVEL);
+    const [legacyLevelFingerprint] = await getLegacyLevelFingerprints(RAW_LEVEL);
     const legacyRating = { tags: ['geese'], customTags: [], difficulty: 5, fun: 2 };
-    const { state, manager, loadCalls, saveCalls } = createHarness({ ratingsByFingerprint: { [legacyFingerprint]: legacyRating } });
+    const { state, manager, loadCalls, saveCalls } = createHarness({ ratingsByLevelFingerprint: { [legacyLevelFingerprint]: legacyRating } });
 
     await manager.refreshForCurrentLevel();
 
-    assert.deepEqual(loadCalls, [currentFingerprint, legacyFingerprint], 'current key first, then the legacy key');
+    assert.deepEqual(loadCalls, [currentLevelFingerprint, legacyLevelFingerprint], 'current key first, then the legacy key');
     assert.equal(saveCalls.length, 1, 'the found legacy rating is copied forward to the current key');
-    assert.equal(saveCalls[0].fingerprint, currentFingerprint);
+    assert.equal(saveCalls[0].levelFingerprint, currentLevelFingerprint);
     assert.deepEqual(saveCalls[0].rating, legacyRating);
     assert.deepEqual([...state.engineState.levelRating.tags], ['geese'], 'the legacy rating is applied to the UI');
     assert.equal(state.engineState.levelRating.difficulty, 5);
@@ -85,8 +85,8 @@ test('a miss on every fingerprint (current and legacy) resolves to a blank, load
 });
 
 test('a failed migration write reports but does not block applying the legacy rating', async () => {
-    const currentFingerprint = await getLevelFingerprint(RAW_LEVEL);
-    const [legacyFingerprint] = await getLegacyLevelFingerprints(RAW_LEVEL);
+    const currentLevelFingerprint = await getLevelFingerprint(RAW_LEVEL);
+    const [legacyLevelFingerprint] = await getLegacyLevelFingerprints(RAW_LEVEL);
     const legacyRating = { tags: ['tricky'], customTags: [], difficulty: 1, fun: 1 };
 
     const state = { engineState: createEngineState() };
@@ -97,7 +97,7 @@ test('a failed migration write reports but does not block applying the legacy ra
     const data = { getLevel: () => RAW_LEVEL } as any;
     const errors: any[] = [];
     const persistence = {
-        loadLevelRating: async (fingerprint: string) => (fingerprint === legacyFingerprint ? legacyRating : null),
+        loadLevelRating: async (levelFingerprint: string) => (levelFingerprint === legacyLevelFingerprint ? legacyRating : null),
         saveLevelRating: async () => { throw new Error('write failed'); },
     };
     const reportError = (context: string, err: any) => errors.push({ context, err });
@@ -105,7 +105,7 @@ test('a failed migration write reports but does not block applying the legacy ra
 
     await manager.refreshForCurrentLevel();
 
-    assert.equal(state.engineState.levelRating.fingerprint, currentFingerprint);
+    assert.equal(state.engineState.levelRating.levelFingerprint, currentLevelFingerprint);
     assert.deepEqual([...state.engineState.levelRating.tags], ['tricky'], 'still applies despite the failed migration write');
     assert.ok(errors.some((e) => e.context === 'level-rating.migrate'), 'the migration failure is reported');
 });

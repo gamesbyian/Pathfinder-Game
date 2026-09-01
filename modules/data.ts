@@ -59,7 +59,7 @@ export function createData(
           // Only wired for the published corpus (modules/dev-corpus.ts leaves this null for the
           // stress corpora, which aren't real published levels); null means "no such source",
           // never attempted, so offline/local-only use is unaffected.
-          firestoreHintsSource?: ((fingerprint: string) => Promise<Hint[]>) | null },
+          firestoreHintsSource?: ((levelFingerprint: string) => Promise<Hint[]>) | null },
 ): DataService {
     // Mutable (not a captured const): setHintsSource()/setFirestoreHintsSource() let a caller
     // repoint hint fetches at a different corpus (modules/dev-corpus.ts) without recreating the
@@ -110,8 +110,8 @@ export function createData(
     const withFirestoreHints = async (raw: any, localHints: Hint[]): Promise<Hint[]> => {
         if (typeof firestoreHintsSource !== 'function') return localHints;
         try {
-            const fingerprint = await getLevelFingerprint(raw);
-            const extra = await firestoreHintsSource(fingerprint);
+            const levelFingerprint = await getLevelFingerprint(raw);
+            const extra = await firestoreHintsSource(levelFingerprint);
             return extra.length ? mergeHints(localHints, extra) : localHints;
         } catch {
             return localHints;
@@ -153,7 +153,7 @@ export function createData(
         _hintsCache.clear();
     };
 
-    const setFirestoreHintsSource = (nextSource: ((fingerprint: string) => Promise<Hint[]>) | null): void => {
+    const setFirestoreHintsSource = (nextSource: ((levelFingerprint: string) => Promise<Hint[]>) | null): void => {
         firestoreHintsSource = nextSource;
         _hintsCache.clear();
     };

@@ -55,7 +55,7 @@ test('submit flow serializes landmarks for duplicate check and Firestore submiss
             getCurrentUser: () => ({ uid: 'tester' }),
             findDuplicateLevel: async (levelData: any) => {
                 duplicatePayloads.push(levelData);
-                return { duplicate: null, fingerprint: 'v2:test', warnings: [] };
+                return { duplicate: null, levelFingerprint: 'v2:test', warnings: [] };
             },
             submitLevel: async (levelData: any) => {
                 submittedPayload = levelData;
@@ -214,7 +214,7 @@ test('submission-time false-goal check passes the capped budget as timeLimitMs a
     const submitted = new Promise<void>((resolve) => {
         const persistence = {
             getCurrentUser: () => ({ uid: 'tester' }),
-            findDuplicateLevel: async () => ({ duplicate: null, fingerprint: 'v2:test', warnings: [] }),
+            findDuplicateLevel: async () => ({ duplicate: null, levelFingerprint: 'v2:test', warnings: [] }),
             submitLevel: async () => { resolve(); },
         };
         createSubmissionController({
@@ -296,14 +296,14 @@ test('re-submitting an already-locally-published level with a new hint contribut
     // Matches the local corpus's only level exactly (same fingerprint-relevant fields) but with
     // one hint the local corpus doesn't have yet.
     const workingLevel = parseRawLevel({ ...rawLevel, hints: [existingHint, newHint] })!;
-    const localFingerprint = await getLevelFingerprint(rawLevel);
+    const localLevelFingerprint = await getLevelFingerprint(rawLevel);
 
     const stepMessages: any[] = [];
     let submittedPayload: any = null;
     const submitted = new Promise<void>((resolve) => {
         const persistence = {
             getCurrentUser: () => ({ uid: 'tester' }),
-            findDuplicateLevel: async () => ({ duplicate: null, fingerprint: localFingerprint, warnings: [] }),
+            findDuplicateLevel: async () => ({ duplicate: null, levelFingerprint: localLevelFingerprint, warnings: [] }),
             submitLevel: async (levelData: any, options: any) => {
                 submittedPayload = { levelData, options };
                 resolve();
@@ -368,7 +368,7 @@ test('re-submitting an already-locally-published level with a new hint contribut
         stepMessages.some((m) => String(m).includes('already exists in the published corpus (level 1)')),
         'the modal must advise the user their level already exists',
     );
-    assert.equal(submittedPayload.options.targetLocalLevelFingerprint, localFingerprint);
+    assert.equal(submittedPayload.options.targetLocalLevelFingerprint, localLevelFingerprint);
     assert.equal(submittedPayload.options.targetPublishedLevelId, null);
     assert.deepEqual(submittedPayload.levelData.hints, [{ path: newHint, provenance: [] }],
         'only the novel hint should be submitted, not the one the local corpus already has');

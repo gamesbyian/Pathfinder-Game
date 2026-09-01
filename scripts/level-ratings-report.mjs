@@ -52,9 +52,9 @@ async function fetchLevelRatings() {
   const payload = await res.json();
   return (payload.documents || []).map(doc => {
     const fields = decodeFirestoreFields(doc.fields || {});
-    const fingerprint = doc.name.split('/').pop();
+    const levelFingerprint = doc.name.split('/').pop();
     return {
-      fingerprint,
+      levelFingerprint,
       levelNumber: fields.levelNumber ?? null,
       tags: Array.isArray(fields.tags) ? fields.tags : [],
       customTags: Array.isArray(fields.customTags) ? fields.customTags : [],
@@ -77,7 +77,7 @@ function printReport(ratings, { json = false } = {}) {
   const sorted = [...ratings].sort((a, b) => (a.levelNumber ?? Infinity) - (b.levelNumber ?? Infinity));
   for (const r of sorted) {
     const allTags = [...r.tags, ...r.customTags];
-    const label = r.levelNumber !== null ? `Level ${r.levelNumber}` : `(no level #) ${r.fingerprint}`;
+    const label = r.levelNumber !== null ? `Level ${r.levelNumber}` : `(no level #) ${r.levelFingerprint}`;
     console.log(`${label}: difficulty=${r.difficulty || '-'} fun=${r.fun || '-'} tags=[${allTags.join(', ')}]`);
   }
   console.log(`\n${ratings.length} rated level(s).`);

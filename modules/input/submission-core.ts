@@ -54,22 +54,22 @@ export function selectNovelHints(candidates: number[][], existing: number[][] = 
  *  Firestore published_levels doc) — see modules/persistence/local-level-hints-repository.ts. */
 export interface LocalCorpusMatch {
     levelNumber: number;
-    fingerprint: string;
+    levelFingerprint: string;
 }
 
 /**
- * Find whether `targetFingerprint` matches any level already published locally. Takes
+ * Find whether `targetLevelFingerprint` matches any level already published locally. Takes
  * precomputed fingerprints (fingerprinting is async/SHA-256-based — the caller computes them
  * once, this is the pure comparison) rather than the raw levels themselves, so it stays
  * synchronous and trivially testable.
  */
-export function findLocalCorpusMatchByFingerprint(
-    localFingerprints: readonly { levelNumber: number; fingerprint: string }[],
-    targetFingerprint: string | null,
+export function findLocalCorpusMatchByLevelFingerprint(
+    localLevelFingerprints: readonly { levelNumber: number; levelFingerprint: string }[],
+    targetLevelFingerprint: string | null,
 ): LocalCorpusMatch | null {
-    if (!targetFingerprint) return null;
-    const match = localFingerprints.find((lf) => lf.fingerprint === targetFingerprint);
-    return match ? { levelNumber: match.levelNumber, fingerprint: match.fingerprint } : null;
+    if (!targetLevelFingerprint) return null;
+    const match = localLevelFingerprints.find((lf) => lf.levelFingerprint === targetLevelFingerprint);
+    return match ? { levelNumber: match.levelNumber, levelFingerprint: match.levelFingerprint } : null;
 }
 
 export interface HintAdditionVerdict {
@@ -146,7 +146,7 @@ export function clampReviewIndex(currentIdx: number, count: number): number {
 }
 
 export interface DuplicateCheckPresentation {
-    fingerprint: string | null;
+    levelFingerprint: string | null;
     /** set when the level matches a submission already waiting in the review queue. */
     pendingDuplicateMatch: any | null;
     /** set when the level matches an already-published level (hint-addition path). */
@@ -160,15 +160,15 @@ export interface DuplicateCheckPresentation {
  * contributed); collections that could not be checked degrade the step to a warning.
  */
 export function describeDuplicateCheck(duplicateCheck: {
-    fingerprint?: string | null;
+    levelFingerprint?: string | null;
     duplicate?: { source: string } | null;
     warnings?: string[];
 } | null | undefined): DuplicateCheckPresentation {
-    const fingerprint = duplicateCheck?.fingerprint || null;
+    const levelFingerprint = duplicateCheck?.levelFingerprint || null;
     if (duplicateCheck?.duplicate) {
         const isPending = duplicateCheck.duplicate.source === 'pending';
         return {
-            fingerprint,
+            levelFingerprint,
             pendingDuplicateMatch: isPending ? duplicateCheck.duplicate : null,
             hintAdditionTarget: isPending ? null : duplicateCheck.duplicate,
             step: {
@@ -181,7 +181,7 @@ export function describeDuplicateCheck(duplicateCheck: {
     }
     const warningLabels = (duplicateCheck?.warnings || []).map((source) => source === 'approved' ? 'approved levels' : 'pending queue');
     return {
-        fingerprint,
+        levelFingerprint,
         pendingDuplicateMatch: null,
         hintAdditionTarget: null,
         step: warningLabels.length

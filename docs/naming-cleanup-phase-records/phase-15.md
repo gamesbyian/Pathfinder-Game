@@ -921,3 +921,171 @@ run **33462905089** across all six jobs and exact-head browser characterization 
 NC-P15-003 and NC-P15-009 are now `done` and `activeExecution` is idle.
 `batchCompletions["15E"]` deliberately remains pending until PR #1642 actually merges. A fresh
 exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
+
+
+## 15E merge evidence
+
+Phase 15E completed as implementation PR **#1642**.
+
+- final head: `c226d12e027df23006c79d537ea7e180a0489901`;
+- implementation-head green CI: run **33462905089**, all six CI jobs successful;
+- implementation-head browser characterization: run **33462905117**, successful;
+- final done/idle exact-head CI: run **33463342137**, all six CI jobs successful;
+- final done/idle browser characterization: run **33463342135**, successful;
+- merge commit: `502dd2c610cd36b5ecea656b655ae570e068cbb9`;
+- 15F base-main SHA: the same merge commit;
+- ledger `batchCompletions["15E"]` is now the machine merge-barrier evidence.
+
+## 15F — NC-P15-004 application-local level-fingerprint vocabulary
+
+Status: **implementation complete; awaiting final exact-head CI and merge**
+
+Branch: `chatgpt/phase15f-level-fingerprint-vocabulary-2026-08-31`  
+PR: **#1643**  
+Base main: `502dd2c610cd36b5ecea656b655ae570e068cbb9`
+
+15F is a direct internal vocabulary migration. It changes generic application-local
+`fingerprint` names that specifically mean the level fingerprint to `levelFingerprint`.
+
+The persistence/identity boundary is deliberately invariant:
+
+- Firestore submission documents already persist `levelFingerprint` and `fingerprintVersion`;
+- rating documents remain keyed by the computed fingerprint value as the document ID;
+- local-level-hint paths remain keyed by the same computed fingerprint value;
+- `LEVEL_FINGERPRINT_VERSION`, `getLevelFingerprint`, and
+  `getLegacyLevelFingerprints` keep their identities and behavior;
+- the fingerprint bytes/value for a level must not change;
+- legacy-version rating lookup/migration must remain behaviorally identical;
+- duplicate detection, local-corpus matching, hint contribution, rating load/save, and
+  submission behavior must remain equivalent.
+
+### Pre-edit owner/consumer map
+
+Application/state surfaces identified at batch entry include:
+
+- `modules/engine/level-rating-manager.ts`: level-rating state/context locals and
+  persistence calls;
+- `modules/state/actions/rating-actions.ts`: level-rating context field assignment;
+- `modules/input/submission-controller.ts`: cached local-corpus fingerprint rows and
+  duplicate-check presentation consumption;
+- `modules/input/submission-core.ts`: `LocalCorpusMatch`,
+  `DuplicateCheckPresentation`, and pure local-match/duplicate-presentation helpers;
+- `modules/persistence/level-rating-repository.ts`: private repository parameters;
+- `modules/persistence/local-level-hints-repository.ts`: private repository parameters/path helper;
+- `modules/persistence/level-submission-repository.ts`: private duplicate-check locals/parameters
+  and returned presentation field where generic `fingerprint` means the level fingerprint.
+
+Persisted document field names already canonical under `levelFingerprint` are not rename targets.
+
+### Required proof
+
+15F must add executable tests that prove:
+
+1. computed level fingerprint values are identical before/after for representative real/raw levels;
+2. rating load/save receives the exact same document-key value;
+3. legacy rating lookup/migration uses the exact same old/current fingerprint values and order;
+4. submission duplicate checks still query persisted `levelFingerprint` and return the same
+   duplicate/hint-addition semantics;
+5. local-level-hint Firestore path identity is unchanged;
+6. generic application-local `fingerprint` residue for this contract is gone without renaming
+   unrelated fingerprint concepts or `fingerprintVersion`;
+7. 15G/15H source-freeze surfaces remain untouched.
+
+
+
+
+### 15F red-CI audit finding and repair
+
+PR #1643 exact-head CI run **33463929847** was red only in the Node-test job. The failure came from
+the older Phase-8 closeout guard, and it exposed two different classes of issue:
+
+1. **real missed NC-P15-004 owners:** `modules/data.ts`, `modules/dev-corpus.ts`,
+   `modules/persistence/review-repository.ts`, and `modules/ports.ts` still used generic
+   `fingerprint` parameter/local names that specifically meant the level fingerprint;
+2. **stale Phase-8 assumptions:** NC-P08-008 still classified the broad application fingerprint
+   cluster as a retained boundary and still pinned `fingerprint` in `modules/state-slices.ts`
+   and `level-rating-repository.ts` as the expected API shape.
+
+The four missed live identifiers were migrated to `levelFingerprint` without changing values,
+Firestore fields, document IDs, path keys, algorithm/version, or call ordering. The Phase-8 guard
+was then advanced rather than weakened: NC-P08-008 is now a semantic canonical-vocabulary contract,
+the guard detects naked identifier shapes instead of the English word appearing in comments/import
+paths, and it requires the canonical state/repository forms.
+
+`check:naming-cleanup-phase15f-closeout` now explicitly scans these four newly discovered owners.
+The first red CI is therefore retained as evidence that the cross-phase guard found a genuine
+inventory omission instead of being bypassed.
+
+### 15F implementation state
+
+Current source now uses `levelFingerprint` consistently for the application-local identities owned
+by NC-P15-004, including level-rating state/context, submission duplicate presentation,
+local-corpus matching, private repository parameters, and the level-rating report row.
+
+The persisted/query/path boundary remains intentionally unchanged:
+
+- submission documents still single-write `levelFingerprint` and `fingerprintVersion`;
+- duplicate detection still queries Firestore field `levelFingerprint` with the computed value;
+- rating documents still use that value directly as their document ID;
+- local-level-hint paths still use that value directly as the level path segment;
+- `getLevelFingerprint`, `getLegacyLevelFingerprints`, and
+  `LEVEL_FINGERPRINT_VERSION` are untouched.
+
+The current v2 value for the representative rating identity fixture is frozen by test as
+`v2:1abd33d29f460fee3a9b9dee523699c780df4b55c2a30f12d495e62ae67788d3`.
+
+`check:naming-cleanup-phase15f-closeout` is registered in both the Node suite and validator suite.
+NC-P15-004 remains in progress until PR #1643 exact-head CI/browser characterization passes.
+
+
+### 15F implementation and validation evidence
+
+Implementation on PR **#1643** preserves the identity/persistence boundary while qualifying every
+current application-local level-fingerprint identifier found by the combined 15A/15F census.
+
+Canonicalized application surfaces include:
+
+- level-rating state/context and rating repository parameters;
+- submission local-corpus matching, duplicate presentation, and duplicate-query locals;
+- local-level-hint repository parameters/path helper;
+- data-service Firestore supplemental-hint callback/local vocabulary;
+- dev-corpus Firestore-hint callback type;
+- review-repository local-hint callback and approval vocabulary;
+- the public DataService callback parameter name in `modules/ports.ts`;
+- the level-ratings report row.
+
+The following identities are explicitly invariant and executable guards pin them:
+
+- `getLevelFingerprint`, `getLegacyLevelFingerprints`, and
+  `LEVEL_FINGERPRINT_VERSION`;
+- representative v2 fingerprint bytes
+  `v2:1abd33d29f460fee3a9b9dee523699c780df4b55c2a30f12d495e62ae67788d3`;
+- Firestore submission field `levelFingerprint` and `fingerprintVersion`;
+- duplicate query field/value equality on `levelFingerprint`;
+- rating document ID = computed level fingerprint value;
+- local-level-hint path key = computed level fingerprint value;
+- current-first legacy rating lookup/migration order.
+
+The first exact-head PR CI, run **33463929847**, usefully failed the old Phase-8 closeout guard.
+That failure exposed four real NC-P15-004 owners omitted by the first implementation pass:
+`modules/data.ts`, `modules/dev-corpus.ts`,
+`modules/persistence/review-repository.ts`, and `modules/ports.ts`. Those identifiers were
+canonicalized rather than reclassified away.
+
+A second exact-head CI, run **33464509682**, showed that the production Phase-8/15F guards were
+correct but the Phase-8 negative fixture still expected the old diagnostic wording. Updating only
+that fixture expectation produced implementation head
+`62d50b5baa8abe75f9cd24854b8310e6cc99cf76`.
+
+That implementation head passed:
+
+- CI run **33464597238**, all six jobs successful;
+- browser characterization run **33464597286**, successful;
+- `check:naming-cleanup-phase15f-closeout`, including the four newly discovered owners;
+- the advanced Phase-8 guard, which now rejects naked level-fingerprint identifier shapes rather
+  than treating any prose/import occurrence of the word `fingerprint` as a retained API;
+- existing rating/submission/data/review/type tests and the byte-pinned domain fingerprint test.
+
+NC-P15-004 is now `done` and `activeExecution` is idle. As with earlier serial batches,
+`batchCompletions["15F"]` deliberately remains pending until PR #1643 actually merges. A fresh
+exact-head CI/browser run on this done/idle bookkeeping head is required before merge.

@@ -22,10 +22,10 @@ export function createLevelSubmissionRepository(
     const { appId } = client;
     const root = () => doc(client.db, 'artifacts', appId);
 
-    function duplicateMatchFromDoc(snap: any, levelData: any, fingerprint: string, source: string): any {
+    function duplicateMatchFromDoc(snap: any, levelData: any, levelFingerprint: string, source: string): any {
         const data = snap.data() || {};
         const existingLevelData = decodeHints(data.levelData || {});
-        const isMatch = data.levelFingerprint === fingerprint
+        const isMatch = data.levelFingerprint === levelFingerprint
             || (existingLevelData && isSameLevelStructure(existingLevelData, levelData));
         if (!isMatch) return null;
         // Duplicate-detection compares plain paths only (submission-core.ts's selectNovelHints) —
@@ -33,24 +33,24 @@ export function createLevelSubmissionRepository(
         // The actual Hint records (with provenance) for the final submission come from the working
         // level/session state, not from this match object.
         const hints = hintPaths(upgradeLegacyHints(existingLevelData?.hints));
-        return { source, id: snap.id, fingerprint, hints };
+        return { source, id: snap.id, levelFingerprint, hints };
     }
 
     async function findDuplicateLevel(levelData: any): Promise<any> {
         if (!client.db) throw new Error('No Firebase connection');
-        const fingerprint = await getLevelFingerprint(levelData);
+        const levelFingerprint = await getLevelFingerprint(levelData);
         const warnings: string[] = [];
 
         const checkCollection = async (collectionName: string, source: string): Promise<any> => {
             const col = collection(root(), collectionName);
             try {
                 const indexedSnapshot = await client.withTimeout(
-                    getDocs(query(col, where('levelFingerprint', '==', fingerprint), limit(1))),
+                    getDocs(query(col, where('levelFingerprint', '==', levelFingerprint), limit(1))),
                     15000,
                     `Duplicate ${source} fingerprint query timed out`
                 );
                 for (const snap of indexedSnapshot.docs) {
-                    const match = duplicateMatchFromDoc(snap, levelData, fingerprint, source);
+                    const match = duplicateMatchFromDoc(snap, levelData, levelFingerprint, source);
                     if (match) return match;
                 }
                 // Version bridge: the indexed query above only matches docs stamped with the
@@ -67,7 +67,7 @@ export function createLevelSubmissionRepository(
                     `Duplicate ${source} legacy scan timed out`
                 );
                 for (const snap of fullSnapshot.docs) {
-                    const match = duplicateMatchFromDoc(snap, levelData, fingerprint, source);
+                    const match = duplicateMatchFromDoc(snap, levelData, levelFingerprint, source);
                     if (match) return match;
                 }
             } catch (e) {
@@ -78,10 +78,10 @@ export function createLevelSubmissionRepository(
         };
 
         const pendingMatch  = await checkCollection('submissions',      'pending');
-        if (pendingMatch)  return { duplicate: pendingMatch,  fingerprint, warnings };
+        if (pendingMatch)  return { duplicate: pendingMatch,  levelFingerprint, warnings };
         const approvedMatch = await checkCollection('published_levels', 'approved');
-        if (approvedMatch) return { duplicate: approvedMatch, fingerprint, warnings };
-        return { duplicate: null, fingerprint, warnings };
+        if (approvedMatch) return { duplicate: approvedMatch, levelFingerprint, warnings };
+        return { duplicate: null, levelFingerprint, warnings };
     }
 
     async function submitLevel(levelData: any, options: any = {}): Promise<void> {
@@ -92,7 +92,7 @@ export function createLevelSubmissionRepository(
         let levelFingerprint = options.levelFingerprint || await getLevelFingerprint(levelData);
         if (!options.skipDuplicateCheck) {
             const duplicateCheck = await findDuplicateLevel(levelData);
-            levelFingerprint = duplicateCheck.fingerprint || levelFingerprint;
+            levelFingerprint = duplicateCheck.levelFingerprint || levelFingerprint;
             if (duplicateCheck.duplicate) {
                 const sourceLabel = duplicateCheck.duplicate.source === 'approved' ? 'approved levels' : 'pending submissions';
                 const err = new Error(`Duplicate level found in ${sourceLabel}`) as any;

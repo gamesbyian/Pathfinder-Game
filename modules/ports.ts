@@ -84,7 +84,7 @@ export interface DataService {
     /** Repoints getHints()'s Firestore supplemental-hints merge (or none) and clears the hint
      *  cache — only ever set for the published corpus. See
      *  modules/persistence/local-level-hints-repository.ts and CLAUDE.md's Provenance section. */
-    setFirestoreHintsSource(firestoreHintsSource: ((fingerprint: string) => Promise<import('./domain/hint-types.js').Hint[]>) | null): void;
+    setFirestoreHintsSource(firestoreHintsSource: ((levelFingerprint: string) => Promise<import('./domain/hint-types.js').Hint[]>) | null): void;
     getThemes(): Record<string, any>;
     getTheme(id: string): any;
     getValidation(): Readonly<{ ok: boolean; errors: readonly string[]; warnings: readonly string[] }>;

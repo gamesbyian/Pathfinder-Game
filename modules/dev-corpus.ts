@@ -43,7 +43,7 @@ async function fetchCorpusLevels(cfg: DevCorpusConfig, fetchImpl: any): Promise<
  * the published corpus: the stress corpora aren't real published levels, so they never get a
  * Firestore hints merge regardless of this being provided.
  */
-export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch, getLocalLevelHints }: { data: DataService; fetchImpl?: any; getLocalLevelHints?: ((fingerprint: string) => Promise<any[]>) | null }) {
+export function createDevCorpusSwitcher({ data, fetchImpl = globalThis?.fetch, getLocalLevelHints }: { data: DataService; fetchImpl?: any; getLocalLevelHints?: ((levelFingerprint: string) => Promise<any[]>) | null }) {
     let current = 'published';
     // Captured lazily, the first time we switch away from 'published' — so switching back
     // restores exactly what boot produced (including any Firestore-published levels already
