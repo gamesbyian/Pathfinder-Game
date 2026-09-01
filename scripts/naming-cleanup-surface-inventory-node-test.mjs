@@ -103,8 +103,14 @@ const phase15Rows = rangeInventory.ledgerEntries.filter(row => row.phase === 15)
 const expectedPhase15Ids = ledger.entries.filter(row => row.phase === 15).map(row => row.id).sort();
 assert.deepEqual(phase15Rows.map(row => row.id).sort(), expectedPhase15Ids);
 assert.equal(phase15Rows.length, 13, '15A decomposes Phase 15 into thirteen homogeneous implementation rows');
-assert.ok(phase15Rows.every(row => row.reconciliationState === 'old-live'));
-assert.ok(phase15Rows.every(row => row.oldReferenceFiles.length > 0));
+assert.ok(
+  phase15Rows.every(row => row.oldReferenceFiles.length > 0),
+  '15A must leave every resolved Phase-15 old contract represented on the live tree',
+);
+assert.ok(
+  phase15Rows.every(row => ['old-live', 'mixed-old-and-canonical'].includes(row.reconciliationState)),
+  'canonical target occupancy discovered by 15A may make a row mixed, but no Phase-15 old contract may disappear before implementation',
+);
 assert.ok(phase15Rows.find(row => row.id === 'NC-P15-003').oldReferenceCategories.includes('workflow'));
 assert.ok(phase15Rows.find(row => row.id === 'NC-P15-004').oldReferenceCategories.includes('application'));
 const reconciliationCounts = Object.fromEntries(
