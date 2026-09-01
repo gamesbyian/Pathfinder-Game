@@ -20,7 +20,8 @@ jobs:
         with:
           sparse-checkout: |
             /*
-            !/logs/
+            !/logs/*
+            /logs/solver-baseline.json
             !/reports/
             !/data/stress/
           sparse-checkout-cone-mode: false
