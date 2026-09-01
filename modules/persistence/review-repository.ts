@@ -11,8 +11,8 @@ import type { Hint } from '../domain/hint-types.js';
 
 export function createReviewRepository(client: any, { getLevelFingerprint, getLocalLevelHints, saveLocalLevelHintIfNovel, reportError = defaultReportError }: {
     getLevelFingerprint: (level: any) => any,
-    getLocalLevelHints: (fingerprint: string) => Promise<Hint[]>,
-    saveLocalLevelHintIfNovel: (fingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnown: ReadonlySet<string>) => Promise<boolean>,
+    getLocalLevelHints: (levelFingerprint: string) => Promise<Hint[]>,
+    saveLocalLevelHintIfNovel: (levelFingerprint: string, path: number[], pathSignature: string, provenance: any, alreadyKnown: ReadonlySet<string>) => Promise<boolean>,
     reportError?: ReportError,
 }) {
     const { appId } = client;
@@ -94,15 +94,15 @@ export function createReviewRepository(client: any, { getLevelFingerprint, getLo
      *  independent create, and the count/duplicate check is inherently best-effort already — see
      *  docs/firestore-security-model.md); the submission is deleted last so a failure partway
      *  through leaves it in the queue for a retry rather than silently losing the report. */
-    async function approveLocalHintAddition(submissionId: string, fingerprint: string, hints: Hint[]): Promise<void> {
+    async function approveLocalHintAddition(submissionId: string, levelFingerprint: string, hints: Hint[]): Promise<void> {
         if (!client.db) throw new Error('No Firebase connection');
-        const existing = await getLocalLevelHints(fingerprint);
+        const existing = await getLocalLevelHints(levelFingerprint);
         const knownSignatures = new Set(existing.map((h) => hintPathSignature(h.path)));
         for (const hint of hints) {
             const signature = hintPathSignature(hint.path);
             const provenanceEntry = hint.provenance[hint.provenance.length - 1];
             if (!provenanceEntry) continue;
-            const saved = await saveLocalLevelHintIfNovel(fingerprint, hint.path, signature, provenanceEntry, knownSignatures);
+            const saved = await saveLocalLevelHintIfNovel(levelFingerprint, hint.path, signature, provenanceEntry, knownSignatures);
             if (saved) knownSignatures.add(signature);
         }
         await deleteDoc(doc(submissions(), submissionId));
