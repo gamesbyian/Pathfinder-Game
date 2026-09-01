@@ -1,6 +1,6 @@
 # Naming cleanup implementation plan
 
-Status: **active implementation plan; volatile execution state is owned by `docs/naming-cleanup-ledger.json` and `npm run naming:status`, not by this sentence**. At the completion-contract-v5 revision, Phases 1-7 were implemented/repeatedly audited and the pre-Phase-8 technical gate was complete. The remaining work is serialized into evidence-backed batches. The original latest-`main` preflight was completed at `e236a51d3af9` (2026-08-28); every future implementation batch must reconcile again against current `main`. The canonical naming decisions in this document remain authoritative, but no implementation PR may outrank newer implementation on `main`.
+Status: **complete and frozen after Phase 15**. This document preserves the authorized mappings, sequencing, compatibility decisions, and closeout design that produced the current repository. It is no longer an active implementation queue. Current canonical terminology is owned by `docs/naming-and-vocabulary.md`; new rename work uses `docs/change-recipes.md` and current implementation rather than adding a Phase 16.
 
 This is a **behavior-preserving naming and vocabulary migration** unless a section explicitly says that an obsolete compatibility surface is removed after its consumers are migrated. Do not change solver policy, attempt order, scoring weights, eligibility, budgets, pruning behavior, random seeds, corpus contents, or evidence disposition as part of this work.
 
@@ -15,7 +15,7 @@ npm run naming:status
 npm run check:naming-cleanup-ledger
 ```
 
-`naming:status` derives the next incomplete phase/batch, active execution claim, high-risk rows, and compatibility boundaries from the ledger. Use `--phase=<n>`, `--batch=<id>`, or `--json` for a narrower view.
+`naming:status` now reports the terminal completed state by default. Use `--phase=<n>`, `--batch=<id>`, or `--json` to inspect historical rows/batches and evidence. There is no next cleanup phase after Phase 15.
 
 Authority is intentionally split by question:
 
