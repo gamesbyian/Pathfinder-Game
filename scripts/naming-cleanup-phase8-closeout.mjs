@@ -127,7 +127,7 @@ try {
 
 const coverageContractRows = new Map([
   ['typed-scoring-profile-shorthand', new Set(['NC-P08-007'])],
-  ['persisted-level-fingerprint-cluster', new Set(['NC-P08-008'])],
+  ['qualified-level-fingerprint-vocabulary', new Set(['NC-P08-008'])],
   ['solution-path-family-concept', new Set(['NC-P08-009'])],
   ['domain-qualified-residual-exports', new Set(['NC-P08-011'])],
   ['trove-compatibility-and-persisted-identities', new Set(['NC-P08-019'])],
@@ -210,16 +210,16 @@ for (const file of files) {
 // Semantic qualification guards. These deliberately inspect declaration/boundary shapes rather
 // than banning common English words. Expanding one of these retained boundaries requires updating
 // the ledger/vocabulary authority, not merely adding another file to a loose allowlist.
-const expectedApplicationFingerprintCluster = new Set(phase8Coverage['NC-P08-008']?.files ?? []);
-const applicationFingerprintCluster = new Set(files.filter(file =>
-  (file === 'modules/data.ts' || file === 'modules/dev-corpus.ts' || file === 'modules/ports.ts' ||
-   file === 'modules/state-slices.ts' || /^modules\/(?:input|persistence|state\/actions)\//u.test(file)) &&
-  /\bfingerprint\b/u.test(readFileSync(file, 'utf8'))));
-for (const file of applicationFingerprintCluster) {
-  if (!expectedApplicationFingerprintCluster.has(file)) failures.push({ label: 'application fingerprint outside retained cluster', file, line: 0, text: 'amend NC-P15-004 inventory before expanding this boundary' });
-}
-for (const file of expectedApplicationFingerprintCluster) {
-  if (!applicationFingerprintCluster.has(file)) failures.push({ label: 'stale application fingerprint retained-cluster contract', file, line: 0, text: 'remove/reclassify this boundary entry explicitly' });
+const applicationFingerprintFiles = files.filter(file =>
+  file === 'modules/data.ts' || file === 'modules/dev-corpus.ts' || file === 'modules/ports.ts' ||
+  file === 'modules/state-slices.ts' || /^modules\/(?:input|persistence|state\/actions)\//u.test(file));
+const genericApplicationFingerprintPattern =
+  /(?:\bfingerprint\s*:\s*string\b|\bconst\s+fingerprint\s*=|\blet\s+fingerprint\s*=|\bfunction\s+[A-Za-z_$][\w$]*\([^)]*\bfingerprint\s*:\s*string\b|\([\s\S]{0,160}\bfingerprint\s*:\s*string\b)/u;
+for (const file of applicationFingerprintFiles) {
+  const source = readFileSync(file, 'utf8');
+  if (genericApplicationFingerprintPattern.test(source)) {
+    failures.push({ label: 'unqualified application level-fingerprint identifier', file, line: 0, text: 'use levelFingerprint for the NC-P15-004 application identity' });
+  }
 }
 
 function exportedObjectTypeBodies(source) {
@@ -300,13 +300,13 @@ const targetedContracts = [
   },
   {
     file: 'modules/state-slices.ts',
-    forbidden: [],
-    required: [/fingerprint: string \| null/gu],
+    forbidden: [/\bfingerprint:\s*string \| null/gu],
+    required: [/levelFingerprint: string \| null/gu],
   },
   {
     file: 'modules/persistence/level-rating-repository.ts',
-    forbidden: [],
-    required: [/doc\(ratings\(\), fingerprint\)/gu],
+    forbidden: [/doc\(ratings\(\), fingerprint\)/gu],
+    required: [/doc\(ratings\(\), levelFingerprint\)/gu],
   },
   {
     file: 'scripts/experiment-manifest-lib.mjs',
