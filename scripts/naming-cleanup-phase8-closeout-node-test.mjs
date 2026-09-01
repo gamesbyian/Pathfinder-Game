@@ -116,7 +116,7 @@ try {
   writeFileSync(fingerprintExpansion, 'export interface Unowned { fingerprint: string }\n');
   result = run(cleanLedgerPath, fixture);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /application fingerprint outside retained cluster/);
+  assert.match(result.stderr, /unqualified application level-fingerprint identifier/);
   unlinkSync(fingerprintExpansion);
 
   const profileExpansion = path.join(fixture, 'modules/solver/unowned-profile.ts');
