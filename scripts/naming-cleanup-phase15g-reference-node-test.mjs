@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -62,7 +62,63 @@ try {
   assert.equal(result.summary.cases, 1);
   assert.equal(result.summary.abstain, 1);
   assert.equal(result.summary.inputAlarms, 1);
-  console.log('Phase-15G explicit-prefix writer smoke passed: real CLI output is schema v2/reference-only.');
+
+  // Faithful workflow harness: feed the real writer output through the same combiner script now
+  // called by cpsat-explicit-prefix-reference.yml, then publish the standard solver-sweep result.
+  const staging = path.join(dir, 'artifact-staging');
+  mkdirSync(staging, { recursive: true });
+  const shardFile = path.join(staging, 'cpsat-explicit-prefix-reference-shard-001.json');
+  writeFileSync(shardFile, readFileSync(outFile));
+
+  const combinedFile = path.join(dir, 'cpsat-explicit-prefix-reference-fixture.json');
+  let combineExit = 0;
+  try {
+    await run(process.execPath, [
+      path.join(process.cwd(), 'scripts/combine-cpsat-explicit-prefix-reference-shards.mjs'),
+      `--in-dir=${staging}`,
+      '--shards=1',
+      `--out=${combinedFile}`,
+    ], { cwd: dir, maxBuffer: 16 * 1024 * 1024 });
+  } catch (error) {
+    combineExit = error.code;
+  }
+  assert.equal(combineExit, 2, 'input-alarm shard should preserve the workflow combiner alarm exit after writing output');
+  const combined = JSON.parse(readFileSync(combinedFile, 'utf8'));
+  assert.equal(combined.schemaVersion, 2);
+  assert.equal(combined.shardCount, 1);
+  assert.equal(combined.summary.cases, 1);
+  assert.equal(combined.summary.inputAlarms, 1);
+  assert.equal(combined.rows[0].referenceLabel, 'timeout/abstain');
+  assert.equal('oracleLabel' in combined.rows[0], false);
+
+  await run(process.execPath, [
+    path.join(process.cwd(), 'scripts/publish-solver-sweep-result.mjs'),
+    `--primary=${combinedFile}`,
+    '--shards-expected=1',
+    '--shards-observed=1',
+    '--source-artifact=cpsat-explicit-prefix-reference-fixture',
+  ], {
+    cwd: dir,
+    env: {
+      ...process.env,
+      GITHUB_WORKFLOW: 'cpsat-explicit-prefix-reference',
+      GITHUB_RUN_ID: '15',
+      GITHUB_RUN_ATTEMPT: '1',
+      GITHUB_EVENT_NAME: 'workflow_dispatch',
+      GITHUB_REPOSITORY: 'gamesbyian/Pathfinder-Game',
+      GITHUB_SERVER_URL: 'https://github.com',
+      GITHUB_REF: 'refs/heads/fixture',
+      GITHUB_REF_NAME: 'fixture',
+      GITHUB_SHA: '1111111111111111111111111111111111111111',
+    },
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  const published = JSON.parse(readFileSync(path.join(dir, 'logs/solver-sweep-result/manifest.json'), 'utf8'));
+  assert.equal(published.status, 'published');
+  assert.equal(published.shardCompleteness?.complete, true);
+  assert.equal(published.sourceArtifact, 'cpsat-explicit-prefix-reference-fixture');
+
+  console.log('Phase-15G explicit-prefix workflow harness passed: real writer -> shard combiner -> standard publisher is schema-v2/reference-only.');
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
