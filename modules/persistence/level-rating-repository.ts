@@ -5,9 +5,9 @@ export function createLevelRatingRepository(client: any) {
     const { appId } = client;
     const ratings = () => collection(doc(client.db, 'artifacts', appId), 'level_ratings');
 
-    async function loadLevelRating(fingerprint: string): Promise<any> {
-        if (!client.db || !fingerprint) return null;
-        const snap = await getDoc(doc(ratings(), fingerprint));
+    async function loadLevelRating(levelFingerprint: string): Promise<any> {
+        if (!client.db || !levelFingerprint) return null;
+        const snap = await getDoc(doc(ratings(), levelFingerprint));
         if (!snap.exists()) return null;
         const data = snap.data();
         return {
@@ -18,9 +18,9 @@ export function createLevelRatingRepository(client: any) {
         };
     }
 
-    async function saveLevelRating(fingerprint: string, levelNumber: number | null, rating: any): Promise<void> {
-        if (!client.db || !fingerprint) throw new Error('No Firebase connection');
-        await setDoc(doc(ratings(), fingerprint), {
+    async function saveLevelRating(levelFingerprint: string, levelNumber: number | null, rating: any): Promise<void> {
+        if (!client.db || !levelFingerprint) throw new Error('No Firebase connection');
+        await setDoc(doc(ratings(), levelFingerprint), {
             tags:        rating.tags || [],
             customTags:  rating.customTags || [],
             difficulty:  rating.difficulty || 0,
