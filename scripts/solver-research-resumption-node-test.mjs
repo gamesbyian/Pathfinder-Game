@@ -90,6 +90,7 @@ for (const script of [
   'scripts/naming-cleanup-phase15g-reference-node-test.mjs',
   'scripts/naming-cleanup-phase15h-node-test.mjs',
   'scripts/stress/analyze-equal-work-production-reach-node-test.mjs',
+  'scripts/level-blind-capability-sweep-cli-node-test.mjs',
 ]) {
   execFileSync(process.execPath, [script], { cwd: ROOT, stdio: 'pipe' });
 }
@@ -249,4 +250,4 @@ for (const required of [
 assert.match(bridge, /no maintained historical schema-v1 result reader/u);
 assert.doesNotMatch(bridge, /pre-Phase-15 handoff contract/u);
 
-console.log('solver research resumption gate passed: mixed-era identity joins/discovery, family aggregate reconciliation, owned Phase-15 compatibility suites, Workstream-2 preflight, equal-work anchor, and the production-reach join are executable.');
+console.log('solver research resumption gate passed: mixed-era identity joins/discovery, family aggregate reconciliation, owned Phase-15 compatibility suites, Workstream-2 preflight, equal-work anchor, and the real production-report wrapper → production-reach join are executable.');
