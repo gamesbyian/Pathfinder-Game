@@ -763,3 +763,33 @@ preserving array order. A regression test deliberately reorders the v1 shard's `
 dataset metadata relative to its v2 peer and proves they still normalize to one complete canonical
 run. This changes only false-negative equality behavior; genuinely different values and array order
 remain conflict-producing.
+
+
+### 15D implementation and validation evidence
+
+Implementation is complete on the hardened head descended from
+`300d26bd35886f01b8fccebac0453d6d7bdc226a`.
+
+The final implementation contract is:
+
+- new family-evaluation run manifests write schemaVersion **2** and
+  `variantFamilyDataset` only;
+- authentic schema-v1 `trove` manifests normalize permanently through
+  `validateFamilyEvaluationRunManifest` to the same canonical in-memory v2 model;
+- malformed dual-field input is rejected rather than precedence-resolved;
+- the maintained bulk-family producer uses only the canonical writer field;
+- family-index grouping consumes only the normalized canonical dataset identity;
+- shard-local `shardFile` provenance is retained per shard but excluded from run-level identity,
+  then aggregated as `variantFamilyDatasetShardFiles`;
+- all-v1, all-v2, mixed-v1/v2, conflicting dual-field, cross-shard provenance, output-artifact
+  joining, and authentic-v1 normalization are executable tests;
+- mixed-era invariant comparison is structural and key-order-insensitive for objects while retaining
+  array order and value differences;
+- Phase-15E historical `wide-trove-attempts-*` discovery remains untouched.
+
+Implementation-head exact CI run **33461568649** passed all six jobs after the structural-equality
+hardening. Exact-head browser characterization run **33461568646** also passed.
+
+NC-P15-002 is now `done` and `activeExecution` is idle. As with 15B/15C,
+`batchCompletions["15D"]` remains pending until the implementation PR actually merges. A fresh
+exact-head CI/browser run on the done/idle bookkeeping head is required before merge.
