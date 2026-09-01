@@ -68,6 +68,20 @@ test('landmark fingerprint payload has no undefined properties', () => {
     assert.equal(Object.hasOwn(payload.landmarks[0], 'turn'), false);
 });
 
+test('current v2 fingerprint bytes remain pinned for the Phase-15F rating identity fixture', async () => {
+    const level = {
+        grid: { w: 5, h: 5 }, reqLen: 8, reqInt: 0,
+        gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },
+        falseGoals: [], blocks: [{ x: 2, y: 2 }], mustPass: [], mustCross: [],
+        filters: [], flippingFilters: [], portals: [], geese: [], landmarks: [],
+    };
+    assert.equal(
+        await getLevelFingerprint(level),
+        'v2:1abd33d29f460fee3a9b9dee523699c780df4b55c2a30f12d495e62ae67788d3',
+        'application vocabulary renames must never alter the persisted/current level fingerprint bytes',
+    );
+});
+
 // --- getLegacyLevelFingerprints (migration support for pre-v2-fingerprint persisted data) ---
 
 test('getLegacyLevelFingerprints reproduces the frozen v1 hash for a fixed level (regression pin)', async () => {
