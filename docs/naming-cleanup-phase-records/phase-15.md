@@ -882,3 +882,42 @@ rather than surviving on the research branch.
   current workflow paths, canonical-only current writer behavior, and deletion-staging pathspec;
 - Phase-15 progression/source-freeze checks now permit the 15E cutover while keeping 15F-15H
   implementation rows pending.
+
+
+### 15E implementation and validation evidence
+
+Implementation is complete on PR **#1642** from base
+`b00c68f3495ec6591f3846ac0bf2e519f2613a1e`.
+
+The final 15E contract is:
+
+- historical dated and undated `wide-trove-attempts-*` artifacts remain permanently discoverable;
+- canonical `variant-family-dataset-attempts-*` files take precedence per corpus when present,
+  preventing old/new aggregate double-counting;
+- current merger output single-writes stable
+  `variant-family-dataset-summary.md` and
+  `variant-family-dataset-attempts-<corpus>-partNN.json`;
+- current workflow publication/provenance single-writes
+  `variant-family-dataset-source-run.json`;
+- reruns delete only stale canonical attempt chunks before writing replacements;
+- workflow staging uses `git add -A` for the canonical attempt wildcard so stale higher-numbered
+  parts are committed as deletions;
+- frozen historical `wide-trove` artifacts are never deleted or rewritten.
+
+Executable proof is carried by:
+
+- `test:family-index`, including authentic dated historical fallback and canonical-per-corpus
+  precedence;
+- `test:merge-variant-family-dataset-shards`, exercising the real merger in a temporary tree and
+  proving stable output, stale canonical cleanup, and historical-file survival;
+- `check:naming-cleanup-phase15e-closeout`, pinning the one dual-era reader owner plus canonical
+  merger/workflow paths and deletion staging;
+- the Phase-15 progression/source guard, which keeps 15F-15H pending.
+
+Implementation-head commit `aeadeeb670b41650cbbb9c3225b7f730382721bb` passed exact-head CI
+run **33462905089** across all six jobs and exact-head browser characterization run
+**33462905117**.
+
+NC-P15-003 and NC-P15-009 are now `done` and `activeExecution` is idle.
+`batchCompletions["15E"]` deliberately remains pending until PR #1642 actually merges. A fresh
+exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
