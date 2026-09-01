@@ -1324,3 +1324,30 @@ Implementation head `433966955750f1898800a567133693415f1d0f0d` passed:
 NC-P15-007 and NC-P15-013 are now `done`, and `activeExecution` is idle.
 `batchCompletions["15H"]` deliberately remains pending until PR #1645 actually merges. A fresh
 exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
+
+
+## 15H merge evidence
+
+Phase 15H completed as implementation PR **#1645**.
+
+- final head: `0573438bb1c3fcb98fb4cb72320c10d2fd4ae45d`;
+- implementation-head green CI: run **33466837817**, all six CI jobs successful;
+- implementation-head browser characterization: run **33466837814**, successful;
+- final done/idle exact-head CI: run **33466977123**, all six CI jobs successful;
+- final done/idle browser characterization: run **33466977073**, successful;
+- merge commit: `65650862eb4626c5d6eecf7bbc1753a1006d97c8`;
+- 15I base-main SHA: the same merge commit;
+- ledger `batchCompletions["15H"]` is now the machine merge-barrier evidence.
+
+## 15I — independent merged-tree hostile closeout and solver-research resumption
+
+Status: **active, read-only findings pass**
+
+Branch: `chatgpt/phase15i-hostile-closeout-2026-08-31`  
+Base merged main: `65650862eb4626c5d6eecf7bbc1753a1006d97c8`
+
+15I starts from the merged result of every Phase-15 implementation batch. The first pass is
+investigation only: findings are recorded before any repair. The batch must independently re-prove
+repository vocabulary, compatibility readers, canonical writers, frozen-history integrity, current
+authority routing, closeout-guard quality, and solver-research resumability rather than citing the
+implementation PRs as sufficient evidence.
