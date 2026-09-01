@@ -5653,6 +5653,44 @@
           "recordPath": "docs/naming-cleanup-phase-records/phase-14.md"
         }
       ]
+    },
+    "15": {
+      "status": "closed",
+      "recordPath": "docs/naming-cleanup-phase-records/phase-15.md",
+      "implementation": {
+        "pr": 1645,
+        "finalHeadSha": "0573438bb1c3fcb98fb4cb72320c10d2fd4ae45d",
+        "ciRunId": 33466977123,
+        "ciConclusion": "success",
+        "browserRunId": 33466977073,
+        "browserConclusion": "success",
+        "mergeCommit": "65650862eb4626c5d6eecf7bbc1753a1006d97c8"
+      },
+      "mergedTreeCloseout": {
+        "baseMainSha": "65650862eb4626c5d6eecf7bbc1753a1006d97c8",
+        "pr": 1646,
+        "ciPolicy": "exact-head-green-before-merge",
+        "finalHeadSha": "44b331be5c69ff4305c5edcc5809f6a1fea4e73e",
+        "ciRunId": 33470625109,
+        "ciConclusion": "success",
+        "browserRunId": 33470625154,
+        "browserConclusion": "success",
+        "mergeCommit": "55b405b2caf511543503a7581b2457c92c06a1f9"
+      },
+      "finalizationHandoff": {
+        "baseMainSha": "55b405b2caf511543503a7581b2457c92c06a1f9",
+        "pr": 1647,
+        "finalHeadSha": "f1e292db125cde633ff5b36ddc216c09f5350e1f",
+        "ciRunId": 33471986789,
+        "ciConclusion": "success",
+        "browserRunId": 33471986760,
+        "browserConclusion": "success",
+        "mergeCommit": "504330dc4e474b1ebc7755e8c34f72f63fd37901"
+      },
+      "completionSeal": {
+        "branch": "chatgpt/phase15-completion-seal-2026-08-31",
+        "evidenceModel": "exact-head CI and Git history; the ledger does not self-record the seal commit SHA"
+      }
     }
   },
   "phaseBatchKinds": {
