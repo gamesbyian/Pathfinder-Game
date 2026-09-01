@@ -169,7 +169,7 @@
     "test:analyze-technique-census": "node scripts/analyze-technique-census-node-test.mjs",
     "test:technique-census-cell": "tsx scripts/technique-census-cell-node-test.mjs",
     "test:operational-similarity-lib": "node scripts/operational-similarity-lib-node-test.mjs",
-    "test:solver-research-resumption": "node scripts/solver-research-resumption-node-test.mjs",
+    "test:solver-research-resumption": "tsx scripts/solver-research-resumption-node-test.mjs",
     "facts:levels": "node scripts/current-level-facts.mjs",
     "check:current-level-facts": "node scripts/current-level-facts.mjs --check",
     "test:current-level-facts": "node scripts/current-level-facts-node-test.mjs",
