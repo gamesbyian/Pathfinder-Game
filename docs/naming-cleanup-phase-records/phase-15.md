@@ -720,3 +720,33 @@ The current-tree census found one canonical producer/normalizer seam and one con
 - all-v1, all-v2, mixed-era, conflict, and authentic-v1 normalization proofs are executable;
 - `check:naming-cleanup-phase15d-closeout` permanently pins the one legacy reader, canonical
   writer/consumer ownership, and the deliberate 15E `wide-trove-attempts-*` non-change.
+
+
+### 15D cross-shard invariant correction discovered during implementation
+
+The workflow wiring exposed a pre-existing contradiction in the v1 contract. Each Actions shard
+creates and passes a different source slice:
+
+- `wide-shard-01-slice.json`;
+- `wide-shard-02-slice.json`;
+- and so on.
+
+The v1 writer stored that per-shard `shardFile` inside `trove`, while
+`family-index-lib.mjs` compared the entire `trove` object as a run-level invariant. A real
+multi-shard run could therefore be diagnosed as internally inconsistent solely because each shard
+correctly named its own input slice. Existing tests hid this by giving both shards the same
+`shardFile`.
+
+15D resolves the contradiction without deleting provenance:
+
+- each v1/v2 shard manifest still retains its own `shardFile`;
+- the family index derives run-level `variantFamilyDataset` identity by excluding only the
+  shard-local `shardFile`;
+- it aggregates those local paths separately as sorted/deduplicated
+  `variantFamilyDatasetShardFiles`;
+- all other dataset metadata remains part of the cross-shard invariant;
+- the era-matrix test now deliberately gives shard 1 and shard 2 different slice paths, so this
+  failure mode cannot be reintroduced accidentally.
+
+This correction is inside NC-P15-002's required cross-shard invariant proof. It does not alter
+15E's artifact discovery/output-path contract.
