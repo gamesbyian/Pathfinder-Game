@@ -16,6 +16,7 @@ const files = Object.fromEntries([
   'devCorpus',
   'reviewRepository',
   'ports',
+  'winController',
   'fingerprintTest',
 ].map(name => {
   const paths = {
@@ -32,6 +33,7 @@ const files = Object.fromEntries([
     devCorpus: 'modules/dev-corpus.ts',
     reviewRepository: 'modules/persistence/review-repository.ts',
     ports: 'modules/ports.ts',
+    winController: 'modules/engine/win-controller.ts',
     fingerprintTest: 'modules/domain/level-fingerprint.test.ts',
   };
   return [name, readFileSync(paths[name], 'utf8')];
@@ -51,6 +53,7 @@ const combinedApplication = [
   files.devCorpus,
   files.reviewRepository,
   files.ports,
+  files.winController,
 ].join('\n');
 
 // Retired application-local identities. Domain-level fingerprint terminology and
@@ -83,6 +86,8 @@ assert.match(files.data, /firestoreHintsSource\?: \(\(levelFingerprint: string\)
 assert.match(files.devCorpus, /getLocalLevelHints\?: \(\(levelFingerprint: string\)/u);
 assert.match(files.reviewRepository, /approveLocalHintAddition\(submissionId: string, levelFingerprint: string/u);
 assert.match(files.ports, /setFirestoreHintsSource\(firestoreHintsSource: \(\(levelFingerprint: string\)/u);
+assert.match(files.winController, /const levelFingerprint = await getLevelFingerprint\(rawLevel\)/u);
+assert.match(files.winController, /saveLocalLevelHintIfNovel\(levelFingerprint, path, signature/u);
 
 // Persisted query/document/path identities remain exactly on the pre-15F value.
 assert.match(
