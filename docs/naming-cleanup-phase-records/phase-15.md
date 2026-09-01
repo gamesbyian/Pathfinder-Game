@@ -588,6 +588,7 @@ Phase 15B completed as implementation PR **#1639**.
 Status: **active**
 
 Branch: `chatgpt/phase15c-variant-family-dataset-root-2026-08-31`  
+PR: **#1640**  
 Base main: `56a69e483e267a6da4aaa92acc172e994e2c541e`
 
 15C owns two deliberately separated lifetimes:
