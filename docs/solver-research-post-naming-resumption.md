@@ -38,7 +38,7 @@ assumptions.
 | --- | --- | --- |
 | NC-P15-001 / NC-P15-008 | variant-family dataset-root CLI vs private source vocabulary | current commands use `--variant-family-dataset-root`; Phase 15J retired `--trove-root` and current tooling rejects it; private source names are canonical-only |
 | NC-P15-002 | family evaluation run-manifest schema | new manifests are schema v2 and single-write `variantFamilyDataset`; authentic schema-v1 `trove` manifests permanently normalize through the owning validator/index reader |
-| NC-P15-003 / NC-P15-009 | historical family attempt discovery vs current output paths | frozen `wide-trove-attempts-*` evidence remains discoverable; current new-run artifacts use stable `variant-family-dataset-*` names; the family index reconciles overlapping aggregate rows by `(corpus,parentId,mode,variantId)`, gives canonical evidence precedence only for the exact logical row it covers, preserves historical-only rows when a canonical aggregate is partial, and exposes mixed-era diagnostics |
+| NC-P15-003 / NC-P15-009 | historical family attempt discovery vs current output paths | frozen `wide-trove-attempts-*` evidence remains discoverable; current new-run artifacts use stable `variant-family-dataset-*` names; the family index reconciles aggregate rows by `(corpus,parentId,mode,variantId)` plus normalized evidence payload; payload-equivalent current rows replace duplicate historical rows, while historical-only and conflicting observations survive and mixed-era diagnostics expose partial coverage/conflicts |
 | NC-P15-004 | application level-fingerprint vocabulary | current application names use `levelFingerprint` while computed bytes, Firestore document/path identity, persisted fields, versions, duplicate semantics, and historical readability remain invariant |
 | NC-P15-005 / NC-P15-010 | CP-SAT explicit-prefix result schema and workflow-local shard job | current same-run output is schema v2 `referenceLabel`/`referenceReason`, and the workflow job is `reference-shards`; there is **no maintained historical schema-v1 result reader**, so frozen old result artifacts are not normalized or mixed into current shard combination |
 | NC-P15-011 / NC-P15-012 | external case-format token and known-prefix source schema | canonical `reference-abstain` is the only current input spelling; Phase 15J retired `atlas-abstain`; authentic schema-v1 `oracle-abstain` known-prefix sources permanently normalize through the shared extractor to the canonical reference model |
@@ -89,7 +89,8 @@ from post-Phase-15 `main`. Record:
 - one representative mixed-era identity join from current analysis tooling, not merely a
   single-record parser; for Workstream 2 this is the equal-work × production-reach analyzer above;
 - when family aggregates participate, the `family:index` mixed-era diagnostics, with no ambiguous
-  logical rows or duplicate canonical logical rows;
+  logical rows, duplicate canonical logical rows, or conflicting overlap rows left unresolved for the
+  decision being made;
 - if the next experiment uses a confirmation workflow, the persisted resolved
   treatment/control-flag artifact or equivalent proof of arm wiring.
 
@@ -107,9 +108,10 @@ Do not start a decision-bearing solver experiment if any of the following is tru
   than through its owning normalizer;
 - a Phase-15 persisted boundary can read one era in isolation but has no mixed-era
   grouping/join/deduplication proof where the real consumer combines eras;
-- family-index diagnostics report ambiguous aggregate logical rows or duplicate canonical logical
-  rows for evidence intended to influence a decision; partial canonical coverage is permitted only
-  because the index now preserves historical-only rows explicitly rather than suppressing them;
+- family-index diagnostics report ambiguous aggregate logical rows, duplicate canonical logical
+  rows, or conflicting overlap rows for evidence intended to influence a decision; partial canonical
+  coverage is permitted because the index preserves historical-only rows, and conflicting observations
+  are preserved rather than silently treated as duplicates;
 - a new writer still emits a retired field/value/path spelling that should have become
   canonical-single-write;
 - a claimed legacy reader exists only as comments, checker allowlists, or a synthetic string fixture;
