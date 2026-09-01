@@ -239,7 +239,9 @@
     "test:firestore-level-fingerprint-boundary": "tsx scripts/firestore-level-fingerprint-boundary-test.mjs",
     "check:naming-cleanup-hostile-ratchet": "node scripts/naming-cleanup-phase15i-closeout.mjs",
     "solver:analyze-equal-work-production-reach": "node scripts/stress/analyze-equal-work-production-reach.mjs",
-    "test:equal-work-production-reach": "node scripts/stress/analyze-equal-work-production-reach-node-test.mjs"
+    "test:equal-work-production-reach": "node scripts/stress/analyze-equal-work-production-reach-node-test.mjs",
+    "solver:analyze-zero-t1-production-calibration": "node scripts/analyze-zero-t1-production-calibration.mjs",
+    "test:zero-t1-production-calibration": "node scripts/analyze-zero-t1-production-calibration-node-test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
