@@ -4355,17 +4355,17 @@
       "persistence": "none",
       "phase": 15,
       "batch": "15H",
-      "status": "in-progress",
+      "status": "done",
       "notes": "15A corrected two inherited assumptions: ATLAS_DIR is a local constant, not an environment variable, and no maintained machine/external caller for --atlas-dir was found beyond current docs. Generated report fields moved to NC-P15-013. No legacy alias without a demonstrated caller. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "inventoryTerms": [
         "--atlas-dir",
@@ -4531,17 +4531,17 @@
       "persistence": "none",
       "phase": 15,
       "batch": "15H",
-      "status": "in-progress",
+      "status": "done",
       "notes": "15A split generated report fields from NC-P15-007. No maintained reader of these metadata fields was found, so old reports remain frozen and new writers rename directly; no dead dual-read normalizer. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "current-surface-rename-preserve-frozen-history",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "inventoryTerms": [
         "atlasDir",
@@ -4646,14 +4646,14 @@
     "15": "docs/naming-cleanup-phase-records/phase-15.md"
   },
   "activeExecution": {
-    "status": "active",
-    "phase": 15,
-    "batch": "15H",
-    "branch": "chatgpt/phase15h-prune-gap-vocabulary-2026-08-31",
-    "pr": 1645,
-    "baseMainSha": "7e82a4325484eac2da67864101e33f614d075d70",
-    "recordPath": "docs/naming-cleanup-phase-records/phase-15.md",
-    "notes": "Phase 15H implementation of NC-P15-007 and NC-P15-013 only: prune-gap directory CLI/local vocabulary plus generated report metadata."
+    "status": "idle",
+    "phase": null,
+    "batch": null,
+    "branch": null,
+    "pr": null,
+    "baseMainSha": null,
+    "recordPath": null,
+    "notes": "Phase 15H implementation rows are done and PR #1645 awaits final exact-head CI/merge; rowless 15I remains blocked until batchCompletions[15H] records the merge."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior. Post-closeout audit correction (2026-08-31): NC-P08-024/025 are direct current-source renames, not dual-read boundaries; 8G proved no persisted artifact or historical reader existed, and the Phase-8 closeout now bans the retired fields rather than treating comments as compatibility reads. Phase-15 hardening (2026-08-31): the final phase now requires a rowless contract-decomposition gate before any NC-P15 implementation, row splitting when bundled identities have different owners/lifetimes, reader-first executable historical fixtures, schema-version decisions, mixed-era join/discovery proof, canonical single-write proof, small serial boundary-specific batches, an independent merged-tree hostile closeout, a solver-research resumption evidence bundle, and a separate archival/finalization handoff. This amendment changes no NC-P15 row status or canonical target.",
   "phaseBatches": {
