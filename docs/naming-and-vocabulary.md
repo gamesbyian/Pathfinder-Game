@@ -111,22 +111,33 @@ similar complete solution paths. Within the bounded
 `known-solution-prefix-survival.ts` contract, `family`, `families`, and `familyIds` are accepted
 short member names for that concept; they do not mean level, attempt, or search family.
 
-The following legacy spellings are compatibility identities, not vocabulary templates for new
-surfaces:
+Historical compatibility is narrower than current vocabulary. Do not copy a legacy spelling into a
+new surface merely because one owning reader still accepts it:
 
-- naked `fingerprint` inside the existing application level-identity cluster may remain where it
-  is a Firestore document ID, persisted field/shape, or a local/positional value flowing directly
-  through that boundary. New unrelated APIs use `levelFingerprint`; NC-P15-004 owns any migration.
-- `--trove-root`, the family-run manifest `trove` key, and dated `wide-trove-*` discovery paths
-  remain live compatibility contracts. Current explanatory prose calls the resource the
-  **variant-family dataset**. NC-P15-001 through NC-P15-003 own their possible migration.
-- CP-SAT explicit-prefix `oracle-shards`, `oracleLabel`, `oracleReason`, and the historical label
-  values remain result/workflow compatibility identities. The tool and workflow are the **CP-SAT
-  reference**; NC-P15-005 owns any schema/job migration. Independent solver-oracle terminology
-  remains valid under the general oracle rule.
-- `atlas-eligibility.mjs` and the shared `--atlas-dir` CLI/report fields remain Batch-8E-discovered
-  compatibility interfaces, not canonical vocabulary for new surfaces. NC-P15-006 and NC-P15-007
-  own their consumer-inward migrations.
+- Current application level-identity APIs use `levelFingerprint`. Phase 15 preserved the computed
+  fingerprint bytes, Firestore document/path identities, persisted `levelFingerprint` field, and
+  `fingerprintVersion`; it did not create a generic `fingerprint` compatibility shape.
+- The current variant-family dataset CLI is `--variant-family-dataset-root`. The shared
+  `family-paths.mjs` parser alone accepts `--trove-root` as an external transition alias
+  (NC-P15-001). Family-run manifest schema v2 single-writes `variantFamilyDataset`, while its owning
+  normalizer permanently reads authentic schema-v1 `trove` manifests (NC-P15-002). Family-index
+  discovery permanently recognizes frozen `wide-trove-attempts-*` evidence alongside canonical
+  `variant-family-dataset-attempts-*` paths (NC-P15-003); new dataset outputs use the canonical
+  stable path convention (NC-P15-009).
+- Current CP-SAT explicit-prefix results are schema v2
+  `referenceLabel`/`referenceReason`, and the workflow job is `reference-shards`
+  (NC-P15-005/010). There is no maintained historical schema-v1 result reader. The external
+  `atlas-abstain` case-format spelling remains only as the owned transition alias for canonical
+  `reference-abstain` (NC-P15-011), and the known-prefix source reader permanently normalizes
+  authentic schema-v1 `oracle-abstain` branches to the canonical reference model (NC-P15-012).
+  Independent solver-oracle terminology remains valid under the general oracle rule.
+- The shared eligibility owner is
+  `scripts/stress/lib/cpsat-branch-label-eligibility.mjs`; the retired
+  `atlas-eligibility.mjs` filename has no compatibility alias (NC-P15-006). Current prune-gap
+  consumers use `--prune-gap-dir`/`PRUNE_GAP_DIR` and new report metadata
+  `pruneGapDir`/`pruneGapFiles`; `--atlas-dir`, `ATLAS_DIR`, `atlasDir`, and `atlasFiles`
+  survive only in frozen history or naming-migration evidence, not current executable compatibility
+  (NC-P15-007/013).
 
 ## Corpora
 
