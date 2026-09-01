@@ -684,3 +684,39 @@ Base main: `300d26bd35886f01b8fccebac0453d6d7bdc226a`
 - no unrelated Phase-15E artifact-path discovery/output rename is permitted in this batch.
 
 Pre-edit work begins with a current writer/reader/fixture census before code changes.
+
+
+### 15D pre-edit census and resolved implementation seam
+
+The current-tree census found one canonical producer/normalizer seam and one consumer join seam:
+
+- `scripts/experiment-manifest-lib.mjs::buildFamilyEvaluationRunManifest` was the only shared
+  current writer helper and emitted schemaVersion 1 with `trove`;
+- `scripts/collect-variant-family-dataset-shard.mjs` is the maintained bulk-family shard producer
+  using that helper;
+- `scripts/experiment-manifest-lib.mjs::validateFamilyEvaluationRunManifest` is the one current
+  run-manifest validator used by family indexing;
+- `scripts/family-index-lib.mjs` normalizes each discovered run manifest through that validator
+  before grouping shards, then formerly compared/exposed `trove` as an invariant;
+- no committed historical family-run `manifest.json` artifact exists on `main`, so
+  `docs/naming-cleanup-phase-records/fixtures/phase15d-family-run-manifest-v1.json` freezes the
+  exact pre-15D v1 contract from base `300d26bd35886f01b8fccebac0453d6d7bdc226a` for permanent
+  reader coverage;
+- adjacent `wide-trove-attempts-*` discovery in `family-index-lib.mjs` belongs to NC-P15-003/009
+  (15E) and is deliberately untouched.
+
+### 15D implementation contract now encoded in source/tests
+
+- new `buildFamilyEvaluationRunManifest` output is schemaVersion **2** and contains only
+  `variantFamilyDataset`;
+- `validateFamilyEvaluationRunManifest` permanently upgrades schema-v1 `trove` input to an
+  in-memory schema-v2 `variantFamilyDataset` model;
+- schema-v2 input must contain the canonical field;
+- an object carrying both spellings is rejected rather than precedence-resolved;
+- unsupported schema versions remain rejected;
+- `family-index-lib.mjs` groups only the normalized canonical field, which makes v1/v1, v2/v2,
+  and v1/v2 shard sets comparable without raw-era drift;
+- new producer output never writes `trove`;
+- all-v1, all-v2, mixed-era, conflict, and authentic-v1 normalization proofs are executable;
+- `check:naming-cleanup-phase15d-closeout` permanently pins the one legacy reader, canonical
+  writer/consumer ownership, and the deliberate 15E `wide-trove-attempts-*` non-change.
