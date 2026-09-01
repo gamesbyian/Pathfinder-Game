@@ -411,7 +411,8 @@ function isReconciliationAuthorityOrGuard(file) {
     || file.startsWith('docs/history/')
     || file.startsWith('docs/naming-cleanup-phase-records/')
     || file.startsWith('scripts/naming-cleanup-')
-    || file === 'scripts/check-naming-current-authorities.mjs';
+    || file === 'scripts/check-naming-current-authorities.mjs'
+    || file === 'scripts/naming-current-authorities-node-test.mjs';
 }
 
 function reconciliationReferenceFilesForValue(value) {
