@@ -1109,6 +1109,7 @@ Phase 15F completed as implementation PR **#1643**.
 Status: **active**
 
 Branch: `chatgpt/phase15g-cpsat-reference-vocabulary-2026-08-31`  
+PR: **#1644**  
 Base main: `1990387f31a3b045e70f6ccea088f833ffa0f583`
 
 15G owns five deliberately separated contracts after the implementation-time census:
