@@ -124,17 +124,34 @@ const ATTEMPT_IDENTITY_PATTERNS = Object.freeze([
     /(?:dfs|beam):[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)?(?:@beam[1-9]\d*)?(?:\(diverse\))?(?::repair)?(?:\(mustTurnBiased\)|\(turnBiased\))?/gu,
 ]);
 
-function expandKnownAliases(terms, variants) {
+function aliasReplacementAllowed(term, index, source, kind) {
+    const before = term.slice(0, index);
+    const after = term.slice(index + source.length);
+    const previous = before.at(-1) ?? '';
+    const next = after[0] ?? '';
+    if (/[a-z0-9_-]/u.test(previous) || /[a-z0-9_-]/u.test(next)) return false;
+    if (kind === 'stage' && source === 'admissible-order' && after.startsWith('|tiebreak=')) return false;
+    if (kind === 'routing' && /(?:score=|tiebreak=|dfs:|ida:)$/u.test(before)) return false;
+    return true;
+}
+
+function expandKnownAliases(terms, variants, kind) {
     let added = false;
     const lowerVariants = variants.map(value => value.toLowerCase());
     for (const term of [...terms]) {
         for (const source of lowerVariants) {
-            if (!term.includes(source)) continue;
-            for (const target of lowerVariants) {
-                const expanded = term.replaceAll(source, target);
-                if (!terms.has(expanded)) {
-                    terms.add(expanded);
-                    added = true;
+            let from = 0;
+            while (from <= term.length - source.length) {
+                const index = term.indexOf(source, from);
+                if (index < 0) break;
+                from = index + source.length;
+                if (!aliasReplacementAllowed(term, index, source, kind)) continue;
+                for (const target of lowerVariants) {
+                    const expanded = term.slice(0, index) + target + term.slice(index + source.length);
+                    if (!terms.has(expanded)) {
+                        terms.add(expanded);
+                        added = true;
+                    }
                 }
             }
         }
@@ -172,10 +189,10 @@ function equivalentQueryTerms(query) {
     while (changed) {
         changed = false;
         for (const canonical of SOLVER_STAGE_IDS) {
-            changed = expandKnownAliases(terms, solverStageIdentityTerms(canonical)) || changed;
+            changed = expandKnownAliases(terms, solverStageIdentityTerms(canonical), 'stage') || changed;
         }
         for (const canonical of ROUTING_REGIMES) {
-            changed = expandKnownAliases(terms, routingRegimeIdentityTerms(canonical)) || changed;
+            changed = expandKnownAliases(terms, routingRegimeIdentityTerms(canonical), 'routing') || changed;
         }
         changed = expandAttemptIdentityAliases(terms) || changed;
         if (terms.size > 128) throw new Error('research-status query alias expansion exceeded safety bound');
