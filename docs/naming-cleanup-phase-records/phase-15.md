@@ -436,6 +436,7 @@ Phase 15A completed as specification/control-plane PR **#1638**.
 Status: **active**
 
 Branch: `chatgpt/phase15b-cpsat-branch-label-eligibility-2026-08-31`  
+PR: **#1639**  
 Base main: `4b61b59dfba6dada48f316edcdb6e9b4daa6683e`
 
 ### Pre-edit impact map
