@@ -1,0 +1,37 @@
+name: Firestore level-fingerprint boundary
+
+on:
+  pull_request:
+    paths:
+      - 'modules/domain/level-fingerprint.ts'
+      - 'modules/persistence/level-rating-repository.ts'
+      - 'modules/persistence/level-submission-repository.ts'
+      - 'modules/persistence/local-level-hints-repository.ts'
+      - 'scripts/firestore-level-fingerprint-boundary-test.mjs'
+      - 'scripts/naming-cleanup-final-state.mjs'
+      - 'scripts/check-naming-cleanup-ledger.mjs'
+      - 'docs/naming-cleanup-ledger.json'
+      - 'firestore.rules'
+      - '.github/workflows/firestore-level-fingerprint-boundary.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-emulator-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Exercise repository identity through Firestore emulator
+        run: >-
+          npx --yes firebase-tools@15.28.2
+          emulators:exec
+          --only firestore
+          --project demo-pathfinder-phase15-boundary
+          "npm run test:firestore-level-fingerprint-boundary"
