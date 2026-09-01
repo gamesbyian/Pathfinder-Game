@@ -67,8 +67,13 @@ assert.match(manifestLib, /manifest\.schemaVersion !== 1/u);
 const mergeFamily = readFileSync('scripts/merge-variant-family-dataset-shards.mjs', 'utf8');
 assert.match(mergeFamily, /2026-08-07-wide-trove/u);
 
-assert.ok(existsSync('scripts/stress/lib/atlas-eligibility.mjs'));
-assert.ok(!existsSync('scripts/stress/lib/cpsat-branch-label-eligibility.mjs'));
+assert.ok(!existsSync('scripts/stress/lib/atlas-eligibility.mjs'));
+assert.ok(existsSync('scripts/stress/lib/cpsat-branch-label-eligibility.mjs'));
+assert.equal(
+  (ledger.phaseRetainedSurfaces?.['8'] ?? []).some(item => item.id === 'NC-RET-P08-009'),
+  false,
+  '15B must retire the Phase-8 deferred atlas eligibility exemption once all shared consumers migrate',
+);
 
 const cpsatReference = readFileSync('scripts/stress/cpsat-explicit-prefix-reference.mjs', 'utf8');
 assert.match(cpsatReference, /oracleLabel/u);
