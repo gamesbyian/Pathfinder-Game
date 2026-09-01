@@ -21,11 +21,11 @@ const relative = (root, file) => path.relative(root, file).split(path.sep).join(
 
 const MODE_ABBREVIATIONS = { sym: 'symmetry', lm: 'local-mutant', swap: 'swap', gr: 'group-reshuffle', cs: 'constrained-shuffle', ds: 'density-sweep', re: 're-embed' };
 
-const FAMILY_ATTEMPT_ARTIFACT_RE = /^(variant-family-dataset|wide-trove)-attempts-([A-Za-z0-9_-]+)-part\d+\.json$/;
+const FAMILY_ATTEMPT_ARTIFACT_RE = /^((?:\d{4}-\d{2}-\d{2}-)?wide-trove|variant-family-dataset)-attempts-([A-Za-z0-9_-]+)-part\d+\.json$/;
 
 function familyAttemptArtifactIdentity(file) {
     const match = FAMILY_ATTEMPT_ARTIFACT_RE.exec(path.basename(file));
-    return match ? { convention: match[1], corpus: match[2] } : null;
+    return match ? { convention: match[1].endsWith('wide-trove') ? 'wide-trove' : 'variant-family-dataset', corpus: match[2] } : null;
 }
 
 function selectFamilyAttemptEvidenceFiles(files) {
