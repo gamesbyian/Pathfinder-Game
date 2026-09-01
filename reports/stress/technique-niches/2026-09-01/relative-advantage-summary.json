@@ -1,0 +1,487 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "observational-development",
+  "baseSchemaVersion": 2,
+  "pairs": [
+    {
+      "leftAction": "ida:default",
+      "rightAction": "ida:mustCrossFirst",
+      "leftOnly": 16,
+      "rightOnly": 13,
+      "both": 426,
+      "neither": 1507,
+      "topEffects": [
+        {
+          "feature": "mustTurn",
+          "leftMean": 1.125,
+          "rightMean": 3,
+          "standardizedDifference": -0.6443280312697278
+        },
+        {
+          "feature": "mustCross",
+          "leftMean": 2.9375,
+          "rightMean": 1.6923076923076923,
+          "standardizedDifference": 0.48268211561980445
+        },
+        {
+          "feature": "requiredIntersections",
+          "leftMean": 4.5625,
+          "rightMean": 5.461538461538462,
+          "standardizedDifference": -0.3864993646077083
+        },
+        {
+          "feature": "gates",
+          "leftMean": 1.1875,
+          "rightMean": 1,
+          "standardizedDifference": 0.36514837167011077
+        },
+        {
+          "feature": "requiredPathLength",
+          "leftMean": 89.125,
+          "rightMean": 95.76923076923077,
+          "standardizedDifference": -0.35229381308100954
+        },
+        {
+          "feature": "flippingFilters",
+          "leftMean": 3.75,
+          "rightMean": 4.615384615384615,
+          "standardizedDifference": -0.27747924956727715
+        },
+        {
+          "feature": "adjacentTurn",
+          "leftMean": 2.5,
+          "rightMean": 3.3846153846153846,
+          "standardizedDifference": -0.2704946547153915
+        },
+        {
+          "feature": "constrainedObjects",
+          "leftMean": 21.4375,
+          "rightMean": 23.615384615384617,
+          "standardizedDifference": -0.25143847726708346
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 0.6443280312697278,
+      "evidenceRole": "outcome-selected-development"
+    },
+    {
+      "leftAction": "dfs:harvestThenFinish",
+      "rightAction": "dfs:portalFirstTransfer",
+      "leftOnly": 12,
+      "rightOnly": 15,
+      "both": 370,
+      "neither": 1565,
+      "topEffects": [
+        {
+          "feature": "requiredPathLength",
+          "leftMean": 84.75,
+          "rightMean": 106.4,
+          "standardizedDifference": -1.09524184506042
+        },
+        {
+          "feature": "requiredIntersections",
+          "leftMean": 4.083333333333333,
+          "rightMean": 6.733333333333333,
+          "standardizedDifference": -0.9377389954327336
+        },
+        {
+          "feature": "constrainedObjects",
+          "leftMean": 23.416666666666668,
+          "rightMean": 16.8,
+          "standardizedDifference": 0.8626247014242324
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "leftMean": 0.19409620934994432,
+          "rightMean": 0.12016014322085619,
+          "standardizedDifference": 0.8602417392856412
+        },
+        {
+          "feature": "flippingFilters",
+          "leftMean": 5.666666666666667,
+          "rightMean": 3.1333333333333333,
+          "standardizedDifference": 0.8514637902858482
+        },
+        {
+          "feature": "requiredPathCoverageRatio",
+          "leftMean": 0.6301628773290205,
+          "rightMean": 0.7154978278901358,
+          "standardizedDifference": -0.8381447260072993
+        },
+        {
+          "feature": "mustTurn",
+          "leftMean": 1.75,
+          "rightMean": 0.3333333333333333,
+          "standardizedDifference": 0.6065628765706068
+        },
+        {
+          "feature": "mustCross",
+          "leftMean": 0.5,
+          "rightMean": 1.7333333333333334,
+          "standardizedDifference": -0.5842550349736264
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 1.09524184506042,
+      "evidenceRole": "outcome-selected-development"
+    },
+    {
+      "leftAction": "beam:objectiveFirst@beam2000",
+      "rightAction": "beam:objectiveFirst@beam5000",
+      "leftOnly": 33,
+      "rightOnly": 163,
+      "both": 469,
+      "neither": 1297,
+      "topEffects": [
+        {
+          "feature": "navigableArea",
+          "leftMean": 150.63636363636363,
+          "rightMean": 127.17791411042944,
+          "standardizedDifference": 0.6561235480886498
+        },
+        {
+          "feature": "area",
+          "leftMean": 179.78787878787878,
+          "rightMean": 157.55828220858896,
+          "standardizedDifference": 0.5690946571342925
+        },
+        {
+          "feature": "width",
+          "leftMean": 13.303030303030303,
+          "rightMean": 12.478527607361963,
+          "standardizedDifference": 0.5400399108764621
+        },
+        {
+          "feature": "height",
+          "leftMean": 13.303030303030303,
+          "rightMean": 12.478527607361963,
+          "standardizedDifference": 0.5400399108764621
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "leftMean": 0.1231479108340258,
+          "rightMean": 0.16328469035313448,
+          "standardizedDifference": -0.47707591792429804
+        },
+        {
+          "feature": "requiredPathCoverageRatio",
+          "leftMean": 0.674887134665141,
+          "rightMean": 0.7361553627086715,
+          "standardizedDifference": -0.43642524404051
+        },
+        {
+          "feature": "nonNavigableDensity",
+          "leftMean": 0.1619208437886982,
+          "rightMean": 0.19547056815794214,
+          "standardizedDifference": -0.42260843630168404
+        },
+        {
+          "feature": "mustPass",
+          "leftMean": 2.484848484848485,
+          "rightMean": 3.7975460122699385,
+          "standardizedDifference": -0.4129938161929072
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 0.6561235480886498,
+      "evidenceRole": "outcome-selected-development"
+    },
+    {
+      "leftAction": "beam:intersectionHarvest@beam2000",
+      "rightAction": "beam:intersectionHarvest@beam5000",
+      "leftOnly": 37,
+      "rightOnly": 147,
+      "both": 471,
+      "neither": 1307,
+      "topEffects": [
+        {
+          "feature": "constrainedObjectDensity",
+          "leftMean": 0.12670635891621204,
+          "rightMean": 0.15649312092795667,
+          "standardizedDifference": -0.44244913813702164
+        },
+        {
+          "feature": "requiredPathCoverageRatio",
+          "leftMean": 0.6786077356052378,
+          "rightMean": 0.7285979810087747,
+          "standardizedDifference": -0.3566074075734952
+        },
+        {
+          "feature": "flippingFilters",
+          "leftMean": 2.4324324324324325,
+          "rightMean": 3.510204081632653,
+          "standardizedDifference": -0.3322860914234914
+        },
+        {
+          "feature": "constrainedObjects",
+          "leftMean": 17.18918918918919,
+          "rightMean": 19.081632653061224,
+          "standardizedDifference": -0.2545828277642662
+        },
+        {
+          "feature": "falseGoals",
+          "leftMean": 2.5675675675675675,
+          "rightMean": 3.360544217687075,
+          "standardizedDifference": -0.23839824466078272
+        },
+        {
+          "feature": "adjacentTurn",
+          "leftMean": 2.675675675675676,
+          "rightMean": 3.4285714285714284,
+          "standardizedDifference": -0.23419215386771425
+        },
+        {
+          "feature": "navigableArea",
+          "leftMean": 140.0810810810811,
+          "rightMean": 131.3265306122449,
+          "standardizedDifference": 0.2338348499669327
+        },
+        {
+          "feature": "area",
+          "leftMean": 168.16216216216216,
+          "rightMean": 159.9251700680272,
+          "standardizedDifference": 0.21232324382447001
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 0.44244913813702164,
+      "evidenceRole": "outcome-selected-development"
+    },
+    {
+      "leftAction": "beam:objectiveFirst@beam5000",
+      "rightAction": "beam:objectiveFirst@beam5000(diverse)",
+      "leftOnly": 48,
+      "rightOnly": 128,
+      "both": 584,
+      "neither": 1202,
+      "topEffects": [
+        {
+          "feature": "portals",
+          "leftMean": 1.0625,
+          "rightMean": 3.546875,
+          "standardizedDifference": -1.0596350774214012
+        },
+        {
+          "feature": "requiredIntersections",
+          "leftMean": 6.708333333333333,
+          "rightMean": 4.8671875,
+          "standardizedDifference": 0.6797940224007687
+        },
+        {
+          "feature": "turnConstraintLoad",
+          "leftMean": 15.270833333333334,
+          "rightMean": 11.8515625,
+          "standardizedDifference": 0.5323598138733304
+        },
+        {
+          "feature": "requiredPathCoverageRatio",
+          "leftMean": 0.7337222146778224,
+          "rightMean": 0.6915369629043219,
+          "standardizedDifference": 0.434449882869207
+        },
+        {
+          "feature": "surround",
+          "leftMean": 1.1041666666666667,
+          "rightMean": 0.5859375,
+          "standardizedDifference": 0.40032584404889027
+        },
+        {
+          "feature": "requiredPathLength",
+          "leftMean": 102.45833333333333,
+          "rightMean": 94.171875,
+          "standardizedDifference": 0.3501106145064648
+        },
+        {
+          "feature": "adjacentTurn",
+          "leftMean": 3.6041666666666665,
+          "rightMean": 2.53125,
+          "standardizedDifference": 0.3357748641948417
+        },
+        {
+          "feature": "constrainedObjects",
+          "leftMean": 21.8125,
+          "rightMean": 23.9921875,
+          "standardizedDifference": -0.32096211580122175
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 1.0596350774214012,
+      "evidenceRole": "outcome-selected-development"
+    },
+    {
+      "leftAction": "beam:intersectionHarvest@beam5000",
+      "rightAction": "beam:intersectionHarvest@beam5000(diverse)",
+      "leftOnly": 40,
+      "rightOnly": 135,
+      "both": 578,
+      "neither": 1209,
+      "topEffects": [
+        {
+          "feature": "requiredIntersections",
+          "leftMean": 6.575,
+          "rightMean": 5,
+          "standardizedDifference": 0.6551365936106655
+        },
+        {
+          "feature": "portals",
+          "leftMean": 1.65,
+          "rightMean": 3.074074074074074,
+          "standardizedDifference": -0.5390740853094248
+        },
+        {
+          "feature": "requiredPathLength",
+          "leftMean": 101.825,
+          "rightMean": 93.08888888888889,
+          "standardizedDifference": 0.3865291012250912
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "leftMean": 0.15756805585574593,
+          "rightMean": 0.1863517785089159,
+          "standardizedDifference": -0.3758780190606311
+        },
+        {
+          "feature": "constrainedObjects",
+          "leftMean": 20.825,
+          "rightMean": 23.333333333333332,
+          "standardizedDifference": -0.3525742127297201
+        },
+        {
+          "feature": "mustPass",
+          "leftMean": 3.85,
+          "rightMean": 2.859259259259259,
+          "standardizedDifference": 0.3161945437219707
+        },
+        {
+          "feature": "requiredPathCoverageRatio",
+          "leftMean": 0.7284475966127893,
+          "rightMean": 0.7036845724561311,
+          "standardizedDifference": 0.24420031903210127
+        },
+        {
+          "feature": "width",
+          "leftMean": 12.925,
+          "rightMean": 12.577777777777778,
+          "standardizedDifference": 0.24388050382275414
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 0.6551365936106655,
+      "evidenceRole": "outcome-selected-development"
+    },
+    {
+      "leftAction": "beam:perimeterSweep/perimeterCW@beam2000",
+      "rightAction": "beam:perimeterSweep/perimeterCCW@beam2000",
+      "leftOnly": 115,
+      "rightOnly": 113,
+      "both": 389,
+      "neither": 1345,
+      "topEffects": [
+        {
+          "feature": "width",
+          "leftMean": 12.556521739130435,
+          "rightMean": 12.256637168141593,
+          "standardizedDifference": 0.21544616370911668
+        },
+        {
+          "feature": "height",
+          "leftMean": 12.556521739130435,
+          "rightMean": 12.256637168141593,
+          "standardizedDifference": 0.21544616370911668
+        },
+        {
+          "feature": "area",
+          "leftMean": 159.70434782608694,
+          "rightMean": 152.06194690265488,
+          "standardizedDifference": 0.2146222232200794
+        },
+        {
+          "feature": "navigableArea",
+          "leftMean": 129.77391304347827,
+          "rightMean": 123.08849557522124,
+          "standardizedDifference": 0.2112400616689587
+        },
+        {
+          "feature": "requiredPathLength",
+          "leftMean": 92.92173913043479,
+          "rightMean": 88.40707964601769,
+          "standardizedDifference": 0.19957162468262094
+        },
+        {
+          "feature": "mustPass",
+          "leftMean": 3.4956521739130433,
+          "rightMean": 2.982300884955752,
+          "standardizedDifference": 0.1601394698346328
+        },
+        {
+          "feature": "mustTurn",
+          "leftMean": 3.026086956521739,
+          "rightMean": 2.5575221238938055,
+          "standardizedDifference": 0.1470264999867996
+        },
+        {
+          "feature": "falseGoals",
+          "leftMean": 3.6956521739130435,
+          "rightMean": 3.230088495575221,
+          "standardizedDifference": 0.14199893502528751
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 0.21544616370911668,
+      "evidenceRole": "outcome-selected-development"
+    },
+    {
+      "leftAction": "dfs:perimeterSweep/perimeterCW",
+      "rightAction": "dfs:perimeterSweep/perimeterCCW",
+      "leftOnly": 47,
+      "rightOnly": 50,
+      "both": 353,
+      "neither": 1512,
+      "topEffects": [
+        {
+          "feature": "mustCross",
+          "leftMean": 1.297872340425532,
+          "rightMean": 0.66,
+          "standardizedDifference": 0.344015295247729
+        },
+        {
+          "feature": "flippingFilters",
+          "leftMean": 2.276595744680851,
+          "rightMean": 3.06,
+          "standardizedDifference": -0.25423609646666673
+        },
+        {
+          "feature": "portals",
+          "leftMean": 2.404255319148936,
+          "rightMean": 3.12,
+          "standardizedDifference": -0.2507042250363947
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "leftMean": 0.11949203982889783,
+          "rightMean": 0.13695405657089238,
+          "standardizedDifference": -0.23626333286767498
+        },
+        {
+          "feature": "gates",
+          "leftMean": 1.0212765957446808,
+          "rightMean": 1,
+          "standardizedDifference": 0.20851441405707394
+        },
+        {
+          "feature": "constrainedObjects",
+          "leftMean": 15.063829787234043,
+          "rightMean": 16.56,
+          "standardizedDifference": -0.19567824178885085
+        },
+        {
+          "feature": "adjacentTurn",
+          "leftMean": 1.2127659574468086,
+          "rightMean": 1.74,
+          "standardizedDifference": -0.19058276392321938
+        },
+        {
+          "feature": "mustTurn",
+          "leftMean": 2.0851063829787235,
+          "rightMean": 1.6,
+          "standardizedDifference": 0.16826866125455447
+        }
+      ],
+      "maxAbsoluteStandardizedDifference": 0.344015295247729,
+      "evidenceRole": "outcome-selected-development"
+    }
+  ]
+}
