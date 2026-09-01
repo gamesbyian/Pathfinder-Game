@@ -11,14 +11,12 @@ const args = new Map(process.argv.slice(2).filter((arg) => arg.startsWith('--'))
   return [key, value.join('=')];
 }));
 const json = args.has('--json');
-// PATHFINDER_VARIANT_TROVE is a legacy compatibility read: dual-read with the new name, prefer
-// the new name, retire the legacy fallback at the phase-15 review (docs/naming-cleanup-ledger.json
-// NC-P08-053 -- this env var may exist outside git in someone's local shell/CI config, so it is
-// NOT simply renamed in place).
+// Phase 15 retired the former legacy dataset-root environment input after the final review.
+// Keep the external root contract canonical-only: explicit --root, then the canonical environment
+// variable, then the historical-worktree default.
 const root = resolve(
   args.get('--root')
   || process.env.PATHFINDER_VARIANT_FAMILY_DATASET_ROOT
-  || process.env.PATHFINDER_VARIANT_TROVE
   || '../pathfinder-variant-research',
 );
 

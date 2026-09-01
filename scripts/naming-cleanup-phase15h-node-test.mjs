@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -32,6 +32,37 @@ try {
   );
 } finally {
   rmSync(temp, { recursive: true, force: true });
+}
+
+// Execute the second real 15H producer too. An empty prune-gap directory is sufficient for this
+// naming-boundary smoke: it exercises the canonical CLI, report writer, and metadata fields while
+// avoiding an expensive research replay. The producer deliberately skips Corpus-2 loading when
+// there are no branch artifacts, so this remains valid in the ordinary sparse Node-test checkout.
+const crossingTemp = mkdtempSync(path.join(tmpdir(), 'phase15h-crossing-producer-'));
+try {
+  const out = path.join(crossingTemp, 'crossing.json');
+  const result = spawnSync(
+    process.execPath,
+    [
+      'scripts/run-bundled.mjs',
+      'scripts/stress/mc-crossing-slack-analysis.mjs',
+      '--',
+      `--prune-gap-dir=${crossingTemp}`,
+      '--corpora=published',
+      '--limit-levels=0',
+      `--out=${out}`,
+    ],
+    { cwd: process.cwd(), encoding: 'utf8' },
+  );
+  assert.equal(result.status, 0, `crossing producer smoke failed: ${result.stdout}\n${result.stderr}`);
+  assert.equal(existsSync(out), true, 'crossing producer must write the requested report');
+  const report = JSON.parse(readFileSync(out, 'utf8'));
+  assert.equal(report.atlas.pruneGapDir, crossingTemp);
+  assert.equal(report.atlas.pruneGapFiles, 0);
+  assert.equal('atlasDir' in report.atlas, false);
+  assert.equal('atlasFiles' in report.atlas, false);
+} finally {
+  rmSync(crossingTemp, { recursive: true, force: true });
 }
 
 assert.ok(replaySource.includes('pruneGapDir: PRUNE_GAP_DIR'));

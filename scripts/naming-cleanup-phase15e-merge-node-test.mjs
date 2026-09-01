@@ -46,4 +46,44 @@ const attemptDoc = JSON.parse(readFileSync(attempts, 'utf8'));
 assert.equal(attemptDoc.levels.length, 1);
 assert.equal(attemptDoc.levels[0].id, 'V1');
 
-console.log('variant-family dataset shard merger canonical-path/stale-chunk tests passed');
+// Faithful workflow publication harness: execute the same standard-result publisher arguments used
+// after the merger in collect-variant-family-dataset.yml. This proves the canonical summary path
+// reaches the standard artifact and the canonical source-run provenance path is actually writable.
+const publish = spawnSync(process.execPath, [
+    path.join(ROOT, 'scripts/publish-solver-sweep-result.mjs'),
+    '--primary=reports/families/variant-family-dataset-summary.md',
+    '--shards-expected=1',
+    '--shards-basis=fixture shard count',
+    '--shards-observed=1',
+    '--provenance-out=reports/families/variant-family-dataset-source-run.json',
+    '--source-artifact=variant-family-dataset-combined',
+], {
+    cwd: temp,
+    encoding: 'utf8',
+    env: {
+        ...process.env,
+        GITHUB_WORKFLOW: 'collect-variant-family-dataset.yml',
+        GITHUB_RUN_ID: '15',
+        GITHUB_RUN_ATTEMPT: '1',
+        GITHUB_EVENT_NAME: 'workflow_dispatch',
+        GITHUB_REPOSITORY: 'gamesbyian/Pathfinder-Game',
+        GITHUB_SERVER_URL: 'https://github.com',
+        GITHUB_REF: 'refs/heads/fixture',
+        GITHUB_REF_NAME: 'fixture',
+        GITHUB_SHA: '1111111111111111111111111111111111111111',
+    },
+});
+assert.equal(publish.status, 0, `standard publisher failed:\n${publish.stdout}\n${publish.stderr}`);
+const sourceRun = path.join(temp, 'reports/families/variant-family-dataset-source-run.json');
+assert.ok(existsSync(sourceRun), 'workflow publication harness must write the canonical source-run path');
+const sourceRunDoc = JSON.parse(readFileSync(sourceRun, 'utf8'));
+assert.equal(sourceRunDoc.workflow, 'collect-variant-family-dataset.yml');
+assert.equal(sourceRunDoc.shardCompleteness?.complete, true);
+assert.equal(existsSync(path.join(temp, 'reports/families/2026-08-07-wide-trove-source-run.json')), false,
+    'workflow publication harness must not manufacture the retired dated provenance path');
+const standardManifest = JSON.parse(readFileSync(path.join(temp, 'logs/solver-sweep-result/manifest.json'), 'utf8'));
+assert.equal(standardManifest.status, 'published');
+assert.equal(standardManifest.entries[0].source, 'reports/families/variant-family-dataset-summary.md');
+assert.equal(standardManifest.sourceArtifact, 'variant-family-dataset-combined');
+
+console.log('variant-family dataset workflow harness passed: real merger -> canonical provenance -> standard publisher.');

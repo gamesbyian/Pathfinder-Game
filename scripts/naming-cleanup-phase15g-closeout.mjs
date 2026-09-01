@@ -105,12 +105,15 @@ assert.match(repair, /referenceReason/u);
 assert.doesNotMatch(repair, /oracleProbe|oracleLabel|oracleReason/u);
 
 const workflow = readFileSync('.github/workflows/cpsat-explicit-prefix-reference.yml', 'utf8');
+const combiner = readFileSync('scripts/combine-cpsat-explicit-prefix-reference-shards.mjs', 'utf8');
 assert.match(workflow, /default: 'reference-abstain'/u);
 assert.match(workflow, /^  reference-shards:$/mu);
 assert.match(workflow, /needs: \[plan, reference-shards\]/u);
-assert.match(workflow, /row\.referenceLabel/u);
-assert.match(workflow, /schemaVersion: 2/u);
+assert.match(workflow, /combine-cpsat-explicit-prefix-reference-shards\.mjs/u);
 assert.doesNotMatch(workflow, /oracle-shards|atlas-abstain|row\.oracleLabel/u);
+assert.match(combiner, /row\.referenceLabel/u);
+assert.match(combiner, /schemaVersion: 2/u);
+assert.doesNotMatch(combiner, /oracleLabel|oracle-shards|atlas-abstain/u);
 
 const ledger = JSON.parse(readFileSync('docs/naming-cleanup-ledger.json', 'utf8'));
 const retained = Object.fromEntries((ledger.phaseRetainedSurfaces?.['8'] ?? []).map(row => [row.id, row]));

@@ -71,6 +71,23 @@ try {
 
   {
     const ledger = clone(source);
+    const row = ledger.entries.find(entry => entry.id === 'NC-P08-053');
+    if (!row) throw new Error('terminal compatibility fixture requires NC-P08-053');
+    row.persistence = 'dual-read';
+    row.compatibility = {
+      mode: 'external-config-transition',
+      retireWhen: 'phase-15-review',
+      owner: 'variant-family dataset root resolver',
+    };
+    expectFail(
+      'completed program cannot retain unresolved phase-15-review compatibility',
+      ledger,
+      /NC-P08-053: phase-15-review compatibility is unresolved after Phase 15 completion/u,
+    );
+  }
+
+  {
+    const ledger = clone(source);
     ledger.phaseBatches['8'] = ['8A', '8A'];
     expectFail('batch order must be unique', ledger, /phaseBatches\["8"\] must be a non-empty unique ordered batch list/u);
   }
