@@ -11,7 +11,8 @@ const indexTest = readFileSync('scripts/family-index-lib-check.mjs', 'utf8');
 // NC-P15-003: one discovery owner reads both eras, preferring canonical current aggregate files
 // per corpus when both conventions coexist.
 assert.match(familyIndex, /FAMILY_ATTEMPT_ARTIFACT_RE/u);
-assert.match(familyIndex, /variant-family-dataset\|wide-trove/u);
+assert.match(familyIndex, /variant-family-dataset/u);
+assert.match(familyIndex, /wide-trove/u);
 assert.match(familyIndex, /selectFamilyAttemptEvidenceFiles/u);
 assert.match(familyIndex, /canonicalCorpora/u);
 assert.match(familyIndex, /identity\.convention === 'variant-family-dataset'/u);
