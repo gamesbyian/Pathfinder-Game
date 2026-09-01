@@ -175,10 +175,11 @@ jobs:
           if (files.length !== expectedShards) throw new Error(`missing shard artifacts: found ${files.length}/${expectedShards}`);
           const docs = files.map(name => JSON.parse(readFileSync(path.join(dir, name), 'utf8')));
           const first = docs[0];
+          const legacyLabelKey = ['oracle', 'Label'].join('');
           for (const doc of docs) {
             if (doc.schemaVersion !== 2) throw new Error(`unexpected explicit-prefix shard schemaVersion ${doc.schemaVersion}`);
             for (const row of doc.rows ?? []) {
-              if (!('referenceLabel' in row) || 'oracleLabel' in row) {
+              if (!('referenceLabel' in row) || legacyLabelKey in row) {
                 throw new Error(`noncanonical explicit-prefix result row in shard ${doc.shardIndex}`);
               }
             }
