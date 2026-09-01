@@ -91,7 +91,7 @@ try {
   expectFailure(
     'retired explicit-prefix input alias resurrected in resumption bridge',
     'docs/solver-research-post-naming-resumption.md',
-    source => `${source}\n\`atlas-abstain\` remains the accepted input alias.\n`,
+    source => `${source}\n\`${['atlas', 'abstain'].join('-')}\` remains the accepted input alias.\n`,
     /retired atlas-abstain as accepted/iu,
   );
 
