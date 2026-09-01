@@ -15,10 +15,8 @@ assert.deepEqual(ledger.phaseBatches?.['15'], ['15A','15B','15C','15D','15E','15
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15A'], 'specification-gate');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15I'], 'merged-tree-closeout');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15J'], 'finalization');
-assert.equal(ledger.activeExecution?.status, 'active');
-assert.equal(ledger.activeExecution?.phase, 15);
-assert.equal(ledger.activeExecution?.batch, '15D');
-assert.equal(ledger.activeExecution?.recordPath, 'docs/naming-cleanup-phase-records/phase-15.md');
+assert.ok(['active', 'idle'].includes(ledger.activeExecution?.status),
+  'Phase-15 execution may be active during a batch or idle while a completed batch awaits merge');
 
 const phase15 = ledger.entries.filter(row => row.phase === 15);
 assert.equal(phase15.length, 13, '15A should resolve to thirteen homogeneous implementation rows');
@@ -34,11 +32,11 @@ assert.equal(phase15.find(row => row.id === 'NC-P15-008')?.status, 'done');
 assert.equal(ledger.batchCompletions?.['15C']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15C']?.pr, 1640);
 assert.equal(ledger.batchCompletions?.['15C']?.mergeCommit, '300d26bd35886f01b8fccebac0453d6d7bdc226a');
-assert.equal(phase15.find(row => row.id === 'NC-P15-002')?.status, 'in-progress');
+assert.equal(phase15.find(row => row.id === 'NC-P15-002')?.status, 'done');
 assert.ok(
   phase15.filter(row => !['NC-P15-001', 'NC-P15-002', 'NC-P15-006', 'NC-P15-008'].includes(row.id))
     .every(row => row.status === 'pending'),
-  'active 15D must leave later implementation rows pending',
+  'completed 15D must leave later implementation rows pending until their serial batch begins',
 );
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
