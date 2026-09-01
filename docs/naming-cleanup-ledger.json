@@ -4166,15 +4166,15 @@
     {
       "id": "NC-P15-001",
       "old": "external --trove-root variant-family dataset-root CLI",
-      "new": "--variant-family-dataset-root with one owned legacy CLI alias",
+      "new": "--variant-family-dataset-root canonical-only; retired --trove-root input is rejected after Phase-15 review",
       "kind": "interface",
       "risk": "medium",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 15,
       "batch": "15C",
       "status": "done",
-      "notes": "15A narrowed the inherited CLI/API bundle. External dataset-root CLI compatibility is owned here; private helper/local names moved to NC-P15-008. Inventory and decision record: docs/naming-cleanup-phase-records/phase-15.md.",
-      "migrationClass": "compatibility-boundary-migration",
+      "notes": "15A narrowed the inherited CLI/API bundle. External dataset-root CLI compatibility is owned here; private helper/local names moved to NC-P15-008. Inventory and decision record: docs/naming-cleanup-phase-records/phase-15.md. Phase 15J retired the external --trove-root transition alias after 15I proved there was no current repository caller; the canonical parser now rejects the retired spelling.",
+      "migrationClass": "current-surface-rename-retired-transition-alias",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
@@ -4183,11 +4183,6 @@
         "consumerAudit": "done",
         "behavioralParity": "done",
         "closeoutAudit": "done"
-      },
-      "compatibility": {
-        "mode": "external-config-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "scripts/family-paths.mjs shared dataset-root CLI parser"
       },
       "inventoryTerms": [
         "--trove-root",
@@ -4540,15 +4535,15 @@
     {
       "id": "NC-P15-011",
       "old": "external explicit-prefix case-format token atlas-abstain",
-      "new": "reference-abstain canonical case-format token with one legacy parser alias",
+      "new": "reference-abstain canonical case-format token; retired atlas-abstain input is rejected after Phase-15 review",
       "kind": "interface",
       "risk": "high",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 15,
       "batch": "15G",
       "status": "done",
-      "notes": "15A split the workflow/CLI input token from NC-P15-005. The shared input parser owns the transition alias; current workflow/docs single-write the canonical token after migration. docs/naming-cleanup-phase-records/phase-15.md.",
-      "migrationClass": "compatibility-boundary-migration",
+      "notes": "15A split the workflow/CLI input token from NC-P15-005. The shared input parser owns the transition alias; current workflow/docs single-write the canonical token after migration. docs/naming-cleanup-phase-records/phase-15.md. Phase 15J retired the external atlas-abstain format alias after 15I proved there was no current repository caller. Historical schema-v1 oracle-abstain data remains readable under NC-P15-012 through the canonical reference-abstain format.",
+      "migrationClass": "current-surface-rename-retired-transition-alias",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
@@ -4557,11 +4552,6 @@
         "consumerAudit": "done",
         "behavioralParity": "done",
         "closeoutAudit": "done"
-      },
-      "compatibility": {
-        "mode": "external-config-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "extractExplicitPrefixCases input-format parser plus cpsat-explicit-prefix-reference workflow input"
       },
       "inventoryTerms": [
         "atlas-abstain",
@@ -4963,10 +4953,7 @@
       },
       "NC-P08-017": {
         "kind": "literal-legacy-surface",
-        "legacy": "branch atlas",
-        "retainedSurfaceIds": [
-          "NC-RET-P08-008"
-        ]
+        "legacy": "branch atlas"
       },
       "NC-P08-018": {
         "kind": "literal-legacy-surface",
@@ -5034,8 +5021,7 @@
         "kind": "literal-legacy-surface",
         "legacy": "stress/winning-prefix-atlas-pilot.mjs",
         "retainedSurfaceIds": [
-          "NC-RET-P08-002",
-          "NC-RET-P08-008"
+          "NC-RET-P08-002"
         ]
       },
       "NC-P08-032": {
@@ -5290,31 +5276,24 @@
     "8": [
       {
         "id": "NC-RET-P08-001",
-        "owner": "NC-P08-053 and NC-P15-001 through NC-P15-003",
-        "lifecycle": "phase-15-review; historical dated paths remain readable",
+        "owner": "NC-P08-053 plus NC-P15-002/NC-P15-003 permanent historical family-data readers",
+        "lifecycle": "permanent historical family-run/attempt reads; retired dataset-root input is rejection-only",
         "matches": [
           {
             "term": "trove",
             "files": [
               "scripts/family-paths.mjs",
-              "scripts/family-parent-hint-replay-batch.mjs",
               "scripts/experiment-manifest-lib.mjs",
               "scripts/family-index-lib.mjs",
               "scripts/family-index-lib-check.mjs",
               "scripts/experiment-manifest-lib-check.mjs",
               "scripts/family-run-manifest-producer-node-test.mjs",
-              "scripts/collect-variant-family-dataset-shard.mjs",
-              "scripts/family-index.mjs",
-              "scripts/merge-variant-family-dataset-shards.mjs",
-              ".github/workflows/collect-variant-family-dataset.yml",
-              "docs/tooling-catalog.md",
-              "docs/variant-level-research.md"
+              "scripts/merge-variant-family-dataset-shards.mjs"
             ]
           }
         ],
         "ownerRowIds": [
           "NC-P08-053",
-          "NC-P15-001",
           "NC-P15-002",
           "NC-P15-003"
         ],
@@ -5439,26 +5418,6 @@
         "ownerRowIds": [
           "NC-P08-046",
           "NC-P15-012"
-        ],
-        "ownerClass": "compatibility-or-deferred"
-      },
-      {
-        "id": "NC-RET-P08-008",
-        "owner": "NC-P15-011 external explicit-prefix case-format compatibility alias",
-        "lifecycle": "phase-15-review; current callers single-write reference-abstain",
-        "matches": [
-          {
-            "term": "atlas-abstain",
-            "files": [
-              "scripts/stress/cpsat-explicit-prefix-reference-lib.mjs",
-              "scripts/stress/research-analysis-lib-check.mjs"
-            ]
-          }
-        ],
-        "ownerRowIds": [
-          "NC-P08-017",
-          "NC-P08-031",
-          "NC-P15-011"
         ],
         "ownerClass": "compatibility-or-deferred"
       },
