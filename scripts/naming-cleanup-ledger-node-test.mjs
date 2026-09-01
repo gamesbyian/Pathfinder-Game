@@ -152,6 +152,7 @@ try {
     // is durably recorded, even though there are no 15A implementation rows to mark done.
     const row = ledger.entries.find(entry => entry.id === 'NC-P15-006');
     if (!row) throw new Error('Phase-15 serial-gate fixture requires NC-P15-006');
+    ledger.batchCompletions['15A'] = { status: 'pending', pr: null, mergeCommit: null };
     row.status = 'in-progress';
     row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-15.md';
     ledger.activeExecution = {
