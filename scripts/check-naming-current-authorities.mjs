@@ -16,7 +16,8 @@ const ROOT = path.resolve(rootArg ? rootArg.slice('--root='.length) : process.cw
 const read = relative => readFileSync(path.join(ROOT, relative), 'utf8');
 
 const ledger = JSON.parse(read('docs/naming-cleanup-ledger.json'));
-const nextPhase = Number(ledger.lastCompletedPhase) + 1;
+const programComplete = ledger.status === 'complete';
+const nextPhase = programComplete ? null : Number(ledger.lastCompletedPhase) + 1;
 const agents = read('AGENTS.md');
 const docsIndex = read('docs/README.md');
 const naming = read('docs/naming-and-vocabulary.md');
@@ -25,8 +26,15 @@ const scriptsReadme = read('scripts/README.md');
 const tooling = read('docs/tooling-catalog.md');
 const failures = [];
 
-if (!agents.includes('npm run naming:status')) failures.push('AGENTS.md naming route must start from npm run naming:status');
-if (!agents.includes('next phase returned by that status')) failures.push('AGENTS.md naming route must explicitly follow the next phase returned by status');
+if (!agents.includes('npm run naming:status')) failures.push('AGENTS.md naming route must retain npm run naming:status as the historical/status entry point');
+if (programComplete) {
+  if (ledger.lastCompletedPhase !== 15) failures.push('completed naming program must end at Phase 15');
+  if (!/repository-wide naming cleanup is complete/iu.test(agents)) failures.push('AGENTS.md must route naming as a completed program');
+  if (!/do not reopen[^\n]+Phase 16/iu.test(agents)) failures.push('AGENTS.md must explicitly forbid reopening the completed sequence or inventing Phase 16');
+  if (/next phase returned by that status/iu.test(agents)) failures.push('AGENTS.md must not advertise a next naming phase after completion');
+} else if (!agents.includes('next phase returned by that status')) {
+  failures.push('AGENTS.md naming route must explicitly follow the next phase returned by status while the program is active');
+}
 if (/technical Phase-8 gate is ready/iu.test(agents)) failures.push('AGENTS.md still presents the completed Phase-8 gate as current');
 if (/active phase\/batch authority[^\n]*phase-08\.md/iu.test(agents)) failures.push('AGENTS.md still hard-codes Phase 8 as the active naming authority');
 
@@ -84,7 +92,30 @@ for (const id of ['NC-P15-008','NC-P15-009','NC-P15-010','NC-P15-011','NC-P15-01
 }
 if (resumption.includes('\\`')) failures.push('solver resumption bridge contains escaped Markdown code delimiters');
 
-if (nextPhase === 15) {
+if (programComplete) {
+  const execution = ledger.phaseExecutionRecords?.['15'];
+  if (execution !== 'docs/naming-cleanup-phase-records/phase-15.md') {
+    failures.push('completed Phase 15 must retain its registered execution record');
+  }
+  const executionIndexPath = typeof execution === 'string' ? execution.replace(/^docs\//u, '') : '';
+  if (!docsIndex.includes(executionIndexPath)) failures.push('docs/README.md must retain completed Phase-15 execution evidence');
+  if (!docsIndex.includes('naming-cleanup-phase-records/phase-15-preparation.md')) {
+    failures.push('docs/README.md must retain the frozen Phase-15 preparation snapshot');
+  }
+  if (!/Completed\/frozen Phase-15 execution evidence/iu.test(docsIndex)) {
+    failures.push('docs/README.md must classify Phase-15 execution as completed/frozen evidence');
+  }
+  if (/Current Phase-15 execution\/closeout authority/iu.test(docsIndex)) {
+    failures.push('docs/README.md must not classify Phase 15 as current execution authority after completion');
+  }
+  if (ledger.activeExecution?.status !== 'idle') failures.push('completed naming program must leave activeExecution idle');
+  if (!/repository-wide naming cleanup is complete through Phase 15/iu.test(resumption)) {
+    failures.push('solver resumption bridge must be activated after completed Phase 15');
+  }
+  if (/Phase 16|next cleanup phase/iu.test(resumption)) {
+    failures.push('solver resumption bridge must not invent post-completion naming work');
+  }
+} else if (nextPhase === 15) {
   const preparation = 'naming-cleanup-phase-records/phase-15-preparation.md';
   const execution = ledger.phaseExecutionRecords?.['15'];
   const phase15Active = ledger.activeExecution?.status === 'active' && ledger.activeExecution?.phase === 15;
@@ -119,4 +150,6 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log(`Naming current authorities agree with ledger state and resolved Phase-15 semantics: Phase ${ledger.lastCompletedPhase} complete, Phase ${nextPhase} next.`);
+console.log(programComplete
+  ? 'Naming current authorities agree with terminal ledger state: Phase 15 complete; no next cleanup phase.'
+  : `Naming current authorities agree with ledger state and resolved Phase-15 semantics: Phase ${ledger.lastCompletedPhase} complete, Phase ${nextPhase} next.`);
