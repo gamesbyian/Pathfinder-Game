@@ -62,7 +62,6 @@ Workflow `run-name` values also include the inputs most useful for distinguishin
 
 ## Core capability
 
-- `connectivity-retry-migration-validation.yml` — **temporary branch-only validation** for the 2026-09-01 connectivity retry work-dose migration; targeted ownership tests plus full published-corpus solver regression. Remove before merge.
 - `solver-stress-refresh.yml` — canonical level-blind full refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers; node/work ceilings normally bind. Hint capture is always on; deterministic runs defer canonical hint persistence to the harvester.
 - `solver-typical-budget-baseline.yml` — typical-budget baseline. Already heavily oversharded; its ordinary wall deadlines are semantically meaningful, so worker-count changes require matched measurement.
 - `solver-highbudget-unsolved-sweep.yml` — high-budget unsolved sweep with runtime-weighted bin packing and dedicated slow-level handling.
