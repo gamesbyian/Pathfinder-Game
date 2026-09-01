@@ -3288,10 +3288,10 @@
     {
       "id": "NC-P08-053",
       "old": "PATHFINDER_VARIANT_TROVE",
-      "new": "PATHFINDER_VARIANT_FAMILY_DATASET_ROOT",
+      "new": "PATHFINDER_VARIANT_FAMILY_DATASET_ROOT canonical-only; retired legacy dataset-root env input is ignored after Phase-15 review",
       "kind": "env",
       "risk": "high",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 8,
       "status": "done",
       "verification": {
@@ -3302,15 +3302,10 @@
         "behavioralParity": "done",
         "closeoutAudit": "done"
       },
-      "notes": "External developer/CI env compatibility window.",
+      "notes": "External developer/CI env transition was retained through the naming program, then retired by the post-Phase-15 hostile audit repair after the completion seal had already classified the old dataset-root input as rejection-only. Current code accepts only --root and PATHFINDER_VARIANT_FAMILY_DATASET_ROOT.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-08-batch-8f.md",
-      "batch": "8F",
-      "compatibility": {
-        "mode": "external-config-transition",
-        "retireWhen": "phase-15-review",
-        "owner": "variant-family dataset root resolver"
-      }
+      "batch": "8F"
     },
     {
       "id": "NC-P08-054",
@@ -5120,16 +5115,8 @@
         "legacy": "family:trove:doctor"
       },
       "NC-P08-053": {
-        "kind": "compatibility-exemption",
-        "legacy": "PATHFINDER_VARIANT_TROVE",
-        "contract": "variant-family-dataset-root-resolver",
-        "files": [
-          "scripts/validate-variant-family-dataset-worktree.mjs",
-          "scripts/validate-variant-family-dataset-worktree-node-test.mjs"
-        ],
-        "retainedSurfaceIds": [
-          "NC-RET-P08-001"
-        ]
+        "kind": "literal-legacy-surface",
+        "legacy": "PATHFINDER_VARIANT_TROVE"
       },
       "NC-P08-054": {
         "kind": "literal-legacy-surface",
@@ -5276,8 +5263,8 @@
     "8": [
       {
         "id": "NC-RET-P08-001",
-        "owner": "NC-P08-053 plus NC-P15-002/NC-P15-003 permanent historical family-data readers",
-        "lifecycle": "permanent historical family-run/attempt reads; retired dataset-root input is rejection-only",
+        "owner": "NC-P08-019 plus NC-P15-002/NC-P15-003 permanent historical family-data readers",
+        "lifecycle": "permanent historical family-run/attempt reads only; retired dataset-root environment input is canonical-only/rejection-by-nonrecognition",
         "matches": [
           {
             "term": "trove",
@@ -5292,7 +5279,7 @@
           }
         ],
         "ownerRowIds": [
-          "NC-P08-053",
+          "NC-P08-019",
           "NC-P15-002",
           "NC-P15-003"
         ],
