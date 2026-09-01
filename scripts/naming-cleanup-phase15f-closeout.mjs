@@ -12,6 +12,10 @@ const files = Object.fromEntries([
   'submissionRepository',
   'localHintsRepository',
   'ratingsReport',
+  'data',
+  'devCorpus',
+  'reviewRepository',
+  'ports',
   'fingerprintTest',
 ].map(name => {
   const paths = {
@@ -24,6 +28,10 @@ const files = Object.fromEntries([
     submissionRepository: 'modules/persistence/level-submission-repository.ts',
     localHintsRepository: 'modules/persistence/local-level-hints-repository.ts',
     ratingsReport: 'scripts/level-ratings-report.mjs',
+    data: 'modules/data.ts',
+    devCorpus: 'modules/dev-corpus.ts',
+    reviewRepository: 'modules/persistence/review-repository.ts',
+    ports: 'modules/ports.ts',
     fingerprintTest: 'modules/domain/level-fingerprint.test.ts',
   };
   return [name, readFileSync(paths[name], 'utf8')];
@@ -39,6 +47,10 @@ const combinedApplication = [
   files.submissionRepository,
   files.localHintsRepository,
   files.ratingsReport,
+  files.data,
+  files.devCorpus,
+  files.reviewRepository,
+  files.ports,
 ].join('\n');
 
 // Retired application-local identities. Domain-level fingerprint terminology and
@@ -51,6 +63,8 @@ for (const [label, pattern] of [
   ['old local match member', /targetLocalLevelMatch\?\.fingerprint\b/u],
   ['old repository parameter', /\(fingerprint:\s*string\b/u],
   ['old awaited local', /const\s+fingerprint\s*=\s*await\s+getLevelFingerprint/u],
+  ['old callback parameter', /\bfingerprint:\s*string\b/u],
+  ['old local-hint approval parameter', /approveLocalHintAddition\([^)]*\bfingerprint:\s*string\b/u],
 ]) {
   assert.doesNotMatch(combinedApplication, pattern, `retired Phase-15F ${label} must not remain on current application surfaces`);
 }
@@ -64,6 +78,11 @@ assert.match(files.submissionCore, /levelFingerprint: string \| null/u);
 assert.match(files.submissionController, /findLocalCorpusMatchByLevelFingerprint/u);
 assert.match(files.submissionController, /targetLocalLevelFingerprint: targetLocalLevelMatch\?\.levelFingerprint/u);
 assert.match(files.ratingsReport, /levelFingerprint/u);
+assert.match(files.data, /const levelFingerprint = await getLevelFingerprint\(raw\)/u);
+assert.match(files.data, /firestoreHintsSource\?: \(\(levelFingerprint: string\)/u);
+assert.match(files.devCorpus, /getLocalLevelHints\?: \(\(levelFingerprint: string\)/u);
+assert.match(files.reviewRepository, /approveLocalHintAddition\(submissionId: string, levelFingerprint: string/u);
+assert.match(files.ports, /setFirestoreHintsSource\(firestoreHintsSource: \(\(levelFingerprint: string\)/u);
 
 // Persisted query/document/path identities remain exactly on the pre-15F value.
 assert.match(
