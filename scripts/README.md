@@ -9,10 +9,10 @@ For a named concept, start with `node scripts/tooling-census.mjs --compact --que
 Before opening large evidence/data files:
 
 - research/experiment status: `node scripts/research-status-index.mjs --compact`, optionally `--query=...`, `--status=...`, or `--kind=queue|experiment|evidence`;
-- active naming-cleanup status: `npm run naming:status`; add `-- --phase=N`, `--batch=8A`, or `--json` to inspect the machine-readable ledger without rereading the whole plan;
+- active naming-cleanup status: `npm run naming:status`; add `-- --phase=N`, `--batch=<id>`, or `--json` to inspect the machine-readable ledger without rereading the whole plan;
 - Phase-13 raw level-metric ownership: `npm run check:level-metric-boundaries` prints raw/wire,
   frozen, normalized-runtime, and ambiguous script/workflow owners from the reviewed
-  `../docs/naming-cleanup-level-metric-boundaries.json` manifest; the future 13B zero-leakage gate is
+  `../docs/naming-cleanup-level-metric-boundaries.json` manifest; the Phase-13B zero-leakage gate is
   `node scripts/audit-level-metric-boundaries.mjs --require-normalized-clean`;
 - level corpora: `node scripts/corpus-query.mjs --corpus=stress2` for a summary; add filters, `--list`, or deterministic `--sample=N`; use `--full` only when exact level payloads are needed;
 - hint/provenance evidence: `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; filter by cold-evidence class, source, solver, technique, or retry tier; use `--full` only for exact paths/provenance;
