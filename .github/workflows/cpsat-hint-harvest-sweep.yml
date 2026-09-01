@@ -1,6 +1,6 @@
 # Sharded runner for scripts/stress/cpsat-hint-harvest-sweep.mjs, which drives
 # scripts/stress/cpsat-hint-harvest.mjs's --forced-grid mode across every eligible corpus-2 level
-# CP-SAT hasn't been run against yet (atlas-eligibility.mjs's selectUnharvestedCpsatLevels).
+# CP-SAT hasn't been run against yet (cpsat-branch-label-eligibility.mjs's selectUnharvestedCpsatLevels).
 #
 # Sharded wide (60 shards) with only 20 running at a time (`max-parallel`), not because there are
 # 60x more levels than collect-prune-gap-labels.yml's 20-shard runs -- CP-SAT's own per-level duration is highly
