@@ -141,4 +141,12 @@ const resumption = readFileSync('docs/solver-research-post-naming-resumption.md'
 assert.match(resumption, /repository-wide naming cleanup is complete through Phase 15/u);
 assert.doesNotMatch(resumption, /becomes permission[^\n]+only after final naming closeout is complete/iu);
 
+const scriptsReadme = readFileSync('scripts/README.md', 'utf8');
+assert.match(scriptsReadme, /completed naming-cleanup status\/history/iu);
+assert.doesNotMatch(scriptsReadme, /active naming-cleanup status/iu);
+
+const toolingCatalog = readFileSync('docs/tooling-catalog.md', 'utf8');
+assert.match(toolingCatalog, /Completed naming-cleanup status\/history/u);
+assert.doesNotMatch(toolingCatalog, /Active naming-cleanup execution state/u);
+
 console.log('Naming-cleanup final state valid: Phase 15 complete, no next phase, permanent historical readers preserved, retired inputs rejected, and current routing is post-cleanup.');
