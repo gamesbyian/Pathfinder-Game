@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { attemptIdentityTerms } from '../modules/solver/attempt-identity.mjs';
 import { SOLVER_STAGE_IDS, solverStageIdentityTerms } from '../modules/solver/stage-id-normalization.mjs';
 import { ROUTING_REGIMES, routingRegimeIdentityTerms } from '../modules/solver/routing-regime-normalization.mjs';
 
@@ -114,17 +115,71 @@ function compactEntry(kind, entry) {
         report: entry.latestEvidence.report, authorities: entry.authorities };
 }
 
+const ATTEMPT_IDENTITY_PATTERNS = Object.freeze([
+    /admissible-order\|tieBreak=[A-Za-z0-9_-]+\|lds=(?:on|off)/gu,
+    /repair\|score=repair\|guidance=(?:standard|turn-biased|must-turn-biased)/gu,
+    /beam\|score=[A-Za-z0-9_-]+\|bias=(?:[A-Za-z0-9_-]+|none)\|width=[1-9]\d*\|retention=(?:plain|mechanic-buckets)/gu,
+    /dfs\|score=[A-Za-z0-9_-]+\|bias=(?:[A-Za-z0-9_-]+|none)/gu,
+    /ida:[A-Za-z0-9_-]+(?:\(lds\))?/gu,
+    /(?:dfs|beam):[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)?(?:@beam[1-9]\d*)?(?:\(diverse\))?(?::repair)?(?:\(mustTurnBiased\)|\(turnBiased\))?/gu,
+]);
+
+function expandKnownAliases(terms, variants) {
+    let added = false;
+    const lowerVariants = variants.map(value => value.toLowerCase());
+    for (const term of [...terms]) {
+        for (const source of lowerVariants) {
+            if (!term.includes(source)) continue;
+            for (const target of lowerVariants) {
+                const expanded = term.replaceAll(source, target);
+                if (!terms.has(expanded)) {
+                    terms.add(expanded);
+                    added = true;
+                }
+            }
+        }
+    }
+    return added;
+}
+
+function expandAttemptIdentityAliases(terms) {
+    let added = false;
+    for (const term of [...terms]) {
+        for (const pattern of ATTEMPT_IDENTITY_PATTERNS) {
+            pattern.lastIndex = 0;
+            for (const match of term.matchAll(pattern)) {
+                let variants;
+                try { variants = attemptIdentityTerms(match[0]); } catch { continue; }
+                for (const target of variants) {
+                    const expanded = term.slice(0, match.index) + target.toLowerCase()
+                        + term.slice(match.index + match[0].length);
+                    if (!terms.has(expanded)) {
+                        terms.add(expanded);
+                        added = true;
+                    }
+                }
+            }
+        }
+    }
+    return added;
+}
+
 function equivalentQueryTerms(query) {
     const raw = query.trim().toLowerCase();
     if (!raw) return [];
     const terms = new Set([raw]);
-    const expand = variants => {
-        for (const source of variants) if (raw.includes(source.toLowerCase())) {
-            for (const target of variants) terms.add(raw.replaceAll(source.toLowerCase(), target.toLowerCase()));
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const canonical of SOLVER_STAGE_IDS) {
+            changed = expandKnownAliases(terms, solverStageIdentityTerms(canonical)) || changed;
         }
-    };
-    for (const canonical of SOLVER_STAGE_IDS) expand(solverStageIdentityTerms(canonical));
-    for (const canonical of ROUTING_REGIMES) expand(routingRegimeIdentityTerms(canonical));
+        for (const canonical of ROUTING_REGIMES) {
+            changed = expandKnownAliases(terms, routingRegimeIdentityTerms(canonical)) || changed;
+        }
+        changed = expandAttemptIdentityAliases(terms) || changed;
+        if (terms.size > 128) throw new Error('research-status query alias expansion exceeded safety bound');
+    }
     return [...terms];
 }
 
