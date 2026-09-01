@@ -174,6 +174,17 @@ assert.match(summary, /Decision-bearing integration status: \*\*READY\*\*/u);
 assert.match(summary, /beam\|score=intersectionHarvest/u);
 assert.match(summary, /Level-local EW1 pricing headroom/u);
 assert.match(summary, /ew1-solver-offered-below-solve-work/u);
+assert.match(summary, /historical development evidence/u);
+
+const incompleteProduction = JSON.parse(JSON.stringify(production));
+incompleteProduction.levels = incompleteProduction.levels.filter(row => row.id !== 'R2');
+const missingProduction = analyzeEqualWorkProductionReach(equalWork, [incompleteProduction], {
+    currentHead: 'abc123',
+    requireCurrentHead: true,
+    capabilityDocument: capability,
+});
+assert.equal(missingProduction.decisionBearing, false);
+assert.ok(missingProduction.blockers.some(value => value.includes('production evidence is missing 1 EW1 level')));
 
 const missingCapability = analyzeEqualWorkProductionReach(equalWork, [production], {
     currentHead: 'abc123',
