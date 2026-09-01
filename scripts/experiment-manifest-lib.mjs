@@ -28,15 +28,15 @@ export function captureSolverGitState() {
  *  validateFamilyEvaluationRunManifest) before returning anything a caller could write to disk, so
  *  an invalid producer input never reaches a manifest file. */
 export function buildFamilyEvaluationRunManifest({
-    runId, tool, workflow, corpora, families, trove, solverPolicy, budgets, seeds,
+    runId, tool, workflow, corpora, families, variantFamilyDataset, solverPolicy, budgets, seeds,
     shardCount, shardIndex, startedAt, completedAt, outputArtifacts, sourceGenerationArtifacts,
     solver = captureSolverGitState(),
 }) {
     return validateFamilyEvaluationRunManifest({
-        schemaVersion: 1, runId, solver,
+        schemaVersion: 2, runId, solver,
         invocation: { tool, workflow },
         selection: { corpora, families },
-        trove, solverPolicy, budgets, seeds,
+        variantFamilyDataset, solverPolicy, budgets, seeds,
         shard: { count: shardCount, index: shardIndex },
         startedAt, completedAt, outputArtifacts, sourceGenerationArtifacts,
     });
@@ -87,7 +87,7 @@ export function validateExperimentManifest(manifest) {
 }
 
 const FAMILY_RUN_REQUIRED = ['schemaVersion', 'runId', 'solver', 'invocation', 'selection',
-    'trove', 'solverPolicy', 'budgets', 'seeds', 'shard', 'startedAt', 'completedAt',
+    'solverPolicy', 'budgets', 'seeds', 'shard', 'startedAt', 'completedAt',
     'outputArtifacts', 'sourceGenerationArtifacts'];
 
 /** Canonical provenance for new family/variant solver evaluations. Historical census artifacts
@@ -96,35 +96,53 @@ export function validateFamilyEvaluationRunManifest(manifest) {
     for (const field of FAMILY_RUN_REQUIRED) if (!(field in manifest)) {
         throw new Error(`family evaluation run manifest missing ${field}`);
     }
-    if (manifest.schemaVersion !== 1) throw new Error(`unsupported family evaluation run manifest schema ${manifest.schemaVersion}`);
-    if (typeof manifest.runId !== 'string' || !manifest.runId) throw new Error('runId must be a non-empty string');
-    if (!manifest.solver || typeof manifest.solver.commit !== 'string' || !manifest.solver.commit ||
-        !('ref' in manifest.solver) || !('dirty' in manifest.solver) ||
-        (manifest.solver.dirty !== null && typeof manifest.solver.dirty !== 'boolean')) {
+
+    const hasLegacyDataset = Object.prototype.hasOwnProperty.call(manifest, 'trove');
+    const hasCanonicalDataset = Object.prototype.hasOwnProperty.call(manifest, 'variantFamilyDataset');
+    if (hasLegacyDataset && hasCanonicalDataset) {
+        throw new Error('family evaluation run manifest cannot contain both trove and variantFamilyDataset');
+    }
+
+    let normalized;
+    if (manifest.schemaVersion === 1) {
+        if (!hasLegacyDataset) throw new Error('family evaluation run manifest schema 1 missing trove');
+        const { trove, ...rest } = manifest;
+        normalized = { ...rest, schemaVersion: 2, variantFamilyDataset: trove };
+    } else if (manifest.schemaVersion === 2) {
+        if (!hasCanonicalDataset) throw new Error('family evaluation run manifest schema 2 missing variantFamilyDataset');
+        normalized = manifest;
+    } else {
+        throw new Error(`unsupported family evaluation run manifest schema ${manifest.schemaVersion}`);
+    }
+
+    if (typeof normalized.runId !== 'string' || !normalized.runId) throw new Error('runId must be a non-empty string');
+    if (!normalized.solver || typeof normalized.solver.commit !== 'string' || !normalized.solver.commit ||
+        !('ref' in normalized.solver) || !('dirty' in normalized.solver) ||
+        (normalized.solver.dirty !== null && typeof normalized.solver.dirty !== 'boolean')) {
         throw new Error('solver must record commit, ref, and boolean-or-null dirty state');
     }
-    for (const field of ['tool', 'workflow']) if (!(field in manifest.invocation)) throw new Error(`invocation missing ${field}`);
-    for (const field of ['corpora', 'families']) if (!Array.isArray(manifest.selection?.[field])) throw new Error(`selection.${field} must be an array`);
+    for (const field of ['tool', 'workflow']) if (!(field in normalized.invocation)) throw new Error(`invocation missing ${field}`);
+    for (const field of ['corpora', 'families']) if (!Array.isArray(normalized.selection?.[field])) throw new Error(`selection.${field} must be an array`);
     for (const field of ['mode', 'profile', 'config', 'flags', 'strictTotalWorkBudget']) {
-        if (!(field in manifest.solverPolicy)) throw new Error(`solverPolicy missing ${field}`);
+        if (!(field in normalized.solverPolicy)) throw new Error(`solverPolicy missing ${field}`);
     }
     for (const field of ['workUnits', 'nodeCeiling', 'wallDeadlineMs']) {
-        const value = manifest.budgets?.[field];
+        const value = normalized.budgets?.[field];
         if (value !== null && (!Number.isFinite(value) || value < 0)) throw new Error(`budgets.${field} must be a non-negative number or null`);
     }
-    if (!Array.isArray(manifest.seeds) || manifest.seeds.some(seed => !Number.isFinite(seed))) throw new Error('seeds must be finite numbers');
-    if (!Number.isInteger(manifest.shard?.count) || manifest.shard.count < 1 ||
-        !Number.isInteger(manifest.shard?.index) || manifest.shard.index < 1 || manifest.shard.index > manifest.shard.count) {
+    if (!Array.isArray(normalized.seeds) || normalized.seeds.some(seed => !Number.isFinite(seed))) throw new Error('seeds must be finite numbers');
+    if (!Number.isInteger(normalized.shard?.count) || normalized.shard.count < 1 ||
+        !Number.isInteger(normalized.shard?.index) || normalized.shard.index < 1 || normalized.shard.index > normalized.shard.count) {
         throw new Error('shard must use a one-based index within count');
     }
     for (const field of ['outputArtifacts', 'sourceGenerationArtifacts']) {
-        if (!Array.isArray(manifest[field]) || manifest[field].some(value => typeof value !== 'string')) throw new Error(`${field} must be a string array`);
+        if (!Array.isArray(normalized[field]) || normalized[field].some(value => typeof value !== 'string')) throw new Error(`${field} must be a string array`);
     }
     for (const field of ['startedAt', 'completedAt']) {
-        if (typeof manifest[field] !== 'string' || Number.isNaN(Date.parse(manifest[field]))) throw new Error(`${field} must be an ISO timestamp`);
+        if (typeof normalized[field] !== 'string' || Number.isNaN(Date.parse(normalized[field]))) throw new Error(`${field} must be an ISO timestamp`);
     }
-    if (Date.parse(manifest.completedAt) < Date.parse(manifest.startedAt)) throw new Error('completedAt precedes startedAt');
-    return manifest;
+    if (Date.parse(normalized.completedAt) < Date.parse(normalized.startedAt)) throw new Error('completedAt precedes startedAt');
+    return normalized;
 }
 
 /** Reject every unexpected A/B mismatch. Only arm, run/output identity, the named solver flag,
