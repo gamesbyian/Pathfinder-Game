@@ -33,7 +33,7 @@ function canonicalCorpusName(value) {
     return raw || 'unknown';
 }
 
-const finite = value => Number.isFinite(Number(value)) ? Number(value) : null;
+const finite = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) ? Number(value) : null;
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 const median = values => {
     if (!values.length) return null;
