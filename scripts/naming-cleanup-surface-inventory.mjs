@@ -402,6 +402,7 @@ const reconciliationAuthorityFiles = new Set([
   'docs/naming-cleanup-process-hardening.md',
   'docs/naming-and-vocabulary.md',
   'docs/change-recipes.md',
+  'docs/solver-research-post-naming-resumption.md',
 ]);
 
 function isReconciliationAuthorityOrGuard(file) {
