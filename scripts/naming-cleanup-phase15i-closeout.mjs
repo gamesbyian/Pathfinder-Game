@@ -135,7 +135,6 @@ assert.equal(blobSha, '3de81cc8f95862c7f7142511e06f7bdb72710d52');
 
 // The separately deferred repairLateProbe family remains deliberately classified rather than
 // accidentally half-renamed during Phase 15.
-const vocabulary = readFileSync('docs/naming-and-vocabulary.md', 'utf8');
 const phaseRecord = readFileSync('docs/naming-cleanup-phase-records/phase-15.md', 'utf8');
 assert.match(phaseRecord, /separately deferred vocabulary debt/u);
 assert.match(phaseRecord, /repairLateProbe/u);
