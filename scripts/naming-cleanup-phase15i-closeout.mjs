@@ -124,7 +124,11 @@ execFileSync(process.execPath, ['scripts/check-naming-current-authorities.mjs'],
 // Representative frozen historical source remains byte-identical to its recorded Phase-15 entry
 // blob SHA. Compute Git's blob object ID directly so shallow CI checkout depth is irrelevant.
 const frozenPath = 'reports/stress/winning-prefix-atlas-pilot-2026-08-11.json';
-const frozen = readFileSync(frozenPath);
+const frozen = execFileSync('git', ['show', `HEAD:${frozenPath}`], {
+  cwd: ROOT,
+  encoding: null,
+  maxBuffer: 32 * 1024 * 1024,
+});
 const blobHeader = Buffer.from(`blob ${frozen.length}\0`);
 const blobSha = createHash('sha1').update(blobHeader).update(frozen).digest('hex');
 assert.equal(blobSha, '3de81cc8f95862c7f7142511e06f7bdb72710d52');
