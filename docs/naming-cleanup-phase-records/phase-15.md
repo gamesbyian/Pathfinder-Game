@@ -1229,6 +1229,7 @@ Phase 15G completed as implementation PR **#1644**.
 Status: **active**
 
 Branch: `chatgpt/phase15h-prune-gap-vocabulary-2026-08-31`  
+PR: **#1645**  
 Base main: `7e82a4325484eac2da67864101e33f614d075d70`
 
 15H owns two separated current-surface contracts:
