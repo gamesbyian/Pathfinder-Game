@@ -5316,70 +5316,40 @@
       },
       {
         "id": "NC-RET-P08-007",
-        "owner": "NC-P15-005 CP-SAT result/job compatibility boundary",
-        "lifecycle": "phase-15-review with historical reads preserved",
+        "owner": "NC-P15-012 permanent known-prefix schema-v1 normalization",
+        "lifecycle": "never retire while schema-v1 known-prefix evidence remains supported",
         "matches": [
-          {
-            "term": "oracleLabel",
-            "files": [
-              "scripts/stress/repair-retreat-binary-search.mjs",
-              "scripts/stress/cpsat-explicit-prefix-reference.mjs",
-              ".github/workflows/cpsat-explicit-prefix-reference.yml"
-            ]
-          },
-          {
-            "term": "oracleReason",
-            "files": [
-              "scripts/stress/repair-retreat-binary-search.mjs",
-              "scripts/stress/cpsat-explicit-prefix-reference.mjs"
-            ]
-          },
           {
             "term": "oracle-abstain",
             "files": [
-              "scripts/stress/research-analysis-lib.mjs",
-              "scripts/stress/research-analysis-lib-check.mjs",
               "scripts/stress/cpsat-explicit-prefix-reference-lib.mjs",
-              "scripts/stress/collect-known-solution-prefix-branches.mjs"
-            ]
-          },
-          {
-            "term": "oracle-unknown",
-            "files": [
-              "scripts/stress/cpsat-explicit-prefix-reference-lib.mjs"
-            ]
-          },
-          {
-            "term": "oracle-shards",
-            "files": [
-              ".github/workflows/cpsat-explicit-prefix-reference.yml"
+              "scripts/stress/research-analysis-lib-check.mjs"
             ]
           }
         ],
         "ownerRowIds": [
           "NC-P08-046",
-          "NC-P15-005"
+          "NC-P15-012"
         ],
         "ownerClass": "compatibility-or-deferred"
       },
       {
         "id": "NC-RET-P08-008",
-        "owner": "NC-P15-005 workflow input enum compatibility boundary",
-        "lifecycle": "phase-15-review with historical input accepted",
+        "owner": "NC-P15-011 external explicit-prefix case-format compatibility alias",
+        "lifecycle": "phase-15-review; current callers single-write reference-abstain",
         "matches": [
           {
             "term": "atlas-abstain",
             "files": [
               "scripts/stress/cpsat-explicit-prefix-reference-lib.mjs",
-              "scripts/stress/research-analysis-lib-check.mjs",
-              ".github/workflows/cpsat-explicit-prefix-reference.yml"
+              "scripts/stress/research-analysis-lib-check.mjs"
             ]
           }
         ],
         "ownerRowIds": [
           "NC-P08-017",
           "NC-P08-031",
-          "NC-P15-005"
+          "NC-P15-011"
         ],
         "ownerClass": "compatibility-or-deferred"
       },
