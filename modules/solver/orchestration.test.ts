@@ -2566,6 +2566,62 @@ test('connectivity-axis-prune-disabled-retry pass can solve a level the main loo
     assert.equal(result.attempts.at(-1)?.stageId, 'connectivity-axis-prune-disabled-retry');
 });
 
+
+// 2026-09-01: connectivity-axis-prune-disabled-retry is the fourth tier migrated off
+// queue #2 step 3's ms-derived work-dose debt. Same ownership invariant as the first three:
+// a non-binding wall deadline must not resize an explicit-work retry dose, and explicit
+// baseWorkBudget must size the fresh pool. The tier's ms total remains a wall-deadline bound.
+function isolateConnectivityRetryWorkDoseOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        attemptBudgetTelemetry: true,
+        ablation: {
+            STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY: true,
+            STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false,
+        },
+        repairAdditiveBudgetMultiplierOverride: 0,
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
+        ...overrides,
+    };
+}
+
+test('connectivity-axis-prune-disabled-retry work dose no longer resizes with a non-binding deadline change', async () => {
+    const run = (timeBudgetMs: number) => solveLevel(
+        makeGoalAttractionDisabledRetryGatedInfeasibleLevel(),
+        isolateConnectivityRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }),
+    );
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.stageId === 'connectivity-axis-prune-disabled-retry')
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one connectivity-axis-prune-disabled-retry attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the non-binding deadline');
+});
+
+test('connectivity-axis-prune-disabled-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const solveWith = (baseWorkBudget: number) => solveLevel(
+        makeGoalAttractionDisabledRetryGatedInfeasibleLevel(),
+        isolateConnectivityRetryWorkDoseOpts({ timeBudgetMs: 1000, baseWorkBudget }),
+    );
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.stageId === 'connectivity-axis-prune-disabled-retry')?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null,
+        'expected a connectivity-axis-prune-disabled-retry attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
 // ── STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY ─────────────────────────────────────
 //
 // Opt-in, default OFF (see REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION's own comment in
