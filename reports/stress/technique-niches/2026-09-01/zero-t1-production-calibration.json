@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "observational-development-cross-revision-calibration",
+  "frozenCaseDefinition": "corpus2: frozen production solved && zero frozen T1 isolated winners",
+  "interpretationGuardrail": "A later solve/fail outcome does not establish current-head technique capability or causality.",
+  "laterBaseline": {
+    "compiledAt": "2026-08-25T12:20:51.308Z",
+    "corpus": "data/stress/stress-levels-random.json",
+    "solved": 976,
+    "total": 1700,
+    "primarySource": {
+      "name": "official-contended",
+      "file": "reports/stress/solver-corpus2-latest.json",
+      "levels": 1700,
+      "engine": "legacy-scheduler (portfolio-solve-sweep, combined from 60 batch report(s))",
+      "parallel": 1,
+      "budgetMs": 86400000,
+      "timestamp": "2026-08-25T12:20:45.525Z",
+      "commitSha": "fc625d187204a86c94dd18fedf12013906b7863d",
+      "timingTrustworthy": false,
+      "caveat": "This official run was not produced by the exact single-threaded sequential engine (see its own engine/parallel fields) — ok/refereeValid/nodesExpanded remain trustworthy correctness signals, but elapsedMs is not comparable to a true sequential run."
+    }
+  },
+  "summary": {
+    "frozenCases": 14,
+    "laterSolved": 8,
+    "laterUnsolved": 6,
+    "laterMissing": 0,
+    "laterSolvedStageCounts": [
+      {
+        "key": "dedup-near-tie-retry",
+        "count": 4
+      },
+      {
+        "key": "connectivity-axis-exhausted-retry",
+        "count": 2
+      },
+      {
+        "key": "main-loop",
+        "count": 1
+      },
+      {
+        "key": "repair-probe",
+        "count": 1
+      }
+    ],
+    "laterSolvedConfigCounts": [
+      {
+        "key": "beam:intersectionHarvest@beam5000(diverse)",
+        "count": 6
+      },
+      {
+        "key": "beam:objectiveFirst@beam5000(diverse)",
+        "count": 1
+      },
+      {
+        "key": "dfs:repair:repair",
+        "count": 1
+      }
+    ]
+  },
+  "rows": [
+    {
+      "corpus": "corpus2",
+      "levelId": "R02655",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": false,
+      "laterWinningConfig": null,
+      "laterWinningActionKey": null,
+      "laterWinningStageId": null,
+      "laterWinningNodesExpanded": null,
+      "laterAttemptCount": 26
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R02493",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningActionKey": "main-loop|beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningStageId": "main-loop",
+      "laterWinningNodesExpanded": 232396,
+      "laterAttemptCount": 4
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R02088",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningActionKey": "connectivity-axis-exhausted-retry|beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningStageId": "connectivity-axis-exhausted-retry",
+      "laterWinningNodesExpanded": 312412,
+      "laterAttemptCount": 23
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R02536",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningActionKey": "dedup-near-tie-retry|beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningStageId": "dedup-near-tie-retry",
+      "laterWinningNodesExpanded": 378290,
+      "laterAttemptCount": 14
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R01356",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningActionKey": "dedup-near-tie-retry|beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningStageId": "dedup-near-tie-retry",
+      "laterWinningNodesExpanded": 478139,
+      "laterAttemptCount": 14
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R03195",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": false,
+      "laterWinningConfig": null,
+      "laterWinningActionKey": null,
+      "laterWinningStageId": null,
+      "laterWinningNodesExpanded": null,
+      "laterAttemptCount": 41
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R02842",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": false,
+      "laterWinningConfig": null,
+      "laterWinningActionKey": null,
+      "laterWinningStageId": null,
+      "laterWinningNodesExpanded": null,
+      "laterAttemptCount": 71
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R02452",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": false,
+      "laterWinningConfig": null,
+      "laterWinningActionKey": null,
+      "laterWinningStageId": null,
+      "laterWinningNodesExpanded": null,
+      "laterAttemptCount": 60
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R02690",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "beam:objectiveFirst@beam5000(diverse)",
+      "laterWinningActionKey": "connectivity-axis-exhausted-retry|beam:objectiveFirst@beam5000(diverse)",
+      "laterWinningStageId": "connectivity-axis-exhausted-retry",
+      "laterWinningNodesExpanded": 571573,
+      "laterAttemptCount": 22
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R02887",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": false,
+      "laterWinningConfig": null,
+      "laterWinningActionKey": null,
+      "laterWinningStageId": null,
+      "laterWinningNodesExpanded": null,
+      "laterAttemptCount": 41
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R01086",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": false,
+      "laterWinningConfig": null,
+      "laterWinningActionKey": null,
+      "laterWinningStageId": null,
+      "laterWinningNodesExpanded": null,
+      "laterAttemptCount": 25
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R03230",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningActionKey": "dedup-near-tie-retry|beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningStageId": "dedup-near-tie-retry",
+      "laterWinningNodesExpanded": 430712,
+      "laterAttemptCount": 14
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R01936",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "dfs:repair:repair",
+      "laterWinningActionKey": "repair-probe|dfs:repair:repair|seedSalt=1",
+      "laterWinningStageId": "repair-probe",
+      "laterWinningNodesExpanded": 1791510,
+      "laterAttemptCount": 2
+    },
+    {
+      "corpus": "corpus2",
+      "levelId": "R03238",
+      "frozenProductionSolved": true,
+      "frozenT1WinnerCount": 0,
+      "laterBaselinePresent": true,
+      "laterProductionSolved": true,
+      "laterWinningConfig": "beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningActionKey": "dedup-near-tie-retry|beam:intersectionHarvest@beam5000(diverse)",
+      "laterWinningStageId": "dedup-near-tie-retry",
+      "laterWinningNodesExpanded": 404240,
+      "laterAttemptCount": 14
+    }
+  ]
+}
