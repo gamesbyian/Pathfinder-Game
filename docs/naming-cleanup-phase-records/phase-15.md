@@ -1,10 +1,13 @@
 # Phase 15 execution and closeout record
 
-Status: **15A contract-decomposition gate active; no Phase-15 implementation rename has begun**
+Status: **15I hostile merged-tree closeout active; implementation batches 15B-15H are merged and done**
 
-Execution branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`  
-Execution PR: **#1638**  
-Entry base: `fad988569c70802db7d69b85f4443a4daf0486a6` (current `main` at Phase-15 entry)  
+Program entry branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`  
+Program entry PR: **#1638**  
+Program entry base: `fad988569c70802db7d69b85f4443a4daf0486a6`  
+Current active branch: `chatgpt/phase15i-hostile-closeout-2026-08-31`  
+Current active PR: **#1646**  
+Current merged implementation base: `65650862eb4626c5d6eecf7bbc1753a1006d97c8`  
 Preparation authority: [phase-15-preparation.md](phase-15-preparation.md)  
 Independent pre-entry repair record: [pre-phase-15-audit-repairs.md](pre-phase-15-audit-repairs.md)  
 Plan authority: [../naming-cleanup-plan.md](../naming-cleanup-plan.md)
@@ -1590,3 +1593,20 @@ contract.
 Repair must assert the final state instead: the old side has no application ownership, while the
 canonical side still has application ownership. This preserves the category-level regression value
 without requiring a defect to remain live.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-017 — the live Phase-15 execution record header still advertised 15A as active and labeled
+the 15A branch/PR as the current execution identity.**
+
+The body of `phase-15.md` correctly records 15B-15H completion and the active 15I section, but its
+top-level status/header was never advanced after the specification gate. Because this file is the
+registered live execution authority, an agent opening it from `AGENTS.md` could be sent back to
+`chatgpt/phase15a-contract-decomposition-2026-08-31` / PR #1638 even while the ledger correctly
+declares 15I / PR #1646 active.
+
+Repair must distinguish immutable program-entry identity from the current active batch identity and
+extend `check:naming-current-authorities` so an active serial phase requires its registered
+execution-record header to name the ledger's active batch, branch, and PR. A mutation fixture must
+prove that stale-header drift fails.
