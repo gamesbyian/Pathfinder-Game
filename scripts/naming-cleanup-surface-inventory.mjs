@@ -370,12 +370,17 @@ function exactSurfaceMatches(entry) {
 
 function referenceFilesForValue(value) {
   if (typeof value !== 'string' || value.length < 3) return [];
-  const terms = [...new Set([value, path.basename(value)].filter(term => term.length >= 3))];
+  const terms = [value];
+  // Only derive a basename from an actual path-like token. Several ledger descriptions use "/"
+  // as prose punctuation (for example "fields/parameters"); path.basename() on those labels turns
+  // the suffix into an unrelated generic search term and manufactures false legacy references.
+  if (!/\s/u.test(value) && value.includes('/')) terms.push(path.basename(value));
+  const uniqueTerms = [...new Set(terms.filter(term => term.length >= 3))];
   const files = [];
   for (const [file, source] of sourceByFile) {
-    if (terms.some(term => source.includes(term))) files.push(file);
+    if (uniqueTerms.some(term => source.includes(term))) files.push(file);
   }
-  if (terms.some(term => JSON.stringify(packageScripts).includes(term))) files.push('package.json');
+  if (uniqueTerms.some(term => JSON.stringify(packageScripts).includes(term))) files.push('package.json');
   return [...new Set(files)].sort();
 }
 
