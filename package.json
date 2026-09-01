@@ -222,7 +222,7 @@
     "test:naming-cleanup-phase15-entry": "node scripts/naming-cleanup-phase15-entry-node-test.mjs",
     "test:cpsat-branch-label-eligibility": "node scripts/stress/cpsat-branch-label-eligibility-node-test.mjs",
     "check:naming-cleanup-phase15b-closeout": "node scripts/naming-cleanup-phase15b-closeout.mjs",
-    "test:variant-family-dataset-root": "node scripts/variant-family-dataset-root-node-test.mjs",
+    "test:variant-family-dataset-root": "node scripts/naming-cleanup-phase15c-dataset-root-node-test.mjs",
     "check:naming-cleanup-phase15c-closeout": "node scripts/naming-cleanup-phase15c-closeout.mjs"
   },
   "devDependencies": {
