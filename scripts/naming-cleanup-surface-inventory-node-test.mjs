@@ -105,13 +105,18 @@ assert.deepEqual(phase15Rows.map(row => row.id).sort(), expectedPhase15Ids);
 assert.equal(phase15Rows.length, 14,
   'Phase 15 contains the thirteen 15A rows plus the implementation-time NC-P15-014 split');
 const pendingPhase15Rows = phase15Rows.filter(row => row.status === 'pending');
-assert.deepEqual(pendingPhase15Rows.map(row => row.id).sort(), ['NC-P15-007', 'NC-P15-013'],
-  'after 15G starts, only the 15H implementation rows remain pending');
+assert.deepEqual(pendingPhase15Rows.map(row => row.id).sort(), [],
+  'once final implementation batch 15H starts, no Phase-15 implementation row remains pending');
+const phase15HRows = phase15Rows.filter(row => ['NC-P15-007', 'NC-P15-013'].includes(row.id));
 assert.ok(
-  pendingPhase15Rows.every(row => row.oldReferenceFiles.length > 0 &&
-    ['old-live', 'mixed-old-and-canonical'].includes(row.reconciliationState)),
-  'future Phase-15 rows must still expose their old contract until their owning serial batch begins',
+  phase15HRows.every(row => ['in-progress', 'done'].includes(row.status)),
+  '15H rows must be active or done while the final implementation batch owns them',
 );
+assert.ok(
+  phase15HRows.every(row => row.reconciliationState === 'canonical-live'),
+  '15H current surfaces must reconcile to canonical prune-gap vocabulary after the cutover',
+);
+
 assert.ok(
   phase15Rows.every(row => [
     'old-live',
