@@ -13,8 +13,8 @@ const engine = () => createEngineState();
 test('setLevelRatingContext resets the pane to an unloaded blank slate', () => {
     const eng = engine();
     applyLevelRatingData(eng, { tags: ['fun'], customTags: ['x'], difficulty: 3, fun: 4 });
-    const r = setLevelRatingContext(eng, { fingerprint: 'fp1', levelNumber: 7 });
-    assert.equal(r!.fingerprint, 'fp1');
+    const r = setLevelRatingContext(eng, { levelFingerprint: 'fp1', levelNumber: 7 });
+    assert.equal(r!.levelFingerprint, 'fp1');
     assert.equal(r!.levelNumber, 7);
     assert.equal(r!.loaded, false);
     assert.equal(r!.tags.size, 0);
@@ -23,7 +23,7 @@ test('setLevelRatingContext resets the pane to an unloaded blank slate', () => {
     assert.equal(r!.fun, 0);
     // Defaults: no args → null context
     const blank = setLevelRatingContext(engine());
-    assert.equal(blank!.fingerprint, null);
+    assert.equal(blank!.levelFingerprint, null);
     assert.equal(blank!.levelNumber, null);
 });
 
