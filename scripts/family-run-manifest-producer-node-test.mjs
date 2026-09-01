@@ -54,8 +54,14 @@ function buildEraPairIndex(firstEra, secondEra) {
     mkdirSync(path.join(root, 'data/families'), { recursive: true });
     mkdirSync(path.join(root, 'logs/family-census/run/shard-1'), { recursive: true });
     mkdirSync(path.join(root, 'logs/family-census/run/shard-2'), { recursive: true });
-    const shard1 = buildFamilyEvaluationRunManifest({ ...baseInput, runId: 'era-run', shardIndex: 1, outputArtifacts: [] });
-    const shard2 = buildFamilyEvaluationRunManifest({ ...baseInput, runId: 'era-run', shardIndex: 2, outputArtifacts: [] });
+    const shard1 = buildFamilyEvaluationRunManifest({
+        ...baseInput, runId: 'era-run', shardIndex: 1, outputArtifacts: [],
+        variantFamilyDataset: { ...baseInput.variantFamilyDataset, shardFile: 'logs/family-census/wide-shard-01-slice.json' },
+    });
+    const shard2 = buildFamilyEvaluationRunManifest({
+        ...baseInput, runId: 'era-run', shardIndex: 2, outputArtifacts: [],
+        variantFamilyDataset: { ...baseInput.variantFamilyDataset, shardFile: 'logs/family-census/wide-shard-02-slice.json' },
+    });
     writeFileSync(
         path.join(root, 'logs/family-census/run/shard-1/manifest.json'),
         JSON.stringify(firstEra === 'v1' ? legacyV1(shard1) : shard1),
@@ -74,7 +80,12 @@ for (const [firstEra, secondEra] of [['v1', 'v1'], ['v2', 'v2'], ['v1', 'v2']]) 
         assert.equal(index.runs.length, 1);
         assert.equal(index.runs[0].complete, true);
         assert.equal(index.runs[0].schemaVersion, 2);
-        assert.deepEqual(index.runs[0].variantFamilyDataset, baseInput.variantFamilyDataset);
+        const { shardFile: _shardFile, ...datasetIdentity } = baseInput.variantFamilyDataset;
+        assert.deepEqual(index.runs[0].variantFamilyDataset, datasetIdentity);
+        assert.deepEqual(index.runs[0].variantFamilyDatasetShardFiles, [
+            'logs/family-census/wide-shard-01-slice.json',
+            'logs/family-census/wide-shard-02-slice.json',
+        ]);
         assert.equal('trove' in index.runs[0], false);
     });
 }
