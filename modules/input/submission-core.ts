@@ -64,7 +64,7 @@ export interface LocalCorpusMatch {
  * synchronous and trivially testable.
  */
 export function findLocalCorpusMatchByLevelFingerprint(
-    localLevelFingerprints: readonly { levelNumber: number; fingerprint: string }[],
+    localLevelFingerprints: readonly { levelNumber: number; levelFingerprint: string }[],
     targetLevelFingerprint: string | null,
 ): LocalCorpusMatch | null {
     if (!targetLevelFingerprint) return null;
