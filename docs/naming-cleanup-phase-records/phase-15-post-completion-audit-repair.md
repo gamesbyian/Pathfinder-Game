@@ -13,11 +13,11 @@ fresh hostile audit of the sealed `main` tree and the additional proof machinery
 | --- | --- |
 | Audited/sealed base `main` | `221dda339968612af1ceb340a210ce3b35e28a06` |
 | Repair branch | `chatgpt/post-phase15-audit-repairs-2026-08-31` |
-| Repair PR | **#1649** |
+| Repair PR | **#1650** (supersedes draft #1649 after its cancelled CI worker remained wedged) |
 | Scope | post-completion correctness/proof repair only; no solver-policy change |
 | Original Phase-15 authority | `docs/naming-cleanup-phase-records/phase-15.md` (frozen) |
 
-A narrow post-merge evidence seal should record PR #1649's immutable final head, successful CI and
+A narrow post-merge evidence seal should record PR #1650's immutable final head, successful CI and
 specialized proof runs, and merge commit after this repair actually merges. That second step avoids
 making this implementation PR describe its own not-yet-known merge commit.
 
