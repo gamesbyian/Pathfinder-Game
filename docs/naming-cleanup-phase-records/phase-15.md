@@ -1573,3 +1573,20 @@ Repair must make the row's observational side vocabulary match the actual execut
 tokens (`wide-trove` versus `variant-family-dataset`). The dedicated 15E/15I guards remain
 responsible for proving that those tokens participate specifically in attempt-artifact discovery and
 for rejecting legacy current writer/workflow paths.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-016 — the broad inventory regression still expected the NC-P15-004 legacy application
+category after 15I had repaired the last live owner.**
+
+F15I-009 correctly found and migrated the final generic `fingerprint` local in
+`modules/engine/win-controller.ts`. The independent hostile closeout now requires NC-P15-004 to be
+`canonical-live` with zero old references. However,
+`naming-cleanup-surface-inventory-node-test.mjs` retained an earlier assertion that the row's
+`oldReferenceCategories` must include `application`, directly contradicting the post-repair
+contract.
+
+Repair must assert the final state instead: the old side has no application ownership, while the
+canonical side still has application ownership. This preserves the category-level regression value
+without requiring a defect to remain live.
