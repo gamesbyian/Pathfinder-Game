@@ -24,6 +24,11 @@ assert.equal(phase15.length, 13, '15A should resolve to thirteen homogeneous imp
 assert.ok(phase15.every(row => row.status === 'pending'), '15A must leave every implementation row pending');
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
+assert.deepEqual(
+  phase15.filter(row => row.persistence === 'dual-read').map(row => row.id).sort(),
+  ['NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-011', 'NC-P15-012'],
+  '15A must keep dual-read only for boundaries with an identified current legacy reader/caller',
+);
 assert.equal(byId['NC-P15-002'].compatibility?.mode, 'permanent-historical-read');
 assert.match(byId['NC-P15-002'].new, /schemaVersion 2/u);
 assert.equal(byId['NC-P15-004'].persistence, 'none', 'application-local fingerprint rename must not invent a persisted generic-field adapter');
