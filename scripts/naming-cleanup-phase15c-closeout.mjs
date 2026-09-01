@@ -77,8 +77,8 @@ for (const file of files) {
 
 assert.deepEqual(
   legacyCliOwners.sort(),
-  ['scripts/family-paths.mjs'],
-  'the temporary --trove-root alias must exist only in the one shared parser on maintained current surfaces',
+  [],
+  'Phase 15J must leave no maintained current surface accepting the retired --trove-root spelling',
 );
 
 assert.deepEqual(
@@ -108,7 +108,8 @@ if (failures.length) {
 const familyPaths = readFileSync('scripts/family-paths.mjs', 'utf8');
 assert.match(familyPaths, /export function variantFamilyDatasetRootArg\(/u);
 assert.doesNotMatch(familyPaths, /export function troveRootArg\(/u);
-assert.match(familyPaths, /const legacyPrefix = '--trove-root='/u);
+assert.doesNotMatch(familyPaths, /--trove-root=/u);
+assert.match(familyPaths, /retired variant-family dataset-root option/u);
 assert.match(familyPaths, /conflicting variant-family dataset roots/u);
 
-console.log(`Phase-15C closeout clean: ${files.length} maintained text surfaces contain no retired private dataset-root vocabulary; external alias ownership is exact.`);
+console.log(`Phase-15C/15J closeout clean: ${files.length} maintained text surfaces contain no retired private dataset-root vocabulary or accepted legacy dataset-root alias.`);
