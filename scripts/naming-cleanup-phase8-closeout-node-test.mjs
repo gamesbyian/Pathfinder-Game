@@ -140,19 +140,19 @@ try {
   assert.match(result.stderr, /unclassified naked family declaration/);
 
   unlinkSync(familyExpansion);
-  const retainedExpansion = path.join(fixture, 'scripts/unowned-oracle-result.mjs');
-  writeFileSync(retainedExpansion, 'export const row = { oracleLabel: "dead" };\n');
+  const retainedExpansion = path.join(fixture, 'scripts/unowned-oracle-source-label.mjs');
+  writeFileSync(retainedExpansion, 'export const legacyLabel = "oracle-abstain";\n');
   result = run(cleanLedgerPath, fixture);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /NC-RET-P08-007 retained surface: oracleLabel/);
+  assert.match(result.stderr, /NC-RET-P08-007 retained surface: oracle-abstain/);
 
   unlinkSync(retainedExpansion);
   const workflowFixture = path.join(fixture, '.github/workflows/cpsat-explicit-prefix-reference.yml');
   const workflowSource = readFileSync(workflowFixture, 'utf8');
-  writeFileSync(workflowFixture, `${workflowSource}\n# unowned field: oracleReason\n`);
+  writeFileSync(workflowFixture, `${workflowSource}\n# unowned legacy input: atlas-abstain\n`);
   result = run(cleanLedgerPath, fixture);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /NC-RET-P08-007 retained surface: oracleReason/);
+  assert.match(result.stderr, /NC-RET-P08-008 retained surface: atlas-abstain/);
   writeFileSync(workflowFixture, workflowSource);
 
   const staleCasePath = path.join(fixture, 'scripts/stale-case-import.mjs');
