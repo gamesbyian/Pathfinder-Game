@@ -51,9 +51,6 @@ if (!phaseBatches || typeof phaseBatches !== 'object' || Array.isArray(phaseBatc
     }
   }
 }
-const phase8BatchOrder = phaseBatchOrders.get(8) ?? [];
-const phase8BatchSet = new Set(phase8BatchOrder);
-
 const allowedPhaseBatchKinds = new Set(['implementation', 'specification-gate', 'merged-tree-closeout', 'finalization']);
 const phaseBatchKinds = ledger.phaseBatchKinds ?? {};
 if (typeof phaseBatchKinds !== 'object' || Array.isArray(phaseBatchKinds)) {
