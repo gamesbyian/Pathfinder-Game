@@ -74,6 +74,16 @@ function readEvidence(file, source, normalizedRun = null) {
     }
 }
 
+function variantFamilyDatasetRunIdentity(dataset) {
+    if (!dataset || typeof dataset !== 'object' || Array.isArray(dataset)) return dataset;
+    const { shardFile: _shardFile, ...runIdentity } = dataset;
+    return runIdentity;
+}
+
+function variantFamilyDatasetShardFile(dataset) {
+    return typeof dataset?.shardFile === 'string' && dataset.shardFile ? dataset.shardFile : null;
+}
+
 export function buildFamilyIndex(variantFamilyDatasetRoot) {
     const roots = familyArtifactRoots(variantFamilyDatasetRoot);
     const manifests = filesBelow(roots.families, file => file.endsWith('-manifest.json'));
@@ -134,15 +144,19 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
         }
     }
     const runsById = new Map();
-    const invariantFields = ['schemaVersion', 'solver', 'invocation', 'selection', 'variantFamilyDataset', 'solverPolicy', 'budgets', 'seeds'];
+    const invariantFields = ['schemaVersion', 'solver', 'invocation', 'selection', 'solverPolicy', 'budgets', 'seeds'];
     for (const shard of runShards) {
         const row = runsById.get(shard.runId) ?? { runId: shard.runId, schemaVersion: shard.schemaVersion,
             solver: shard.solver, invocation: shard.invocation, selection: shard.selection,
-            variantFamilyDataset: shard.variantFamilyDataset,
+            variantFamilyDataset: variantFamilyDatasetRunIdentity(shard.variantFamilyDataset),
+            variantFamilyDatasetShardFiles: [],
             solverPolicy: shard.solverPolicy, budgets: shard.budgets, seeds: shard.seeds,
             shardCount: shard.shard.count, shards: [], startedAt: shard.startedAt, completedAt: shard.completedAt,
             outputArtifacts: [], sourceGenerationArtifacts: [], manifestPaths: [], valid: true };
         const conflictingFields = invariantFields.filter(field => JSON.stringify(row[field]) !== JSON.stringify(shard[field]));
+        if (JSON.stringify(row.variantFamilyDataset) !== JSON.stringify(variantFamilyDatasetRunIdentity(shard.variantFamilyDataset))) {
+            conflictingFields.push('variantFamilyDataset');
+        }
         if (row.shardCount !== shard.shard.count) conflictingFields.push('shard.count');
         if (conflictingFields.length) {
             row.valid = false;
@@ -155,12 +169,15 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
                 runId: shard.runId, shardIndex: shard.shard.index });
         }
         row.shards.push(shard.shard.index); row.outputArtifacts.push(...shard.outputArtifacts);
+        const datasetShardFile = variantFamilyDatasetShardFile(shard.variantFamilyDataset);
+        if (datasetShardFile) row.variantFamilyDatasetShardFiles.push(datasetShardFile);
         row.sourceGenerationArtifacts.push(...shard.sourceGenerationArtifacts); row.manifestPaths.push(shard.manifestPath);
         if (Date.parse(shard.startedAt) < Date.parse(row.startedAt)) row.startedAt = shard.startedAt;
         if (Date.parse(shard.completedAt) > Date.parse(row.completedAt)) row.completedAt = shard.completedAt;
         runsById.set(shard.runId, row);
     }
     const runs = [...runsById.values()].map(run => ({ ...run, shards: [...new Set(run.shards)].sort((a, b) => a - b),
+        variantFamilyDatasetShardFiles: [...new Set(run.variantFamilyDatasetShardFiles)].sort(),
         outputArtifacts: [...new Set(run.outputArtifacts)].sort(), sourceGenerationArtifacts: [...new Set(run.sourceGenerationArtifacts)].sort(),
         manifestPaths: run.manifestPaths.sort(), complete: run.valid && new Set(run.shards).size === run.shardCount })).sort((a, b) => a.runId.localeCompare(b.runId));
     const runByOutput = new Map();
