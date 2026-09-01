@@ -121,12 +121,12 @@ writeFileSync(path.join(discoveryRoot, 'data/families/corpus-b/family-P2-sym-man
     JSON.stringify(familyManifest('family-P2', 'P2', 'V2')));
 
 // corpus-a has only historical aggregate evidence, which must remain permanently discoverable.
-writeFileSync(path.join(discoveryRoot, 'reports/families/wide-trove-attempts-corpus-a-part01.json'), JSON.stringify({
+writeFileSync(path.join(discoveryRoot, 'reports/families/2026-08-07-wide-trove-attempts-corpus-a-part01.json'), JSON.stringify({
     levels: [{ id: 'V1', parentId: 'P1', corpus: 'corpus-a', ok: true, workSpent: 11 }],
 }));
 // corpus-b has both eras. Canonical current aggregate evidence owns precedence for that corpus so
 // the same logical aggregate is not double-counted merely because the frozen historical file remains.
-writeFileSync(path.join(discoveryRoot, 'reports/families/wide-trove-attempts-corpus-b-part01.json'), JSON.stringify({
+writeFileSync(path.join(discoveryRoot, 'reports/families/2026-08-07-wide-trove-attempts-corpus-b-part01.json'), JSON.stringify({
     levels: [{ id: 'V2', parentId: 'P2', corpus: 'corpus-b', ok: false, workSpent: 22 }],
 }));
 writeFileSync(path.join(discoveryRoot, 'reports/families/variant-family-dataset-attempts-corpus-b-part01.json'), JSON.stringify({
@@ -135,7 +135,7 @@ writeFileSync(path.join(discoveryRoot, 'reports/families/variant-family-dataset-
 const discoveryIndex = buildFamilyIndex(discoveryRoot);
 const historicalOnly = queryFamilyIndex(discoveryIndex, { parentId: 'P1', variantId: 'V1' }).variants[0];
 assert.equal(historicalOnly.evidence.length, 1);
-assert.match(historicalOnly.evidence[0].evidencePath, /wide-trove-attempts-corpus-a-part01\.json$/u);
+assert.match(historicalOnly.evidence[0].evidencePath, /2026-08-07-wide-trove-attempts-corpus-a-part01\.json$/u);
 assert.equal(historicalOnly.evidence[0].work, 11);
 const canonicalPreferred = queryFamilyIndex(discoveryIndex, { parentId: 'P2', variantId: 'V2' }).variants[0];
 assert.equal(canonicalPreferred.evidence.length, 1, 'canonical corpus aggregate must not double-count frozen historical aggregate');
