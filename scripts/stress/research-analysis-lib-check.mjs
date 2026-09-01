@@ -32,7 +32,9 @@ const api = {
 const atlas = enumerateKnownPrefixBranches({ api, level: { portalMap: new Map(), requiredLength: 3, requiredIntersections: 1 }, prep: {}, depths: [1],
     knownSolutions: [{ id: 'a', path: [1, 2, 3], provenance: 'x' }, { id: 'b', path: [1, 2, 3], provenance: 'y' }] });
 assert.equal(atlas.length, 2, 'shared known prefixes are enumerated once, not once per solution');
+assert.ok(atlas.every(row => row.schemaVersion === 2), 'new known-prefix branch rows write schemaVersion 2');
 assert.equal(atlas.find(row => row.child === 3).label, 'known-valid-continuation');
+assert.equal(atlas.find(row => row.child === 4).label, 'reference-abstain');
 assert.equal(atlas.find(row => row.child === 4).neutral.intersections, 1, 'neutral facts describe the child state');
 
 // Explicit-prefix CP-SAT seam: packed solver cells are 0-based internally and MUST be shifted to
