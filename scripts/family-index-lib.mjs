@@ -84,6 +84,14 @@ function variantFamilyDatasetShardFile(dataset) {
     return typeof dataset?.shardFile === 'string' && dataset.shardFile ? dataset.shardFile : null;
 }
 
+function stableJson(value) {
+    if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+    if (value && typeof value === 'object') {
+        return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
+    }
+    return JSON.stringify(value);
+}
+
 export function buildFamilyIndex(variantFamilyDatasetRoot) {
     const roots = familyArtifactRoots(variantFamilyDatasetRoot);
     const manifests = filesBelow(roots.families, file => file.endsWith('-manifest.json'));
@@ -153,8 +161,8 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
             solverPolicy: shard.solverPolicy, budgets: shard.budgets, seeds: shard.seeds,
             shardCount: shard.shard.count, shards: [], startedAt: shard.startedAt, completedAt: shard.completedAt,
             outputArtifacts: [], sourceGenerationArtifacts: [], manifestPaths: [], valid: true };
-        const conflictingFields = invariantFields.filter(field => JSON.stringify(row[field]) !== JSON.stringify(shard[field]));
-        if (JSON.stringify(row.variantFamilyDataset) !== JSON.stringify(variantFamilyDatasetRunIdentity(shard.variantFamilyDataset))) {
+        const conflictingFields = invariantFields.filter(field => stableJson(row[field]) !== stableJson(shard[field]));
+        if (stableJson(row.variantFamilyDataset) !== stableJson(variantFamilyDatasetRunIdentity(shard.variantFamilyDataset))) {
             conflictingFields.push('variantFamilyDataset');
         }
         if (row.shardCount !== shard.shard.count) conflictingFields.push('shard.count');
