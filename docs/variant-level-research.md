@@ -34,7 +34,7 @@ npm run family:coverage -- --variant-family-dataset-root=../pathfinder-variant-r
 
 `.cache/family-index.json` is deterministic/disposable. Extend the family index rather than creating investigation-specific indexes.
 
-Mixed-era aggregate snapshots are reconciled at the index boundary by logical `(corpus, parentId, mode, variantId)` identity. A current `variant-family-dataset-attempts-*` row supersedes a frozen pre-cleanup aggregate row only for that exact logical variant; historical-only rows remain visible when a canonical aggregate is partial. The index exposes `diagnostics.familyAttemptAggregates.mixedEraCorpora` so partial supersession is inspectable, and recognized historical `winningConfig` identities are canonicalized on read. Do not reintroduce corpus-wide filename precedence or raw-string attempt joins in downstream scratch analysis.
+Mixed-era aggregate snapshots are reconciled at the index boundary by logical `(corpus, parentId, mode, variantId)` identity **and normalized evidence payload**. A current `variant-family-dataset-attempts-*` row replaces a frozen pre-cleanup row only when the two observations are payload-equivalent after identity normalization. Historical-only rows remain visible when canonical coverage is partial; differing observations for the same logical variant both survive and are reported as conflicts. The index exposes `diagnostics.familyAttemptAggregates` so partial coverage, conflicts, ambiguous rows, and duplicate canonical logical rows are inspectable, and recognized historical `winningConfig` identities are canonicalized on read. Do not reintroduce corpus-wide filename precedence or raw-string attempt joins in downstream scratch analysis.
 
 ## Scientific unit and independence
 
