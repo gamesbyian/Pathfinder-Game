@@ -4619,7 +4619,7 @@
     "phase": 15,
     "batch": "15F",
     "branch": "chatgpt/phase15f-level-fingerprint-vocabulary-2026-08-31",
-    "pr": null,
+    "pr": 1643,
     "baseMainSha": "502dd2c610cd36b5ecea656b655ae570e068cbb9",
     "recordPath": "docs/naming-cleanup-phase-records/phase-15.md",
     "notes": "Phase 15F implementation of NC-P15-004 only: application-local generic fingerprint vocabulary to levelFingerprint while preserving persisted fields, fingerprint values, Firestore IDs/path keys, algorithm/version, and legacy-version migration behavior."
