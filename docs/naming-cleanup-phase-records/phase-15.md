@@ -992,6 +992,30 @@ Persisted document field names already canonical under `levelFingerprint` are no
 7. 15G/15H source-freeze surfaces remain untouched.
 
 
+
+
+### 15F red-CI audit finding and repair
+
+PR #1643 exact-head CI run **33463929847** was red only in the Node-test job. The failure came from
+the older Phase-8 closeout guard, and it exposed two different classes of issue:
+
+1. **real missed NC-P15-004 owners:** `modules/data.ts`, `modules/dev-corpus.ts`,
+   `modules/persistence/review-repository.ts`, and `modules/ports.ts` still used generic
+   `fingerprint` parameter/local names that specifically meant the level fingerprint;
+2. **stale Phase-8 assumptions:** NC-P08-008 still classified the broad application fingerprint
+   cluster as a retained boundary and still pinned `fingerprint` in `modules/state-slices.ts`
+   and `level-rating-repository.ts` as the expected API shape.
+
+The four missed live identifiers were migrated to `levelFingerprint` without changing values,
+Firestore fields, document IDs, path keys, algorithm/version, or call ordering. The Phase-8 guard
+was then advanced rather than weakened: NC-P08-008 is now a semantic canonical-vocabulary contract,
+the guard detects naked identifier shapes instead of the English word appearing in comments/import
+paths, and it requires the canonical state/repository forms.
+
+`check:naming-cleanup-phase15f-closeout` now explicitly scans these four newly discovered owners.
+The first red CI is therefore retained as evidence that the cross-phase guard found a genuine
+inventory omission instead of being bypassed.
+
 ### 15F implementation state
 
 Current source now uses `levelFingerprint` consistently for the application-local identities owned
