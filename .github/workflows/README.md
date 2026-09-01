@@ -100,6 +100,7 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 ## Other batch research
 
 - `collect-variant-family-dataset.yml` — native solver work already defaults to 4 workers per runner; its hints belong to generated variants under `data/families`, not canonical levels.
+- `firestore-level-fingerprint-boundary.yml` — narrow emulator-backed persistence proof for level-fingerprint identity: rating document IDs, submission fields/legacy duplicate fallback, and local-hint path keys through real Firestore rules/repositories.
 - `solver-elite-prefix-dfs-retry-validate.yml` — targeted elite-prefix validation; valid paths are serialized for the isolated-evidence harvester.
 
 ## Repository / diagnostic workflows
