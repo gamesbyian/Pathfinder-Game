@@ -15,10 +15,10 @@ assert.deepEqual(ledger.phaseBatches?.['15'], ['15A','15B','15C','15D','15E','15
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15A'], 'specification-gate');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15I'], 'merged-tree-closeout');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15J'], 'finalization');
-assert.equal(ledger.activeExecution?.status, 'active');
-assert.equal(ledger.activeExecution?.phase, 15);
-assert.equal(ledger.activeExecution?.batch, '15C');
-assert.equal(ledger.activeExecution?.recordPath, 'docs/naming-cleanup-phase-records/phase-15.md');
+assert.equal(ledger.activeExecution?.status, 'idle');
+assert.equal(ledger.activeExecution?.phase, null);
+assert.equal(ledger.activeExecution?.batch, null);
+assert.equal(ledger.activeExecution?.recordPath, null);
 
 const phase15 = ledger.entries.filter(row => row.phase === 15);
 assert.equal(phase15.length, 13, '15A should resolve to thirteen homogeneous implementation rows');
@@ -29,12 +29,13 @@ assert.equal(ledger.batchCompletions?.['15B']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15B']?.pr, 1639);
 assert.equal(ledger.batchCompletions?.['15B']?.mergeCommit, '56a69e483e267a6da4aaa92acc172e994e2c541e');
 assert.equal(phase15.find(row => row.id === 'NC-P15-006')?.status, 'done');
-assert.equal(phase15.find(row => row.id === 'NC-P15-001')?.status, 'in-progress');
-assert.equal(phase15.find(row => row.id === 'NC-P15-008')?.status, 'in-progress');
+assert.equal(phase15.find(row => row.id === 'NC-P15-001')?.status, 'done');
+assert.equal(phase15.find(row => row.id === 'NC-P15-008')?.status, 'done');
+assert.equal(ledger.batchCompletions?.['15C']?.status, 'pending');
 assert.ok(
   phase15.filter(row => !['NC-P15-001', 'NC-P15-006', 'NC-P15-008'].includes(row.id))
     .every(row => row.status === 'pending'),
-  'active 15C must leave later implementation rows pending',
+  'completed 15C awaiting merge must leave later implementation rows pending',
 );
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
