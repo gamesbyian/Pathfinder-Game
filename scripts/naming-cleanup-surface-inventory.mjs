@@ -368,14 +368,19 @@ function exactSurfaceMatches(entry) {
   return matches;
 }
 
-function referenceFilesForValue(value) {
+function referenceTermsForValue(value) {
   if (typeof value !== 'string' || value.length < 3) return [];
   const terms = [value];
   // Only derive a basename from an actual path-like token. Several ledger descriptions use "/"
   // as prose punctuation (for example "fields/parameters"); path.basename() on those labels turns
   // the suffix into an unrelated generic search term and manufactures false legacy references.
   if (!/\s/u.test(value) && value.includes('/')) terms.push(path.basename(value));
-  const uniqueTerms = [...new Set(terms.filter(term => term.length >= 3))];
+  return [...new Set(terms.filter(term => term.length >= 3))];
+}
+
+function referenceFilesForValue(value) {
+  const uniqueTerms = referenceTermsForValue(value);
+  if (!uniqueTerms.length) return [];
   const files = [];
   for (const [file, source] of sourceByFile) {
     if (uniqueTerms.some(term => source.includes(term))) files.push(file);
@@ -399,20 +404,49 @@ const reconciliationAuthorityFiles = new Set([
   'docs/change-recipes.md',
 ]);
 
+function isReconciliationAuthorityOrGuard(file) {
+  return reconciliationAuthorityFiles.has(file)
+    || file.startsWith('docs/archive/')
+    || file.startsWith('docs/history/')
+    || file.startsWith('docs/naming-cleanup-phase-records/')
+    || file.startsWith('scripts/naming-cleanup-')
+    || file === 'scripts/check-naming-current-authorities.mjs';
+}
+
 function reconciliationReferenceFilesForValue(value) {
-  return referenceFilesForValue(value).filter(file =>
-    !reconciliationAuthorityFiles.has(file) &&
-    !file.startsWith('docs/archive/') &&
-    !file.startsWith('docs/history/') &&
-    !file.startsWith('docs/naming-cleanup-phase-records/') &&
-    !file.startsWith('scripts/naming-cleanup-') &&
-    file !== 'scripts/check-naming-current-authorities.mjs');
+  return referenceFilesForValue(value).filter(file => !isReconciliationAuthorityOrGuard(file));
+}
+
+function reconciliationOldReferenceFiles(entry, value) {
+  const oldTerms = referenceTermsForValue(value);
+  if (!oldTerms.length) return [];
+
+  const canonicalTerms = [...new Set([
+    entry.new,
+    ...(entry.newInventoryTerms ?? []),
+  ].flatMap(referenceTermsForValue))];
+
+  const files = [];
+  for (const [file, source] of sourceByFile) {
+    if (isReconciliationAuthorityOrGuard(file)) continue;
+    let masked = source;
+    for (const canonical of canonicalTerms) masked = masked.split(canonical).join('');
+    if (oldTerms.some(term => masked.includes(term))) files.push(file);
+  }
+
+  let packageSource = JSON.stringify(packageScripts);
+  for (const canonical of canonicalTerms) packageSource = packageSource.split(canonical).join('');
+  if (oldTerms.some(term => packageSource.includes(term))) files.push('package.json');
+
+  return [...new Set(files)].sort();
 }
 
 function reconciliationReferenceMatches(entry, side) {
-  const values = side === 'old'
-    ? [entry.old, ...(entry.oldInventoryTerms ?? entry.inventoryTerms ?? [])]
-    : [entry.new, ...(entry.newInventoryTerms ?? [])];
+  if (side === 'old') {
+    const values = [entry.old, ...(entry.oldInventoryTerms ?? [])];
+    return [...new Set(values.flatMap(value => reconciliationOldReferenceFiles(entry, value)))].sort();
+  }
+  const values = [entry.new, ...(entry.newInventoryTerms ?? [])];
   return [...new Set(values.flatMap(reconciliationReferenceFilesForValue))].sort();
 }
 
