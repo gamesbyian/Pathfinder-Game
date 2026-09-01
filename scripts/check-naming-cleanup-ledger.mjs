@@ -31,20 +31,59 @@ const allowedMigrationClasses = new Set([
   'compatibility-boundary-migration',
   'current-surface-rename-preserve-frozen-history',
 ]);
-const phase8Batches = ledger.phaseBatches?.['8'];
-const phase8BatchOrder = Array.isArray(phase8Batches) ? phase8Batches : [];
-if (!phase8BatchOrder.length || new Set(phase8BatchOrder).size !== phase8BatchOrder.length) {
-  failures.push('phaseBatches["8"] must be a non-empty unique ordered batch list');
+const phaseBatches = ledger.phaseBatches;
+const phaseBatchOrders = new Map();
+const expectedBatchKeys = new Set();
+if (!phaseBatches || typeof phaseBatches !== 'object' || Array.isArray(phaseBatches)) {
+  failures.push('phaseBatches must be an object keyed by phase number');
+} else {
+  for (const [phaseKey, order] of Object.entries(phaseBatches)) {
+    const phase = Number(phaseKey);
+    if (!Number.isInteger(phase) || phase < 1 || !Array.isArray(order) || !order.length ||
+        new Set(order).size !== order.length || order.some(batch => typeof batch !== 'string' || !batch.trim())) {
+      failures.push(`phaseBatches["${phaseKey}"] must be a non-empty unique ordered batch list`);
+      continue;
+    }
+    phaseBatchOrders.set(phase, order);
+    for (const batch of order) {
+      if (expectedBatchKeys.has(batch)) failures.push(`batch id ${batch} is reused across phaseBatches`);
+      expectedBatchKeys.add(batch);
+    }
+  }
 }
-const phase8BatchSet = new Set(phase8BatchOrder);
+const allowedPhaseBatchKinds = new Set(['implementation', 'specification-gate', 'merged-tree-closeout', 'finalization']);
+const phaseBatchKinds = ledger.phaseBatchKinds ?? {};
+if (typeof phaseBatchKinds !== 'object' || Array.isArray(phaseBatchKinds)) {
+  failures.push('phaseBatchKinds must be an object keyed by batched phase');
+}
+function batchKind(phase, batch) {
+  return phaseBatchKinds?.[String(phase)]?.[batch] ?? 'implementation';
+}
+for (const [phaseKey, kinds] of Object.entries(phaseBatchKinds ?? {})) {
+  const phase = Number(phaseKey);
+  const order = phaseBatchOrders.get(phase);
+  if (!order || !kinds || typeof kinds !== 'object' || Array.isArray(kinds)) {
+    failures.push(`phaseBatchKinds["${phaseKey}"] must describe an existing batched phase`);
+    continue;
+  }
+  const kindKeys = Object.keys(kinds).sort();
+  const expectedKeys = [...order].sort();
+  if (JSON.stringify(kindKeys) !== JSON.stringify(expectedKeys)) {
+    failures.push(`phaseBatchKinds["${phaseKey}"] keys must exactly match phaseBatches["${phaseKey}"]`);
+  }
+  for (const [batch, kind] of Object.entries(kinds)) {
+    if (!allowedPhaseBatchKinds.has(kind)) failures.push(`phaseBatchKinds["${phaseKey}"].${batch} has invalid kind ${JSON.stringify(kind)}`);
+  }
+}
+
 const batchCompletions = ledger.batchCompletions;
 if (!batchCompletions || typeof batchCompletions !== 'object' || Array.isArray(batchCompletions)) {
-  failures.push('batchCompletions must be an object keyed by Phase-8 batch');
+  failures.push('batchCompletions must be an object keyed by every declared serial batch');
 } else {
   const completionKeys = Object.keys(batchCompletions).sort();
-  const expectedKeys = [...phase8BatchSet].sort();
+  const expectedKeys = [...expectedBatchKeys].sort();
   if (JSON.stringify(completionKeys) !== JSON.stringify(expectedKeys)) {
-    failures.push(`batchCompletions keys must exactly match Phase-8 batches; found ${completionKeys.join(', ')}`);
+    failures.push(`batchCompletions keys must exactly match all declared serial batches; found ${completionKeys.join(', ')}`);
   }
 }
 const verificationKeys = [
@@ -116,8 +155,11 @@ if (!repoPathExists(ledger.phaseRecordTemplate)) {
 if (ledger.phaseExecutionRecords?.['8'] !== 'docs/naming-cleanup-phase-records/phase-08.md') {
   fail('phaseExecutionRecords["8"] must point at docs/naming-cleanup-phase-records/phase-08.md');
 }
-if (!repoPathExists(ledger.phaseExecutionRecords?.['8'])) {
-  fail(`Phase-8 execution authority does not exist: ${JSON.stringify(ledger.phaseExecutionRecords?.['8'])}`);
+for (const phase of phaseBatchOrders.keys()) {
+  const recordPath = ledger.phaseExecutionRecords?.[String(phase)];
+  if (typeof recordPath !== 'string' || !recordPath.startsWith('docs/naming-cleanup-phase-records/') || !repoPathExists(recordPath)) {
+    fail(`Phase-${phase} declared serial execution must register an existing phaseExecutionRecords authority; found ${JSON.stringify(recordPath)}`);
+  }
 }
 
 const phaseClosures = ledger.phaseClosures;
@@ -292,8 +334,9 @@ for (const [index, entry] of (ledger.entries ?? []).entries()) {
     fail(`${label}: verificationRecord must be null or a repository path string`);
   }
 
-  if (entry.phase === 8 && !phase8BatchSet.has(entry.batch)) {
-    fail(`${label}: Phase-8 row must be assigned to one of 8A-8H; found ${JSON.stringify(entry.batch)}`);
+  const declaredBatchOrder = phaseBatchOrders.get(entry.phase);
+  if (declaredBatchOrder && !declaredBatchOrder.includes(entry.batch)) {
+    fail(`${label}: Phase ${entry.phase} row must be assigned to one of ${declaredBatchOrder.join(', ')}; found ${JSON.stringify(entry.batch)}`);
   }
 
   if (entry.persistence === 'dual-read') {
@@ -536,48 +579,63 @@ for (const entry of futureEntries) {
   }
 }
 
-/* Phase 8 has an explicit serial batch order and a durable merge barrier. */
-const phase8Entries = futureEntries.filter(entry => entry.phase === 8);
-for (let i = 0; i < phase8BatchOrder.length; i += 1) {
-  const batch = phase8BatchOrder[i];
-  const rows = phase8Entries.filter(entry => entry.batch === batch);
-  const completion = batchCompletions?.[batch];
+/* Declared batched phases have explicit serial order and a durable merge barrier.
+ * Rowless lifecycle gates are permitted only when phaseBatchKinds declares them explicitly. */
+for (const [phase, batchOrder] of phaseBatchOrders.entries()) {
+  const phaseEntries = futureEntries.filter(entry => entry.phase === phase);
+  for (let i = 0; i < batchOrder.length; i += 1) {
+    const batch = batchOrder[i];
+    const rows = phaseEntries.filter(entry => entry.batch === batch);
+    const completion = batchCompletions?.[batch];
+    const kind = batchKind(phase, batch);
+    const rowlessGate = kind !== 'implementation';
 
-  if (!completion || !['pending', 'merged'].includes(completion.status)) {
-    fail(`batchCompletions.${batch}.status must be "pending" or "merged"`);
-  } else if (completion.status === 'pending') {
-    if (completion.pr !== null || completion.mergeCommit !== null) {
-      fail(`batchCompletions.${batch} is pending, so pr and mergeCommit must be null`);
+    if (rowlessGate && rows.length) {
+      fail(`Phase-${phase} batch ${batch} is kind ${kind} and must be rowless; found ${rows.length} row(s)`);
     }
-  } else {
-    if (!Number.isInteger(completion.pr) || completion.pr < 1) {
-      fail(`batchCompletions.${batch}.pr must be a positive PR number when merged`);
+    if (!rowlessGate && rows.length === 0) {
+      fail(`Phase-${phase} implementation batch ${batch} must own at least one ledger row`);
     }
-    if (typeof completion.mergeCommit !== 'string' || !/^[0-9a-f]{40}$/u.test(completion.mergeCommit)) {
-      fail(`batchCompletions.${batch}.mergeCommit must be a full commit SHA when merged`);
-    }
-    const incompleteOwnRows = rows.filter(entry => entry.status !== 'done');
-    if (incompleteOwnRows.length) {
-      fail(`batchCompletions.${batch} is merged but ${incompleteOwnRows.length} row(s) are not done`);
-    }
-    for (const previousBatch of phase8BatchOrder.slice(0, i)) {
-      if (batchCompletions?.[previousBatch]?.status !== 'merged') {
-        fail(`batchCompletions.${batch} cannot be merged before predecessor ${previousBatch}`);
+
+    if (!completion || !['pending', 'merged'].includes(completion.status)) {
+      fail(`batchCompletions.${batch}.status must be "pending" or "merged"`);
+    } else if (completion.status === 'pending') {
+      if (completion.pr !== null || completion.mergeCommit !== null) {
+        fail(`batchCompletions.${batch} is pending, so pr and mergeCommit must be null`);
+      }
+    } else {
+      if (!Number.isInteger(completion.pr) || completion.pr < 1) {
+        fail(`batchCompletions.${batch}.pr must be a positive PR number when merged`);
+      }
+      if (typeof completion.mergeCommit !== 'string' || !/^[0-9a-f]{40}$/u.test(completion.mergeCommit)) {
+        fail(`batchCompletions.${batch}.mergeCommit must be a full commit SHA when merged`);
+      }
+      const incompleteOwnRows = rows.filter(entry => entry.status !== 'done');
+      if (incompleteOwnRows.length) {
+        fail(`batchCompletions.${batch} is merged but ${incompleteOwnRows.length} row(s) are not done`);
+      }
+      for (const previousBatch of batchOrder.slice(0, i)) {
+        if (batchCompletions?.[previousBatch]?.status !== 'merged') {
+          fail(`batchCompletions.${batch} cannot be merged before predecessor ${previousBatch}`);
+        }
       }
     }
-  }
 
-  const batchHasStarted = rows.some(entry => entry.status !== 'pending');
-  if (!batchHasStarted) continue;
+    const batchHasStarted = rows.some(entry => entry.status !== 'pending') ||
+      (ledger.activeExecution?.status === 'active' &&
+       ledger.activeExecution.phase === phase &&
+       ledger.activeExecution.batch === batch);
+    if (!batchHasStarted) continue;
 
-  for (const previousBatch of phase8BatchOrder.slice(0, i)) {
-    const previousRows = phase8Entries.filter(entry => entry.batch === previousBatch);
-    const incomplete = previousRows.filter(entry => entry.status !== 'done');
-    if (incomplete.length) {
-      fail(`Phase-8 batch ${batch} has started before predecessor ${previousBatch} is fully done (${incomplete.length} incomplete row(s))`);
-    }
-    if (batchCompletions?.[previousBatch]?.status !== 'merged') {
-      fail(`Phase-8 batch ${batch} has started before predecessor ${previousBatch} is recorded merged`);
+    for (const previousBatch of batchOrder.slice(0, i)) {
+      const previousRows = phaseEntries.filter(entry => entry.batch === previousBatch);
+      const incomplete = previousRows.filter(entry => entry.status !== 'done');
+      if (incomplete.length) {
+        fail(`Phase-${phase} batch ${batch} has started before predecessor ${previousBatch} is fully done (${incomplete.length} incomplete row(s))`);
+      }
+      if (batchCompletions?.[previousBatch]?.status !== 'merged') {
+        fail(`Phase-${phase} batch ${batch} has started before predecessor ${previousBatch} is recorded merged`);
+      }
     }
   }
 }
@@ -612,19 +670,27 @@ if (!active || !['idle', 'active'].includes(active.status)) {
     !repoPathExists(active.recordPath)
   ) {
     fail(`activeExecution.recordPath must be an existing file under docs/naming-cleanup-phase-records/; found ${JSON.stringify(active.recordPath)}`);
+  } else if (ledger.phaseExecutionRecords?.[String(active.phase)] !== active.recordPath) {
+    fail(`activeExecution.recordPath must match phaseExecutionRecords["${active.phase}"]; found ${JSON.stringify(active.recordPath)}`);
   }
-  if (active.phase === 8 && !phase8BatchSet.has(active.batch)) {
-    fail(`activeExecution.batch must be one of ${phase8BatchOrder.join(', ')} for Phase 8; found ${JSON.stringify(active.batch)}`);
+  const activeBatchOrder = phaseBatchOrders.get(active.phase);
+  const activeKind = activeBatchOrder ? batchKind(active.phase, active.batch) : null;
+  if (activeBatchOrder && !activeBatchOrder.includes(active.batch)) {
+    fail(`activeExecution.batch must be one of ${activeBatchOrder.join(', ')} for Phase ${active.phase}; found ${JSON.stringify(active.batch)}`);
   }
-  if (!inProgressEntries.length) {
-    fail('activeExecution is active but no Phase-8+ ledger row is in-progress');
+  if (activeBatchOrder && activeKind !== 'implementation') {
+    if (inProgressEntries.length) {
+      fail(`active rowless ${activeKind} batch ${active.batch} cannot have in-progress implementation rows`);
+    }
+  } else if (!inProgressEntries.length) {
+    fail('activeExecution is active but no implementation ledger row is in-progress');
   }
   for (const entry of inProgressEntries) {
     if (entry.phase !== active.phase) {
       fail(`in-progress row ${entry.id} belongs to Phase ${entry.phase}, not active Phase ${active.phase}`);
     }
-    if (active.phase === 8 && entry.batch !== active.batch) {
-      fail(`in-progress Phase-8 row ${entry.id} belongs to ${entry.batch}, not active batch ${active.batch}`);
+    if (activeBatchOrder && entry.batch !== active.batch) {
+      fail(`in-progress Phase-${active.phase} row ${entry.id} belongs to ${entry.batch}, not active batch ${active.batch}`);
     }
     if (entry.verificationRecord !== active.recordPath) {
       fail(`in-progress row ${entry.id} must use activeExecution.recordPath ${JSON.stringify(active.recordPath)}`);
@@ -640,10 +706,11 @@ for (let phase = 8; phase <= Number(ledger.lastCompletedPhase); phase += 1) {
   }
 }
 
-if (Number(ledger.lastCompletedPhase) >= 8) {
-  const unmergedBatches = phase8BatchOrder.filter(batch => batchCompletions?.[batch]?.status !== 'merged');
+for (const [phase, batchOrder] of phaseBatchOrders.entries()) {
+  if (Number(ledger.lastCompletedPhase) < phase) continue;
+  const unmergedBatches = batchOrder.filter(batch => batchCompletions?.[batch]?.status !== 'merged');
   if (unmergedBatches.length) {
-    fail(`lastCompletedPhase=${ledger.lastCompletedPhase}, but Phase-8 batch merge completion is missing for: ${unmergedBatches.join(', ')}`);
+    fail(`lastCompletedPhase=${ledger.lastCompletedPhase}, but Phase-${phase} batch merge completion is missing for: ${unmergedBatches.join(', ')}`);
   }
 }
 
@@ -653,11 +720,14 @@ if (failures.length) {
   process.exit(1);
 }
 
-const phase8Counts = Object.fromEntries(
-  phase8BatchOrder.map(batch => [batch, phase8Entries.filter(entry => entry.batch === batch).length]),
+const batchCounts = Object.fromEntries(
+  [...phaseBatchOrders.entries()].map(([phase, order]) => [
+    String(phase),
+    Object.fromEntries(order.map(batch => [batch, futureEntries.filter(entry => entry.phase === phase && entry.batch === batch).length])),
+  ]),
 );
 console.log(
   `Naming-cleanup ledger contract valid: schema=v5; gate=${gate.status}; active=${active.status}; ` +
   `${futureEntries.length} Phase-8+ rows carry verification state/evidence pointers; ` +
-  `Phase-8 batches=${JSON.stringify(phase8Counts)}.`,
+  `serial batches=${JSON.stringify(batchCounts)}.`,
 );

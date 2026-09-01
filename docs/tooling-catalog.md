@@ -22,7 +22,7 @@ Use this short preflight before choosing a command:
 | Question | Preferred entry point / evidence limit |
 |---|---|
 | Repository checks | `npm run ci:fast` by default; full `npm run ci` for solver-core changes/final implementation completeness; [`testing.md`](testing.md). CI validates implementation, not research efficacy/generalization. |
-| Active naming-cleanup execution state | `npm run naming:status [-- --phase=N|--batch=8A|--json]`; derives next phase/batch, immutable row IDs, high-risk rows, active claim, and compatibility retirement from the ledger. This is an execution view, not a naming authority. |
+| Active naming-cleanup execution state | `npm run naming:status [-- --phase=N|--batch=<id>|--json]`; derives next phase/batch, immutable row IDs, high-risk rows, active claim, and compatibility retirement from the ledger. This is an execution view, not a naming authority. |
 | Browser flows | focused `test:e2e:*`; `npm run ci:full` for release confidence |
 | Existing-but-unindexed local tooling | `node scripts/tooling-census.mjs --orphans`; observational discovery only, then inspect lifecycle/current evidence before reuse |
 | Supported surfaced-tool import health | `node scripts/tooling-census.mjs --health`; checks literal local import/export targets reachable from surfaced script entrypoints. Observational support-health signal only; it does not scan historical/cold tooling or replace normal tests. |
