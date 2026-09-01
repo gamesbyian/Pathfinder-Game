@@ -814,6 +814,7 @@ Phase 15D completed as implementation PR **#1641**.
 Status: **active**
 
 Branch: `chatgpt/phase15e-variant-family-artifact-paths-2026-08-31`  
+PR: **#1642**  
 Base main: `b00c68f3495ec6591f3846ac0bf2e519f2613a1e`
 
 15E separates two lifetimes that previously shared the `wide-trove` vocabulary:
