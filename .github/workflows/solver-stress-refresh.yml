@@ -69,7 +69,7 @@ on:
         required: false
         default: 'false'
       lifecycle_telemetry:
-        description: 'true adds --lifecycle-telemetry to both corpus solves (per-stage eligible/reached/starved/exhausted record on every row -- see modules/solver/orchestration.ts finish()) and has the combine job emit a mass-weighted failure map (scripts/stress/lifecycle-failure-map.mjs) over the full unsolved population. Opt-in: adds negligible per-level overhead (post-processing only) and newly generated combined solver-measurement files carry the canonical stageLifecycle field on every row.'
+        description: 'true adds --lifecycle-telemetry to both corpus solves, emits mass-weighted failure maps, and runs the durable corrected-EW1 × exact-dispatch production reach/work gate. Opt-in: adds negligible per-level overhead (post-processing only); combined measurement rows carry canonical stageLifecycle and the EW1 join requires per-attempt workSpent/current-SHA provenance.'
         required: false
         default: 'false'
       shard_count:
@@ -411,6 +411,19 @@ jobs:
             --in=reports/stress/solver-corpus2-latest.json \
             --out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2.json" \
             --summary-out="reports/stress/capability-runs/${{ github.run_id }}/lifecycle-failure-map-corpus2-summary.md"
+
+      - name: Join durable EW1 pricing to exact-current production reach/work
+        if: steps.coverage.outputs.complete == 'true' && inputs.lifecycle_telemetry == 'true'
+        shell: bash
+        run: |
+          npm run solver:analyze-equal-work-production-reach -- \
+            --equal-work=reports/stress/ew1/33156541827-pricing-snapshot.json \
+            --production=reports/stress/solver-corpus1-latest.json,reports/stress/solver-corpus2-latest.json \
+            --capability=reports/stress/technique-niches/2026-09-01/level-capability.json \
+            --out="reports/stress/capability-runs/${{ github.run_id }}/equal-work-production-reach.json" \
+            --summary-out="reports/stress/capability-runs/${{ github.run_id }}/equal-work-production-reach.md" \
+            --require-current-head \
+            --check
 
       - name: Print solved counts
         if: steps.coverage.outputs.complete == 'true'

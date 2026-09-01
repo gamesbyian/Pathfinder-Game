@@ -86,6 +86,22 @@ const equalWorkRows = document => {
 
 const levelIdOf = row => String(row?.levelId ?? row?.id ?? row?.level ?? '');
 
+function equalWorkIntegrityMismatch(document, rows) {
+    if (!document?.sourceIntegrity || typeof document.sourceIntegrity !== 'object') return null;
+    const actual = {
+        cells: rows.length,
+        levels: new Set(rows.map(row => canonicalCorpusName(row.corpus) + '/' + levelIdOf(row))).size,
+        techniques: new Set(rows.map(row => String(row.techniqueKeys?.[0] ?? ''))).size,
+        solved: rows.filter(row => row.ok === true).length,
+        deadlineTruncated: rows.filter(row => row.deadlineTruncated === true).length,
+        errors: rows.filter(row => row.status === 'error').length,
+        workBudgets: [...new Set(rows.map(row => finite(row.workBudget)).filter(value => value !== null))].sort((a, b) => a - b),
+        maxWorkSpent: rows.length ? Math.max(...rows.map(row => finite(row.workSpent) ?? 0)) : 0,
+    };
+    const expected = document.sourceIntegrity;
+    return JSON.stringify(actual) === JSON.stringify(expected) ? null : { expected, actual };
+}
+
 function summarizeEqualWork(rows) {
     const byTechnique = new Map();
     for (const row of rows) {
@@ -107,6 +123,7 @@ function summarizeProduction(documents, equalWorkTechniques) {
     let rowsWithLifecycle = 0;
     let rowsWithUnknownCorpus = 0;
     let matchedAttempts = 0;
+    const levelRows = new Map();
     let unmatchedAttemptIdentity = 0;
     const corpora = new Set();
 
@@ -119,6 +136,14 @@ function summarizeProduction(documents, equalWorkTechniques) {
             if (corpus === 'unknown') rowsWithUnknownCorpus++;
             else corpora.add(corpus);
             const levelKey = corpus + '/' + levelIdOf(row);
+            const levelDetail = {
+                corpus,
+                levelId: levelIdOf(row),
+                ok: row?.ok === true,
+                workSpent: finite(row?.workSpent),
+                attempts: [],
+            };
+            levelRows.set(levelKey, levelDetail);
             for (const attempt of Array.isArray(row?.attempts) ? row.attempts : []) {
                 const config = canonicalConfigOf(attempt);
                 if (!config) {
@@ -130,6 +155,13 @@ function summarizeProduction(documents, equalWorkTechniques) {
                 const action = canonicalActionOf(attempt);
                 const stage = canonicalStageOf(attempt, action) ?? 'unknown';
                 const work = finite(attempt.workSpent);
+                levelDetail.attempts.push({
+                    attemptConfigIdentity: config,
+                    actionKey: action,
+                    stageId: stage,
+                    workSpent: work,
+                    ok: attempt.ok === true,
+                });
                 const target = byTechnique.get(config);
                 target.levels.add(levelKey);
                 target.attempts++;
@@ -157,23 +189,119 @@ function summarizeProduction(documents, equalWorkTechniques) {
     }
     return {
         byTechnique, rows, rowsWithLifecycle, rowsWithUnknownCorpus,
-        matchedAttempts, unmatchedAttemptIdentity, corpora,
+        matchedAttempts, unmatchedAttemptIdentity, corpora, levelRows,
+    };
+}
+
+function summarizeLevelHeadroom(ewRows, productionLevels, capabilityDocument = null) {
+    const capabilityRows = Array.isArray(capabilityDocument?.levels) ? capabilityDocument.levels : [];
+    const capabilityByLevel = new Map(capabilityRows.map(row => [
+        canonicalCorpusName(row.corpus) + '/' + levelIdOf(row),
+        row,
+    ]));
+    const ewByLevel = new Map();
+    for (const row of ewRows) {
+        const key = canonicalCorpusName(row.corpus) + '/' + levelIdOf(row);
+        const bucket = ewByLevel.get(key) ?? [];
+        bucket.push(row);
+        ewByLevel.set(key, bucket);
+    }
+
+    const levels = [...ewByLevel.entries()].map(([levelKey, rows]) => {
+        const [corpus, ...idParts] = levelKey.split('/');
+        const levelId = idParts.join('/');
+        const production = productionLevels.get(levelKey) ?? null;
+        const capability = capabilityByLevel.get(levelKey) ?? null;
+        const solvedActions = rows.filter(row => row.ok === true).map(row => {
+            let technique;
+            try { technique = normalizeAttemptIdentityKey(row.techniqueKeys[0]); } catch { technique = String(row.techniqueKeys[0]); }
+            const productionAttempts = (production?.attempts ?? []).filter(attempt =>
+                attempt.attemptConfigIdentity === technique);
+            const productionWork = productionAttempts.map(attempt => attempt.workSpent)
+                .filter(value => value !== null);
+            return {
+                attemptConfigIdentity: technique,
+                ew1SolveWork: finite(row.workSpent),
+                productionAttempts: productionAttempts.length,
+                productionSuccessfulAttempts: productionAttempts.filter(attempt => attempt.ok).length,
+                productionMaxAttemptWork: productionWork.length ? Math.max(...productionWork) : null,
+                productionStages: [...new Set(productionAttempts.map(attempt => attempt.stageId))].sort(),
+            };
+        }).sort((a, b) => a.attemptConfigIdentity.localeCompare(b.attemptConfigIdentity));
+
+        let pricingComparison = 'no-ew1-solve';
+        if (production?.ok) pricingComparison = 'production-solved';
+        else if (solvedActions.length) {
+            const offered = solvedActions.filter(action => action.productionAttempts > 0);
+            const atOrAbove = offered.filter(action =>
+                action.ew1SolveWork !== null
+                && action.productionMaxAttemptWork !== null
+                && action.productionMaxAttemptWork >= action.ew1SolveWork);
+            pricingComparison = !offered.length
+                ? 'ew1-solvers-not-offered'
+                : atOrAbove.length
+                    ? 'ew1-solver-offered-at-or-above-solve-work'
+                    : 'ew1-solver-offered-below-solve-work';
+        }
+
+        return {
+            corpus,
+            levelId,
+            productionPresent: Boolean(production),
+            productionSolved: production?.ok ?? null,
+            productionWorkSpent: production?.workSpent ?? null,
+            ew1EligibleActions: rows.length,
+            ew1SolvedActions: solvedActions,
+            pricingComparison,
+            frozenCapability: capability ? {
+                frozenT1SupportClass: capability.frozenT1SupportClass ?? null,
+                solverCount: capability.solverCount ?? null,
+                singleton: capability.singleton ?? null,
+                doubleton: capability.doubleton ?? null,
+            } : null,
+        };
+    }).sort((a, b) => a.corpus.localeCompare(b.corpus) || a.levelId.localeCompare(b.levelId));
+
+    const comparisonCounts = Object.entries(levels.reduce((counts, row) => {
+        counts[row.pricingComparison] = (counts[row.pricingComparison] ?? 0) + 1;
+        return counts;
+    }, {})).sort(([a], [b]) => a.localeCompare(b)).map(([key, count]) => ({ key, count }));
+
+    return {
+        levels,
+        summary: {
+            levels: levels.length,
+            ew1SolvableLevels: levels.filter(row => row.ew1SolvedActions.length > 0).length,
+            productionSolvedLevels: levels.filter(row => row.productionSolved === true).length,
+            missingProductionLevels: levels.filter(row => !row.productionPresent).length,
+            productionMissEw1SolvableLevels: levels.filter(row =>
+                row.productionSolved === false && row.ew1SolvedActions.length > 0).length,
+            comparisonCounts,
+            capabilityRowsProvided: capabilityRows.length,
+            missingCapabilityLevels: capabilityRows.length
+                ? levels.filter(row => row.frozenCapability === null).length
+                : null,
+        },
     };
 }
 
 export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDocuments, {
     currentHead = null,
     requireCurrentHead = false,
+    capabilityDocument = null,
 } = {}) {
     const ewRows = equalWorkRows(equalWorkDocument);
     const ewByTechnique = summarizeEqualWork(ewRows);
     const production = summarizeProduction(productionDocuments, new Set(ewByTechnique.keys()));
+    const levelHeadroom = summarizeLevelHeadroom(ewRows, production.levelRows, capabilityDocument);
     const documentCommits = productionDocuments.map(productionDocumentCommit);
     const commits = [...new Set(documentCommits.filter(Boolean))].sort();
     const missingCommitDocuments = documentCommits.filter(commit => commit === null).length;
     const blockers = [];
 
     if (!ewRows.length) blockers.push('equal-work input contains no EW1 singleton rows');
+    const integrityMismatch = equalWorkIntegrityMismatch(equalWorkDocument, ewRows);
+    if (integrityMismatch) blockers.push('equal-work sourceIntegrity does not match the supplied EW1 rows');
     if (!production.rows) blockers.push('production input contains no level rows');
     if (production.rowsWithLifecycle !== production.rows) {
         blockers.push('production rows are missing stageLifecycle; rerun current production sweep with --lifecycle-telemetry');
@@ -195,6 +323,12 @@ export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDoc
     const invalidEqualWork = ewRows.filter(row =>
         row?.deadlineTruncated === true || row?.status === 'error' || finite(row?.workSpent) === null);
     if (invalidEqualWork.length) blockers.push('EW1 rows contain errors, deadline truncation, or missing workSpent');
+    if (levelHeadroom.summary.missingProductionLevels) {
+        blockers.push('production evidence is missing ' + levelHeadroom.summary.missingProductionLevels + ' EW1 level(s)');
+    }
+    if (capabilityDocument && levelHeadroom.summary.missingCapabilityLevels) {
+        blockers.push('capability input is missing ' + levelHeadroom.summary.missingCapabilityLevels + ' EW1 level(s)');
+    }
 
     const techniques = [...ewByTechnique.entries()].map(([technique, rows]) => {
         const work = rows.map(row => finite(row.workSpent)).filter(value => value !== null);
@@ -257,6 +391,7 @@ export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDoc
             missingMatchedAttemptWork: missingAttemptWork,
         },
         techniques,
+        levelHeadroom,
     };
 }
 
@@ -276,7 +411,22 @@ export function renderEqualWorkProductionReachSummary(result) {
     if (result.blockers.length) {
         lines.push('', '## Blockers', '', ...result.blockers.map(item => '- ' + item));
     }
-    lines.push('', '## Joined action view', '',
+    lines.push('', '## Level-local EW1 pricing headroom', '',
+        'EW1-solvable levels: ' + result.levelHeadroom.summary.ew1SolvableLevels
+            + '; current production misses among them: ' + result.levelHeadroom.summary.productionMissEw1SolvableLevels + '.',
+        ...result.levelHeadroom.summary.comparisonCounts.map(row => '- ' + row.key + ': ' + row.count),
+        '',
+        '> EW1 solve-work is historical development evidence. Current-attempt work below/above that value is a pricing/reach comparison, not proof that identical work would reproduce the historical solve across revisions or stage contexts.',
+        '',
+        '| corpus/level | production | EW1 solves | comparison | frozen capability |',
+        '|---|---:|---:|---|---|',
+        ...result.levelHeadroom.levels
+            .filter(row => row.ew1SolvedActions.length > 0)
+            .map(row => '| ' + row.corpus + '/' + row.levelId + ' | '
+                + (row.productionSolved === true ? 'solved' : row.productionSolved === false ? 'miss' : 'missing') + ' | '
+                + row.ew1SolvedActions.length + ' | ' + row.pricingComparison + ' | '
+                + (row.frozenCapability?.frozenT1SupportClass ?? 'unjoined') + ' |'),
+        '', '## Joined action view', '',
         '| attempt config | EW1 solves/cells | EW1 mean work | production reached levels | production wins | production work | missing attempt work |',
         '|---|---:|---:|---:|---:|---:|---:|');
     for (const row of result.techniques) {
@@ -304,6 +454,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     const { values, flags } = parseArgs(process.argv.slice(2));
     const equalWorkPath = values.get('--equal-work');
     const productionPaths = (values.get('--production') ?? '').split(',').filter(Boolean);
+    const capabilityPath = values.get('--capability');
     if (!equalWorkPath || !productionPaths.length) {
         throw new Error('--equal-work=<combined-cells.json> and --production=<report.json[,report2.json]> are required');
     }
@@ -313,7 +464,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
         ? execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()
         : null;
     const result = analyzeEqualWorkProductionReach(read(equalWorkPath), productionPaths.map(read), {
-        currentHead, requireCurrentHead,
+        currentHead,
+        requireCurrentHead,
+        capabilityDocument: capabilityPath ? read(capabilityPath) : null,
     });
     const out = values.get('--out') ?? 'tmp/equal-work-production-reach.json';
     const summaryOut = values.get('--summary-out') ?? out.replace(/\.json$/u, '.md');
@@ -323,7 +476,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     writeFileSync(summaryOut, renderEqualWorkProductionReachSummary(result));
     console.log(JSON.stringify({
         out, summaryOut, decisionBearing: result.decisionBearing, blockers: result.blockers,
-        techniques: result.equalWork.techniques, matchedAttempts: result.production.matchedAttempts,
+        techniques: result.equalWork.techniques,
+        matchedAttempts: result.production.matchedAttempts,
+        productionMissEw1SolvableLevels: result.levelHeadroom.summary.productionMissEw1SolvableLevels,
     }, null, 2));
     if (flags.has('--check') && !result.decisionBearing) process.exitCode = 1;
 }
