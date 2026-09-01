@@ -1375,12 +1375,16 @@ pass. It owns the remaining compatibility boundaries, the final mixed-era eviden
 proof that the naming program can be archived without leaving current code, current authorities, or
 solver research in two dialects.
 
-NC-P15-001 through NC-P15-003 cover the shared variant-family dataset root CLI, generated
-family-run manifest schema, and dated artifact discovery. NC-P15-004 covers the
-application/Firestore level-fingerprint cluster. NC-P15-005 covers the CP-SAT explicit-prefix
-result fields, values, and workflow identities. NC-P15-006 covers the shared CP-SAT
-branch-labelling eligibility library. NC-P15-007 covers the shared prune-gap/atlas directory
-CLI and generated-report boundary.
+The inherited Phase-15 inventory began as NC-P15-001 through NC-P15-007. The mandatory 15A
+homogeneity census on 2026-08-31 preserved those stable IDs while splitting contracts with different
+owners/lifetimes into NC-P15-008 through NC-P15-013. The authoritative resolved partition is recorded
+in [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) and the
+ledger: 001/008 own dataset-root CLI vs private source vocabulary; 002 owns the family-run manifest
+schema; 003/009 own historical artifact discovery vs current output paths; 004 owns application-local
+level-fingerprint vocabulary while stored Firestore identities remain invariant; 005/010/011/012
+separate CP-SAT result schema, workflow-local job identity, external case-format token, and
+known-prefix branch source schema; 006 owns the shared branch-labelling eligibility library; and
+007/013 separate prune-gap CLI/local vocabulary from generated-report metadata.
 
 These rows are not advance authorization for blind direct renames. Every row must prove the actual
 reader/writer/external-identity graph on implementation-time current \`main\`, and heterogeneous
@@ -1462,6 +1466,36 @@ If 15A changes a target name, persistence classification, compatibility owner, r
 row partition, land that amendment before any implementation batch. Discovery is not permission to
 improvise a different contract in code.
 
+**15A resolved amendment (2026-08-31).** The entry census did change the row partition and several
+compatibility classifications, so this plan now records the amendment before 15B:
+
+- NC-P15-001 is the external `--trove-root` -> `--variant-family-dataset-root` transition only;
+  private `troveRootArg` / dataset-root locals are NC-P15-008 and have no alias;
+- NC-P15-002 new writes bump family-run manifests from schema v1/`trove` to
+  schema v2/`variantFamilyDataset`; v1 normalization is permanent;
+- NC-P15-003 owns permanent historical/canonical attempt-path discovery; NC-P15-009 owns the
+  current merger/workflow cutover from dated `wide-trove` output names to stable
+  `variant-family-dataset` names;
+- NC-P15-004 is now persistence=`none`: the remaining generic `fingerprint` spellings are
+  application-local names, while Firestore already stores `levelFingerprint`/`fingerprintVersion`
+  and uses the computed fingerprint value as document/path identity. Those stored identities are
+  invariants, not migration targets;
+- NC-P15-005 owns explicit-prefix result schema only and bumps new output to v2
+  `referenceLabel`/`referenceReason`; NC-P15-010 owns workflow-local `oracle-shards`,
+  NC-P15-011 owns the external `atlas-abstain` case-format transition, and NC-P15-012 owns the
+  still-live known-solution-prefix v1 `oracle`/`oracle-abstain` source schema with a v2 canonical
+  writer plus permanent v1 read;
+- NC-P15-007 is now a direct CLI/local rename because `ATLAS_DIR` is a local constant rather than
+  an environment variable and no maintained machine caller for `--atlas-dir` was found;
+  NC-P15-013 owns new-report `atlasDir`/`atlasFiles` -> `pruneGapDir`/`pruneGapFiles`
+  single-write while frozen old reports stay untouched;
+- the active `repairLateProbe` / `STRATEGY_REPAIR_LATE_PROBE` family is explicitly **separately
+  deferred vocabulary debt**, because it spans historical telemetry compatibility, active solver
+  configuration, budget policy, batch overrides, and tests without one settled replacement contract.
+
+The ledger's `phaseBatches["15"]` and `phaseBatchKinds["15"]` are the machine authority for this
+resolved sequence. 15A, 15I, and 15J are explicitly rowless lifecycle gates.
+
 #### Default serial implementation order after 15A
 
 The default decomposition is intentionally small. 15A may split a row further, but it should not
@@ -1470,12 +1504,12 @@ recombine independent boundaries merely to reduce PR count.
 | Batch | Default scope | Why it is isolated |
 | --- | --- | --- |
 | 15B | NC-P15-006 shared CP-SAT branch-label eligibility library | private current-surface rename; no persistence; proves consumer-inward migration on the least ambiguous row |
-| 15C | NC-P15-001 family dataset-root CLI/API | developer/external CLI compatibility and conflict semantics are independent of data schema |
-| 15D | NC-P15-002 family-run manifest field | high-risk generated schema; reader-first normalization and version decision |
-| 15E | NC-P15-003 dated dataset artifact discovery | historical path identity and mixed old/new discovery/deduplication |
-| 15F | NC-P15-004 application/Firestore fingerprint cluster | highest-risk application/persistence identity boundary; must preserve stored document identity |
-| 15G | NC-P15-005 CP-SAT result/workflow identities | persisted result fields/values and workflow-local names must be decomposed and proven separately |
-| 15H | NC-P15-007 prune-gap directory CLI/report boundary | CLI/env/report compatibility may have different real consumers and may need row splitting |
+| 15C | NC-P15-001 CLI + NC-P15-008 private dataset-root source vocabulary | one shared external alias owner, while private symbols migrate directly without inheriting that lifetime |
+| 15D | NC-P15-002 family-run manifest schema | high-risk persisted/generated schema; v1 reader-first normalization and explicit v2 writer |
+| 15E | NC-P15-003 discovery + NC-P15-009 current output paths | permanent historical discovery is proven before current producer/workflow filenames cut over |
+| 15F | NC-P15-004 application-local level-fingerprint vocabulary | high-risk application/Firestore path: local names change while stored identity/algorithm/version remain invariant |
+| 15G | NC-P15-005 + NC-P15-010 + NC-P15-011 + NC-P15-012 CP-SAT contracts | result schema, workflow-local dependency, external input token, and known-prefix source schema have distinct owners/lifetimes but must land coherently |
+| 15H | NC-P15-007 CLI/local + NC-P15-013 report metadata | direct prune-gap CLI/source rename and canonical-only new report fields, without invented readers |
 | 15I | merged-tree hostile closeout + solver-research resumption gate | proves the integrated repository, not the implementation branches |
 | 15J | archival/finalization handoff | records immutable closeout evidence and changes routing only after the closeout has merged |
 
@@ -1519,67 +1553,85 @@ document/path identity is part of the invariant.
 
 #### Boundary-specific Phase-15 traps and required evidence
 
-**NC-P15-001, family dataset-root CLI/API**
+**NC-P15-001 / NC-P15-008, family dataset-root CLI vs private source vocabulary**
 
-- canonical-first parsing lives in one shared owner;
-- current callers/docs/workflows emit only the canonical option after cutover;
-- the authorized legacy CLI remains accepted only for its recorded window;
+- the shared parser accepts canonical `--variant-family-dataset-root` and the one authorized
+  `--trove-root` transition alias; current docs/callers emit only canonical after cutover;
 - same-value and conflicting dual-argument behavior are both tested;
-- individual family tools must not grow their own alias parsing.
+- `troveRootArg` and dataset-root locals migrate directly under NC-P15-008, with no private alias;
+- individual family tools must not grow their own CLI alias parsing.
 
 **NC-P15-002, family-run manifest schema**
 
-- changing the required dataset field requires an explicit schema-version decision;
-- a real legacy manifest must validate and enter the family index as the canonical dataset identity;
-- new manifests single-write the canonical field;
-- cross-shard invariants are tested with all-legacy, all-canonical, and mixed-era shard manifests;
-- a mixed-era join must not split one dataset or silently drop the field.
+- new writers bump to schemaVersion 2 with `variantFamilyDataset`;
+- the one validator/normalizer permanently reads authentic schema-v1 `trove` manifests;
+- conflict behavior is explicit if malformed input carries both spellings;
+- cross-shard invariants are tested with all-legacy, all-canonical, and mixed-era manifests;
+- new output never writes `trove`.
 
-**NC-P15-003, dated variant-family artifact discovery**
+**NC-P15-003 / NC-P15-009, historical artifact discovery vs new-run output paths**
 
-- historical wide-trove paths remain discoverable without moving or rewriting the artifacts;
-- new-run paths use the canonical convention only after dual discovery works;
-- if both historical and canonical paths expose the same logical artifact, precedence and
-  deduplication are explicit and tested;
-- ordering/globbing differences must not change which evidence is selected without a separately
-  authorized behavior change.
+- NC-P15-003 keeps historical `wide-trove-attempts-*` discoverable without moving or rewriting
+  frozen evidence and adds canonical `variant-family-dataset-attempts-*` discovery through the
+  same owner;
+- deduplication/precedence is explicit when old/new discovery can expose the same logical evidence;
+- only after that reader proof does NC-P15-009 switch the merger/workflow to stable
+  `variant-family-dataset` output paths;
+- ordering/globbing differences must not silently change evidence selection.
 
-**NC-P15-004, application/Firestore fingerprint cluster**
+**NC-P15-004, application-local level-fingerprint vocabulary**
 
-- partition local application vocabulary from stored document/path identity before editing;
-- preserve fingerprint algorithm/version, Firestore document IDs/path keys, duplicate detection,
-  rating lookup, hint lookup, submission behavior, and old-document readability;
-- prove existing Firestore-shaped fixtures and canonical application names through the real
-  repository boundary;
-- do not rename a persisted ID merely to make a local field look uniform;
-- if the row contains local-only and persisted contracts with different retirement semantics, split
-  it before implementation.
+- rename application state/helper/local/repository parameter vocabulary to `levelFingerprint`;
+- do not add a generic-field dual reader that no persisted schema needs;
+- preserve fingerprint algorithm/version, Firestore document IDs/path keys, persisted
+  `levelFingerprint` fields, duplicate detection, rating lookup, hint lookup, submission behavior,
+  and old-document readability;
+- prove identity parity through the real repository/Firestore boundary.
 
-**NC-P15-005, CP-SAT result/workflow identities**
+**NC-P15-005, CP-SAT explicit-prefix result schema**
 
-- separately classify persisted result field names, persisted enum/reason values, workflow-local job
-  IDs, \`needs\` references, artifact names, and external workflow inputs;
-- workflow-local job IDs normally migrate atomically with every dependency and need no historical
-  data reader;
-- persisted fields/values require real historical fixture normalization before the writer changes;
-- the combiner/analyzer must handle mixed old/new rows, not only pure legacy and pure canonical files;
-- exercise resolved workflow inputs/outputs/job dependencies with executable evidence rather than
-  treating a green YAML parser as proof.
+- new result output bumps to schemaVersion 2 and single-writes
+  `referenceLabel`/`referenceReason` plus canonical reason values;
+- a real v1-shaped result fixture normalizes through one owner;
+- the combiner handles all-v1, all-v2, and mixed shard rows without raw-string grouping drift.
+
+**NC-P15-010, CP-SAT workflow-local shard job identity**
+
+- rename `oracle-shards` to `reference-shards` atomically with every `needs`/expression
+  reference;
+- do not create historical-data compatibility for a workflow-local dependency ID;
+- executable workflow wiring evidence, not YAML parse alone, proves the dependency.
+
+**NC-P15-011, CP-SAT external case-format token**
+
+- current workflow/CLI emits canonical `reference-abstain`;
+- `atlas-abstain` remains accepted only through the one input-parser transition owner;
+- canonical and legacy forms must resolve to the same case population; conflicting future forms
+  must not fork behavior.
+
+**NC-P15-012, known-solution-prefix branch source schema**
+
+- the current collector is a live schema-v1 writer of `oracle` metadata and
+  `oracle-abstain` branch labels, so this is not frozen-only prose residue;
+- new source artifacts bump to schemaVersion 2 with canonical reference vocabulary;
+- `extractExplicitPrefixCases` permanently normalizes the committed v1 winning-prefix fixture and
+  v2 current output to one canonical model;
+- frozen v1 files are not rewritten.
 
 **NC-P15-006, CP-SAT branch-label eligibility library**
 
-- rename the shared file/export and every import/current reference atomically;
+- rename the shared file/export/predicate and every import/current reference atomically;
 - pin the selected eligibility population before/after on representative data;
 - do not create a private filename/function compatibility alias.
 
-**NC-P15-007, prune-gap directory CLI/report boundary**
+**NC-P15-007 / NC-P15-013, prune-gap CLI/local vs generated-report fields**
 
-- census CLI, environment-variable, generated-report field, and historical-report readers
-  separately;
-- preserve a legacy CLI alias only if an actual external/current caller justifies it;
-- preserve historical report readability only through an actual reader; do not manufacture a dead
-  report normalizer because the ledger once said \`dual-read\`;
-- if CLI/env/report fields have different owners or lifetimes, split the row during 15A.
+- `ATLAS_DIR` is a local constant, not an environment-variable interface;
+- NC-P15-007 directly migrates `--atlas-dir` / `ATLAS_DIR` to prune-gap vocabulary unless 15H
+  discovers a real supported external caller that requires an amended alias contract;
+- NC-P15-013 changes new report metadata to `pruneGapDir`/`pruneGapFiles`;
+- no maintained reader of historical `atlasDir`/`atlasFiles` was found in 15A, so do not
+  manufacture a dead report normalizer; frozen reports remain frozen.
 
 #### Phase 15 solver-research resumption gate
 
