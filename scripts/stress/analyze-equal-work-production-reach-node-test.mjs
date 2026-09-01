@@ -84,7 +84,7 @@ assert.equal(repair.production.winningLevels, 1);
 assert.deepEqual(repair.production.stages[0].actionKeys,
     ['early-repair-search|repair|score=repair|guidance=standard|seedSalt=0']);
 
-const missingWork = structuredClone(production);
+const missingWork = JSON.parse(JSON.stringify(production));
 delete missingWork.levels[0].attempts[0].workSpent;
 const blockedWork = analyzeEqualWorkProductionReach(equalWork, [missingWork], {
     currentHead: 'abc123',
@@ -93,7 +93,7 @@ const blockedWork = analyzeEqualWorkProductionReach(equalWork, [missingWork], {
 assert.equal(blockedWork.decisionBearing, false);
 assert.ok(blockedWork.blockers.some(value => value.includes('missing per-attempt workSpent')));
 
-const missingLifecycle = structuredClone(production);
+const missingLifecycle = JSON.parse(JSON.stringify(production));
 missingLifecycle.levels[1].stageLifecycle = null;
 const blockedLifecycle = analyzeEqualWorkProductionReach(equalWork, [missingLifecycle], {
     currentHead: 'abc123',
