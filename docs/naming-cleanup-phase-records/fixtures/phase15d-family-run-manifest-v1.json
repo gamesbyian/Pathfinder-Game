@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "runId": "phase15d-v1-fixture",
+  "solver": {
+    "commit": "300d26bd35886f01b8fccebac0453d6d7bdc226a",
+    "ref": "main",
+    "dirty": false
+  },
+  "invocation": {
+    "tool": "collect-variant-family-dataset-shard.mjs",
+    "workflow": "collect-variant-family-dataset.yml"
+  },
+  "selection": {
+    "corpora": [
+      "corpus1"
+    ],
+    "families": [
+      "corpus1:S00001"
+    ]
+  },
+  "trove": {
+    "manifest": "data/families/variant-family-dataset-manifest.json",
+    "shardFile": "logs/family-census/wide-shard-01-slice.json"
+  },
+  "solverPolicy": {
+    "mode": "production",
+    "profile": null,
+    "config": null,
+    "flags": {},
+    "strictTotalWorkBudget": false
+  },
+  "budgets": {
+    "workUnits": 48240000,
+    "nodeCeiling": 36000000,
+    "wallDeadlineMs": 86400000
+  },
+  "seeds": [
+    20260807
+  ],
+  "shard": {
+    "count": 2,
+    "index": 1
+  },
+  "startedAt": "2026-08-21T00:00:00Z",
+  "completedAt": "2026-08-21T00:05:00Z",
+  "outputArtifacts": [
+    "logs/family-census/corpus1/solve-S00001-sym.json"
+  ],
+  "sourceGenerationArtifacts": [
+    "data/families/corpus1/family-S00001-sym.json"
+  ]
+}
