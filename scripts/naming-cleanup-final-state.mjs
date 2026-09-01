@@ -28,6 +28,31 @@ assert.equal(ledger.activeExecution?.status, 'idle');
 for (const key of ['phase', 'batch', 'branch', 'pr', 'baseMainSha', 'recordPath']) {
   assert.equal(ledger.activeExecution?.[key], null, `completed execution must leave ${key} null`);
 }
+assert.deepEqual(ledger.phaseClosures?.['15']?.implementation, {
+  pr: 1645,
+  finalHeadSha: '0573438bb1c3fcb98fb4cb72320c10d2fd4ae45d',
+  ciRunId: 33466977123,
+  ciConclusion: 'success',
+  browserRunId: 33466977073,
+  browserConclusion: 'success',
+  mergeCommit: '65650862eb4626c5d6eecf7bbc1753a1006d97c8',
+});
+assert.deepEqual(ledger.phaseClosures?.['15']?.mergedTreeCloseout, {
+  baseMainSha: '65650862eb4626c5d6eecf7bbc1753a1006d97c8',
+  pr: 1646,
+  ciPolicy: 'exact-head-green-before-merge',
+  finalHeadSha: '44b331be5c69ff4305c5edcc5809f6a1fea4e73e',
+  ciRunId: 33470625109,
+  ciConclusion: 'success',
+  browserRunId: 33470625154,
+  browserConclusion: 'success',
+  mergeCommit: '55b405b2caf511543503a7581b2457c92c06a1f9',
+});
+assert.equal(ledger.phaseClosures?.['15']?.finalizationHandoff?.pr, 1647);
+assert.equal(
+  ledger.phaseClosures?.['15']?.finalizationHandoff?.mergeCommit,
+  '504330dc4e474b1ebc7755e8c34f72f63fd37901',
+);
 assert.ok(phase15.every(row => row.status === 'done'), 'completed Phase 15 must leave every implementation row done');
 assert.ok(
   Object.entries(ledger.batchCompletions ?? {})
