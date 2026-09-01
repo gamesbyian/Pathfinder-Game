@@ -85,7 +85,7 @@ jobs:
       - name: Commit snapshot onto PR branch
         shell: bash
         run: |
-          if git diff --quiet -- reports/stress/ew1/33156541827-pricing-snapshot.json; then
+          if [ -z "$(git status --porcelain -- reports/stress/ew1/33156541827-pricing-snapshot.json)" ]; then
             echo "No snapshot change."
             exit 0
           fi
