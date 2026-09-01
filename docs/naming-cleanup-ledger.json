@@ -4776,27 +4776,9 @@
         ]
       },
       "NC-P08-008": {
-        "kind": "retained-boundary",
+        "kind": "semantic-contract",
         "legacy": "naked fingerprint",
-        "contract": "persisted-level-fingerprint-cluster",
-        "files": [
-          "modules/data.ts",
-          "modules/dev-corpus.ts",
-          "modules/input/review-controller.ts",
-          "modules/input/solver-controller.ts",
-          "modules/input/submission-controller.test.ts",
-          "modules/input/submission-controller.ts",
-          "modules/input/submission-core.test.ts",
-          "modules/input/submission-core.ts",
-          "modules/persistence/level-rating-repository.ts",
-          "modules/persistence/level-submission-repository.ts",
-          "modules/persistence/local-level-hints-repository.ts",
-          "modules/persistence/review-repository.ts",
-          "modules/ports.ts",
-          "modules/state-slices.ts",
-          "modules/state/actions/rating-actions.test.ts",
-          "modules/state/actions/rating-actions.ts"
-        ]
+        "contract": "qualified-level-fingerprint-vocabulary"
       },
       "NC-P08-009": {
         "kind": "retained-boundary",
