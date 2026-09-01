@@ -2429,9 +2429,13 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // THE DEFECT. runGateSerialAttempts/runInterleavedAttempts divide budget BETWEEN configs in
         // WORK units (`attemptBudgetShare` over `workBudget`), but treat the node ceiling as a
         // single shared ABSOLUTE cap with no per-config subdivision unless the staircase is used.
-        // Every retry tier sizes its fresh work budget as `timeBudgetMs * fraction and converts that legacy ms-shaped amount to work` — and under the capability protocol `timeBudgetMs` is a deliberately
-        // NON-BINDING 24h deadline (`deterministic=true`, see docs/solver-budget-determinism.md).
-        // That makes the work pool ~2.9e11 units, so the work-based division never bites, and the
+        // At the time this staircase was diagnosed, these whole-ladder retry tiers sized fresh
+        // work from `timeBudgetMs * fraction` and converted that legacy ms-shaped amount back to
+        // work. Under the capability protocol `timeBudgetMs` is a deliberately NON-BINDING 24h
+        // deadline (`deterministic=true`, see docs/solver-budget-determinism.md). Workstream 2 is
+        // migrating those work doses one site at a time; this tier's migration is immediately below.
+        // In the historical measurement, that produced a ~2.9e11-unit work pool, so work-based
+        // division never bit and the
         // FIRST config simply runs until the tier's absolute node ceiling is gone. Measured directly
         // on `R02119` (probe at `nodeBudget` 10M): per-attempt elapsed inside each ladder-rerun tier
         // was `[10896, 0, 0, 0, 0, 0, 0, 0]` for the coarse-state-near-tie-retention tier, `[21319, 0 x7]` for the
