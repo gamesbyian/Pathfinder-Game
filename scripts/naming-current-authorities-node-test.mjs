@@ -82,6 +82,20 @@ try {
   );
 
   expectFailure(
+    'retired dataset-root alias resurrected in permanent vocabulary',
+    'docs/naming-and-vocabulary.md',
+    source => `${source}\nThe shared parser accepts \`--trove-root\` as a transition alias.\n`,
+    /retired --trove-root as accepted compatibility/iu,
+  );
+
+  expectFailure(
+    'retired explicit-prefix input alias resurrected in resumption bridge',
+    'docs/solver-research-post-naming-resumption.md',
+    source => `${source}\n\`atlas-abstain\` remains the accepted input alias.\n`,
+    /retired atlas-abstain as accepted/iu,
+  );
+
+  expectFailure(
     'active authority routing drift',
     'AGENTS.md',
     source => source.replaceAll('docs/naming-cleanup-phase-records/phase-15.md', 'docs/naming-cleanup-phase-records/phase-08.md'),
@@ -92,7 +106,7 @@ try {
     'active execution-record header drift',
     'docs/naming-cleanup-phase-records/phase-15.md',
     source => source.replace(
-      'Status: **15I hostile merged-tree closeout active; implementation batches 15B-15H are merged and done**',
+      /^Status: \*\*[^\n]+\*\*$/mu,
       'Status: **15A contract-decomposition gate active**',
     ),
     /execution-record header must name the active batch/iu,
