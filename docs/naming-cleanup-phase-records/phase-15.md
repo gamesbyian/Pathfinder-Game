@@ -1519,3 +1519,21 @@ The repair must make old-side reconciliation canonical-shadow-aware, classify in
 old==new terms as retained/canonical rather than legacy, exclude test/naming-guard files from the
 runtime/control leak check, and update NC-P15-003's regression assertion to pin the actual
 historical-reader owner instead of resurrecting a workflow dependency.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-013 — the compatibility-owner proof assumed legacy/canonical artifact prefixes must exist as
+contiguous string literals, but NC-P15-003 intentionally shares one regex suffix.**
+
+The dedicated 15I gate correctly demanded executable evidence for every claimed historical reader,
+but its generic token helper tested NC-P15-003 for literal `wide-trove-attempts-` and
+`variant-family-dataset-attempts-`. The actual owner,
+`scripts/family-index-lib.mjs`, implements both through
+`FAMILY_ATTEMPT_ARTIFACT_RE = ... (wide-trove|variant-family-dataset)-attempts- ...`.
+Consequently neither expanded prefix is contiguous in source, even though the reader is executable
+and `family-index-lib-check.mjs` already exercises historical/canonical discovery and precedence.
+
+Repair must keep the generic comment-only compatibility check for literal parser fields/tokens, but
+prove NC-P15-003 through its executable regex owner plus the real family-index mixed-era test rather
+than forcing the implementation to duplicate path literals merely to satisfy the checker.
