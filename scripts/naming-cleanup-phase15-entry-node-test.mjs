@@ -41,14 +41,17 @@ assert.equal(phase15.find(row => row.id === 'NC-P15-009')?.status, 'done');
 assert.equal(ledger.batchCompletions?.['15E']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15E']?.pr, 1642);
 assert.equal(ledger.batchCompletions?.['15E']?.mergeCommit, '502dd2c610cd36b5ecea656b655ae570e068cbb9');
-assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === 'NC-P15-004')?.status),
-  '15F row NC-P15-004 must be active or done while this source guard owns the application rename');
+assert.equal(phase15.find(row => row.id === 'NC-P15-004')?.status, 'done');
+assert.equal(ledger.batchCompletions?.['15F']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15F']?.pr, 1643);
+assert.equal(ledger.batchCompletions?.['15F']?.mergeCommit, '1990387f31a3b045e70f6ccea088f833ffa0f583');
+for (const id of ['NC-P15-005', 'NC-P15-010', 'NC-P15-011', 'NC-P15-012', 'NC-P15-014']) {
+  assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === id)?.status),
+    `15G row ${id} must be active or done while this source guard owns the CP-SAT reference migration`);
+}
 assert.ok(
-  phase15.filter(row => ![
-    'NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-004',
-    'NC-P15-006', 'NC-P15-008', 'NC-P15-009',
-  ].includes(row.id)).every(row => row.status === 'pending'),
-  '15F must leave 15G/15H implementation rows pending until their serial batch begins',
+  phase15.filter(row => ['NC-P15-007', 'NC-P15-013'].includes(row.id)).every(row => row.status === 'pending'),
+  '15G must leave 15H implementation rows pending until its serial batch begins',
 );
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
