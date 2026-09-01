@@ -1,6 +1,6 @@
 # Phase 15 post-completion hostile-audit repair
 
-Status: **repair implementation on PR #1649; original Phase-15 execution record remains frozen**
+Status: **repair merged and sealed in terminal closure evidence; original Phase-15 execution record remains frozen**
 
 This record is a post-seal correction to the completed naming program, not Phase 16 and not a new
 rename batch. The original Phase-15 execution/closeout record remains immutable historical evidence
@@ -12,14 +12,19 @@ fresh hostile audit of the sealed `main` tree and the additional proof machinery
 | Field | Value |
 | --- | --- |
 | Audited/sealed base `main` | `221dda339968612af1ceb340a210ce3b35e28a06` |
-| Repair branch | `chatgpt/post-phase15-audit-repairs-2026-08-31` |
-| Repair PR | **#1650** (supersedes draft #1649 after its cancelled CI worker remained wedged) |
+| Repair implementation head | `0d14bbe0395fb8bd2e431fa54af67a9ddbaf4a20` |
+| Merged repair PR | **#1651** (exact validated repair tree; merge carrier for draft #1650) |
+| Repair merge commit | `d3aabd081fa8c400aacbde36c2cb22cdb1e1f218` |
 | Scope | post-completion correctness/proof repair only; no solver-policy change |
 | Original Phase-15 authority | `docs/naming-cleanup-phase-records/phase-15.md` (frozen) |
 
-A narrow post-merge evidence seal should record PR #1650's immutable final head, successful CI and
-specialized proof runs, and merge commit after this repair actually merges. That second step avoids
-making this implementation PR describe its own not-yet-known merge commit.
+The post-merge evidence seal records the immutable repair evidence in
+`phaseClosures["15"].postCompletionAuditRepair`. Draft PR #1649 was closed after a cancelled CI
+worker remained wedged; draft PR #1650 carried the exact final repair tree and produced the decisive
+green validation runs, but the connected GitHub ready-for-review mutation failed on a GraphQL
+response-schema incompatibility. Non-draft PR #1651 therefore merged the byte-identical
+`0d14bbe...` tree against the unchanged sealed base. No implementation content changed between the
+validated #1650 tree and #1651's merge carrier.
 
 ## 2. Hostile-audit findings repaired here
 
@@ -167,3 +172,26 @@ failed before repository execution because the runner's default Java was too old
 hardened with Java 21. A later CI run correctly rejected a retired-token fixture, an unclassified
 raw-wire test, and an uncatalogued workflow; those were repaired without weakening the corresponding
 guards.
+
+
+## 5. Immutable repair evidence
+
+The final repair implementation head was
+`0d14bbe0395fb8bd2e431fa54af67a9ddbaf4a20`, based on sealed
+`main` `221dda339968612af1ceb340a210ce3b35e28a06`.
+
+That exact tree passed:
+
+- ordinary six-job CI run **33475366217**, all jobs successful;
+- Firestore level-fingerprint repository/emulator boundary run **33475366196**, successful;
+- Phase-11 orientation browser characterization run **33475366197**, successful.
+
+The exact tree was merged by PR **#1651** as merge commit
+`d3aabd081fa8c400aacbde36c2cb22cdb1e1f218`.
+
+The terminal ledger now carries this evidence under
+`phaseClosures["15"].postCompletionAuditRepair`. The ledger checker and final-state checker reject
+a completed Phase-15 state that drops or weakens that repair evidence. The evidence-seal PR itself
+does not attempt to self-record its own commit SHA; its integrity is proven by its own exact-head
+checks and Git history, following the anti-self-reference model used for the original Phase-15
+completion seal.
