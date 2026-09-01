@@ -10,9 +10,20 @@ const result = analyze({
     levels: [level('A', 3), level('B', 7)],
 });
 assert.equal(result.summary.productionMissIsolatedSolvable, 1);
-assert.equal(result.summary.noCurrentTechnique, 1);
+assert.equal(result.summary.noFrozenT1Winner, 1);
+assert.equal(result.summary.productionMissNoFrozenT1Winner, 1);
 assert.equal(result.levels[0].singleton, true);
 assert.equal(result.levels[1].failureCensoring.budgetOrOtherCensored, 1);
 assert.equal(result.actions.find((a) => a.action === 'dfs:default').exclusiveLevels, 1);
-assert.ok(result.supportedVsUnsupportedEffects.some((e) => e.feature === 'requiredPathCoverageRatio' && e.unsupportedMean > e.supportedMean));
+assert.equal(result.levels[1].frozenT1SupportClass, 'production-miss-without-frozen-t1-winner');
+assert.ok(result.frozenT1SupportedVsNoWinnerEffects.some((e) => e.feature === 'requiredPathCoverageRatio' && e.unsupportedMean > e.supportedMean));
+assert.ok(result.frozenT1SupportedVsNoWinnerEffects.some((e) => e.feature === 'nonNavigableDensity'));
+const productionSolvedNoT1 = analyze({
+    cells: [cell('C', 'dfs:default', false, 'budget_exhausted')],
+    coverage: [{ corpus: 'c', levelId: 'C', wasSolvedByProduction: true }],
+    levels: [level('C', 5)],
+});
+assert.equal(productionSolvedNoT1.summary.productionSolvedNoFrozenT1Winner, 1);
+assert.equal(productionSolvedNoT1.levels[0].frozenT1SupportClass, 'production-solved-without-frozen-t1-winner');
+assert.throws(() => analyze({ cells: [], coverage: [], levels: [level('D', 3), level('D', 4)] }), /Duplicate static level id D/);
 console.log('analyze-technique-niches tests passed');
