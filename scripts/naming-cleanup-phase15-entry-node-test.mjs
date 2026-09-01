@@ -33,10 +33,17 @@ assert.equal(ledger.batchCompletions?.['15C']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15C']?.pr, 1640);
 assert.equal(ledger.batchCompletions?.['15C']?.mergeCommit, '300d26bd35886f01b8fccebac0453d6d7bdc226a');
 assert.equal(phase15.find(row => row.id === 'NC-P15-002')?.status, 'done');
+assert.equal(ledger.batchCompletions?.['15D']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15D']?.pr, 1641);
+assert.equal(ledger.batchCompletions?.['15D']?.mergeCommit, 'b00c68f3495ec6591f3846ac0bf2e519f2613a1e');
+for (const id of ['NC-P15-003', 'NC-P15-009']) {
+  assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === id)?.status),
+    `15E row ${id} must be active or done while this source guard owns the 15E cutover`);
+}
 assert.ok(
-  phase15.filter(row => !['NC-P15-001', 'NC-P15-002', 'NC-P15-006', 'NC-P15-008'].includes(row.id))
+  phase15.filter(row => !['NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-006', 'NC-P15-008', 'NC-P15-009'].includes(row.id))
     .every(row => row.status === 'pending'),
-  'completed 15D must leave later implementation rows pending until their serial batch begins',
+  '15E must leave later implementation rows pending until their serial batch begins',
 );
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
@@ -81,7 +88,11 @@ assert.match(manifestLib, /manifest\.schemaVersion === 1/u);
 assert.match(manifestLib, /manifest\.schemaVersion === 2/u);
 
 const mergeFamily = readFileSync('scripts/merge-variant-family-dataset-shards.mjs', 'utf8');
-assert.match(mergeFamily, /2026-08-07-wide-trove/u);
+assert.match(mergeFamily, /variant-family-dataset-summary\.md/u);
+assert.match(mergeFamily, /variant-family-dataset-attempts-/u);
+const familyIndex = readFileSync('scripts/family-index-lib.mjs', 'utf8');
+assert.match(familyIndex, /wide-trove/u, '15E must retain permanent historical attempt discovery');
+assert.match(familyIndex, /variant-family-dataset/u, '15E must discover canonical current attempt artifacts');
 
 assert.ok(!existsSync('scripts/stress/lib/atlas-eligibility.mjs'));
 assert.ok(existsSync('scripts/stress/lib/cpsat-branch-label-eligibility.mjs'));

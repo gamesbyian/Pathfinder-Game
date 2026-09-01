@@ -794,3 +794,130 @@ hardening. Exact-head browser characterization run **33461568646** also passed.
 NC-P15-002 is now `done` and `activeExecution` is idle. As with 15B/15C,
 `batchCompletions["15D"]` remains pending until the implementation PR actually merges. A fresh
 exact-head CI/browser run on the done/idle bookkeeping head is required before merge.
+
+
+## 15D merge evidence
+
+Phase 15D completed as implementation PR **#1641**.
+
+- final head: `62c1a6283b1bfd0917aa0ef513ceecfee74a1267`;
+- hardened implementation-head CI: run **33461568649**, all six jobs successful;
+- hardened implementation-head browser characterization: run **33461568646**, successful;
+- final done/idle exact-head CI: run **33461871053**, all six jobs successful;
+- final done/idle browser characterization: run **33461870878**, successful;
+- merge commit: `b00c68f3495ec6591f3846ac0bf2e519f2613a1e`;
+- 15E base-main SHA: the same merge commit;
+- ledger `batchCompletions["15D"]` is now the machine merge-barrier evidence.
+
+## 15E — NC-P15-003 / NC-P15-009 variant-family artifact paths
+
+Status: **active**
+
+Branch: `chatgpt/phase15e-variant-family-artifact-paths-2026-08-31`  
+PR: **#1642**  
+Base main: `b00c68f3495ec6591f3846ac0bf2e519f2613a1e`
+
+15E separates two lifetimes that previously shared the `wide-trove` vocabulary:
+
+- **NC-P15-003** owns permanent discovery/readability of genuine historical
+  `wide-trove-attempts-*` evidence alongside canonical
+  `variant-family-dataset-attempts-*` paths;
+- **NC-P15-009** owns current producer/workflow output paths for new runs and must single-write
+  stable `variant-family-dataset` names.
+
+Frozen dated historical artifacts are not renamed, moved, or rewritten. Discovery must normalize
+old and new path conventions through one owner before current writers cut over.
+
+
+### 15E implementation-time census and resolved precedence
+
+The current owner graph is narrow but cross-boundary:
+
+- `scripts/family-index-lib.mjs` was the maintained discovery reader for
+  `wide-trove-attempts-<corpus>-partNN.json`;
+- `scripts/merge-variant-family-dataset-shards.mjs` still defaulted new coverage output to
+  `reports/families/2026-08-07-wide-trove-summary.md` and wrote all new consolidated attempt
+  chunks under dated `wide-trove` names;
+- `.github/workflows/collect-variant-family-dataset.yml` printed, uploaded, published, and staged
+  those dated summary/attempt paths and wrote the standard sweep provenance to the dated
+  `2026-08-07-wide-trove-source-run.json` path;
+- no canonical stable summary/attempt/source-run path was occupied by another concept;
+- the actual historical bulk artifacts live off current `main` with the variant-family dataset,
+  so 15E must preserve their readability without trying to move them in this code PR.
+
+Reader precedence is explicit rather than row-level guesswork. For each corpus:
+
+1. if any canonical `variant-family-dataset-attempts-*` chunks exist, that canonical aggregate set
+   is the current discovery source for that corpus;
+2. otherwise historical `wide-trove-attempts-*` chunks remain permanently discoverable;
+3. old and new aggregate conventions are never ingested together for one corpus, preventing the
+   same consolidated evidence from being double-counted merely because frozen history remains.
+
+This matches the writer contract: a canonical aggregate is a current replacement view of that
+corpus's consolidated solve files, not an additional independent experiment.
+
+### 15E writer cutover and stable-filename lifecycle
+
+New writes now use:
+
+- `reports/families/variant-family-dataset-summary.md`;
+- `reports/families/variant-family-dataset-attempts-<corpus>-partNN.json`;
+- `reports/families/variant-family-dataset-source-run.json`.
+
+Stable filenames create one lifecycle requirement that dated one-off names could obscure: a later
+run may produce fewer attempt chunks than an earlier run. The merger therefore deletes **only**
+previous canonical `variant-family-dataset-attempts-*` chunks before writing the new set. It never
+deletes historical `wide-trove` artifacts. The workflow stages the canonical wildcard through a
+quoted `git add -A` pathspec so deleted stale higher-numbered chunks are committed as deletions
+rather than surviving on the research branch.
+
+### 15E executable proof surface
+
+- `test:family-index` now proves historical-only fallback and canonical-per-corpus precedence when
+  both conventions coexist;
+- `test:merge-variant-family-dataset-shards` runs the real merger in a temporary working tree and
+  proves canonical summary/attempt output, stale canonical chunk deletion, and frozen historical
+  file survival;
+- `check:naming-cleanup-phase15e-closeout` pins the dual-era reader owner, all three canonical
+  current workflow paths, canonical-only current writer behavior, and deletion-staging pathspec;
+- Phase-15 progression/source-freeze checks now permit the 15E cutover while keeping 15F-15H
+  implementation rows pending.
+
+
+### 15E implementation and validation evidence
+
+Implementation is complete on PR **#1642** from base
+`b00c68f3495ec6591f3846ac0bf2e519f2613a1e`.
+
+The final 15E contract is:
+
+- historical dated and undated `wide-trove-attempts-*` artifacts remain permanently discoverable;
+- canonical `variant-family-dataset-attempts-*` files take precedence per corpus when present,
+  preventing old/new aggregate double-counting;
+- current merger output single-writes stable
+  `variant-family-dataset-summary.md` and
+  `variant-family-dataset-attempts-<corpus>-partNN.json`;
+- current workflow publication/provenance single-writes
+  `variant-family-dataset-source-run.json`;
+- reruns delete only stale canonical attempt chunks before writing replacements;
+- workflow staging uses `git add -A` for the canonical attempt wildcard so stale higher-numbered
+  parts are committed as deletions;
+- frozen historical `wide-trove` artifacts are never deleted or rewritten.
+
+Executable proof is carried by:
+
+- `test:family-index`, including authentic dated historical fallback and canonical-per-corpus
+  precedence;
+- `test:merge-variant-family-dataset-shards`, exercising the real merger in a temporary tree and
+  proving stable output, stale canonical cleanup, and historical-file survival;
+- `check:naming-cleanup-phase15e-closeout`, pinning the one dual-era reader owner plus canonical
+  merger/workflow paths and deletion staging;
+- the Phase-15 progression/source guard, which keeps 15F-15H pending.
+
+Implementation-head commit `aeadeeb670b41650cbbb9c3225b7f730382721bb` passed exact-head CI
+run **33462905089** across all six jobs and exact-head browser characterization run
+**33462905117**.
+
+NC-P15-003 and NC-P15-009 are now `done` and `activeExecution` is idle.
+`batchCompletions["15E"]` deliberately remains pending until PR #1642 actually merges. A fresh
+exact-head CI/browser run on this done/idle bookkeeping head is required before merge.

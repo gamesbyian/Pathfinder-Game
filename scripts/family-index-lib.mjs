@@ -21,11 +21,29 @@ const relative = (root, file) => path.relative(root, file).split(path.sep).join(
 
 const MODE_ABBREVIATIONS = { sym: 'symmetry', lm: 'local-mutant', swap: 'swap', gr: 'group-reshuffle', cs: 'constrained-shuffle', ds: 'density-sweep', re: 're-embed' };
 
+const FAMILY_ATTEMPT_ARTIFACT_RE = /^((?:\d{4}-\d{2}-\d{2}-)?wide-trove|variant-family-dataset)-attempts-([A-Za-z0-9_-]+)-part\d+\.json$/;
+
+function familyAttemptArtifactIdentity(file) {
+    const match = FAMILY_ATTEMPT_ARTIFACT_RE.exec(path.basename(file));
+    return match ? { convention: match[1].endsWith('wide-trove') ? 'wide-trove' : 'variant-family-dataset', corpus: match[2] } : null;
+}
+
+function selectFamilyAttemptEvidenceFiles(files) {
+    const canonicalCorpora = new Set(files
+        .map(familyAttemptArtifactIdentity)
+        .filter(identity => identity?.convention === 'variant-family-dataset')
+        .map(identity => identity.corpus));
+    return files.filter(file => {
+        const identity = familyAttemptArtifactIdentity(file);
+        return identity && (identity.convention === 'variant-family-dataset' || !canonicalCorpora.has(identity.corpus));
+    });
+}
+
 function artifactContext(source) {
     const solve = source.match(/^logs\/family-census\/(?:([^/]+)\/)?solve-([A-Za-z]\d+)-([a-z]+)\.json$/);
     if (solve) return { corpus: solve[1] ?? null, parentId: solve[2], mode: MODE_ABBREVIATIONS[solve[3]] ?? solve[3] };
-    const attempts = source.match(/wide-trove-attempts-([A-Za-z0-9_-]+)-part\d+\.json$/);
-    return attempts ? { corpus: attempts[1] } : {};
+    const attempts = familyAttemptArtifactIdentity(source);
+    return attempts ? { corpus: attempts.corpus } : {};
 }
 
 function evidenceRows(value, source, run = {}) {
@@ -209,9 +227,12 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
                 runManifestPath: shard.manifestPath, shard: shard.shard });
         }
     }
+    const familyAttemptEvidenceFiles = selectFamilyAttemptEvidenceFiles(
+        filesBelow(roots.reports, file => FAMILY_ATTEMPT_ARTIFACT_RE.test(path.basename(file))),
+    );
     const evidenceCandidates = [
         ...filesBelow(roots.census, file => /\.(json|jsonl)$/.test(file)),
-        ...filesBelow(roots.reports, file => /wide-trove-attempts-.+\.json$/.test(path.basename(file))),
+        ...familyAttemptEvidenceFiles,
     ];
     const maximumEvidenceBytes = 512 * 1024 * 1024;
     const evidenceFiles = evidenceCandidates.filter(file => statSync(file).size <= maximumEvidenceBytes);

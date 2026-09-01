@@ -37,8 +37,8 @@ assert.match(manifestLib, /cannot contain both trove and variantFamilyDataset/u)
 assert.match(producer, /variantFamilyDataset: \{ manifest:/u);
 assert.doesNotMatch(producer, /\btrove:\s*\{\s*manifest:/u);
 
-// Family-index consumes only the normalized canonical model. Phase-15E historical filename
-// discovery is intentionally not part of this row and is allowed to retain wide-trove-attempts-*.
+// Family-index consumes only the normalized canonical run-manifest model. Later Phase-15E may
+// generalize attempt-artifact discovery, but permanent historical wide-trove recognition must remain.
 assert.match(familyIndex, /variantFamilyDatasetRunIdentity\(/u);
 assert.match(familyIndex, /variantFamilyDataset: variantFamilyDatasetRunIdentity\(shard\.variantFamilyDataset\)/u);
 assert.match(familyIndex, /variantFamilyDatasetShardFiles/u);
@@ -48,7 +48,7 @@ assert.match(familyIndex, /stableJson\(row\[field\]\) !== stableJson\(shard\[fie
 assert.match(familyIndex, /stableJson\(row\.variantFamilyDataset\)/u);
 assert.doesNotMatch(familyIndex, /\bshard\.trove\b/u);
 assert.doesNotMatch(familyIndex, /\btrove:\s*shard\.trove\b/u);
-assert.match(familyIndex, /wide-trove-attempts-/u);
+assert.match(familyIndex, /wide-trove/u, 'later artifact-path migration must retain historical wide-trove recognition');
 
 // Tests pin all-legacy, all-canonical, mixed-era, conflict, and canonical-only writer behavior.
 assert.match(producerTest, /\['v1', 'v1'\]/u);

@@ -275,7 +275,7 @@ jobs:
 
       - name: Print headline numbers
         shell: bash
-        run: head -30 reports/families/2026-08-07-wide-trove-summary.md
+        run: head -30 reports/families/variant-family-dataset-summary.md
 
       - name: Upload the combined variant-family dataset as an artifact
         if: always()
@@ -283,8 +283,8 @@ jobs:
         with:
           name: variant-family-dataset-combined
           path: |
-            reports/families/2026-08-07-wide-trove-summary.md
-            reports/families/2026-08-07-wide-trove-attempts-*.json
+            reports/families/variant-family-dataset-summary.md
+            reports/families/variant-family-dataset-attempts-*.json
             logs/family-census/
           if-no-files-found: warn
           retention-days: 90
@@ -294,11 +294,11 @@ jobs:
         shell: bash
         run: |
           node scripts/publish-solver-sweep-result.mjs \
-            --primary="reports/families/2026-08-07-wide-trove-summary.md" \
+            --primary="reports/families/variant-family-dataset-summary.md" \
             --shards-expected="$(if [ -n "${{ inputs.recover_run_id }}" ]; then find logs/family-census -maxdepth 1 -name 'wide-shard-*-summary.jsonl' | wc -l | tr -d ' '; else echo "${{ inputs.shards }}"; fi)" \
             --shards-basis="${{ inputs.recover_run_id && 'recovery source expected count unavailable; observed source artifacts used as denominator' || 'dispatch shard count' }}" \
             --shards-observed="$(find logs/family-census -maxdepth 1 -name 'wide-shard-*-summary.jsonl' | wc -l | tr -d ' ')" \
-            --provenance-out="reports/families/2026-08-07-wide-trove-source-run.json" \
+            --provenance-out="reports/families/variant-family-dataset-source-run.json" \
             --source-artifact="variant-family-dataset-combined"
 
       - name: Upload standard solver sweep result
@@ -315,9 +315,9 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/families/ logs/family-census/ reports/families/2026-08-07-wide-trove-summary.md \
-                  reports/families/2026-08-07-wide-trove-attempts-*.json \
-                  reports/families/2026-08-07-wide-trove-source-run.json
+          git add data/families/ logs/family-census/ reports/families/variant-family-dataset-summary.md \
+                  reports/families/variant-family-dataset-source-run.json
+          git add -A -- 'reports/families/variant-family-dataset-attempts-*.json'
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
             exit 0
