@@ -826,3 +826,58 @@ Base main: `b00c68f3495ec6591f3846ac0bf2e519f2613a1e`
 
 Frozen dated historical artifacts are not renamed, moved, or rewritten. Discovery must normalize
 old and new path conventions through one owner before current writers cut over.
+
+
+### 15E implementation-time census and resolved precedence
+
+The current owner graph is narrow but cross-boundary:
+
+- `scripts/family-index-lib.mjs` was the maintained discovery reader for
+  `wide-trove-attempts-<corpus>-partNN.json`;
+- `scripts/merge-variant-family-dataset-shards.mjs` still defaulted new coverage output to
+  `reports/families/2026-08-07-wide-trove-summary.md` and wrote all new consolidated attempt
+  chunks under dated `wide-trove` names;
+- `.github/workflows/collect-variant-family-dataset.yml` printed, uploaded, published, and staged
+  those dated summary/attempt paths and wrote the standard sweep provenance to the dated
+  `2026-08-07-wide-trove-source-run.json` path;
+- no canonical stable summary/attempt/source-run path was occupied by another concept;
+- the actual historical bulk artifacts live off current `main` with the variant-family dataset,
+  so 15E must preserve their readability without trying to move them in this code PR.
+
+Reader precedence is explicit rather than row-level guesswork. For each corpus:
+
+1. if any canonical `variant-family-dataset-attempts-*` chunks exist, that canonical aggregate set
+   is the current discovery source for that corpus;
+2. otherwise historical `wide-trove-attempts-*` chunks remain permanently discoverable;
+3. old and new aggregate conventions are never ingested together for one corpus, preventing the
+   same consolidated evidence from being double-counted merely because frozen history remains.
+
+This matches the writer contract: a canonical aggregate is a current replacement view of that
+corpus's consolidated solve files, not an additional independent experiment.
+
+### 15E writer cutover and stable-filename lifecycle
+
+New writes now use:
+
+- `reports/families/variant-family-dataset-summary.md`;
+- `reports/families/variant-family-dataset-attempts-<corpus>-partNN.json`;
+- `reports/families/variant-family-dataset-source-run.json`.
+
+Stable filenames create one lifecycle requirement that dated one-off names could obscure: a later
+run may produce fewer attempt chunks than an earlier run. The merger therefore deletes **only**
+previous canonical `variant-family-dataset-attempts-*` chunks before writing the new set. It never
+deletes historical `wide-trove` artifacts. The workflow stages the canonical wildcard through a
+quoted `git add -A` pathspec so deleted stale higher-numbered chunks are committed as deletions
+rather than surviving on the research branch.
+
+### 15E executable proof surface
+
+- `test:family-index` now proves historical-only fallback and canonical-per-corpus precedence when
+  both conventions coexist;
+- `test:merge-variant-family-dataset-shards` runs the real merger in a temporary working tree and
+  proves canonical summary/attempt output, stale canonical chunk deletion, and frozen historical
+  file survival;
+- `check:naming-cleanup-phase15e-closeout` pins the dual-era reader owner, all three canonical
+  current workflow paths, canonical-only current writer behavior, and deletion-staging pathspec;
+- Phase-15 progression/source-freeze checks now permit the 15E cutover while keeping 15F-15H
+  implementation rows pending.
