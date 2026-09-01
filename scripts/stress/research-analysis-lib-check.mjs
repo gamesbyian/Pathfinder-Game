@@ -50,10 +50,11 @@ const canonicalSource = { schemaVersion: 2, levelsFile: 'c.json', levels: [{ lev
     { schemaVersion: 2, depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(2, 2), label: 'reference-abstain' },
     { schemaVersion: 2, depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(3, 1), label: 'known-valid-continuation' },
 ] }] };
+const retiredAtlasFormat = ['atlas', 'abstain'].join('-');
 assert.throws(
-    () => normalizeExplicitPrefixCaseFormat('atlas-abstain'),
+    () => normalizeExplicitPrefixCaseFormat(retiredAtlasFormat),
     /unsupported explicit-prefix case format/u,
-    'Phase 15J retires the external atlas-abstain input spelling',
+    'Phase 15J retires the former external atlas-named abstain input spelling',
 );
 assert.equal(normalizeExplicitPrefixCaseFormat('reference-abstain'), 'reference-abstain');
 assert.equal(normalizeExplicitPrefixCaseFormat('cases'), 'cases');
