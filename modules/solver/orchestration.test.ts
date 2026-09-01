@@ -1828,6 +1828,63 @@ test('lifecycle telemetry classifies newer retry tiers as their own technique, n
         'main-ladder must not absorb attempts that belong to a newer retry tier');
 });
 
+// 2026-09-01: must-cross-neighbor-prune-disabled-retry is the fifth tier migrated off
+// queue #2 step 3's ms-derived work-dose debt. This tier's own historical implementation
+// comment explicitly diagnosed the huge non-binding deadline-derived work pool as defeating
+// work subdivision; keep its staircase/node logic unchanged and pin only work-dose ownership.
+function isolateMcNeighborRetryWorkDoseOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        attemptBudgetTelemetry: true,
+        ablation: {
+            STRATEGY_MC_NEIGHBOR_BUDGET_RETRY: true,
+            STRATEGY_EARLY_REPAIR_SEARCH: false,
+            STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false,
+        },
+        repairAdditiveBudgetMultiplierOverride: 0,
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        repairElitePrefixDfsRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
+        ...overrides,
+    };
+}
+
+test('must-cross-neighbor-prune-disabled-retry work dose no longer resizes with a non-binding deadline change', async () => {
+    const run = (timeBudgetMs: number) => solveLevel(
+        makeRepairGatedInfeasibleLevel(),
+        isolateMcNeighborRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }),
+    );
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.stageId === 'must-cross-neighbor-prune-disabled-retry')
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one must-cross-neighbor-prune-disabled-retry attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the non-binding deadline');
+});
+
+test('must-cross-neighbor-prune-disabled-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const solveWith = (baseWorkBudget: number) => solveLevel(
+        makeRepairGatedInfeasibleLevel(),
+        isolateMcNeighborRetryWorkDoseOpts({ timeBudgetMs: 1000, baseWorkBudget }),
+    );
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.stageId === 'must-cross-neighbor-prune-disabled-retry')?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null,
+        'expected a must-cross-neighbor-prune-disabled-retry attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
 test('lifecycle telemetry separates mechanical eligibility from disabled routing', async () => {
     const result = await solveLevel(makeRepairGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
