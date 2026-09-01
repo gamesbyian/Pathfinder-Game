@@ -1351,3 +1351,72 @@ investigation only: findings are recorded before any repair. The batch must inde
 repository vocabulary, compatibility readers, canonical writers, frozen-history integrity, current
 authority routing, closeout-guard quality, and solver-research resumability rather than citing the
 implementation PRs as sufficient evidence.
+
+
+### 15I read-only findings, recorded before repair
+
+The first merged-tree pass found real current defects. This section intentionally predates their
+repairs.
+
+**F15I-001 — permanent naming authority still describes completed Phase-15 migrations as live
+legacy contracts.**
+
+`docs/naming-and-vocabulary.md` lines 114-129 on merged 15H main still say, among other things,
+that:
+
+- naked application `fingerprint` may remain as local/positional vocabulary under NC-P15-004;
+- `--trove-root`, manifest `trove`, and dated `wide-trove-*` paths remain generally live
+  compatibility contracts owned by NC-P15-001..003;
+- current explicit-prefix `oracle-shards`, `oracleLabel`, and `oracleReason` remain compatibility
+  identities;
+- `atlas-eligibility.mjs` and `--atlas-dir` remain live deferred interfaces.
+
+Those statements describe the pre-15A/pre-implementation state, not the merged repository. Some
+narrow historical readers remain legitimate, but the permanent vocabulary authority currently
+teaches a materially broader old contract than the implementation actually supports.
+
+**F15I-002 — solver-research resumption authority is stale and contains one specifically false
+compatibility requirement.**
+
+`docs/solver-research-post-naming-resumption.md` still labels itself a
+"pre-Phase-15 handoff contract" and its Phase-15 table reflects the original seven-row inventory
+rather than the resolved 14-row contract. Most importantly, NC-P15-005 still requires historical
+explicit-prefix result fields/values to normalize before combination. 15A proved no maintained
+historical result reader exists, and 15G correctly made the result writer/combiner a same-run
+schema-v2 cutover instead of inventing that adapter. The current resumption doc would therefore
+encourage future research work to recreate compatibility that Phase 15 deliberately rejected.
+
+**F15I-003 — docs index contains a literal escaped newline inside the current-reference table.**
+
+`docs/README.md` stores the Phase-15 execution row and Phase-15 preparation row on one physical
+line separated by the literal characters `\n`. Link validation does not detect this because both
+targets exist, but the Markdown table is malformed and the preparation record is not represented as
+its own row.
+
+**F15I-004 — current scripts runbook still hard-codes a Phase-8 batch example.**
+
+`scripts/README.md` teaches `npm run naming:status ... --batch=8A` even though the status tool and
+tooling catalog were generalized to `--batch=<id>`. This is small but directly contradicts the
+cleanup's goal of leaving resumable current instructions.
+
+**F15I-005 — generic surface-inventory reconciliation is not side-specific for composite rows.**
+
+`scripts/naming-cleanup-surface-inventory.mjs` computes the old side from
+`[entry.old, ...entry.inventoryTerms]` while the new side uses only `entry.new`.
+`inventoryTerms` intentionally contains both old and canonical search terms on many Phase-15 rows,
+so canonical target terms can make `oldReferenceFiles` non-empty. The resulting
+`reconciliationState` cannot safely answer whether a composite migration is old-live,
+mixed, or canonical-live. 15H exposed this when its dedicated semantic closeout proved zero
+maintained old identifiers while the generic state still resisted canonical classification.
+
+**F15I-006 — current-authority guard is too narrow to detect the authority defects above.**
+
+`scripts/check-naming-current-authorities.mjs` checks only `AGENTS.md` and `docs/README.md`, and
+mostly checks for route-path presence. It does not inspect the permanent vocabulary authority,
+solver-resumption bridge, scripts runbook, tooling catalog, or table-row structure. Consequently
+F15I-001, F15I-002, F15I-003, and F15I-004 all survived green exact-head CI through every
+implementation batch.
+
+No repair has been made in response to F15I-001..006 at the point this findings section is written.
+The next 15I step is to harden the guard/model and current authorities, then rerun the hostile audit
+against the repaired tree.
