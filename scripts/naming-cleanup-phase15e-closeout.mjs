@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const familyIndex = readFileSync('scripts/family-index-lib.mjs', 'utf8');
 const merger = readFileSync('scripts/merge-variant-family-dataset-shards.mjs', 'utf8');
 const workflow = readFileSync('.github/workflows/collect-variant-family-dataset.yml', 'utf8');
-const mergerTest = readFileSync('scripts/merge-variant-family-dataset-shards-node-test.mjs', 'utf8');
+const mergerTest = readFileSync('scripts/naming-cleanup-phase15e-merge-node-test.mjs', 'utf8');
 const indexTest = readFileSync('scripts/family-index-lib-check.mjs', 'utf8');
 
 // NC-P15-003: one discovery owner reads both eras, preferring canonical current aggregate files
