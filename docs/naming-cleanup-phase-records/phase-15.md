@@ -418,3 +418,154 @@ routing that requires completed state, and is the only authorized transition to
 batch and may not contain new rename work. Its own exact-head CI plus Git history prove the seal;
 requiring the completed ledger to contain the SHA of the commit that contains itself would be
 self-referential and is deliberately not part of the contract.
+
+
+## 15A merge evidence
+
+Phase 15A completed as specification/control-plane PR **#1638**.
+
+- final head: `af882b27c6c8442022286586814943f33384bfec`;
+- exact-head CI: run **33454401488**, all six CI jobs successful;
+- exact-head browser characterization: run **33454401532**, successful;
+- merge commit: `4b61b59dfba6dada48f316edcdb6e9b4daa6683e`;
+- 15B base-main SHA: the same merge commit;
+- ledger `batchCompletions["15A"]` is now the machine-readable merge barrier evidence.
+
+## 15B — NC-P15-006 shared CP-SAT branch-label eligibility library
+
+Status: **implementation complete; awaiting final exact-head CI and merge**
+
+Branch: `chatgpt/phase15b-cpsat-branch-label-eligibility-2026-08-31`  
+PR: **#1639**  
+Base main: `4b61b59dfba6dada48f316edcdb6e9b4daa6683e`
+
+### Pre-edit impact map
+
+Owner:
+
+- `scripts/stress/lib/atlas-eligibility.mjs`.
+
+Current exports:
+
+- `isEligibleForCpsatAtlas`;
+- `selectEligibleAtlasLevels`;
+- `selectShardByRoundRobin`;
+- `isHarvestedByCpsat`;
+- `selectUnharvestedCpsatLevels`.
+
+Maintained import consumers found at batch entry:
+
+- `scripts/stress/collect-prune-gap-labels.mjs` imports
+  `selectEligibleAtlasLevels` and `selectShardByRoundRobin`;
+- `scripts/stress/cpsat-hint-harvest-sweep.mjs` imports
+  `selectUnharvestedCpsatLevels` and `selectShardByRoundRobin`.
+
+No persisted schema, CLI spelling, workflow identity, or historical import compatibility owner exists
+for this library. 15A therefore requires an atomic direct rename, with no forwarding file or legacy
+export alias.
+
+Exact canonical targets locked by 15A:
+
+- file: `scripts/stress/lib/cpsat-branch-label-eligibility.mjs`;
+- predicate: `isEligibleForCpsatBranchLabeling`;
+- selector: `selectEligibleCpsatBranchLevels`.
+
+The already-specific `selectShardByRoundRobin`, `isHarvestedByCpsat`, and
+`selectUnharvestedCpsatLevels` names remain unchanged unless implementation evidence proves a
+semantic conflict.
+
+### Behavior/change envelope
+
+The batch may change only naming/import/comment/test surfaces required by NC-P15-006. It must not
+change the eligibility predicate:
+
+1. a level is eligible iff it has at least one stored hint path;
+2. levels with `filters` are excluded;
+3. levels with `flippingFilters` are excluded;
+4. portals remain eligible;
+5. round-robin sharding is unchanged;
+6. harvested detection remains the presence of provenance technique
+   `cpsat-reference-probe`;
+7. unharvested selection remains eligibility followed by harvested exclusion.
+
+One current consumer comment incorrectly says portals are filtered out. 15B may correct that prose
+because it directly describes this owner, but the executable portal behavior is an invariant.
+
+### Validation topology
+
+Before completion, 15B must provide:
+
+- direct unit parity over hint/no-hint, filter, flipping-filter, portal, harvested, and unharvested
+  cases;
+- before/after identity for eligible and unharvested IDs on a representative authentic fixture or
+  current corpus slice;
+- import-health proof for both maintained consumers;
+- old-name residue proof over maintained source/current docs for this row;
+- canonical target occupancy proof showing the new filename/export names identify this one concept;
+- full relevant Node/check/lint/build CI and exact-head PR CI.
+
+The remaining 15C-15H source-freeze assertions stay active; only the NC-P15-006 part of the 15A
+freeze may transition to canonical in this batch.
+
+
+### 15B implementation and validation evidence
+
+Implemented in PR **#1639** from base
+`4b61b59dfba6dada48f316edcdb6e9b4daa6683e`.
+
+The executable change is an atomic direct current-source migration:
+
+- physical library owner is now
+  `scripts/stress/lib/cpsat-branch-label-eligibility.mjs`;
+- predicate is now `isEligibleForCpsatBranchLabeling`;
+- selector is now `selectEligibleCpsatBranchLevels`;
+- `selectShardByRoundRobin`, `isHarvestedByCpsat`, and
+  `selectUnharvestedCpsatLevels` retain their already-specific identities;
+- the two maintained tool consumers import only the canonical library;
+- the old file was deleted with no forwarding shim or old-export alias.
+
+Behavioral parity is executable, not inferred from the textual diff.
+`test:cpsat-branch-label-eligibility` passed in CI run **33455234408** and proves:
+
+- no hint path remains ineligible;
+- static filters and flipping filters remain ineligible;
+- portals remain eligible;
+- CP-SAT harvest provenance detection is unchanged;
+- unharvested selection remains eligibility minus harvest provenance;
+- round-robin sharding is unchanged;
+- the authentic minimized current-data fixture preserves its pre-edit eligible and unharvested ID
+  population exactly as `["R00001", "R00059"]`; portal-bearing R00059 remains selected and
+  flipping-filter R00039 remains excluded.
+
+Authentic fixture provenance is recorded in
+`fixtures/phase15b-cpsat-branch-label-eligibility.json` against:
+
+- random stress corpus blob `860e00da91b76dfca8cdefa7b15994782175e44c`;
+- R00001 hint blob `2e5b54e4a5e0931f812fe6385049f1e527e2500d`;
+- R00059 hint blob `6854788645f62565953a1c31c00cb3512c0ed3e8`;
+- R00039 hint blob `d286b7bfbd74f3981c251ce915de0d36ebd9cb41`.
+
+Consumer-inward closeout is owned by
+`check:naming-cleanup-phase15b-closeout`. In the same green CI run it scanned maintained text
+surfaces, found zero retired NC-P15-006 path/export identities outside naming authorities/guards,
+and proved canonical import ownership is exactly the two maintained consumers plus the parity test.
+
+15B also fulfilled the pre-existing Phase-8 deferred-retention contract
+`NC-RET-P08-009` ("retain until all shared consumers migrate"). That retained-surface registry
+entry and its Phase-8 closeout references were removed after every registered consumer migrated.
+This was required to keep the old Phase-8 ledger contract truthful after the physical source file
+was deleted.
+
+CI usefully caught and forced repair of three control-plane assumptions during implementation:
+
+1. the Phase-15 progression guard initially still asserted the 15A old-file state;
+2. Phase-8 retained-surface evidence still pointed at the deleted deferred library;
+3. the 15A merge-barrier negative fixture implicitly relied on 15A still being pending.
+
+All three were repaired without relaxing their underlying invariants. The merge-barrier fixture now
+constructs the forbidden pre-merge state explicitly and remains a permanent negative test.
+
+Implementation-head CI run **33455234408** is green across build, checks, lint, node tests, deep
+proofs, and coverage. The row is now `done` and `activeExecution` is idle, but
+`batchCompletions["15B"]` deliberately remains pending until PR #1639 actually merges. A fresh
+exact-head CI run after this bookkeeping closeout is required before merge.

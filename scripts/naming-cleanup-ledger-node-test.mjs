@@ -152,6 +152,7 @@ try {
     // is durably recorded, even though there are no 15A implementation rows to mark done.
     const row = ledger.entries.find(entry => entry.id === 'NC-P15-006');
     if (!row) throw new Error('Phase-15 serial-gate fixture requires NC-P15-006');
+    ledger.batchCompletions['15A'] = { status: 'pending', pr: null, mergeCommit: null };
     row.status = 'in-progress';
     row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-15.md';
     ledger.activeExecution = {
@@ -170,7 +171,20 @@ try {
 
   {
     const ledger = clone(source);
-    ledger.activeExecution.recordPath = 'docs/naming-cleanup-phase-records/phase-15-preparation.md';
+    const row = ledger.entries.find(entry => entry.id === 'NC-P15-006');
+    if (!row) throw new Error('Phase-15 execution-record fixture requires NC-P15-006');
+    row.status = 'in-progress';
+    row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-15.md';
+    ledger.activeExecution = {
+      status: 'active',
+      phase: 15,
+      batch: '15B',
+      branch: 'test/phase15-record-mismatch',
+      pr: null,
+      baseMainSha: '4b61b59dfba6dada48f316edcdb6e9b4daa6683e',
+      recordPath: 'docs/naming-cleanup-phase-records/phase-15-preparation.md',
+      notes: 'fixture',
+    };
     expectFail('active Phase-15 execution record must match registered phase authority', ledger,
       /activeExecution\.recordPath must match phaseExecutionRecords\["15"\]/u);
   }

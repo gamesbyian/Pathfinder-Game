@@ -1,14 +1,14 @@
-// Shared CP-SAT atlas eligibility. Requires a stored path to sample branches from; filters and
-// flipping filters remain out of oracle scope. Portals are supported but costlier.
-export function isEligibleForCpsatAtlas(rawLevel) {
+// Shared CP-SAT branch-label eligibility. Requires a stored path to sample branches from; filters
+// and flipping filters remain outside this reference-labelling scope. Portals are supported but costlier.
+export function isEligibleForCpsatBranchLabeling(rawLevel) {
     const hasHint = !!(rawLevel.hintRecords || [])[0]?.path;
     const filterFree = !(rawLevel.filters && rawLevel.filters.length > 0);
     const flipperFree = !(rawLevel.flippingFilters && rawLevel.flippingFilters.length > 0);
     return hasHint && filterFree && flipperFree;
 }
 
-export function selectEligibleAtlasLevels(corpusLevels) {
-    return corpusLevels.filter(isEligibleForCpsatAtlas);
+export function selectEligibleCpsatBranchLevels(corpusLevels) {
+    return corpusLevels.filter(isEligibleForCpsatBranchLabeling);
 }
 
 /** Round-robin partition avoids positional hardness clustering across shards. */
@@ -23,5 +23,5 @@ export function isHarvestedByCpsat(rawLevel) {
 }
 
 export function selectUnharvestedCpsatLevels(corpusLevels) {
-    return selectEligibleAtlasLevels(corpusLevels).filter(l => !isHarvestedByCpsat(l));
+    return selectEligibleCpsatBranchLevels(corpusLevels).filter(l => !isHarvestedByCpsat(l));
 }
