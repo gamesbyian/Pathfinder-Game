@@ -46,13 +46,16 @@ assert.equal(ledger.batchCompletions?.['15F']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15F']?.pr, 1643);
 assert.equal(ledger.batchCompletions?.['15F']?.mergeCommit, '1990387f31a3b045e70f6ccea088f833ffa0f583');
 for (const id of ['NC-P15-005', 'NC-P15-010', 'NC-P15-011', 'NC-P15-012', 'NC-P15-014']) {
-  assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === id)?.status),
-    `15G row ${id} must be active or done while this source guard owns the CP-SAT reference migration`);
+  assert.equal(phase15.find(row => row.id === id)?.status, 'done',
+    `merged 15G must leave ${id} done`);
 }
-assert.ok(
-  phase15.filter(row => ['NC-P15-007', 'NC-P15-013'].includes(row.id)).every(row => row.status === 'pending'),
-  '15G must leave 15H implementation rows pending until its serial batch begins',
-);
+assert.equal(ledger.batchCompletions?.['15G']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15G']?.pr, 1644);
+assert.equal(ledger.batchCompletions?.['15G']?.mergeCommit, '7e82a4325484eac2da67864101e33f614d075d70');
+for (const id of ['NC-P15-007', 'NC-P15-013']) {
+  assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === id)?.status),
+    `15H row ${id} must be active or done while this source guard owns the prune-gap vocabulary migration`);
+}
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
 assert.deepEqual(
@@ -143,12 +146,17 @@ assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'reference-abstain'
   'legacy oracle-abstain source rows must normalize to the canonical reference-abstain model');
 
 const replay = readFileSync('scripts/stress/offline-replay-harness.mjs', 'utf8');
-assert.match(replay, /--atlas-dir=/u);
-assert.match(replay, /atlasDir/u);
+assert.match(replay, /--prune-gap-dir=/u);
+assert.match(replay, /PRUNE_GAP_DIR/u);
+assert.match(replay, /pruneGapDir/u);
+assert.doesNotMatch(replay, /--atlas-dir|ATLAS_DIR|atlasDir|atlasFiles/u);
 
 const crossing = readFileSync('scripts/stress/mc-crossing-slack-analysis.mjs', 'utf8');
-assert.match(crossing, /--atlas-dir=/u);
-assert.match(crossing, /atlasFiles/u);
+assert.match(crossing, /--prune-gap-dir=/u);
+assert.match(crossing, /PRUNE_GAP_DIR/u);
+assert.match(crossing, /pruneGapDir/u);
+assert.match(crossing, /pruneGapFiles/u);
+assert.doesNotMatch(crossing, /--atlas-dir|ATLAS_DIR|atlasDir|atlasFiles/u);
 
 const submissionRepo = readFileSync('modules/persistence/level-submission-repository.ts', 'utf8');
 assert.match(submissionRepo, /levelFingerprint/u);
