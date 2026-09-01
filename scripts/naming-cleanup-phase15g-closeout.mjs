@@ -32,7 +32,8 @@ function isAuthorityOrGuard(file) {
     || file === 'docs/naming-cleanup-future-phase-preparation.md'
     || file === 'docs/naming-and-vocabulary.md'
     || file === 'docs/solver-research-post-naming-resumption.md'
-    || file === 'scripts/check-naming-current-authorities.mjs';
+    || file === 'scripts/check-naming-current-authorities.mjs'
+    || file === 'scripts/naming-current-authorities-node-test.mjs';
 }
 
 const files = [...ROOTS.flatMap(walk), ...TOP_LEVEL]
