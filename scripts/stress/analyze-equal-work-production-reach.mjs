@@ -86,6 +86,22 @@ const equalWorkRows = document => {
 
 const levelIdOf = row => String(row?.levelId ?? row?.id ?? row?.level ?? '');
 
+function equalWorkIntegrityMismatch(document, rows) {
+    if (!document?.sourceIntegrity || typeof document.sourceIntegrity !== 'object') return null;
+    const actual = {
+        cells: rows.length,
+        levels: new Set(rows.map(row => canonicalCorpusName(row.corpus) + '/' + levelIdOf(row))).size,
+        techniques: new Set(rows.map(row => String(row.techniqueKeys?.[0] ?? ''))).size,
+        solved: rows.filter(row => row.ok === true).length,
+        deadlineTruncated: rows.filter(row => row.deadlineTruncated === true).length,
+        errors: rows.filter(row => row.status === 'error').length,
+        workBudgets: [...new Set(rows.map(row => finite(row.workBudget)).filter(value => value !== null))].sort((a, b) => a - b),
+        maxWorkSpent: rows.length ? Math.max(...rows.map(row => finite(row.workSpent) ?? 0)) : 0,
+    };
+    const expected = document.sourceIntegrity;
+    return JSON.stringify(actual) === JSON.stringify(expected) ? null : { expected, actual };
+}
+
 function summarizeEqualWork(rows) {
     const byTechnique = new Map();
     for (const row of rows) {
@@ -284,6 +300,8 @@ export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDoc
     const blockers = [];
 
     if (!ewRows.length) blockers.push('equal-work input contains no EW1 singleton rows');
+    const integrityMismatch = equalWorkIntegrityMismatch(equalWorkDocument, ewRows);
+    if (integrityMismatch) blockers.push('equal-work sourceIntegrity does not match the supplied EW1 rows');
     if (!production.rows) blockers.push('production input contains no level rows');
     if (production.rowsWithLifecycle !== production.rows) {
         blockers.push('production rows are missing stageLifecycle; rerun current production sweep with --lifecycle-telemetry');
