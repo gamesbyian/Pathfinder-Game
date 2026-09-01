@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 import { familyArtifactRoots } from './family-paths.mjs';
 import { validateFamilyEvaluationRunManifest } from './experiment-manifest-lib.mjs';
 
@@ -28,15 +29,97 @@ function familyAttemptArtifactIdentity(file) {
     return match ? { convention: match[1].endsWith('wide-trove') ? 'wide-trove' : 'variant-family-dataset', corpus: match[2] } : null;
 }
 
-function selectFamilyAttemptEvidenceFiles(files) {
-    const canonicalCorpora = new Set(files
-        .map(familyAttemptArtifactIdentity)
-        .filter(identity => identity?.convention === 'variant-family-dataset')
-        .map(identity => identity.corpus));
-    return files.filter(file => {
-        const identity = familyAttemptArtifactIdentity(file);
-        return identity && (identity.convention === 'variant-family-dataset' || !canonicalCorpora.has(identity.corpus));
-    });
+function normalizeAttemptIdentityIfRecognized(value) {
+    if (typeof value !== 'string' || !value) return value ?? null;
+    try { return normalizeAttemptIdentityKey(value); } catch { return value; }
+}
+
+function familyAttemptLogicalRowKey(row) {
+    const artifact = familyAttemptArtifactIdentity(row.evidencePath);
+    if (!artifact || !row.variantId || !row.parentId || !row.mode) return null;
+    return [artifact.corpus, row.parentId, row.mode, row.variantId].join('\0');
+}
+
+/**
+ * Reconcile frozen wide-trove aggregate snapshots with current canonical aggregate snapshots by
+ * logical variant identity. Canonical rows win only for the exact parent/mode/variant they cover;
+ * historical-only rows survive when a canonical aggregate is partial. This prevents a newly
+ * generated partial canonical corpus aggregate from silently hiding unrelated frozen evidence.
+ */
+function reconcileFamilyAttemptAggregateEvidence(rows) {
+    const ordinary = [];
+    const byLogicalRow = new Map();
+    const corpusStats = new Map();
+    let ambiguousRows = 0;
+
+    for (const row of rows) {
+        const artifact = familyAttemptArtifactIdentity(row.evidencePath);
+        if (!artifact) {
+            ordinary.push(row);
+            continue;
+        }
+        const stats = corpusStats.get(artifact.corpus) ?? {
+            corpus: artifact.corpus, historicalKeys: new Set(), canonicalKeys: new Set(),
+        };
+        const key = familyAttemptLogicalRowKey(row);
+        if (!key) {
+            ambiguousRows++;
+            ordinary.push(row);
+            corpusStats.set(artifact.corpus, stats);
+            continue;
+        }
+        const bucket = byLogicalRow.get(key) ?? { historical: [], canonical: [] };
+        if (artifact.convention === 'variant-family-dataset') {
+            bucket.canonical.push(row);
+            stats.canonicalKeys.add(key);
+        } else {
+            bucket.historical.push(row);
+            stats.historicalKeys.add(key);
+        }
+        byLogicalRow.set(key, bucket);
+        corpusStats.set(artifact.corpus, stats);
+    }
+
+    const aggregate = [];
+    let canonicalOverridesHistoricalRows = 0;
+    let duplicateCanonicalLogicalRows = 0;
+    for (const key of [...byLogicalRow.keys()].sort()) {
+        const bucket = byLogicalRow.get(key);
+        if (bucket.canonical.length) {
+            aggregate.push(...bucket.canonical);
+            canonicalOverridesHistoricalRows += bucket.historical.length;
+            if (bucket.canonical.length > 1) duplicateCanonicalLogicalRows += bucket.canonical.length - 1;
+        } else {
+            aggregate.push(...bucket.historical);
+        }
+    }
+
+    const mixedEraCorpora = [...corpusStats.values()]
+        .filter(stats => stats.historicalKeys.size && stats.canonicalKeys.size)
+        .map(stats => {
+            const historicalOnlyKeys = [...stats.historicalKeys].filter(key => !stats.canonicalKeys.has(key));
+            return {
+                corpus: stats.corpus,
+                historicalLogicalRows: stats.historicalKeys.size,
+                canonicalLogicalRows: stats.canonicalKeys.size,
+                overlappingLogicalRows: stats.historicalKeys.size - historicalOnlyKeys.length,
+                historicalOnlyRowsPreserved: historicalOnlyKeys.length,
+                canonicalFullySupersedesHistorical: historicalOnlyKeys.length === 0,
+            };
+        })
+        .sort((a, b) => a.corpus.localeCompare(b.corpus));
+
+    return {
+        rows: [...ordinary, ...aggregate],
+        diagnostics: {
+            mixedEraCorpora,
+            canonicalOverridesHistoricalRows,
+            historicalRowsPreservedFromPartialCanonical: mixedEraCorpora
+                .reduce((sum, row) => sum + row.historicalOnlyRowsPreserved, 0),
+            duplicateCanonicalLogicalRows,
+            ambiguousRows,
+        },
+    };
 }
 
 function artifactContext(source) {
@@ -57,8 +140,8 @@ function evidenceRows(value, source, run = {}) {
                 variantId: String(variantId), parentId: item.parentId ?? item.parentLevelId ?? run.parentId,
                 corpus: item.corpus ?? item.parentCorpus ?? run.corpus, mode: item.mode ?? run.mode ?? null,
                 solved: item.solved ?? item.ok ?? null,
-                winningTechnique: item.winningTechnique ?? item.technique ?? null,
-                winningConfig: item.winningConfig ?? item.config ?? null,
+                winningTechnique: normalizeAttemptIdentityIfRecognized(item.winningTechnique ?? item.technique ?? null),
+                winningConfig: normalizeAttemptIdentityIfRecognized(item.winningConfig ?? item.config ?? null),
                 work: item.workSpent ?? item.work ?? item.nodesExpanded ?? null,
                 budget: item.workBudget ?? item.budget ?? run.workBudget ?? null,
                 runId: item.runId ?? run.runId ?? null, solverCommit: item.solverCommit ?? run.solverCommit ?? null,
@@ -227,8 +310,9 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
                 runManifestPath: shard.manifestPath, shard: shard.shard });
         }
     }
-    const familyAttemptEvidenceFiles = selectFamilyAttemptEvidenceFiles(
-        filesBelow(roots.reports, file => FAMILY_ATTEMPT_ARTIFACT_RE.test(path.basename(file))),
+    const familyAttemptEvidenceFiles = filesBelow(
+        roots.reports,
+        file => FAMILY_ATTEMPT_ARTIFACT_RE.test(path.basename(file)),
     );
     const evidenceCandidates = [
         ...filesBelow(roots.census, file => /\.(json|jsonl)$/.test(file)),
@@ -243,7 +327,10 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
         return readEvidence(file, source, runByOutput.get(source));
     });
     const parseFailures = parsedEvidence.filter(row => row.parseError).map(row => ({ path: row.evidencePath, error: row.parseError }));
-    const evidence = parsedEvidence.filter(row => !row.parseError);
+    const reconciledAggregateEvidence = reconcileFamilyAttemptAggregateEvidence(
+        parsedEvidence.filter(row => !row.parseError),
+    );
+    const evidence = reconciledAggregateEvidence.rows;
     const identitiesByVariantId = new Map();
     for (const variant of variants) {
         const identities = identitiesByVariantId.get(variant.variantId) ?? [];
@@ -278,7 +365,13 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
             skippedEvidenceArtifacts: skippedEvidenceArtifacts.length,
             manifestDiagnostics: manifestDiagnostics.length, normalizedRuns: runs.length,
             runManifestDiagnostics: runManifestDiagnostics.length },
-        diagnostics: { manifests: manifestDiagnostics, runManifests: runManifestDiagnostics, evidenceParseFailures: parseFailures, skippedEvidenceArtifacts },
+        diagnostics: {
+            manifests: manifestDiagnostics,
+            runManifests: runManifestDiagnostics,
+            evidenceParseFailures: parseFailures,
+            skippedEvidenceArtifacts,
+            familyAttemptAggregates: reconciledAggregateEvidence.diagnostics,
+        },
         runs, families, variants,
     };
 }
