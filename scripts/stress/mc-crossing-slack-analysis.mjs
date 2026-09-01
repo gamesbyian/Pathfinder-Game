@@ -213,7 +213,12 @@ function thresholdContrast(deadDist, aliveDist) {
 function analyzeAtlas() {
     const pruneGapRoot = path.resolve(root, PRUNE_GAP_DIR);
     const pruneGapFiles = readdirSync(pruneGapRoot).filter(f => /^prune-gap-.*\.json$/.test(f)).sort();
-    const corpusLevels = readLevelsWithHints(path.join(root, CORPORA.corpus2.levels));
+    // An empty input directory is a useful wiring smoke and has no Corpus-2 branches to replay.
+    // Avoid loading the standing stress corpus in that case; ordinary non-empty analysis is
+    // unchanged and still uses the exact same corpus/hint reader.
+    const corpusLevels = pruneGapFiles.length
+        ? readLevelsWithHints(path.join(root, CORPORA.corpus2.levels))
+        : [];
     const grouped = new Map();
     const overall = new Map();
     const abstainedByReason = new Map();
