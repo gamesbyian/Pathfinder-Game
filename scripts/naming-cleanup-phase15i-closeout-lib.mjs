@@ -22,7 +22,9 @@ export function findDerivedIdentityHits(source, tokens) {
 export function isLikelyTestOrNamingGuard(file) {
   const posix = file.split(path.sep).join('/');
   return posix.startsWith('scripts/naming-cleanup-')
+    || posix.startsWith('scripts/check-naming-')
     || posix.includes('/test-fixtures/')
     || /(?:-node-test|-check)\.(?:mjs|js|ts|tsx)$/u.test(posix)
+    || /\.(?:test|spec)\.(?:mjs|js|ts|tsx)$/u.test(posix)
     || /(?:^|\/)test(?:s)?\//u.test(posix);
 }
