@@ -4308,10 +4308,14 @@
         "getLocalLevelHints"
       ],
       "oldInventoryTerms": [
+        "levelRating.fingerprint",
         "rating.fingerprint",
+        "findLocalCorpusMatchByFingerprint",
+        "verdict.fingerprint",
+        "duplicateCheck.fingerprint",
         "targetLocalLevelMatch?.fingerprint",
         "const fingerprint = await getLevelFingerprint",
-        "fingerprint: string | null"
+        "approveLocalHintAddition(submissionId: string, fingerprint: string"
       ],
       "newInventoryTerms": [
         "levelFingerprint"
