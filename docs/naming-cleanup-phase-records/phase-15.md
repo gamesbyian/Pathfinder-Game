@@ -1432,3 +1432,20 @@ surface as F15I-002.
 **Read-only-pass conclusion:** Phase 15 was not closeout-ready at this point. F15I-001 through
 F15I-008 required repair plus a fresh hostile rerun before 15I could close.
 
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-009 — NC-P15-004 missed one live application owner in `win-controller.ts`.**
+
+After the side-specific reconciliation scanner was repaired, the hostile rerun exposed
+`modules/engine/win-controller.ts` as the sole remaining current NC-P15-004 legacy application
+surface. The win path computes `getLevelFingerprint(rawLevel)` into a generic local named
+`fingerprint`, then passes that same value into hint provenance and
+`saveLocalLevelHintIfNovel`. This is the exact application-local level-fingerprint vocabulary that
+15F intended to canonicalize, not an unrelated fingerprint concept.
+
+The existing Phase-15F closeout guard did not include `win-controller.ts` in its owner set, so the
+miss survived 15F through 15H. No repair has been made at the point this finding is recorded. 15I
+must rename the local without changing the computed value or persistence call ordering, add this
+owner to the permanent 15F guard, and rerun the hostile closeout.
