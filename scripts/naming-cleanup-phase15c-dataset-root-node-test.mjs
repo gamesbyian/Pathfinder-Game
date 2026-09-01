@@ -21,19 +21,6 @@ assert.equal(
   'canonical dataset-root CLI must resolve through the shared parser',
 );
 assert.equal(
-  variantFamilyDatasetRootArg([`--trove-root=${relativeRoot}`]),
-  resolvedRoot,
-  'the one external legacy dataset-root alias must remain readable during its transition window',
-);
-assert.equal(
-  variantFamilyDatasetRootArg([
-    `--variant-family-dataset-root=${relativeRoot}`,
-    '--trove-root=./tmp/phase15c-family-root',
-  ]),
-  resolvedRoot,
-  'canonical plus legacy spellings that resolve to the same root must be accepted',
-);
-assert.equal(
   variantFamilyDatasetRootArg([
     `--variant-family-dataset-root=${relativeRoot}`,
     `--variant-family-dataset-root=${relativeRoot}`,
@@ -43,11 +30,16 @@ assert.equal(
 );
 assert.throws(
   () => variantFamilyDatasetRootArg([
-    '--variant-family-dataset-root=tmp/phase15c-a',
-    '--trove-root=tmp/phase15c-b',
+    '--variant-family-dataset-root=tmp/phase15j-a',
+    '--variant-family-dataset-root=tmp/phase15j-b',
   ]),
   /conflicting variant-family dataset roots/u,
-  'canonical and legacy spellings must reject genuinely different roots',
+  'conflicting canonical roots must still fail explicitly',
+);
+assert.throws(
+  () => variantFamilyDatasetRootArg(['--trove-root=tmp/phase15j-retired']),
+  /retired variant-family dataset-root option/u,
+  'Phase 15J must reject the retired external dataset-root spelling instead of silently falling back',
 );
 
 assert.deepEqual(
@@ -58,41 +50,34 @@ assert.deepEqual(
     census: path.join(resolvedRoot, 'logs/family-census'),
     reports: path.join(resolvedRoot, 'reports/families'),
   },
-  'renaming the private root parameter must not change family artifact path semantics',
+  'canonical dataset-root vocabulary must not change family artifact path semantics',
 );
 
-const temp = mkdtempSync(path.join(tmpdir(), 'phase15c-family-root-'));
+const temp = mkdtempSync(path.join(tmpdir(), 'phase15j-family-root-'));
 try {
   const canonicalOut = path.join(temp, 'canonical-index.json');
-  const legacyOut = path.join(temp, 'legacy-index.json');
-  const dualOut = path.join(temp, 'dual-index.json');
-
-  for (const args of [
-    ['index', `--variant-family-dataset-root=${temp}`, `--out=${canonicalOut}`],
-    ['index', `--trove-root=${temp}`, `--out=${legacyOut}`],
-    ['index', `--variant-family-dataset-root=${temp}`, `--trove-root=${temp}`, `--out=${dualOut}`],
-  ]) {
-    execFileSync(process.execPath, ['scripts/family-index.mjs', ...args], {
-      cwd: process.cwd(),
-      stdio: 'pipe',
-    });
-  }
-
-  const indexes = [canonicalOut, legacyOut, dualOut].map(file => JSON.parse(readFileSync(file, 'utf8')));
-  assert.deepEqual(indexes[1], indexes[0], 'legacy alias must select the same dataset and produce the same disposable index');
-  assert.deepEqual(indexes[2], indexes[0], 'same-value dual CLI must produce the same disposable index');
-
-  const conflict = spawnSync(process.execPath, [
+  execFileSync(process.execPath, [
     'scripts/family-index.mjs',
     'index',
     `--variant-family-dataset-root=${temp}`,
-    `--trove-root=${path.join(temp, 'other')}`,
-    `--out=${path.join(temp, 'conflict.json')}`,
+    `--out=${canonicalOut}`,
+  ], {
+    cwd: process.cwd(),
+    stdio: 'pipe',
+  });
+  const canonicalIndex = JSON.parse(readFileSync(canonicalOut, 'utf8'));
+  assert.equal(canonicalIndex.schemaVersion, 4);
+
+  const retired = spawnSync(process.execPath, [
+    'scripts/family-index.mjs',
+    'index',
+    `--trove-root=${temp}`,
+    `--out=${path.join(temp, 'retired.json')}`,
   ], { cwd: process.cwd(), encoding: 'utf8' });
-  assert.notEqual(conflict.status, 0, 'conflicting external root spellings must fail the real family:index entrypoint');
-  assert.match(conflict.stderr, /conflicting variant-family dataset roots/u);
+  assert.notEqual(retired.status, 0, 'retired dataset-root CLI must fail the real family:index entrypoint');
+  assert.match(retired.stderr, /retired variant-family dataset-root option/u);
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('Phase-15C variant-family dataset-root parser/CLI behavior passed.');
+console.log('Phase-15C/15J variant-family dataset-root canonical-only behavior passed.');
