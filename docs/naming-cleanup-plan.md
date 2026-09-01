@@ -1480,11 +1480,12 @@ compatibility classifications, so this plan now records the amendment before 15B
   application-local names, while Firestore already stores `levelFingerprint`/`fingerprintVersion`
   and uses the computed fingerprint value as document/path identity. Those stored identities are
   invariants, not migration targets;
-- NC-P15-005 owns explicit-prefix result schema only and bumps new output to v2
-  `referenceLabel`/`referenceReason`; NC-P15-010 owns workflow-local `oracle-shards`,
-  NC-P15-011 owns the external `atlas-abstain` case-format transition, and NC-P15-012 owns the
-  still-live known-solution-prefix v1 `oracle`/`oracle-abstain` source schema with a v2 canonical
-  writer plus permanent v1 read;
+- NC-P15-005 owns explicit-prefix result schema only and bumps new same-run output to v2
+  `referenceLabel`/`referenceReason`; no maintained historical result reader was found, so old
+  result artifacts stay frozen rather than gaining a synthetic v1 normalizer. NC-P15-010 owns
+  workflow-local `oracle-shards`, NC-P15-011 owns the external `atlas-abstain` case-format
+  transition, and NC-P15-012 owns the still-live known-solution-prefix v1
+  `oracle`/`oracle-abstain` source schema with a v2 canonical writer plus permanent v1 read;
 - NC-P15-007 is now a direct CLI/local rename because `ATLAS_DIR` is a local constant rather than
   an environment variable and no maintained machine caller for `--atlas-dir` was found;
   NC-P15-013 owns new-report `atlasDir`/`atlasFiles` -> `pruneGapDir`/`pruneGapFiles`
@@ -1592,8 +1593,10 @@ document/path identity is part of the invariant.
 
 - new result output bumps to schemaVersion 2 and single-writes
   `referenceLabel`/`referenceReason` plus canonical reason values;
-- a real v1-shaped result fixture normalizes through one owner;
-- the combiner handles all-v1, all-v2, and mixed shard rows without raw-string grouping drift.
+- the workflow's writer and combiner cut over atomically because every shard in one run checks out
+  the same exact commit and no maintained historical result reader was found;
+- historical schema-v1 result artifacts remain frozen; do not manufacture a v1 result normalizer or
+  mixed-v1/v2 shard contract without a real consumer.
 
 **NC-P15-010, CP-SAT workflow-local shard job identity**
 
