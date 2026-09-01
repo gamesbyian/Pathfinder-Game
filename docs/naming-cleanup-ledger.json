@@ -4293,15 +4293,15 @@
     {
       "id": "NC-P15-005",
       "old": "CP-SAT explicit-prefix result schemaVersion 1 oracleLabel/oracleReason/oracle-unknown",
-      "new": "schemaVersion 2 referenceLabel/referenceReason/reference-unknown with permanent v1 normalization",
+      "new": "schemaVersion 2 referenceLabel/referenceReason/reference-unknown for new same-run results; historical v1 artifacts remain frozen",
       "kind": "field",
       "risk": "high",
-      "persistence": "dual-read",
+      "persistence": "none",
       "phase": 15,
       "batch": "15G",
       "status": "pending",
-      "notes": "15A narrowed the inherited result/job/input bundle to the persisted explicit-prefix result schema. New writes bump to v2; v1/v2 and mixed-era shards normalize through the owning combiner. Workflow job/input/source-schema identities are NC-P15-010..012. docs/naming-cleanup-phase-records/phase-15.md.",
-      "migrationClass": "compatibility-boundary-migration",
+      "notes": "15A narrowed the inherited result/job/input bundle to the explicit-prefix result schema and found no maintained repository reader that reopens historical result artifacts. The workflow combiner reads same-run shards produced from one exact commit, so mixed v1/v2 shards are not a supported live state. New writer+combiner cut over atomically to schema v2; old result artifacts remain frozen. Workflow job/input/source-schema identities are NC-P15-010..012. docs/naming-cleanup-phase-records/phase-15.md.",
+      "migrationClass": "current-surface-rename-preserve-frozen-history",
       "verificationRecord": null,
       "verification": {
         "surfaceInventory": "done",
@@ -4310,11 +4310,6 @@
         "consumerAudit": "pending",
         "behavioralParity": "pending",
         "closeoutAudit": "pending"
-      },
-      "compatibility": {
-        "mode": "permanent-historical-read",
-        "retireWhen": "never",
-        "owner": "CP-SAT explicit-prefix result writer/normalizer and workflow combiner"
       },
       "inventoryTerms": [
         "oracleLabel",
