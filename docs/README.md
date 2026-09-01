@@ -21,6 +21,7 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 | [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md) | Completed Phase-8 implementation evidence: serial batch authority and merged-tree completion gate |
 | [`naming-cleanup-phase-records/pre-phase-15-audit-repairs.md`](naming-cleanup-phase-records/pre-phase-15-audit-repairs.md) | Completed pre-Phase-15 audit-repair evidence for mixed-era research/current-authority defects |
 | [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) | Completed/frozen Phase-15 execution evidence: contract partition, serial batches, implementation, hostile merged-tree closeout, and finalization |
+| [`naming-cleanup-phase-records/phase-15-post-completion-audit-repair.md`](naming-cleanup-phase-records/phase-15-post-completion-audit-repair.md) | Post-seal hostile-audit repair evidence: terminal compatibility retirement, permanent hostile ratchet, Firestore boundary proof, and workflow/report proof hardening |
 | [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md) | Frozen Phase-15 preparation snapshot and pre-entry compatibility analysis |
 | [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Completed machine-readable naming-cleanup history: immutable row IDs, compatibility ownership/retirement, batch merges, terminal state, and evidence pointers |
 | [`testing.md`](testing.md) | Validation and finish-line gates |
