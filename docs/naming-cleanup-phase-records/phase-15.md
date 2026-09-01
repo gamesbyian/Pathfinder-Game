@@ -794,3 +794,35 @@ hardening. Exact-head browser characterization run **33461568646** also passed.
 NC-P15-002 is now `done` and `activeExecution` is idle. As with 15B/15C,
 `batchCompletions["15D"]` remains pending until the implementation PR actually merges. A fresh
 exact-head CI/browser run on the done/idle bookkeeping head is required before merge.
+
+
+## 15D merge evidence
+
+Phase 15D completed as implementation PR **#1641**.
+
+- final head: `62c1a6283b1bfd0917aa0ef513ceecfee74a1267`;
+- hardened implementation-head CI: run **33461568649**, all six jobs successful;
+- hardened implementation-head browser characterization: run **33461568646**, successful;
+- final done/idle exact-head CI: run **33461871053**, all six jobs successful;
+- final done/idle browser characterization: run **33461870878**, successful;
+- merge commit: `b00c68f3495ec6591f3846ac0bf2e519f2613a1e`;
+- 15E base-main SHA: the same merge commit;
+- ledger `batchCompletions["15D"]` is now the machine merge-barrier evidence.
+
+## 15E — NC-P15-003 / NC-P15-009 variant-family artifact paths
+
+Status: **active**
+
+Branch: `chatgpt/phase15e-variant-family-artifact-paths-2026-08-31`  
+Base main: `b00c68f3495ec6591f3846ac0bf2e519f2613a1e`
+
+15E separates two lifetimes that previously shared the `wide-trove` vocabulary:
+
+- **NC-P15-003** owns permanent discovery/readability of genuine historical
+  `wide-trove-attempts-*` evidence alongside canonical
+  `variant-family-dataset-attempts-*` paths;
+- **NC-P15-009** owns current producer/workflow output paths for new runs and must single-write
+  stable `variant-family-dataset` names.
+
+Frozen dated historical artifacts are not renamed, moved, or rewritten. Discovery must normalize
+old and new path conventions through one owner before current writers cut over.
