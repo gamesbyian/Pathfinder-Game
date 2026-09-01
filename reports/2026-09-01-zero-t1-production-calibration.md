@@ -49,7 +49,7 @@ This calibration strengthens the semantic warning already attached to the capabi
 
 The frozen label "production solved, no frozen T1 winner" is not a stable capability class. Six of the 14 frozen production solves disappear in the later production baseline, while eight remain solved. Conversely, seven of the eight later solves are attributed to beam configurations whose later winning runs are shallow relative to the T1 ceiling.
 
-That pattern rules out a simple explanation in which T1 merely failed because those techniques needed more raw node budget. The evidence instead points to some mixture of revision drift, attempt/context semantics, retry-stage conditions, solver-state differences, eligibility/flag differences, or other behavior that is not captured by a coarse cross-revision attempt-config identity.
+That pattern does not support a raw-depth-only reconciliation. The later winning runs are shallow, but because the comparison crosses revisions it cannot tell us what the frozen implementation would have done with a different node ceiling. The evidence instead points to some mixture of revision drift, attempt/context semantics, retry-stage conditions, solver-state differences, eligibility/flag differences, or other behavior that is not captured by a coarse cross-revision attempt-config identity.
 
 The result is especially useful as a warning against treating normalized action names as proof of behavioral equivalence across revisions. The same textual configuration identity can participate in materially different solver behavior as surrounding orchestration and implementation change.
 
