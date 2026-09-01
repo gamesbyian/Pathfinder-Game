@@ -1484,8 +1484,10 @@ compatibility classifications, so this plan now records the amendment before 15B
   `referenceLabel`/`referenceReason`; no maintained historical result reader was found, so old
   result artifacts stay frozen rather than gaining a synthetic v1 normalizer. NC-P15-010 owns
   workflow-local `oracle-shards`, NC-P15-011 owns the external `atlas-abstain` case-format
-  transition, and NC-P15-012 owns the still-live known-solution-prefix v1
-  `oracle`/`oracle-abstain` source schema with a v2 canonical writer plus permanent v1 read;
+  transition, NC-P15-012 owns the still-live known-solution-prefix v1
+  `oracle`/`oracle-abstain` source schema with a v2 canonical writer plus permanent v1 read, and
+  the 15G implementation-time census adds NC-P15-014 for the live repair-retreat diagnostic's
+  CP-SAT `oracleProbe`/`oracleLabel`/`oracleReason` vocabulary that Phase 8 had deferred but 15A missed;
 - NC-P15-007 is now a direct CLI/local rename because `ATLAS_DIR` is a local constant rather than
   an environment variable and no maintained machine caller for `--atlas-dir` was found;
   NC-P15-013 owns new-report `atlasDir`/`atlasFiles` -> `pruneGapDir`/`pruneGapFiles`
@@ -1509,7 +1511,7 @@ recombine independent boundaries merely to reduce PR count.
 | 15D | NC-P15-002 family-run manifest schema | high-risk persisted/generated schema; v1 reader-first normalization and explicit v2 writer |
 | 15E | NC-P15-003 discovery + NC-P15-009 current output paths | permanent historical discovery is proven before current producer/workflow filenames cut over |
 | 15F | NC-P15-004 application-local level-fingerprint vocabulary | high-risk application/Firestore path: local names change while stored identity/algorithm/version remain invariant |
-| 15G | NC-P15-005 + NC-P15-010 + NC-P15-011 + NC-P15-012 CP-SAT contracts | result schema, workflow-local dependency, external input token, and known-prefix source schema have distinct owners/lifetimes but must land coherently |
+| 15G | NC-P15-005 + NC-P15-010 + NC-P15-011 + NC-P15-012 + NC-P15-014 CP-SAT contracts | result schema, workflow-local dependency, external input token, and known-prefix source schema have distinct owners/lifetimes but must land coherently |
 | 15H | NC-P15-007 CLI/local + NC-P15-013 report metadata | direct prune-gap CLI/source rename and canonical-only new report fields, without invented readers |
 | 15I | merged-tree hostile closeout + solver-research resumption gate | proves the integrated repository, not the implementation branches |
 | 15J | archival/finalization handoff | records immutable closeout evidence and changes routing only after the closeout has merged |
@@ -1620,6 +1622,18 @@ document/path identity is part of the invariant.
 - `extractExplicitPrefixCases` permanently normalizes the committed v1 winning-prefix fixture and
   v2 current output to one canonical model;
 - frozen v1 files are not rewritten.
+
+
+**NC-P15-014, repair-retreat CP-SAT reference-result vocabulary**
+
+- this row was added by the 15G implementation-time census before any 15G implementation rename;
+- the live diagnostic was already named in Phase 8's deferred `oracleLabel`/`oracleReason`
+  retained-surface registry but was accidentally omitted from the 15A split;
+- rename private `oracleProbe` plus new-output `oracleLabel`/`oracleReason` to
+  `referenceProbe`/`referenceLabel`/`referenceReason`;
+- no maintained historical reader exists and the output has no schema discriminator, so frozen old
+  outputs remain frozen and no synthetic compatibility layer/schema bump is introduced;
+- CP-SAT classification, bisection, emitted-path referee checks, and boundary results are invariant.
 
 **NC-P15-006, CP-SAT branch-label eligibility library**
 
