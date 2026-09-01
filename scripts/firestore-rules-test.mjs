@@ -2,11 +2,10 @@
 /**
  * Characterization tests for firestore.rules.
  *
- * These tests intentionally avoid a Firebase emulator dependency. They lock the
- * current access model at the source-rule level so future authorization changes
- * are explicit and reviewed. If the project later adds @firebase/rules-unit-testing
- * and an emulator-backed suite, keep these as fast structural smoke tests or
- * replace them with equivalent behavioral assertions.
+ * These fast tests intentionally inspect the source-rule contract directly. The
+ * repository also has an emulator-backed identity-boundary proof for the rating,
+ * submission, and local-hint repositories; keep this structural suite as the cheap
+ * authorization smoke layer rather than treating it as the persistence-boundary proof.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -118,8 +117,8 @@ test('local level hint creation validates document shape and caps path size', ()
 });
 
 // ── Negative cases (modernization-plan §4 Phase 2): assert the rules can't be widened into
-// anonymous or cross-user writes at the source level. (Emulator-backed behavioral tests for
-// the same cases are a documented follow-up — see docs/firestore-security-model.md.)
+// anonymous or cross-user writes at the source level. These complement, rather than replace,
+// the repository/emulator boundary test.
 
 test('no collection grants an unconditional write/create/delete (no `if true` writes)', () => {
   // Public *reads* are intentional (published_levels, level_ratings, local_level_hints);
