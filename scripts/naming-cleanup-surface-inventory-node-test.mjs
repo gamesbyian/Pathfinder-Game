@@ -147,7 +147,11 @@ assert.ok(phase15HistoricalAttemptReader.oldReferenceFiles.includes('scripts/fam
 assert.ok(phase15HistoricalAttemptReader.oldReferenceCategories.includes('tool-or-report-transport'));
 assert.equal(phase15HistoricalAttemptReader.oldReferenceCategories.includes('workflow'), false,
   'current workflows must not remain wide-trove historical-discovery owners after 15E');
-assert.ok(phase15Rows.find(row => row.id === 'NC-P15-004').oldReferenceCategories.includes('application'));
+const phase15FingerprintRow = phase15Rows.find(row => row.id === 'NC-P15-004');
+assert.equal(phase15FingerprintRow.oldReferenceCategories.includes('application'), false,
+  'NC-P15-004 must not retain generic fingerprint ownership in application code after 15F/15I closeout');
+assert.ok(phase15FingerprintRow.newReferenceCategories.includes('application'),
+  'NC-P15-004 canonical levelFingerprint vocabulary must remain live in application code');
 const reconciliationCounts = Object.fromEntries(
   [...new Set(rangeInventory.ledgerEntries.map(row => row.reconciliationState))]
     .sort()
