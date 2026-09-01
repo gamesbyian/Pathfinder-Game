@@ -750,3 +750,16 @@ correctly named its own input slice. Existing tests hid this by giving both shar
 
 This correction is inside NC-P15-002's required cross-shard invariant proof. It does not alter
 15E's artifact discovery/output-path contract.
+
+### 15D mixed-era structural-equality hardening
+
+A skeptical closeout read found one additional mixed-era hazard after the first green implementation
+head: run invariants were still compared with raw `JSON.stringify`. JSON object key insertion order
+is not semantic schema content, so an authentic v1 artifact and a v2 artifact carrying equivalent
+metadata in different key order could be falsely diagnosed as an inconsistent run.
+
+15D now compares invariant JSON values structurally by recursively sorting object keys while
+preserving array order. A regression test deliberately reorders the v1 shard's `solverPolicy` and
+dataset metadata relative to its v2 peer and proves they still normalize to one complete canonical
+run. This changes only false-negative equality behavior; genuinely different values and array order
+remain conflict-producing.
