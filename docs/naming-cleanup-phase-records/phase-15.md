@@ -1209,3 +1209,51 @@ NC-P15-005, NC-P15-010, NC-P15-011, NC-P15-012, and NC-P15-014 are now `done`, a
 `activeExecution` is idle. `batchCompletions["15G"]` deliberately remains pending until PR
 #1644 actually merges. A fresh exact-head CI/browser run on this done/idle bookkeeping head is
 required before merge.
+
+
+## 15G merge evidence
+
+Phase 15G completed as implementation PR **#1644**.
+
+- final head: `dd6df6a3635b053267ff244ff8502e5acb060737`;
+- implementation-head green CI: run **33465763452**, all six CI jobs successful;
+- implementation-head browser characterization: run **33465763465**, successful;
+- final done/idle exact-head CI: run **33466079678**, all six CI jobs successful;
+- final done/idle browser characterization: run **33466079677**, successful;
+- merge commit: `7e82a4325484eac2da67864101e33f614d075d70`;
+- 15H base-main SHA: the same merge commit;
+- ledger `batchCompletions["15G"]` is now the machine merge-barrier evidence.
+
+## 15H — NC-P15-007 / NC-P15-013 prune-gap directory and report vocabulary
+
+Status: **active**
+
+Branch: `chatgpt/phase15h-prune-gap-vocabulary-2026-08-31`  
+Base main: `7e82a4325484eac2da67864101e33f614d075d70`
+
+15H owns two separated current-surface contracts:
+
+- **NC-P15-007:** direct rename of current `--atlas-dir` CLI/local `ATLAS_DIR` vocabulary to
+  `--prune-gap-dir` / `PRUNE_GAP_DIR`;
+- **NC-P15-013:** new generated report metadata `atlasDir` / `atlasFiles` to
+  `pruneGapDir` / `pruneGapFiles`, while historical outputs remain frozen.
+
+The entry census found no maintained machine/external caller requiring a `--atlas-dir` alias and no
+maintained historical reader for the generated metadata fields. 15H therefore must not manufacture
+compatibility shims absent new evidence.
+
+Maintained implementation owners identified at entry:
+
+- `scripts/stress/offline-replay-harness.mjs`;
+- `scripts/stress/mc-crossing-slack-analysis.mjs`;
+- `docs/solver-offline-replay-harness.md` for current operator-facing usage.
+
+Behavioral invariants:
+
+1. the same default directory remains `reports/stress`;
+2. both tools still discover exactly `prune-gap-*.json` inputs;
+3. file ordering/selection is unchanged;
+4. analysis/replay behavior is unchanged;
+5. only new output metadata field names change;
+6. historical reports/archived docs are not rewritten;
+7. Phase 15I remains blocked until this batch merges.
