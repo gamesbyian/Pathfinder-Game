@@ -39,8 +39,10 @@ assert.doesNotMatch(producer, /\btrove:\s*\{\s*manifest:/u);
 
 // Family-index consumes only the normalized canonical model. Phase-15E historical filename
 // discovery is intentionally not part of this row and is allowed to retain wide-trove-attempts-*.
-assert.match(familyIndex, /'variantFamilyDataset'/u);
-assert.match(familyIndex, /variantFamilyDataset: shard\.variantFamilyDataset/u);
+assert.match(familyIndex, /variantFamilyDatasetRunIdentity\(/u);
+assert.match(familyIndex, /variantFamilyDataset: variantFamilyDatasetRunIdentity\(shard\.variantFamilyDataset\)/u);
+assert.match(familyIndex, /variantFamilyDatasetShardFiles/u);
+assert.match(familyIndex, /const \{ shardFile: _shardFile, \.\.\.runIdentity \} = dataset/u);
 assert.doesNotMatch(familyIndex, /\bshard\.trove\b/u);
 assert.doesNotMatch(familyIndex, /\btrove:\s*shard\.trove\b/u);
 assert.match(familyIndex, /wide-trove-attempts-/u);
