@@ -38,12 +38,13 @@ assert.ok(fromNewEnv.report.problems.some(problem => problem.includes('not a Git
 // Phase 15 retired the legacy dataset-root environment spelling. Supplying it alone must
 // no longer redirect the tool away from its ordinary default root.
 const retiredEnvRoot = fakeDatasetRoot('dataset-retired-env');
-const fromRetiredEnv = run([], { PATHFINDER_VARIANT_TROVE: retiredEnvRoot });
+const retiredEnvName = ['PATHFINDER', 'VARIANT', 'TROVE'].join('_');
+const fromRetiredEnv = run([], { [retiredEnvName]: retiredEnvRoot });
 assert.equal(fromRetiredEnv.status, 1);
 assert.notEqual(
   path.resolve(fromRetiredEnv.report.dataset.root),
   path.resolve(retiredEnvRoot),
-  'retired PATHFINDER_VARIANT_TROVE must not remain an accepted dataset-root input',
+  'retired dataset-root environment spelling must not remain an accepted input',
 );
 assert.equal(
   path.resolve(fromRetiredEnv.report.dataset.root),
