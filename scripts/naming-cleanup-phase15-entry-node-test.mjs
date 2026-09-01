@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import assert from 'node:assert/strict';
+
+import { troveRootArg } from './family-paths.mjs';
+import { extractExplicitPrefixCases } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
 
 const ledger = JSON.parse(readFileSync('docs/naming-cleanup-ledger.json', 'utf8'));
 const record = readFileSync('docs/naming-cleanup-phase-records/phase-15.md', 'utf8');
@@ -25,6 +29,8 @@ assert.match(byId['NC-P15-002'].new, /schemaVersion 2/u);
 assert.equal(byId['NC-P15-004'].persistence, 'none', 'application-local fingerprint rename must not invent a persisted generic-field adapter');
 assert.equal(byId['NC-P15-007'].persistence, 'none', 'prune-gap CLI rename must not invent an unproven compatibility reader');
 assert.match(byId['NC-P15-005'].new, /schemaVersion 2/u);
+assert.equal(byId['NC-P15-005'].persistence, 'none', 'same-run CP-SAT result combiner must not imply a nonexistent historical reader');
+assert.equal('compatibility' in byId['NC-P15-005'], false, 'NC-P15-005 must not carry a synthetic dual-read policy');
 assert.match(byId['NC-P15-012'].new, /schemaVersion 2/u);
 assert.equal(byId['NC-P15-013'].migrationClass, 'current-surface-rename-preserve-frozen-history');
 assert.match(record, /separately deferred vocabulary debt/u);
@@ -36,6 +42,11 @@ const familyPaths = readFileSync('scripts/family-paths.mjs', 'utf8');
 assert.match(familyPaths, /--trove-root=/u);
 assert.match(familyPaths, /troveRootArg/u);
 assert.doesNotMatch(familyPaths, /--variant-family-dataset-root=/u);
+assert.equal(
+  troveRootArg(['--trove-root=tmp/phase15-legacy-family-root']),
+  path.resolve('tmp/phase15-legacy-family-root'),
+  'current shared dataset-root parser must still execute the legacy CLI before 15C',
+);
 
 const manifestLib = readFileSync('scripts/experiment-manifest-lib.mjs', 'utf8');
 assert.match(manifestLib, /'trove'/u);
@@ -58,6 +69,12 @@ assert.match(cpsatWorkflow, /atlas-abstain/u);
 const prefixCollector = readFileSync('scripts/stress/collect-known-solution-prefix-branches.mjs', 'utf8');
 assert.match(prefixCollector, /schemaVersion: 1/u);
 assert.match(prefixCollector, /oracle-abstain/u);
+
+const legacyPrefixDocument = JSON.parse(readFileSync('reports/stress/winning-prefix-atlas-pilot-2026-08-11.json', 'utf8'));
+const legacyPrefixCases = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'atlas-abstain' });
+assert.ok(legacyPrefixCases.length > 0, 'committed v1 prefix fixture must execute through the current historical reader');
+assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'oracle-abstain'),
+  'legacy atlas-abstain reader must select the historical oracle-abstain branch population');
 
 const replay = readFileSync('scripts/stress/offline-replay-harness.mjs', 'utf8');
 assert.match(replay, /--atlas-dir=/u);
