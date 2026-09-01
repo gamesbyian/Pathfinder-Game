@@ -71,6 +71,7 @@ assert.deepEqual(index.runs.map(run => ({ id: run.runId, shards: run.shards, com
     [{ id: 'run-2', shards: [1, 2], complete: true }]);
 assert.equal(index.runs[0].schemaVersion, 2, 'all-v1 run shards normalize to canonical schema v2');
 assert.deepEqual(index.runs[0].variantFamilyDataset, normalizedRun(1, '').trove);
+assert.deepEqual(index.runs[0].variantFamilyDatasetShardFiles, []);
 assert.equal('trove' in index.runs[0], false, 'family index must expose only the canonical normalized dataset field');
 const duplicateIdRows = queryFamilyIndex(index, { variantId: 'V1' }).variants;
 assert.equal(duplicateIdRows.length, 2);
