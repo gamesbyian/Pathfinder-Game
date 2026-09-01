@@ -279,7 +279,7 @@ export const createFlagState = (): FlagState => ({
 
 /** Level-rating slice — owner: engine/level-rating-manager. Authoritative; Firestore-backed. */
 export interface LevelRatingState {
-    fingerprint: string | null;
+    levelFingerprint: string | null;
     levelNumber: number | null;
     loaded: boolean;
     /** stale-response guard (incremented per refresh) */
@@ -291,7 +291,7 @@ export interface LevelRatingState {
 }
 
 export const createLevelRatingState = (): LevelRatingState => ({
-    fingerprint: null,
+    levelFingerprint: null,
     levelNumber: null,
     loaded: false,
     requestId: 0,    // stale-response guard (incremented per refresh)
