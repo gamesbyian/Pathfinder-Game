@@ -4322,14 +4322,14 @@
     {
       "id": "NC-P15-006",
       "old": "atlas-eligibility.mjs / selectEligibleAtlasLevels / isEligibleForCpsatAtlas",
-      "new": "cpsat-branch-label-eligibility.mjs / selectEligibleCpsatBranchLevels / branch-label-specific predicate",
+      "new": "cpsat-branch-label-eligibility.mjs / selectEligibleCpsatBranchLevels / isEligibleForCpsatBranchLabeling",
       "kind": "tool",
       "risk": "medium",
       "persistence": "none",
       "phase": 15,
       "batch": "15B",
       "status": "pending",
-      "notes": "15A reconfirmed this is a private shared-library/import graph with no persistence contract. Rename atomically and pin eligibility population parity; no compatibility file/export alias. docs/naming-cleanup-phase-records/phase-15.md.",
+      "notes": "15A reconfirmed this is a private shared-library/import graph with no persistence contract. Rename atomically to cpsat-branch-label-eligibility.mjs, selectEligibleCpsatBranchLevels, and isEligibleForCpsatBranchLabeling; pin eligibility population parity; no compatibility file/export alias. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": null,
       "verification": {
