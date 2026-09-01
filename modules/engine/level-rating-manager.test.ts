@@ -97,7 +97,7 @@ test('a failed migration write reports but does not block applying the legacy ra
     const data = { getLevel: () => RAW_LEVEL } as any;
     const errors: any[] = [];
     const persistence = {
-        loadLevelRating: async (levelFingerprint: string) => (fingerprint === legacyLevelFingerprint ? legacyRating : null),
+        loadLevelRating: async (levelFingerprint: string) => (levelFingerprint === legacyLevelFingerprint ? legacyRating : null),
         saveLevelRating: async () => { throw new Error('write failed'); },
     };
     const reportError = (context: string, err: any) => errors.push({ context, err });
