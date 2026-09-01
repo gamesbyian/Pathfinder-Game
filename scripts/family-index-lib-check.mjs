@@ -106,4 +106,41 @@ const conflictingIndex = buildFamilyIndex(root);
 assert.equal(conflictingIndex.runs.find(run => run.runId === 'run-3').complete, false);
 assert.deepEqual(conflictingIndex.diagnostics.runManifests.filter(row => row.runId === 'run-3').map(row => row.reason).sort(),
     ['duplicate-run-shard', 'inconsistent-run-shard']);
+
+const discoveryRoot = mkdtempSync(path.join(tmpdir(), 'family-index-attempt-discovery-'));
+mkdirSync(path.join(discoveryRoot, 'data/families/corpus-a'), { recursive: true });
+mkdirSync(path.join(discoveryRoot, 'data/families/corpus-b'), { recursive: true });
+mkdirSync(path.join(discoveryRoot, 'reports/families'), { recursive: true });
+const familyManifest = (familyId, parentId, variantId) => ({
+    familyId, parentLevelId: parentId, parentCorpus: 'historical-source.json', familyMode: 'symmetry',
+    variants: [{ variantId, relation: 'symmetry', mutationManifest: { operation: 'transform' } }],
+});
+writeFileSync(path.join(discoveryRoot, 'data/families/corpus-a/family-P1-sym-manifest.json'),
+    JSON.stringify(familyManifest('family-P1', 'P1', 'V1')));
+writeFileSync(path.join(discoveryRoot, 'data/families/corpus-b/family-P2-sym-manifest.json'),
+    JSON.stringify(familyManifest('family-P2', 'P2', 'V2')));
+
+// corpus-a has only historical aggregate evidence, which must remain permanently discoverable.
+writeFileSync(path.join(discoveryRoot, 'reports/families/wide-trove-attempts-corpus-a-part01.json'), JSON.stringify({
+    levels: [{ id: 'V1', parentId: 'P1', corpus: 'corpus-a', ok: true, workSpent: 11 }],
+}));
+// corpus-b has both eras. Canonical current aggregate evidence owns precedence for that corpus so
+// the same logical aggregate is not double-counted merely because the frozen historical file remains.
+writeFileSync(path.join(discoveryRoot, 'reports/families/wide-trove-attempts-corpus-b-part01.json'), JSON.stringify({
+    levels: [{ id: 'V2', parentId: 'P2', corpus: 'corpus-b', ok: false, workSpent: 22 }],
+}));
+writeFileSync(path.join(discoveryRoot, 'reports/families/variant-family-dataset-attempts-corpus-b-part01.json'), JSON.stringify({
+    levels: [{ id: 'V2', parentId: 'P2', corpus: 'corpus-b', ok: true, workSpent: 33 }],
+}));
+const discoveryIndex = buildFamilyIndex(discoveryRoot);
+const historicalOnly = queryFamilyIndex(discoveryIndex, { parentId: 'P1', variantId: 'V1' }).variants[0];
+assert.equal(historicalOnly.evidence.length, 1);
+assert.match(historicalOnly.evidence[0].evidencePath, /wide-trove-attempts-corpus-a-part01\.json$/u);
+assert.equal(historicalOnly.evidence[0].work, 11);
+const canonicalPreferred = queryFamilyIndex(discoveryIndex, { parentId: 'P2', variantId: 'V2' }).variants[0];
+assert.equal(canonicalPreferred.evidence.length, 1, 'canonical corpus aggregate must not double-count frozen historical aggregate');
+assert.match(canonicalPreferred.evidence[0].evidencePath, /variant-family-dataset-attempts-corpus-b-part01\.json$/u);
+assert.equal(canonicalPreferred.evidence[0].work, 33);
+assert.equal(canonicalPreferred.solved, true);
+
 console.log('family index unit tests passed');
