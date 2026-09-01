@@ -571,6 +571,18 @@ if (gate?.status === 'ready') {
   }
 }
 
+/* Terminal compatibility retirement: a phase-15-review transition is allowed to survive
+ * only until the Phase-15 review actually happens. Once the program is complete, every such row
+ * must have been explicitly resolved to a non-dual-read current state. This keeps "retireWhen"
+ * from becoming inert historical prose after the terminal gate passes. */
+if (ledger.status === 'complete' || Number(ledger.lastCompletedPhase) >= 15) {
+  for (const entry of futureEntries) {
+    if (entry.persistence === 'dual-read' && entry.compatibility?.retireWhen === 'phase-15-review') {
+      fail(`${entry.id}: phase-15-review compatibility is unresolved after Phase 15 completion; record and implement an explicit retain/remove decision`);
+    }
+  }
+}
+
 /* Serial phase ordering: no future work may skip over the next incomplete phase. */
 const nextIncompletePhase = Number(ledger.lastCompletedPhase) + 1;
 for (const entry of futureEntries) {
