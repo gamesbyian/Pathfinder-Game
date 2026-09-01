@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 const fixture = mkdtempSync(path.join(tmpdir(), 'naming-authorities-'));
 const files = [
   'docs/naming-cleanup-ledger.json',
+  'docs/naming-cleanup-phase-records/phase-15.md',
   'AGENTS.md',
   'docs/README.md',
   'docs/naming-and-vocabulary.md',
@@ -85,6 +86,16 @@ try {
     'AGENTS.md',
     source => source.replaceAll('docs/naming-cleanup-phase-records/phase-15.md', 'docs/naming-cleanup-phase-records/phase-08.md'),
     /AGENTS\.md must route active Phase 15|active naming authority/iu,
+  );
+
+  expectFailure(
+    'active execution-record header drift',
+    'docs/naming-cleanup-phase-records/phase-15.md',
+    source => source.replace(
+      'Status: **15I hostile merged-tree closeout active; implementation batches 15B-15H are merged and done**',
+      'Status: **15A contract-decomposition gate active**',
+    ),
+    /execution-record header must name the active batch/iu,
   );
 
   console.log('Naming current-authority negative fixtures passed.');
