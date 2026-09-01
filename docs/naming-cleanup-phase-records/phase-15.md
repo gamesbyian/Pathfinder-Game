@@ -1355,156 +1355,79 @@ implementation PRs as sufficient evidence.
 
 ### 15I read-only findings, recorded before repair
 
-The first merged-tree pass found real current defects. This section intentionally predates their
-repairs.
+The first hostile pass was performed from merged 15H main
+`65650862eb4626c5d6eecf7bbc1753a1006d97c8`. This section is deliberately a snapshot of what was
+wrong **before** the repair commits below.
 
-**F15I-001 — permanent naming authority still describes completed Phase-15 migrations as live
-legacy contracts.**
+**F15I-001 — permanent naming authority taught completed Phase-15 migrations as broader live legacy
+contracts than the implementation actually supports.**
 
-`docs/naming-and-vocabulary.md` lines 114-129 on merged 15H main still say, among other things,
-that:
+`docs/naming-and-vocabulary.md` still described generic application `fingerprint`, broad
+`trove` / dated `wide-trove` compatibility, current explicit-prefix `oracle*` identities, the
+retired `atlas-eligibility.mjs` source identity, and `--atlas-dir` as if the pre-15A contract were
+still current. Narrow historical readers existed for some of those concepts, but the permanent
+authority had not been reconciled to their actual owners/lifetimes.
 
-- naked application `fingerprint` may remain as local/positional vocabulary under NC-P15-004;
-- `--trove-root`, manifest `trove`, and dated `wide-trove-*` paths remain generally live
-  compatibility contracts owned by NC-P15-001..003;
-- current explicit-prefix `oracle-shards`, `oracleLabel`, and `oracleReason` remain compatibility
-  identities;
-- `atlas-eligibility.mjs` and `--atlas-dir` remain live deferred interfaces.
+**F15I-002 — solver-research resumption authority was stale and contained a specifically false
+NC-P15-005 compatibility requirement.**
 
-Those statements describe the pre-15A/pre-implementation state, not the merged repository. Some
-narrow historical readers remain legitimate, but the permanent vocabulary authority currently
-teaches a materially broader old contract than the implementation actually supports.
+The bridge still presented the pre-15A seven-row model and implied that historical explicit-prefix
+result fields/values should normalize before combination. 15A proved no maintained historical
+result reader exists, and 15G correctly made NC-P15-005 a same-run schema-v2 cutover instead of
+inventing that adapter. The bridge also omitted the split NC-P15-008 through NC-P15-014 contracts.
 
-**F15I-002 — solver-research resumption authority is stale and contains one specifically false
-compatibility requirement.**
+**F15I-003 — the docs index had a malformed Phase-15 table row.**
 
-`docs/solver-research-post-naming-resumption.md` still labels itself a
-"pre-Phase-15 handoff contract" and its Phase-15 table reflects the original seven-row inventory
-rather than the resolved 14-row contract. Most importantly, NC-P15-005 still requires historical
-explicit-prefix result fields/values to normalize before combination. 15A proved no maintained
-historical result reader exists, and 15G correctly made the result writer/combiner a same-run
-schema-v2 cutover instead of inventing that adapter. The current resumption doc would therefore
-encourage future research work to recreate compatibility that Phase 15 deliberately rejected.
+`docs/README.md` stored the execution and preparation rows on one physical line separated by a
+literal escaped newline. Ordinary link validation could still see both targets, so the defect
+survived green implementation CI.
 
-**F15I-003 — docs index contains a literal escaped newline inside the current-reference table.**
+**F15I-004 — the current scripts runbook contained stale lifecycle examples.**
 
-`docs/README.md` stores the Phase-15 execution row and Phase-15 preparation row on one physical
-line separated by the literal characters `\n`. Link validation does not detect this because both
-targets exist, but the Markdown table is malformed and the preparation record is not represented as
-its own row.
+`scripts/README.md` hard-coded `--batch=8A` after the status tool had become generic, and still
+described the completed Phase-13B `--require-normalized-clean` validation as future work.
 
-**F15I-004 — current scripts runbook still hard-codes a Phase-8 batch example.**
+**F15I-005 — generic surface reconciliation was not side-specific.**
 
-`scripts/README.md` teaches `npm run naming:status ... --batch=8A` even though the status tool and
-tooling catalog were generalized to `--batch=<id>`. This is small but directly contradicts the
-cleanup's goal of leaving resumable current instructions.
+`scripts/naming-cleanup-surface-inventory.mjs` searched `entry.old` plus every
+`inventoryTerms` value on the old side while the new side searched only `entry.new`.
+Phase-15 composite rows intentionally carried both old and canonical discovery terms, so canonical
+target occupancy could falsely keep a fully migrated row `old-live` or
+`mixed-old-and-canonical`. Naming guard/authority files could also count as lifecycle evidence.
 
-**F15I-005 — generic surface-inventory reconciliation is not side-specific for composite rows.**
+**F15I-006 — the current-authority guard was too narrow.**
 
-`scripts/naming-cleanup-surface-inventory.mjs` computes the old side from
-`[entry.old, ...entry.inventoryTerms]` while the new side uses only `entry.new`.
-`inventoryTerms` intentionally contains both old and canonical search terms on many Phase-15 rows,
-so canonical target terms can make `oldReferenceFiles` non-empty. The resulting
-`reconciliationState` cannot safely answer whether a composite migration is old-live,
-mixed, or canonical-live. 15H exposed this when its dedicated semantic closeout proved zero
-maintained old identifiers while the generic state still resisted canonical classification.
+`scripts/check-naming-current-authorities.mjs` inspected essentially `AGENTS.md` and
+`docs/README.md`, so it missed the stale permanent vocabulary, solver-resumption bridge,
+scripts runbook, and malformed-table semantics above.
 
-**F15I-006 — current-authority guard is too narrow to detect the authority defects above.**
+**F15I-007 — the solver-research resumption test was only a smoke test.**
 
-`scripts/check-naming-current-authorities.mjs` checks only `AGENTS.md` and `docs/README.md`, and
-mostly checks for route-path presence. It does not inspect the permanent vocabulary authority,
-solver-resumption bridge, scripts runbook, tooling catalog, or table-row structure. Consequently
-F15I-001, F15I-002, F15I-003, and F15I-004 all survived green exact-head CI through every
-implementation batch.
+The npm alias existed and was already in `test:node`, but it proved only representative one-record
+attempt/action/stage/routing normalization and selected command existence. It did not prove
+mixed-era joins, Phase-15 historical reader ownership, canonical single-write, current
+research-status discovery, experiment preflight, or a post-naming equal-work execution anchor.
 
-No repair has been made in response to F15I-001..006 at the point this findings section is written.
-The next 15I step is to harden the guard/model and current authorities, then rerun the hostile audit
-against the repaired tree.
+**F15I-008 — the resumption evidence bundle contained escaped Markdown code delimiters.**
 
+Several code spans in the operational handoff were stored with literal backslashes before
+backticks. This was not a runtime defect, but it was current runbook damage in the same authority
+surface as F15I-002.
 
-**F15I-007 — scripts runbook also presents completed Phase 13B validation as future work.**
+**Positive read-only evidence and finalization classifications.**
 
-The same `scripts/README.md` discovery block says the Phase-13
-`--require-normalized-clean` gate is "future 13B" even though Phase 13 is complete and the gate is
-current validation. This is another current-authority lifecycle drift missed by the authority guard.
+- The frozen known-prefix source
+  `reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` has Git blob
+  `3de81cc8f95862c7f7142511e06f7bdb72710d52` both at Phase-15 implementation entry lineage
+  `4b61b59dfba6dada48f316edcdb6e9b4daa6683e` and merged 15H main
+  `65650862eb4626c5d6eecf7bbc1753a1006d97c8`.
+- NC-P15-001 `--trove-root` and NC-P15-011 `atlas-abstain` still had exactly their intended
+  transition owners and no current repository caller. Their ledger retirement condition is
+  `phase-15-review`; 15I therefore recommends retiring those **external transition aliases in
+  15J**, while permanent historical data readers NC-P15-002, NC-P15-003, and NC-P15-012 remain.
+- The separately deferred `repairLateProbe` / `REPAIR_LATE_PROBE` family remains deliberately
+  deferred vocabulary debt, not an accidental partially migrated Phase-15 contract.
 
-**F15I-008 — solver-resumption evidence bundle contains escaped Markdown code delimiters.**
+**Read-only-pass conclusion:** Phase 15 was not closeout-ready at this point. F15I-001 through
+F15I-008 required repair plus a fresh hostile rerun before 15I could close.
 
-The current `docs/solver-research-post-naming-resumption.md` minimum-evidence section contains
-literal backslashes before several backticks (for example `\`main\``). This does not alter
-runtime behavior but degrades the operational handoff document and is part of the same current-doc
-quality failure as F15I-002.
-
-
-### 15I read-only hostile findings — recorded before repair
-
-The first 15I pass was performed from merged 15H main
-`65650862eb4626c5d6eecf7bbc1753a1006d97c8`. The findings below are deliberately recorded before
-their repairs.
-
-**F15I-001 — generic reconciliation guard is not side-specific.**
-
-`scripts/naming-cleanup-surface-inventory.mjs::reconciliationReferenceMatches(entry, 'old')`
-searches `entry.old` **plus every `inventoryTerms` value**, while the canonical side searches only
-`entry.new`. Phase-15 rows deliberately use `inventoryTerms` for both old and canonical discovery,
-so a fully migrated composite row can remain reported as `old-live` or
-`mixed-old-and-canonical`. 15H already observed this symptom. The hostile pass confirms the cause:
-the reconciliation state cannot currently serve as a trustworthy old-vs-canonical lifecycle oracle.
-This is a closeout-guard defect, not implementation residue.
-
-**F15I-002 — solver-research resumption authority is stale after the resolved Phase-15 partition.**
-
-`docs/solver-research-post-naming-resumption.md` still labels itself a pre-Phase-15 handoff and lists
-only NC-P15-001 through NC-P15-007. Its NC-P15-005 row still claims historical explicit-prefix
-result fields/values are normalized before combination, even though 15A proved there is **no
-maintained historical result reader** and 15G correctly performed an atomic same-run v2 cutover.
-The bridge also omits split rows NC-P15-008 through NC-P15-014, including the real v1 known-prefix
-source compatibility owner and repair-retreat current-vocabulary migration. This is current-authority
-drift and must be repaired before solver work resumes.
-
-**F15I-003 — `test:solver-research-resumption` is only a smoke test, not the gate required by the plan.**
-
-The existing test proves representative one-record attempt/action/stage/routing normalization and
-selected package-command existence. It does **not** prove mixed-era joins for those identities,
-does not execute the Phase-15 compatibility fixtures/owners, does not prove canonical single-write,
-and does not exercise the post-naming research-status/equal-work anchor requirements. The npm alias
-exists and is already in `test:node`; the defect is insufficient proof depth, not missing wiring.
-
-**F15I-004 — current docs index contains a literal escaped newline inside the Phase-15 table.**
-
-`docs/README.md` currently stores the Phase-15 execution row followed by the literal characters
-`\n|` before the preparation row. The links remain visible to simple substring guards, which is
-why current-authority validation did not catch it, but the current reference table is malformed.
-This is a concrete current-authority formatting defect and a useful negative case for stronger
-authority checking.
-
-**F15I-005 — current-authority guard scope is narrower than the 15I semantic authority contract.**
-
-`scripts/check-naming-current-authorities.mjs` currently checks only `AGENTS.md` and
-`docs/README.md` for Phase-15 routing. The hostile semantic walk covered the broader authority graph
-required by the plan: change recipes, architecture/typing, solver architecture/runbooks, package
-commands, workflow map, tooling catalog, naming vocabulary, and solver workstreams. Those surfaces
-are mostly canonical, but the stale resumption bridge proves the two-file guard can miss real
-current-authority drift. 15I needs a broader closeout guard rather than merely expanding an allowlist.
-
-**F15I-006 — representative frozen Phase-15 source evidence remained byte-identical.**
-
-The committed historical known-prefix source
-`reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` has Git blob
-`3de81cc8f95862c7f7142511e06f7bdb72710d52` both at the Phase-15 implementation entry lineage
-(`4b61b59dfba6dada48f316edcdb6e9b4daa6683e`) and merged 15H main
-(`65650862eb4626c5d6eecf7bbc1753a1006d97c8`). The hostile pass found no evidence that this frozen
-fixture was rewritten during Phase 15.
-
-**F15I-007 — temporary compatibility aliases require final retirement classification, but are not current defects.**
-
-The two transition aliases still have their intended single owners:
-`--trove-root` in `scripts/family-paths.mjs` (NC-P15-001) and `atlas-abstain` in the explicit-prefix
-case-format normalizer (NC-P15-011). Current repository docs/workflows emit canonical spellings.
-Their ledger retirement condition is `phase-15-review`; 15I must make the evidence explicit for 15J
-rather than silently deleting or perpetuating them.
-
-**Read-only-pass conclusion:** Phase 15 is **not yet closeout-ready**. The implementation batches are
-merged, but F15I-001 through F15I-005 require repair and rerun of the hostile closeout before 15I can
-be marked complete. F15I-006 is positive frozen-history evidence; F15I-007 is a finalization
-classification decision, not a migration defect.
