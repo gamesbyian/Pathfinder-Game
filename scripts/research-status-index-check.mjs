@@ -46,6 +46,14 @@ Historical attempt identity appears only in compact pre-rename syntax.
 ## main-loop|beam:intersectionHarvest@beam5000(diverse) action reach
 Historical composite action identity uses both legacy stage and compact attempt syntax.
 `);
+writeFileSync(path.join(root, 'reports/2026-01-02-decoy.md'), `# Alias decoys
+
+## dfs:general
+A scoring-profile string must not be invented by expanding the routing-regime alias default -> general.
+
+## admissible-order-fallback|tieBreak=default|lds=off
+A canonical attempt identity must not be rewritten as though its search-family token were a stage id.
+`);
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
@@ -69,6 +77,14 @@ assert.deepEqual(queryResearchStatusIndex(index, {
     query: 'main-loop|beam:intersectionHarvest@beam5000(diverse)',
 }).map(x => x.id), ['legacy'],
 'legacy composite action query must remain discoverable after canonicalization');
+assert.deepEqual(queryResearchStatusIndex(index, {
+    query: 'dfs|score=default|bias=none',
+}).map(x => x.id), [],
+'routing alias default -> general must not rewrite a scoring-profile component');
+assert.deepEqual(queryResearchStatusIndex(index, {
+    query: 'admissible-order|tieBreak=default|lds=off',
+}).map(x => x.id), [],
+'admissible-order attempt family must not be rewritten as the admissible-order-fallback stage');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'legacy-evidence' }).map(x => x.report), ['reports/2026-01-01-legacy.md']);
 assert.deepEqual(queryResearchStatusIndex(index, { status: 'rejected' }).map(x => x.id), ['FLAG_ONE']);
 const compact = compactResearchStatusIndex(index, { query: 'current question' });
