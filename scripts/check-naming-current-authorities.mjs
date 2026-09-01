@@ -51,6 +51,18 @@ const staleNamingPatterns = [
   [/`atlas-eligibility\.mjs`[\s\S]{0,180}remain Batch-8E-discovered compatibility interfaces/iu, 'permanent vocabulary still describes retired atlas eligibility/directory identities as live'],
 ];
 for (const [pattern, message] of staleNamingPatterns) if (pattern.test(naming)) failures.push(message);
+if (/accepts `--trove-root`|--trove-root[^\n]{0,120}transition alias/iu.test(naming)) {
+  failures.push('permanent vocabulary still presents retired --trove-root as accepted compatibility');
+}
+if (!/Phase 15J retired[\s\S]{0,180}`--trove-root`/iu.test(naming)) {
+  failures.push('permanent vocabulary must record --trove-root retirement');
+}
+if (/`atlas-abstain`[^\n]{0,180}(?:remains|transition alias|accepted)/iu.test(naming)) {
+  failures.push('permanent vocabulary still presents retired atlas-abstain as accepted compatibility');
+}
+if (!/Phase 15J retired[\s\S]{0,180}`atlas-abstain`/iu.test(naming)) {
+  failures.push('permanent vocabulary must record atlas-abstain retirement');
+}
 for (const canonical of ['--variant-family-dataset-root','variantFamilyDataset','reference-shards','reference-abstain','cpsat-branch-label-eligibility.mjs','--prune-gap-dir','pruneGapDir']) {
   if (!naming.includes(canonical)) failures.push(`docs/naming-and-vocabulary.md missing canonical Phase-15 term ${canonical}`);
 }
@@ -58,6 +70,15 @@ for (const canonical of ['--variant-family-dataset-root','variantFamilyDataset',
 if (/pre-Phase-15 handoff contract/iu.test(resumption)) failures.push('solver resumption bridge still identifies itself as pre-Phase-15');
 if (resumption.includes('historical result values/fields are normalized before analysis/combination')) failures.push('solver resumption bridge still invents an NC-P15-005 historical result normalizer');
 if (!resumption.includes('no maintained historical schema-v1 result reader')) failures.push('solver resumption bridge must preserve the NC-P15-005 no-historical-reader decision');
+if (/accepts `--trove-root`|--trove-root[^\n]{0,120}(?:transition window|alias)/iu.test(resumption)) {
+  failures.push('solver resumption bridge still presents retired --trove-root as accepted');
+}
+if (/`atlas-abstain`[^\n]{0,160}(?:remains|input alias|accepted)/iu.test(resumption)) {
+  failures.push('solver resumption bridge still presents retired atlas-abstain as accepted');
+}
+if (!/retired `--trove-root`/iu.test(resumption) || !/retired `atlas-abstain`/iu.test(resumption)) {
+  failures.push('solver resumption bridge must record both Phase-15J transition-alias retirements');
+}
 for (const id of ['NC-P15-008','NC-P15-009','NC-P15-010','NC-P15-011','NC-P15-012','NC-P15-013','NC-P15-014']) {
   if (!resumption.includes(id)) failures.push(`solver resumption bridge missing resolved Phase-15 row ${id}`);
 }
