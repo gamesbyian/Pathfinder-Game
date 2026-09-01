@@ -378,8 +378,10 @@ content belonging to 15B-15H remains unchanged until its owning migration batch.
   `wide-trove-attempts-*` path convention and exercises current family-index discovery.
 - **NC-P15-011 / NC-P15-012:** `test:research-analysis-lib` exercises the current
   `extractExplicitPrefixCases` owner with the legacy `atlas-abstain` format and
-  `oracle-abstain` branch label; `test:naming-cleanup-phase15-entry` additionally reads the
-  committed `winning-prefix-atlas-pilot-2026-08-11.json` v1 fixture through that same owner.
+  `oracle-abstain` branch label; `test:naming-cleanup-phase15-entry` additionally reads the sparse-safe minimized fixture
+  `scripts/test-fixtures/naming-cleanup/phase15-winning-prefix-v1.json` through that same owner. The
+  fixture records source path `reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` and source
+  blob SHA `3de81cc8f95862c7f7142511e06f7bdb72710d52`.
 - **NC-P15-005 is deliberately absent:** no maintained historical result reader was found, so 15A
   removed the inherited dual-read claim rather than manufacturing one.
 
