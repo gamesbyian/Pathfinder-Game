@@ -13,7 +13,7 @@ import {
     pendingDuplicateNovelCount,
     clampReviewIndex,
     describeDuplicateCheck,
-    findLocalCorpusMatchByFingerprint,
+    findLocalCorpusMatchByLevelFingerprint,
 } from './submission-core.js';
 import { defaultReportError } from '../error-reporting.js';
 import { OVERLAY_NONE, REVIEW, SOLVER_RUNNING } from '../app-constants.js';
@@ -40,19 +40,19 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
     // just the Firestore submissions/published_levels collections. Cached against the levels
     // array's own identity, since fingerprinting is an async SHA-256 hash per level and this
     // corpus rarely changes mid-session.
-    let cachedLocalFingerprints: { levels: any[]; fingerprints: Promise<{ levelNumber: number; fingerprint: string }[]> } | null = null;
-    const getLocalCorpusFingerprints = () => {
+    let cachedLocalLevelFingerprints: { levels: any[]; levelFingerprints: Promise<{ levelNumber: number; levelFingerprint: string }[]> } | null = null;
+    const getLocalCorpusLevelFingerprints = () => {
         const levels = data.getLevels();
-        if (cachedLocalFingerprints?.levels !== levels) {
-            cachedLocalFingerprints = {
+        if (cachedLocalLevelFingerprints?.levels !== levels) {
+            cachedLocalLevelFingerprints = {
                 levels,
-                fingerprints: Promise.all(levels.map(async (raw: any, i: number) => ({
+                levelFingerprints: Promise.all(levels.map(async (raw: any, i: number) => ({
                     levelNumber: i + 1,
-                    fingerprint: await getLevelFingerprint(raw),
+                    levelFingerprint: await getLevelFingerprint(raw),
                 }))),
             };
         }
-        return cachedLocalFingerprints.fingerprints;
+        return cachedLocalLevelFingerprints.levelFingerprints;
     };
 
     // --- Shared multi-step submission flow ---
@@ -149,7 +149,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
         try {
             const duplicateCheck = await persistence.findDuplicateLevel(buildLevelData([]));
             const verdict = describeDuplicateCheck(duplicateCheck);
-            levelFingerprint      = verdict.fingerprint;
+            levelFingerprint      = verdict.levelFingerprint;
             pendingDuplicateMatch = verdict.pendingDuplicateMatch;
             hintAdditionTarget    = verdict.hintAdditionTarget;
             ui.setSubmitStep('smStep-duplicate', verdict.step.state, verdict.step.details);
@@ -169,7 +169,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
         let localExistingHintPaths: number[][] = [];
         if (!pendingDuplicateMatch && !hintAdditionTarget && levelFingerprint) {
             try {
-                const localFingerprints = await getLocalCorpusFingerprints();
+                const localLevelFingerprints = await getLocalCorpusLevelFingerprints();
                 localMatch = findLocalCorpusMatchByFingerprint(localFingerprints, levelFingerprint);
                 if (localMatch) {
                     localExistingHintPaths = hintPaths(await data.getHints(data.getLevel(localMatch.levelNumber - 1)));
@@ -348,7 +348,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
             ui.setButtonState(triggerBtnId, { enabled: false });
             await persistence.submitLevel(levelData, {
                 levelFingerprint, skipDuplicateCheck: true, targetPublishedLevelId,
-                targetLocalLevelFingerprint: targetLocalLevelMatch?.fingerprint ?? null,
+                targetLocalLevelFingerprint: targetLocalLevelMatch?.levelFingerprint ?? null,
             });
             ui.setSubmitStep('smStep-save', 'ok',
                 targetLocalLevelMatch
