@@ -100,7 +100,9 @@ assert.ok(rangeInventory.ledgerEntries.filter(row => row.persistence === 'dual-r
 assert.ok(rangeInventory.ledgerEntries.every(row => Array.isArray(row.oldReferenceCategories)));
 assert.ok(rangeInventory.ledgerEntries.some(row => row.reconciliationState === 'old-live'));
 const phase15Rows = rangeInventory.ledgerEntries.filter(row => row.phase === 15);
-assert.equal(phase15Rows.length, 7);
+const expectedPhase15Ids = ledger.entries.filter(row => row.phase === 15).map(row => row.id).sort();
+assert.deepEqual(phase15Rows.map(row => row.id).sort(), expectedPhase15Ids);
+assert.equal(phase15Rows.length, 13, '15A decomposes Phase 15 into thirteen homogeneous implementation rows');
 assert.ok(phase15Rows.every(row => row.reconciliationState === 'old-live'));
 assert.ok(phase15Rows.every(row => row.oldReferenceFiles.length > 0));
 assert.ok(phase15Rows.find(row => row.id === 'NC-P15-003').oldReferenceCategories.includes('workflow'));
