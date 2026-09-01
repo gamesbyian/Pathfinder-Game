@@ -2325,13 +2325,19 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // as coarse-state-near-tie-retention-disabled-retry's own call site above (that tier's own history: sharing the
         // depleting (workBudget, workStart) pool with every earlier tier starved its attempts of
         // work even when the node reserve genuinely protected the node ceiling).
+        // Queue #2 step-3 work-dose migration (2026-09-01): size this tier's fresh work pool
+        // from the solve's already-resolved canonical workBudget instead of independently converting
+        // its timeBudgetMs-derived wall allocation back into work. CONNECTIVITY_AXIS_EXHAUSTED_RETRY_
+        // BUDGET_FRACTION is 1.0, so the plain-default/no-explicit-work call shape is algebraically
+        // identical; explicit-work research callers now get the work dose they actually requested.
+        // The ms total remains below solely as the tier's wall-clock safety deadline.
         const connectivityRetryTotalBudget = Math.floor(timeBudgetMs * connectivityRetryBudgetFraction);
         const connectivityRetryResult = await runWholeLadderRetryTier({
             stageId: 'connectivity-axis-prune-disabled-retry', proxyOverrides: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: connectivityRetryTotalBudget, nodeCeiling: connectivityRetryNodeCeiling,
-            workBudget: legacyMsToWork(connectivityRetryTotalBudget, MIN_ATTEMPT_WORK),
+            workBudget: scaledStageWorkBudget(workBudget, connectivityRetryBudgetFraction, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });
