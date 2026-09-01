@@ -122,7 +122,6 @@ assert.deepEqual(retiredHits, [], `retired Phase-15 executable identity survives
 const compatibilityOwners = [
   ['NC-P15-001','scripts/family-paths.mjs','--trove-root','--variant-family-dataset-root'],
   ['NC-P15-002','scripts/experiment-manifest-lib.mjs','trove','variantFamilyDataset'],
-  ['NC-P15-003','scripts/family-index-lib.mjs','wide-trove-attempts-','variant-family-dataset-attempts-'],
   ['NC-P15-011','scripts/stress/cpsat-explicit-prefix-reference-lib.mjs','atlas-abstain','reference-abstain'],
   ['NC-P15-012','scripts/stress/cpsat-explicit-prefix-reference-lib.mjs','oracle-abstain','reference-abstain'],
 ];
@@ -131,6 +130,16 @@ for (const [id,file,legacy,canonical] of compatibilityOwners) {
   assert.equal(hasExecutableToken(source, legacy), true, `${id} claimed legacy form exists only in comments or disappeared from owner ${file}`);
   assert.equal(hasExecutableToken(source, canonical), true, `${id} owner lacks canonical executable form ${canonical}`);
 }
+
+// NC-P15-003 deliberately factors the shared "-attempts-" suffix into one regex alternation, so
+// expanded old/new prefixes are not contiguous string literals. Prove the executable owner shape
+// here; solver-research-resumption has already executed family-index-lib-check.mjs against both eras.
+const familyIndexSource = readFileSync('scripts/family-index-lib.mjs', 'utf8');
+assert.match(
+  familyIndexSource,
+  /FAMILY_ATTEMPT_ARTIFACT_RE\s*=\s*\/[^\n]*wide-trove\|variant-family-dataset[^\n]*-attempts-/u,
+  'NC-P15-003 historical/canonical attempt discovery must remain one executable family-index regex owner',
+);
 
 // Current authorities must agree semantically, including physical table rows and the resolved
 // no-historical-reader decision for NC-P15-005.
