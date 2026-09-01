@@ -19,7 +19,7 @@ assert.ok(['active', 'idle'].includes(ledger.activeExecution?.status),
   'Phase-15 execution may be active during a batch or idle while a completed batch awaits merge');
 
 const phase15 = ledger.entries.filter(row => row.phase === 15);
-assert.equal(phase15.length, 13, '15A should resolve to thirteen homogeneous implementation rows');
+assert.equal(phase15.length, 14, 'Phase 15 now contains the thirteen 15A rows plus the 15G implementation-time repair-retreat split');
 assert.equal(ledger.batchCompletions?.['15A']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15A']?.pr, 1638);
 assert.equal(ledger.batchCompletions?.['15A']?.mergeCommit, '4b61b59dfba6dada48f316edcdb6e9b4daa6683e');
