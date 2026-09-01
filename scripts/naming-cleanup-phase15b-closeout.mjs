@@ -56,6 +56,7 @@ const files = [
     .sort();
 
 const retired = [
+    'atlas-eligibility.mjs',
     'scripts/stress/lib/atlas-eligibility.mjs',
     './lib/atlas-eligibility.mjs',
     'selectEligibleAtlasLevels',
