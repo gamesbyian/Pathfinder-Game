@@ -406,5 +406,13 @@ read-only hostile audit of merged `main`, followed by the solver-research resump
 required by the plan. Findings precede repairs.
 
 15J is intentionally empty until 15I is merged and green. It owns immutable implementation/CI/merge
-evidence, program archival/finalization, retirement decisions, and the only authorized transition to
-`lastCompletedPhase: 15` / naming-cleanup `status: complete`.
+evidence, retirement decisions, and the archival handoff. Its handoff PR remains an active rowless
+`finalization` batch with `batchCompletions["15J"]` pending until that PR actually merges.
+
+After the 15J handoff merge, one narrow completion-seal PR/commit records that now-known PR/merge SHA
+under `batchCompletions["15J"]`, moves `activeExecution` to idle, performs any terminal archive
+routing that requires completed state, and is the only authorized transition to
+`lastCompletedPhase: 15` / naming-cleanup `status: complete`. This seal is not a 15K migration
+batch and may not contain new rename work. Its own exact-head CI plus Git history prove the seal;
+requiring the completed ledger to contain the SHA of the commit that contains itself would be
+self-referential and is deliberately not part of the contract.
