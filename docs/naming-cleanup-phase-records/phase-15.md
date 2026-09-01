@@ -1274,3 +1274,53 @@ implementation batch. Its dedicated closeout scans maintained sources directly a
 15H residue proof. Phase 15I's required closeout-guard blind-spot audit must revisit the
 side-specific reconciliation model and either harden it with explicit old/new inventory terms or
 document a narrower authoritative role for that state.
+
+
+### 15H implementation and validation evidence
+
+Implementation on PR **#1645** is complete on implementation head
+`433966955750f1898800a567133693415f1d0f0d`.
+
+The final 15H contract is:
+
+- `scripts/stress/offline-replay-harness.mjs` and
+  `scripts/stress/mc-crossing-slack-analysis.mjs` accept canonical
+  `--prune-gap-dir` and use `PRUNE_GAP_DIR`;
+- both tools preserve the default directory `reports/stress` and discover exactly
+  `prune-gap-*.json`;
+- no maintained current CLI caller requiring `--atlas-dir` was found, so no legacy alias was
+  manufactured;
+- new report metadata single-writes `pruneGapDir`, plus `pruneGapFiles` where the file count is
+  emitted;
+- frozen historical outputs remain untouched and no historical report-field reader was invented;
+- current operator documentation uses the canonical CLI;
+- Phase-8 retained surface `NC-RET-P08-010` is retired because every registered current owner has
+  migrated.
+
+Executable proof includes:
+
+- `test:naming-cleanup-phase15h`, which runs the real offline-replay CLI with a canonical temporary
+  prune-gap directory and proves the existing no-input behavior, default, and file-selection
+  contract;
+- `check:naming-cleanup-phase15h-closeout`, which scans maintained current text surfaces for
+  `--atlas-dir`, `ATLAS_DIR`, `atlasDir`, and `atlasFiles`, pins canonical source/docs/output
+  forms, and verifies retirement of the Phase-8 retained boundary;
+- the ordinary Phase-8 closeout, which accepts the retired retained-surface registry state;
+- the Phase-15 lifecycle/source guard, advanced through the final implementation batch.
+
+CI usefully exposed only lifecycle/guard-integration assumptions, not implementation defects.
+Three successive Node-only failures came from `test:naming-cleanup-surface-inventory` while every
+dedicated 15H proof and Phase-8 closeout remained green. The final diagnosis is recorded above under
+**15H guard observation for 15I**: the generic reconciliation view mixes canonical
+`inventoryTerms` into its old-reference side and therefore cannot be treated as a side-specific
+canonicality oracle for composite rows. 15H narrowed that lifecycle test to what the inventory
+actually proves and deliberately leaves the cross-phase guard hardening to independent 15I.
+
+Implementation head `433966955750f1898800a567133693415f1d0f0d` passed:
+
+- CI run **33466837817**, all six jobs successful;
+- browser characterization run **33466837814**, successful.
+
+NC-P15-007 and NC-P15-013 are now `done`, and `activeExecution` is idle.
+`batchCompletions["15H"]` deliberately remains pending until PR #1645 actually merges. A fresh
+exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
