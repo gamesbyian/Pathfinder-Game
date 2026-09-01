@@ -70,7 +70,7 @@ const productionRows = document =>
     Array.isArray(document) ? document : Array.isArray(document?.levels) ? document.levels : [];
 
 function productionDocumentCommit(document) {
-    const value = document?.commitSha ?? document?.summary?.commit ?? document?.commit ?? document?.solverCommit;
+    const value = document?.commitSha ?? document?.summary?.commit;
     if (typeof value !== 'string') return null;
     const trimmed = value.trim();
     return trimmed && trimmed !== 'unknown' ? trimmed : null;
