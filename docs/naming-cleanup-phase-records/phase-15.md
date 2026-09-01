@@ -652,3 +652,145 @@ deep proofs, and coverage. Exact-head browser characterization run **33459622623
 NC-P15-001 and NC-P15-008 are now `done` and `activeExecution` is idle, while
 `batchCompletions["15C"]` deliberately remains pending until PR #1640 actually merges. A final
 exact-head CI run on this done/idle bookkeeping state is required before merge.
+
+
+## 15C merge evidence
+
+Phase 15C completed as implementation PR **#1640**.
+
+- final head: `f4a73fcd451fba1bbd440f6d75252075b4cf5bc9`;
+- implementation-head green CI: run **33459622550**;
+- final done/idle exact-head CI: run **33460063214**, all six CI jobs successful;
+- final exact-head browser characterization: run **33460063149**, successful;
+- merge commit: `300d26bd35886f01b8fccebac0453d6d7bdc226a`;
+- 15D base-main SHA: the same merge commit;
+- ledger `batchCompletions["15C"]` is now the machine merge-barrier evidence.
+
+## 15D — NC-P15-002 family-run manifest schema v2
+
+Status: **implementation complete; awaiting final exact-head CI and merge**
+
+Branch: `chatgpt/phase15d-family-run-manifest-v2-2026-08-31`  
+PR: **#1641**  
+Base main: `300d26bd35886f01b8fccebac0453d6d7bdc226a`
+
+15D owns only the persisted/generated family evaluation run-manifest contract:
+
+- current schema v1 field `trove`;
+- canonical schema v2 field `variantFamilyDataset`;
+- new writes must be schemaVersion 2 and single-write only the canonical field;
+- the one validator/normalizer permanently reads authentic schema-v1 `trove` manifests;
+- all-legacy, all-canonical, and mixed-era shard groups must normalize to one invariant model;
+- conflict behavior must be explicit if malformed input carries both spellings;
+- no unrelated Phase-15E artifact-path discovery/output rename is permitted in this batch.
+
+Pre-edit work begins with a current writer/reader/fixture census before code changes.
+
+
+### 15D pre-edit census and resolved implementation seam
+
+The current-tree census found one canonical producer/normalizer seam and one consumer join seam:
+
+- `scripts/experiment-manifest-lib.mjs::buildFamilyEvaluationRunManifest` was the only shared
+  current writer helper and emitted schemaVersion 1 with `trove`;
+- `scripts/collect-variant-family-dataset-shard.mjs` is the maintained bulk-family shard producer
+  using that helper;
+- `scripts/experiment-manifest-lib.mjs::validateFamilyEvaluationRunManifest` is the one current
+  run-manifest validator used by family indexing;
+- `scripts/family-index-lib.mjs` normalizes each discovered run manifest through that validator
+  before grouping shards, then formerly compared/exposed `trove` as an invariant;
+- no committed historical family-run `manifest.json` artifact exists on `main`, so
+  `docs/naming-cleanup-phase-records/fixtures/phase15d-family-run-manifest-v1.json` freezes the
+  exact pre-15D v1 contract from base `300d26bd35886f01b8fccebac0453d6d7bdc226a` for permanent
+  reader coverage;
+- adjacent `wide-trove-attempts-*` discovery in `family-index-lib.mjs` belongs to NC-P15-003/009
+  (15E) and is deliberately untouched.
+
+### 15D implementation contract now encoded in source/tests
+
+- new `buildFamilyEvaluationRunManifest` output is schemaVersion **2** and contains only
+  `variantFamilyDataset`;
+- `validateFamilyEvaluationRunManifest` permanently upgrades schema-v1 `trove` input to an
+  in-memory schema-v2 `variantFamilyDataset` model;
+- schema-v2 input must contain the canonical field;
+- an object carrying both spellings is rejected rather than precedence-resolved;
+- unsupported schema versions remain rejected;
+- `family-index-lib.mjs` groups only the normalized canonical field, which makes v1/v1, v2/v2,
+  and v1/v2 shard sets comparable without raw-era drift;
+- new producer output never writes `trove`;
+- all-v1, all-v2, mixed-era, conflict, and authentic-v1 normalization proofs are executable;
+- `check:naming-cleanup-phase15d-closeout` permanently pins the one legacy reader, canonical
+  writer/consumer ownership, and the deliberate 15E `wide-trove-attempts-*` non-change.
+
+
+### 15D cross-shard invariant correction discovered during implementation
+
+The workflow wiring exposed a pre-existing contradiction in the v1 contract. Each Actions shard
+creates and passes a different source slice:
+
+- `wide-shard-01-slice.json`;
+- `wide-shard-02-slice.json`;
+- and so on.
+
+The v1 writer stored that per-shard `shardFile` inside `trove`, while
+`family-index-lib.mjs` compared the entire `trove` object as a run-level invariant. A real
+multi-shard run could therefore be diagnosed as internally inconsistent solely because each shard
+correctly named its own input slice. Existing tests hid this by giving both shards the same
+`shardFile`.
+
+15D resolves the contradiction without deleting provenance:
+
+- each v1/v2 shard manifest still retains its own `shardFile`;
+- the family index derives run-level `variantFamilyDataset` identity by excluding only the
+  shard-local `shardFile`;
+- it aggregates those local paths separately as sorted/deduplicated
+  `variantFamilyDatasetShardFiles`;
+- all other dataset metadata remains part of the cross-shard invariant;
+- the era-matrix test now deliberately gives shard 1 and shard 2 different slice paths, so this
+  failure mode cannot be reintroduced accidentally.
+
+This correction is inside NC-P15-002's required cross-shard invariant proof. It does not alter
+15E's artifact discovery/output-path contract.
+
+### 15D mixed-era structural-equality hardening
+
+A skeptical closeout read found one additional mixed-era hazard after the first green implementation
+head: run invariants were still compared with raw `JSON.stringify`. JSON object key insertion order
+is not semantic schema content, so an authentic v1 artifact and a v2 artifact carrying equivalent
+metadata in different key order could be falsely diagnosed as an inconsistent run.
+
+15D now compares invariant JSON values structurally by recursively sorting object keys while
+preserving array order. A regression test deliberately reorders the v1 shard's `solverPolicy` and
+dataset metadata relative to its v2 peer and proves they still normalize to one complete canonical
+run. This changes only false-negative equality behavior; genuinely different values and array order
+remain conflict-producing.
+
+
+### 15D implementation and validation evidence
+
+Implementation is complete on the hardened head descended from
+`300d26bd35886f01b8fccebac0453d6d7bdc226a`.
+
+The final implementation contract is:
+
+- new family-evaluation run manifests write schemaVersion **2** and
+  `variantFamilyDataset` only;
+- authentic schema-v1 `trove` manifests normalize permanently through
+  `validateFamilyEvaluationRunManifest` to the same canonical in-memory v2 model;
+- malformed dual-field input is rejected rather than precedence-resolved;
+- the maintained bulk-family producer uses only the canonical writer field;
+- family-index grouping consumes only the normalized canonical dataset identity;
+- shard-local `shardFile` provenance is retained per shard but excluded from run-level identity,
+  then aggregated as `variantFamilyDatasetShardFiles`;
+- all-v1, all-v2, mixed-v1/v2, conflicting dual-field, cross-shard provenance, output-artifact
+  joining, and authentic-v1 normalization are executable tests;
+- mixed-era invariant comparison is structural and key-order-insensitive for objects while retaining
+  array order and value differences;
+- Phase-15E historical `wide-trove-attempts-*` discovery remains untouched.
+
+Implementation-head exact CI run **33461568649** passed all six jobs after the structural-equality
+hardening. Exact-head browser characterization run **33461568646** also passed.
+
+NC-P15-002 is now `done` and `activeExecution` is idle. As with 15B/15C,
+`batchCompletions["15D"]` remains pending until the implementation PR actually merges. A fresh
+exact-head CI/browser run on the done/idle bookkeeping head is required before merge.
