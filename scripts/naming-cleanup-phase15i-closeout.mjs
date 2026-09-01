@@ -57,11 +57,26 @@ const allInventory = JSON.parse(allRaw);
 const forbiddenLiveCategories = new Set([
   'application','solver-internal','public-port','worker-transport','workflow','package-command',
 ]);
+function enforcementCategory(file) {
+  if (file === 'package.json') return 'package-command';
+  if (file.startsWith('.github/workflows/')) return 'workflow';
+  if (file === 'modules/ports.ts') return 'public-port';
+  if (/worker/iu.test(file) && (file.startsWith('modules/') || file.startsWith('scripts/'))) return 'worker-transport';
+  if (file.startsWith('modules/solver/')) return 'solver-internal';
+  if (/^modules\/(?:input|engine|state|runtime|editor|render|ui)\//u.test(file) || /^modules\/(?:state|renderer|level-utils)\./u.test(file)) return 'application';
+  return 'other';
+}
 const crossPhaseLeaks = [];
 for (const row of allInventory.ledgerEntries) {
-  if (row.persistence !== 'none' || row.oldReferenceFiles.length === 0) continue;
-  const badCategories = row.oldReferenceCategories.filter(category => forbiddenLiveCategories.has(category));
-  if (badCategories.length) crossPhaseLeaks.push(`${row.id}: ${badCategories.join(',')} -> ${row.oldReferenceFiles.join(',')}`);
+  if (row.persistence !== 'none' || row.oldReferenceFiles.length === 0 || row.old === row.new) continue;
+  const liveOldFiles = row.oldReferenceFiles.filter(file =>
+    !file.startsWith('docs/') &&
+    !isLikelyTestOrNamingGuard(file));
+  const badFiles = liveOldFiles.filter(file => forbiddenLiveCategories.has(enforcementCategory(file)));
+  if (badFiles.length) {
+    const categories = [...new Set(badFiles.map(enforcementCategory))].sort();
+    crossPhaseLeaks.push(`${row.id}: ${categories.join(',')} -> ${badFiles.join(',')}`);
+  }
 }
 assert.deepEqual(crossPhaseLeaks, [], `direct-renamed legacy identities remain on live runtime/control surfaces:\n${crossPhaseLeaks.join('\n')}`);
 
