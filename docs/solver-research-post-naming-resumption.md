@@ -1,6 +1,6 @@
 # Solver research resumption after naming cleanup
 
-> **Status:** Phase-15 implementation migrations are merged. This document is the active resumption/closeout bridge during Phase 15I/15J and becomes permission for decision-bearing solver research only after final naming closeout is complete.
+> **Status:** The repository-wide naming cleanup is complete through Phase 15. This document is now the active post-cleanup bridge for interpreting frozen pre-cleanup evidence and for the baseline checkpoint before resumed decision-bearing solver research.
 >
 > **Purpose:** preserve research continuity across frozen historical evidence without rewriting that evidence or teaching every consumer two vocabularies.
 
