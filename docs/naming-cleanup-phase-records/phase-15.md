@@ -1157,3 +1157,55 @@ therefore adds **NC-P15-014** to batch 15G before implementation. Its migration 
 
 This same census locks NC-P15-012's previously unspecified canonical summary field to
 `referenceAbstentions`.
+
+
+### 15G implementation and validation evidence
+
+Implementation on PR **#1644** is complete on implementation head
+`33cc5009739188a66221111e38542df114f911e0`.
+
+The final 15G contract is:
+
+- same-run explicit-prefix result output is schema v2 and single-writes
+  `referenceLabel` / `referenceReason`; UNKNOWN uses `reference-unknown`;
+- workflow-local shard dependency identity is `reference-shards`;
+- canonical external case format is `reference-abstain`, while the shared extractor alone retains
+  `atlas-abstain` as the transition alias;
+- current known-prefix source output is schema v2 and single-writes
+  `reference`, `reference-abstain`, and `referenceAbstentions`;
+- authentic schema-v1 known-prefix evidence using `oracle-abstain` remains permanently readable
+  through the same extractor and is not rewritten;
+- repair-retreat current diagnostic output now uses
+  `referenceProbe`, `referenceLabel`, and `referenceReason`;
+- historical unversioned repair-retreat outputs and historical schema-v1 explicit-prefix result
+  artifacts remain frozen;
+- no synthetic historical adapter was added for NC-P15-005 because no maintained historical result
+  reader exists;
+- 15H prune-gap directory/report vocabulary remains untouched.
+
+Executable proof on the implementation head includes:
+
+- `test:research-analysis-lib`, proving v1/v2 known-prefix source normalization and population
+  equivalence for `atlas-abstain` vs `reference-abstain`;
+- `test:naming-cleanup-phase15g-reference`, executing the real explicit-prefix CLI through the
+  sparse-safe native-illegal smoke path and proving canonical schema-v2 output without invoking
+  CP-SAT;
+- `check:naming-cleanup-phase15g-closeout`, scanning maintained current text surfaces and allowing
+  only the two intentional compatibility literals at their owned parser/test boundary;
+- workflow combiner guards that reject non-v2/noncanonical same-run shard rows rather than
+  manufacturing mixed-era compatibility;
+- the advanced Phase-8 retained-surface contract, which now retains only the two real compatibility
+  owners after the current CP-SAT vocabulary migration.
+
+Exact-head validation for implementation head
+`33cc5009739188a66221111e38542df114f911e0` passed:
+
+- CI run **33465763452**, all six jobs successful:
+  `node-tests`, `deep-proofs`, `build`, `checks`, `checks-lint`, and
+  `deep-verification`;
+- browser characterization run **33465763465**, successful.
+
+NC-P15-005, NC-P15-010, NC-P15-011, NC-P15-012, and NC-P15-014 are now `done`, and
+`activeExecution` is idle. `batchCompletions["15G"]` deliberately remains pending until PR
+#1644 actually merges. A fresh exact-head CI/browser run on this done/idle bookkeeping head is
+required before merge.
