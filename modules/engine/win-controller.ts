@@ -41,13 +41,13 @@ export async function saveWinAsHintIfNovel(
         const levelIdx = state.engineState.levelIdx;
         const rawLevel = data.getLevel(levelIdx);
         if (!rawLevel) return;
-        const fingerprint = await getLevelFingerprint(rawLevel);
+        const levelFingerprint = await getLevelFingerprint(rawLevel);
         const knownHints = await data.getHints(rawLevel); // already merges local + Firestore
         const signature = hintPathSignature(path);
         const alreadyKnown = new Set(knownHints.map((h: any) => hintPathSignature(h.path)));
         if (alreadyKnown.has(signature)) return;
-        const provenanceEntry = makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved', levelRevision: fingerprint });
-        await persistence.saveLocalLevelHintIfNovel(fingerprint, path, signature, provenanceEntry, alreadyKnown);
+        const provenanceEntry = makeProvenanceEntry('manual-path', { solverId: HUMAN_PLAYER_ID, termination: 'solved', levelRevision: levelFingerprint });
+        await persistence.saveLocalLevelHintIfNovel(levelFingerprint, path, signature, provenanceEntry, alreadyKnown);
     } catch (err: any) {
         reportError('win.auto-save-hint', err);
     }
