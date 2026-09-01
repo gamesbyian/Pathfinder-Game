@@ -4174,7 +4174,7 @@
       "batch": "15C",
       "status": "done",
       "notes": "15A narrowed the inherited CLI/API bundle. External dataset-root CLI compatibility is owned here; private helper/local names moved to NC-P15-008. Inventory and decision record: docs/naming-cleanup-phase-records/phase-15.md. Phase 15J retired the external --trove-root transition alias after 15I proved there was no current repository caller; the canonical parser now rejects the retired spelling.",
-      "migrationClass": "current-surface-rename-retired-transition-alias",
+      "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
@@ -4543,7 +4543,7 @@
       "batch": "15G",
       "status": "done",
       "notes": "15A split the workflow/CLI input token from NC-P15-005. The shared input parser owns the transition alias; current workflow/docs single-write the canonical token after migration. docs/naming-cleanup-phase-records/phase-15.md. Phase 15J retired the external atlas-abstain format alias after 15I proved there was no current repository caller. Historical schema-v1 oracle-abstain data remains readable under NC-P15-012 through the canonical reference-abstain format.",
-      "migrationClass": "current-surface-rename-retired-transition-alias",
+      "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
