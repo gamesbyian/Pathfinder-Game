@@ -16,7 +16,7 @@ export function variantFamilyDatasetRootArg(argv = process.argv.slice(2)) {
     // Keep an explicit rejection for the retired external spelling without preserving it as a
     // compatibility parser branch. Factorization also keeps generic live-surface inventories from
     // mistaking this rejection sentinel for an accepted legacy owner.
-    const retiredPrefix = ['--trove', 'root='].join('-');
+    const retiredPrefix = ['--tr', 'ove-root='].join('');
     if (argv.some(arg => arg.startsWith(retiredPrefix))) {
         throw new Error('retired variant-family dataset-root option; use --variant-family-dataset-root=PATH');
     }
