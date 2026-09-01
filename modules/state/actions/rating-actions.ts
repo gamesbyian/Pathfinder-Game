@@ -5,13 +5,13 @@ import type { StateOrEngine } from './shared.js';
 
 export function setLevelRatingContext(
     stateOrEngine: StateOrEngine,
-    { fingerprint = null, levelNumber = null, loaded = false }:
-        { fingerprint?: string | null; levelNumber?: number | null; loaded?: boolean } = {}
+    { levelFingerprint = null, levelNumber = null, loaded = false }:
+        { levelFingerprint?: string | null; levelNumber?: number | null; loaded?: boolean } = {}
 ) {
     const engineState = resolveEngineState(stateOrEngine);
     const rating = engineState?.levelRating;
     if (!rating) return null;
-    rating.fingerprint = fingerprint;
+    rating.levelFingerprint = levelFingerprint;
     rating.levelNumber = levelNumber;
     rating.loaded = loaded;
     rating.tags = new Set();
