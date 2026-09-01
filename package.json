@@ -233,7 +233,8 @@
     "test:naming-cleanup-phase15h": "node scripts/naming-cleanup-phase15h-node-test.mjs",
     "check:naming-cleanup-phase15h-closeout": "node scripts/naming-cleanup-phase15h-closeout.mjs",
     "test:naming-current-authorities": "node scripts/naming-current-authorities-node-test.mjs",
-    "check:naming-cleanup-final-state": "node scripts/naming-cleanup-final-state.mjs"
+    "check:naming-cleanup-final-state": "node scripts/naming-cleanup-final-state.mjs",
+    "test:firestore-level-fingerprint-boundary": "tsx scripts/firestore-level-fingerprint-boundary-test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
