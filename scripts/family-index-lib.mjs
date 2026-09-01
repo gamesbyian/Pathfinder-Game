@@ -40,11 +40,17 @@ function familyAttemptLogicalRowKey(row) {
     return [artifact.corpus, row.parentId, row.mode, row.variantId].join('\0');
 }
 
+function familyAttemptComparablePayload(row) {
+    const { evidencePath: _evidencePath, ...payload } = row;
+    return stableJson(payload);
+}
+
 /**
  * Reconcile frozen wide-trove aggregate snapshots with current canonical aggregate snapshots by
- * logical variant identity. Canonical rows win only for the exact parent/mode/variant they cover;
- * historical-only rows survive when a canonical aggregate is partial. This prevents a newly
- * generated partial canonical corpus aggregate from silently hiding unrelated frozen evidence.
+ * logical variant identity and normalized evidence payload. A canonical row replaces a historical
+ * row only when the two observations are payload-equivalent after identity normalization.
+ * Historical-only rows survive partial canonical coverage, and conflicting observations for the
+ * same logical variant are both preserved and surfaced as diagnostics.
  */
 function reconcileFamilyAttemptAggregateEvidence(rows) {
     const ordinary = [];
@@ -81,16 +87,27 @@ function reconcileFamilyAttemptAggregateEvidence(rows) {
     }
 
     const aggregate = [];
-    let canonicalOverridesHistoricalRows = 0;
+    let historicalDuplicateRowsReplacedByCanonical = 0;
+    let historicalConflictingRowsPreserved = 0;
     let duplicateCanonicalLogicalRows = 0;
+    const conflictingKeys = new Set();
     for (const key of [...byLogicalRow.keys()].sort()) {
         const bucket = byLogicalRow.get(key);
-        if (bucket.canonical.length) {
-            aggregate.push(...bucket.canonical);
-            canonicalOverridesHistoricalRows += bucket.historical.length;
-            if (bucket.canonical.length > 1) duplicateCanonicalLogicalRows += bucket.canonical.length - 1;
-        } else {
+        if (!bucket.canonical.length) {
             aggregate.push(...bucket.historical);
+            continue;
+        }
+        aggregate.push(...bucket.canonical);
+        if (bucket.canonical.length > 1) duplicateCanonicalLogicalRows += bucket.canonical.length - 1;
+        const canonicalPayloads = new Set(bucket.canonical.map(familyAttemptComparablePayload));
+        for (const historical of bucket.historical) {
+            if (canonicalPayloads.has(familyAttemptComparablePayload(historical))) {
+                historicalDuplicateRowsReplacedByCanonical++;
+            } else {
+                aggregate.push(historical);
+                historicalConflictingRowsPreserved++;
+                conflictingKeys.add(key);
+            }
         }
     }
 
@@ -98,13 +115,16 @@ function reconcileFamilyAttemptAggregateEvidence(rows) {
         .filter(stats => stats.historicalKeys.size && stats.canonicalKeys.size)
         .map(stats => {
             const historicalOnlyKeys = [...stats.historicalKeys].filter(key => !stats.canonicalKeys.has(key));
+            const conflictingOverlapRows = [...stats.historicalKeys]
+                .filter(key => stats.canonicalKeys.has(key) && conflictingKeys.has(key)).length;
             return {
                 corpus: stats.corpus,
                 historicalLogicalRows: stats.historicalKeys.size,
                 canonicalLogicalRows: stats.canonicalKeys.size,
                 overlappingLogicalRows: stats.historicalKeys.size - historicalOnlyKeys.length,
+                conflictingOverlapRows,
                 historicalOnlyRowsPreserved: historicalOnlyKeys.length,
-                canonicalFullySupersedesHistorical: historicalOnlyKeys.length === 0,
+                canonicalFullySupersedesHistorical: historicalOnlyKeys.length === 0 && conflictingOverlapRows === 0,
             };
         })
         .sort((a, b) => a.corpus.localeCompare(b.corpus));
@@ -113,9 +133,10 @@ function reconcileFamilyAttemptAggregateEvidence(rows) {
         rows: [...ordinary, ...aggregate],
         diagnostics: {
             mixedEraCorpora,
-            canonicalOverridesHistoricalRows,
+            historicalDuplicateRowsReplacedByCanonical,
             historicalRowsPreservedFromPartialCanonical: mixedEraCorpora
                 .reduce((sum, row) => sum + row.historicalOnlyRowsPreserved, 0),
+            historicalConflictingRowsPreserved,
             duplicateCanonicalLogicalRows,
             ambiguousRows,
         },
