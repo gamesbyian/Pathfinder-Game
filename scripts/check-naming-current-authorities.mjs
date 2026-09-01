@@ -25,8 +25,9 @@ if (nextPhase === 15) {
     if (phase15Active) {
         if (execution !== 'docs/naming-cleanup-phase-records/phase-15.md')
             failures.push('active Phase 15 must register docs/naming-cleanup-phase-records/phase-15.md as its execution authority');
+        const executionIndexPath = typeof execution === 'string' ? execution.replace(/^docs\//u, '') : '';
         if (!agents.includes(execution)) failures.push('AGENTS.md must route active Phase 15 through its execution authority');
-        if (!docsIndex.includes(execution)) failures.push('docs/README.md must list the active Phase-15 execution authority');
+        if (!docsIndex.includes(executionIndexPath)) failures.push('docs/README.md must list the active Phase-15 execution authority');
         if (!docsIndex.includes(preparation)) failures.push('docs/README.md must retain the Phase-15 preparation snapshot');
     } else {
         if (!agents.includes(preparation)) failures.push('AGENTS.md must route pending Phase 15 through its preparation authority');
