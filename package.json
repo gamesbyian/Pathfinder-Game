@@ -167,6 +167,7 @@
     "test:technique-campaign-analysis": "node scripts/analyze-technique-campaign-node-test.mjs",
     "test:technique-census-result-lib": "node scripts/technique-census-result-lib-node-test.mjs",
     "test:analyze-technique-census": "node scripts/analyze-technique-census-node-test.mjs",
+    "test:analyze-technique-niches": "node scripts/analyze-technique-niches-node-test.mjs",
     "test:technique-census-cell": "tsx scripts/technique-census-cell-node-test.mjs",
     "test:operational-similarity-lib": "node scripts/operational-similarity-lib-node-test.mjs",
     "test:solver-research-resumption": "tsx scripts/solver-research-resumption-node-test.mjs",
