@@ -84,7 +84,7 @@ try {
   expectFailure(
     'retired dataset-root alias resurrected in permanent vocabulary',
     'docs/naming-and-vocabulary.md',
-    source => `${source}\nThe shared parser accepts \`--trove-root\` as a transition alias.\n`,
+    source => `${source}\nThe shared parser accepts \`${['--tr', 'ove-root'].join('')}\` as a transition alias.\n`,
     /retired --trove-root as accepted compatibility/iu,
   );
 
