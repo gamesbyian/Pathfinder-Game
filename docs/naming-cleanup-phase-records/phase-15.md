@@ -1209,3 +1209,118 @@ NC-P15-005, NC-P15-010, NC-P15-011, NC-P15-012, and NC-P15-014 are now `done`, a
 `activeExecution` is idle. `batchCompletions["15G"]` deliberately remains pending until PR
 #1644 actually merges. A fresh exact-head CI/browser run on this done/idle bookkeeping head is
 required before merge.
+
+
+## 15G merge evidence
+
+Phase 15G completed as implementation PR **#1644**.
+
+- final head: `dd6df6a3635b053267ff244ff8502e5acb060737`;
+- implementation-head green CI: run **33465763452**, all six CI jobs successful;
+- implementation-head browser characterization: run **33465763465**, successful;
+- final done/idle exact-head CI: run **33466079678**, all six CI jobs successful;
+- final done/idle browser characterization: run **33466079677**, successful;
+- merge commit: `7e82a4325484eac2da67864101e33f614d075d70`;
+- 15H base-main SHA: the same merge commit;
+- ledger `batchCompletions["15G"]` is now the machine merge-barrier evidence.
+
+## 15H — NC-P15-007 / NC-P15-013 prune-gap directory and report vocabulary
+
+Status: **active**
+
+Branch: `chatgpt/phase15h-prune-gap-vocabulary-2026-08-31`  
+PR: **#1645**  
+Base main: `7e82a4325484eac2da67864101e33f614d075d70`
+
+15H owns two separated current-surface contracts:
+
+- **NC-P15-007:** direct rename of current `--atlas-dir` CLI/local `ATLAS_DIR` vocabulary to
+  `--prune-gap-dir` / `PRUNE_GAP_DIR`;
+- **NC-P15-013:** new generated report metadata `atlasDir` / `atlasFiles` to
+  `pruneGapDir` / `pruneGapFiles`, while historical outputs remain frozen.
+
+The entry census found no maintained machine/external caller requiring a `--atlas-dir` alias and no
+maintained historical reader for the generated metadata fields. 15H therefore must not manufacture
+compatibility shims absent new evidence.
+
+Maintained implementation owners identified at entry:
+
+- `scripts/stress/offline-replay-harness.mjs`;
+- `scripts/stress/mc-crossing-slack-analysis.mjs`;
+- `docs/solver-offline-replay-harness.md` for current operator-facing usage.
+
+Behavioral invariants:
+
+1. the same default directory remains `reports/stress`;
+2. both tools still discover exactly `prune-gap-*.json` inputs;
+3. file ordering/selection is unchanged;
+4. analysis/replay behavior is unchanged;
+5. only new output metadata field names change;
+6. historical reports/archived docs are not rewritten;
+7. Phase 15I remains blocked until this batch merges.
+
+
+### 15H guard observation for 15I
+
+While integrating 15H, `test:naming-cleanup-surface-inventory` exposed a pre-existing limitation in
+the generic reconciliation view: `reconciliationReferenceMatches(entry, 'old')` includes every
+`inventoryTerms` value, even canonical target terms, while the `new` side searches only the
+descriptive `entry.new` string. Composite ledger rows can therefore remain classified
+`old-live`/mixed even when the dedicated semantic closeout proves all maintained implementation
+surfaces canonical.
+
+15H does **not** change that cross-phase inventory algorithm because doing so would broaden the final
+implementation batch. Its dedicated closeout scans maintained sources directly and is the decisive
+15H residue proof. Phase 15I's required closeout-guard blind-spot audit must revisit the
+side-specific reconciliation model and either harden it with explicit old/new inventory terms or
+document a narrower authoritative role for that state.
+
+
+### 15H implementation and validation evidence
+
+Implementation on PR **#1645** is complete on implementation head
+`433966955750f1898800a567133693415f1d0f0d`.
+
+The final 15H contract is:
+
+- `scripts/stress/offline-replay-harness.mjs` and
+  `scripts/stress/mc-crossing-slack-analysis.mjs` accept canonical
+  `--prune-gap-dir` and use `PRUNE_GAP_DIR`;
+- both tools preserve the default directory `reports/stress` and discover exactly
+  `prune-gap-*.json`;
+- no maintained current CLI caller requiring `--atlas-dir` was found, so no legacy alias was
+  manufactured;
+- new report metadata single-writes `pruneGapDir`, plus `pruneGapFiles` where the file count is
+  emitted;
+- frozen historical outputs remain untouched and no historical report-field reader was invented;
+- current operator documentation uses the canonical CLI;
+- Phase-8 retained surface `NC-RET-P08-010` is retired because every registered current owner has
+  migrated.
+
+Executable proof includes:
+
+- `test:naming-cleanup-phase15h`, which runs the real offline-replay CLI with a canonical temporary
+  prune-gap directory and proves the existing no-input behavior, default, and file-selection
+  contract;
+- `check:naming-cleanup-phase15h-closeout`, which scans maintained current text surfaces for
+  `--atlas-dir`, `ATLAS_DIR`, `atlasDir`, and `atlasFiles`, pins canonical source/docs/output
+  forms, and verifies retirement of the Phase-8 retained boundary;
+- the ordinary Phase-8 closeout, which accepts the retired retained-surface registry state;
+- the Phase-15 lifecycle/source guard, advanced through the final implementation batch.
+
+CI usefully exposed only lifecycle/guard-integration assumptions, not implementation defects.
+Three successive Node-only failures came from `test:naming-cleanup-surface-inventory` while every
+dedicated 15H proof and Phase-8 closeout remained green. The final diagnosis is recorded above under
+**15H guard observation for 15I**: the generic reconciliation view mixes canonical
+`inventoryTerms` into its old-reference side and therefore cannot be treated as a side-specific
+canonicality oracle for composite rows. 15H narrowed that lifecycle test to what the inventory
+actually proves and deliberately leaves the cross-phase guard hardening to independent 15I.
+
+Implementation head `433966955750f1898800a567133693415f1d0f0d` passed:
+
+- CI run **33466837817**, all six jobs successful;
+- browser characterization run **33466837814**, successful.
+
+NC-P15-007 and NC-P15-013 are now `done`, and `activeExecution` is idle.
+`batchCompletions["15H"]` deliberately remains pending until PR #1645 actually merges. A fresh
+exact-head CI/browser run on this done/idle bookkeeping head is required before merge.

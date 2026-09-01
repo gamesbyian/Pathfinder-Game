@@ -34,12 +34,12 @@
  * how early they fire. Deliberately NOT reduced to one leaderboard number; see
  * docs/solver-offline-replay-harness.md.
  *
- * PERSISTENCE. Writes --out after EVERY atlas file, following scripts/README.md's rule that long
+ * PERSISTENCE. Writes --out after EVERY prune-gap file, following scripts/README.md's rule that long
  * batch tools persist recoverable progress incrementally.
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/offline-replay-harness.mjs -- \
- *     --atlas-dir=reports/stress --probes=scripts/stress/probes/separator-resource-probe.mjs \
+ *     --prune-gap-dir=reports/stress --probes=scripts/stress/probes/separator-resource-probe.mjs \
  *     --out=reports/stress/interface-probe-harness-results.json
  */
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -65,7 +65,7 @@ const CORPUS = path.join(root, 'data/stress/stress-levels-random.json');
 
 const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
-const ATLAS_DIR = arg('atlas-dir', 'reports/stress');
+const PRUNE_GAP_DIR = arg('prune-gap-dir', 'reports/stress');
 const PROBE_NAMES = (arg('probes', [...PROBE_REGISTRY.keys()].join(','))).split(',').map(s => s.trim()).filter(Boolean);
 const OUT_FILE = arg('out', null);
 
@@ -76,8 +76,8 @@ const probes = PROBE_NAMES.map((n) => {
 });
 console.log(`interface-probe-harness: ${probes.length} probe(s): ${probes.map(p => p.name).join(', ')}`);
 
-const atlasFiles = readdirSync(path.resolve(root, ATLAS_DIR)).filter(f => /^prune-gap-.*\.json$/.test(f));
-if (atlasFiles.length === 0) { console.error(`No prune-gap-*.json files found under ${ATLAS_DIR}.`); process.exit(1); }
+const pruneGapFiles = readdirSync(path.resolve(root, PRUNE_GAP_DIR)).filter(f => /^prune-gap-.*\.json$/.test(f));
+if (pruneGapFiles.length === 0) { console.error(`No prune-gap-*.json files found under ${PRUNE_GAP_DIR}.`); process.exit(1); }
 
 const packXY = ([x, y]) => (((y - 1) << 16) | (x - 1)) >>> 0;
 const corpusLevels = readLevelsWithHints(CORPUS);
@@ -87,7 +87,7 @@ function freshTally() {
 }
 
 const perProbe = new Map(probes.map(p => [p.name, { tally: freshTally(), falseRejects: [], catchesByDepth: [] }]));
-const results = { atlasDir: ATLAS_DIR, probes: probes.map(p => ({ name: p.name, soundnessClass: p.soundnessClass })), perFile: [], summary: null };
+const results = { pruneGapDir: PRUNE_GAP_DIR, probes: probes.map(p => ({ name: p.name, soundnessClass: p.soundnessClass })), perFile: [], summary: null };
 
 function persist() {
     if (!OUT_FILE) return;
@@ -113,8 +113,8 @@ function summarize() {
     return out;
 }
 
-for (const file of atlasFiles.sort()) {
-    const atlas = JSON.parse(readFileSync(path.resolve(root, ATLAS_DIR, file), 'utf8'));
+for (const file of pruneGapFiles.sort()) {
+    const atlas = JSON.parse(readFileSync(path.resolve(root, PRUNE_GAP_DIR, file), 'utf8'));
     const levelId = atlas.level;
     const idx = corpusLevels.findIndex(l => l.id === levelId);
     if (idx < 0) { console.warn(`${file}: level ${levelId} not found in corpus, skipping.`); continue; }

@@ -14,7 +14,7 @@ Example:
 
 ```bash
 node scripts/run-bundled.mjs scripts/stress/offline-replay-harness.mjs -- \
-  --atlas-dir=reports/stress \
+  --prune-gap-dir=reports/stress \
   --probes=<probe-id> \
   --out=reports/stress/interface-probe-harness-results.json
 ```

@@ -29,7 +29,7 @@
  *     --out=reports/stress/mc-crossing-slack-analysis.json
  *
  * Optional:
- *   --atlas-dir=reports/stress
+ *   --prune-gap-dir=reports/stress
  *   --corpora=published,corpus1,corpus2
  *   --limit-levels=N          # per corpus, useful for smoke runs
  */
@@ -60,7 +60,7 @@ const arg = (name, fallback) => {
     return hit === undefined ? fallback : hit.slice(name.length + 3);
 };
 
-const ATLAS_DIR = arg('atlas-dir', 'reports/stress');
+const PRUNE_GAP_DIR = arg('prune-gap-dir', 'reports/stress');
 const OUT_FILE = arg('out', 'reports/stress/mc-crossing-slack-analysis.json');
 const CORPUS_NAMES = arg('corpora', 'published,corpus1,corpus2').split(',').map(s => s.trim()).filter(Boolean);
 const LIMIT_LEVELS = Number(arg('limit-levels', 'Infinity'));
@@ -211,8 +211,8 @@ function thresholdContrast(deadDist, aliveDist) {
 }
 
 function analyzeAtlas() {
-    const atlasRoot = path.resolve(root, ATLAS_DIR);
-    const files = readdirSync(atlasRoot).filter(f => /^prune-gap-.*\.json$/.test(f)).sort();
+    const pruneGapRoot = path.resolve(root, PRUNE_GAP_DIR);
+    const pruneGapFiles = readdirSync(pruneGapRoot).filter(f => /^prune-gap-.*\.json$/.test(f)).sort();
     const corpusLevels = readLevelsWithHints(path.join(root, CORPORA.corpus2.levels));
     const grouped = new Map();
     const overall = new Map();
@@ -220,8 +220,8 @@ function analyzeAtlas() {
     const rows = [];
     let liveNegativeSlack = 0;
 
-    for (const file of files) {
-        const atlas = JSON.parse(readFileSync(path.join(atlasRoot, file), 'utf8'));
+    for (const file of pruneGapFiles) {
+        const atlas = JSON.parse(readFileSync(path.join(pruneGapRoot, file), 'utf8'));
         const idx = corpusLevels.findIndex(l => l.id === atlas.level);
         if (idx < 0) continue;
         const raw = corpusLevels[idx];
@@ -277,8 +277,8 @@ function analyzeAtlas() {
     }
 
     return {
-        atlasDir: ATLAS_DIR,
-        atlasFiles: files.length,
+        pruneGapDir: PRUNE_GAP_DIR,
+        pruneGapFiles: pruneGapFiles.length,
         rows,
         overall: Object.fromEntries([...overall.entries()].map(([k, v]) => [k, finishDist(v)])),
         byDepthAndRemainingMustCross: finishGrouped(grouped),
