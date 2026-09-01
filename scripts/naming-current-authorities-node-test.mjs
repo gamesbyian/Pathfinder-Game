@@ -96,20 +96,40 @@ try {
   );
 
   expectFailure(
-    'active authority routing drift',
+    'terminal route invents Phase 16',
     'AGENTS.md',
-    source => source.replaceAll('docs/naming-cleanup-phase-records/phase-15.md', 'docs/naming-cleanup-phase-records/phase-08.md'),
-    /AGENTS\.md must route active Phase 15|active naming authority/iu,
+    source => source.replace(
+      'do not reopen them as a new phase sequence or invent Phase 16',
+      'follow the next phase returned by that status and begin Phase 16',
+    ),
+    /must explicitly forbid reopening|must not advertise a next naming phase/iu,
   );
 
   expectFailure(
-    'active execution-record header drift',
-    'docs/naming-cleanup-phase-records/phase-15.md',
-    source => source.replace(
-      /^Status: \*\*[^\n]+\*\*$/mu,
-      'Status: **15A contract-decomposition gate active**',
-    ),
-    /execution-record header must name the active batch/iu,
+    'completed execution evidence relabeled current',
+    'docs/README.md',
+    source => source.replace('Completed/frozen Phase-15 execution evidence', 'Current Phase-15 execution/closeout authority'),
+    /completed\/frozen evidence|must not classify Phase 15 as current execution authority/iu,
+  );
+
+  expectFailure(
+    'terminal ledger reopens execution',
+    'docs/naming-cleanup-ledger.json',
+    source => {
+      const ledger = JSON.parse(source);
+      ledger.activeExecution = {
+        status: 'active',
+        phase: 15,
+        batch: '15J',
+        branch: 'test/reopened-phase15',
+        pr: 9999,
+        baseMainSha: '504330dc4e474b1ebc7755e8c34f72f63fd37901',
+        recordPath: 'docs/naming-cleanup-phase-records/phase-15.md',
+        notes: 'invalid terminal fixture',
+      };
+      return `${JSON.stringify(ledger, null, 2)}\n`;
+    },
+    /completed naming program must leave activeExecution idle/iu,
   );
 
   console.log('Naming current-authority negative fixtures passed.');
