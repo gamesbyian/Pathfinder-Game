@@ -2461,7 +2461,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: mcNeighborBudgetRetryTotalBudget, nodeCeiling: mcNeighborBudgetRetryNodeCeiling,
-            workBudget: legacyMsToWork(mcNeighborBudgetRetryTotalBudget, MIN_ATTEMPT_WORK),
+            // Work-dose migration (2026-09-01): this tier's own historical comment already
+            // diagnosed the 24h capability deadline -> enormous legacyMsToWork pool as the reason
+            // work subdivision failed to bind. Size the fresh pool from the solve's resolved
+            // canonical workBudget instead. The ms total remains the wall-clock safety deadline.
+            workBudget: scaledStageWorkBudget(workBudget, mcNeighborBudgetRetryBudgetFraction, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: true,
         });
