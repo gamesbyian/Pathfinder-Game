@@ -111,16 +111,27 @@ assert.equal(
 );
 
 const cpsatReference = readFileSync('scripts/stress/cpsat-explicit-prefix-reference.mjs', 'utf8');
-assert.match(cpsatReference, /oracleLabel/u);
-assert.match(cpsatReference, /oracleReason/u);
+assert.match(cpsatReference, /schemaVersion: 2/u);
+assert.match(cpsatReference, /referenceLabel/u);
+assert.match(cpsatReference, /referenceReason/u);
+assert.doesNotMatch(cpsatReference, /oracleLabel|oracleReason/u);
 
 const cpsatWorkflow = readFileSync('.github/workflows/cpsat-explicit-prefix-reference.yml', 'utf8');
-assert.match(cpsatWorkflow, /oracle-shards:/u);
-assert.match(cpsatWorkflow, /atlas-abstain/u);
+assert.match(cpsatWorkflow, /reference-shards:/u);
+assert.match(cpsatWorkflow, /reference-abstain/u);
+assert.doesNotMatch(cpsatWorkflow, /oracle-shards|atlas-abstain/u);
 
 const prefixCollector = readFileSync('scripts/stress/collect-known-solution-prefix-branches.mjs', 'utf8');
-assert.match(prefixCollector, /schemaVersion: 1/u);
-assert.match(prefixCollector, /oracle-abstain/u);
+assert.match(prefixCollector, /schemaVersion: 2/u);
+assert.match(prefixCollector, /reference-abstain/u);
+assert.match(prefixCollector, /referenceAbstentions/u);
+assert.doesNotMatch(prefixCollector, /oracleAbstentions|oracle: \{/u);
+
+const repairRetreat = readFileSync('scripts/stress/repair-retreat-binary-search.mjs', 'utf8');
+assert.match(repairRetreat, /referenceProbe/u);
+assert.match(repairRetreat, /referenceLabel/u);
+assert.match(repairRetreat, /referenceReason/u);
+assert.doesNotMatch(repairRetreat, /oracleProbe|oracleLabel|oracleReason/u);
 
 const legacyPrefixDocument = JSON.parse(readFileSync('docs/naming-cleanup-phase-records/fixtures/phase15-winning-prefix-v1.json', 'utf8'));
 const legacyPrefixCases = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'atlas-abstain' });
