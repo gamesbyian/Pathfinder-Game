@@ -1622,7 +1622,7 @@ open. The proof head passed all three required execution gates:
 - ordinary exact-head CI run **33470466934**: all six jobs successful, including build, lint,
   non-lint checks, Node tests, deep proofs, and coverage/deep verification;
 - dedicated **Phase 15I Closeout** run **33470466888**: successful. It executed
-  `test:solver-research-resumption`, `check:naming-cleanup-phase15i-closeout`, and the production
+  `test:solver-research-resumption`, the former dedicated Phase-15I hostile-closeout check, and the production
   solved-set regression `solver:regression -- --check`;
 - browser characterization run **33470466886**: successful.
 
