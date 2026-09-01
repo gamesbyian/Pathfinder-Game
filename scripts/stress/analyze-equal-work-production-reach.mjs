@@ -19,6 +19,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 import { normalizeAttemptActionKey, normalizeAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 import { normalizeSolverStageId } from '../../modules/solver/stage-id-normalization.mjs';
@@ -266,7 +267,7 @@ function parseArgs(argv) {
     return { values, flags };
 }
 
-if (import.meta.url === 'file://' + process.argv[1]) {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
     const { values, flags } = parseArgs(process.argv.slice(2));
     const equalWorkPath = values.get('--equal-work');
     const productionPaths = (values.get('--production') ?? '').split(',').filter(Boolean);
