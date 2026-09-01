@@ -17,16 +17,23 @@ const base = { schemaVersion: 2, experimentId: 'e', solverRef: 'abc', corpus: 'c
     profile: 'default', instrumentation: 'off', workflow: 'solver-stress-refresh', workflowInputs };
 const control = { ...base, runId: 'c', arm: 'control', solverFlags: { TARGET: false, OTHER: true }, output: 'c.json' };
 const treatment = { ...base, runId: 't', arm: 'treatment', solverFlags: { TARGET: true, OTHER: true }, output: 't.json' };
-const familyRun = { schemaVersion: 1, runId: 'family-run', solver: { commit: 'abc', ref: 'main', dirty: false },
-    invocation: { tool: 'family-evaluate', workflow: null }, selection: { corpora: ['corpus2'], families: [] },
-    trove: { branch: null, commit: null, artifactSha256: '123' },
-    solverPolicy: { mode: 'cold', profile: 'default', config: null, flags: {}, strictTotalWorkBudget: true },
-    budgets: { workUnits: 100, nodeCeiling: null, wallDeadlineMs: 1000 }, seeds: [1],
-    shard: { count: 1, index: 1 }, startedAt: '2026-08-21T00:00:00Z', completedAt: '2026-08-21T00:01:00Z',
-    outputArtifacts: ['logs/run.json'], sourceGenerationArtifacts: ['data/family-manifest.json'] };
-assert.equal(validateFamilyEvaluationRunManifest(familyRun), familyRun);
-assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRun, shard: { count: 2, index: 3 } }), /shard/);
-assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRun, solver: { commit: 'abc' } }), /solver/);
+const familyRunV1 = JSON.parse(readFileSync(
+    'docs/naming-cleanup-phase-records/fixtures/phase15d-family-run-manifest-v1.json',
+    'utf8',
+));
+const normalizedFamilyRun = validateFamilyEvaluationRunManifest(familyRunV1);
+assert.equal(normalizedFamilyRun.schemaVersion, 2);
+assert.deepEqual(normalizedFamilyRun.variantFamilyDataset, familyRunV1.trove);
+assert.equal('trove' in normalizedFamilyRun, false);
+const familyRunV2 = { ...normalizedFamilyRun, runId: 'family-run-v2' };
+assert.equal(validateFamilyEvaluationRunManifest(familyRunV2), familyRunV2);
+assert.throws(
+    () => validateFamilyEvaluationRunManifest({ ...familyRunV2, trove: familyRunV1.trove }),
+    /cannot contain both trove and variantFamilyDataset/,
+);
+assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRunV1, schemaVersion: 3 }), /unsupported family evaluation run manifest schema/);
+assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRunV2, shard: { count: 2, index: 3 } }), /shard/);
+assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRunV2, solver: { commit: 'abc' } }), /solver/);
 assert.equal(validateExperimentManifest(control), control);
 assert.deepEqual(compareExperimentArms(control, treatment, 'TARGET'), {
     matched: true, targetFlag: 'TARGET', levels: 2, allowedWorkflowInputDifferences: [],
