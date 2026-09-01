@@ -89,6 +89,7 @@ for (const script of [
   'scripts/family-index-lib-check.mjs',
   'scripts/naming-cleanup-phase15g-reference-node-test.mjs',
   'scripts/naming-cleanup-phase15h-node-test.mjs',
+  'scripts/stress/analyze-equal-work-production-reach-node-test.mjs',
 ]) {
   execFileSync(process.execPath, [script], { cwd: ROOT, stdio: 'pipe' });
 }
@@ -111,16 +112,36 @@ try {
 Historical stage evidence.
 ## High-intersection-burden cohort
 Historical routing evidence.
+## beam:intersectionHarvest@beam5000(diverse) exposure
+Historical compact attempt identity.
+## main-loop|beam:intersectionHarvest@beam5000(diverse) reach
+Historical composite action identity.
 `);
   const index = buildResearchStatusIndex(statusRoot);
   const canonicalStage = queryResearchStatusIndex(index, { query: 'early-repair-search' }).map(row => row.id);
   const legacyStage = queryResearchStatusIndex(index, { query: 'repair-probe' }).map(row => row.id);
   const canonicalRouting = queryResearchStatusIndex(index, { query: 'intersection-heavy' }).map(row => row.id);
   const legacyRouting = queryResearchStatusIndex(index, { query: 'high-intersection-burden' }).map(row => row.id);
+  const canonicalAttempt = queryResearchStatusIndex(index, {
+    query: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+  }).map(row => row.id);
+  const legacyAttempt = queryResearchStatusIndex(index, {
+    query: 'beam:intersectionHarvest@beam5000(diverse)',
+  }).map(row => row.id);
+  const canonicalAction = queryResearchStatusIndex(index, {
+    query: 'main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+  }).map(row => row.id);
+  const legacyAction = queryResearchStatusIndex(index, {
+    query: 'main-loop|beam:intersectionHarvest@beam5000(diverse)',
+  }).map(row => row.id);
   assert.deepEqual(canonicalStage, legacyStage);
   assert.deepEqual(canonicalRouting, legacyRouting);
+  assert.deepEqual(canonicalAttempt, legacyAttempt);
+  assert.deepEqual(canonicalAction, legacyAction);
   assert.deepEqual(canonicalStage, ['legacy']);
   assert.deepEqual(canonicalRouting, ['legacy']);
+  assert.deepEqual(canonicalAttempt, ['legacy']);
+  assert.deepEqual(canonicalAction, ['legacy']);
 } finally {
   rmSync(statusRoot, { recursive: true, force: true });
 }
@@ -225,4 +246,4 @@ for (const required of [
 assert.match(bridge, /no maintained historical schema-v1 result reader/u);
 assert.doesNotMatch(bridge, /pre-Phase-15 handoff contract/u);
 
-console.log('solver research resumption gate passed: mixed-era joins, owned Phase-15 compatibility suites, current research-status discovery, Workstream-2 preflight, and equal-work anchor are executable.');
+console.log('solver research resumption gate passed: mixed-era identity joins/discovery, family aggregate reconciliation, owned Phase-15 compatibility suites, Workstream-2 preflight, equal-work anchor, and the production-reach join are executable.');

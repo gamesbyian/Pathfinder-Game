@@ -38,7 +38,7 @@ assumptions.
 | --- | --- | --- |
 | NC-P15-001 / NC-P15-008 | variant-family dataset-root CLI vs private source vocabulary | current commands use `--variant-family-dataset-root`; Phase 15J retired `--trove-root` and current tooling rejects it; private source names are canonical-only |
 | NC-P15-002 | family evaluation run-manifest schema | new manifests are schema v2 and single-write `variantFamilyDataset`; authentic schema-v1 `trove` manifests permanently normalize through the owning validator/index reader |
-| NC-P15-003 / NC-P15-009 | historical family attempt discovery vs current output paths | frozen `wide-trove-attempts-*` evidence remains discoverable; current new-run artifacts use stable `variant-family-dataset-*` names; old/new evidence joins through the family index without rewriting frozen paths |
+| NC-P15-003 / NC-P15-009 | historical family attempt discovery vs current output paths | frozen `wide-trove-attempts-*` evidence remains discoverable; current new-run artifacts use stable `variant-family-dataset-*` names; the family index reconciles aggregate rows by `(corpus,parentId,mode,variantId)` plus normalized evidence payload; payload-equivalent current rows replace duplicate historical rows, while historical-only and conflicting observations survive and mixed-era diagnostics expose partial coverage/conflicts |
 | NC-P15-004 | application level-fingerprint vocabulary | current application names use `levelFingerprint` while computed bytes, Firestore document/path identity, persisted fields, versions, duplicate semantics, and historical readability remain invariant |
 | NC-P15-005 / NC-P15-010 | CP-SAT explicit-prefix result schema and workflow-local shard job | current same-run output is schema v2 `referenceLabel`/`referenceReason`, and the workflow job is `reference-shards`; there is **no maintained historical schema-v1 result reader**, so frozen old result artifacts are not normalized or mixed into current shard combination |
 | NC-P15-011 / NC-P15-012 | external case-format token and known-prefix source schema | canonical `reference-abstain` is the only current input spelling; Phase 15J retired `atlas-abstain`; authentic schema-v1 `oracle-abstain` known-prefix sources permanently normalize through the shared extractor to the canonical reference model |
@@ -46,9 +46,9 @@ assumptions.
 | NC-P15-007 / NC-P15-013 | prune-gap directory CLI/local vocabulary and generated report metadata | current tools use `--prune-gap-dir`/`PRUNE_GAP_DIR` and new reports write `pruneGapDir`/`pruneGapFiles`; no maintained old CLI/report reader was found, so atlas-directory spellings survive only in frozen history/migration evidence |
 | NC-P15-014 | repair-retreat CP-SAT result-local vocabulary | current diagnostic output uses `referenceProbe`/`referenceLabel`/`referenceReason`; historical unversioned outputs remain frozen and are not promoted into a new compatibility schema |
 
-The Phase-15 closeout must replay every compatibility claim above that actually has a reader,
-prove canonical single-write for the current writers, and explicitly prove that boundaries without a
-historical reader do not acquire synthetic adapters.
+The permanent resumption/closeout tests replay every compatibility claim above that actually has a
+reader, prove canonical single-write for current writers, and explicitly prove that boundaries
+without a historical reader do not acquire synthetic adapters.
 
 ## Rules for consuming frozen solver evidence
 
@@ -56,7 +56,7 @@ historical reader do not acquire synthetic adapters.
 - Do not write a five-line replacement parser in a one-off analysis script. Import the owning normalizer. If the owner lacks a case required by real evidence, extend the owner and add a fixture there.
 - Treat historical shell commands, workflow names, source paths, and private helper names as provenance. Resolve them against current `main` before execution.
 - Treat raw level JSON as wire data. Parse it before passing it to normalized/runtime code.
-- Preserve negative knowledge. Before reopening a treatment because its old name is absent from current source, canonicalize the historical identity and check the live workstream/experiment disposition. `research-status-index` expands stage/routing aliases through the owning normalizers so current-name queries can still discover frozen evidence written in the prior vocabulary.
+- Preserve negative knowledge. Before reopening a treatment because its old name is absent from current source, canonicalize the historical identity and check the live workstream/experiment disposition. `research-status-index` expands stage, routing-regime, attempt-config, and composite action aliases through the owning normalizers so current-name queries can still discover frozen evidence written in the prior vocabulary.
 - Do not resume from old `solver-dev-queue-*` branches. Create a new branch from post-Phase-15 `main`.
 
 ## Post-Phase-15 baseline checkpoint
@@ -69,6 +69,7 @@ Before the first decision-bearing solver change after the naming cleanup:
 4. run the current experiment preflight appropriate to the first resumed workstream;
 5. execute one small current equal-work/census path and record the exact command/output as the post-naming research anchor;
 6. for any confirmation workflow used next, inspect its persisted resolved treatment/control flags as well as the workflow conclusion.
+7. before the first Workstream-2 repricing A/B, collect current-head production evidence with `--lifecycle-telemetry` and per-attempt `workSpent`, then run `npm run solver:analyze-equal-work-production-reach -- --equal-work=<EW1 combined-cells.json> --production=<current report> --require-current-head --check`; a blocked result is a resumption failure, not a scheduler finding.
 
 The checkpoint is not authority to reopen August experiments. Its purpose is to prove the current research toolchain can still interpret the evidence needed by the live queue before new results depend on it.
 
@@ -83,10 +84,13 @@ from post-Phase-15 `main`. Record:
 - `npm run solver:regression -- --check` result;
 - the current experiment-preflight command/result for the next workstream;
 - one small equal-work/census execution with exact command and output path;
-- one canonical research-status query that discovers representative frozen evidence written under
-  historical stage/routing vocabulary, plus the equivalent legacy query/disposition;
+- canonical research-status queries that discover representative frozen evidence written under
+  historical stage/routing and attempt/action vocabulary, plus equivalent legacy queries/dispositions;
 - one representative mixed-era identity join from current analysis tooling, not merely a
-  single-record parser;
+  single-record parser; for Workstream 2 this is the equal-work × production-reach analyzer above;
+- when family aggregates participate, the `family:index` mixed-era diagnostics, with no ambiguous
+  logical rows, duplicate canonical logical rows, or conflicting overlap rows left unresolved for the
+  decision being made;
 - if the next experiment uses a confirmation workflow, the persisted resolved
   treatment/control-flag artifact or equivalent proof of arm wiring.
 
@@ -104,6 +108,10 @@ Do not start a decision-bearing solver experiment if any of the following is tru
   than through its owning normalizer;
 - a Phase-15 persisted boundary can read one era in isolation but has no mixed-era
   grouping/join/deduplication proof where the real consumer combines eras;
+- family-index diagnostics report ambiguous aggregate logical rows, duplicate canonical logical
+  rows, or conflicting overlap rows for evidence intended to influence a decision; partial canonical
+  coverage is permitted because the index preserves historical-only rows, and conflicting observations
+  are preserved rather than silently treated as duplicates;
 - a new writer still emits a retired field/value/path spelling that should have become
   canonical-single-write;
 - a claimed legacy reader exists only as comments, checker allowlists, or a synthetic string fixture;

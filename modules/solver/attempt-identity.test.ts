@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import {
+    attemptActionIdentityTerms,
+    attemptIdentityTerms,
     formatAttemptActionKey,
     formatAttemptIdentityKey,
     normalizeAttemptIdentityKey,
@@ -55,6 +57,38 @@ test('historical attempt identities normalize to exactly one canonical identity'
         assert.equal(normalizeAttemptIdentityKey(legacy), canonical, legacy);
         assert.equal(formatAttemptIdentityKey(parseAttemptIdentityKey(legacy)), canonical, legacy);
     }
+});
+
+test('attemptIdentityTerms exposes canonical and historical spellings without duplicating the grammar', () => {
+    assert.deepEqual(
+        attemptIdentityTerms('beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets'),
+        [
+            'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+            'beam:intersectionHarvest@beam5000(diverse)',
+        ],
+    );
+    assert.deepEqual(
+        attemptIdentityTerms('dfs:repair:repair(turnBiased)'),
+        ['repair|score=repair|guidance=turn-biased', 'dfs:repair:repair(turnBiased)'],
+    );
+});
+
+test('attemptActionIdentityTerms spans legacy/current stage and attempt components', () => {
+    const terms = attemptActionIdentityTerms(
+        'main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+    );
+    assert.ok(terms.includes(
+        'main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+    ));
+    assert.ok(terms.includes('main-search|beam:intersectionHarvest@beam5000(diverse)'));
+    assert.ok(terms.includes(
+        'main-loop|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+    ));
+    assert.ok(terms.includes('main-loop|beam:intersectionHarvest@beam5000(diverse)'));
+
+    const repair = attemptActionIdentityTerms('repair-probe|dfs:repair:repair|seedSalt=1');
+    assert.ok(repair.includes('early-repair-search|repair|score=repair|guidance=standard|seedSalt=1'));
+    assert.ok(repair.includes('repair-probe|dfs:repair:repair|seedSalt=1'));
 });
 
 test('distinct supported behavior shapes have unique canonical identities', () => {

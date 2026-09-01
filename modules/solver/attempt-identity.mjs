@@ -1,4 +1,4 @@
-import { normalizeSolverStageId } from './stage-id-normalization.mjs';
+import { normalizeSolverStageId, solverStageIdentityTerms } from './stage-id-normalization.mjs';
 
 /**
  * Canonical solver attempt-identity parser/formatters shared by live AttemptConfig and persisted
@@ -140,6 +140,39 @@ export function formatAttemptIdentityKey(fields) {
 export function normalizeAttemptIdentityKey(key) {
     return formatAttemptIdentityKey(parseAttemptIdentityKey(key));
 }
+/** @param {AttemptIdentityFields} fields @returns {string} */
+function formatLegacyAttemptIdentityKey(fields) {
+    if (fields.admissibleOrder) {
+        const tieBreak = fields.admissibleOrderNoTieBreak ? 'none' : fields.scoringProfileId;
+        return 'ida:' + tieBreak + (fields.admissibleOrderLds ? '(lds)' : '');
+    }
+    if (fields.repair) {
+        const biased = fields.repairMustTurnBiased
+            ? '(mustTurnBiased)'
+            : fields.repairTurnBiased ? '(turnBiased)' : '';
+        return 'dfs:repair:repair' + biased;
+    }
+    const bias = fields.orderingBiasId ? '/' + fields.orderingBiasId : '';
+    if (fields.beamWidth) {
+        return 'beam:' + fields.scoringProfileId + bias + '@beam' + fields.beamWidth
+            + (fields.mechanicBucketRetention ? '(diverse)' : '');
+    }
+    return 'dfs:' + fields.scoringProfileId + bias;
+}
+
+/**
+ * Every persisted spelling known to denote the same attempt identity. Search/discovery tools use
+ * this rather than duplicating the historical compact grammar.
+ * @param {string} key
+ * @returns {readonly string[]}
+ */
+export function attemptIdentityTerms(key) {
+    const fields = parseAttemptIdentityKey(key);
+    return Object.freeze([...new Set([
+        formatAttemptIdentityKey(fields),
+        formatLegacyAttemptIdentityKey(fields),
+    ])]);
+}
 
 /**
  * Stable scheduler/research action identity. Budget envelope and gate remain separate dimensions.
@@ -180,4 +213,28 @@ export function normalizeAttemptActionKey(key) {
     if (seedMatch && !fields.repair)
         throw new Error('seedSalt is only valid on repair attempt action identities.');
     return formatAttemptActionKey({ ...fields, stageId, ...(seedSalt === undefined ? {} : { seedSalt }) });
+}
+
+/**
+ * Every stage/config spelling known to denote the same persisted action identity. The cross-product
+ * is intentional: historical evidence can contain a legacy stage with a canonical config, the
+ * reverse, or both legacy components.
+ * @param {string} key
+ * @returns {readonly string[]}
+ */
+export function attemptActionIdentityTerms(key) {
+    const canonical = normalizeAttemptActionKey(key);
+    const separator = canonical.indexOf('|');
+    const stageId = canonical.slice(0, separator);
+    let configAndSeed = canonical.slice(separator + 1);
+    let seed = '';
+    const seedMatch = /\|seedSalt=-?\d+$/.exec(configAndSeed);
+    if (seedMatch) {
+        seed = seedMatch[0];
+        configAndSeed = configAndSeed.slice(0, seedMatch.index);
+    }
+    return Object.freeze([...new Set(
+        solverStageIdentityTerms(stageId).flatMap(stage =>
+            attemptIdentityTerms(configAndSeed).map(config => stage + '|' + config + seed)),
+    )]);
 }

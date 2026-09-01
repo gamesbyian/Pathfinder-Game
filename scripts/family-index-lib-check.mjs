@@ -118,29 +118,87 @@ const familyManifest = (familyId, parentId, variantId) => ({
 writeFileSync(path.join(discoveryRoot, 'data/families/corpus-a/family-P1-sym-manifest.json'),
     JSON.stringify(familyManifest('family-P1', 'P1', 'V1')));
 writeFileSync(path.join(discoveryRoot, 'data/families/corpus-b/family-P2-sym-manifest.json'),
-    JSON.stringify(familyManifest('family-P2', 'P2', 'V2')));
+    JSON.stringify({
+        ...familyManifest('family-P2', 'P2', 'V2'),
+        variants: [
+            { variantId: 'V2', relation: 'symmetry', mutationManifest: { operation: 'transform' } },
+            { variantId: 'V3', relation: 'symmetry', mutationManifest: { operation: 'transform' } },
+            { variantId: 'V4', relation: 'symmetry', mutationManifest: { operation: 'transform' } },
+        ],
+    }));
 
 // corpus-a has only historical aggregate evidence, which must remain permanently discoverable.
 writeFileSync(path.join(discoveryRoot, 'reports/families/2026-08-07-wide-trove-attempts-corpus-a-part01.json'), JSON.stringify({
-    levels: [{ id: 'V1', parentId: 'P1', corpus: 'corpus-a', ok: true, workSpent: 11 }],
+    levels: [{
+        id: 'V1', parentId: 'P1', corpus: 'corpus-a', ok: true, workSpent: 11,
+        winningConfig: 'beam:intersectionHarvest@beam5000(diverse)',
+    }],
 }));
-// corpus-b has both eras. Canonical current aggregate evidence owns precedence for that corpus so
-// the same logical aggregate is not double-counted merely because the frozen historical file remains.
+// corpus-b has both eras, but the canonical aggregate is deliberately partial. Canonical evidence
+// owns precedence only for overlapping logical rows; V3 must remain visible from frozen history.
 writeFileSync(path.join(discoveryRoot, 'reports/families/2026-08-07-wide-trove-attempts-corpus-b-part01.json'), JSON.stringify({
-    levels: [{ id: 'V2', parentId: 'P2', corpus: 'corpus-b', ok: false, workSpent: 22 }],
+    levels: [
+        {
+            id: 'V2', parentId: 'P2', corpus: 'corpus-b', mode: 'symmetry', ok: true, workSpent: 33,
+            winningConfig: 'beam:intersectionHarvest@beam5000(diverse)',
+        },
+        { id: 'V3', parentId: 'P2', corpus: 'corpus-b', mode: 'symmetry', ok: true, workSpent: 44 },
+        { id: 'V4', parentId: 'P2', corpus: 'corpus-b', mode: 'symmetry', ok: false, workSpent: 55 },
+    ],
 }));
 writeFileSync(path.join(discoveryRoot, 'reports/families/variant-family-dataset-attempts-corpus-b-part01.json'), JSON.stringify({
-    levels: [{ id: 'V2', parentId: 'P2', corpus: 'corpus-b', ok: true, workSpent: 33 }],
+    levels: [
+        {
+            id: 'V2', parentId: 'P2', corpus: 'corpus-b', mode: 'symmetry', ok: true, workSpent: 33,
+            winningConfig: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+        },
+        { id: 'V4', parentId: 'P2', corpus: 'corpus-b', mode: 'symmetry', ok: true, workSpent: 66 },
+    ],
 }));
 const discoveryIndex = buildFamilyIndex(discoveryRoot);
 const historicalOnly = queryFamilyIndex(discoveryIndex, { parentId: 'P1', variantId: 'V1' }).variants[0];
 assert.equal(historicalOnly.evidence.length, 1);
 assert.match(historicalOnly.evidence[0].evidencePath, /2026-08-07-wide-trove-attempts-corpus-a-part01\.json$/u);
 assert.equal(historicalOnly.evidence[0].work, 11);
+assert.equal(
+    historicalOnly.evidence[0].winningConfig,
+    'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+    'family-index read boundary must canonicalize historical attempt identities',
+);
 const canonicalPreferred = queryFamilyIndex(discoveryIndex, { parentId: 'P2', variantId: 'V2' }).variants[0];
 assert.equal(canonicalPreferred.evidence.length, 1, 'canonical corpus aggregate must not double-count frozen historical aggregate');
 assert.match(canonicalPreferred.evidence[0].evidencePath, /variant-family-dataset-attempts-corpus-b-part01\.json$/u);
+assert.equal(canonicalPreferred.evidence.length, 1,
+    'payload-equivalent historical/canonical rows should collapse to the canonical evidence row');
 assert.equal(canonicalPreferred.evidence[0].work, 33);
+assert.match(canonicalPreferred.evidence[0].evidencePath, /variant-family-dataset-attempts-corpus-b-part01\.json$/u);
 assert.equal(canonicalPreferred.solved, true);
+
+const historicalPreserved = queryFamilyIndex(discoveryIndex, { parentId: 'P2', variantId: 'V3' }).variants[0];
+assert.equal(historicalPreserved.evidence.length, 1,
+    'partial canonical aggregate must not hide historical-only logical rows from the same corpus');
+assert.match(historicalPreserved.evidence[0].evidencePath, /wide-trove-attempts-corpus-b-part01\.json$/u);
+assert.equal(historicalPreserved.evidence[0].work, 44);
+
+const conflicting = queryFamilyIndex(discoveryIndex, { parentId: 'P2', variantId: 'V4' }).variants[0];
+assert.equal(conflicting.evidence.length, 2,
+    'different observations for the same logical variant must both survive mixed-era reconciliation');
+assert.deepEqual(conflicting.evidence.map(row => row.work).sort((a, b) => a - b), [55, 66]);
+assert.equal(conflicting.solved, true);
+
+const mixedEra = discoveryIndex.diagnostics.familyAttemptAggregates.mixedEraCorpora
+    .find(row => row.corpus === 'corpus-b');
+assert.deepEqual(mixedEra, {
+    corpus: 'corpus-b',
+    historicalLogicalRows: 3,
+    canonicalLogicalRows: 2,
+    overlappingLogicalRows: 2,
+    conflictingOverlapRows: 1,
+    historicalOnlyRowsPreserved: 1,
+    canonicalFullySupersedesHistorical: false,
+});
+assert.equal(discoveryIndex.diagnostics.familyAttemptAggregates.historicalDuplicateRowsReplacedByCanonical, 1);
+assert.equal(discoveryIndex.diagnostics.familyAttemptAggregates.historicalRowsPreservedFromPartialCanonical, 1);
+assert.equal(discoveryIndex.diagnostics.familyAttemptAggregates.historicalConflictingRowsPreserved, 1);
 
 console.log('family index unit tests passed');
