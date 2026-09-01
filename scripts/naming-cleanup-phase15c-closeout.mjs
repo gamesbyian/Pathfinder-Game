@@ -72,16 +72,13 @@ for (const file of files) {
 
   if (source.includes('--trove-root=')) legacyCliOwners.push(file);
   if (source.includes('variantFamilyDatasetRootArg')) canonicalHelperImporters.push(file);
-  if (source.includes('--variant-family-dataset-root=')) canonicalCliFiles.push(file);
+  if (source.includes('--variant-family-dataset-root')) canonicalCliFiles.push(file);
 }
 
 assert.deepEqual(
   legacyCliOwners.sort(),
-  [
-    'scripts/family-paths.mjs',
-    'scripts/variant-family-dataset-root-node-test.mjs',
-  ],
-  'the temporary --trove-root alias must exist only in the one shared parser and its behavior test',
+  ['scripts/family-paths.mjs'],
+  'the temporary --trove-root alias must exist only in the one shared parser on maintained current surfaces',
 );
 
 assert.deepEqual(
@@ -90,9 +87,8 @@ assert.deepEqual(
     'scripts/family-index.mjs',
     'scripts/family-parent-hint-replay-batch.mjs',
     'scripts/family-paths.mjs',
-    'scripts/variant-family-dataset-root-node-test.mjs',
   ],
-  'canonical root-parser ownership must be the parser, two maintained consumers, and the behavior test',
+  'canonical root-parser ownership must be the parser plus the two maintained tool consumers',
 );
 
 for (const required of [
