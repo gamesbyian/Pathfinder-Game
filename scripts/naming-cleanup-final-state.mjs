@@ -71,6 +71,14 @@ for (const id of ['NC-P15-001', 'NC-P15-011']) {
   assert.equal('compatibility' in byId[id], false);
 }
 
+// The earlier Phase-8 external dataset-root transition also reached its terminal review gate.
+// Completion must not leave it as a live dual-read merely because it predates the Phase-15 rows.
+const datasetEnvRow = ledger.entries.find(row => row.id === 'NC-P08-053');
+assert.equal(datasetEnvRow?.persistence, 'none');
+assert.equal('compatibility' in (datasetEnvRow ?? {}), false);
+const datasetRootResolver = readFileSync('scripts/validate-variant-family-dataset-worktree.mjs', 'utf8');
+assert.doesNotMatch(datasetRootResolver, /PATHFINDER_VARIANT_TROVE/u);
+
 // Retired external spellings remain rejected.
 assert.throws(
   () => variantFamilyDatasetRootArg(['--trove-root=tmp/retired-root']),
