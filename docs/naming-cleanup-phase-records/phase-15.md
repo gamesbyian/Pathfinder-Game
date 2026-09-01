@@ -921,3 +921,71 @@ run **33462905089** across all six jobs and exact-head browser characterization 
 NC-P15-003 and NC-P15-009 are now `done` and `activeExecution` is idle.
 `batchCompletions["15E"]` deliberately remains pending until PR #1642 actually merges. A fresh
 exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
+
+
+## 15E merge evidence
+
+Phase 15E completed as implementation PR **#1642**.
+
+- final head: `c226d12e027df23006c79d537ea7e180a0489901`;
+- implementation-head green CI: run **33462905089**, all six CI jobs successful;
+- implementation-head browser characterization: run **33462905117**, successful;
+- final done/idle exact-head CI: run **33463342137**, all six CI jobs successful;
+- final done/idle browser characterization: run **33463342135**, successful;
+- merge commit: `502dd2c610cd36b5ecea656b655ae570e068cbb9`;
+- 15F base-main SHA: the same merge commit;
+- ledger `batchCompletions["15E"]` is now the machine merge-barrier evidence.
+
+## 15F — NC-P15-004 application-local level-fingerprint vocabulary
+
+Status: **active**
+
+Branch: `chatgpt/phase15f-level-fingerprint-vocabulary-2026-08-31`  
+Base main: `502dd2c610cd36b5ecea656b655ae570e068cbb9`
+
+15F is a direct internal vocabulary migration. It changes generic application-local
+`fingerprint` names that specifically mean the level fingerprint to `levelFingerprint`.
+
+The persistence/identity boundary is deliberately invariant:
+
+- Firestore submission documents already persist `levelFingerprint` and `fingerprintVersion`;
+- rating documents remain keyed by the computed fingerprint value as the document ID;
+- local-level-hint paths remain keyed by the same computed fingerprint value;
+- `LEVEL_FINGERPRINT_VERSION`, `getLevelFingerprint`, and
+  `getLegacyLevelFingerprints` keep their identities and behavior;
+- the fingerprint bytes/value for a level must not change;
+- legacy-version rating lookup/migration must remain behaviorally identical;
+- duplicate detection, local-corpus matching, hint contribution, rating load/save, and
+  submission behavior must remain equivalent.
+
+### Pre-edit owner/consumer map
+
+Application/state surfaces identified at batch entry include:
+
+- `modules/engine/level-rating-manager.ts`: level-rating state/context locals and
+  persistence calls;
+- `modules/state/actions/rating-actions.ts`: level-rating context field assignment;
+- `modules/input/submission-controller.ts`: cached local-corpus fingerprint rows and
+  duplicate-check presentation consumption;
+- `modules/input/submission-core.ts`: `LocalCorpusMatch`,
+  `DuplicateCheckPresentation`, and pure local-match/duplicate-presentation helpers;
+- `modules/persistence/level-rating-repository.ts`: private repository parameters;
+- `modules/persistence/local-level-hints-repository.ts`: private repository parameters/path helper;
+- `modules/persistence/level-submission-repository.ts`: private duplicate-check locals/parameters
+  and returned presentation field where generic `fingerprint` means the level fingerprint.
+
+Persisted document field names already canonical under `levelFingerprint` are not rename targets.
+
+### Required proof
+
+15F must add executable tests that prove:
+
+1. computed level fingerprint values are identical before/after for representative real/raw levels;
+2. rating load/save receives the exact same document-key value;
+3. legacy rating lookup/migration uses the exact same old/current fingerprint values and order;
+4. submission duplicate checks still query persisted `levelFingerprint` and return the same
+   duplicate/hint-addition semantics;
+5. local-level-hint Firestore path identity is unchanged;
+6. generic application-local `fingerprint` residue for this contract is gone without renaming
+   unrelated fingerprint concepts or `fingerprintVersion`;
+7. 15G/15H source-freeze surfaces remain untouched.
