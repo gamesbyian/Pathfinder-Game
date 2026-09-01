@@ -1,9 +1,9 @@
 # Connectivity-axis retry work-dose migration
 
-> **Status:** active
-> **Last evidence:** 2026-09-01 — site-specific code/ratchet migration and targeted ownership tests added; full CI and published-corpus regression pending.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-01 — targeted ownership tests, six-job PR CI, and full 160-level published-corpus `solver:regression -- --check` all passed; regression solved 160/160 with 68,562,085 nodes, identical to the established current plain/default node total.
 > **Decision:** migrate `connectivity-axis-prune-disabled-retry`'s fresh work pool from a second wall-derived `legacyMsToWork` conversion to `scaledStageWorkBudget(workBudget, connectivityRetryBudgetFraction, MIN_ATTEMPT_WORK)`. Keep its ms allocation solely as a latency-safety deadline.
-> **Remaining gate:** require green full CI plus `solver:regression -- --check`; if either shows a plain/default solve-set or deterministic regression, do not merge this as a representation/ownership migration.
+> **Remaining gate:** none for this site. Historical explicit-work artifacts that reached this tier remain cross-migration work-incomparable unless the changed dose is accounted for.
 
 ## Why this site
 
@@ -74,7 +74,15 @@ The CI ratchet also records `connectivityRetryTotalBudget` as a migrated work-do
 
 ## Validation
 
-Pending on this branch:
+Completed on this branch:
+
+- targeted connectivity ownership tests: passed;
+- normal six-job PR CI: passed;
+- published-corpus regression: **160/160 solved, failed `[]`, 68,562,085 nodes**; `solver-bench --check PASS`.
+
+The regression helper warns that its stored cost baseline is stale, so its wall-time/cost delta versus that old baseline is not interpreted here. The decision-relevant check for this migration is solved-set/plain-default parity, and the node total exactly matches the established post-migration plain/default total cited by the prior three work-dose migration reports.
+
+Reproduction:
 
 ```bash
 npm run solver:regression -- --check
