@@ -169,6 +169,14 @@ for (const id of ['NC-P15-001','NC-P15-011']) {
   assert.equal(row.compatibility?.mode, 'external-config-transition');
   assert.equal(row.compatibility?.retireWhen, 'phase-15-review');
 }
-assert.match(phaseRecord, /15J[^\n]{0,200}retir/iu);
+assert.ok(
+  phaseRecord.includes('NC-P15-001 `--trove-root` and NC-P15-011 `atlas-abstain`'),
+  'transition-alias review must name the exact NC-P15-001/011 external aliases',
+);
+assert.match(
+  phaseRecord,
+  /15I\s+therefore\s+recommends\s+retiring\s+those[\s\S]{0,180}external\s+transition\s+aliases[\s\S]{0,120}\b15J\b/iu,
+  'transition-alias review must assign the recommended alias retirement to 15J',
+);
 
 console.log(`Phase-15I hostile closeout guard passed: ${allInventory.ledgerEntries.length} Phase-1-15 rows censused, ${sourceFiles.length} maintained executable surfaces scanned, Phase-15 compatibility ownership is executable and frozen source blob is unchanged.`);
