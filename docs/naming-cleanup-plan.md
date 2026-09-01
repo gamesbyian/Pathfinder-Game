@@ -1711,8 +1711,19 @@ A final audit that merely restates each batch record is not independent evidence
 Archival is a separate finalization step after the hostile merged-tree closeout has itself merged.
 It must not be combined with the last compatibility implementation batch.
 
+Phase 15J has an explicit **handoff + completion-seal** shape because a pull request cannot record
+its own not-yet-known merge commit without creating an infinite self-reference. The 15J handoff PR
+runs as the rowless \`finalization\` batch and keeps \`batchCompletions["15J"]\` pending while it is
+open. After that PR merges, create one narrow post-15J completion-seal PR/commit from the merged
+tree. The seal is not a 15K migration batch: it may only record the now-known 15J PR/merge evidence,
+advance terminal ledger/program state, finish archive/routing changes that require the completed
+state, and repair a defect found by its own final checks. The seal itself is proven by its exact-head
+CI and Git history; the completed ledger is not required to contain the SHA of the commit that
+contains itself.
+
 - record immutable Phase-15 implementation and merged-tree closeout PR/head/CI/merge evidence;
-- only then advance \`lastCompletedPhase\` to 15, mark the ledger/program complete, and keep
+- in the post-15J seal, set \`batchCompletions["15J"]\` to merged using the handoff PR's actual merge
+  commit, then advance \`lastCompletedPhase\` to 15, mark the ledger/program complete, and keep
   \`activeExecution\` idle;
 - remove temporary aliases only where the recorded retirement condition is satisfied; retain
   permanent historical readers and stable external identities that still have a real contract;
@@ -1723,7 +1734,8 @@ It must not be combined with the last compatibility implementation batch.
 - update docs index, \`AGENTS.md\`, change recipes, and current-authority guards so future agents are
   routed to permanent vocabulary/current implementation rather than an "active" cleanup phase;
 - verify there is no open naming-cleanup PR/branch containing unique unmerged work;
-- rerun documentation links, naming status/ledger checks, current-authority checks, ordinary exact-head CI, and any closeout-specific gate required by the final archive shape.
+- rerun documentation links, naming status/ledger checks, current-authority checks, ordinary
+  exact-head CI, and any closeout-specific gate required by the final archive shape.
 
 Completion means the repository can operate, research, and explain itself in the canonical
 vocabulary while still interpreting historical evidence at explicit boundaries. It does not mean
@@ -1840,7 +1852,7 @@ The cleanup is complete only when all of the following are true.
 5. Current routing code/docs say "routing regime", not "archetype".
 6. Current runtime orientation code does not use `variant`.
 7. False-goal internals use triggerability terminology.
-8. Only independent reference implementations introduce new "oracle" terminology; the CP-SAT explicit-prefix historical result/job identities owned by NC-P15-005 remain compatible exceptions.
+8. Only independent reference implementations introduce new "oracle" terminology; frozen CP-SAT explicit-prefix schema-v1 result artifacts may retain historical \`oracle*\` text, while current explicit-prefix result/job identities migrate canonically and the real source/input compatibility exceptions remain owned by NC-P15-011/012.
 9. Solved-set regression tooling does not use "benchmark".
 10. Current stage IDs use the Section 4.6 names, and historical IDs are accepted by one centralized normalizer.
 11. Current attempt identities use the Section 4.2 grammar, and historical identities are accepted by one centralized parser.
