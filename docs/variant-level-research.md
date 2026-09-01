@@ -26,10 +26,10 @@ Run current tools against the sibling data root. If a tool assumes in-tree famil
 Build/query the disposable index with:
 
 ```bash
-npm run family:index -- --trove-root=../pathfinder-variant-research
-npm run family:show -- --trove-root=../pathfinder-variant-research --variant-id=F00110-01
-npm run family:query -- --trove-root=../pathfinder-variant-research --corpus=corpus2 --mode=symmetry
-npm run family:coverage -- --trove-root=../pathfinder-variant-research --corpus=corpus2
+npm run family:index -- --variant-family-dataset-root=../pathfinder-variant-research
+npm run family:show -- --variant-family-dataset-root=../pathfinder-variant-research --variant-id=F00110-01
+npm run family:query -- --variant-family-dataset-root=../pathfinder-variant-research --corpus=corpus2 --mode=symmetry
+npm run family:coverage -- --variant-family-dataset-root=../pathfinder-variant-research --corpus=corpus2
 ```
 
 `.cache/family-index.json` is deterministic/disposable. Extend the family index rather than creating investigation-specific indexes.
