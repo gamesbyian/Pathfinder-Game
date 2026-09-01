@@ -39,6 +39,12 @@ Historical mechanism evidence used the pre-rename stage vocabulary.
 
 ## High-intersection-burden cohort
 Historical routing evidence used the pre-rename routing label.
+
+## beam:intersectionHarvest@beam5000(diverse) missing exposure
+Historical attempt identity appears only in compact pre-rename syntax.
+
+## main-loop|beam:intersectionHarvest@beam5000(diverse) action reach
+Historical composite action identity uses both legacy stage and compact attempt syntax.
 `);
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
@@ -51,6 +57,18 @@ assert.deepEqual(queryResearchStatusIndex(index, { query: 'main-search' }).map(x
     'canonical main-search query must discover reports written only with the historical main-loop name');
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'intersection-heavy' }).map(x => x.id), ['legacy'],
     'canonical routing query must discover reports written only with the historical high-intersection-burden label');
+assert.deepEqual(queryResearchStatusIndex(index, {
+    query: 'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+}).map(x => x.id), ['legacy'],
+'canonical attempt query must discover reports written only with the compact historical identity');
+assert.deepEqual(queryResearchStatusIndex(index, {
+    query: 'main-search|beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets',
+}).map(x => x.id), ['legacy'],
+'canonical composite action query must cross-expand both stage and attempt identity');
+assert.deepEqual(queryResearchStatusIndex(index, {
+    query: 'main-loop|beam:intersectionHarvest@beam5000(diverse)',
+}).map(x => x.id), ['legacy'],
+'legacy composite action query must remain discoverable after canonicalization');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'legacy-evidence' }).map(x => x.report), ['reports/2026-01-01-legacy.md']);
 assert.deepEqual(queryResearchStatusIndex(index, { status: 'rejected' }).map(x => x.id), ['FLAG_ONE']);
 const compact = compactResearchStatusIndex(index, { query: 'current question' });
