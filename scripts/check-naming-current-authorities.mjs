@@ -6,8 +6,13 @@
  * canonical code vocabulary and still send an agent to a completed phase.
  */
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
-const ledger = JSON.parse(readFileSync('docs/naming-cleanup-ledger.json', 'utf8'));
+const rootArg = process.argv.find(arg => arg.startsWith('--root='));
+const ROOT = path.resolve(rootArg ? rootArg.slice('--root='.length) : process.cwd());
+const read = relative => readFileSync(path.join(ROOT, relative), 'utf8');
+
+const ledger = JSON.parse(read('docs/naming-cleanup-ledger.json'));
 const nextPhase = Number(ledger.lastCompletedPhase) + 1;
 const agents = readFileSync('AGENTS.md', 'utf8');
 const docsIndex = readFileSync('docs/README.md', 'utf8');
