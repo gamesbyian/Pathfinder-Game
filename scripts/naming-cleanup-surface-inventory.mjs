@@ -397,13 +397,14 @@ const reconciliationAuthorityFiles = new Set([
 function reconciliationReferenceFilesForValue(value) {
   return referenceFilesForValue(value).filter(file =>
     !reconciliationAuthorityFiles.has(file) &&
-    !file.startsWith('docs/naming-cleanup-phase-records/'));
+    !file.startsWith('docs/naming-cleanup-phase-records/') &&
+    !file.startsWith('scripts/naming-cleanup-'));
 }
 
 function reconciliationReferenceMatches(entry, side) {
   const values = side === 'old'
-    ? [entry.old, ...(entry.inventoryTerms ?? [])]
-    : [entry.new];
+    ? [entry.old, ...(entry.oldInventoryTerms ?? entry.inventoryTerms ?? [])]
+    : [entry.new, ...(entry.newInventoryTerms ?? [])];
   return [...new Set(values.flatMap(reconciliationReferenceFilesForValue))].sort();
 }
 
