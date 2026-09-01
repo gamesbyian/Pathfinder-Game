@@ -141,7 +141,12 @@ assert.ok(
   ].includes(row.reconciliationState)),
   'Phase-15 reconciliation must classify every lifecycle state explicitly',
 );
-assert.ok(phase15Rows.find(row => row.id === 'NC-P15-003').oldReferenceCategories.includes('workflow'));
+const phase15HistoricalAttemptReader = phase15Rows.find(row => row.id === 'NC-P15-003');
+assert.ok(phase15HistoricalAttemptReader.oldReferenceFiles.includes('scripts/family-index-lib.mjs'),
+  'NC-P15-003 permanent historical discovery must remain owned by family-index-lib.mjs');
+assert.ok(phase15HistoricalAttemptReader.oldReferenceCategories.includes('tool-or-report-transport'));
+assert.equal(phase15HistoricalAttemptReader.oldReferenceCategories.includes('workflow'), false,
+  'current workflows must not remain wide-trove historical-discovery owners after 15E');
 assert.ok(phase15Rows.find(row => row.id === 'NC-P15-004').oldReferenceCategories.includes('application'));
 const reconciliationCounts = Object.fromEntries(
   [...new Set(rangeInventory.ledgerEntries.map(row => row.reconciliationState))]
