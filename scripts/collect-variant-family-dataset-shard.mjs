@@ -220,7 +220,7 @@ if (RUN_ID) {
     const manifest = buildFamilyEvaluationRunManifest({
         runId: RUN_ID, tool: 'collect-variant-family-dataset-shard.mjs', workflow: WORKFLOW,
         corpora: [...corporaSeen].sort(), families: [...familiesSeen].sort(),
-        trove: { manifest: 'data/families/variant-family-dataset-manifest.json', shardFile: SHARD_FILE },
+        variantFamilyDataset: { manifest: 'data/families/variant-family-dataset-manifest.json', shardFile: SHARD_FILE },
         solverPolicy: { mode: 'production', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
         budgets: { workUnits: Number(WORK_BUDGET), nodeCeiling: Number(NODE_BUDGET), wallDeadlineMs: Number(BUDGET_MS) },
         seeds: [Number(SEED)], shardCount: SHARD_COUNT, shardIndex: Number(NN),
