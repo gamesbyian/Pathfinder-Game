@@ -329,8 +329,15 @@ try {
       row.verificationRecord = 'docs/naming-cleanup-phase-records/phase-09-final-audit.md';
       for (const key of Object.keys(row.verification)) row.verification[key] = 'done';
     }
-    // Isolate the closed-Phase-9 fixture from whichever later phase is active in the source ledger.
+    // Isolate the closed-Phase-9 fixture from whichever later phase/batch is active or merged in
+    // the source ledger. Row status and serial merge evidence must move together.
     for (const row of ledger.entries.filter(entry => entry.phase > 9)) row.status = 'pending';
+    for (const [phaseKey, batches] of Object.entries(ledger.phaseBatches ?? {})) {
+      if (Number(phaseKey) <= 9) continue;
+      for (const batch of batches ?? []) {
+        ledger.batchCompletions[batch] = { status: 'pending', pr: null, mergeCommit: null };
+      }
+    }
     ledger.lastCompletedPhase = 9;
     ledger.activeExecution = {
       status: 'idle', phase: null, batch: null, branch: null, pr: null,
