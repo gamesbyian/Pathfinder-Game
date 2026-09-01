@@ -4,7 +4,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories curr
 
 ## Naming
 
-Current docs use lowercase kebab-case, stable undated names, and canonical repository terms. Put dated/narrative investigations in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports merely to modernize paths. Canonical naming rules live in [`naming-and-vocabulary.md`](naming-and-vocabulary.md). For active cleanup work, run `npm run naming:status` rather than inferring the next step from prose. The repository-wide cleanup is specified by [`naming-cleanup-plan.md`](naming-cleanup-plan.md); its implementation history and failure-derived lessons are in [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md); its Phase-8+ execution controls are in [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md); machine-readable state with immutable row IDs and compatibility retirement is tracked in [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json); and each active implementation batch uses a checked-in record based on [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md).
+Current docs use lowercase kebab-case, stable undated names, and canonical repository terms. Put dated/narrative investigations in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports merely to modernize paths. Canonical naming rules live in [`naming-and-vocabulary.md`](naming-and-vocabulary.md). The repository-wide naming cleanup is complete through Phase 15. `npm run naming:status` reports that terminal/history state; [`naming-cleanup-plan.md`](naming-cleanup-plan.md), the ledger, hardening/history docs, and phase records remain implementation evidence rather than an active queue. New cross-boundary renames use [`change-recipes.md`](change-recipes.md) and current implementation without reopening the completed phase sequence.
 
 ## Current references
 
@@ -14,20 +14,20 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 | [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining authority/mutable-lifetime architecture debt |
 | [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes and experiment preflight recipes |
 | [`naming-and-vocabulary.md`](naming-and-vocabulary.md) | Permanent canonical naming and vocabulary rules |
-| [`naming-cleanup-plan.md`](naming-cleanup-plan.md) | Decision-complete repository naming cleanup, compatibility rules, rename inventory, serial implementation sequence, and phase gates |
+| [`naming-cleanup-plan.md`](naming-cleanup-plan.md) | Completed/frozen repository naming-cleanup plan, mappings, compatibility decisions, serial sequence, and phase gates |
 | [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md) | PR-by-PR implementation retrospective and the failure patterns that justify the remaining safeguards |
 | [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md) | Phase-1-7 failure analysis, pre-Phase-8 technical gate, batch execution controls, and stronger contract-migration/closeout model |
 | [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md) | Durable per-batch impact-map, validation, parity, audit, and pre-merge evidence template |
 | [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md) | Completed Phase-8 implementation evidence: serial batch authority and merged-tree completion gate |
 | [`naming-cleanup-phase-records/pre-phase-15-audit-repairs.md`](naming-cleanup-phase-records/pre-phase-15-audit-repairs.md) | Completed pre-Phase-15 audit-repair evidence for mixed-era research/current-authority defects |
-| [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) | **Current Phase-15 execution/closeout authority**: 15A contract partition, serial batches, implementation evidence, merged-tree closeout, and finalization |
+| [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) | Completed/frozen Phase-15 execution evidence: contract partition, serial batches, implementation, hostile merged-tree closeout, and finalization |
 | [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md) | Frozen Phase-15 preparation snapshot and pre-entry compatibility analysis |
-| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Machine-readable execution status, immutable migration row IDs, compatibility ownership/retirement, active execution claim, and verification evidence pointers |
+| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Completed machine-readable naming-cleanup history: immutable row IDs, compatibility ownership/retirement, batch merges, terminal state, and evidence pointers |
 | [`testing.md`](testing.md) | Validation and finish-line gates |
 | [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver workstreams and current execution priority** |
-| [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) | Historical-evidence translation and post-Phase-15 solver research resumption gate |
+| [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) | Active post-cleanup solver-research bridge for translating frozen naming-era evidence and running the resumption checkpoint |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research/evidence method, stop rules, promotion and selection discipline |
 | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer roles, proportional holdout gates, confirmation blocks, cross-generator challenge |
 | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection, fixed-work allocation, portfolio/configuration research |

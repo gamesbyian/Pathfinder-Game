@@ -45,65 +45,27 @@ try {
     });
     if (status.status !== 0) throw new Error(`naming status failed:\n${status.stdout}\n${status.stderr}`);
     const parsed = JSON.parse(status.stdout);
-    // Assert the live invariants of naming:status's --json shape without hardcoding a
-    // transient batch. This covers normal Phase-8 batch work, the post-8H phase-closeout state,
-    // and later phases after lastCompletedPhase advances.
-    const expectedNextPhase = Number(source.lastCompletedPhase) + 1;
-    if (parsed.nextPhase !== expectedNextPhase) {
-      throw new Error(`naming status expected next Phase ${expectedNextPhase}, got ${parsed.nextPhase}`);
+    if (parsed.programStatus !== 'complete') {
+      throw new Error(`completed naming status expected programStatus=complete, got ${JSON.stringify(parsed.programStatus)}`);
     }
-
-    const batchOrder = source.phaseBatches?.[String(parsed.nextPhase)] ?? [];
-    if (batchOrder.length) {
-      const expectedBatch = batchOrder.find(batch => source.batchCompletions?.[batch]?.status !== 'merged') ?? null;
-      if (parsed.nextBatch !== expectedBatch) {
-        throw new Error(`naming status expected batch ${expectedBatch}, got ${parsed.nextBatch}`);
-      }
-      if (parsed.nextBatch === null) {
-        if (parsed.nextAction !== 'phase-closeout') {
-          throw new Error(`all declared Phase-${parsed.nextPhase} batches merged expects phase-closeout, got ${JSON.stringify(parsed.nextAction)}`);
-        }
-        if (parsed.nextScope.count !== 0) {
-          throw new Error(`phase-closeout expects an empty batch-scoped nextScope, got ${parsed.nextScope.count}`);
-        }
-      } else {
-        const kind = source.phaseBatchKinds?.[String(parsed.nextPhase)]?.[parsed.nextBatch] ?? 'implementation';
-        if (parsed.nextBatchKind !== kind) {
-          throw new Error(`naming status expected batch kind ${kind}, got ${parsed.nextBatchKind}`);
-        }
-        const batchRows = source.entries.filter(row => row.phase === parsed.nextPhase && row.batch === parsed.nextBatch);
-        const activeHere = source.activeExecution?.status === 'active' &&
-          source.activeExecution.phase === parsed.nextPhase &&
-          source.activeExecution.batch === parsed.nextBatch;
-        const inProgress = batchRows.filter(row => row.status === 'in-progress').length;
-        const done = batchRows.filter(row => row.status === 'done').length;
-        let expectedAction;
-        if (activeHere) expectedAction = kind === 'implementation' ? 'continue-active-batch' : 'continue-active-gate';
-        else if (inProgress) expectedAction = 'repair-active-execution-state';
-        else if (batchRows.length && done === batchRows.length) expectedAction = 'merge-or-record-batch-completion';
-        else expectedAction = kind === 'implementation' ? 'start-batch' : 'start-gate';
-        if (parsed.nextAction !== expectedAction) {
-          throw new Error(`naming status expected ${expectedAction}, got ${parsed.nextAction}`);
-        }
-        if (!parsed.nextScope.rows.every(row =>
-          row.phase === parsed.nextPhase && row.batch === parsed.nextBatch && typeof row.id === 'string')) {
-          throw new Error('naming status nextScope does not match the declared serial batch');
-        }
-        if (kind !== 'implementation' && parsed.nextScope.count !== 0) {
-          throw new Error(`rowless ${kind} expects zero next-scope rows, got ${parsed.nextScope.count}`);
-        }
-      }
-    } else {
-      if (parsed.nextBatch !== null) {
-        throw new Error(`non-batched Phase-${parsed.nextPhase} status must not expose a batch, got ${parsed.nextBatch}`);
-      }
-      const expectedAction = parsed.activeExecution?.status === 'active' ? 'continue-active-phase' : 'start-phase';
-      if (parsed.nextAction !== expectedAction) {
-        throw new Error(`non-batched status expected ${expectedAction}, got ${parsed.nextAction}`);
-      }
-      if (!parsed.nextScope.rows.every(row => row.phase === parsed.nextPhase && typeof row.id === 'string')) {
-        throw new Error('naming status nextScope does not match the next incomplete phase');
-      }
+    if (parsed.lastCompletedPhase !== 15) {
+      throw new Error(`completed naming status expected lastCompletedPhase=15, got ${parsed.lastCompletedPhase}`);
+    }
+    if (parsed.nextPhase !== null || parsed.nextBatch !== null || parsed.nextBatchKind !== null) {
+      throw new Error(`completed naming status must expose no next phase/batch, got ${JSON.stringify({
+        nextPhase: parsed.nextPhase,
+        nextBatch: parsed.nextBatch,
+        nextBatchKind: parsed.nextBatchKind,
+      })}`);
+    }
+    if (parsed.nextAction !== 'complete') {
+      throw new Error(`completed naming status expected nextAction=complete, got ${JSON.stringify(parsed.nextAction)}`);
+    }
+    if (parsed.nextScope.count !== 0 || parsed.nextScope.rows.length !== 0) {
+      throw new Error('completed naming status must have an empty nextScope');
+    }
+    if (parsed.activeExecution?.status !== 'idle') {
+      throw new Error(`completed naming status expected idle execution, got ${JSON.stringify(parsed.activeExecution)}`);
     }
   }
 

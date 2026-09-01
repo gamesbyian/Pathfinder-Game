@@ -9,7 +9,7 @@ For a named concept, start with `node scripts/tooling-census.mjs --compact --que
 Before opening large evidence/data files:
 
 - research/experiment status: `node scripts/research-status-index.mjs --compact`, optionally `--query=...`, `--status=...`, or `--kind=queue|experiment|evidence`;
-- active naming-cleanup status: `npm run naming:status`; add `-- --phase=N`, `--batch=<id>`, or `--json` to inspect the machine-readable ledger without rereading the whole plan;
+- completed naming-cleanup status/history: `npm run naming:status`; add `-- --phase=N`, `--batch=<id>`, or `--json` to inspect historical ledger rows without reopening the frozen plan;
 - Phase-13 raw level-metric ownership: `npm run check:level-metric-boundaries` prints raw/wire,
   frozen, normalized-runtime, and ambiguous script/workflow owners from the reviewed
   `../docs/naming-cleanup-level-metric-boundaries.json` manifest; the Phase-13B zero-leakage gate is

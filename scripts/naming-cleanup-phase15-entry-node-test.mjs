@@ -9,14 +9,17 @@ import { extractExplicitPrefixCases } from './stress/cpsat-explicit-prefix-refer
 const ledger = JSON.parse(readFileSync('docs/naming-cleanup-ledger.json', 'utf8'));
 const record = readFileSync('docs/naming-cleanup-phase-records/phase-15.md', 'utf8');
 
-assert.equal(ledger.lastCompletedPhase, 14, '15A must not advance Phase 15 completion');
+assert.equal(ledger.lastCompletedPhase, 15, 'completion seal must mark Phase 15 complete');
+assert.equal(ledger.status, 'complete');
 assert.equal(ledger.phaseExecutionRecords?.['15'], 'docs/naming-cleanup-phase-records/phase-15.md');
 assert.deepEqual(ledger.phaseBatches?.['15'], ['15A','15B','15C','15D','15E','15F','15G','15H','15I','15J']);
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15A'], 'specification-gate');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15I'], 'merged-tree-closeout');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15J'], 'finalization');
-assert.ok(['active', 'idle'].includes(ledger.activeExecution?.status),
-  'Phase-15 execution may be active during the final handoff or idle after completion');
+assert.equal(ledger.activeExecution?.status, 'idle', 'completed naming cleanup must leave execution idle');
+for (const key of ['phase', 'batch', 'branch', 'pr', 'baseMainSha', 'recordPath']) {
+  assert.equal(ledger.activeExecution?.[key], null, `completed naming cleanup must clear activeExecution.${key}`);
+}
 
 const phase15 = ledger.entries.filter(row => row.phase === 15);
 assert.equal(phase15.length, 14, 'Phase 15 now contains the thirteen 15A rows plus the 15G implementation-time repair-retreat split');
@@ -59,14 +62,11 @@ assert.equal(ledger.batchCompletions?.['15H']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15I']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15I']?.pr, 1646);
 assert.equal(ledger.batchCompletions?.['15I']?.mergeCommit, '55b405b2caf511543503a7581b2457c92c06a1f9');
-if (ledger.batchCompletions?.['15J']?.status === 'pending') {
-  assert.equal(ledger.activeExecution?.status, 'active');
-  assert.equal(ledger.activeExecution?.phase, 15);
-  assert.equal(ledger.activeExecution?.batch, '15J');
-} else {
-  assert.equal(ledger.batchCompletions?.['15J']?.status, 'merged');
-  assert.equal(ledger.activeExecution?.status, 'idle');
-}
+assert.deepEqual(ledger.batchCompletions?.['15J'], {
+  status: 'merged',
+  pr: 1647,
+  mergeCommit: '504330dc4e474b1ebc7755e8c34f72f63fd37901',
+});
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
 assert.deepEqual(
