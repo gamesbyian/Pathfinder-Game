@@ -405,7 +405,8 @@ function reconciliationReferenceFilesForValue(value) {
     !file.startsWith('docs/archive/') &&
     !file.startsWith('docs/history/') &&
     !file.startsWith('docs/naming-cleanup-phase-records/') &&
-    !file.startsWith('scripts/naming-cleanup-'));
+    !file.startsWith('scripts/naming-cleanup-') &&
+    file !== 'scripts/check-naming-current-authorities.mjs');
 }
 
 function reconciliationReferenceMatches(entry, side) {
