@@ -1,9 +1,9 @@
 # Must-cross neighbor retry work-dose migration
 
-> **Status:** active
-> **Last evidence:** 2026-09-01 — site-specific work-dose change, CI ratchet, and ownership tests added; full CI and published-corpus regression pending.
-> **Decision:** size `must-cross-neighbor-prune-disabled-retry`'s fresh work pool from canonical `workBudget` instead of the stage's wall-derived ms budget. Preserve its eligibility gate, staircase, node reserve/ceiling, and wall deadline.
-> **Remaining gate:** targeted ownership tests, six-job PR CI, and full `solver:regression -- --check` must pass before this site can be concluded positive.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-01 — PR #1664 validation run 33573059040: both focused ownership tests passed, the budget-boundary ratchet passed, and the full published regression solved 160/160 with no solved-set regressions.
+> **Decision:** keep the canonical-work migration: size `must-cross-neighbor-prune-disabled-retry`'s fresh work pool from resolved `workBudget` instead of the stage's wall-derived ms budget. Its eligibility gate, staircase, node reserve/ceiling, retry ordering, and wall deadline remain unchanged.
+> **Remaining gate:** none for this site. Continue Workstream 2 one migration at a time; do not infer that another remaining site has the same behavior-preservation proof without its own test.
 
 ## Why this site
 
@@ -71,10 +71,20 @@ The budget-boundary ratchet now prevents `legacyMsToWork(mcNeighborBudgetRetryTo
 
 ## Validation
 
-Pending:
+PR #1664's dedicated validation run `33573059040` passed all three intended gates:
+
+- focused ownership/deadline-independence tests: **2 passed**;
+- `npm run check:solver-budget-boundaries`: **passed**;
+- `npm run solver:regression -- --check`: **160/160 solved, no regressions**.
+
+The regression run reported 68,562,085 nodes versus the committed baseline's 51,789,137 (+32.4%), but the benchmark itself flagged that baseline as 17.7 days stale. That cost delta spans substantial unrelated solver evolution and is not attributable to this migration. The decision-bearing check here is solved-set retention in the plain/default call shape, backed by the site-specific tests that directly prove work-dose ownership.
+
+The first temporary validation attempt also solved 160/160 but exited before comparison because its sparse checkout omitted `logs/solver-baseline.json`; the harness was corrected to include that fixture and the exact check then passed.
+
+Reproduction:
 
 ```bash
 SOLVER_DEEP_TESTS=0 npx vitest run modules/solver/orchestration.test.ts -t "must-cross-neighbor-prune-disabled-retry"
-npm run solver:regression -- --check
 npm run check:solver-budget-boundaries
+npm run solver:regression -- --check
 ```
