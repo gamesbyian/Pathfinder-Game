@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Batch driver for family-parent-hint-replay-lib.mjs's replay logic: walks every family manifest
- * in the wide research trove, tries every variant's discovered hint path against its canonical
+ * in the variant-family dataset, tries every variant's discovered hint path against its canonical
  * parent (inverse-transformed for symmetry, as-is for exact-coordinate witness relations -- the
  * same eligibility replayVariantPath itself enforces), and persists every referee-accepted path as
  * a new parent hint via the existing hint-merge/provenance system (mergeVariantDerivedHint).
@@ -9,7 +9,7 @@
  * Read-only until --save-hints is passed (dry run reports counts without writing).
  *
  * Usage: npx tsx scripts/family-parent-hint-replay-batch.mjs [--save-hints]
- *   [--corpora=published,corpus1,corpus2] [--trove-root=<data-worktree>] [--out=<report.json>]
+ *   [--corpora=published,corpus1,corpus2] [--variant-family-dataset-root=<data-worktree>] [--out=<report.json>]
  */
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -19,7 +19,7 @@ import { normalizeRawLevel } from '../modules/solver/normalization.ts';
 import { validateCandidatePath } from '../modules/domain/path-validator.ts';
 import { getLevelFingerprint } from '../modules/domain/level-fingerprint.ts';
 import { mergeVariantDerivedHint, replayVariantPath } from './family-parent-hint-replay-lib.mjs';
-import { familyArtifactRoots, troveRootArg } from './family-paths.mjs';
+import { familyArtifactRoots, variantFamilyDatasetRootArg } from './family-paths.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -28,7 +28,7 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 const SAVE = process.argv.includes('--save-hints');
 const CORPORA = (args.get('--corpora') || 'published,corpus1,corpus2').split(',');
 const OUT = args.get('--out') || 'reports/families/2026-08-08-parent-hint-replay.json';
-const TROVE = familyArtifactRoots(troveRootArg());
+const FAMILY_DATASET = familyArtifactRoots(variantFamilyDatasetRootArg());
 
 const CORPUS_LEVELS_FILE = {
     published: 'data/levels.json',
@@ -57,8 +57,8 @@ function discoverFamilyManifests(dir) {
     return found;
 }
 
-if (!existsSync(TROVE.families)) throw new Error(`family data root does not exist: ${TROVE.families}`);
-const allManifests = discoverFamilyManifests(TROVE.families);
+if (!existsSync(FAMILY_DATASET.families)) throw new Error(`family data root does not exist: ${FAMILY_DATASET.families}`);
+const allManifests = discoverFamilyManifests(FAMILY_DATASET.families);
 
 for (const corpus of CORPORA) {
     const levelsFile = CORPUS_LEVELS_FILE[corpus];
@@ -73,7 +73,7 @@ for (const corpus of CORPORA) {
     let variantsChecked = 0, variantsAccepted = 0, parentsTouched = new Set();
 
     for (const { fullPath: manifestPath, manifest } of manifestFiles) {
-        const mf = path.relative(TROVE.families, manifestPath);
+        const mf = path.relative(FAMILY_DATASET.families, manifestPath);
         const parent = byId.get(String(manifest.parentLevelId));
         // A missing parent is corpus/manifest drift, not an ineligible replay. Silently skipping
         // here previously omitted S00141's entire family after its manifest and level corpus used

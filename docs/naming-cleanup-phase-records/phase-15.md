@@ -569,3 +569,86 @@ Implementation-head CI run **33455234408** is green across build, checks, lint, 
 proofs, and coverage. The row is now `done` and `activeExecution` is idle, but
 `batchCompletions["15B"]` deliberately remains pending until PR #1639 actually merges. A fresh
 exact-head CI run after this bookkeeping closeout is required before merge.
+
+
+## 15B merge evidence
+
+Phase 15B completed as implementation PR **#1639**.
+
+- final head: `1aa440697e083ce243f3c61237073fcec4a66a17`;
+- implementation-head green CI: run **33455234408**;
+- final done/idle exact-head CI: run **33455520229**, all six CI jobs successful;
+- final exact-head browser characterization: run **33455520341**, successful;
+- merge commit: `56a69e483e267a6da4aaa92acc172e994e2c541e`;
+- 15C base-main SHA: the same merge commit;
+- ledger `batchCompletions["15B"]` is now the machine merge-barrier evidence.
+
+## 15C — NC-P15-001 / NC-P15-008 variant-family dataset-root vocabulary
+
+Status: **active**
+
+Branch: `chatgpt/phase15c-variant-family-dataset-root-2026-08-31`  
+PR: **#1640**  
+Base main: `56a69e483e267a6da4aaa92acc172e994e2c541e`
+
+15C owns two deliberately separated lifetimes:
+
+- **NC-P15-001**: external CLI transition from `--trove-root` to
+  `--variant-family-dataset-root`, with one shared parser owning the temporary legacy alias;
+- **NC-P15-008**: private source/API vocabulary `troveRootArg` / `troveRoot` for that mounted
+  dataset root, migrated directly with no private compatibility alias.
+
+The batch must prove canonical-only current docs/callers, same-value dual-argument acceptance,
+conflicting dual-argument rejection, default-current-working-directory behavior, and atomic private
+import migration. It must not change family artifact path semantics or dataset content.
+
+
+### 15C implementation and validation evidence
+
+Implemented in PR **#1640** from base
+`56a69e483e267a6da4aaa92acc172e994e2c541e`.
+
+The current-source migration is deliberately split by lifetime:
+
+- the shared external parser now accepts canonical
+  `--variant-family-dataset-root=PATH`;
+- `--trove-root=PATH` remains readable only at that parser as the one temporary external alias;
+- canonical + legacy spellings that resolve to the same absolute path are accepted;
+- conflicting resolved paths are rejected before a family tool can select data;
+- no-argument behavior remains `process.cwd()`;
+- private `troveRootArg` / `troveRoot` source vocabulary is removed rather than aliased;
+- family index and parent-hint-replay consumers import/use only
+  `variantFamilyDatasetRootArg` / canonical root vocabulary;
+- current family research/tooling docs teach the canonical CLI;
+- Phase-15D manifest field `trove` and Phase-15E historical
+  `wide-trove-attempts-*` discovery remain untouched.
+
+`test:variant-family-dataset-root` is an executable compatibility proof. It covers direct parser
+behavior plus the real `family:index` entrypoint under canonical-only, legacy-only, same-value
+dual, and conflicting-dual invocations. It also pins `familyArtifactRoots` path semantics.
+
+`check:naming-cleanup-phase15c-closeout` scans maintained scripts/docs/workflows and proves:
+
+- no retired private `troveRootArg` / `troveRoot` vocabulary remains;
+- the temporary `--trove-root` CLI exists on maintained current surfaces only in
+  `scripts/family-paths.mjs`;
+- canonical parser ownership is exactly the shared parser plus
+  `family-index.mjs` and `family-parent-hint-replay-batch.mjs`;
+- current front-door family docs/tooling expose the canonical CLI.
+
+CI usefully caught three closeout/control-plane assumptions before completion:
+
+1. the first closeout assertion required the canonical CLI text to include a literal trailing
+   `=`, which was too presentation-specific for prose docs and was relaxed to the actual CLI token;
+2. the compatibility test initially lived at a general script path, causing the Phase-8 retained
+   `trove` scanner to correctly classify its legacy-alias fixture text as live residue; the test
+   moved under the naming-cleanup guard namespace instead of expanding the old retained-surface
+   allowlist;
+3. the generic Phase-9 closure self-test reset later row status but not later serial-batch merge
+   records; it now resets both so historical closure fixtures are lifecycle-independent.
+
+Implementation-head exact CI run **33459622550** is green across build, checks, lint, node tests,
+deep proofs, and coverage. Exact-head browser characterization run **33459622623** is also green.
+NC-P15-001 and NC-P15-008 are now `done` and `activeExecution` is idle, while
+`batchCompletions["15C"]` deliberately remains pending until PR #1640 actually merges. A final
+exact-head CI run on this done/idle bookkeeping state is required before merge.

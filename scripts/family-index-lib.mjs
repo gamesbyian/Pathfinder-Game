@@ -74,8 +74,8 @@ function readEvidence(file, source, normalizedRun = null) {
     }
 }
 
-export function buildFamilyIndex(troveRoot) {
-    const roots = familyArtifactRoots(troveRoot);
+export function buildFamilyIndex(variantFamilyDatasetRoot) {
+    const roots = familyArtifactRoots(variantFamilyDatasetRoot);
     const manifests = filesBelow(roots.families, file => file.endsWith('-manifest.json'));
     const families = [];
     const variants = [];
