@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -38,7 +38,9 @@ assert.ok(fromNewEnv.report.problems.some(problem => problem.includes('not a Git
 // Phase 15 retired the legacy dataset-root environment spelling. Supplying it alone must
 // no longer redirect the tool away from its ordinary default root.
 const retiredEnvRoot = fakeDatasetRoot('dataset-retired-env');
-const retiredEnvName = ['PATHFINDER', 'VARIANT', 'TROVE'].join('_');
+const cleanupLedger = JSON.parse(readFileSync('docs/naming-cleanup-ledger.json', 'utf8'));
+const retiredEnvName = cleanupLedger.entries.find(entry => entry.id === 'NC-P08-053')?.old;
+assert.equal(typeof retiredEnvName, 'string', 'NC-P08-053 must retain its immutable historical old spelling in the ledger');
 const fromRetiredEnv = run([], { [retiredEnvName]: retiredEnvRoot });
 assert.equal(fromRetiredEnv.status, 1);
 assert.notEqual(
