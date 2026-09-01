@@ -402,6 +402,8 @@ const reconciliationAuthorityFiles = new Set([
 function reconciliationReferenceFilesForValue(value) {
   return referenceFilesForValue(value).filter(file =>
     !reconciliationAuthorityFiles.has(file) &&
+    !file.startsWith('docs/archive/') &&
+    !file.startsWith('docs/history/') &&
     !file.startsWith('docs/naming-cleanup-phase-records/') &&
     !file.startsWith('scripts/naming-cleanup-'));
 }
