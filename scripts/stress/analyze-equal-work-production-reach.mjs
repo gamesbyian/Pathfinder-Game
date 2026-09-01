@@ -257,6 +257,7 @@ function summarizeLevelHeadroom(ewRows, productionLevels, capabilityDocument = n
             levels: levels.length,
             ew1SolvableLevels: levels.filter(row => row.ew1SolvedActions.length > 0).length,
             productionSolvedLevels: levels.filter(row => row.productionSolved === true).length,
+            missingProductionLevels: levels.filter(row => !row.productionPresent).length,
             productionMissEw1SolvableLevels: levels.filter(row =>
                 row.productionSolved === false && row.ew1SolvedActions.length > 0).length,
             comparisonCounts,
@@ -304,6 +305,9 @@ export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDoc
     const invalidEqualWork = ewRows.filter(row =>
         row?.deadlineTruncated === true || row?.status === 'error' || finite(row?.workSpent) === null);
     if (invalidEqualWork.length) blockers.push('EW1 rows contain errors, deadline truncation, or missing workSpent');
+    if (levelHeadroom.summary.missingProductionLevels) {
+        blockers.push('production evidence is missing ' + levelHeadroom.summary.missingProductionLevels + ' EW1 level(s)');
+    }
     if (capabilityDocument && levelHeadroom.summary.missingCapabilityLevels) {
         blockers.push('capability input is missing ' + levelHeadroom.summary.missingCapabilityLevels + ' EW1 level(s)');
     }
@@ -393,6 +397,8 @@ export function renderEqualWorkProductionReachSummary(result) {
         'EW1-solvable levels: ' + result.levelHeadroom.summary.ew1SolvableLevels
             + '; current production misses among them: ' + result.levelHeadroom.summary.productionMissEw1SolvableLevels + '.',
         ...result.levelHeadroom.summary.comparisonCounts.map(row => '- ' + row.key + ': ' + row.count),
+        '',
+        '> EW1 solve-work is historical development evidence. Current-attempt work below/above that value is a pricing/reach comparison, not proof that identical work would reproduce the historical solve across revisions or stage contexts.',
         '',
         '| corpus/level | production | EW1 solves | comparison | frozen capability |',
         '|---|---:|---:|---|---|',
