@@ -9,11 +9,29 @@ import { promisify } from 'node:util';
 const run = promisify(execFile);
 const dir = mkdtempSync(path.join(tmpdir(), 'phase15g-explicit-prefix-'));
 try {
+  const corpusFile = path.join(dir, 'levels.json');
   const casesFile = path.join(dir, 'cases.json');
   const outFile = path.join(dir, 'result.json');
+  writeFileSync(corpusFile, JSON.stringify([{
+    id: 'PHASE15G',
+    grid: { w: 3, h: 3 },
+    reqLen: 2,
+    reqInt: 0,
+    gates: [{ x: 1, y: 1 }],
+    goal: { x: 3, y: 1 },
+    blocks: [],
+    mustPass: [],
+    mustCross: [],
+    falseGoals: [],
+    geese: [],
+    portals: [],
+    filters: [],
+    flippingFilters: [],
+    landmarks: [],
+  }]));
   writeFileSync(casesFile, JSON.stringify({
-    corpus: 'data/stress/stress-levels-random.json',
-    cases: [{ id: 'phase15g-native-illegal', levelId: 'R00001', prefix: [[999, 999]] }],
+    corpus: corpusFile,
+    cases: [{ id: 'phase15g-native-illegal', levelId: 'PHASE15G', prefix: [[999, 999]] }],
   }));
 
   let exitCode = 0;
