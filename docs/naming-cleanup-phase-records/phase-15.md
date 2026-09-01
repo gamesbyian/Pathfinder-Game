@@ -941,6 +941,7 @@ Phase 15E completed as implementation PR **#1642**.
 Status: **active**
 
 Branch: `chatgpt/phase15f-level-fingerprint-vocabulary-2026-08-31`  
+PR: **#1643**  
 Base main: `502dd2c610cd36b5ecea656b655ae570e068cbb9`
 
 15F is a direct internal vocabulary migration. It changes generic application-local
@@ -989,3 +990,25 @@ Persisted document field names already canonical under `levelFingerprint` are no
 6. generic application-local `fingerprint` residue for this contract is gone without renaming
    unrelated fingerprint concepts or `fingerprintVersion`;
 7. 15G/15H source-freeze surfaces remain untouched.
+
+
+### 15F implementation state
+
+Current source now uses `levelFingerprint` consistently for the application-local identities owned
+by NC-P15-004, including level-rating state/context, submission duplicate presentation,
+local-corpus matching, private repository parameters, and the level-rating report row.
+
+The persisted/query/path boundary remains intentionally unchanged:
+
+- submission documents still single-write `levelFingerprint` and `fingerprintVersion`;
+- duplicate detection still queries Firestore field `levelFingerprint` with the computed value;
+- rating documents still use that value directly as their document ID;
+- local-level-hint paths still use that value directly as the level path segment;
+- `getLevelFingerprint`, `getLegacyLevelFingerprints`, and
+  `LEVEL_FINGERPRINT_VERSION` are untouched.
+
+The current v2 value for the representative rating identity fixture is frozen by test as
+`v2:1abd33d29f460fee3a9b9dee523699c780df4b55c2a30f12d495e62ae67788d3`.
+
+`check:naming-cleanup-phase15f-closeout` is registered in both the Node suite and validator suite.
+NC-P15-004 remains in progress until PR #1643 exact-head CI/browser characterization passes.
