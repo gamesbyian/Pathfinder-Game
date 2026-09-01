@@ -20,10 +20,20 @@ if (/active phase\/batch authority[^\n]*phase-08\.md/i.test(agents)) failures.pu
 
 if (nextPhase === 15) {
     const preparation = 'naming-cleanup-phase-records/phase-15-preparation.md';
-    if (!agents.includes(preparation)) failures.push('AGENTS.md must route pending Phase 15 through its preparation authority');
-    if (!docsIndex.includes(preparation)) failures.push('docs/README.md must list the pending Phase-15 preparation authority');
+    const execution = ledger.phaseExecutionRecords?.['15'];
+    const phase15Active = ledger.activeExecution?.status === 'active' && ledger.activeExecution?.phase === 15;
+    if (phase15Active) {
+        if (execution !== 'docs/naming-cleanup-phase-records/phase-15.md')
+            failures.push('active Phase 15 must register docs/naming-cleanup-phase-records/phase-15.md as its execution authority');
+        if (!agents.includes(execution)) failures.push('AGENTS.md must route active Phase 15 through its execution authority');
+        if (!docsIndex.includes(execution)) failures.push('docs/README.md must list the active Phase-15 execution authority');
+        if (!docsIndex.includes(preparation)) failures.push('docs/README.md must retain the Phase-15 preparation snapshot');
+    } else {
+        if (!agents.includes(preparation)) failures.push('AGENTS.md must route pending Phase 15 through its preparation authority');
+        if (!docsIndex.includes(preparation)) failures.push('docs/README.md must list the pending Phase-15 preparation authority');
+    }
     if (!/phase-08\.md[^\n]*completed Phase-8 implementation evidence/i.test(docsIndex))
-        failures.push('docs/README.md must classify phase-08.md as completed evidence while Phase 15 is pending');
+        failures.push('docs/README.md must classify phase-08.md as completed evidence while Phase 15 is open');
 }
 
 if (failures.length) {
