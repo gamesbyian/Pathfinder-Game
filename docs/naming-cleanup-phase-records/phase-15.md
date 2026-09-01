@@ -1,10 +1,13 @@
 # Phase 15 execution and closeout record
 
-Status: **15A contract-decomposition gate active; no Phase-15 implementation rename has begun**
+Status: **15I hostile merged-tree closeout active; implementation batches 15B-15H are merged and done**
 
-Execution branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`  
-Execution PR: **#1638**  
-Entry base: `fad988569c70802db7d69b85f4443a4daf0486a6` (current `main` at Phase-15 entry)  
+Program entry branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`  
+Program entry PR: **#1638**  
+Program entry base: `fad988569c70802db7d69b85f4443a4daf0486a6`  
+Current active branch: `chatgpt/phase15i-hostile-closeout-2026-08-31`  
+Current active PR: **#1646**  
+Current merged implementation base: `65650862eb4626c5d6eecf7bbc1753a1006d97c8`  
 Preparation authority: [phase-15-preparation.md](phase-15-preparation.md)  
 Independent pre-entry repair record: [pre-phase-15-audit-repairs.md](pre-phase-15-audit-repairs.md)  
 Plan authority: [../naming-cleanup-plan.md](../naming-cleanup-plan.md)
@@ -1324,3 +1327,353 @@ Implementation head `433966955750f1898800a567133693415f1d0f0d` passed:
 NC-P15-007 and NC-P15-013 are now `done`, and `activeExecution` is idle.
 `batchCompletions["15H"]` deliberately remains pending until PR #1645 actually merges. A fresh
 exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
+
+
+## 15H merge evidence
+
+Phase 15H completed as implementation PR **#1645**.
+
+- final head: `0573438bb1c3fcb98fb4cb72320c10d2fd4ae45d`;
+- implementation-head green CI: run **33466837817**, all six CI jobs successful;
+- implementation-head browser characterization: run **33466837814**, successful;
+- final done/idle exact-head CI: run **33466977123**, all six CI jobs successful;
+- final done/idle browser characterization: run **33466977073**, successful;
+- merge commit: `65650862eb4626c5d6eecf7bbc1753a1006d97c8`;
+- 15I base-main SHA: the same merge commit;
+- ledger `batchCompletions["15H"]` is now the machine merge-barrier evidence.
+
+## 15I — independent merged-tree hostile closeout and solver-research resumption
+
+Status: **active, read-only findings pass**
+
+Branch: `chatgpt/phase15i-hostile-closeout-2026-08-31`  
+PR: **#1646**  
+Base merged main: `65650862eb4626c5d6eecf7bbc1753a1006d97c8`
+
+15I starts from the merged result of every Phase-15 implementation batch. The first pass is
+investigation only: findings are recorded before any repair. The batch must independently re-prove
+repository vocabulary, compatibility readers, canonical writers, frozen-history integrity, current
+authority routing, closeout-guard quality, and solver-research resumability rather than citing the
+implementation PRs as sufficient evidence.
+
+
+### 15I read-only findings, recorded before repair
+
+The first hostile pass was performed from merged 15H main
+`65650862eb4626c5d6eecf7bbc1753a1006d97c8`. This section is deliberately a snapshot of what was
+wrong **before** the repair commits below.
+
+**F15I-001 — permanent naming authority taught completed Phase-15 migrations as broader live legacy
+contracts than the implementation actually supports.**
+
+`docs/naming-and-vocabulary.md` still described generic application `fingerprint`, broad
+`trove` / dated `wide-trove` compatibility, current explicit-prefix `oracle*` identities, the
+retired `atlas-eligibility.mjs` source identity, and `--atlas-dir` as if the pre-15A contract were
+still current. Narrow historical readers existed for some of those concepts, but the permanent
+authority had not been reconciled to their actual owners/lifetimes.
+
+**F15I-002 — solver-research resumption authority was stale and contained a specifically false
+NC-P15-005 compatibility requirement.**
+
+The bridge still presented the pre-15A seven-row model and implied that historical explicit-prefix
+result fields/values should normalize before combination. 15A proved no maintained historical
+result reader exists, and 15G correctly made NC-P15-005 a same-run schema-v2 cutover instead of
+inventing that adapter. The bridge also omitted the split NC-P15-008 through NC-P15-014 contracts.
+
+**F15I-003 — the docs index had a malformed Phase-15 table row.**
+
+`docs/README.md` stored the execution and preparation rows on one physical line separated by a
+literal escaped newline. Ordinary link validation could still see both targets, so the defect
+survived green implementation CI.
+
+**F15I-004 — the current scripts runbook contained stale lifecycle examples.**
+
+`scripts/README.md` hard-coded `--batch=8A` after the status tool had become generic, and still
+described the completed Phase-13B `--require-normalized-clean` validation as future work.
+
+**F15I-005 — generic surface reconciliation was not side-specific.**
+
+`scripts/naming-cleanup-surface-inventory.mjs` searched `entry.old` plus every
+`inventoryTerms` value on the old side while the new side searched only `entry.new`.
+Phase-15 composite rows intentionally carried both old and canonical discovery terms, so canonical
+target occupancy could falsely keep a fully migrated row `old-live` or
+`mixed-old-and-canonical`. Naming guard/authority files could also count as lifecycle evidence.
+
+**F15I-006 — the current-authority guard was too narrow.**
+
+`scripts/check-naming-current-authorities.mjs` inspected essentially `AGENTS.md` and
+`docs/README.md`, so it missed the stale permanent vocabulary, solver-resumption bridge,
+scripts runbook, and malformed-table semantics above.
+
+**F15I-007 — the solver-research resumption test was only a smoke test.**
+
+The npm alias existed and was already in `test:node`, but it proved only representative one-record
+attempt/action/stage/routing normalization and selected command existence. It did not prove
+mixed-era joins, Phase-15 historical reader ownership, canonical single-write, current
+research-status discovery, experiment preflight, or a post-naming equal-work execution anchor.
+
+**F15I-008 — the resumption evidence bundle contained escaped Markdown code delimiters.**
+
+Several code spans in the operational handoff were stored with literal backslashes before
+backticks. This was not a runtime defect, but it was current runbook damage in the same authority
+surface as F15I-002.
+
+**Positive read-only evidence and finalization classifications.**
+
+- The frozen known-prefix source
+  `reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` has Git blob
+  `3de81cc8f95862c7f7142511e06f7bdb72710d52` both at Phase-15 implementation entry lineage
+  `4b61b59dfba6dada48f316edcdb6e9b4daa6683e` and merged 15H main
+  `65650862eb4626c5d6eecf7bbc1753a1006d97c8`.
+- NC-P15-001 `--trove-root` and NC-P15-011 `atlas-abstain` still had exactly their intended
+  transition owners and no current repository caller. Their ledger retirement condition is
+  `phase-15-review`; 15I therefore recommends retiring those **external transition aliases in
+  15J**, while permanent historical data readers NC-P15-002, NC-P15-003, and NC-P15-012 remain.
+- The separately deferred `repairLateProbe` / `REPAIR_LATE_PROBE` family remains deliberately
+  deferred vocabulary debt, not an accidental partially migrated Phase-15 contract.
+
+**Read-only-pass conclusion:** Phase 15 was not closeout-ready at this point. F15I-001 through
+F15I-008 required repair plus a fresh hostile rerun before 15I could close.
+
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-009 — NC-P15-004 missed one live application owner in `win-controller.ts`.**
+
+After the side-specific reconciliation scanner was repaired, the hostile rerun exposed
+`modules/engine/win-controller.ts` as the sole remaining current NC-P15-004 legacy application
+surface. The win path computes `getLevelFingerprint(rawLevel)` into a generic local named
+`fingerprint`, then passes that same value into hint provenance and
+`saveLocalLevelHintIfNovel`. This is the exact application-local level-fingerprint vocabulary that
+15F intended to canonicalize, not an unrelated fingerprint concept.
+
+The existing Phase-15F closeout guard did not include `win-controller.ts` in its owner set, so the
+miss survived 15F through 15H. No repair has been made at the point this finding is recorded. 15I
+must rename the local without changing the computed value or persistence call ordering, add this
+owner to the permanent 15F guard, and rerun the hostile closeout.
+
+
+**F15I-010 — NC-P15-006 left a retired bare filename in a live workflow comment, and generic
+reconciliation counted archived documentation as current.**
+
+The next hostile rerun found NC-P15-006 old references in two places:
+
+- `.github/workflows/cpsat-hint-harvest-sweep.yml` still describes eligibility as coming from
+  `atlas-eligibility.mjs`, even though the maintained source owner is now
+  `cpsat-branch-label-eligibility.mjs`;
+- `docs/archive/snapshots/solver-shadow-eval-harness-2026-08-20.md` is frozen historical
+  documentation and should not participate in current lifecycle reconciliation.
+
+The first is genuine current workflow-prose residue. The second is a scanner-classification defect.
+The Phase-15B closeout guard missed the live workflow prose because its retired set included the old
+full import paths and exports but not the bare retired filename. No repair has been made at the point
+this finding is recorded.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-011 — two closeout scanners still conflated naming/operational authority text with live
+implementation ownership.**
+
+Exact-head CI on `2f38daee48418cd4257d5104bf5b04342848e5f2` exposed two evidence-classification
+false positives after the F15I-009/F15I-010 repairs:
+
+- Phase-15 reconciliation reported NC-P15-010 `oracle-shards` as live in
+  `scripts/check-naming-current-authorities.mjs`. That script is itself a naming guard and contains
+  retired spellings only as negative semantic patterns/fixtures; it is not a workflow/job consumer.
+  The reconciliation scanner excluded `scripts/naming-cleanup-*` guards but not this separately
+  named current-authority guard.
+- the Phase-8 post-merge scanner reported `trove`, `oracle-abstain`, and `atlas-abstain` in
+  `docs/solver-research-post-naming-resumption.md` as unclassified live implementation residue.
+  15I deliberately made that document a current operational authority that states the exact
+  historical compatibility readers and retirement boundaries. Its semantics are independently
+  checked by `check:naming-current-authorities`; those literals are documentation of the contract,
+  not additional compatibility owners.
+
+These failures are guard-classification defects, not permission to delete the negative fixture or
+hide compatibility vocabulary from the resumption bridge. Repair must exclude the current-authority
+guard from implementation reconciliation and classify the resumption bridge alongside naming
+authority/evidence for the older Phase-8 lexical residue scanner, while retaining the semantic
+current-authority checks that ensure both surfaces remain truthful.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-012 — cross-phase reconciliation still confused canonical shadow matches and test/guard
+references with live legacy ownership; one Phase-15 inventory assertion also encoded a pre-15E
+workflow assumption.**
+
+After F15I-011, exact-head closeout progressed far enough to execute the full Phase-1–15 census.
+That exposed two distinct guard problems:
+
+- several older rows intentionally retain the same old/new term (for example
+  `must-cross-heavy`, `repair-fallback`, `baseWorkBudget`), while other canonical replacements
+  literally contain the old token (`SCORING_PROFILE_ORDER` contains `PROFILE_ORDER`;
+  `legacy-latency-portfolio-experiment.ts` contains `portfolio-experiment.ts`). The generic old
+  side used raw substring search, so canonical current code could manufacture a false legacy hit.
+  Test files and naming-consumer guard scripts could then lend those hits runtime-shaped categories.
+- `test:naming-cleanup-surface-inventory` still asserted that NC-P15-003 historical
+  `wide-trove-attempts-*` ownership must include a workflow. After 15E, the permanent historical
+  reader is deliberately centralized in `scripts/family-index-lib.mjs`; current workflows write
+  canonical `variant-family-dataset-*` paths and should not remain legacy owners.
+
+The repair must make old-side reconciliation canonical-shadow-aware, classify intentional
+old==new terms as retained/canonical rather than legacy, exclude test/naming-guard files from the
+runtime/control leak check, and update NC-P15-003's regression assertion to pin the actual
+historical-reader owner instead of resurrecting a workflow dependency.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-013 — the compatibility-owner proof assumed legacy/canonical artifact prefixes must exist as
+contiguous string literals, but NC-P15-003 intentionally shares one regex suffix.**
+
+The dedicated 15I gate correctly demanded executable evidence for every claimed historical reader,
+but its generic token helper tested NC-P15-003 for literal `wide-trove-attempts-` and
+`variant-family-dataset-attempts-`. The actual owner,
+`scripts/family-index-lib.mjs`, implements both through
+`FAMILY_ATTEMPT_ARTIFACT_RE = ... (wide-trove|variant-family-dataset)-attempts- ...`.
+Consequently neither expanded prefix is contiguous in source, even though the reader is executable
+and `family-index-lib-check.mjs` already exercises historical/canonical discovery and precedence.
+
+Repair must keep the generic comment-only compatibility check for literal parser fields/tokens, but
+prove NC-P15-003 through its executable regex owner plus the real family-index mixed-era test rather
+than forcing the implementation to duplicate path literals merely to satisfy the checker.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-014 — the transition-alias retirement proof was coupled to Markdown line wrapping rather
+than the semantic recommendation.**
+
+The closeout correctly verified that NC-P15-001 and NC-P15-011 still carry
+`external-config-transition` / `phase-15-review`, then attempted to prove the execution record
+assigns retirement to 15J with `/15J[^\n]{0,200}retir/`. The record already states that
+`--trove-root` and `atlas-abstain` have no current repository caller and that 15I
+**recommends retiring those external transition aliases in 15J**, but the sentence is wrapped with
+`retiring` before `15J` and across a newline. The proof therefore failed on presentation shape,
+not contract content.
+
+Repair must pin the exact two aliases and the semantic “recommends retiring ... in 15J” statement
+with whitespace-insensitive matching, without weakening the ledger compatibility-mode assertions.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-015 — NC-P15-003's side-specific inventory vocabulary still encoded the expanded filename
+prefix rather than the factorized executable convention token.**
+
+After F15I-013 made the dedicated compatibility proof architecture-aware, the broad inventory
+regression still expected `family-index-lib.mjs` to appear under the row's old-reference files.
+The ledger supplied `oldInventoryTerms: ["wide-trove-attempts-"]` and
+`newInventoryTerms: ["variant-family-dataset-attempts-"]`, but the real owner factors the shared
+`-attempts-` suffix outside a `wide-trove|variant-family-dataset` alternation. The generic
+inventory therefore found the old expanded prefix only in explanatory current documentation, not in
+the executable historical reader.
+
+Repair must make the row's observational side vocabulary match the actual executable convention
+tokens (`wide-trove` versus `variant-family-dataset`). The dedicated 15E/15I guards remain
+responsible for proving that those tokens participate specifically in attempt-artifact discovery and
+for rejecting legacy current writer/workflow paths.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-016 — the broad inventory regression still expected the NC-P15-004 legacy application
+category after 15I had repaired the last live owner.**
+
+F15I-009 correctly found and migrated the final generic `fingerprint` local in
+`modules/engine/win-controller.ts`. The independent hostile closeout now requires NC-P15-004 to be
+`canonical-live` with zero old references. However,
+`naming-cleanup-surface-inventory-node-test.mjs` retained an earlier assertion that the row's
+`oldReferenceCategories` must include `application`, directly contradicting the post-repair
+contract.
+
+Repair must assert the final state instead: the old side has no application ownership, while the
+canonical side still has application ownership. This preserves the category-level regression value
+without requiring a defect to remain live.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-017 — the live Phase-15 execution record header still advertised 15A as active and labeled
+the 15A branch/PR as the current execution identity.**
+
+The body of `phase-15.md` correctly records 15B-15H completion and the active 15I section, but its
+top-level status/header was never advanced after the specification gate. Because this file is the
+registered live execution authority, an agent opening it from `AGENTS.md` could be sent back to
+`chatgpt/phase15a-contract-decomposition-2026-08-31` / PR #1638 even while the ledger correctly
+declares 15I / PR #1646 active.
+
+Repair must distinguish immutable program-entry identity from the current active batch identity and
+extend `check:naming-current-authorities` so an active serial phase requires its registered
+execution-record header to name the ledger's active batch, branch, and PR. A mutation fixture must
+prove that stale-header drift fails.
+
+
+## 15I closeout proof evidence
+
+Hostile-closeout proof head: `89e37abbb08f8aaec3de18951e73c44426fe9226`.
+
+All findings F15I-001 through F15I-017 are repaired on that lineage; no known hostile finding remains
+open. The proof head passed all three required execution gates:
+
+- ordinary exact-head CI run **33470466934**: all six jobs successful, including build, lint,
+  non-lint checks, Node tests, deep proofs, and coverage/deep verification;
+- dedicated **Phase 15I Closeout** run **33470466888**: successful. It executed
+  `test:solver-research-resumption`, `check:naming-cleanup-phase15i-closeout`, and the production
+  solved-set regression `solver:regression -- --check`;
+- browser characterization run **33470466886**: successful.
+
+The post-naming solver-research execution anchor produced by the dedicated gate is:
+
+```json
+{"cellId":"phase15i-post-naming-anchor","tier":"EW-ANCHOR","corpus":"published","levelId":"P00001","levelPos":1,"techniqueKeys":["dfs|score=default|bias=none"],"workBudget":10000,"workSpent":1987,"ok":true,"status":"success","refereeValid":true,"winningConfigKey":"dfs|score=default|bias=none","nodesExpanded":1069}
+```
+
+That anchor is deliberately tiny and deterministic: it proves that current post-rename solver
+tooling can pass Workstream-2 preflight, execute a real equal-work cell on published level P00001,
+produce current canonical attempt/config identity, and return a referee-valid solve. It is a
+resumption/smoke anchor, not a new solver-performance baseline.
+
+### Independent semantic authority walk
+
+15I re-read the current human/machine authority surfaces after the implementation batches rather
+than treating lexical scans as sufficient:
+
+- `AGENTS.md`, `docs/README.md`, `docs/change-recipes.md`, permanent
+  `docs/naming-and-vocabulary.md`, `docs/tooling-catalog.md`, and `scripts/README.md`;
+- `docs/architecture.md`, `docs/solver-architecture.md`, and `docs/typing.md`;
+- accepted/enforced ADR authority under `docs/adr/` (0001 through 0011, respecting each ADR's
+  accepted/superseded status);
+- package scripts, current workflow map `.github/workflows/README.md`, and the temporary
+  `naming-phase15i-closeout.yml` lifecycle assignment to 15J;
+- `docs/solver-research-post-naming-resumption.md` and
+  `docs/solver-optimization-workstreams.md`, including Workstream 2's active-foundation route.
+
+No additional stale Phase-15 contract was found in those authorities after the recorded repairs.
+The mutation-backed `check:naming-current-authorities` now also binds the live Phase-15 execution
+record header to the ledger's active batch/branch/PR, preventing the F15I-017 drift class from
+recurring in 15J.
+
+### Compatibility, frozen-history, and overlap conclusions
+
+- Permanent historical readers remain NC-P15-002, NC-P15-003, and NC-P15-012; their real
+  legacy/canonical paths were exercised by the resumption/Phase-15 compatibility suites.
+- External transition aliases NC-P15-001 `--trove-root` and NC-P15-011
+  `atlas-abstain` have no current repository caller and satisfy their `phase-15-review`
+  retirement condition; 15I recommends retiring them in 15J.
+- NC-P15-005 remains a same-run schema-v2 cutover with no invented historical-result reader.
+- The representative frozen known-prefix source remains blob
+  `3de81cc8f95862c7f7142511e06f7bdb72710d52`, unchanged from Phase-15 implementation entry
+  lineage through merged 15H.
+- `repairLateProbe` / `REPAIR_LATE_PROBE` remains explicitly separate deferred vocabulary debt.
+- The 15I branch was compared against current `main` during closeout and was zero commits behind;
+  searches for open naming-cleanup / Phase-15 PRs found only PR **#1646**, so no parallel unique
+  implementation authority exists to supersede or merge first.
+
+15I remains **active** and `batchCompletions["15I"]` remains **pending** while PR #1646 is open.
+15J is still blocked. Final bookkeeping commits on this PR must receive fresh exact-head CI,
+dedicated closeout, and browser success before merge; the actual 15I merge commit is recorded by
+15J after it exists.

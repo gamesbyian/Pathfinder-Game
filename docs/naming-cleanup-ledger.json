@@ -4193,6 +4193,12 @@
         "--trove-root",
         "--variant-family-dataset-root",
         "family-paths.mjs"
+      ],
+      "oldInventoryTerms": [
+        "--trove-root"
+      ],
+      "newInventoryTerms": [
+        "--variant-family-dataset-root"
       ]
     },
     {
@@ -4227,6 +4233,12 @@
         "invariantFields",
         "trove",
         "variantFamilyDataset"
+      ],
+      "oldInventoryTerms": [
+        "trove"
+      ],
+      "newInventoryTerms": [
+        "variantFamilyDataset"
       ]
     },
     {
@@ -4239,7 +4251,7 @@
       "phase": 15,
       "batch": "15E",
       "status": "done",
-      "notes": "15A split historical-reader discovery from current writer filenames. Frozen dated paths remain readable permanently; current writer migration is NC-P15-009. docs/naming-cleanup-phase-records/phase-15.md.",
+      "notes": "15A split historical-reader discovery from current writer filenames. Frozen dated paths remain readable permanently; current writer migration is NC-P15-009. docs/naming-cleanup-phase-records/phase-15.md. 15I reconciliation refinement: side-specific observational terms use the factorized executable convention tokens wide-trove / variant-family-dataset; dedicated 15E/15I guards prove the attempt-artifact suffix and ownership.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
@@ -4259,6 +4271,12 @@
         "wide-trove-attempts-",
         "variant-family-dataset-attempts-",
         "family-index-lib.mjs"
+      ],
+      "oldInventoryTerms": [
+        "wide-trove"
+      ],
+      "newInventoryTerms": [
+        "variant-family-dataset"
       ]
     },
     {
@@ -4288,6 +4306,19 @@
         "DuplicateCheckPresentation",
         "loadLevelRating",
         "getLocalLevelHints"
+      ],
+      "oldInventoryTerms": [
+        "levelRating.fingerprint",
+        "rating.fingerprint",
+        "findLocalCorpusMatchByFingerprint",
+        "verdict.fingerprint",
+        "duplicateCheck.fingerprint",
+        "targetLocalLevelMatch?.fingerprint",
+        "const fingerprint = await getLevelFingerprint",
+        "approveLocalHintAddition(submissionId: string, fingerprint: string"
+      ],
+      "newInventoryTerms": [
+        "levelFingerprint"
       ]
     },
     {
@@ -4317,6 +4348,16 @@
         "oracle-unknown",
         "referenceLabel",
         "referenceReason"
+      ],
+      "oldInventoryTerms": [
+        "oracleLabel",
+        "oracleReason",
+        "oracle-unknown"
+      ],
+      "newInventoryTerms": [
+        "referenceLabel",
+        "referenceReason",
+        "reference-unknown"
       ]
     },
     {
@@ -4344,6 +4385,16 @@
         "atlas-eligibility.mjs",
         "selectEligibleAtlasLevels",
         "isEligibleForCpsatAtlas"
+      ],
+      "oldInventoryTerms": [
+        "atlas-eligibility.mjs",
+        "selectEligibleAtlasLevels",
+        "isEligibleForCpsatAtlas"
+      ],
+      "newInventoryTerms": [
+        "cpsat-branch-label-eligibility.mjs",
+        "selectEligibleCpsatBranchLevels",
+        "isEligibleForCpsatBranchLabeling"
       ]
     },
     {
@@ -4370,6 +4421,14 @@
       "inventoryTerms": [
         "--atlas-dir",
         "ATLAS_DIR",
+        "--prune-gap-dir",
+        "PRUNE_GAP_DIR"
+      ],
+      "oldInventoryTerms": [
+        "--atlas-dir",
+        "ATLAS_DIR"
+      ],
+      "newInventoryTerms": [
         "--prune-gap-dir",
         "PRUNE_GAP_DIR"
       ]
@@ -4399,6 +4458,14 @@
         "troveRootArg",
         "troveRoot",
         "variantFamilyDatasetRootArg"
+      ],
+      "oldInventoryTerms": [
+        "troveRootArg",
+        "troveRoot"
+      ],
+      "newInventoryTerms": [
+        "variantFamilyDatasetRootArg",
+        "variantFamilyDatasetRoot"
       ]
     },
     {
@@ -4427,6 +4494,14 @@
         "wide-trove-summary",
         "variant-family-dataset-summary",
         "collect-variant-family-dataset.yml"
+      ],
+      "oldInventoryTerms": [
+        "reports/families/2026-08-07-wide-trove-summary.md",
+        "reports/families/2026-08-07-wide-trove-source-run.json"
+      ],
+      "newInventoryTerms": [
+        "reports/families/variant-family-dataset-summary.md",
+        "reports/families/variant-family-dataset-source-run.json"
       ]
     },
     {
@@ -4454,6 +4529,12 @@
         "oracle-shards",
         "reference-shards",
         "needs:"
+      ],
+      "oldInventoryTerms": [
+        "oracle-shards"
+      ],
+      "newInventoryTerms": [
+        "reference-shards"
       ]
     },
     {
@@ -4487,6 +4568,12 @@
         "reference-abstain",
         "case_format",
         "--format"
+      ],
+      "oldInventoryTerms": [
+        "atlas-abstain"
+      ],
+      "newInventoryTerms": [
+        "reference-abstain"
       ]
     },
     {
@@ -4520,6 +4607,14 @@
         "unknownSiblingLabel",
         "oracleAbstentions",
         "collect-known-solution-prefix-branches"
+      ],
+      "oldInventoryTerms": [
+        "oracle-abstain",
+        "oracleAbstentions"
+      ],
+      "newInventoryTerms": [
+        "reference-abstain",
+        "referenceAbstentions"
       ]
     },
     {
@@ -4546,6 +4641,14 @@
       "inventoryTerms": [
         "atlasDir",
         "atlasFiles",
+        "pruneGapDir",
+        "pruneGapFiles"
+      ],
+      "oldInventoryTerms": [
+        "atlasDir",
+        "atlasFiles"
+      ],
+      "newInventoryTerms": [
         "pruneGapDir",
         "pruneGapFiles"
       ]
@@ -4576,6 +4679,16 @@
         "oracleProbe",
         "oracleLabel",
         "oracleReason",
+        "referenceProbe",
+        "referenceLabel",
+        "referenceReason"
+      ],
+      "oldInventoryTerms": [
+        "oracleProbe",
+        "oracleLabel",
+        "oracleReason"
+      ],
+      "newInventoryTerms": [
         "referenceProbe",
         "referenceLabel",
         "referenceReason"
@@ -4646,14 +4759,14 @@
     "15": "docs/naming-cleanup-phase-records/phase-15.md"
   },
   "activeExecution": {
-    "status": "idle",
-    "phase": null,
-    "batch": null,
-    "branch": null,
-    "pr": null,
-    "baseMainSha": null,
-    "recordPath": null,
-    "notes": "Phase 15H implementation rows are done and PR #1645 awaits final exact-head CI/merge; rowless 15I remains blocked until batchCompletions[15H] records the merge."
+    "status": "active",
+    "phase": 15,
+    "batch": "15I",
+    "branch": "chatgpt/phase15i-hostile-closeout-2026-08-31",
+    "pr": 1646,
+    "baseMainSha": "65650862eb4626c5d6eecf7bbc1753a1006d97c8",
+    "recordPath": "docs/naming-cleanup-phase-records/phase-15.md",
+    "notes": "Phase 15I hostile merged-tree closeout proof is complete; proof head 89e37abbb08f8aaec3de18951e73c44426fe9226 passed CI 33470466934, Phase 15I Closeout 33470466888, and browser 33470466886. 15I remains active/pending until PR #1646 merges; 15J remains blocked."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior. Post-closeout audit correction (2026-08-31): NC-P08-024/025 are direct current-source renames, not dual-read boundaries; 8G proved no persisted artifact or historical reader existed, and the Phase-8 closeout now bans the retired fields rather than treating comments as compatibility reads. Phase-15 hardening (2026-08-31): the final phase now requires a rowless contract-decomposition gate before any NC-P15 implementation, row splitting when bundled identities have different owners/lifetimes, reader-first executable historical fixtures, schema-version decisions, mixed-era join/discovery proof, canonical single-write proof, small serial boundary-specific batches, an independent merged-tree hostile closeout, a solver-research resumption evidence bundle, and a separate archival/finalization handoff. This amendment changes no NC-P15 row status or canonical target.",
   "phaseBatches": {
@@ -4757,9 +4870,9 @@
       "mergeCommit": "7e82a4325484eac2da67864101e33f614d075d70"
     },
     "15H": {
-      "status": "pending",
-      "pr": null,
-      "mergeCommit": null
+      "status": "merged",
+      "pr": 1645,
+      "mergeCommit": "65650862eb4626c5d6eecf7bbc1753a1006d97c8"
     },
     "15I": {
       "status": "pending",

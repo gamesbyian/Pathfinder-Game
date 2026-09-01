@@ -56,6 +56,7 @@ const files = [
     .sort();
 
 const retired = [
+    'atlas-eligibility.mjs',
     'scripts/stress/lib/atlas-eligibility.mjs',
     './lib/atlas-eligibility.mjs',
     'selectEligibleAtlasLevels',
@@ -69,7 +70,7 @@ for (const file of files) {
     for (const token of retired) {
         if (source.includes(token)) failures.push(`${file}: retired NC-P15-006 token ${JSON.stringify(token)}`);
     }
-    if (source.includes('cpsat-branch-label-eligibility.mjs')) canonicalImportFiles.push(file);
+    if (/\bfrom\s+['"][^'"]*cpsat-branch-label-eligibility\.mjs['"]/u.test(source)) canonicalImportFiles.push(file);
 }
 
 if (failures.length) {

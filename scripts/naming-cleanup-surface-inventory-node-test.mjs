@@ -112,11 +112,24 @@ assert.ok(
   phase15HRows.every(row => ['in-progress', 'done'].includes(row.status)),
   '15H rows must be active or done while the final implementation batch owns them',
 );
-// Do not infer canonical-vs-old lifecycle from reconciliationState here. The inventory currently
-// folds every inventoryTerm into oldReferenceFiles while newReferenceFiles searches only entry.new;
-// composite rows such as 15H therefore need their dedicated semantic closeout guard for that proof.
 assert.ok(phase15HRows.every(row => row.referenceFiles.length > 0),
   '15H rows must remain represented in the repository-wide surface inventory');
+
+const permanentOrTransitionReaders = new Set(['NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-011', 'NC-P15-012']);
+for (const row of phase15Rows) {
+  if (permanentOrTransitionReaders.has(row.id)) {
+    assert.equal(row.reconciliationState, 'mixed-old-and-canonical',
+      `${row.id} owns a real current legacy reader/alias plus canonical current vocabulary`);
+    assert.ok(row.oldReferenceFiles.length > 0, `${row.id} legacy reader/alias must be executable current evidence`);
+    assert.ok(row.newReferenceFiles.length > 0, `${row.id} canonical side must be current evidence`);
+  } else {
+    assert.equal(row.reconciliationState, 'canonical-live',
+      `${row.id} has no live compatibility contract and must not retain old current-surface identity`);
+    assert.equal(row.oldReferenceFiles.length, 0,
+      `${row.id} retired current identity must not survive outside naming authorities/guards`);
+    assert.ok(row.newReferenceFiles.length > 0, `${row.id} canonical identity must be live`);
+  }
+}
 
 assert.ok(
   phase15Rows.every(row => [
@@ -128,8 +141,17 @@ assert.ok(
   ].includes(row.reconciliationState)),
   'Phase-15 reconciliation must classify every lifecycle state explicitly',
 );
-assert.ok(phase15Rows.find(row => row.id === 'NC-P15-003').oldReferenceCategories.includes('workflow'));
-assert.ok(phase15Rows.find(row => row.id === 'NC-P15-004').oldReferenceCategories.includes('application'));
+const phase15HistoricalAttemptReader = phase15Rows.find(row => row.id === 'NC-P15-003');
+assert.ok(phase15HistoricalAttemptReader.oldReferenceFiles.includes('scripts/family-index-lib.mjs'),
+  'NC-P15-003 permanent historical discovery must remain owned by family-index-lib.mjs');
+assert.ok(phase15HistoricalAttemptReader.oldReferenceCategories.includes('tool-or-report-transport'));
+assert.equal(phase15HistoricalAttemptReader.oldReferenceCategories.includes('workflow'), false,
+  'current workflows must not remain wide-trove historical-discovery owners after 15E');
+const phase15FingerprintRow = phase15Rows.find(row => row.id === 'NC-P15-004');
+assert.equal(phase15FingerprintRow.oldReferenceCategories.includes('application'), false,
+  'NC-P15-004 must not retain generic fingerprint ownership in application code after 15F/15I closeout');
+assert.ok(phase15FingerprintRow.newReferenceCategories.includes('application'),
+  'NC-P15-004 canonical levelFingerprint vocabulary must remain live in application code');
 const reconciliationCounts = Object.fromEntries(
   [...new Set(rangeInventory.ledgerEntries.map(row => row.reconciliationState))]
     .sort()
