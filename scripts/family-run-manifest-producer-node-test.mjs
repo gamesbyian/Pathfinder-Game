@@ -90,6 +90,41 @@ for (const [firstEra, secondEra] of [['v1', 'v1'], ['v2', 'v2'], ['v1', 'v2']]) 
     });
 }
 
+test('mixed-era invariant comparison ignores JSON object key insertion order', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'family-run-era-key-order-'));
+    mkdirSync(path.join(root, 'data/families'), { recursive: true });
+    mkdirSync(path.join(root, 'logs/family-census/run/shard-1'), { recursive: true });
+    mkdirSync(path.join(root, 'logs/family-census/run/shard-2'), { recursive: true });
+    const first = legacyV1(buildFamilyEvaluationRunManifest({
+        ...baseInput, runId: 'key-order-run', shardIndex: 1, outputArtifacts: [],
+        variantFamilyDataset: {
+            manifest: baseInput.variantFamilyDataset.manifest,
+            shardFile: 'logs/family-census/wide-shard-01-slice.json',
+        },
+    }));
+    first.solverPolicy = {
+        strictTotalWorkBudget: first.solverPolicy.strictTotalWorkBudget,
+        flags: first.solverPolicy.flags,
+        config: first.solverPolicy.config,
+        profile: first.solverPolicy.profile,
+        mode: first.solverPolicy.mode,
+    };
+    first.trove = { shardFile: first.trove.shardFile, manifest: first.trove.manifest };
+    const second = buildFamilyEvaluationRunManifest({
+        ...baseInput, runId: 'key-order-run', shardIndex: 2, outputArtifacts: [],
+        variantFamilyDataset: {
+            manifest: baseInput.variantFamilyDataset.manifest,
+            shardFile: 'logs/family-census/wide-shard-02-slice.json',
+        },
+    });
+    writeFileSync(path.join(root, 'logs/family-census/run/shard-1/manifest.json'), JSON.stringify(first));
+    writeFileSync(path.join(root, 'logs/family-census/run/shard-2/manifest.json'), JSON.stringify(second));
+    const index = buildFamilyIndex(root);
+    assert.deepEqual(index.diagnostics.runManifests, []);
+    assert.equal(index.runs[0].complete, true);
+    assert.deepEqual(index.runs[0].variantFamilyDataset, { manifest: baseInput.variantFamilyDataset.manifest });
+});
+
 // (2)+(3): shards of one run agree on invariant fields, and output artifact paths join back to
 // family-index evidence — set up a real variant-family dataset tree with two shards' manifests +
 // their evidence files and run them through the real consumer (family-index-lib.mjs's
