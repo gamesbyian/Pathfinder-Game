@@ -238,6 +238,37 @@ if (!phaseClosures || typeof phaseClosures !== 'object' || Array.isArray(phaseCl
       }
     }
 
+    if (Number(phaseKey) === 15) {
+      const repair = closure.postCompletionAuditRepair;
+      if (!repair || typeof repair !== 'object' || Array.isArray(repair)) {
+        fail(`phaseClosures["${phaseKey}"].postCompletionAuditRepair must record the merged post-Phase-15 hostile-audit repair`);
+      } else {
+        if (repair.recordPath !== 'docs/naming-cleanup-phase-records/phase-15-post-completion-audit-repair.md' ||
+            !repoPathExists(repair.recordPath)) {
+          fail(`phaseClosures["${phaseKey}"].postCompletionAuditRepair.recordPath must identify the checked-in post-completion repair record`);
+        }
+        if (!Number.isInteger(repair.pr) || repair.pr < 1) {
+          fail(`phaseClosures["${phaseKey}"].postCompletionAuditRepair.pr must be a positive PR number`);
+        }
+        for (const key of ['baseMainSha', 'finalHeadSha', 'mergeCommit']) {
+          if (typeof repair[key] !== 'string' || !/^[0-9a-f]{40}$/u.test(repair[key])) {
+            fail(`phaseClosures["${phaseKey}"].postCompletionAuditRepair.${key} must be a full commit SHA`);
+          }
+        }
+        if (!Number.isInteger(repair.ciRunId) || repair.ciRunId < 1 || repair.ciConclusion !== 'success') {
+          fail(`phaseClosures["${phaseKey}"].postCompletionAuditRepair must record successful exact-head CI`);
+        }
+        if (!Number.isInteger(repair.firestoreRunId) || repair.firestoreRunId < 1 ||
+            repair.firestoreConclusion !== 'success') {
+          fail(`phaseClosures["${phaseKey}"].postCompletionAuditRepair must record the successful Firestore boundary run`);
+        }
+        if (!Number.isInteger(repair.browserRunId) || repair.browserRunId < 1 ||
+            repair.browserConclusion !== 'success') {
+          fail(`phaseClosures["${phaseKey}"].postCompletionAuditRepair must record the successful browser characterization run`);
+        }
+      }
+    }
+
     const closeout = closure.mergedTreeCloseout;
     if (!closeout || typeof closeout !== 'object' || Array.isArray(closeout)) {
       fail(`phaseClosures["${phaseKey}"].mergedTreeCloseout must identify the merged-tree closure PR`);

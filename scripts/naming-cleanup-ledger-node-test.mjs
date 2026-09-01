@@ -239,6 +239,26 @@ try {
 
   {
     const ledger = clone(source);
+    delete ledger.phaseClosures['15'].postCompletionAuditRepair;
+    expectFail(
+      'Phase-15 closure requires post-completion hostile-audit repair evidence',
+      ledger,
+      /postCompletionAuditRepair must record the merged post-Phase-15 hostile-audit repair/u,
+    );
+  }
+
+  {
+    const ledger = clone(source);
+    delete ledger.phaseClosures['15'].postCompletionAuditRepair.firestoreRunId;
+    expectFail(
+      'Phase-15 post-completion repair requires Firestore boundary evidence',
+      ledger,
+      /postCompletionAuditRepair must record the successful Firestore boundary run/u,
+    );
+  }
+
+  {
+    const ledger = clone(source);
     delete ledger.phaseClosures['11'].implementation.browserRunId;
     expectFail('Phase-11 implementation requires browser evidence', ledger, /implementation must record the successful exact-head Phase-11 browser run/u);
   }
