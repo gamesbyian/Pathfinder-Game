@@ -6,7 +6,7 @@ Program entry branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`
 Program entry PR: **#1638**  
 Program entry base: `fad988569c70802db7d69b85f4443a4daf0486a6`  
 Current active branch: `chatgpt/phase15j-archival-handoff-2026-08-31`  
-Current active PR: **not opened yet**  
+Current active PR: **#1647**  
 Current merged closeout base: `55b405b2caf511543503a7581b2457c92c06a1f9`  
 Preparation authority: [phase-15-preparation.md](phase-15-preparation.md)  
 Independent pre-entry repair record: [pre-phase-15-audit-repairs.md](pre-phase-15-audit-repairs.md)  
@@ -1696,6 +1696,7 @@ Phase 15I completed as hostile merged-tree closeout PR **#1646**.
 Status: **active**
 
 Branch: `chatgpt/phase15j-archival-handoff-2026-08-31`  
+PR: **#1647**  
 Base main: `55b405b2caf511543503a7581b2457c92c06a1f9`
 
 15J is deliberately rowless. It does not reopen completed implementation rows. Its handoff work is:
