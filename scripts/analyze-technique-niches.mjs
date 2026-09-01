@@ -30,7 +30,7 @@ function serializableFeatures(raw) {
         width: f.w, height: f.h, area: f.area, navigableArea,
         requiredPathLength: f.reqLen, requiredIntersections: f.reqInt,
         requiredPathCoverageRatio: f.requiredPathCoverageRatio,
-        objectDensity: (f.area - navigableArea) / f.area,
+        nonNavigableDensity: (f.area - navigableArea) / f.area,
         constrainedObjects, constrainedObjectDensity: constrainedObjects / navigableArea,
         gates: f.gates, falseGoals: f.falseGoals, blocks: f.blocks,
         mustPass: f.mustPass, mustCross: f.mustCross, filters: f.staticFilters,
@@ -51,7 +51,13 @@ const effect = (supported, unsupported, key) => {
 };
 
 export function analyze({ cells, coverage, levels, sourceIdentities = {} }) {
-    const rawById = new Map(levels.map((level) => [level.id, level]));
+    const rawById = new Map();
+    for (const level of levels) {
+        if (rawById.has(level.id)) {
+            throw new Error(`Duplicate static level id ${level.id}; corpus-aware identity is required before joining`);
+        }
+        rawById.set(level.id, level);
+    }
     const t1 = cells.filter((cell) => cell.tier === 'T1');
     const cellsByLevel = new Map();
     for (const cell of t1) {
@@ -74,14 +80,15 @@ export function analyze({ cells, coverage, levels, sourceIdentities = {} }) {
         const cappedFailures = failures.filter((cell) => cell.status !== 'exhausted').length;
         const productionSolved = Boolean(entry.wasSolvedByProduction);
         const isolatedOracleSolved = solverCount > 0;
-        const supportedClass = !isolatedOracleSolved ? 'no-current-technique'
-            : !productionSolved ? 'production-miss-isolated-solvable'
-                : solverCount <= 2 ? 'thin-boundary' : 'broadly-supported';
+        const frozenT1SupportClass = !isolatedOracleSolved
+            ? (productionSolved ? 'production-solved-without-frozen-t1-winner' : 'production-miss-without-frozen-t1-winner')
+            : !productionSolved ? 'production-miss-frozen-t1-solvable'
+                : solverCount <= 2 ? 'frozen-t1-thin-boundary' : 'frozen-t1-broadly-supported';
         const solveNodes = successful.map((cell) => cell.nodesExpanded).filter(Number.isFinite);
         return {
             levelId: entry.levelId, corpus: entry.corpus, productionSolved, isolatedOracleSolved,
             solverCount, solvingFamilies, solvingActions,
-            singleton: solverCount === 1, doubleton: solverCount === 2, supportedClass,
+            singleton: solverCount === 1, doubleton: solverCount === 2, frozenT1SupportClass,
             cheapestObservedSolveNodes: quantile(solveNodes, 0), deepestObservedSolveNodes: quantile(solveNodes, 1),
             failureCensoring: { failedCells: failures.length, naturallyExhausted: exhaustedFailures, budgetOrOtherCensored: cappedFailures },
             familyId: raw.stressMeta?.familyId ?? null, parentId: raw.stressMeta?.parentId ?? null,
@@ -103,25 +110,28 @@ export function analyze({ cells, coverage, levels, sourceIdentities = {} }) {
             failedNodes: { median: quantile(failedCells.map((c) => c.nodesExpanded).filter(Number.isFinite), .5), p90: quantile(failedCells.map((c) => c.nodesExpanded).filter(Number.isFinite), .9) },
         };
     });
-    const supported = rows.filter((r) => r.isolatedOracleSolved);
-    const unsupported = rows.filter((r) => !r.isolatedOracleSolved);
+    const frozenT1Supported = rows.filter((r) => r.isolatedOracleSolved);
+    const noFrozenT1Winner = rows.filter((r) => !r.isolatedOracleSolved);
     const numeric = Object.keys(rows[0].features).filter((key) => typeof rows[0].features[key] === 'number');
     const routingRegimes = [...new Set(rows.map((r) => r.features.routingRegime))].sort().map((routingRegime) => {
         const all = rows.filter((r) => r.features.routingRegime === routingRegime);
         const no = all.filter((r) => !r.isolatedOracleSolved);
-        return { routingRegime, levels: all.length, unsupported: no.length, unsupportedRate: no.length / all.length,
-            unsupportedEnrichment: (no.length / unsupported.length) / (all.length / rows.length) };
+        return { routingRegime, levels: all.length, noFrozenT1Winner: no.length, noFrozenT1WinnerRate: no.length / all.length,
+            noFrozenT1WinnerEnrichment: (no.length / noFrozenT1Winner.length) / (all.length / rows.length) };
     });
     return {
-        schemaVersion: 1, evidenceRole: 'observational-development', sourceIdentities,
+        schemaVersion: 2, evidenceRole: 'observational-development', sourceIdentities,
         summary: {
             levels: rows.length, productionSolved: rows.filter((r) => r.productionSolved).length,
             productionUnsolved: rows.filter((r) => !r.productionSolved).length,
-            isolatedOracleSolved: supported.length, noCurrentTechnique: unsupported.length,
-            productionMissIsolatedSolvable: rows.filter((r) => r.supportedClass === 'production-miss-isolated-solvable').length,
+            isolatedOracleSolved: frozenT1Supported.length,
+            noFrozenT1Winner: noFrozenT1Winner.length,
+            productionMissNoFrozenT1Winner: rows.filter((r) => r.frozenT1SupportClass === 'production-miss-without-frozen-t1-winner').length,
+            productionSolvedNoFrozenT1Winner: rows.filter((r) => r.frozenT1SupportClass === 'production-solved-without-frozen-t1-winner').length,
+            productionMissIsolatedSolvable: rows.filter((r) => r.frozenT1SupportClass === 'production-miss-frozen-t1-solvable').length,
             singleton: rows.filter((r) => r.singleton).length, doubleton: rows.filter((r) => r.doubleton).length,
         },
-        supportedVsUnsupportedEffects: numeric.map((key) => effect(supported, unsupported, key)).sort((a, b) => Math.abs(b.standardizedDifference) - Math.abs(a.standardizedDifference)),
+        frozenT1SupportedVsNoWinnerEffects: numeric.map((key) => effect(frozenT1Supported, noFrozenT1Winner, key)).sort((a, b) => Math.abs(b.standardizedDifference) - Math.abs(a.standardizedDifference)),
         routingRegimes, actions, levels: rows,
     };
 }
@@ -143,7 +153,7 @@ async function main() {
         sourceIdentities: Object.fromEntries(Object.entries(texts).map(([p, text]) => [p, `sha256:${sha256(text)}`])),
     });
     writeFileSync(outPath, `${JSON.stringify(result, null, 2)}\n`);
-    console.log(`Wrote ${outPath}: ${result.summary.levels} levels, ${result.summary.noCurrentTechnique} unsupported`);
+    console.log(`Wrote ${outPath}: ${result.summary.levels} levels, ${result.summary.noFrozenT1Winner} without a frozen T1 winner`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
