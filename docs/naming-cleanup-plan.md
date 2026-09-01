@@ -1689,8 +1689,10 @@ The closeout must, at minimum:
 4. replay every claimed Phase-15 historical compatibility fixture through its real owner and prove
    canonical internal form;
 5. run real writers/combiners and prove canonical single-write with no fresh legacy fields/values;
-6. run mixed-era join/discovery tests for the family dataset, CP-SAT results, and any other resolved
-   persisted boundary;
+6. run mixed-era join/discovery tests for the family dataset, the CP-SAT known-prefix/source
+   compatibility boundary (NC-P15-011/012), and any other resolved persisted boundary; do not invent
+   a mixed-era NC-P15-005 result-shard contract after 15A proved there is no maintained historical
+   result reader;
 7. verify Phase-15 migration did not modify frozen historical artifacts except for explicitly
    authorized current generated outputs, and record blob/hash evidence for representative fixtures;
 8. rerun supported-Node, sparse-checkout/remote-CI-sensitive, browser, workflow, and Firestore gates
