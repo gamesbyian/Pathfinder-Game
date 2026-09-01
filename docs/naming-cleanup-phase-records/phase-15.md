@@ -652,3 +652,35 @@ deep proofs, and coverage. Exact-head browser characterization run **33459622623
 NC-P15-001 and NC-P15-008 are now `done` and `activeExecution` is idle, while
 `batchCompletions["15C"]` deliberately remains pending until PR #1640 actually merges. A final
 exact-head CI run on this done/idle bookkeeping state is required before merge.
+
+
+## 15C merge evidence
+
+Phase 15C completed as implementation PR **#1640**.
+
+- final head: `f4a73fcd451fba1bbd440f6d75252075b4cf5bc9`;
+- implementation-head green CI: run **33459622550**;
+- final done/idle exact-head CI: run **33460063214**, all six CI jobs successful;
+- final exact-head browser characterization: run **33460063149**, successful;
+- merge commit: `300d26bd35886f01b8fccebac0453d6d7bdc226a`;
+- 15D base-main SHA: the same merge commit;
+- ledger `batchCompletions["15C"]` is now the machine merge-barrier evidence.
+
+## 15D — NC-P15-002 family-run manifest schema v2
+
+Status: **active**
+
+Branch: `chatgpt/phase15d-family-run-manifest-v2-2026-08-31`  
+Base main: `300d26bd35886f01b8fccebac0453d6d7bdc226a`
+
+15D owns only the persisted/generated family evaluation run-manifest contract:
+
+- current schema v1 field `trove`;
+- canonical schema v2 field `variantFamilyDataset`;
+- new writes must be schemaVersion 2 and single-write only the canonical field;
+- the one validator/normalizer permanently reads authentic schema-v1 `trove` manifests;
+- all-legacy, all-canonical, and mixed-era shard groups must normalize to one invariant model;
+- conflict behavior must be explicit if malformed input carries both spellings;
+- no unrelated Phase-15E artifact-path discovery/output rename is permitted in this batch.
+
+Pre-edit work begins with a current writer/reader/fixture census before code changes.
