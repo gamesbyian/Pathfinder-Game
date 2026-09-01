@@ -124,9 +124,12 @@ assert.match(prefixCollector, /oracle-abstain/u);
 
 const legacyPrefixDocument = JSON.parse(readFileSync('docs/naming-cleanup-phase-records/fixtures/phase15-winning-prefix-v1.json', 'utf8'));
 const legacyPrefixCases = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'atlas-abstain' });
+const legacyPrefixCasesCanonicalFormat = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'reference-abstain' });
 assert.ok(legacyPrefixCases.length > 0, 'committed v1 prefix fixture must execute through the current historical reader');
-assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'oracle-abstain'),
-  'legacy atlas-abstain reader must select the historical oracle-abstain branch population');
+assert.deepEqual(legacyPrefixCasesCanonicalFormat, legacyPrefixCases,
+  'legacy and canonical external format spellings must select the same authentic v1 case population');
+assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'reference-abstain'),
+  'legacy oracle-abstain source rows must normalize to the canonical reference-abstain model');
 
 const replay = readFileSync('scripts/stress/offline-replay-harness.mjs', 'utf8');
 assert.match(replay, /--atlas-dir=/u);
