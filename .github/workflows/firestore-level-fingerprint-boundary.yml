@@ -27,6 +27,10 @@ jobs:
         with:
           node-version: '20'
           cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
       - run: npm ci
       - name: Exercise repository identity through Firestore emulator
         run: >-
