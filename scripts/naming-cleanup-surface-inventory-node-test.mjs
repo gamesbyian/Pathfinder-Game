@@ -112,12 +112,11 @@ assert.ok(
   phase15HRows.every(row => ['in-progress', 'done'].includes(row.status)),
   '15H rows must be active or done while the final implementation batch owns them',
 );
-assert.ok(
-  phase15HRows.every(row =>
-    row.newReferenceFiles.length > 0 &&
-    ['canonical-live', 'mixed-old-and-canonical'].includes(row.reconciliationState)),
-  '15H must expose canonical prune-gap references; naming guards/ledger may keep retired spellings visible to reconciliation',
-);
+// Do not infer canonical-vs-old lifecycle from reconciliationState here. The inventory currently
+// folds every inventoryTerm into oldReferenceFiles while newReferenceFiles searches only entry.new;
+// composite rows such as 15H therefore need their dedicated semantic closeout guard for that proof.
+assert.ok(phase15HRows.every(row => row.referenceFiles.length > 0),
+  '15H rows must remain represented in the repository-wide surface inventory');
 
 assert.ok(
   phase15Rows.every(row => [
