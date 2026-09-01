@@ -1554,3 +1554,22 @@ not contract content.
 
 Repair must pin the exact two aliases and the semantic “recommends retiring ... in 15J” statement
 with whitespace-insensitive matching, without weakening the ledger compatibility-mode assertions.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-015 — NC-P15-003's side-specific inventory vocabulary still encoded the expanded filename
+prefix rather than the factorized executable convention token.**
+
+After F15I-013 made the dedicated compatibility proof architecture-aware, the broad inventory
+regression still expected `family-index-lib.mjs` to appear under the row's old-reference files.
+The ledger supplied `oldInventoryTerms: ["wide-trove-attempts-"]` and
+`newInventoryTerms: ["variant-family-dataset-attempts-"]`, but the real owner factors the shared
+`-attempts-` suffix outside a `wide-trove|variant-family-dataset` alternation. The generic
+inventory therefore found the old expanded prefix only in explanatory current documentation, not in
+the executable historical reader.
+
+Repair must make the row's observational side vocabulary match the actual executable convention
+tokens (`wide-trove` versus `variant-family-dataset`). The dedicated 15E/15I guards remain
+responsible for proving that those tokens participate specifically in attempt-artifact discovery and
+for rejecting legacy current writer/workflow paths.
