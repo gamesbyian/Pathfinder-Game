@@ -1610,3 +1610,70 @@ Repair must distinguish immutable program-entry identity from the current active
 extend `check:naming-current-authorities` so an active serial phase requires its registered
 execution-record header to name the ledger's active batch, branch, and PR. A mutation fixture must
 prove that stale-header drift fails.
+
+
+## 15I closeout proof evidence
+
+Hostile-closeout proof head: `89e37abbb08f8aaec3de18951e73c44426fe9226`.
+
+All findings F15I-001 through F15I-017 are repaired on that lineage; no known hostile finding remains
+open. The proof head passed all three required execution gates:
+
+- ordinary exact-head CI run **33470466934**: all six jobs successful, including build, lint,
+  non-lint checks, Node tests, deep proofs, and coverage/deep verification;
+- dedicated **Phase 15I Closeout** run **33470466888**: successful. It executed
+  `test:solver-research-resumption`, `check:naming-cleanup-phase15i-closeout`, and the production
+  solved-set regression `solver:regression -- --check`;
+- browser characterization run **33470466886**: successful.
+
+The post-naming solver-research execution anchor produced by the dedicated gate is:
+
+```json
+{"cellId":"phase15i-post-naming-anchor","tier":"EW-ANCHOR","corpus":"published","levelId":"P00001","levelPos":1,"techniqueKeys":["dfs|score=default|bias=none"],"workBudget":10000,"workSpent":1987,"ok":true,"status":"success","refereeValid":true,"winningConfigKey":"dfs|score=default|bias=none","nodesExpanded":1069}
+```
+
+That anchor is deliberately tiny and deterministic: it proves that current post-rename solver
+tooling can pass Workstream-2 preflight, execute a real equal-work cell on published level P00001,
+produce current canonical attempt/config identity, and return a referee-valid solve. It is a
+resumption/smoke anchor, not a new solver-performance baseline.
+
+### Independent semantic authority walk
+
+15I re-read the current human/machine authority surfaces after the implementation batches rather
+than treating lexical scans as sufficient:
+
+- `AGENTS.md`, `docs/README.md`, `docs/change-recipes.md`, permanent
+  `docs/naming-and-vocabulary.md`, `docs/tooling-catalog.md`, and `scripts/README.md`;
+- `docs/architecture.md`, `docs/solver-architecture.md`, and `docs/typing.md`;
+- accepted/enforced ADR authority under `docs/adr/` (0001 through 0011, respecting each ADR's
+  accepted/superseded status);
+- package scripts, current workflow map `.github/workflows/README.md`, and the temporary
+  `naming-phase15i-closeout.yml` lifecycle assignment to 15J;
+- `docs/solver-research-post-naming-resumption.md` and
+  `docs/solver-optimization-workstreams.md`, including Workstream 2's active-foundation route.
+
+No additional stale Phase-15 contract was found in those authorities after the recorded repairs.
+The mutation-backed `check:naming-current-authorities` now also binds the live Phase-15 execution
+record header to the ledger's active batch/branch/PR, preventing the F15I-017 drift class from
+recurring in 15J.
+
+### Compatibility, frozen-history, and overlap conclusions
+
+- Permanent historical readers remain NC-P15-002, NC-P15-003, and NC-P15-012; their real
+  legacy/canonical paths were exercised by the resumption/Phase-15 compatibility suites.
+- External transition aliases NC-P15-001 `--trove-root` and NC-P15-011
+  `atlas-abstain` have no current repository caller and satisfy their `phase-15-review`
+  retirement condition; 15I recommends retiring them in 15J.
+- NC-P15-005 remains a same-run schema-v2 cutover with no invented historical-result reader.
+- The representative frozen known-prefix source remains blob
+  `3de81cc8f95862c7f7142511e06f7bdb72710d52`, unchanged from Phase-15 implementation entry
+  lineage through merged 15H.
+- `repairLateProbe` / `REPAIR_LATE_PROBE` remains explicitly separate deferred vocabulary debt.
+- The 15I branch was compared against current `main` during closeout and was zero commits behind;
+  searches for open naming-cleanup / Phase-15 PRs found only PR **#1646**, so no parallel unique
+  implementation authority exists to supersede or merge first.
+
+15I remains **active** and `batchCompletions["15I"]` remains **pending** while PR #1646 is open.
+15J is still blocked. Final bookkeeping commits on this PR must receive fresh exact-head CI,
+dedicated closeout, and browser success before merge; the actual 15I merge commit is recorded by
+15J after it exists.
