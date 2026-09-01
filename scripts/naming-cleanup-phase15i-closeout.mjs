@@ -41,7 +41,7 @@ for (const row of phase15) {
     assert.ok(observed.oldReferenceFiles.length > 0);
     assert.ok(observed.newReferenceFiles.length > 0);
   } else {
-    assert.equal(observed.reconciliationState, 'canonical-live', `${row.id} must have no maintained legacy identity`);
+    assert.equal(observed.reconciliationState, 'canonical-live', `${row.id} must have no maintained legacy identity; oldRefs=${JSON.stringify(observed.oldReferenceFiles)} categories=${JSON.stringify(observed.oldReferenceCategories)}`);
     assert.deepEqual(observed.oldReferenceFiles, []);
     assert.ok(observed.newReferenceFiles.length > 0);
   }
