@@ -134,10 +134,11 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
         }
     }
     const runsById = new Map();
-    const invariantFields = ['schemaVersion', 'solver', 'invocation', 'selection', 'trove', 'solverPolicy', 'budgets', 'seeds'];
+    const invariantFields = ['schemaVersion', 'solver', 'invocation', 'selection', 'variantFamilyDataset', 'solverPolicy', 'budgets', 'seeds'];
     for (const shard of runShards) {
         const row = runsById.get(shard.runId) ?? { runId: shard.runId, schemaVersion: shard.schemaVersion,
-            solver: shard.solver, invocation: shard.invocation, selection: shard.selection, trove: shard.trove,
+            solver: shard.solver, invocation: shard.invocation, selection: shard.selection,
+            variantFamilyDataset: shard.variantFamilyDataset,
             solverPolicy: shard.solverPolicy, budgets: shard.budgets, seeds: shard.seeds,
             shardCount: shard.shard.count, shards: [], startedAt: shard.startedAt, completedAt: shard.completedAt,
             outputArtifacts: [], sourceGenerationArtifacts: [], manifestPaths: [], valid: true };
