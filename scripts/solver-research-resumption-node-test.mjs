@@ -231,8 +231,8 @@ mkdirSync('tmp', { recursive: true });
 const preflightPath = 'tmp/phase15i-post-naming-preflight.json';
 execFileSync(process.execPath, [
   '--import', 'tsx', 'scripts/solver-experiment-preflight.mjs',
-  '--corpus=data/stress/stress-levels-random.json',
-  '--level-ids=R00001',
+  '--corpus=data/levels.json',
+  '--level-ids=P00001',
   '--experiment-id=phase15i-post-naming-anchor',
   '--run-id=phase15i-post-naming-anchor-control',
   '--arm=control',
@@ -248,7 +248,7 @@ const preflight = JSON.parse(readFileSync(preflightPath, 'utf8'));
 assert.equal(preflight.arm, 'control');
 assert.equal(preflight.budgetProtocol, 'strict-total-work');
 assert.equal(preflight.canonicalWorkBudget, 10_000);
-assert.deepEqual(preflight.levelIds, ['R00001']);
+assert.deepEqual(preflight.levelIds, ['P00001']);
 
 // Execute one tiny REAL equal-work census cell on current solver/data. This is a toolchain anchor,
 // not decision-bearing research; it proves the post-naming equal-work path can still execute.
