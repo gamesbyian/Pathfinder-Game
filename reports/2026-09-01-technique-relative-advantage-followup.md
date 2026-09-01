@@ -1,9 +1,13 @@
 # Technique relative-advantage follow-up
 
-> **Status:** development evidence; compact offline follow-up to the 2026-09-01 technique-capability synthesis.
-> **Question:** do coarse legal static descriptors distinguish levels where one closely related solver action succeeds and its sibling fails?
-> **Source:** `reports/stress/technique-niches/2026-09-01/level-capability.json` (schema v2).
+> **Status:** active
+> **Last evidence:** 2026-09-01 — compact offline relative-advantage analysis over the schema-v2 technique-capability artifact.
 > **Decision:** some beam configuration inversions show substantial structural separation worth deeper testing; direction flips mostly do not. This strengthens the case for selective relative-advantage analysis before a static selector experiment and for geometry/topology diagnostics on orientation-sensitive failures.
+> **Remaining gate:** after the exact-current-head work/reach join, test the repeated portal/diverse-beam nomination with stronger controls and evaluate a small geometry/topology descriptor bundle for orientation-sensitive inversions.
+
+**Question:** do coarse legal static descriptors distinguish levels where one closely related solver action succeeds and its sibling fails?
+
+**Source:** `reports/stress/technique-niches/2026-09-01/level-capability.json` (schema v2).
 
 ## Method
 
