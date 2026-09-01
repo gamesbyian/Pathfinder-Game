@@ -3,7 +3,7 @@
  * Multi-level driver for cpsat-hint-harvest.mjs's --forced-grid mode — sharding the harvest of
  * additional CP-SAT-found hints across the eligible pool CLAUDE.md's offline-replay-harness work grew
  * to 397 levels, minus whichever ones cpsat-hint-harvest.mjs has already been run against
- * (atlas-eligibility.mjs's selectUnharvestedCpsatLevels, checked by provenance, not hint presence).
+ * (cpsat-branch-label-eligibility.mjs's selectUnharvestedCpsatLevels, checked by provenance, not hint presence).
  *
  * DELIBERATELY A THIN WRAPPER, NOT A REFACTOR — same rationale as collect-prune-gap-labels.mjs for
  * prune-gap-probe.mjs: cpsat-hint-harvest.mjs stays independently runnable and untouched by this
@@ -26,7 +26,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { readLevelsWithHints } from '../level-data-io.mjs';
-import { selectUnharvestedCpsatLevels, selectShardByRoundRobin } from './lib/atlas-eligibility.mjs';
+import { selectUnharvestedCpsatLevels, selectShardByRoundRobin } from './lib/cpsat-branch-label-eligibility.mjs';
 
 const root = (() => {
     let d = path.dirname(fileURLToPath(import.meta.url));
