@@ -153,6 +153,7 @@ for (const current of [
   'stress:measure-solver',
   'solver:direct',
   'solver:experiment-preflight',
+  'solver:analyze-equal-work-production-reach',
 ]) {
   assert.equal(typeof pkg.scripts?.[current], 'string', `current command missing: ${current}`);
 }
@@ -164,6 +165,8 @@ for (const retired of [
   assert.equal(pkg.scripts?.[retired], undefined, `retired command unexpectedly live: ${retired}`);
 }
 assert.match(pkg.scripts['solver:direct'], /run-solver-direct\.mjs/u);
+assert.match(pkg.scripts['solver:analyze-equal-work-production-reach'],
+  /analyze-equal-work-production-reach\.mjs/u);
 
 // Workstream 2 remains the active foundation. Naming work must not silently reorder the research
 // queue. The current preflight must accept a tiny strict-total-work control manifest.
