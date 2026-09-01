@@ -170,7 +170,7 @@ export function createSubmissionController({ state, ui, engine, editor, persiste
         if (!pendingDuplicateMatch && !hintAdditionTarget && levelFingerprint) {
             try {
                 const localLevelFingerprints = await getLocalCorpusLevelFingerprints();
-                localMatch = findLocalCorpusMatchByFingerprint(localFingerprints, levelFingerprint);
+                localMatch = findLocalCorpusMatchByLevelFingerprint(localLevelFingerprints, levelFingerprint);
                 if (localMatch) {
                     localExistingHintPaths = hintPaths(await data.getHints(data.getLevel(localMatch.levelNumber - 1)));
                     ui.setSubmitStep('smStep-duplicate', 'warn',
