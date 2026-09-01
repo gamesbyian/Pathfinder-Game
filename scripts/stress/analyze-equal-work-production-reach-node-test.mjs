@@ -53,15 +53,39 @@ const production = {
     ],
 };
 
+const capability = {
+    levels: [
+        {
+            corpus: 'corpus2', levelId: 'R1',
+            frozenT1SupportClass: 'frozen-t1-thin-boundary',
+            solverCount: 1, singleton: true, doubleton: false,
+        },
+        {
+            corpus: 'corpus2', levelId: 'R2',
+            frozenT1SupportClass: 'production-miss-frozen-t1-solvable',
+            solverCount: 3, singleton: false, doubleton: false,
+        },
+    ],
+};
+
 const result = analyzeEqualWorkProductionReach(equalWork, [production], {
     currentHead: 'abc123',
     requireCurrentHead: true,
+    capabilityDocument: capability,
 });
 assert.equal(result.decisionBearing, true);
 assert.deepEqual(result.blockers, []);
 assert.equal(result.equalWork.techniques, 2);
 assert.equal(result.production.matchedAttempts, 2);
 assert.equal(result.production.rowsWithLifecycle, 2);
+assert.equal(result.levelHeadroom.summary.levels, 2);
+assert.equal(result.levelHeadroom.summary.ew1SolvableLevels, 1);
+assert.equal(result.levelHeadroom.summary.productionMissEw1SolvableLevels, 1);
+const r1 = result.levelHeadroom.levels.find(row => row.levelId === 'R1');
+assert.equal(r1.pricingComparison, 'ew1-solver-offered-below-solve-work');
+assert.equal(r1.ew1SolvedActions[0].ew1SolveWork, 100);
+assert.equal(r1.ew1SolvedActions[0].productionMaxAttemptWork, 30);
+assert.equal(r1.frozenCapability.frozenT1SupportClass, 'frozen-t1-thin-boundary');
 
 const beam = result.techniques.find(row =>
     row.attemptConfigIdentity === 'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets');
@@ -95,6 +119,7 @@ const wrappedProduction = {
 const wrappedResult = analyzeEqualWorkProductionReach(equalWork, [wrappedProduction], {
     currentHead: 'abc123',
     requireCurrentHead: true,
+    capabilityDocument: capability,
 });
 assert.equal(wrappedResult.decisionBearing, true,
     'authentic level-blind sweep wrapper must be accepted without flattening');
@@ -110,6 +135,7 @@ const partiallyUnproven = [
 const blockedMissingDocumentProvenance = analyzeEqualWorkProductionReach(equalWork, partiallyUnproven, {
     currentHead: 'abc123',
     requireCurrentHead: true,
+    capabilityDocument: capability,
 });
 assert.equal(blockedMissingDocumentProvenance.decisionBearing, false);
 assert.ok(blockedMissingDocumentProvenance.blockers.some(value => value.includes('without a solver commit')));
@@ -120,6 +146,7 @@ delete missingWork.levels[0].attempts[0].workSpent;
 const blockedWork = analyzeEqualWorkProductionReach(equalWork, [missingWork], {
     currentHead: 'abc123',
     requireCurrentHead: true,
+    capabilityDocument: capability,
 });
 assert.equal(blockedWork.decisionBearing, false);
 assert.ok(blockedWork.blockers.some(value => value.includes('missing per-attempt workSpent')));
@@ -129,6 +156,7 @@ missingLifecycle.levels[1].stageLifecycle = null;
 const blockedLifecycle = analyzeEqualWorkProductionReach(equalWork, [missingLifecycle], {
     currentHead: 'abc123',
     requireCurrentHead: true,
+    capabilityDocument: capability,
 });
 assert.equal(blockedLifecycle.decisionBearing, false);
 assert.ok(blockedLifecycle.blockers.some(value => value.includes('missing stageLifecycle')));
@@ -136,6 +164,7 @@ assert.ok(blockedLifecycle.blockers.some(value => value.includes('missing stageL
 const staleCommit = analyzeEqualWorkProductionReach(equalWork, [production], {
     currentHead: 'different',
     requireCurrentHead: true,
+    capabilityDocument: capability,
 });
 assert.equal(staleCommit.decisionBearing, false);
 assert.ok(staleCommit.blockers.some(value => value.includes('does not match current HEAD')));
@@ -143,5 +172,15 @@ assert.ok(staleCommit.blockers.some(value => value.includes('does not match curr
 const summary = renderEqualWorkProductionReachSummary(result);
 assert.match(summary, /Decision-bearing integration status: \*\*READY\*\*/u);
 assert.match(summary, /beam\|score=intersectionHarvest/u);
+assert.match(summary, /Level-local EW1 pricing headroom/u);
+assert.match(summary, /ew1-solver-offered-below-solve-work/u);
+
+const missingCapability = analyzeEqualWorkProductionReach(equalWork, [production], {
+    currentHead: 'abc123',
+    requireCurrentHead: true,
+    capabilityDocument: { levels: [capability.levels[0]] },
+});
+assert.equal(missingCapability.decisionBearing, false);
+assert.ok(missingCapability.blockers.some(value => value.includes('capability input is missing 1 EW1 level')));
 
 console.log('equal-work production reach join tests passed');
