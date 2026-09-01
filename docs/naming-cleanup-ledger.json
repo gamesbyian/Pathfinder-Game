@@ -4329,7 +4329,7 @@
       "phase": 15,
       "batch": "15B",
       "status": "in-progress",
-      "notes": "15A reconfirmed this is a private shared-library/import graph with no persistence contract. Rename atomically to cpsat-branch-label-eligibility.mjs, selectEligibleCpsatBranchLevels, and isEligibleForCpsatBranchLabeling; pin eligibility population parity; no compatibility file/export alias. docs/naming-cleanup-phase-records/phase-15.md.",
+      "notes": "15A reconfirmed this is a private shared-library/import graph with no persistence contract. Rename atomically to cpsat-branch-label-eligibility.mjs, selectEligibleCpsatBranchLevels, and isEligibleForCpsatBranchLabeling; pin eligibility population parity; no compatibility file/export alias. docs/naming-cleanup-phase-records/phase-15.md. 15B satisfies and retires Phase-8 retained-surface NC-RET-P08-009 after every registered shared consumer migrated to the canonical library.",
       "migrationClass": "direct-current-surface-rename",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
@@ -4840,7 +4840,6 @@
         "legacy": "branch atlas",
         "retainedSurfaceIds": [
           "NC-RET-P08-008",
-          "NC-RET-P08-009",
           "NC-RET-P08-010"
         ]
       },
@@ -4973,7 +4972,6 @@
         "legacy": "workflow atlas-sweep display/concurrency",
         "contract": "prune-gap-workflow-identity",
         "retainedSurfaceIds": [
-          "NC-RET-P08-009",
           "NC-RET-P08-010"
         ]
       },
@@ -5371,41 +5369,6 @@
           "NC-P15-005"
         ],
         "ownerClass": "compatibility-or-deferred"
-      },
-      {
-        "id": "NC-RET-P08-009",
-        "owner": "Batch 8E shared CP-SAT eligibility library deferred to NC-P15-006",
-        "lifecycle": "phase-15-review; retain until all shared consumers migrate",
-        "ownerRowIds": [
-          "NC-P08-017",
-          "NC-P08-044",
-          "NC-P15-006"
-        ],
-        "ownerClass": "compatibility-or-deferred",
-        "matches": [
-          {
-            "term": "atlas-eligibility.mjs",
-            "files": [
-              "scripts/stress/lib/atlas-eligibility.mjs",
-              "scripts/stress/collect-prune-gap-labels.mjs",
-              "scripts/stress/cpsat-hint-harvest-sweep.mjs",
-              ".github/workflows/cpsat-hint-harvest-sweep.yml"
-            ]
-          },
-          {
-            "term": "selectEligibleAtlasLevels",
-            "files": [
-              "scripts/stress/lib/atlas-eligibility.mjs",
-              "scripts/stress/collect-prune-gap-labels.mjs"
-            ]
-          },
-          {
-            "term": "isEligibleForCpsatAtlas",
-            "files": [
-              "scripts/stress/lib/atlas-eligibility.mjs"
-            ]
-          }
-        ]
       },
       {
         "id": "NC-RET-P08-010",
