@@ -170,6 +170,13 @@ try {
 
   {
     const ledger = clone(source);
+    ledger.activeExecution.recordPath = 'docs/naming-cleanup-phase-records/phase-15-preparation.md';
+    expectFail('active Phase-15 execution record must match registered phase authority', ledger,
+      /activeExecution\.recordPath must match phaseExecutionRecords\["15"\]/u);
+  }
+
+  {
+    const ledger = clone(source);
     const row = ledger.entries.find(entry => entry.id === 'NC-P15-006');
     row.batch = '15A';
     expectFail('rowless Phase-15 gate cannot accidentally own an implementation row', ledger,
