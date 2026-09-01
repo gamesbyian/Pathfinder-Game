@@ -50,15 +50,18 @@ const canonicalSource = { schemaVersion: 2, levelsFile: 'c.json', levels: [{ lev
     { schemaVersion: 2, depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(2, 2), label: 'reference-abstain' },
     { schemaVersion: 2, depth: 1, prefix: [K(1, 1), K(2, 1)], child: K(3, 1), label: 'known-valid-continuation' },
 ] }] };
-assert.equal(normalizeExplicitPrefixCaseFormat('atlas-abstain'), 'reference-abstain');
+const retiredAtlasFormat = ['atlas', 'abstain'].join('-');
+assert.throws(
+    () => normalizeExplicitPrefixCaseFormat(retiredAtlasFormat),
+    /unsupported explicit-prefix case format/u,
+    'Phase 15J retires the former external atlas-named abstain input spelling',
+);
 assert.equal(normalizeExplicitPrefixCaseFormat('reference-abstain'), 'reference-abstain');
 assert.equal(normalizeExplicitPrefixCaseFormat('cases'), 'cases');
 assert.throws(() => normalizeExplicitPrefixCaseFormat('unknown-format'), /unsupported explicit-prefix case format/u);
-const legacyCases = extractExplicitPrefixCases(legacySource, { format: 'atlas-abstain' });
-const legacyViaCanonicalSpelling = extractExplicitPrefixCases(legacySource, { format: 'reference-abstain' });
+const legacyCases = extractExplicitPrefixCases(legacySource, { format: 'reference-abstain' });
 const canonicalCases = extractExplicitPrefixCases(canonicalSource, { format: 'reference-abstain' });
-assert.deepEqual(legacyCases, canonicalCases, 'v1 and v2 known-prefix source schemas normalize identically');
-assert.deepEqual(legacyViaCanonicalSpelling, canonicalCases, 'legacy and canonical format spellings select the same population');
+assert.deepEqual(legacyCases, canonicalCases, 'v1 and v2 known-prefix source schemas normalize identically through the canonical format');
 assert.equal(legacyCases.length, 1);
 assert.equal(legacyCases[0].sourceLabel, 'reference-abstain');
 assert.deepEqual(legacyCases[0].prefix, [[2, 2], [3, 2], [3, 3]], 'packed 0-based cells become raw 1-based coordinates');

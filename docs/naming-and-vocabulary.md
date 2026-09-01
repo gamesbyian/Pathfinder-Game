@@ -117,18 +117,19 @@ new surface merely because one owning reader still accepts it:
 - Current application level-identity APIs use `levelFingerprint`. Phase 15 preserved the computed
   fingerprint bytes, Firestore document/path identities, persisted `levelFingerprint` field, and
   `fingerprintVersion`; it did not create a generic `fingerprint` compatibility shape.
-- The current variant-family dataset CLI is `--variant-family-dataset-root`. The shared
-  `family-paths.mjs` parser alone accepts `--trove-root` as an external transition alias
-  (NC-P15-001). Family-run manifest schema v2 single-writes `variantFamilyDataset`, while its owning
-  normalizer permanently reads authentic schema-v1 `trove` manifests (NC-P15-002). Family-index
-  discovery permanently recognizes frozen `wide-trove-attempts-*` evidence alongside canonical
+- The current variant-family dataset CLI is `--variant-family-dataset-root`. Phase 15J retired
+  the former `--trove-root` external transition spelling after the closeout proved there was no
+  current repository caller; current tooling rejects that spelling (NC-P15-001). Family-run manifest
+  schema v2 single-writes `variantFamilyDataset`, while its owning normalizer permanently reads
+  authentic schema-v1 `trove` manifests (NC-P15-002). Family-index discovery permanently recognizes
+  frozen `wide-trove-attempts-*` evidence alongside canonical
   `variant-family-dataset-attempts-*` paths (NC-P15-003); new dataset outputs use the canonical
   stable path convention (NC-P15-009).
 - Current CP-SAT explicit-prefix results are schema v2
   `referenceLabel`/`referenceReason`, and the workflow job is `reference-shards`
-  (NC-P15-005/010). There is no maintained historical schema-v1 result reader. The external
-  `atlas-abstain` case-format spelling remains only as the owned transition alias for canonical
-  `reference-abstain` (NC-P15-011), and the known-prefix source reader permanently normalizes
+  (NC-P15-005/010). There is no maintained historical schema-v1 result reader. Phase 15J retired
+  the former external `atlas-abstain` case-format spelling; current inputs use
+  `reference-abstain` only (NC-P15-011). The known-prefix source reader permanently normalizes
   authentic schema-v1 `oracle-abstain` branches to the canonical reference model (NC-P15-012).
   Independent solver-oracle terminology remains valid under the general oracle rule.
 - The shared eligibility owner is

@@ -56,6 +56,8 @@ function isFrozenOrAuthority(file) {
     || file.startsWith('docs/naming-cleanup-phase-records/')
     || file.startsWith('scripts/naming-cleanup-')
     || file === 'scripts/check-naming-cleanup-ledger.mjs'
+    || file === 'scripts/check-naming-current-authorities.mjs'
+    || file === 'scripts/naming-current-authorities-node-test.mjs'
     || file === 'docs/naming-cleanup-plan.md'
     || file === 'docs/naming-cleanup-ledger.json'
     || file === 'docs/naming-cleanup-history-and-lessons.md'

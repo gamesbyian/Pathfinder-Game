@@ -1,13 +1,13 @@
 # Phase 15 execution and closeout record
 
-Status: **15I hostile merged-tree closeout active; implementation batches 15B-15H are merged and done**
+Status: **15J archival/finalization handoff active; hostile merged-tree closeout is merged and green**
 
 Program entry branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`  
 Program entry PR: **#1638**  
 Program entry base: `fad988569c70802db7d69b85f4443a4daf0486a6`  
-Current active branch: `chatgpt/phase15i-hostile-closeout-2026-08-31`  
-Current active PR: **#1646**  
-Current merged implementation base: `65650862eb4626c5d6eecf7bbc1753a1006d97c8`  
+Current active branch: `chatgpt/phase15j-archival-handoff-2026-08-31`  
+Current active PR: **#1647**  
+Current merged closeout base: `55b405b2caf511543503a7581b2457c92c06a1f9`  
 Preparation authority: [phase-15-preparation.md](phase-15-preparation.md)  
 Independent pre-entry repair record: [pre-phase-15-audit-repairs.md](pre-phase-15-audit-repairs.md)  
 Plan authority: [../naming-cleanup-plan.md](../naming-cleanup-plan.md)
@@ -1622,7 +1622,7 @@ open. The proof head passed all three required execution gates:
 - ordinary exact-head CI run **33470466934**: all six jobs successful, including build, lint,
   non-lint checks, Node tests, deep proofs, and coverage/deep verification;
 - dedicated **Phase 15I Closeout** run **33470466888**: successful. It executed
-  `test:solver-research-resumption`, `check:naming-cleanup-phase15i-closeout`, and the production
+  `test:solver-research-resumption`, the former dedicated Phase-15I hostile-closeout check, and the production
   solved-set regression `solver:regression -- --check`;
 - browser characterization run **33470466886**: successful.
 
@@ -1677,3 +1677,46 @@ recurring in 15J.
 15J is still blocked. Final bookkeeping commits on this PR must receive fresh exact-head CI,
 dedicated closeout, and browser success before merge; the actual 15I merge commit is recorded by
 15J after it exists.
+
+
+## 15I merge evidence
+
+Phase 15I completed as hostile merged-tree closeout PR **#1646**.
+
+- final head: `44b331be5c69ff4305c5edcc5809f6a1fea4e73e`;
+- final exact-head ordinary CI: run **33470625109**, successful;
+- final exact-head dedicated Phase 15I Closeout: run **33470625115**, successful;
+- final exact-head browser characterization: run **33470625154**, successful;
+- merge commit: `55b405b2caf511543503a7581b2457c92c06a1f9`;
+- ledger `batchCompletions["15I"]` now records the merge barrier;
+- 15J starts from that exact merged tree.
+
+## 15J — archival/finalization handoff
+
+Status: **active**
+
+Branch: `chatgpt/phase15j-archival-handoff-2026-08-31`  
+PR: **#1647**  
+Base main: `55b405b2caf511543503a7581b2457c92c06a1f9`
+
+15J is deliberately rowless. It does not reopen completed implementation rows. Its handoff work is:
+
+1. retire NC-P15-001 external input alias `--trove-root`, because 15I proved there is no current
+   repository caller and its `phase-15-review` retirement condition is satisfied;
+2. retire NC-P15-011 external case-format alias `atlas-abstain` for the same reason;
+3. preserve permanent historical readers NC-P15-002 (schema-v1 family-run `trove`),
+   NC-P15-003 (historical `wide-trove` attempt paths), and NC-P15-012
+   (schema-v1 `oracle-abstain` branch labels);
+4. retire the temporary Phase-15I workflow surface and any package routing that exists only to run
+   an active 15I gate, while preserving durable resumption and current-authority protections;
+5. update permanent vocabulary/current routing to describe the post-cleanup state without claiming
+   Phase 15 complete before this PR merges;
+6. add a finalization guard that proves the two transition aliases are gone, the three permanent
+   historical readers still execute, 15I is recorded merged, and 15J remains pending/active;
+7. run exact-head CI and documentation/current-authority validation before merge.
+
+The 15J handoff PR must leave `batchCompletions["15J"]` pending and
+`lastCompletedPhase: 14`. After this PR merges, one narrow completion-seal PR records its actual
+merge SHA, advances `lastCompletedPhase` to 15, marks the naming program complete, idles
+`activeExecution`, and performs only routing/archive changes that logically require completed
+state.

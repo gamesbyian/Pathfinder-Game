@@ -32,7 +32,8 @@ function isAuthorityOrGuard(file) {
     || file === 'docs/naming-cleanup-future-phase-preparation.md'
     || file === 'docs/naming-and-vocabulary.md'
     || file === 'docs/solver-research-post-naming-resumption.md'
-    || file === 'scripts/check-naming-current-authorities.mjs';
+    || file === 'scripts/check-naming-current-authorities.mjs'
+    || file === 'scripts/naming-current-authorities-node-test.mjs';
 }
 
 const files = [...ROOTS.flatMap(walk), ...TOP_LEVEL]
@@ -50,11 +51,8 @@ const allowedLegacy = new Map([
     'scripts/stress/cpsat-explicit-prefix-reference-lib.mjs',
     'scripts/stress/research-analysis-lib-check.mjs',
   ])],
-  ['atlas-abstain', new Set([
-    'scripts/stress/cpsat-explicit-prefix-reference-lib.mjs',
-    'scripts/stress/research-analysis-lib-check.mjs',
-  ])],
 ]);
+const retiredInputFixture = 'scripts/stress/research-analysis-lib-check.mjs';
 const failures = [];
 for (const file of files) {
   const source = readFileSync(file, 'utf8');
@@ -63,6 +61,9 @@ for (const file of files) {
   }
   for (const [token, owners] of allowedLegacy) {
     if (source.includes(token) && !owners.has(file)) failures.push(`${file}: legacy ${token} outside its one compatibility owner/test`);
+  }
+  if (source.includes('atlas-abstain') && file !== retiredInputFixture) {
+    failures.push(`${file}: retired atlas-abstain input spelling outside its negative regression fixture`);
   }
 }
 for (const [token, owners] of allowedLegacy) {
@@ -74,7 +75,8 @@ for (const [token, owners] of allowedLegacy) {
 
 const lib = readFileSync('scripts/stress/cpsat-explicit-prefix-reference-lib.mjs', 'utf8');
 assert.match(lib, /normalizeExplicitPrefixCaseFormat/u);
-assert.match(lib, /format === 'reference-abstain' \|\| format === 'atlas-abstain'/u);
+assert.match(lib, /format === 'reference-abstain'/u);
+assert.doesNotMatch(lib, /atlas-abstain/u);
 assert.match(lib, /row\.label === 'reference-abstain' \|\| row\.label === 'oracle-abstain'/u);
 assert.match(lib, /reason: 'reference-unknown'/u);
 
@@ -119,17 +121,12 @@ assert.deepEqual(retained['NC-RET-P08-007']?.matches, [{
     'scripts/stress/research-analysis-lib-check.mjs',
   ],
 }]);
-assert.deepEqual(retained['NC-RET-P08-008']?.matches, [{
-  term: 'atlas-abstain',
-  files: [
-    'scripts/stress/cpsat-explicit-prefix-reference-lib.mjs',
-    'scripts/stress/research-analysis-lib-check.mjs',
-  ],
-}]);
+assert.equal(retained['NC-RET-P08-008'], undefined, 'Phase 15J must retire the former atlas-abstain retained-surface exemption');
+assert.match(readFileSync(retiredInputFixture, 'utf8'), /retiredAtlasFormat\s*=\s*\['atlas', 'abstain'\]\.join\('-'\)/u);
 
 if (failures.length) {
   console.error('Phase-15G closeout found retired or mis-owned CP-SAT reference vocabulary:');
   for (const failure of failures) console.error(`- ${failure}`);
   process.exit(1);
 }
-console.log(`Phase-15G closeout clean: ${files.length} maintained text surfaces scanned; only the two owned compatibility literals remain.`);
+console.log(`Phase-15G/15J closeout clean: ${files.length} maintained text surfaces scanned; oracle-abstain remains the sole historical label compatibility and atlas-abstain is rejection-only.`);

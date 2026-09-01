@@ -16,7 +16,7 @@ assert.equal(ledger.phaseBatchKinds?.['15']?.['15A'], 'specification-gate');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15I'], 'merged-tree-closeout');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15J'], 'finalization');
 assert.ok(['active', 'idle'].includes(ledger.activeExecution?.status),
-  'Phase-15 execution may be active during a batch or idle while a completed batch awaits merge');
+  'Phase-15 execution may be active during the final handoff or idle after completion');
 
 const phase15 = ledger.entries.filter(row => row.phase === 15);
 assert.equal(phase15.length, 14, 'Phase 15 now contains the thirteen 15A rows plus the 15G implementation-time repair-retreat split');
@@ -53,20 +53,35 @@ assert.equal(ledger.batchCompletions?.['15G']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15G']?.pr, 1644);
 assert.equal(ledger.batchCompletions?.['15G']?.mergeCommit, '7e82a4325484eac2da67864101e33f614d075d70');
 for (const id of ['NC-P15-007', 'NC-P15-013']) {
-  assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === id)?.status),
-    `15H row ${id} must be active or done while this source guard owns the prune-gap vocabulary migration`);
+  assert.equal(phase15.find(row => row.id === id)?.status, 'done', `merged 15H must leave ${id} done`);
+}
+assert.equal(ledger.batchCompletions?.['15H']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15I']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15I']?.pr, 1646);
+assert.equal(ledger.batchCompletions?.['15I']?.mergeCommit, '55b405b2caf511543503a7581b2457c92c06a1f9');
+if (ledger.batchCompletions?.['15J']?.status === 'pending') {
+  assert.equal(ledger.activeExecution?.status, 'active');
+  assert.equal(ledger.activeExecution?.phase, 15);
+  assert.equal(ledger.activeExecution?.batch, '15J');
+} else {
+  assert.equal(ledger.batchCompletions?.['15J']?.status, 'merged');
+  assert.equal(ledger.activeExecution?.status, 'idle');
 }
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
 assert.deepEqual(
   phase15.filter(row => row.persistence === 'dual-read').map(row => row.id).sort(),
-  ['NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-011', 'NC-P15-012'],
-  '15A must keep dual-read only for boundaries with an identified current legacy reader/caller',
+  ['NC-P15-002', 'NC-P15-003', 'NC-P15-012'],
+  'after Phase-15 review only permanent historical readers may remain dual-read',
 );
 assert.equal(byId['NC-P15-002'].compatibility?.mode, 'permanent-historical-read');
 assert.match(byId['NC-P15-002'].new, /schemaVersion 2/u);
 assert.equal(byId['NC-P15-004'].persistence, 'none', 'application-local fingerprint rename must not invent a persisted generic-field adapter');
 assert.equal(byId['NC-P15-007'].persistence, 'none', 'prune-gap CLI rename must not invent an unproven compatibility reader');
+assert.equal(byId['NC-P15-001'].persistence, 'none', 'retired dataset-root alias must no longer be a dual-read boundary');
+assert.equal('compatibility' in byId['NC-P15-001'], false);
+assert.equal(byId['NC-P15-011'].persistence, 'none', 'retired case-format alias must no longer be a dual-read boundary');
+assert.equal('compatibility' in byId['NC-P15-011'], false);
 assert.match(byId['NC-P15-005'].new, /schemaVersion 2/u);
 assert.equal(byId['NC-P15-005'].persistence, 'none', 'same-run CP-SAT result combiner must not imply a nonexistent historical reader');
 assert.equal('compatibility' in byId['NC-P15-005'], false, 'NC-P15-005 must not carry a synthetic dual-read policy');
@@ -75,22 +90,21 @@ assert.equal(byId['NC-P15-013'].migrationClass, 'current-surface-rename-preserve
 assert.match(record, /separately deferred vocabulary debt/u);
 assert.match(record, /repairLateProbe/u);
 
-// Phase 15C has migrated the current dataset-root vocabulary while retaining one external alias.
-// Later-batch source-freeze checks remain below.
+// Phase 15J retires the external dataset-root transition alias while preserving canonical path semantics.
 const familyPaths = readFileSync('scripts/family-paths.mjs', 'utf8');
-assert.match(familyPaths, /--trove-root=/u);
+assert.doesNotMatch(familyPaths, /--trove-root=/u);
 assert.match(familyPaths, /variantFamilyDatasetRootArg/u);
 assert.doesNotMatch(familyPaths, /troveRootArg/u);
 assert.match(familyPaths, /--variant-family-dataset-root=/u);
-assert.equal(
-  variantFamilyDatasetRootArg(['--trove-root=tmp/phase15-legacy-family-root']),
-  path.resolve('tmp/phase15-legacy-family-root'),
-  '15C must retain the one external legacy dataset-root alias at the shared parser',
+assert.throws(
+  () => variantFamilyDatasetRootArg(['--trove-root=tmp/phase15-retired-family-root']),
+  /retired variant-family dataset-root option/u,
+  '15J must reject the retired external dataset-root alias',
 );
 assert.equal(
   variantFamilyDatasetRootArg(['--variant-family-dataset-root=tmp/phase15-canonical-family-root']),
   path.resolve('tmp/phase15-canonical-family-root'),
-  '15C must accept the canonical dataset-root CLI at the shared parser',
+  'canonical dataset-root CLI must remain behaviorally unchanged',
 );
 
 const manifestLib = readFileSync('scripts/experiment-manifest-lib.mjs', 'utf8');
@@ -137,13 +151,15 @@ assert.match(repairRetreat, /referenceReason/u);
 assert.doesNotMatch(repairRetreat, /oracleProbe|oracleLabel|oracleReason/u);
 
 const legacyPrefixDocument = JSON.parse(readFileSync('docs/naming-cleanup-phase-records/fixtures/phase15-winning-prefix-v1.json', 'utf8'));
-const legacyPrefixCases = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'atlas-abstain' });
-const legacyPrefixCasesCanonicalFormat = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'reference-abstain' });
-assert.ok(legacyPrefixCases.length > 0, 'committed v1 prefix fixture must execute through the current historical reader');
-assert.deepEqual(legacyPrefixCasesCanonicalFormat, legacyPrefixCases,
-  'legacy and canonical external format spellings must select the same authentic v1 case population');
+const legacyPrefixCases = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'reference-abstain' });
+assert.ok(legacyPrefixCases.length > 0, 'committed v1 prefix fixture must execute through the permanent historical reader');
 assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'reference-abstain'),
   'legacy oracle-abstain source rows must normalize to the canonical reference-abstain model');
+assert.throws(
+  () => extractExplicitPrefixCases(legacyPrefixDocument, { format: 'atlas-abstain' }),
+  /unsupported explicit-prefix case format/u,
+  '15J must reject the retired atlas-abstain external input spelling',
+);
 
 const replay = readFileSync('scripts/stress/offline-replay-harness.mjs', 'utf8');
 assert.match(replay, /--prune-gap-dir=/u);

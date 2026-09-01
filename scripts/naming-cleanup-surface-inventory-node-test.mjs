@@ -115,12 +115,12 @@ assert.ok(
 assert.ok(phase15HRows.every(row => row.referenceFiles.length > 0),
   '15H rows must remain represented in the repository-wide surface inventory');
 
-const permanentOrTransitionReaders = new Set(['NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-011', 'NC-P15-012']);
+const permanentHistoricalReaders = new Set(['NC-P15-002', 'NC-P15-003', 'NC-P15-012']);
 for (const row of phase15Rows) {
-  if (permanentOrTransitionReaders.has(row.id)) {
+  if (permanentHistoricalReaders.has(row.id)) {
     assert.equal(row.reconciliationState, 'mixed-old-and-canonical',
-      `${row.id} owns a real current legacy reader/alias plus canonical current vocabulary`);
-    assert.ok(row.oldReferenceFiles.length > 0, `${row.id} legacy reader/alias must be executable current evidence`);
+      `${row.id} owns a permanent historical reader plus canonical current vocabulary`);
+    assert.ok(row.oldReferenceFiles.length > 0, `${row.id} historical reader must be executable current evidence`);
     assert.ok(row.newReferenceFiles.length > 0, `${row.id} canonical side must be current evidence`);
   } else {
     assert.equal(row.reconciliationState, 'canonical-live',

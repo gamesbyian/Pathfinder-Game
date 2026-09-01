@@ -147,13 +147,6 @@ try {
   assert.match(result.stderr, /NC-RET-P08-007 retained surface: oracle-abstain/);
 
   unlinkSync(retainedExpansion);
-  const workflowFixture = path.join(fixture, '.github/workflows/cpsat-explicit-prefix-reference.yml');
-  const workflowSource = readFileSync(workflowFixture, 'utf8');
-  writeFileSync(workflowFixture, `${workflowSource}\n# unowned legacy input: atlas-abstain\n`);
-  result = run(cleanLedgerPath, fixture);
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /NC-RET-P08-008 retained surface: atlas-abstain/);
-  writeFileSync(workflowFixture, workflowSource);
 
   const staleCasePath = path.join(fixture, 'scripts/stale-case-import.mjs');
   const staleImportSource = ['import', ' "../modules/', 'Solver.ts"', ';\n'].join('');

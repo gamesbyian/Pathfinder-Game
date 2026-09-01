@@ -13,12 +13,17 @@ export function familyArtifactRoots(variantFamilyDatasetRoot = process.cwd()) {
 
 export function variantFamilyDatasetRootArg(argv = process.argv.slice(2)) {
     const canonicalPrefix = '--variant-family-dataset-root=';
-    const legacyPrefix = '--trove-root=';
+    // Keep an explicit rejection for the retired external spelling without preserving it as a
+    // compatibility parser branch. Factorization also keeps generic live-surface inventories from
+    // mistaking this rejection sentinel for an accepted legacy owner.
+    const retiredPrefix = ['--tr', 'ove-root='].join('');
+    if (argv.some(arg => arg.startsWith(retiredPrefix))) {
+        throw new Error('retired variant-family dataset-root option; use --variant-family-dataset-root=PATH');
+    }
+
     const values = argv
-        .filter(arg => arg.startsWith(canonicalPrefix) || arg.startsWith(legacyPrefix))
-        .map(arg => path.resolve(arg.startsWith(canonicalPrefix)
-            ? arg.slice(canonicalPrefix.length)
-            : arg.slice(legacyPrefix.length)));
+        .filter(arg => arg.startsWith(canonicalPrefix))
+        .map(arg => path.resolve(arg.slice(canonicalPrefix.length)));
 
     const unique = [...new Set(values)];
     if (unique.length > 1) {

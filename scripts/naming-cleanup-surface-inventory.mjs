@@ -402,6 +402,7 @@ const reconciliationAuthorityFiles = new Set([
   'docs/naming-cleanup-process-hardening.md',
   'docs/naming-and-vocabulary.md',
   'docs/change-recipes.md',
+  'docs/solver-research-post-naming-resumption.md',
 ]);
 
 function isReconciliationAuthorityOrGuard(file) {
@@ -410,7 +411,8 @@ function isReconciliationAuthorityOrGuard(file) {
     || file.startsWith('docs/history/')
     || file.startsWith('docs/naming-cleanup-phase-records/')
     || file.startsWith('scripts/naming-cleanup-')
-    || file === 'scripts/check-naming-current-authorities.mjs';
+    || file === 'scripts/check-naming-current-authorities.mjs'
+    || file === 'scripts/naming-current-authorities-node-test.mjs';
 }
 
 function reconciliationReferenceFilesForValue(value) {
