@@ -1434,3 +1434,77 @@ The current `docs/solver-research-post-naming-resumption.md` minimum-evidence se
 literal backslashes before several backticks (for example `\`main\``). This does not alter
 runtime behavior but degrades the operational handoff document and is part of the same current-doc
 quality failure as F15I-002.
+
+
+### 15I read-only hostile findings — recorded before repair
+
+The first 15I pass was performed from merged 15H main
+`65650862eb4626c5d6eecf7bbc1753a1006d97c8`. The findings below are deliberately recorded before
+their repairs.
+
+**F15I-001 — generic reconciliation guard is not side-specific.**
+
+`scripts/naming-cleanup-surface-inventory.mjs::reconciliationReferenceMatches(entry, 'old')`
+searches `entry.old` **plus every `inventoryTerms` value**, while the canonical side searches only
+`entry.new`. Phase-15 rows deliberately use `inventoryTerms` for both old and canonical discovery,
+so a fully migrated composite row can remain reported as `old-live` or
+`mixed-old-and-canonical`. 15H already observed this symptom. The hostile pass confirms the cause:
+the reconciliation state cannot currently serve as a trustworthy old-vs-canonical lifecycle oracle.
+This is a closeout-guard defect, not implementation residue.
+
+**F15I-002 — solver-research resumption authority is stale after the resolved Phase-15 partition.**
+
+`docs/solver-research-post-naming-resumption.md` still labels itself a pre-Phase-15 handoff and lists
+only NC-P15-001 through NC-P15-007. Its NC-P15-005 row still claims historical explicit-prefix
+result fields/values are normalized before combination, even though 15A proved there is **no
+maintained historical result reader** and 15G correctly performed an atomic same-run v2 cutover.
+The bridge also omits split rows NC-P15-008 through NC-P15-014, including the real v1 known-prefix
+source compatibility owner and repair-retreat current-vocabulary migration. This is current-authority
+drift and must be repaired before solver work resumes.
+
+**F15I-003 — `test:solver-research-resumption` is only a smoke test, not the gate required by the plan.**
+
+The existing test proves representative one-record attempt/action/stage/routing normalization and
+selected package-command existence. It does **not** prove mixed-era joins for those identities,
+does not execute the Phase-15 compatibility fixtures/owners, does not prove canonical single-write,
+and does not exercise the post-naming research-status/equal-work anchor requirements. The npm alias
+exists and is already in `test:node`; the defect is insufficient proof depth, not missing wiring.
+
+**F15I-004 — current docs index contains a literal escaped newline inside the Phase-15 table.**
+
+`docs/README.md` currently stores the Phase-15 execution row followed by the literal characters
+`\n|` before the preparation row. The links remain visible to simple substring guards, which is
+why current-authority validation did not catch it, but the current reference table is malformed.
+This is a concrete current-authority formatting defect and a useful negative case for stronger
+authority checking.
+
+**F15I-005 — current-authority guard scope is narrower than the 15I semantic authority contract.**
+
+`scripts/check-naming-current-authorities.mjs` currently checks only `AGENTS.md` and
+`docs/README.md` for Phase-15 routing. The hostile semantic walk covered the broader authority graph
+required by the plan: change recipes, architecture/typing, solver architecture/runbooks, package
+commands, workflow map, tooling catalog, naming vocabulary, and solver workstreams. Those surfaces
+are mostly canonical, but the stale resumption bridge proves the two-file guard can miss real
+current-authority drift. 15I needs a broader closeout guard rather than merely expanding an allowlist.
+
+**F15I-006 — representative frozen Phase-15 source evidence remained byte-identical.**
+
+The committed historical known-prefix source
+`reports/stress/winning-prefix-atlas-pilot-2026-08-11.json` has Git blob
+`3de81cc8f95862c7f7142511e06f7bdb72710d52` both at the Phase-15 implementation entry lineage
+(`4b61b59dfba6dada48f316edcdb6e9b4daa6683e`) and merged 15H main
+(`65650862eb4626c5d6eecf7bbc1753a1006d97c8`). The hostile pass found no evidence that this frozen
+fixture was rewritten during Phase 15.
+
+**F15I-007 — temporary compatibility aliases require final retirement classification, but are not current defects.**
+
+The two transition aliases still have their intended single owners:
+`--trove-root` in `scripts/family-paths.mjs` (NC-P15-001) and `atlas-abstain` in the explicit-prefix
+case-format normalizer (NC-P15-011). Current repository docs/workflows emit canonical spellings.
+Their ledger retirement condition is `phase-15-review`; 15I must make the evidence explicit for 15J
+rather than silently deleting or perpetuating them.
+
+**Read-only-pass conclusion:** Phase 15 is **not yet closeout-ready**. The implementation batches are
+merged, but F15I-001 through F15I-005 require repair and rerun of the hostile closeout before 15I can
+be marked complete. F15I-006 is positive frozen-history evidence; F15I-007 is a finalization
+classification decision, not a migration defect.
