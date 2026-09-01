@@ -668,9 +668,10 @@ Phase 15C completed as implementation PR **#1640**.
 
 ## 15D — NC-P15-002 family-run manifest schema v2
 
-Status: **active**
+Status: **implementation complete; awaiting final exact-head CI and merge**
 
 Branch: `chatgpt/phase15d-family-run-manifest-v2-2026-08-31`  
+PR: **#1641**  
 Base main: `300d26bd35886f01b8fccebac0453d6d7bdc226a`
 
 15D owns only the persisted/generated family evaluation run-manifest contract:
