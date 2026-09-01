@@ -4193,6 +4193,12 @@
         "--trove-root",
         "--variant-family-dataset-root",
         "family-paths.mjs"
+      ],
+      "oldInventoryTerms": [
+        "--trove-root"
+      ],
+      "newInventoryTerms": [
+        "--variant-family-dataset-root"
       ]
     },
     {
@@ -4227,6 +4233,12 @@
         "invariantFields",
         "trove",
         "variantFamilyDataset"
+      ],
+      "oldInventoryTerms": [
+        "trove"
+      ],
+      "newInventoryTerms": [
+        "variantFamilyDataset"
       ]
     },
     {
@@ -4259,6 +4271,12 @@
         "wide-trove-attempts-",
         "variant-family-dataset-attempts-",
         "family-index-lib.mjs"
+      ],
+      "oldInventoryTerms": [
+        "wide-trove-attempts-"
+      ],
+      "newInventoryTerms": [
+        "variant-family-dataset-attempts-"
       ]
     },
     {
@@ -4288,6 +4306,15 @@
         "DuplicateCheckPresentation",
         "loadLevelRating",
         "getLocalLevelHints"
+      ],
+      "oldInventoryTerms": [
+        "rating.fingerprint",
+        "targetLocalLevelMatch?.fingerprint",
+        "const fingerprint = await getLevelFingerprint",
+        "fingerprint: string | null"
+      ],
+      "newInventoryTerms": [
+        "levelFingerprint"
       ]
     },
     {
@@ -4317,6 +4344,16 @@
         "oracle-unknown",
         "referenceLabel",
         "referenceReason"
+      ],
+      "oldInventoryTerms": [
+        "oracleLabel",
+        "oracleReason",
+        "oracle-unknown"
+      ],
+      "newInventoryTerms": [
+        "referenceLabel",
+        "referenceReason",
+        "reference-unknown"
       ]
     },
     {
@@ -4344,6 +4381,16 @@
         "atlas-eligibility.mjs",
         "selectEligibleAtlasLevels",
         "isEligibleForCpsatAtlas"
+      ],
+      "oldInventoryTerms": [
+        "atlas-eligibility.mjs",
+        "selectEligibleAtlasLevels",
+        "isEligibleForCpsatAtlas"
+      ],
+      "newInventoryTerms": [
+        "cpsat-branch-label-eligibility.mjs",
+        "selectEligibleCpsatBranchLevels",
+        "isEligibleForCpsatBranchLabeling"
       ]
     },
     {
@@ -4370,6 +4417,14 @@
       "inventoryTerms": [
         "--atlas-dir",
         "ATLAS_DIR",
+        "--prune-gap-dir",
+        "PRUNE_GAP_DIR"
+      ],
+      "oldInventoryTerms": [
+        "--atlas-dir",
+        "ATLAS_DIR"
+      ],
+      "newInventoryTerms": [
         "--prune-gap-dir",
         "PRUNE_GAP_DIR"
       ]
@@ -4399,6 +4454,14 @@
         "troveRootArg",
         "troveRoot",
         "variantFamilyDatasetRootArg"
+      ],
+      "oldInventoryTerms": [
+        "troveRootArg",
+        "troveRoot"
+      ],
+      "newInventoryTerms": [
+        "variantFamilyDatasetRootArg",
+        "variantFamilyDatasetRoot"
       ]
     },
     {
@@ -4427,6 +4490,14 @@
         "wide-trove-summary",
         "variant-family-dataset-summary",
         "collect-variant-family-dataset.yml"
+      ],
+      "oldInventoryTerms": [
+        "reports/families/2026-08-07-wide-trove-summary.md",
+        "reports/families/2026-08-07-wide-trove-source-run.json"
+      ],
+      "newInventoryTerms": [
+        "reports/families/variant-family-dataset-summary.md",
+        "reports/families/variant-family-dataset-source-run.json"
       ]
     },
     {
@@ -4454,6 +4525,12 @@
         "oracle-shards",
         "reference-shards",
         "needs:"
+      ],
+      "oldInventoryTerms": [
+        "oracle-shards"
+      ],
+      "newInventoryTerms": [
+        "reference-shards"
       ]
     },
     {
@@ -4487,6 +4564,12 @@
         "reference-abstain",
         "case_format",
         "--format"
+      ],
+      "oldInventoryTerms": [
+        "atlas-abstain"
+      ],
+      "newInventoryTerms": [
+        "reference-abstain"
       ]
     },
     {
@@ -4520,6 +4603,14 @@
         "unknownSiblingLabel",
         "oracleAbstentions",
         "collect-known-solution-prefix-branches"
+      ],
+      "oldInventoryTerms": [
+        "oracle-abstain",
+        "oracleAbstentions"
+      ],
+      "newInventoryTerms": [
+        "reference-abstain",
+        "referenceAbstentions"
       ]
     },
     {
@@ -4546,6 +4637,14 @@
       "inventoryTerms": [
         "atlasDir",
         "atlasFiles",
+        "pruneGapDir",
+        "pruneGapFiles"
+      ],
+      "oldInventoryTerms": [
+        "atlasDir",
+        "atlasFiles"
+      ],
+      "newInventoryTerms": [
         "pruneGapDir",
         "pruneGapFiles"
       ]
@@ -4576,6 +4675,16 @@
         "oracleProbe",
         "oracleLabel",
         "oracleReason",
+        "referenceProbe",
+        "referenceLabel",
+        "referenceReason"
+      ],
+      "oldInventoryTerms": [
+        "oracleProbe",
+        "oracleLabel",
+        "oracleReason"
+      ],
+      "newInventoryTerms": [
         "referenceProbe",
         "referenceLabel",
         "referenceReason"
