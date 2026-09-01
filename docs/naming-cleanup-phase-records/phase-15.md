@@ -1111,7 +1111,7 @@ Status: **active**
 Branch: `chatgpt/phase15g-cpsat-reference-vocabulary-2026-08-31`  
 Base main: `1990387f31a3b045e70f6ccea088f833ffa0f583`
 
-15G owns four deliberately separated contracts:
+15G owns five deliberately separated contracts after the implementation-time census:
 
 - **NC-P15-005:** same-run explicit-prefix result schema v1
   `oracleLabel`/`oracleReason`/`oracle-unknown` -> v2
@@ -1122,8 +1122,10 @@ Base main: `1990387f31a3b045e70f6ccea088f833ffa0f583`
 - **NC-P15-011:** external case-format token `atlas-abstain` -> canonical
   `reference-abstain`, with the one parser retaining `atlas-abstain` as a transition alias;
 - **NC-P15-012:** still-live known-solution-prefix source schema v1
-  `oracle`/`oracle-abstain` vocabulary -> v2 canonical reference vocabulary, while the current
-  extractor permanently normalizes authentic v1 evidence.
+  `oracle`/`oracle-abstain` vocabulary -> v2 `reference`/`reference-abstain` vocabulary with
+  `referenceAbstentions`, while the current extractor permanently normalizes authentic v1 evidence;
+- **NC-P15-014:** live repair-retreat diagnostic `oracleProbe`/`oracleLabel`/`oracleReason` ->
+  `referenceProbe`/`referenceLabel`/`referenceReason`; historical unversioned outputs remain frozen.
 
 15G must not touch the 15H prune-gap directory/report vocabulary.
 
@@ -1137,3 +1139,20 @@ Base main: `1990387f31a3b045e70f6ccea088f833ffa0f583`
 - new source/result writers must be canonical-only after cutover;
 - CP-SAT solving behavior, constraints, timeout/UNSAT/UNKNOWN semantics, and row ordering are
   unchanged.
+
+
+### 15G implementation-time partition amendment
+
+Before any 15G implementation rename, the Phase-8 retained-surface registry exposed a live current
+surface that 15A had accidentally left bundled with NC-P15-005:
+`scripts/stress/repair-retreat-binary-search.mjs` writes CP-SAT reference evidence under
+`oracleLabel`/`oracleReason` and uses private `oracleProbe`.
+
+This tool has no package front-door alias and no maintained historical-output reader, but it is live
+source and Phase 8 explicitly deferred its current terminology into Phase 15. Leaving it unchanged
+would violate the Phase-15 merged-tree audit's current-reference vocabulary rule. The ledger
+therefore adds **NC-P15-014** to batch 15G before implementation. Its migration is direct:
+`referenceProbe`/`referenceLabel`/`referenceReason`; historical unversioned outputs are frozen.
+
+This same census locks NC-P15-012's previously unspecified canonical summary field to
+`referenceAbstentions`.
