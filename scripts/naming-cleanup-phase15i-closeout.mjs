@@ -16,14 +16,28 @@ const ROOT = process.cwd();
 const ledger = JSON.parse(readFileSync('docs/naming-cleanup-ledger.json', 'utf8'));
 const phase15 = ledger.entries.filter(row => row.phase === 15);
 
-assert.equal(ledger.lastCompletedPhase, 14, '15I must not finalize Phase 15');
-assert.equal(ledger.activeExecution?.phase, 15);
-assert.equal(ledger.activeExecution?.batch, '15I');
+const activeCloseoutMode =
+  ledger.lastCompletedPhase === 14 &&
+  ledger.activeExecution?.phase === 15 &&
+  ledger.activeExecution?.batch === '15I';
+const completedMode =
+  ledger.status === 'complete' &&
+  ledger.lastCompletedPhase === 15 &&
+  ledger.activeExecution?.status === 'idle';
+assert.ok(
+  activeCloseoutMode || completedMode,
+  'hostile naming ratchet must run either during active 15I closeout or after terminal Phase-15 completion',
+);
 for (const batch of ['15A','15B','15C','15D','15E','15F','15G','15H']) {
-  assert.equal(ledger.batchCompletions?.[batch]?.status, 'merged', `${batch} must be merged before hostile closeout`);
+  assert.equal(ledger.batchCompletions?.[batch]?.status, 'merged', `${batch} must be merged before hostile closeout/ratchet`);
+}
+if (completedMode) {
+  for (const batch of ['15I','15J']) {
+    assert.equal(ledger.batchCompletions?.[batch]?.status, 'merged', `${batch} must be merged in terminal hostile-ratchet mode`);
+  }
 }
 assert.ok(phase15.length >= 14);
-assert.ok(phase15.every(row => row.status === 'done'), 'all Phase-15 implementation rows must be done before 15I');
+assert.ok(phase15.every(row => row.status === 'done'), 'all Phase-15 implementation rows must be done before hostile closeout/ratchet');
 
 // Reconciliation must now be side-specific: the five real compatibility owners remain mixed;
 // every non-compatibility Phase-15 row is canonical-only on maintained surfaces.
@@ -32,7 +46,11 @@ const inventoryRaw = execFileSync(process.execPath, [
 ], { cwd: ROOT, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
 const inventory = JSON.parse(inventoryRaw);
 const byId = Object.fromEntries(inventory.ledgerEntries.map(row => [row.id, row]));
-const mixedOwners = new Set(['NC-P15-001','NC-P15-002','NC-P15-003','NC-P15-011','NC-P15-012']);
+const mixedOwners = new Set(
+  completedMode
+    ? ['NC-P15-002','NC-P15-003','NC-P15-012']
+    : ['NC-P15-001','NC-P15-002','NC-P15-003','NC-P15-011','NC-P15-012'],
+);
 for (const row of phase15) {
   const observed = byId[row.id];
   assert.ok(observed, `inventory missing ${row.id}`);
@@ -119,12 +137,17 @@ for (const file of sourceFiles) {
 assert.deepEqual(retiredHits, [], `retired Phase-15 executable identity survives in maintained source:\n${retiredHits.join('\n')}`);
 
 // Claimed compatibility must be executable, not comment-only.
-const compatibilityOwners = [
-  ['NC-P15-001','scripts/family-paths.mjs','--trove-root','--variant-family-dataset-root'],
-  ['NC-P15-002','scripts/experiment-manifest-lib.mjs','trove','variantFamilyDataset'],
-  ['NC-P15-011','scripts/stress/cpsat-explicit-prefix-reference-lib.mjs','atlas-abstain','reference-abstain'],
-  ['NC-P15-012','scripts/stress/cpsat-explicit-prefix-reference-lib.mjs','oracle-abstain','reference-abstain'],
-];
+const compatibilityOwners = completedMode
+  ? [
+      ['NC-P15-002','scripts/experiment-manifest-lib.mjs','trove','variantFamilyDataset'],
+      ['NC-P15-012','scripts/stress/cpsat-explicit-prefix-reference-lib.mjs','oracle-abstain','reference-abstain'],
+    ]
+  : [
+      ['NC-P15-001','scripts/family-paths.mjs','--trove-root','--variant-family-dataset-root'],
+      ['NC-P15-002','scripts/experiment-manifest-lib.mjs','trove','variantFamilyDataset'],
+      ['NC-P15-011','scripts/stress/cpsat-explicit-prefix-reference-lib.mjs','atlas-abstain','reference-abstain'],
+      ['NC-P15-012','scripts/stress/cpsat-explicit-prefix-reference-lib.mjs','oracle-abstain','reference-abstain'],
+    ];
 for (const [id,file,legacy,canonical] of compatibilityOwners) {
   const source = readFileSync(file, 'utf8');
   assert.equal(hasExecutableToken(source, legacy), true, `${id} claimed legacy form exists only in comments or disappeared from owner ${file}`);
@@ -163,20 +186,30 @@ const phaseRecord = readFileSync('docs/naming-cleanup-phase-records/phase-15.md'
 assert.match(phaseRecord, /separately deferred vocabulary debt/u);
 assert.match(phaseRecord, /repairLateProbe/u);
 
-// 15I records the transition-alias review but leaves actual retirement to 15J.
-for (const id of ['NC-P15-001','NC-P15-011']) {
-  const row = phase15.find(candidate => candidate.id === id);
-  assert.equal(row.compatibility?.mode, 'external-config-transition');
-  assert.equal(row.compatibility?.retireWhen, 'phase-15-review');
+if (activeCloseoutMode) {
+  // 15I records the transition-alias review but leaves actual retirement to 15J.
+  for (const id of ['NC-P15-001','NC-P15-011']) {
+    const row = phase15.find(candidate => candidate.id === id);
+    assert.equal(row.compatibility?.mode, 'external-config-transition');
+    assert.equal(row.compatibility?.retireWhen, 'phase-15-review');
+  }
+  assert.ok(
+    phaseRecord.includes('NC-P15-001 `--trove-root` and NC-P15-011 `atlas-abstain`'),
+    'transition-alias review must name the exact NC-P15-001/011 external aliases',
+  );
+  assert.match(
+    phaseRecord,
+    /15I\s+therefore\s+recommends\s+retiring\s+those[\s\S]{0,180}external\s+transition\s+aliases[\s\S]{0,120}\b15J\b/iu,
+    'transition-alias review must assign the recommended alias retirement to 15J',
+  );
+} else {
+  // After completion the same hostile scan becomes a permanent ratchet: transition aliases must
+  // actually be retired while the three permanent historical readers remain executable.
+  for (const id of ['NC-P15-001','NC-P15-011']) {
+    const row = phase15.find(candidate => candidate.id === id);
+    assert.equal(row?.persistence, 'none');
+    assert.equal('compatibility' in (row ?? {}), false);
+  }
 }
-assert.ok(
-  phaseRecord.includes('NC-P15-001 `--trove-root` and NC-P15-011 `atlas-abstain`'),
-  'transition-alias review must name the exact NC-P15-001/011 external aliases',
-);
-assert.match(
-  phaseRecord,
-  /15I\s+therefore\s+recommends\s+retiring\s+those[\s\S]{0,180}external\s+transition\s+aliases[\s\S]{0,120}\b15J\b/iu,
-  'transition-alias review must assign the recommended alias retirement to 15J',
-);
 
-console.log(`Phase-15I hostile closeout guard passed: ${allInventory.ledgerEntries.length} Phase-1-15 rows censused, ${sourceFiles.length} maintained executable surfaces scanned, Phase-15 compatibility ownership is executable and frozen source blob is unchanged.`);
+console.log(`Phase-15 hostile closeout/terminal ratchet passed: ${allInventory.ledgerEntries.length} Phase-1-15 rows censused, ${sourceFiles.length} maintained executable surfaces scanned, Phase-15 compatibility ownership is executable and frozen source blob is unchanged.`);
