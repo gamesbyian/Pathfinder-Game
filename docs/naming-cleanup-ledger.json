@@ -4852,8 +4852,7 @@
         "kind": "literal-legacy-surface",
         "legacy": "branch atlas",
         "retainedSurfaceIds": [
-          "NC-RET-P08-008",
-          "NC-RET-P08-010"
+          "NC-RET-P08-008"
         ]
       },
       "NC-P08-018": {
@@ -4983,10 +4982,7 @@
       "NC-P08-044": {
         "kind": "semantic-contract",
         "legacy": "workflow atlas-sweep display/concurrency",
-        "contract": "prune-gap-workflow-identity",
-        "retainedSurfaceIds": [
-          "NC-RET-P08-010"
-        ]
+        "contract": "prune-gap-workflow-identity"
       },
       "NC-P08-045": {
         "kind": "literal-legacy-surface",
@@ -5352,48 +5348,6 @@
           "NC-P15-011"
         ],
         "ownerClass": "compatibility-or-deferred"
-      },
-      {
-        "id": "NC-RET-P08-010",
-        "owner": "Batch 8E shared atlas directory CLI/report boundary deferred to NC-P15-007",
-        "lifecycle": "phase-15-review with dual-read design before new writes",
-        "ownerRowIds": [
-          "NC-P08-017",
-          "NC-P08-044",
-          "NC-P15-007"
-        ],
-        "ownerClass": "compatibility-or-deferred",
-        "matches": [
-          {
-            "term": "--atlas-dir",
-            "files": [
-              "scripts/stress/mc-crossing-slack-analysis.mjs",
-              "scripts/stress/offline-replay-harness.mjs",
-              "docs/solver-offline-replay-harness.md"
-            ]
-          },
-          {
-            "term": "ATLAS_DIR",
-            "files": [
-              "scripts/stress/mc-crossing-slack-analysis.mjs",
-              "scripts/stress/offline-replay-harness.mjs"
-            ]
-          },
-          {
-            "term": "atlasDir",
-            "files": [
-              "scripts/stress/mc-crossing-slack-analysis.mjs",
-              "scripts/stress/offline-replay-harness.mjs"
-            ]
-          },
-          {
-            "term": "atlasFiles",
-            "files": [
-              "scripts/stress/mc-crossing-slack-analysis.mjs",
-              "scripts/stress/offline-replay-harness.mjs"
-            ]
-          }
-        ]
       },
       {
         "id": "NC-RET-P08-011",
