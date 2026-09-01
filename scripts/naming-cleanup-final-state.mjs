@@ -53,6 +53,19 @@ assert.equal(
   ledger.phaseClosures?.['15']?.finalizationHandoff?.mergeCommit,
   '504330dc4e474b1ebc7755e8c34f72f63fd37901',
 );
+assert.deepEqual(ledger.phaseClosures?.['15']?.postCompletionAuditRepair, {
+  baseMainSha: '221dda339968612af1ceb340a210ce3b35e28a06',
+  recordPath: 'docs/naming-cleanup-phase-records/phase-15-post-completion-audit-repair.md',
+  pr: 1651,
+  finalHeadSha: '0d14bbe0395fb8bd2e431fa54af67a9ddbaf4a20',
+  ciRunId: 33475366217,
+  ciConclusion: 'success',
+  firestoreRunId: 33475366196,
+  firestoreConclusion: 'success',
+  browserRunId: 33475366197,
+  browserConclusion: 'success',
+  mergeCommit: 'd3aabd081fa8c400aacbde36c2cb22cdb1e1f218',
+});
 assert.ok(phase15.every(row => row.status === 'done'), 'completed Phase 15 must leave every implementation row done');
 assert.ok(
   Object.entries(ledger.batchCompletions ?? {})
