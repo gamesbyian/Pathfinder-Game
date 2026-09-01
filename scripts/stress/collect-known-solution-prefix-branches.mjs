@@ -35,12 +35,12 @@ for (const raw of selected) {
     levels.push({ levelId: raw.id, validSolutions: solutions.length, depths: [...depthSet].sort((a, b) => a - b), branches });
 }
 const all = levels.flatMap(level => level.branches);
-const document = { schemaVersion: 1, generatedAt: new Date().toISOString(), levelsFile,
+const document = { schemaVersion: 2, generatedAt: new Date().toISOString(), levelsFile,
     selection: 'first solution-bearing levels; first stored solutions; 20/50/80% prefix depths',
-    oracle: { status: 'not-invoked', unknownSiblingLabel: 'oracle-abstain', laterWorkflow: 'feed rows to the existing CP-SAT shadow-eval atlas labeller' },
+    reference: { status: 'not-invoked', unknownSiblingLabel: 'reference-abstain', laterWorkflow: 'feed rows to the existing CP-SAT explicit-prefix reference labeller' },
     summary: { levels: levels.length, prefixes: new Set(all.map(row => row.prefix.join(','))).size, siblings: all.length,
         knownValidContinuations: all.filter(row => row.label === 'known-valid-continuation').length,
-        oracleAbstentions: all.filter(row => row.label === 'oracle-abstain').length }, levels };
+        referenceAbstentions: all.filter(row => row.label === 'reference-abstain').length }, levels };
 mkdirSync(path.dirname(outFile), { recursive: true });
 writeFileSync(outFile, `${JSON.stringify(document, null, 2)}\n`);
 console.log(`Wrote ${outFile}: ${document.summary.prefixes} prefixes / ${document.summary.siblings} siblings`);

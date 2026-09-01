@@ -1089,3 +1089,123 @@ That implementation head passed:
 NC-P15-004 is now `done` and `activeExecution` is idle. As with earlier serial batches,
 `batchCompletions["15F"]` deliberately remains pending until PR #1643 actually merges. A fresh
 exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
+
+
+## 15F merge evidence
+
+Phase 15F completed as implementation PR **#1643**.
+
+- final head: `17f2fe909cb0e1df93cf42ebdf584aa62cd63f92`;
+- implementation-head green CI: run **33464597238**, all six CI jobs successful;
+- implementation-head browser characterization: run **33464597286**, successful;
+- final done/idle exact-head CI: run **33464757292**, all six CI jobs successful;
+- final done/idle browser characterization: run **33464757304**, successful;
+- merge commit: `1990387f31a3b045e70f6ccea088f833ffa0f583`;
+- 15G base-main SHA: the same merge commit;
+- ledger `batchCompletions["15F"]` is now the machine merge-barrier evidence.
+
+## 15G — CP-SAT explicit-prefix reference vocabulary and source-schema migration
+
+Status: **active**
+
+Branch: `chatgpt/phase15g-cpsat-reference-vocabulary-2026-08-31`  
+PR: **#1644**  
+Base main: `1990387f31a3b045e70f6ccea088f833ffa0f583`
+
+15G owns five deliberately separated contracts after the implementation-time census:
+
+- **NC-P15-005:** same-run explicit-prefix result schema v1
+  `oracleLabel`/`oracleReason`/`oracle-unknown` -> v2
+  `referenceLabel`/`referenceReason`/`reference-unknown`; old result artifacts stay frozen and
+  no synthetic historical result reader is added;
+- **NC-P15-010:** workflow-local job ID `oracle-shards` -> `reference-shards`, with every
+  `needs`/expression dependency changed atomically;
+- **NC-P15-011:** external case-format token `atlas-abstain` -> canonical
+  `reference-abstain`, with the one parser retaining `atlas-abstain` as a transition alias;
+- **NC-P15-012:** still-live known-solution-prefix source schema v1
+  `oracle`/`oracle-abstain` vocabulary -> v2 `reference`/`reference-abstain` vocabulary with
+  `referenceAbstentions`, while the current extractor permanently normalizes authentic v1 evidence;
+- **NC-P15-014:** live repair-retreat diagnostic `oracleProbe`/`oracleLabel`/`oracleReason` ->
+  `referenceProbe`/`referenceLabel`/`referenceReason`; historical unversioned outputs remain frozen.
+
+15G must not touch the 15H prune-gap directory/report vocabulary.
+
+### 15G pre-edit invariants
+
+- exact case population extracted from the frozen v1 prefix fixture must remain identical;
+- the workflow result combiner must preserve row counts/grouping when the current same-run writer
+  moves to v2;
+- old `atlas-abstain` input and new `reference-abstain` input must select the same cases;
+- the committed v1 known-prefix fixture remains readable and is not rewritten;
+- new source/result writers must be canonical-only after cutover;
+- CP-SAT solving behavior, constraints, timeout/UNSAT/UNKNOWN semantics, and row ordering are
+  unchanged.
+
+
+### 15G implementation-time partition amendment
+
+Before any 15G implementation rename, the Phase-8 retained-surface registry exposed a live current
+surface that 15A had accidentally left bundled with NC-P15-005:
+`scripts/stress/repair-retreat-binary-search.mjs` writes CP-SAT reference evidence under
+`oracleLabel`/`oracleReason` and uses private `oracleProbe`.
+
+This tool has no package front-door alias and no maintained historical-output reader, but it is live
+source and Phase 8 explicitly deferred its current terminology into Phase 15. Leaving it unchanged
+would violate the Phase-15 merged-tree audit's current-reference vocabulary rule. The ledger
+therefore adds **NC-P15-014** to batch 15G before implementation. Its migration is direct:
+`referenceProbe`/`referenceLabel`/`referenceReason`; historical unversioned outputs are frozen.
+
+This same census locks NC-P15-012's previously unspecified canonical summary field to
+`referenceAbstentions`.
+
+
+### 15G implementation and validation evidence
+
+Implementation on PR **#1644** is complete on implementation head
+`33cc5009739188a66221111e38542df114f911e0`.
+
+The final 15G contract is:
+
+- same-run explicit-prefix result output is schema v2 and single-writes
+  `referenceLabel` / `referenceReason`; UNKNOWN uses `reference-unknown`;
+- workflow-local shard dependency identity is `reference-shards`;
+- canonical external case format is `reference-abstain`, while the shared extractor alone retains
+  `atlas-abstain` as the transition alias;
+- current known-prefix source output is schema v2 and single-writes
+  `reference`, `reference-abstain`, and `referenceAbstentions`;
+- authentic schema-v1 known-prefix evidence using `oracle-abstain` remains permanently readable
+  through the same extractor and is not rewritten;
+- repair-retreat current diagnostic output now uses
+  `referenceProbe`, `referenceLabel`, and `referenceReason`;
+- historical unversioned repair-retreat outputs and historical schema-v1 explicit-prefix result
+  artifacts remain frozen;
+- no synthetic historical adapter was added for NC-P15-005 because no maintained historical result
+  reader exists;
+- 15H prune-gap directory/report vocabulary remains untouched.
+
+Executable proof on the implementation head includes:
+
+- `test:research-analysis-lib`, proving v1/v2 known-prefix source normalization and population
+  equivalence for `atlas-abstain` vs `reference-abstain`;
+- `test:naming-cleanup-phase15g-reference`, executing the real explicit-prefix CLI through the
+  sparse-safe native-illegal smoke path and proving canonical schema-v2 output without invoking
+  CP-SAT;
+- `check:naming-cleanup-phase15g-closeout`, scanning maintained current text surfaces and allowing
+  only the two intentional compatibility literals at their owned parser/test boundary;
+- workflow combiner guards that reject non-v2/noncanonical same-run shard rows rather than
+  manufacturing mixed-era compatibility;
+- the advanced Phase-8 retained-surface contract, which now retains only the two real compatibility
+  owners after the current CP-SAT vocabulary migration.
+
+Exact-head validation for implementation head
+`33cc5009739188a66221111e38542df114f911e0` passed:
+
+- CI run **33465763452**, all six jobs successful:
+  `node-tests`, `deep-proofs`, `build`, `checks`, `checks-lint`, and
+  `deep-verification`;
+- browser characterization run **33465763465**, successful.
+
+NC-P15-005, NC-P15-010, NC-P15-011, NC-P15-012, and NC-P15-014 are now `done`, and
+`activeExecution` is idle. `batchCompletions["15G"]` deliberately remains pending until PR
+#1644 actually merges. A fresh exact-head CI/browser run on this done/idle bookkeeping head is
+required before merge.

@@ -102,14 +102,25 @@ assert.ok(rangeInventory.ledgerEntries.some(row => row.reconciliationState === '
 const phase15Rows = rangeInventory.ledgerEntries.filter(row => row.phase === 15);
 const expectedPhase15Ids = ledger.entries.filter(row => row.phase === 15).map(row => row.id).sort();
 assert.deepEqual(phase15Rows.map(row => row.id).sort(), expectedPhase15Ids);
-assert.equal(phase15Rows.length, 13, '15A decomposes Phase 15 into thirteen homogeneous implementation rows');
+assert.equal(phase15Rows.length, 14,
+  'Phase 15 contains the thirteen 15A rows plus the implementation-time NC-P15-014 split');
+const pendingPhase15Rows = phase15Rows.filter(row => row.status === 'pending');
+assert.deepEqual(pendingPhase15Rows.map(row => row.id).sort(), ['NC-P15-007', 'NC-P15-013'],
+  'after 15G starts, only the 15H implementation rows remain pending');
 assert.ok(
-  phase15Rows.every(row => row.oldReferenceFiles.length > 0),
-  '15A must leave every resolved Phase-15 old contract represented on the live tree',
+  pendingPhase15Rows.every(row => row.oldReferenceFiles.length > 0 &&
+    ['old-live', 'mixed-old-and-canonical'].includes(row.reconciliationState)),
+  'future Phase-15 rows must still expose their old contract until their owning serial batch begins',
 );
 assert.ok(
-  phase15Rows.every(row => ['old-live', 'mixed-old-and-canonical'].includes(row.reconciliationState)),
-  'canonical target occupancy discovered by 15A may make a row mixed, but no Phase-15 old contract may disappear before implementation',
+  phase15Rows.every(row => [
+    'old-live',
+    'mixed-old-and-canonical',
+    'canonical-live',
+    'no-current-live-reference-review',
+    'no-current-live-reference-frozen-history',
+  ].includes(row.reconciliationState)),
+  'Phase-15 reconciliation must classify every lifecycle state explicitly',
 );
 assert.ok(phase15Rows.find(row => row.id === 'NC-P15-003').oldReferenceCategories.includes('workflow'));
 assert.ok(phase15Rows.find(row => row.id === 'NC-P15-004').oldReferenceCategories.includes('application'));

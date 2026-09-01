@@ -19,7 +19,7 @@ assert.ok(['active', 'idle'].includes(ledger.activeExecution?.status),
   'Phase-15 execution may be active during a batch or idle while a completed batch awaits merge');
 
 const phase15 = ledger.entries.filter(row => row.phase === 15);
-assert.equal(phase15.length, 13, '15A should resolve to thirteen homogeneous implementation rows');
+assert.equal(phase15.length, 14, 'Phase 15 now contains the thirteen 15A rows plus the 15G implementation-time repair-retreat split');
 assert.equal(ledger.batchCompletions?.['15A']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15A']?.pr, 1638);
 assert.equal(ledger.batchCompletions?.['15A']?.mergeCommit, '4b61b59dfba6dada48f316edcdb6e9b4daa6683e');
@@ -41,14 +41,17 @@ assert.equal(phase15.find(row => row.id === 'NC-P15-009')?.status, 'done');
 assert.equal(ledger.batchCompletions?.['15E']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15E']?.pr, 1642);
 assert.equal(ledger.batchCompletions?.['15E']?.mergeCommit, '502dd2c610cd36b5ecea656b655ae570e068cbb9');
-assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === 'NC-P15-004')?.status),
-  '15F row NC-P15-004 must be active or done while this source guard owns the application rename');
+assert.equal(phase15.find(row => row.id === 'NC-P15-004')?.status, 'done');
+assert.equal(ledger.batchCompletions?.['15F']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15F']?.pr, 1643);
+assert.equal(ledger.batchCompletions?.['15F']?.mergeCommit, '1990387f31a3b045e70f6ccea088f833ffa0f583');
+for (const id of ['NC-P15-005', 'NC-P15-010', 'NC-P15-011', 'NC-P15-012', 'NC-P15-014']) {
+  assert.ok(['in-progress', 'done'].includes(phase15.find(row => row.id === id)?.status),
+    `15G row ${id} must be active or done while this source guard owns the CP-SAT reference migration`);
+}
 assert.ok(
-  phase15.filter(row => ![
-    'NC-P15-001', 'NC-P15-002', 'NC-P15-003', 'NC-P15-004',
-    'NC-P15-006', 'NC-P15-008', 'NC-P15-009',
-  ].includes(row.id)).every(row => row.status === 'pending'),
-  '15F must leave 15G/15H implementation rows pending until their serial batch begins',
+  phase15.filter(row => ['NC-P15-007', 'NC-P15-013'].includes(row.id)).every(row => row.status === 'pending'),
+  '15G must leave 15H implementation rows pending until its serial batch begins',
 );
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
@@ -108,22 +111,36 @@ assert.equal(
 );
 
 const cpsatReference = readFileSync('scripts/stress/cpsat-explicit-prefix-reference.mjs', 'utf8');
-assert.match(cpsatReference, /oracleLabel/u);
-assert.match(cpsatReference, /oracleReason/u);
+assert.match(cpsatReference, /schemaVersion: 2/u);
+assert.match(cpsatReference, /referenceLabel/u);
+assert.match(cpsatReference, /referenceReason/u);
+assert.doesNotMatch(cpsatReference, /oracleLabel|oracleReason/u);
 
 const cpsatWorkflow = readFileSync('.github/workflows/cpsat-explicit-prefix-reference.yml', 'utf8');
-assert.match(cpsatWorkflow, /oracle-shards:/u);
-assert.match(cpsatWorkflow, /atlas-abstain/u);
+assert.match(cpsatWorkflow, /reference-shards:/u);
+assert.match(cpsatWorkflow, /reference-abstain/u);
+assert.doesNotMatch(cpsatWorkflow, /oracle-shards|atlas-abstain/u);
 
 const prefixCollector = readFileSync('scripts/stress/collect-known-solution-prefix-branches.mjs', 'utf8');
-assert.match(prefixCollector, /schemaVersion: 1/u);
-assert.match(prefixCollector, /oracle-abstain/u);
+assert.match(prefixCollector, /schemaVersion: 2/u);
+assert.match(prefixCollector, /reference-abstain/u);
+assert.match(prefixCollector, /referenceAbstentions/u);
+assert.doesNotMatch(prefixCollector, /oracleAbstentions|oracle: \{/u);
+
+const repairRetreat = readFileSync('scripts/stress/repair-retreat-binary-search.mjs', 'utf8');
+assert.match(repairRetreat, /referenceProbe/u);
+assert.match(repairRetreat, /referenceLabel/u);
+assert.match(repairRetreat, /referenceReason/u);
+assert.doesNotMatch(repairRetreat, /oracleProbe|oracleLabel|oracleReason/u);
 
 const legacyPrefixDocument = JSON.parse(readFileSync('docs/naming-cleanup-phase-records/fixtures/phase15-winning-prefix-v1.json', 'utf8'));
 const legacyPrefixCases = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'atlas-abstain' });
+const legacyPrefixCasesCanonicalFormat = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'reference-abstain' });
 assert.ok(legacyPrefixCases.length > 0, 'committed v1 prefix fixture must execute through the current historical reader');
-assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'oracle-abstain'),
-  'legacy atlas-abstain reader must select the historical oracle-abstain branch population');
+assert.deepEqual(legacyPrefixCasesCanonicalFormat, legacyPrefixCases,
+  'legacy and canonical external format spellings must select the same authentic v1 case population');
+assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'reference-abstain'),
+  'legacy oracle-abstain source rows must normalize to the canonical reference-abstain model');
 
 const replay = readFileSync('scripts/stress/offline-replay-harness.mjs', 'utf8');
 assert.match(replay, /--atlas-dir=/u);

@@ -94,8 +94,8 @@ for (const item of cases) {
     if (!legality.ok) {
         inputAlarms++;
         rows.push({
-            schemaVersion: 1, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
-            depth: item.depth, sourceLabel: item.sourceLabel, oracleLabel: 'timeout/abstain', oracleReason: 'native-prefix-illegal',
+            schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
+            depth: item.depth, sourceLabel: item.sourceLabel, referenceLabel: 'timeout/abstain', referenceReason: 'native-prefix-illegal',
             inputAlarm: true, inputReason: legality.reason, invalidAt: legality.invalidAt, from: legality.from, next: legality.next,
             timeLimitSec: timeLimit,
         });
@@ -110,14 +110,14 @@ for (const item of cases) {
     const exitCode = result.status ?? (result.error ? -1 : 0);
     const classified = classifyProbeProcess({ stdout: result.stdout ?? '', stderr: result.stderr ?? '', exitCode });
     const row = {
-        schemaVersion: 1, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
-        depth: item.depth, sourceLabel: item.sourceLabel, oracleLabel: classified.label, oracleReason: classified.reason,
+        schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
+        depth: item.depth, sourceLabel: item.sourceLabel, referenceLabel: classified.label, referenceReason: classified.reason,
         cpSatStatus: classified.status ?? null, timeLimitSec: timeLimit, exitCode,
     };
     if (classified.label === 'live') {
         const emitted = parseEmittedPath(result.stdout ?? '');
         if (!emitted) {
-            row.oracleLabel = 'timeout/abstain'; row.oracleReason = 'sat-without-emitted-path';
+            row.referenceLabel = 'timeout/abstain'; row.referenceReason = 'sat-without-emitted-path';
             correctnessAlarms++;
             row.correctnessAlarm = true;
         } else {
@@ -127,20 +127,20 @@ for (const item of cases) {
             row.refereeReason = verdict.ok ? null : verdict.reason;
             row.emittedPath = emitted;
             if (!verdict.ok) {
-                row.oracleLabel = 'timeout/abstain'; row.oracleReason = 'sat-witness-referee-rejected';
+                row.referenceLabel = 'timeout/abstain'; row.referenceReason = 'sat-witness-referee-rejected';
                 row.correctnessAlarm = true; correctnessAlarms++;
             }
         }
     }
     if (result.error) row.processError = String(result.error.message ?? result.error);
-    if (row.oracleLabel === 'timeout/abstain' && result.stderr) row.stderrTail = result.stderr.slice(-2000);
+    if (row.referenceLabel === 'timeout/abstain' && result.stderr) row.stderrTail = result.stderr.slice(-2000);
     rows.push(row);
-    console.log(`${item.id}: ${row.oracleLabel} (${row.oracleReason})`);
+    console.log(`${item.id}: ${row.referenceLabel} (${row.referenceReason})`);
 }
 
-const count = label => rows.filter(row => row.oracleLabel === label).length;
+const count = label => rows.filter(row => row.referenceLabel === label).length;
 const document = {
-    schemaVersion: 1, generatedAt: new Date().toISOString(), solverRef, technique: 'cpsat-reference-probe-explicit-prefix',
+    schemaVersion: 2, generatedAt: new Date().toISOString(), solverRef, technique: 'cpsat-reference-probe-explicit-prefix',
     sourceCases: casesFile, sourceFormat: format, coordinateConvention: 'raw-level-1-based', requestedTimeLimitSec: timeLimit,
     shardIndex, shardCount, selectedCaseCount: selectedCases.length,
     summary: { cases: rows.length, live: count('live'), dead: count('dead'), abstain: count('timeout/abstain'), correctnessAlarms, inputAlarms },

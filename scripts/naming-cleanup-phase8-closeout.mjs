@@ -315,8 +315,8 @@ const targetedContracts = [
   },
   {
     file: 'scripts/stress/cpsat-explicit-prefix-reference.mjs',
-    forbidden: [],
-    required: [/oracleLabel/gu, /oracleReason/gu],
+    forbidden: [/oracleLabel/gu, /oracleReason/gu],
+    required: [/referenceLabel/gu, /referenceReason/gu, /schemaVersion: 2/gu],
   },
   {
     file: '.github/workflows/collect-prune-gap-labels.yml',
@@ -325,8 +325,8 @@ const targetedContracts = [
   },
   {
     file: '.github/workflows/cpsat-explicit-prefix-reference.yml',
-    forbidden: [/^name:.*oracle/gimu, /^run-name:.*oracle/gimu, /^\s+name:.*oracle/gimu],
-    required: [/^name: cpsat-explicit-prefix-reference$/gmu, /^run-name: "CP-SAT prefix reference/gmu, /oracle-shards/gu],
+    forbidden: [/^name:.*oracle/gimu, /^run-name:.*oracle/gimu, /^\s+name:.*oracle/gimu, /oracle-shards/gu],
+    required: [/^name: cpsat-explicit-prefix-reference$/gmu, /^run-name: "CP-SAT prefix reference/gmu, /reference-shards/gu],
   },
 ];
 

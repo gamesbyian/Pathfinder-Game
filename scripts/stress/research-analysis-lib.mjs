@@ -142,9 +142,9 @@ export function enumerateKnownPrefixBranches({ api, level, prep, knownSolutions,
             const portal = level.portalMap.get(pos);
             api.applyMove(child, childState, level, prep, !!(portal && portal.dest === child));
             rows.push({
-                schemaVersion: 1, solutionIds: [...group.solutionIds], provenances: [...group.provenances],
+                schemaVersion: 2, solutionIds: [...group.solutionIds], provenances: [...group.provenances],
                 depth: group.depth, prefix: [...group.prefix], child,
-                label: group.continuations.has(child) ? 'known-valid-continuation' : 'oracle-abstain',
+                label: group.continuations.has(child) ? 'known-valid-continuation' : 'reference-abstain',
                 knownContinuationChildren: [...group.continuations], scoreRank: ranked.indexOf(child) + 1,
                 neutral: { remainingSteps: level.requiredLength - group.depth - 1, remainingIntersections: level.requiredIntersections - childState.ints,
                     intersections: childState.ints, mustPassVisitedMask: childState.mpVisitedMask,
