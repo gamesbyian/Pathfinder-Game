@@ -3,6 +3,7 @@
 Status: **15A contract-decomposition gate active; no Phase-15 implementation rename has begun**
 
 Execution branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`  
+Execution PR: **#1638**  
 Entry base: `fad988569c70802db7d69b85f4443a4daf0486a6` (current `main` at Phase-15 entry)  
 Preparation authority: [phase-15-preparation.md](phase-15-preparation.md)  
 Independent pre-entry repair record: [pre-phase-15-audit-repairs.md](pre-phase-15-audit-repairs.md)  
