@@ -107,8 +107,8 @@ concept.
 
 **Resolved contract:** direct atomic source rename:
 `atlas-eligibility.mjs` -> `cpsat-branch-label-eligibility.mjs`,
-`selectEligibleAtlasLevels` -> `selectEligibleCpsatBranchLevels`, and the corresponding
-`isEligibleForCpsatAtlas` predicate to a branch-label-specific canonical name. No compatibility
+`selectEligibleAtlasLevels` -> `selectEligibleCpsatBranchLevels`, and
+`isEligibleForCpsatAtlas` -> `isEligibleForCpsatBranchLabeling`. No compatibility
 filename/export alias.
 
 **Parity proof required in 15B:** pin the selected eligible/unharvested population on representative
