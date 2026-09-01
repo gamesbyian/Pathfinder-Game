@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Batch driver for family-parent-hint-replay-lib.mjs's replay logic: walks every family manifest
- * in the wide research trove, tries every variant's discovered hint path against its canonical
+ * in the variant-family dataset, tries every variant's discovered hint path against its canonical
  * parent (inverse-transformed for symmetry, as-is for exact-coordinate witness relations -- the
  * same eligibility replayVariantPath itself enforces), and persists every referee-accepted path as
  * a new parent hint via the existing hint-merge/provenance system (mergeVariantDerivedHint).
