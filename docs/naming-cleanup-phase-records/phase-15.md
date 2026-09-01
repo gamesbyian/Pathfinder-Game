@@ -227,19 +227,25 @@ submission behavior byte/identity-equivalent. No fake compatibility object is cr
 
 ### NC-P15-005 — CP-SAT explicit-prefix result schema — batch 15G
 
-The inherited row mixed persisted result schema with workflow-local IDs and external input tokens.
-It is narrowed to the result schema.
+The inherited row mixed result schema with workflow-local IDs and external input tokens. It is
+narrowed to the result schema.
 
 **Current writer:** `scripts/stress/cpsat-explicit-prefix-reference.mjs` writes schemaVersion 1
 rows with `oracleLabel` and `oracleReason`; UNKNOWN writes `oracle-unknown`.
 
-**Current reader/combiner:** `.github/workflows/cpsat-explicit-prefix-reference.yml` combines rows
-and groups on `row.oracleLabel`.
+**Current reader/combiner:** `.github/workflows/cpsat-explicit-prefix-reference.yml` combines only
+the shards produced by that same workflow run. Every shard checks out `${{ github.sha }}`, so the
+normal execution graph is schema-homogeneous by construction.
+
+**Historical-reader finding:** no maintained repository tool was found that reopens historical
+explicit-prefix result artifacts and consumes `oracleLabel`/`oracleReason`. No committed
+explicit-prefix result fixture is a current input authority. A hypothetical mixed v1/v2 shard set
+would therefore be a synthetic compatibility surface, not evidence of a supported reader.
 
 **Resolved target/version:** new result schemaVersion **2** writes `referenceLabel`,
-`referenceReason`, and `reference-unknown`. The owning normalizer/combiner must read v1 and v2,
-including mixed old/new shard rows, reject conflicts, and single-write v2 canonical output.
-Historical v1 read support is permanent.
+`referenceReason`, and `reference-unknown`; the current writer and same-run combiner cut over
+atomically. Historical schema-v1 result artifacts remain frozen. Do **not** add a dead v1 result
+normalizer unless a maintained historical consumer is actually introduced or discovered.
 
 ### NC-P15-010 — explicit-prefix workflow-local shard job ID — batch 15G
 
@@ -359,6 +365,23 @@ review; Phase 15 must not opportunistically change it.
 
 15A updates only the routing statements that become stale by starting this execution record. Semantic
 content belonging to 15B-15H remains unchanged until its owning migration batch.
+
+## Executable legacy-reader proof matrix
+
+15A keeps a dual-read claim only where a current owner actually exercises the legacy form:
+
+- **NC-P15-001:** `scripts/family-paths.mjs::troveRootArg` is the live shared parser for
+  `--trove-root`; `test:naming-cleanup-phase15-entry` executes that parser with the legacy CLI.
+- **NC-P15-002:** `test:family-run-manifest-producer` and `test:family-index` execute schema-v1
+  family-run manifests carrying `trove` through the current validator/index path.
+- **NC-P15-003:** `test:family-index` constructs the historical
+  `wide-trove-attempts-*` path convention and exercises current family-index discovery.
+- **NC-P15-011 / NC-P15-012:** `test:research-analysis-lib` exercises the current
+  `extractExplicitPrefixCases` owner with the legacy `atlas-abstain` format and
+  `oracle-abstain` branch label; `test:naming-cleanup-phase15-entry` additionally reads the
+  committed `winning-prefix-atlas-pilot-2026-08-11.json` v1 fixture through that same owner.
+- **NC-P15-005 is deliberately absent:** no maintained historical result reader was found, so 15A
+  removed the inherited dual-read claim rather than manufacturing one.
 
 ## 15A validation contract
 
