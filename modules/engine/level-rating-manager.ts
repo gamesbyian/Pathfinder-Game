@@ -33,14 +33,14 @@ export function createLevelRatingManager({ state, ui, data, persistence, reportE
     // an older version; a hit is copied forward to the current key so subsequent loads take the
     // fast path. The old doc is left in place (not deleted) — harmless, and safer on a
     // best-effort migration path than a delete that a failed save could turn into data loss.
-    async function loadLegacyRatingAndMigrate(rawLevel: any, currentFingerprint: string, levelNumber: number | null) {
-        const legacyFingerprints = await getLegacyLevelFingerprints(rawLevel);
-        for (const legacyFingerprint of legacyFingerprints) {
-            if (legacyFingerprint === currentFingerprint) continue;
-            const found = await persistence.loadLevelRating(legacyFingerprint);
+    async function loadLegacyRatingAndMigrate(rawLevel: any, currentLevelFingerprint: string, levelNumber: number | null) {
+        const legacyLevelFingerprints = await getLegacyLevelFingerprints(rawLevel);
+        for (const legacyLevelFingerprint of legacyLevelFingerprints) {
+            if (legacyLevelFingerprint === currentLevelFingerprint) continue;
+            const found = await persistence.loadLevelRating(legacyLevelFingerprint);
             if (!found) continue;
             try {
-                await persistence.saveLevelRating(currentFingerprint, levelNumber, found);
+                await persistence.saveLevelRating(currentLevelFingerprint, levelNumber, found);
             } catch (e: any) {
                 reportError('level-rating.migrate', e); // best-effort — still show the found rating
             }
@@ -53,19 +53,19 @@ export function createLevelRatingManager({ state, ui, data, persistence, reportE
         const eng = state.engineState;
         const requestId = incrementLevelRatingRequestId(state);
         const levelNumber = eng.mode === REVIEW ? null : eng.levelIdx + 1;
-        setLevelRatingContext(state, { fingerprint: null, levelNumber, loaded: false });
+        setLevelRatingContext(state, { levelFingerprint: null, levelNumber, loaded: false });
         render();
         if (!eng.isDevMode) return;
         const rawLevel = getCurrentRawLevel();
         if (!rawLevel) return;
-        const fingerprint = await getLevelFingerprint(rawLevel);
+        const levelFingerprint = await getLevelFingerprint(rawLevel);
         if (state.engineState.levelRating.requestId !== requestId) return;
-        setLevelRatingContext(state, { fingerprint, levelNumber, loaded: false });
+        setLevelRatingContext(state, { levelFingerprint, levelNumber, loaded: false });
         render();
         let existing = null;
         try {
-            existing = await persistence.loadLevelRating(fingerprint);
-            if (!existing) existing = await loadLegacyRatingAndMigrate(rawLevel, fingerprint, levelNumber);
+            existing = await persistence.loadLevelRating(levelFingerprint);
+            if (!existing) existing = await loadLegacyRatingAndMigrate(rawLevel, levelFingerprint, levelNumber);
         } catch (e: any) {
             reportError('level-rating.load', e);
         }
@@ -76,8 +76,8 @@ export function createLevelRatingManager({ state, ui, data, persistence, reportE
 
     function save() {
         const rating = state.engineState.levelRating;
-        if (!rating.fingerprint) return;
-        persistence.saveLevelRating(rating.fingerprint, rating.levelNumber, {
+        if (!rating.levelFingerprint) return;
+        persistence.saveLevelRating(rating.levelFingerprint, rating.levelNumber, {
             tags: [...rating.tags],
             customTags: rating.customTags,
             difficulty: rating.difficulty,
