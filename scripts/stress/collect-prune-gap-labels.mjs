@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Multi-level driver for prune-gap-probe.mjs — the CP-SAT-oracle-labelled branch set that
+ * Multi-level driver for prune-gap-probe.mjs — the CP-SAT-reference-labelled branch set that
  * offline-replay-harness.mjs scores probes against currently covers only 16 levels (~623
  * branches, all produced by hand-run single-level invocations). Growing it to a meaningful slice
  * of the ~2000-level corpus is exactly the kind of job CLAUDE.md says to shard on GitHub Actions
@@ -19,12 +19,12 @@
  *
  * TWO SELECTION MODES (mutually exclusive):
  *   --levels=pos:1-85          Raw corpus positions, unfiltered -- the original mode. Wastes
- *                              shard time on hint-less/portal/filter/flipper levels that can
- *                              never produce a labelled branch (see atlas-eligibility.mjs's doc
+ *                              shard time on hint-less/filter/flipper levels that can
+ *                              never produce a labelled branch (see cpsat-branch-label-eligibility.mjs's doc
  *                              for why, and docs/solver-offline-replay-harness.md's Part 5 for the
  *                              real numbers that motivated the mode below).
  *   --shard-index=N --shard-count=M   Filters the corpus to CP-SAT-eligible levels FIRST (has a
- *                              stored hint, no portals/filters/flipping filters), then takes every
+ *                              stored hint, no filters/flipping filters; portals remain eligible), then takes every
  *                              M-th one starting at index N-1 (round-robin, not a contiguous
  *                              range) -- so every shard gets an even share of levels that can
  *                              actually produce signal, and any positional clustering in the
@@ -43,7 +43,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { readLevelsWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
-import { selectEligibleAtlasLevels, selectShardByRoundRobin } from './lib/atlas-eligibility.mjs';
+import { selectEligibleCpsatBranchLevels, selectShardByRoundRobin } from './lib/cpsat-branch-label-eligibility.mjs';
 
 const root = (() => {
     let d = path.dirname(fileURLToPath(import.meta.url));
@@ -74,9 +74,9 @@ if ((SHARD_INDEX === null) !== (SHARD_COUNT === null)) {
 const corpusLevels = readLevelsWithHints(path.join(root, CORPUS_FILE));
 let levels;
 if (SHARD_INDEX !== null) {
-    const eligible = selectEligibleAtlasLevels(corpusLevels);
+    const eligible = selectEligibleCpsatBranchLevels(corpusLevels);
     levels = selectShardByRoundRobin(eligible, Number(SHARD_INDEX), Number(SHARD_COUNT));
-    console.log(`collect-prune-gap-labels: ${eligible.length}/${corpusLevels.length} corpus level(s) are CP-SAT-eligible (hint-bearing, no portals/filters/flippers); shard ${SHARD_INDEX}/${SHARD_COUNT} gets ${levels.length} of them.`);
+    console.log(`collect-prune-gap-labels: ${eligible.length}/${corpusLevels.length} corpus level(s) are CP-SAT-eligible (hint-bearing, no filters/flippers; portals allowed); shard ${SHARD_INDEX}/${SHARD_COUNT} gets ${levels.length} of them.`);
 } else {
     levels = LEVEL_SPEC ? selectLevelsBySpec(corpusLevels, LEVEL_SPEC) : corpusLevels;
 }
