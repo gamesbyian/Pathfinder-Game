@@ -11,7 +11,7 @@ const args = new Map(process.argv.slice(2).filter((arg) => arg.startsWith('--'))
   return [key, value.join('=')];
 }));
 const json = args.has('--json');
-// Phase 15 retired the former PATHFINDER_VARIANT_TROVE transition input after the final review.
+// Phase 15 retired the former legacy dataset-root environment input after the final review.
 // Keep the external root contract canonical-only: explicit --root, then the canonical environment
 // variable, then the historical-worktree default.
 const root = resolve(
