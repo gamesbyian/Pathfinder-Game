@@ -4328,10 +4328,10 @@
       "persistence": "none",
       "phase": 15,
       "batch": "15B",
-      "status": "pending",
+      "status": "in-progress",
       "notes": "15A reconfirmed this is a private shared-library/import graph with no persistence contract. Rename atomically to cpsat-branch-label-eligibility.mjs, selectEligibleCpsatBranchLevels, and isEligibleForCpsatBranchLabeling; pin eligibility population parity; no compatibility file/export alias. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "direct-current-surface-rename",
-      "verificationRecord": null,
+      "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
         "implementation": "pending",
@@ -4617,12 +4617,12 @@
   "activeExecution": {
     "status": "active",
     "phase": 15,
-    "batch": "15A",
-    "branch": "chatgpt/phase15a-contract-decomposition-2026-08-31",
-    "pr": 1638,
-    "baseMainSha": "fad988569c70802db7d69b85f4443a4daf0486a6",
+    "batch": "15B",
+    "branch": "chatgpt/phase15b-cpsat-branch-label-eligibility-2026-08-31",
+    "pr": null,
+    "baseMainSha": "4b61b59dfba6dada48f316edcdb6e9b4daa6683e",
     "recordPath": "docs/naming-cleanup-phase-records/phase-15.md",
-    "notes": "Phase 15A specification-only contract decomposition and control-plane gate; all implementation rows remain pending."
+    "notes": "Phase 15B implementation of NC-P15-006 only: shared CP-SAT branch-label eligibility library/current consumers."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior. Post-closeout audit correction (2026-08-31): NC-P08-024/025 are direct current-source renames, not dual-read boundaries; 8G proved no persisted artifact or historical reader existed, and the Phase-8 closeout now bans the retired fields rather than treating comments as compatibility reads. Phase-15 hardening (2026-08-31): the final phase now requires a rowless contract-decomposition gate before any NC-P15 implementation, row splitting when bundled identities have different owners/lifetimes, reader-first executable historical fixtures, schema-version decisions, mixed-era join/discovery proof, canonical single-write proof, small serial boundary-specific batches, an independent merged-tree hostile closeout, a solver-research resumption evidence bundle, and a separate archival/finalization handoff. This amendment changes no NC-P15 row status or canonical target.",
   "phaseBatches": {
@@ -4691,9 +4691,9 @@
       "mergeCommit": "d41204e42cbc99d779dd6fbc60483ea36a84a562"
     },
     "15A": {
-      "status": "pending",
-      "pr": null,
-      "mergeCommit": null
+      "status": "merged",
+      "pr": 1638,
+      "mergeCommit": "4b61b59dfba6dada48f316edcdb6e9b4daa6683e"
     },
     "15B": {
       "status": "pending",
