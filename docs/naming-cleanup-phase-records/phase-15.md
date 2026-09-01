@@ -1089,3 +1089,51 @@ That implementation head passed:
 NC-P15-004 is now `done` and `activeExecution` is idle. As with earlier serial batches,
 `batchCompletions["15F"]` deliberately remains pending until PR #1643 actually merges. A fresh
 exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
+
+
+## 15F merge evidence
+
+Phase 15F completed as implementation PR **#1643**.
+
+- final head: `17f2fe909cb0e1df93cf42ebdf584aa62cd63f92`;
+- implementation-head green CI: run **33464597238**, all six CI jobs successful;
+- implementation-head browser characterization: run **33464597286**, successful;
+- final done/idle exact-head CI: run **33464757292**, all six CI jobs successful;
+- final done/idle browser characterization: run **33464757304**, successful;
+- merge commit: `1990387f31a3b045e70f6ccea088f833ffa0f583`;
+- 15G base-main SHA: the same merge commit;
+- ledger `batchCompletions["15F"]` is now the machine merge-barrier evidence.
+
+## 15G — CP-SAT explicit-prefix reference vocabulary and source-schema migration
+
+Status: **active**
+
+Branch: `chatgpt/phase15g-cpsat-reference-vocabulary-2026-08-31`  
+Base main: `1990387f31a3b045e70f6ccea088f833ffa0f583`
+
+15G owns four deliberately separated contracts:
+
+- **NC-P15-005:** same-run explicit-prefix result schema v1
+  `oracleLabel`/`oracleReason`/`oracle-unknown` -> v2
+  `referenceLabel`/`referenceReason`/`reference-unknown`; old result artifacts stay frozen and
+  no synthetic historical result reader is added;
+- **NC-P15-010:** workflow-local job ID `oracle-shards` -> `reference-shards`, with every
+  `needs`/expression dependency changed atomically;
+- **NC-P15-011:** external case-format token `atlas-abstain` -> canonical
+  `reference-abstain`, with the one parser retaining `atlas-abstain` as a transition alias;
+- **NC-P15-012:** still-live known-solution-prefix source schema v1
+  `oracle`/`oracle-abstain` vocabulary -> v2 canonical reference vocabulary, while the current
+  extractor permanently normalizes authentic v1 evidence.
+
+15G must not touch the 15H prune-gap directory/report vocabulary.
+
+### 15G pre-edit invariants
+
+- exact case population extracted from the frozen v1 prefix fixture must remain identical;
+- the workflow result combiner must preserve row counts/grouping when the current same-run writer
+  moves to v2;
+- old `atlas-abstain` input and new `reference-abstain` input must select the same cases;
+- the committed v1 known-prefix fixture remains readable and is not rewritten;
+- new source/result writers must be canonical-only after cutover;
+- CP-SAT solving behavior, constraints, timeout/UNSAT/UNKNOWN semantics, and row ordering are
+  unchanged.
