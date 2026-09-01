@@ -69,7 +69,7 @@ Before the first decision-bearing solver change after the naming cleanup:
 4. run the current experiment preflight appropriate to the first resumed workstream;
 5. execute one small current equal-work/census path and record the exact command/output as the post-naming research anchor;
 6. for any confirmation workflow used next, inspect its persisted resolved treatment/control flags as well as the workflow conclusion.
-7. before the first Workstream-2 repricing A/B, collect current-head production evidence with `--lifecycle-telemetry` and per-attempt `workSpent`, then run `npm run solver:analyze-equal-work-production-reach -- --equal-work=<EW1 combined-cells.json> --production=<current report> --require-current-head --check`; a blocked result is a resumption failure, not a scheduler finding.
+7. before the first Workstream-2 repricing A/B, collect current-head production evidence with `--lifecycle-telemetry` and per-attempt `workSpent`, then run `npm run solver:analyze-equal-work-production-reach -- --equal-work=<EW1 combined-cells.json> --production=<current report> --require-current-head --check`; a blocked result is a resumption failure, not a scheduler finding. The analyzer accepts both maintained production-report wrappers: raw level-blind sweep output `{ summary: { commit, corpus }, levels }` and flattened stress/combined output `{ commitSha, corpus, levels }`. It rejects any multi-report bundle with missing/mixed solver commits or missing corpus identity rather than inferring provenance.
 
 The checkpoint is not authority to reopen August experiments. Its purpose is to prove the current research toolchain can still interpret the evidence needed by the live queue before new results depend on it.
 

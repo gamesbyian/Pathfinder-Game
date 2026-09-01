@@ -84,6 +84,37 @@ assert.equal(repair.production.winningLevels, 1);
 assert.deepEqual(repair.production.stages[0].actionKeys,
     ['early-repair-search|repair|score=repair|guidance=standard|seedSalt=0']);
 
+const wrappedProduction = {
+    summary: {
+        commit: 'abc123',
+        corpus: 'data/stress/stress-levels-random.json',
+        lifecycleTelemetry: true,
+    },
+    levels: JSON.parse(JSON.stringify(production.levels)),
+};
+const wrappedResult = analyzeEqualWorkProductionReach(equalWork, [wrappedProduction], {
+    currentHead: 'abc123',
+    requireCurrentHead: true,
+});
+assert.equal(wrappedResult.decisionBearing, true,
+    'authentic level-blind sweep wrapper must be accepted without flattening');
+assert.deepEqual(wrappedResult.production.commits, ['abc123']);
+assert.deepEqual(wrappedResult.production.corpora, ['corpus2']);
+assert.equal(wrappedResult.production.missingCommitDocuments, 0);
+assert.equal(wrappedResult.production.rowsWithUnknownCorpus, 0);
+
+const partiallyUnproven = [
+    wrappedProduction,
+    { levels: JSON.parse(JSON.stringify(production.levels)) },
+];
+const blockedMissingDocumentProvenance = analyzeEqualWorkProductionReach(equalWork, partiallyUnproven, {
+    currentHead: 'abc123',
+    requireCurrentHead: true,
+});
+assert.equal(blockedMissingDocumentProvenance.decisionBearing, false);
+assert.ok(blockedMissingDocumentProvenance.blockers.some(value => value.includes('without a solver commit')));
+assert.ok(blockedMissingDocumentProvenance.blockers.some(value => value.includes('missing corpus identity')));
+
 const missingWork = JSON.parse(JSON.stringify(production));
 delete missingWork.levels[0].attempts[0].workSpent;
 const blockedWork = analyzeEqualWorkProductionReach(equalWork, [missingWork], {

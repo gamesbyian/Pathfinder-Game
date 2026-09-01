@@ -53,7 +53,8 @@ function canonicalStageOf(attempt, actionKey) {
     if (attempt?.stageId) {
         try { return normalizeSolverStageId(attempt.stageId); } catch { return String(attempt.stageId); }
     }
-    return actionKey ? actionKey.slice(0, actionKey.indexOf('|')) : null;
+    const separator = actionKey?.indexOf('|') ?? -1;
+    return separator > 0 ? actionKey.slice(0, separator) : null;
 }
 
 function canonicalConfigOf(attempt) {
@@ -67,6 +68,16 @@ function canonicalConfigOf(attempt) {
 
 const productionRows = document =>
     Array.isArray(document) ? document : Array.isArray(document?.levels) ? document.levels : [];
+
+function productionDocumentCommit(document) {
+    const value = document?.commitSha ?? document?.summary?.commit;
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed && trimmed !== 'unknown' ? trimmed : null;
+}
+
+const productionDocumentCorpus = document =>
+    document?.corpus ?? document?.summary?.corpus ?? null;
 
 const equalWorkRows = document => {
     const rows = Array.isArray(document) ? document : document?.results ?? [];
@@ -94,14 +105,19 @@ function summarizeProduction(documents, equalWorkTechniques) {
     }]));
     let rows = 0;
     let rowsWithLifecycle = 0;
+    let rowsWithUnknownCorpus = 0;
     let matchedAttempts = 0;
     let unmatchedAttemptIdentity = 0;
+    const corpora = new Set();
 
     for (const document of documents) {
+        const documentCorpus = productionDocumentCorpus(document);
         for (const row of productionRows(document)) {
             rows++;
             if (row?.stageLifecycle && typeof row.stageLifecycle === 'object') rowsWithLifecycle++;
-            const corpus = canonicalCorpusName(row?.corpus ?? document?.corpus);
+            const corpus = canonicalCorpusName(row?.corpus ?? documentCorpus);
+            if (corpus === 'unknown') rowsWithUnknownCorpus++;
+            else corpora.add(corpus);
             const levelKey = corpus + '/' + levelIdOf(row);
             for (const attempt of Array.isArray(row?.attempts) ? row.attempts : []) {
                 const config = canonicalConfigOf(attempt);
@@ -139,7 +155,10 @@ function summarizeProduction(documents, equalWorkTechniques) {
             }
         }
     }
-    return { byTechnique, rows, rowsWithLifecycle, matchedAttempts, unmatchedAttemptIdentity };
+    return {
+        byTechnique, rows, rowsWithLifecycle, rowsWithUnknownCorpus,
+        matchedAttempts, unmatchedAttemptIdentity, corpora,
+    };
 }
 
 export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDocuments, {
@@ -149,7 +168,9 @@ export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDoc
     const ewRows = equalWorkRows(equalWorkDocument);
     const ewByTechnique = summarizeEqualWork(ewRows);
     const production = summarizeProduction(productionDocuments, new Set(ewByTechnique.keys()));
-    const commits = [...new Set(productionDocuments.map(document => document?.commitSha).filter(Boolean))].sort();
+    const documentCommits = productionDocuments.map(productionDocumentCommit);
+    const commits = [...new Set(documentCommits.filter(Boolean))].sort();
+    const missingCommitDocuments = documentCommits.filter(commit => commit === null).length;
     const blockers = [];
 
     if (!ewRows.length) blockers.push('equal-work input contains no EW1 singleton rows');
@@ -161,6 +182,12 @@ export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDoc
         .reduce((sum, row) => sum + row.missingWorkAttempts, 0);
     if (missingAttemptWork) blockers.push('matched production attempts are missing per-attempt workSpent');
     if (!production.matchedAttempts) blockers.push('production evidence contains no attempts matching EW1 action identities');
+    if (production.rowsWithUnknownCorpus) {
+        blockers.push('production rows are missing corpus identity; preserve row corpus or the current report wrapper summary.corpus');
+    }
+    if (missingCommitDocuments) {
+        blockers.push('production evidence contains report(s) without a solver commit; preserve commitSha or the current report wrapper summary.commit');
+    }
     if (commits.length !== 1) blockers.push('production evidence does not identify exactly one solver commit');
     if (requireCurrentHead && (!currentHead || commits[0] !== currentHead)) {
         blockers.push('production solver commit does not match current HEAD');
@@ -216,9 +243,13 @@ export function analyzeEqualWorkProductionReach(equalWorkDocument, productionDoc
             techniques: ewByTechnique.size,
         },
         production: {
+            documents: productionDocuments.length,
             rows: production.rows,
             rowsWithLifecycle: production.rowsWithLifecycle,
+            rowsWithUnknownCorpus: production.rowsWithUnknownCorpus,
+            corpora: [...production.corpora].sort(),
             commits,
+            missingCommitDocuments,
             currentHead: currentHead ?? null,
             currentHeadRequired: requireCurrentHead,
             matchedAttempts: production.matchedAttempts,
@@ -237,8 +268,10 @@ export function renderEqualWorkProductionReachSummary(result) {
         '',
         'EW1: ' + result.equalWork.rows + ' cells, ' + result.equalWork.levels + ' levels, '
             + result.equalWork.techniques + ' techniques.',
-        'Production: ' + result.production.rows + ' rows, ' + result.production.matchedAttempts
-            + ' matching attempts, commits ' + (result.production.commits.join(', ') || '(unknown)') + '.',
+        'Production: ' + result.production.rows + ' rows across '
+            + (result.production.corpora.join(', ') || '(unknown corpus)') + ', '
+            + result.production.matchedAttempts + ' matching attempts, commits '
+            + (result.production.commits.join(', ') || '(unknown)') + '.',
     ];
     if (result.blockers.length) {
         lines.push('', '## Blockers', '', ...result.blockers.map(item => '- ' + item));
