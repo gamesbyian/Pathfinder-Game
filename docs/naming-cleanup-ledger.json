@@ -4251,7 +4251,7 @@
       "phase": 15,
       "batch": "15E",
       "status": "done",
-      "notes": "15A split historical-reader discovery from current writer filenames. Frozen dated paths remain readable permanently; current writer migration is NC-P15-009. docs/naming-cleanup-phase-records/phase-15.md.",
+      "notes": "15A split historical-reader discovery from current writer filenames. Frozen dated paths remain readable permanently; current writer migration is NC-P15-009. docs/naming-cleanup-phase-records/phase-15.md. 15I reconciliation refinement: side-specific observational terms use the factorized executable convention tokens wide-trove / variant-family-dataset; dedicated 15E/15I guards prove the attempt-artifact suffix and ownership.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
@@ -4273,10 +4273,10 @@
         "family-index-lib.mjs"
       ],
       "oldInventoryTerms": [
-        "wide-trove-attempts-"
+        "wide-trove"
       ],
       "newInventoryTerms": [
-        "variant-family-dataset-attempts-"
+        "variant-family-dataset"
       ]
     },
     {
