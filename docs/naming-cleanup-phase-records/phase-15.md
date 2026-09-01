@@ -1258,3 +1258,19 @@ Behavioral invariants:
 5. only new output metadata field names change;
 6. historical reports/archived docs are not rewritten;
 7. Phase 15I remains blocked until this batch merges.
+
+
+### 15H guard observation for 15I
+
+While integrating 15H, `test:naming-cleanup-surface-inventory` exposed a pre-existing limitation in
+the generic reconciliation view: `reconciliationReferenceMatches(entry, 'old')` includes every
+`inventoryTerms` value, even canonical target terms, while the `new` side searches only the
+descriptive `entry.new` string. Composite ledger rows can therefore remain classified
+`old-live`/mixed even when the dedicated semantic closeout proves all maintained implementation
+surfaces canonical.
+
+15H does **not** change that cross-phase inventory algorithm because doing so would broaden the final
+implementation batch. Its dedicated closeout scans maintained sources directly and is the decisive
+15H residue proof. Phase 15I's required closeout-guard blind-spot audit must revisit the
+side-specific reconciliation model and either harden it with explicit old/new inventory terms or
+document a narrower authoritative role for that state.
