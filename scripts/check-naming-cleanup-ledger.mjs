@@ -158,8 +158,11 @@ if (!repoPathExists(ledger.phaseRecordTemplate)) {
 if (ledger.phaseExecutionRecords?.['8'] !== 'docs/naming-cleanup-phase-records/phase-08.md') {
   fail('phaseExecutionRecords["8"] must point at docs/naming-cleanup-phase-records/phase-08.md');
 }
-if (!repoPathExists(ledger.phaseExecutionRecords?.['8'])) {
-  fail(`Phase-8 execution authority does not exist: ${JSON.stringify(ledger.phaseExecutionRecords?.['8'])}`);
+for (const phase of phaseBatchOrders.keys()) {
+  const recordPath = ledger.phaseExecutionRecords?.[String(phase)];
+  if (typeof recordPath !== 'string' || !recordPath.startsWith('docs/naming-cleanup-phase-records/') || !repoPathExists(recordPath)) {
+    fail(`Phase-${phase} declared serial execution must register an existing phaseExecutionRecords authority; found ${JSON.stringify(recordPath)}`);
+  }
 }
 
 const phaseClosures = ledger.phaseClosures;
@@ -670,6 +673,8 @@ if (!active || !['idle', 'active'].includes(active.status)) {
     !repoPathExists(active.recordPath)
   ) {
     fail(`activeExecution.recordPath must be an existing file under docs/naming-cleanup-phase-records/; found ${JSON.stringify(active.recordPath)}`);
+  } else if (ledger.phaseExecutionRecords?.[String(active.phase)] !== active.recordPath) {
+    fail(`activeExecution.recordPath must match phaseExecutionRecords["${active.phase}"]; found ${JSON.stringify(active.recordPath)}`);
   }
   const activeBatchOrder = phaseBatchOrders.get(active.phase);
   const activeKind = activeBatchOrder ? batchKind(active.phase, active.batch) : null;
