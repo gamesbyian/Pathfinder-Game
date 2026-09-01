@@ -90,8 +90,9 @@ const FAMILY_RUN_REQUIRED = ['schemaVersion', 'runId', 'solver', 'invocation', '
     'solverPolicy', 'budgets', 'seeds', 'shard', 'startedAt', 'completedAt',
     'outputArtifacts', 'sourceGenerationArtifacts'];
 
-/** Canonical provenance for new family/variant solver evaluations. Historical census artifacts
- * intentionally do not pass this validator and remain readable through the family index. */
+/** Canonical provenance for family/variant solver evaluations. New writes are schema v2.
+ * Schema-v1 run manifests permanently normalize through this one owner; pre-schema historical
+ * census notes remain outside this contract and are handled by family-index discovery. */
 export function validateFamilyEvaluationRunManifest(manifest) {
     for (const field of FAMILY_RUN_REQUIRED) if (!(field in manifest)) {
         throw new Error(`family evaluation run manifest missing ${field}`);
