@@ -938,7 +938,7 @@ Phase 15E completed as implementation PR **#1642**.
 
 ## 15F — NC-P15-004 application-local level-fingerprint vocabulary
 
-Status: **active**
+Status: **implementation complete; awaiting final exact-head CI and merge**
 
 Branch: `chatgpt/phase15f-level-fingerprint-vocabulary-2026-08-31`  
 PR: **#1643**  
@@ -1036,3 +1036,56 @@ The current v2 value for the representative rating identity fixture is frozen by
 
 `check:naming-cleanup-phase15f-closeout` is registered in both the Node suite and validator suite.
 NC-P15-004 remains in progress until PR #1643 exact-head CI/browser characterization passes.
+
+
+### 15F implementation and validation evidence
+
+Implementation on PR **#1643** preserves the identity/persistence boundary while qualifying every
+current application-local level-fingerprint identifier found by the combined 15A/15F census.
+
+Canonicalized application surfaces include:
+
+- level-rating state/context and rating repository parameters;
+- submission local-corpus matching, duplicate presentation, and duplicate-query locals;
+- local-level-hint repository parameters/path helper;
+- data-service Firestore supplemental-hint callback/local vocabulary;
+- dev-corpus Firestore-hint callback type;
+- review-repository local-hint callback and approval vocabulary;
+- the public DataService callback parameter name in `modules/ports.ts`;
+- the level-ratings report row.
+
+The following identities are explicitly invariant and executable guards pin them:
+
+- `getLevelFingerprint`, `getLegacyLevelFingerprints`, and
+  `LEVEL_FINGERPRINT_VERSION`;
+- representative v2 fingerprint bytes
+  `v2:1abd33d29f460fee3a9b9dee523699c780df4b55c2a30f12d495e62ae67788d3`;
+- Firestore submission field `levelFingerprint` and `fingerprintVersion`;
+- duplicate query field/value equality on `levelFingerprint`;
+- rating document ID = computed level fingerprint value;
+- local-level-hint path key = computed level fingerprint value;
+- current-first legacy rating lookup/migration order.
+
+The first exact-head PR CI, run **33463929847**, usefully failed the old Phase-8 closeout guard.
+That failure exposed four real NC-P15-004 owners omitted by the first implementation pass:
+`modules/data.ts`, `modules/dev-corpus.ts`,
+`modules/persistence/review-repository.ts`, and `modules/ports.ts`. Those identifiers were
+canonicalized rather than reclassified away.
+
+A second exact-head CI, run **33464509682**, showed that the production Phase-8/15F guards were
+correct but the Phase-8 negative fixture still expected the old diagnostic wording. Updating only
+that fixture expectation produced implementation head
+`62d50b5baa8abe75f9cd24854b8310e6cc99cf76`.
+
+That implementation head passed:
+
+- CI run **33464597238**, all six jobs successful;
+- browser characterization run **33464597286**, successful;
+- `check:naming-cleanup-phase15f-closeout`, including the four newly discovered owners;
+- the advanced Phase-8 guard, which now rejects naked level-fingerprint identifier shapes rather
+  than treating any prose/import occurrence of the word `fingerprint` as a retained API;
+- existing rating/submission/data/review/type tests and the byte-pinned domain fingerprint test.
+
+NC-P15-004 is now `done` and `activeExecution` is idle. As with earlier serial batches,
+`batchCompletions["15F"]` deliberately remains pending until PR #1643 actually merges. A fresh
+exact-head CI/browser run on this done/idle bookkeeping head is required before merge.
