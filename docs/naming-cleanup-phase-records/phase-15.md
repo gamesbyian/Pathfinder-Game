@@ -1420,3 +1420,17 @@ implementation batch.
 No repair has been made in response to F15I-001..006 at the point this findings section is written.
 The next 15I step is to harden the guard/model and current authorities, then rerun the hostile audit
 against the repaired tree.
+
+
+**F15I-007 — scripts runbook also presents completed Phase 13B validation as future work.**
+
+The same `scripts/README.md` discovery block says the Phase-13
+`--require-normalized-clean` gate is "future 13B" even though Phase 13 is complete and the gate is
+current validation. This is another current-authority lifecycle drift missed by the authority guard.
+
+**F15I-008 — solver-resumption evidence bundle contains escaped Markdown code delimiters.**
+
+The current `docs/solver-research-post-naming-resumption.md` minimum-evidence section contains
+literal backslashes before several backticks (for example `\`main\``). This does not alter
+runtime behavior but degrades the operational handoff document and is part of the same current-doc
+quality failure as F15I-002.
