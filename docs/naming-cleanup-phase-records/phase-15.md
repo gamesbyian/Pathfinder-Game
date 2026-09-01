@@ -569,3 +569,34 @@ Implementation-head CI run **33455234408** is green across build, checks, lint, 
 proofs, and coverage. The row is now `done` and `activeExecution` is idle, but
 `batchCompletions["15B"]` deliberately remains pending until PR #1639 actually merges. A fresh
 exact-head CI run after this bookkeeping closeout is required before merge.
+
+
+## 15B merge evidence
+
+Phase 15B completed as implementation PR **#1639**.
+
+- final head: `1aa440697e083ce243f3c61237073fcec4a66a17`;
+- implementation-head green CI: run **33455234408**;
+- final done/idle exact-head CI: run **33455520229**, all six CI jobs successful;
+- final exact-head browser characterization: run **33455520341**, successful;
+- merge commit: `56a69e483e267a6da4aaa92acc172e994e2c541e`;
+- 15C base-main SHA: the same merge commit;
+- ledger `batchCompletions["15B"]` is now the machine merge-barrier evidence.
+
+## 15C — NC-P15-001 / NC-P15-008 variant-family dataset-root vocabulary
+
+Status: **active**
+
+Branch: `chatgpt/phase15c-variant-family-dataset-root-2026-08-31`  
+Base main: `56a69e483e267a6da4aaa92acc172e994e2c541e`
+
+15C owns two deliberately separated lifetimes:
+
+- **NC-P15-001**: external CLI transition from `--trove-root` to
+  `--variant-family-dataset-root`, with one shared parser owning the temporary legacy alias;
+- **NC-P15-008**: private source/API vocabulary `troveRootArg` / `troveRoot` for that mounted
+  dataset root, migrated directly with no private compatibility alias.
+
+The batch must prove canonical-only current docs/callers, same-value dual-argument acceptance,
+conflicting dual-argument rejection, default-current-working-directory behavior, and atomic private
+import migration. It must not change family artifact path semantics or dataset content.
