@@ -85,7 +85,10 @@ assert.deepEqual(queryResearchStatusIndex(index, {
     query: 'admissible-order|tieBreak=default|lds=off',
 }).map(x => x.id), [],
 'admissible-order attempt family must not be rewritten as the admissible-order-fallback stage');
-assert.deepEqual(queryResearchStatusIndex(index, { kind: 'legacy-evidence' }).map(x => x.report), ['reports/2026-01-01-legacy.md']);
+assert.deepEqual(queryResearchStatusIndex(index, { kind: 'legacy-evidence' }).map(x => x.report), [
+    'reports/2026-01-01-legacy.md',
+    'reports/2026-01-02-decoy.md',
+]);
 assert.deepEqual(queryResearchStatusIndex(index, { status: 'rejected' }).map(x => x.id), ['FLAG_ONE']);
 const compact = compactResearchStatusIndex(index, { query: 'current question' });
 assert.equal(compact.count, 1);
