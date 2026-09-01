@@ -4238,17 +4238,17 @@
       "persistence": "dual-read",
       "phase": 15,
       "batch": "15E",
-      "status": "in-progress",
+      "status": "done",
       "notes": "15A split historical-reader discovery from current writer filenames. Frozen dated paths remain readable permanently; current writer migration is NC-P15-009. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "compatibility-boundary-migration",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "compatibility": {
         "mode": "permanent-historical-read",
@@ -4410,17 +4410,17 @@
       "persistence": "none",
       "phase": 15,
       "batch": "15E",
-      "status": "in-progress",
+      "status": "done",
       "notes": "15A split current writer/workflow filenames from NC-P15-003 historical discovery. New runs use stable variant-family-dataset names; committed historical dated paths remain frozen and are read via NC-P15-003. docs/naming-cleanup-phase-records/phase-15.md.",
       "migrationClass": "current-surface-rename-preserve-frozen-history",
       "verificationRecord": "docs/naming-cleanup-phase-records/phase-15.md",
       "verification": {
         "surfaceInventory": "done",
-        "implementation": "pending",
-        "targetedValidation": "pending",
-        "consumerAudit": "pending",
-        "behavioralParity": "pending",
-        "closeoutAudit": "pending"
+        "implementation": "done",
+        "targetedValidation": "done",
+        "consumerAudit": "done",
+        "behavioralParity": "done",
+        "closeoutAudit": "done"
       },
       "inventoryTerms": [
         "2026-08-07-wide-trove",
@@ -4615,14 +4615,14 @@
     "15": "docs/naming-cleanup-phase-records/phase-15.md"
   },
   "activeExecution": {
-    "status": "active",
-    "phase": 15,
-    "batch": "15E",
-    "branch": "chatgpt/phase15e-variant-family-artifact-paths-2026-08-31",
-    "pr": 1642,
-    "baseMainSha": "b00c68f3495ec6591f3846ac0bf2e519f2613a1e",
-    "recordPath": "docs/naming-cleanup-phase-records/phase-15.md",
-    "notes": "Phase 15E implementation of NC-P15-003 and NC-P15-009 only: permanent historical family attempt-artifact discovery plus canonical current output paths."
+    "status": "idle",
+    "phase": null,
+    "batch": null,
+    "branch": null,
+    "pr": null,
+    "baseMainSha": null,
+    "recordPath": null,
+    "notes": "Phase 15E rows are done and PR #1642 awaits final exact-head CI/browser verification and merge; 15F remains blocked until batchCompletions[15E] records the merge."
   },
   "specificationNotes": "Completion contract v5 extends v4 with explicit current-artifact registries and structured Phase-9+ closure evidence; v4 added stable ledger row IDs, explicit compatibility ownership/retirement for every future dual-read row, phase/batch dependency enforcement, and operator-facing status/readiness rules. IDs are immutable once assigned; descriptions may change without changing row identity. Phase batch order is machine-projected in phaseBatches so status/checker code does not duplicate the sequence. Batch row completion and batch merge completion are separate: later batches require predecessor batchCompletions to record a merged PR/commit, preventing same-branch stacking from satisfying the machine gate. Phase-8 specification-accounting amendment (2026-08-30): closeout coverage is now ledger-indexed for every Phase-8 row; retained typed/local vocabulary and persisted compatibility boundaries are explicit; five deferred Phase-15 compatibility rows own trove, application fingerprint, and CP-SAT oracle contracts without changing behavior. Post-closeout audit correction (2026-08-31): NC-P08-024/025 are direct current-source renames, not dual-read boundaries; 8G proved no persisted artifact or historical reader existed, and the Phase-8 closeout now bans the retired fields rather than treating comments as compatibility reads. Phase-15 hardening (2026-08-31): the final phase now requires a rowless contract-decomposition gate before any NC-P15 implementation, row splitting when bundled identities have different owners/lifetimes, reader-first executable historical fixtures, schema-version decisions, mixed-era join/discovery proof, canonical single-write proof, small serial boundary-specific batches, an independent merged-tree hostile closeout, a solver-research resumption evidence bundle, and a separate archival/finalization handoff. This amendment changes no NC-P15 row status or canonical target.",
   "phaseBatches": {
