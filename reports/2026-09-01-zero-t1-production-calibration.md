@@ -1,6 +1,6 @@
 # Zero-T1 production calibration
 
-> **Status:** completed
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-01 — all 14 frozen Corpus-2 production-solved / zero-T1-winner rows calibrated against the later compiled 976/1,700 production baseline.
 > **Decision:** preserve the result as a cross-revision/context-semantics warning; do not treat frozen action identity as current behavioral equivalence, change queue priority, or open a new workstream.
 > **Remaining gate:** none for this bounded calibration. Revisit only if a current-head experiment specifically needs to separate configuration identity from surrounding stage/orchestration semantics.
