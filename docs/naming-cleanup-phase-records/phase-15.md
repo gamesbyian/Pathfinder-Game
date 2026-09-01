@@ -1466,3 +1466,30 @@ The first is genuine current workflow-prose residue. The second is a scanner-cla
 The Phase-15B closeout guard missed the live workflow prose because its retired set included the old
 full import paths and exports but not the bare retired filename. No repair has been made at the point
 this finding is recorded.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-011 — two closeout scanners still conflated naming/operational authority text with live
+implementation ownership.**
+
+Exact-head CI on `2f38daee48418cd4257d5104bf5b04342848e5f2` exposed two evidence-classification
+false positives after the F15I-009/F15I-010 repairs:
+
+- Phase-15 reconciliation reported NC-P15-010 `oracle-shards` as live in
+  `scripts/check-naming-current-authorities.mjs`. That script is itself a naming guard and contains
+  retired spellings only as negative semantic patterns/fixtures; it is not a workflow/job consumer.
+  The reconciliation scanner excluded `scripts/naming-cleanup-*` guards but not this separately
+  named current-authority guard.
+- the Phase-8 post-merge scanner reported `trove`, `oracle-abstain`, and `atlas-abstain` in
+  `docs/solver-research-post-naming-resumption.md` as unclassified live implementation residue.
+  15I deliberately made that document a current operational authority that states the exact
+  historical compatibility readers and retirement boundaries. Its semantics are independently
+  checked by `check:naming-current-authorities`; those literals are documentation of the contract,
+  not additional compatibility owners.
+
+These failures are guard-classification defects, not permission to delete the negative fixture or
+hide compatibility vocabulary from the resumption bridge. Repair must exclude the current-authority
+guard from implementation reconciliation and classify the resumption bridge alongside naming
+authority/evidence for the older Phase-8 lexical residue scanner, while retaining the semantic
+current-authority checks that ensure both surfaces remain truthful.
