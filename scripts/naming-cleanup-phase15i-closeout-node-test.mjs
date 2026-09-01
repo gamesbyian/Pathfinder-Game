@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   findDerivedIdentityHits,
   hasExecutableToken,
+  isLikelyTestOrNamingGuard,
 } from './naming-cleanup-phase15i-closeout-lib.mjs';
 
 // Plural/derived forms must not evade an exact-token-only scanner.
@@ -20,6 +21,11 @@ assert.deepEqual(
 // A comment mentioning a legacy token is not evidence that a compatibility reader exists.
 assert.equal(hasExecutableToken('// --trove-root is historical\nconst canonical = true;', '--trove-root'), false);
 assert.equal(hasExecutableToken("const legacyPrefix = '--trove-root=';", '--trove-root'), true);
+
+// Runtime ownership scans must not promote tests or naming guards into implementation consumers.
+assert.equal(isLikelyTestOrNamingGuard('modules/solver/example.test.ts'), true);
+assert.equal(isLikelyTestOrNamingGuard('scripts/check-naming-current-authorities.mjs'), true);
+assert.equal(isLikelyTestOrNamingGuard('modules/solver/orchestration.ts'), false);
 
 // Raw-string mixed-era grouping is intentionally different; the resumption gate must normalize
 // before joining. This negative fixture makes the failure mode explicit.
