@@ -113,8 +113,10 @@ assert.ok(
   '15H rows must be active or done while the final implementation batch owns them',
 );
 assert.ok(
-  phase15HRows.every(row => row.reconciliationState === 'canonical-live'),
-  '15H current surfaces must reconcile to canonical prune-gap vocabulary after the cutover',
+  phase15HRows.every(row =>
+    row.newReferenceFiles.length > 0 &&
+    ['canonical-live', 'mixed-old-and-canonical'].includes(row.reconciliationState)),
+  '15H must expose canonical prune-gap references; naming guards/ledger may keep retired spellings visible to reconciliation',
 );
 
 assert.ok(
