@@ -75,7 +75,7 @@ const prefixCollector = readFileSync('scripts/stress/collect-known-solution-pref
 assert.match(prefixCollector, /schemaVersion: 1/u);
 assert.match(prefixCollector, /oracle-abstain/u);
 
-const legacyPrefixDocument = JSON.parse(readFileSync('scripts/test-fixtures/naming-cleanup/phase15-winning-prefix-v1.json', 'utf8'));
+const legacyPrefixDocument = JSON.parse(readFileSync('docs/naming-cleanup-phase-records/fixtures/phase15-winning-prefix-v1.json', 'utf8'));
 const legacyPrefixCases = extractExplicitPrefixCases(legacyPrefixDocument, { format: 'atlas-abstain' });
 assert.ok(legacyPrefixCases.length > 0, 'committed v1 prefix fixture must execute through the current historical reader');
 assert.ok(legacyPrefixCases.every(row => row.sourceLabel === 'oracle-abstain'),
