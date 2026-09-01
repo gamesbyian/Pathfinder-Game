@@ -186,6 +186,26 @@ const missingProduction = analyzeEqualWorkProductionReach(equalWork, [incomplete
 assert.equal(missingProduction.decisionBearing, false);
 assert.ok(missingProduction.blockers.some(value => value.includes('production evidence is missing 1 EW1 level')));
 
+const badIntegrity = analyzeEqualWorkProductionReach({
+    ...equalWork,
+    sourceIntegrity: {
+        cells: 999,
+        levels: 2,
+        techniques: 2,
+        solved: 1,
+        deadlineTruncated: 0,
+        errors: 0,
+        workBudgets: [1000],
+        maxWorkSpent: 1000,
+    },
+}, [production], {
+    currentHead: 'abc123',
+    requireCurrentHead: true,
+    capabilityDocument: capability,
+});
+assert.equal(badIntegrity.decisionBearing, false);
+assert.ok(badIntegrity.blockers.some(value => value.includes('sourceIntegrity does not match')));
+
 const missingCapability = analyzeEqualWorkProductionReach(equalWork, [production], {
     currentHead: 'abc123',
     requireCurrentHead: true,
