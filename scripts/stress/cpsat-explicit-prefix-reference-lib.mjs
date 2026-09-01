@@ -32,13 +32,13 @@ const stableCaseId = ({ levelId, depth, prefix, child }, index) => {
  * 1-based [x,y] pairs as expected by cpsat-reference-probe.py's --prefix argument. */
 export function normalizeExplicitPrefixCaseFormat(format = 'cases') {
     if (format === 'cases') return 'cases';
-    if (format === 'reference-abstain' || format === 'atlas-abstain') return 'reference-abstain';
+    if (format === 'reference-abstain') return 'reference-abstain';
     throw new Error(`unsupported explicit-prefix case format: ${format}`);
 }
 
 /** Normalize both authentic v1 oracle-abstain source rows and canonical v2 reference-abstain rows
- * to one current case model. The atlas-abstain format spelling is an external compatibility alias
- * only; current callers emit reference-abstain. */
+ * to one current case model. Phase 15J retired the former external case-format alias; historical
+ * schema-v1 branch labels remain readable through the canonical reference-abstain format. */
 export function extractExplicitPrefixCases(document, { format = 'cases', corpus = null } = {}) {
     const defaultCorpus = corpus ?? document.corpus ?? document.levelsFile ?? 'data/stress/stress-levels-random.json';
     const normalizedFormat = normalizeExplicitPrefixCaseFormat(format);
