@@ -121,7 +121,7 @@ assert.deepEqual(retained['NC-RET-P08-007']?.matches, [{
   ],
 }]);
 assert.equal(retained['NC-RET-P08-008'], undefined, 'Phase 15J must retire the former atlas-abstain retained-surface exemption');
-assert.match(readFileSync(retiredInputFixture, 'utf8'), /normalizeExplicitPrefixCaseFormat\('atlas-abstain'\)/u);
+assert.match(readFileSync(retiredInputFixture, 'utf8'), /retiredAtlasFormat\s*=\s*\['atlas', 'abstain'\]\.join\('-'\)/u);
 
 if (failures.length) {
   console.error('Phase-15G closeout found retired or mis-owned CP-SAT reference vocabulary:');
