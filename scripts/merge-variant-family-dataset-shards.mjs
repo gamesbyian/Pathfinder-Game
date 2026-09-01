@@ -16,7 +16,7 @@
  * failing the ENTIRE combine commit (including the other 59 shards' legitimate levels/hints data,
  * not just the oversized file). 40MB leaves comfortable margin under that cap.
  */
-import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -26,13 +26,11 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 const IN_DIR = args.get('--in-dir') || 'logs/family-census';
 const MANIFEST = args.get('--manifest') || 'data/families/variant-family-dataset-manifest.json';
-// NOTE: this default output path deliberately keeps its original 2026-08-07/"wide-trove" naming --
-// it is the established historical report-filename convention every prior run of this tool has
-// written to (and family-index-lib.mjs's wide-trove-attempts-*.json discovery regex, plus the
-// combine workflow's own "print headline numbers"/artifact-upload steps, key off this exact
-// string). Renaming it is out of scope for this batch; see docs/naming-cleanup-plan.md's "Do not
-// rename historical report filenames containing atlas/trove/archaeology/lineage" rule.
-const OUT = args.get('--out') || 'reports/families/2026-08-07-wide-trove-summary.md';
+// New runs single-write the stable canonical Phase-15E report path. Genuine historical
+// 2026-08-07-wide-trove-* artifacts remain frozen and are discovered by family-index-lib.mjs.
+const OUT = args.get('--out') || 'reports/families/variant-family-dataset-summary.md';
+const ATTEMPTS_DIR = path.resolve(process.cwd(), 'reports/families');
+const CANONICAL_ATTEMPT_RE = /^variant-family-dataset-attempts-[A-Za-z0-9_-]+-part\d+\.json$/;
 
 const manifest = JSON.parse(readFileSync(path.resolve(process.cwd(), MANIFEST), 'utf8'));
 const idToCorpus = new Map(manifest.map((e) => [e.id, e.corpus]));
@@ -151,6 +149,13 @@ if (existsSync(inDirAbs)) {
     }
 }
 const ATTEMPTS_CHUNK_BYTES = 40 * 1024 * 1024; // ~40MB/file, well under GitHub's 100MB hard cap
+// Stable filenames are reused across current runs. Remove only prior canonical chunks before
+// writing so a smaller rerun cannot leave stale partNN files masquerading as current evidence.
+// Historical wide-trove chunks are permanent read-only evidence and are never touched here.
+mkdirSync(ATTEMPTS_DIR, { recursive: true });
+for (const file of readdirSync(ATTEMPTS_DIR)) {
+    if (CANONICAL_ATTEMPT_RE.test(file)) unlinkSync(path.join(ATTEMPTS_DIR, file));
+}
 let totalAttemptRecords = 0;
 let totalAttemptFiles = 0;
 for (const [corpus, levels] of Object.entries(attemptsByCorpus)) {
@@ -160,7 +165,7 @@ for (const [corpus, levels] of Object.entries(attemptsByCorpus)) {
     const flush = () => {
         if (!buf.length) return;
         const outPath = path.resolve(process.cwd(),
-            `reports/families/2026-08-07-wide-trove-attempts-${corpus}-part${String(part).padStart(2, '0')}.json`);
+            `reports/families/variant-family-dataset-attempts-${corpus}-part${String(part).padStart(2, '0')}.json`);
         writeFileSync(outPath, JSON.stringify({ levels: buf }));
         console.log(`Wrote ${buf.length} full attempt record(s) (~${(bufBytes / 1024 / 1024).toFixed(1)}MB) to ${outPath}.`);
         totalAttemptFiles++;
@@ -180,7 +185,7 @@ lines.push('## Failure provenance');
 lines.push('');
 lines.push(`${totalAttemptRecords} full per-variant attempt records (attempts, failedStrategies, nodesExpanded,`);
 lines.push(`winningConfig -- not just solved/total) consolidated into ${totalAttemptFiles} file(s):`);
-lines.push('`reports/families/2026-08-07-wide-trove-attempts-<corpus>-part<NN>.json`, chunked at ~40MB/file');
+lines.push('`reports/families/variant-family-dataset-attempts-<corpus>-part<NN>.json`, chunked at ~40MB/file');
 lines.push('(GitHub hard-rejects any single pushed file over 100MB) -- concatenate a corpus\'s parts\' `levels`');
 lines.push('arrays to reconstruct the full per-corpus set. Each part is independently in the same');
 lines.push('`{levels:[...]}` shape `scripts/stress/rank-levels.mjs` / `cluster-unsolved-failures.mjs` already read.');
