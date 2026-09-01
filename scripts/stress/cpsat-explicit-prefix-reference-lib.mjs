@@ -30,18 +30,26 @@ const stableCaseId = ({ levelId, depth, prefix, child }, index) => {
  * { corpus, cases: [{ id?, levelId, prefix, child? }] }. Prefix/child cells may be packed solver
  * keys (0-based internally), raw [x,y] coordinate pairs, or raw {x,y}; emitted prefixes are always
  * 1-based [x,y] pairs as expected by cpsat-reference-probe.py's --prefix argument. */
+export function normalizeExplicitPrefixCaseFormat(format = 'cases') {
+    if (format === 'cases') return 'cases';
+    if (format === 'reference-abstain' || format === 'atlas-abstain') return 'reference-abstain';
+    throw new Error(`unsupported explicit-prefix case format: ${format}`);
+}
+
+/** Normalize both authentic v1 oracle-abstain source rows and canonical v2 reference-abstain rows
+ * to one current case model. The atlas-abstain format spelling is an external compatibility alias
+ * only; current callers emit reference-abstain. */
 export function extractExplicitPrefixCases(document, { format = 'cases', corpus = null } = {}) {
     const defaultCorpus = corpus ?? document.corpus ?? document.levelsFile ?? 'data/stress/stress-levels-random.json';
+    const normalizedFormat = normalizeExplicitPrefixCaseFormat(format);
     let rawCases;
-    if (format === 'atlas-abstain') {
+    if (normalizedFormat === 'reference-abstain') {
         rawCases = (document.levels ?? []).flatMap(level => (level.branches ?? [])
-            .filter(row => row.label === 'oracle-abstain')
-            .map(row => ({ ...row, levelId: level.levelId })));
-    } else if (format === 'cases') {
+            .filter(row => row.label === 'reference-abstain' || row.label === 'oracle-abstain')
+            .map(row => ({ ...row, levelId: level.levelId, label: 'reference-abstain' })));
+    } else {
         if (!Array.isArray(document.cases)) throw new Error('generic case document must contain a cases array');
         rawCases = document.cases;
-    } else {
-        throw new Error(`unsupported explicit-prefix case format: ${format}`);
     }
 
     return rawCases.map((row, index) => {
@@ -69,7 +77,7 @@ export function classifyProbeProcess({ stdout = '', stderr = '', exitCode = 0 })
     const status = match?.[1] ?? null;
     if (status === 'OPTIMAL' || status === 'FEASIBLE') return { label: 'live', reason: status.toLowerCase(), status };
     if (status === 'INFEASIBLE') return { label: 'dead', reason: 'infeasible', status };
-    if (status === 'UNKNOWN') return { label: 'timeout/abstain', reason: 'oracle-unknown', status };
+    if (status === 'UNKNOWN') return { label: 'timeout/abstain', reason: 'reference-unknown', status };
     if (status === 'MODEL_INVALID') return { label: 'timeout/abstain', reason: 'model-invalid', status };
     return { label: 'timeout/abstain', reason: exitCode === 0 ? 'unparsed-probe-output' : `probe-exit-${exitCode}`, status };
 }
