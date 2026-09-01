@@ -83,7 +83,7 @@ try {
   expectFailure(
     'active authority routing drift',
     'AGENTS.md',
-    source => source.replace('docs/naming-cleanup-phase-records/phase-15.md', 'docs/naming-cleanup-phase-records/phase-08.md'),
+    source => source.replaceAll('docs/naming-cleanup-phase-records/phase-15.md', 'docs/naming-cleanup-phase-records/phase-08.md'),
     /AGENTS\.md must route active Phase 15|active naming authority/iu,
   );
 
