@@ -1493,3 +1493,29 @@ hide compatibility vocabulary from the resumption bridge. Repair must exclude th
 guard from implementation reconciliation and classify the resumption bridge alongside naming
 authority/evidence for the older Phase-8 lexical residue scanner, while retaining the semantic
 current-authority checks that ensure both surfaces remain truthful.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-012 — cross-phase reconciliation still confused canonical shadow matches and test/guard
+references with live legacy ownership; one Phase-15 inventory assertion also encoded a pre-15E
+workflow assumption.**
+
+After F15I-011, exact-head closeout progressed far enough to execute the full Phase-1–15 census.
+That exposed two distinct guard problems:
+
+- several older rows intentionally retain the same old/new term (for example
+  `must-cross-heavy`, `repair-fallback`, `baseWorkBudget`), while other canonical replacements
+  literally contain the old token (`SCORING_PROFILE_ORDER` contains `PROFILE_ORDER`;
+  `legacy-latency-portfolio-experiment.ts` contains `portfolio-experiment.ts`). The generic old
+  side used raw substring search, so canonical current code could manufacture a false legacy hit.
+  Test files and naming-consumer guard scripts could then lend those hits runtime-shaped categories.
+- `test:naming-cleanup-surface-inventory` still asserted that NC-P15-003 historical
+  `wide-trove-attempts-*` ownership must include a workflow. After 15E, the permanent historical
+  reader is deliberately centralized in `scripts/family-index-lib.mjs`; current workflows write
+  canonical `variant-family-dataset-*` paths and should not remain legacy owners.
+
+The repair must make old-side reconciliation canonical-shadow-aware, classify intentional
+old==new terms as retained/canonical rather than legacy, exclude test/naming-guard files from the
+runtime/control leak check, and update NC-P15-003's regression assertion to pin the actual
+historical-reader owner instead of resurrecting a workflow dependency.
