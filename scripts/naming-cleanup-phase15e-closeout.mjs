@@ -16,6 +16,8 @@ assert.match(familyIndex, /selectFamilyAttemptEvidenceFiles/u);
 assert.match(familyIndex, /canonicalCorpora/u);
 assert.match(familyIndex, /identity\.convention === 'variant-family-dataset'/u);
 assert.match(indexTest, /historical aggregate evidence/u);
+assert.match(indexTest, /2026-08-07-wide-trove-attempts-corpus-a-part01/u,
+    'permanent historical discovery proof must use the authentic dated wide-trove convention');
 assert.match(indexTest, /canonical corpus aggregate must not double-count frozen historical aggregate/u);
 
 // NC-P15-009: every current writer/workflow output uses stable canonical paths.
