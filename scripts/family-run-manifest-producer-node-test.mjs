@@ -23,7 +23,7 @@ function test(name, fn) {
 const baseInput = {
     runId: 'run-wide-9001', tool: 'collect-variant-family-dataset-shard.mjs', workflow: 'collect-variant-family-dataset.yml',
     corpora: ['corpus1'], families: ['corpus1:S00001'],
-    trove: { manifest: 'data/families/variant-family-dataset-manifest.json', shardFile: 'logs/family-census/wide-shard-01-slice.json' },
+    variantFamilyDataset: { manifest: 'data/families/variant-family-dataset-manifest.json', shardFile: 'logs/family-census/wide-shard-01-slice.json' },
     solverPolicy: { mode: 'production', profile: null, config: null, flags: {}, strictTotalWorkBudget: false },
     budgets: { workUnits: 48_240_000, nodeCeiling: 36_000_000, wallDeadlineMs: 86_400_000 },
     seeds: [20260807], shardCount: 2, shardIndex: 1,
@@ -37,10 +37,47 @@ const baseInput = {
 test('buildFamilyEvaluationRunManifest produces a manifest validateFamilyEvaluationRunManifest accepts', () => {
     const manifest = buildFamilyEvaluationRunManifest(baseInput);
     assert.deepEqual(validateFamilyEvaluationRunManifest(manifest), manifest);
-    assert.equal(manifest.schemaVersion, 1);
+    assert.equal(manifest.schemaVersion, 2);
+    assert.deepEqual(manifest.variantFamilyDataset, baseInput.variantFamilyDataset);
+    assert.equal('trove' in manifest, false, 'new producers must single-write only the canonical dataset field');
     assert.equal(manifest.invocation.tool, 'collect-variant-family-dataset-shard.mjs');
     assert.deepEqual(manifest.shard, { count: 2, index: 1 });
 });
+
+function legacyV1(manifest) {
+    const { variantFamilyDataset, ...rest } = manifest;
+    return { ...rest, schemaVersion: 1, trove: variantFamilyDataset };
+}
+
+function buildEraPairIndex(firstEra, secondEra) {
+    const root = mkdtempSync(path.join(tmpdir(), `family-run-era-${firstEra}-${secondEra}-`));
+    mkdirSync(path.join(root, 'data/families'), { recursive: true });
+    mkdirSync(path.join(root, 'logs/family-census/run/shard-1'), { recursive: true });
+    mkdirSync(path.join(root, 'logs/family-census/run/shard-2'), { recursive: true });
+    const shard1 = buildFamilyEvaluationRunManifest({ ...baseInput, runId: 'era-run', shardIndex: 1, outputArtifacts: [] });
+    const shard2 = buildFamilyEvaluationRunManifest({ ...baseInput, runId: 'era-run', shardIndex: 2, outputArtifacts: [] });
+    writeFileSync(
+        path.join(root, 'logs/family-census/run/shard-1/manifest.json'),
+        JSON.stringify(firstEra === 'v1' ? legacyV1(shard1) : shard1),
+    );
+    writeFileSync(
+        path.join(root, 'logs/family-census/run/shard-2/manifest.json'),
+        JSON.stringify(secondEra === 'v1' ? legacyV1(shard2) : shard2),
+    );
+    return buildFamilyIndex(root);
+}
+
+for (const [firstEra, secondEra] of [['v1', 'v1'], ['v2', 'v2'], ['v1', 'v2']]) {
+    test(`${firstEra}/${secondEra} shard manifests normalize to one complete canonical run`, () => {
+        const index = buildEraPairIndex(firstEra, secondEra);
+        assert.deepEqual(index.diagnostics.runManifests, []);
+        assert.equal(index.runs.length, 1);
+        assert.equal(index.runs[0].complete, true);
+        assert.equal(index.runs[0].schemaVersion, 2);
+        assert.deepEqual(index.runs[0].variantFamilyDataset, baseInput.variantFamilyDataset);
+        assert.equal('trove' in index.runs[0], false);
+    });
+}
 
 // (2)+(3): shards of one run agree on invariant fields, and output artifact paths join back to
 // family-index evidence — set up a real variant-family dataset tree with two shards' manifests +
