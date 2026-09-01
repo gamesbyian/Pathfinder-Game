@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 
-import { troveRootArg } from './family-paths.mjs';
+import { variantFamilyDatasetRootArg } from './family-paths.mjs';
 import { extractExplicitPrefixCases } from './stress/cpsat-explicit-prefix-reference-lib.mjs';
 
 const ledger = JSON.parse(readFileSync('docs/naming-cleanup-ledger.json', 'utf8'));
@@ -15,20 +15,26 @@ assert.deepEqual(ledger.phaseBatches?.['15'], ['15A','15B','15C','15D','15E','15
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15A'], 'specification-gate');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15I'], 'merged-tree-closeout');
 assert.equal(ledger.phaseBatchKinds?.['15']?.['15J'], 'finalization');
-assert.equal(ledger.activeExecution?.status, 'idle');
-assert.equal(ledger.activeExecution?.phase, null);
-assert.equal(ledger.activeExecution?.batch, null);
-assert.equal(ledger.activeExecution?.recordPath, null);
+assert.equal(ledger.activeExecution?.status, 'active');
+assert.equal(ledger.activeExecution?.phase, 15);
+assert.equal(ledger.activeExecution?.batch, '15C');
+assert.equal(ledger.activeExecution?.recordPath, 'docs/naming-cleanup-phase-records/phase-15.md');
 
 const phase15 = ledger.entries.filter(row => row.phase === 15);
 assert.equal(phase15.length, 13, '15A should resolve to thirteen homogeneous implementation rows');
 assert.equal(ledger.batchCompletions?.['15A']?.status, 'merged');
 assert.equal(ledger.batchCompletions?.['15A']?.pr, 1638);
 assert.equal(ledger.batchCompletions?.['15A']?.mergeCommit, '4b61b59dfba6dada48f316edcdb6e9b4daa6683e');
+assert.equal(ledger.batchCompletions?.['15B']?.status, 'merged');
+assert.equal(ledger.batchCompletions?.['15B']?.pr, 1639);
+assert.equal(ledger.batchCompletions?.['15B']?.mergeCommit, '56a69e483e267a6da4aaa92acc172e994e2c541e');
 assert.equal(phase15.find(row => row.id === 'NC-P15-006')?.status, 'done');
+assert.equal(phase15.find(row => row.id === 'NC-P15-001')?.status, 'in-progress');
+assert.equal(phase15.find(row => row.id === 'NC-P15-008')?.status, 'in-progress');
 assert.ok(
-  phase15.filter(row => row.id !== 'NC-P15-006').every(row => row.status === 'pending'),
-  'completed 15B must leave later implementation rows pending',
+  phase15.filter(row => !['NC-P15-001', 'NC-P15-006', 'NC-P15-008'].includes(row.id))
+    .every(row => row.status === 'pending'),
+  'active 15C must leave later implementation rows pending',
 );
 
 const byId = Object.fromEntries(phase15.map(row => [row.id, row]));
@@ -49,16 +55,22 @@ assert.equal(byId['NC-P15-013'].migrationClass, 'current-surface-rename-preserve
 assert.match(record, /separately deferred vocabulary debt/u);
 assert.match(record, /repairLateProbe/u);
 
-// 15A is specification-only. These checks deliberately pin the old executable surfaces so an
-// accidental implementation rename cannot hide inside the entry/control-plane PR.
+// Phase 15C has migrated the current dataset-root vocabulary while retaining one external alias.
+// Later-batch source-freeze checks remain below.
 const familyPaths = readFileSync('scripts/family-paths.mjs', 'utf8');
 assert.match(familyPaths, /--trove-root=/u);
-assert.match(familyPaths, /troveRootArg/u);
-assert.doesNotMatch(familyPaths, /--variant-family-dataset-root=/u);
+assert.match(familyPaths, /variantFamilyDatasetRootArg/u);
+assert.doesNotMatch(familyPaths, /troveRootArg/u);
+assert.match(familyPaths, /--variant-family-dataset-root=/u);
 assert.equal(
-  troveRootArg(['--trove-root=tmp/phase15-legacy-family-root']),
+  variantFamilyDatasetRootArg(['--trove-root=tmp/phase15-legacy-family-root']),
   path.resolve('tmp/phase15-legacy-family-root'),
-  'current shared dataset-root parser must still execute the legacy CLI before 15C',
+  '15C must retain the one external legacy dataset-root alias at the shared parser',
+);
+assert.equal(
+  variantFamilyDatasetRootArg(['--variant-family-dataset-root=tmp/phase15-canonical-family-root']),
+  path.resolve('tmp/phase15-canonical-family-root'),
+  '15C must accept the canonical dataset-root CLI at the shared parser',
 );
 
 const manifestLib = readFileSync('scripts/experiment-manifest-lib.mjs', 'utf8');
