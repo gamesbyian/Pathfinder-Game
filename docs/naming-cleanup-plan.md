@@ -1623,6 +1623,8 @@ document/path identity is part of the invariant.
 
 **NC-P15-006, CP-SAT branch-label eligibility library**
 
+- exact targets are `cpsat-branch-label-eligibility.mjs`,
+  `selectEligibleCpsatBranchLevels`, and `isEligibleForCpsatBranchLabeling`;
 - rename the shared file/export/predicate and every import/current reference atomically;
 - pin the selected eligibility population before/after on representative data;
 - do not create a private filename/function compatibility alias.
