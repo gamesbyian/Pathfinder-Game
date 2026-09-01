@@ -1,20 +1,22 @@
 # Phase 15 execution and closeout record
 
-Status: **15J archival/finalization handoff active; hostile merged-tree closeout is merged and green**
+Status: **complete and frozen; Phase 15 and the repository-wide naming cleanup are closed**
 
 Program entry branch: `chatgpt/phase15a-contract-decomposition-2026-08-31`  
 Program entry PR: **#1638**  
 Program entry base: `fad988569c70802db7d69b85f4443a4daf0486a6`  
-Current active branch: `chatgpt/phase15j-archival-handoff-2026-08-31`  
-Current active PR: **#1647**  
-Current merged closeout base: `55b405b2caf511543503a7581b2457c92c06a1f9`  
+Final implementation/closeout handoff PR: **#1647**  
+Final handoff head: `f1e292db125cde633ff5b36ddc216c09f5350e1f`  
+Final handoff merge: `504330dc4e474b1ebc7755e8c34f72f63fd37901`  
+Completion-seal branch: `chatgpt/phase15-completion-seal-2026-08-31`  
 Preparation authority: [phase-15-preparation.md](phase-15-preparation.md)  
 Independent pre-entry repair record: [pre-phase-15-audit-repairs.md](pre-phase-15-audit-repairs.md)  
-Plan authority: [../naming-cleanup-plan.md](../naming-cleanup-plan.md)
+Plan/history authority: [../naming-cleanup-plan.md](../naming-cleanup-plan.md)  
+Permanent vocabulary authority: [../naming-and-vocabulary.md](../naming-and-vocabulary.md)
 
-This file is the live Phase-15 execution/closeout authority required by the hardened plan. The
-preparation record remains a frozen snapshot. Implementation-time reconciliation in this file wins
-when it records a newer observation from the Phase-15 entry base.
+This file is frozen Phase-15 execution and closeout evidence. It no longer routes active work.
+Current terminology is owned by `docs/naming-and-vocabulary.md`; future cross-boundary renames use
+`docs/change-recipes.md` and current implementation rather than reopening this phase sequence.
 
 ## 15A change envelope
 
@@ -1720,3 +1722,26 @@ The 15J handoff PR must leave `batchCompletions["15J"]` pending and
 merge SHA, advances `lastCompletedPhase` to 15, marks the naming program complete, idles
 `activeExecution`, and performs only routing/archive changes that logically require completed
 state.
+
+
+## 15J merge evidence and terminal handoff
+
+Phase 15J completed as archival/finalization handoff PR **#1647**.
+
+- final head: `f1e292db125cde633ff5b36ddc216c09f5350e1f`;
+- exact-head ordinary CI: run **33471986789**, all six jobs successful;
+- exact-head browser characterization: run **33471986760**, successful;
+- merge commit: `504330dc4e474b1ebc7755e8c34f72f63fd37901`;
+- the handoff retired the temporary NC-P15-001 and NC-P15-011 external aliases while preserving
+  permanent historical readers NC-P15-002, NC-P15-003, and NC-P15-012;
+- the temporary Phase-15I workflow/routing was removed;
+- the merged handoff is the base for the narrow completion seal.
+
+The post-merge completion seal records `batchCompletions["15J"]` with PR #1647 and the merge SHA
+above, advances `lastCompletedPhase` to 15, marks the naming program `complete`, idles
+`activeExecution`, and converts current routing/status checks to terminal-state semantics. The
+seal is not a 15K migration batch and contains no rename implementation.
+
+The completed ledger deliberately does not attempt to contain the merge SHA of the commit that
+contains the completed ledger itself. The completion seal is proven by its exact-head CI and Git
+history, avoiding an impossible self-referential evidence requirement.
