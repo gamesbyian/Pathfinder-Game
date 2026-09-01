@@ -1537,3 +1537,20 @@ and `family-index-lib-check.mjs` already exercises historical/canonical discover
 Repair must keep the generic comment-only compatibility check for literal parser fields/tokens, but
 prove NC-P15-003 through its executable regex owner plus the real family-index mixed-era test rather
 than forcing the implementation to duplicate path literals merely to satisfy the checker.
+
+
+### 15I hostile-rerun finding, recorded before repair
+
+**F15I-014 — the transition-alias retirement proof was coupled to Markdown line wrapping rather
+than the semantic recommendation.**
+
+The closeout correctly verified that NC-P15-001 and NC-P15-011 still carry
+`external-config-transition` / `phase-15-review`, then attempted to prove the execution record
+assigns retirement to 15J with `/15J[^\n]{0,200}retir/`. The record already states that
+`--trove-root` and `atlas-abstain` have no current repository caller and that 15I
+**recommends retiring those external transition aliases in 15J**, but the sentence is wrapped with
+`retiring` before `15J` and across a newline. The proof therefore failed on presentation shape,
+not contract content.
+
+Repair must pin the exact two aliases and the semantic “recommends retiring ... in 15J” statement
+with whitespace-insensitive matching, without weakening the ledger compatibility-mode assertions.
