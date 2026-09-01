@@ -68,13 +68,16 @@ function statusCounts(selected) {
   );
 }
 
-const nextPhase = Number(ledger.lastCompletedPhase) + 1;
-const nextBatchOrder = phaseBatches?.[String(nextPhase)] ?? [];
+const programComplete = ledger.status === 'complete';
+const nextPhase = programComplete ? null : Number(ledger.lastCompletedPhase) + 1;
+const nextBatchOrder = nextPhase === null ? [] : (phaseBatches?.[String(nextPhase)] ?? []);
 let nextBatch = nextBatchOrder.find(batch => batchCompletions?.[batch]?.status !== 'merged') ?? null;
 let nextBatchKind = nextBatch ? batchKind(nextPhase, nextBatch) : null;
-let nextAction = nextBatchOrder.length ? (nextBatch ? 'start-batch' : 'phase-closeout') : 'start-phase';
+let nextAction = programComplete
+  ? 'complete'
+  : (nextBatchOrder.length ? (nextBatch ? 'start-batch' : 'phase-closeout') : 'start-phase');
 
-if (nextBatch) {
+if (!programComplete && nextBatch) {
   const batchRows = future.filter(row => row.phase === nextPhase && row.batch === nextBatch);
   const counts = statusCounts(batchRows);
   const activeHere = ledger.activeExecution?.status === 'active' &&
@@ -91,7 +94,7 @@ if (nextBatch) {
   }
 }
 
-if (ledger.activeExecution?.status === 'active' && ledger.activeExecution.phase === nextPhase) {
+if (!programComplete && ledger.activeExecution?.status === 'active' && ledger.activeExecution.phase === nextPhase) {
   nextBatch = ledger.activeExecution.batch ?? nextBatch;
   nextBatchKind = nextBatch ? batchKind(nextPhase, nextBatch) : null;
   if (!nextBatchOrder.length) nextAction = 'continue-active-phase';
@@ -108,7 +111,7 @@ if (batchFilter && selected.length === 0) {
   }
 }
 
-const nextScope = future.filter(row =>
+const nextScope = nextPhase === null ? [] : future.filter(row =>
   row.phase === nextPhase &&
   (!nextBatchOrder.length || row.batch === nextBatch),
 );
@@ -116,6 +119,7 @@ const nextScope = future.filter(row =>
 const result = {
   schemaVersion: ledger.schemaVersion,
   completionContractVersion: ledger.completionContractVersion,
+  programStatus: ledger.status,
   lastCompletedPhase: ledger.lastCompletedPhase,
   nextPhase,
   nextBatch,
@@ -149,8 +153,13 @@ if (json) {
 
 console.log('Naming cleanup status');
 console.log(`  contract: schema v${result.schemaVersion}, completion v${result.completionContractVersion}`);
+console.log(`  program: ${result.programStatus}`);
 console.log(`  completed through: Phase ${result.lastCompletedPhase}`);
-console.log(`  next: Phase ${result.nextPhase}${result.nextBatch ? ` / batch ${result.nextBatch}` : ''}${result.nextBatchKind ? ` [${result.nextBatchKind}]` : ''}`);
+if (result.programStatus === 'complete') {
+  console.log('  next: none (program complete)');
+} else {
+  console.log(`  next: Phase ${result.nextPhase}${result.nextBatch ? ` / batch ${result.nextBatch}` : ''}${result.nextBatchKind ? ` [${result.nextBatchKind}]` : ''}`);
+}
 console.log(`  next action: ${result.nextAction}`);
 if (result.batchCompletion) console.log(`  batch merge record: ${result.batchCompletion.status}`);
 console.log(`  Phase-8 gate: ${result.phase8Gate}`);
