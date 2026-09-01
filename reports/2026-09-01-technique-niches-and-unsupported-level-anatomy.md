@@ -1,6 +1,6 @@
 # Technique niches and unsupported-level anatomy
 
-> **Status:** interim-positive; first-pass synthesis, deeper niche/residual analysis still open
+> **Status:** active
 > **Last evidence:** 2026-09-01 — deterministic frozen-census/static-feature join plus corrected EW1 and post-976 reconciliation
 > **Decision:** preserve the current workstream order. Use corrected EW1/current-production work evidence for Workstream 2, and continue mining the existing census/current evidence before any production-shaped selector A/B. Do not reopen a closed mechanism or launch a larger census.
 > **Remaining gate:** exact-current-head lifecycle/`workSpent` join against corrected EW1, followed by deeper per-technique/relative-advantage and unsupported-residual analysis; a fixed-work selector shadow/A-B is earned only if that work leaves actionable static-routing headroom.
