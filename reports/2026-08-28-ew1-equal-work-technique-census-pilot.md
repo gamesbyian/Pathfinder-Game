@@ -44,6 +44,33 @@ workflow's combine command was changed from plain Node to the repository's bundl
 solver shards are green. The canonical measurements below were reconstructed directly from those
 sealed shard artifacts.
 
+## Durable pricing snapshot and current-production gate
+
+The accepted EW1 evidence no longer depends on the corrected run's expiring GitHub Actions shard
+artifacts. Before their 2026-09-27 expiry, all 30 sealed shards from run `33156541827` were
+reconstructed through the repository's current census combiner and reduced to the fields required
+for scheduler pricing:
+
+- `reports/stress/ew1/33156541827-pricing-snapshot.json`;
+- source run `33156541827`, source head `d1d02501a9fb833a732e918fc978a36da405396d`;
+- 2,015 cells, 60 levels, 34 actions, 45 solves;
+- zero errors and zero deadline truncations;
+- one 10,000,000-work cap, maximum observed `workSpent` 10,008,897.
+
+This is a preservation/reconstruction of the already accepted EW1 evidence, not a new experiment.
+
+The canonical `solver-stress-refresh.yml` now consumes this snapshot automatically when
+`lifecycle_telemetry=true`. After complete Corpus-1/Corpus-2 combination it runs
+`solver:analyze-equal-work-production-reach` against the exact dispatched SHA, per-attempt
+`workSpent`, and the current capability map. The resulting run-local JSON/Markdown includes
+per-action pricing/reach plus a level-local comparison for the 60 EW1 levels. The join refuses
+decision-bearing status for stale/missing commit or corpus provenance, missing lifecycle rows,
+missing matched-attempt work, or incomplete capability-map coverage.
+
+That wiring closes an evidence-handling gap only. The empirical next gate remains the first
+exact-current-head lifecycle refresh that produces a READY join; no repricing treatment is selected
+until that artifact is read.
+
 ## Top-line result
 
 At <=10M canonical work per isolated action:
