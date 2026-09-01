@@ -1449,3 +1449,20 @@ The existing Phase-15F closeout guard did not include `win-controller.ts` in its
 miss survived 15F through 15H. No repair has been made at the point this finding is recorded. 15I
 must rename the local without changing the computed value or persistence call ordering, add this
 owner to the permanent 15F guard, and rerun the hostile closeout.
+
+
+**F15I-010 — NC-P15-006 left a retired bare filename in a live workflow comment, and generic
+reconciliation counted archived documentation as current.**
+
+The next hostile rerun found NC-P15-006 old references in two places:
+
+- `.github/workflows/cpsat-hint-harvest-sweep.yml` still describes eligibility as coming from
+  `atlas-eligibility.mjs`, even though the maintained source owner is now
+  `cpsat-branch-label-eligibility.mjs`;
+- `docs/archive/snapshots/solver-shadow-eval-harness-2026-08-20.md` is frozen historical
+  documentation and should not participate in current lifecycle reconciliation.
+
+The first is genuine current workflow-prose residue. The second is a scanner-classification defect.
+The Phase-15B closeout guard missed the live workflow prose because its retired set included the old
+full import paths and exports but not the bare retired filename. No repair has been made at the point
+this finding is recorded.
