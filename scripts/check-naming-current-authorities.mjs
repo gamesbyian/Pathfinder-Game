@@ -73,6 +73,19 @@ if (nextPhase === 15) {
     if (!agents.includes(execution)) failures.push('AGENTS.md must route active Phase 15 through its execution authority');
     if (!docsIndex.includes(executionIndexPath)) failures.push('docs/README.md must list the active Phase-15 execution authority');
     if (!docsIndex.includes(preparation)) failures.push('docs/README.md must retain the Phase-15 preparation snapshot');
+
+    const executionRecord = typeof execution === 'string' ? read(execution) : '';
+    const executionHeader = executionRecord.split(/^##\s+/mu)[0];
+    const active = ledger.activeExecution;
+    if (!executionHeader.includes(String(active.batch)) || !/Status:[^\n]*active/iu.test(executionHeader)) {
+      failures.push('active Phase-15 execution-record header must name the active batch and mark it active');
+    }
+    if (!executionHeader.includes(String(active.branch))) {
+      failures.push('active Phase-15 execution-record header must name activeExecution.branch');
+    }
+    if (Number.isInteger(active.pr) && !executionHeader.includes(`#${active.pr}`)) {
+      failures.push('active Phase-15 execution-record header must name activeExecution.pr');
+    }
   } else {
     if (!agents.includes(preparation)) failures.push('AGENTS.md must route pending Phase 15 through its preparation authority');
     if (!docsIndex.includes(preparation)) failures.push('docs/README.md must list the pending Phase-15 preparation authority');
