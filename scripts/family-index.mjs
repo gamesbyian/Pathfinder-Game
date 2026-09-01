@@ -2,12 +2,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { buildFamilyIndex, coverageByParent, queryFamilyIndex, writeFamilyIndex } from './family-index-lib.mjs';
-import { troveRootArg } from './family-paths.mjs';
+import { variantFamilyDatasetRootArg } from './family-paths.mjs';
 
 const argv = process.argv.slice(2);
 const command = argv.find(arg => !arg.startsWith('--')) ?? 'query';
 const arg = name => argv.find(value => value.startsWith(`--${name}=`))?.slice(name.length + 3);
-const root = troveRootArg(argv);
+const root = variantFamilyDatasetRootArg(argv);
 const indexPath = path.resolve(arg('index') ?? path.join(root, '.cache/family-index.json'));
 const load = () => {
     if (!existsSync(indexPath)) throw new Error(`index not found: ${indexPath}; run family:index first`);
@@ -28,6 +28,6 @@ if (command === 'index') {
 } else if (command === 'coverage') {
     console.log(JSON.stringify(coverageByParent(load(), filters), null, 2));
 } else {
-    console.error('usage: family-index.mjs index|show|query|coverage [--trove-root=PATH] [--index=PATH] [filters]');
+    console.error('usage: family-index.mjs index|show|query|coverage [--variant-family-dataset-root=PATH] [--index=PATH] [filters]');
     process.exitCode = 2;
 }
