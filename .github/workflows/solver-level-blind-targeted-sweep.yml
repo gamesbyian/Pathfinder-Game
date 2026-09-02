@@ -25,7 +25,7 @@
 # arm. Combined results land in the `combine` job's uploaded `targeted-sweep-combined` artifact and
 # its job-log summary; per-shard raw output is in each `targeted-shard-NNN` artifact.
 name: Solver level-blind targeted sweep
-run-name: "Targeted sweep · ${{ inputs.ids_file || 'inline IDs' }} · flags=${{ inputs.enable_flags || 'control' }}"
+run-name: "Targeted sweep · ${{ inputs.ids_file || 'inline IDs' }} · enable=${{ inputs.enable_flags || 'none' }} · disable=${{ inputs.disable_flags || 'none' }}"
 
 on:
   workflow_dispatch:
