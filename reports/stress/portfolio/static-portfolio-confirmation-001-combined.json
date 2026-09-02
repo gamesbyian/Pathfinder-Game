@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "sourceRunId": 33664473923,
+  "sourceRunUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33664473923",
+  "sourceHeadSha": "203e4bea61198e4602228eb84b346544ea7e7a31",
+  "cohortId": "static-portfolio-confirmation-001",
+  "controlArm": "full-menu",
+  "totalCells": 300,
+  "armSummaries": [
+    { "arm": "full-menu", "cells": 150, "solved": 74, "work": 5548131339 },
+    { "arm": "portfolio-11", "cells": 150, "solved": 63, "work": 2118679297 }
+  ],
+  "comparisons": [
+    {
+      "arm": "portfolio-11",
+      "controlArm": "full-menu",
+      "gained": [],
+      "lost": ["R01215", "R01554", "R02055", "R02186", "R02214", "R02306", "R02450", "R02492", "R02783", "R03071", "R03112"],
+      "workDelta": -3429452042,
+      "workDeltaFraction": -0.6181274076720267
+    }
+  ],
+  "note": "Reconstructed from the combine job's own console log output (mcp__github__get_job_logs on job 100365031132), not the raw combined.json artifact, because the artifact's blob-storage download URL is blocked by this session's egress proxy policy. The reported numbers are the combiner's own printed summary, not independently recomputed."
+}
