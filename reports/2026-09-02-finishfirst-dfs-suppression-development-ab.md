@@ -1,9 +1,9 @@
 # `dfs|score=finishFirst` suppression: next-rung zero-production-win DFS-tail candidate
 
-> **Status:** active
-> **Last evidence:** 2026-09-02 — development A/B dispatched on the EW1 60-level sample (control [`33601212956`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601212956), treatment [`33601220410`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601220410))
-> **Decision:** pending — this report is prespecified before either arm's outcome is known; do not read "Why this candidate" as a post-hoc justification
-> **Remaining gate:** both dispatched runs must complete and be evaluated against the frozen zero-loss/gain-or-≥10%-work acceptance rule
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-02 — development A/B on the EW1 60-level sample under `strictTotalWorkBudget` (control [`33601212956`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601212956), treatment [`33601220410`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601220410))
+> **Decision:** close `PROFILE_finishFirst` suppression as tested — zero losses but no gain and no material work reduction (+0.004%, wrong direction, same shape and magnitude as both prior candidates). Do not promote; do not run a confirmation cohort (development itself failed).
+> **Remaining gate:** gate-sequence step (C) itself remains open. This closes path (a) ("a materially larger-footprint candidate") on this population too — a future attempt should try path (b) (a different evaluation population where these actions' corpus-wide cost is actually concentrated), not a fourth single-action DFS-tail candidate on the EW1 60-level sample.
 > **Evidence role:** development (candidate selection + first A/B) — prespecified before either arm's outcome is known
 > **Selection:** chosen from the join's own numbers by a fixed, mechanical rule (see "Why this candidate"), not tuned after any A/B outcome
 
@@ -66,8 +66,26 @@ Both dispatched against the exact same `main` head, so no cross-commit reasoning
 
 ## Result
 
-*(pending — filled in once both runs complete)*
+Both runs completed (control [`33601212956`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601212956), treatment [`33601220410`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601220410); "Combine shard results" job log in each, since this workflow is artifact-only and does not commit):
+
+| metric | control | treatment |
+|---|---:|---:|
+| solved | 3/60 | 3/60 |
+| solved set | `R02657`, `R02651`, `R03171` | `R02657`, `R02651`, `R03171` (same set) |
+| aggregate `workSpent` | 586,813,728 | 586,837,246 |
+| work delta | — | **+23,518 (+0.004%)** |
+| aggregate `nodesExpanded` | 262,561,189 | 262,549,454 |
+
+Zero gained, zero lost — the solved set is identical, and the control's numbers are byte-identical to the closureCommitment/nearClosureRescue tests' own shared control (confirming `915754e5`'s flipper-radix fix is indeed a no-op on this 60-level sample, as expected — none of these 60 levels have 31/32 flipping filters). Aggregate `workSpent` did not drop by the required margin; it is flat to within noise (+0.004%, the wrong direction), and the magnitude is nearly identical to closureCommitment's own +0.004% (+23,626) despite this candidate's corpus-wide footprint being ~1.86x-5x larger than any prior candidate tested. **This fails the frozen acceptance rule** (zero losses + (gain OR ≥10% lower work)).
+
+The rare-capability guardrail is moot here: no level changed status, so there is nothing to cross-check against the technique-niches singleton/doubleton list. The one EW1-solved cell (1/60) this candidate carried as latent capability was not among this sample's 3 actually-solved-in-production levels, so its removal could not have shown up as a loss even in principle on this run — consistent with production's own zero-win count for this action.
+
+## Interpretation
+
+The same interpretation that closed the first candidate class applies here, now confirmed at nearly 2-5x the footprint: **corpus-wide `workSpent` is not a reliable proxy for this-sample local footprint.** `dfs|score=finishFirst|bias=none`'s 279M corpus-wide total is dominated by one specific stage (`guidance-goal-distance-retry`, 257M of the 279M total per the join's per-stage breakdown) — a late, rarely-reached retry tier that most likely engages heavily on a handful of levels elsewhere in the 1,802-row corpus, not broadly across this particular 60-level EW1 sample. Scaling up the footprint of a single suppressed action, while holding the evaluation population fixed, did not change the outcome shape at all: same zero losses, same flat-to-noise work delta, same order of magnitude. This is a materially different result from "the effect was too small to detect" — it suggests the EW1 60-level sample itself may not contain enough of any one action's real cost concentration to detect a repricing effect from single/paired-action suppression, regardless of which action is chosen.
 
 ## Disposition
 
-*(pending)*
+**Close this exact candidate as a clean null; do not promote `PROFILE_finishFirst` suppression.** No confirmation cohort is warranted (development already failed the frozen rule).
+
+This also closes path (a) from the prior report's "next step" framing: three DFS-tail candidates now span roughly a 5x footprint range (54M, 96M/150M combined, 279M) with the same null result each time, on the same 60-level population. A fourth, still-larger single/paired ordinary-DFS-tail candidate on this same population is not a promising next move — the evidence now points at the population choice itself, not candidate size, as the binding constraint. Per the closureCommitment report's own next-step framing, path (b) — evaluating on a population where these actions' corpus-wide cost is actually concentrated (e.g., a sample stratified toward the corpus rows that actually reach `guidance-goal-distance-retry` or the other late retry tiers, rather than the EW1 frozen-gap sample built for equal-work pricing) — is the more promising direction for whoever picks up gate-sequence step (C) next. Building that stratified sample is nontrivial (it needs per-level stage-reach data, not just the aggregate join) and is left as the next gate rather than attempted here.
