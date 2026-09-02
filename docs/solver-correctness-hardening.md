@@ -28,21 +28,21 @@ Use when changing hard prunes, state identity, solver/runtime rules, reusable sc
 | 17 | Stale documentation | Current behavior belongs in current contracts/queues; reports/snapshots preserve evidence. Update/archive status when implementation or promotion state changes. |
 | 18 | Unmodelled stage-history dependence | Given the same explicit level/action/config/seed and deterministic work budget, unrelated predecessor stages must not silently change search semantics, ordering, randomness, or capability. Any intended handoff must be explicit typed action state. Cache warming may change wall cost only unless a different contract is documented. Add fresh-vs-preceded differential tests for affected stages before treating sequence effects as causal evidence. |
 
-## Open correctness defect: 31-32 flipping-filter beam identity
+## Closed correctness defect: 31-32 flipping-filter beam identity (fixed 2026-09-02)
 
 `validateRawLevel` permits up to 32 flipping filters because `flipperUsedMask` legitimately uses all 32 int32 bits. The underlying transition state is sound at that boundary: bit 31 is a negative signed int32 value but nonzero membership checks, `popcount`, apply, and undo handle it correctly; `flipper-cardinality.test.ts` pins that behavior.
 
-Beam's numeric state-identity fast path does **not** currently share that full-domain guarantee. `search.ts` derives `_flipperBase` as `1 << prep.flipperKeys.length`. JavaScript bitwise shifts are int32: at 31 filters this becomes `-2147483648`, and at 32 the shift count wraps so it becomes `1`. `flipperUsedMask` itself is also signed when bit 31 is set. Therefore the mixed-radix coarse-state key and mechanic-bucket-retention `(mustCrossMask, flipperUsedMask)` bucket encoding are not collision-free on schema-valid 31/32-filter levels even though their comments claim cardinality-derived exactness.
+Beam's numeric state-identity fast path did **not** previously share that full-domain guarantee. `search.ts` derived `_flipperBase` as `1 << prep.flipperKeys.length`. JavaScript bitwise shifts are int32: at 31 filters this became `-2147483648`, and at 32 the shift count wrapped so it became `1`. `flipperUsedMask` itself is also signed when bit 31 is set. The mixed-radix coarse-state key and mechanic-bucket-retention `(mustCrossMask, flipperUsedMask)` bucket encoding were therefore not collision-free on schema-valid 31/32-filter levels even though their comments claimed cardinality-derived exactness.
 
-Required repair before claiming solver correctness over that domain:
+Fixed by following the required repair exactly:
 
-1. derive the radix arithmetically (`2 ** flipperCount`), never with a bitwise shift;
-2. normalize the 32-bit flipper mask to its unsigned value (`>>> 0`) before numeric composition;
-3. use numeric dedup/bucketing only when the complete composed key is a safe integer; otherwise use an exact delimited/string representation;
-4. add 31- and 32-filter counterexamples proving distinct high-bit states remain distinct in both dedup and diverse-beam bucketing;
-5. preserve the ordinary small-cardinality numeric path byte-for-byte except for representation arithmetic.
+1. `_flipperBase` now derives the radix arithmetically (`2 ** flipperCount`), never with a bitwise shift;
+2. every numeric composition normalizes the 32-bit flipper mask to its unsigned value (`c.flipperUsedMask >>> 0`) first;
+3. the existing safe-integer overflow fallback to the exact delimited-string representation (`beamStateKey`) is unchanged and untouched by this fix;
+4. `search.test.ts` adds four 31/32-filter counterexamples (two per numeric key: `_mechanicBucketSelect` and the newly-extracted, directly-testable `_composeBeamNumericCoarseStateKey`) that each pin the OLD formula's real aliasing before proving the fixed formula keeps the states distinct;
+5. the ordinary small-cardinality numeric path is unchanged: `2 ** n === 1 << n` bit-for-bit for every `n <= 30`, confirmed byte-identical (160/160 solved, identical node count) on the full published-corpus regression.
 
-This is a representation correctness bug, not evidence that any existing corpus result was wrong: no affected production/corpus population has yet been established. Do not reduce the validator's 32-filter contract merely to protect the fast path; fix or bypass the representation instead.
+This was a representation correctness bug, not evidence that any existing corpus result was wrong: no affected production/corpus population was ever established, and the published corpus (which has no 31/32-flipping-filter levels) is unaffected either way. See [`../reports/2026-09-02-beam-31-32-flipper-filter-identity-fix.md`](../reports/2026-09-02-beam-31-32-flipper-filter-identity-fix.md) for the full account.
 
 ## Open research-integrity blocker: fresh vs preceded stage behavior
 
@@ -72,7 +72,7 @@ Do not tune scheduler caps or technique value around unexplained stage-history d
 ## Closed work not to rediscover unchanged
 
 - Exact DFS/beam transposition caching with sound identity had poor payoff; coarse state merge is a deliberately lossy frontier-retention policy, not exact equivalence.
-- Do **not** treat an earlier packing audit as blanket closure. The 2026-08 hardening pass found two later counterexamples created by domain/representation drift: (a) must-pass lower-bound memoization reserved only 24 mask bits although normalized must-pass/must-turn cardinality is schema-valid through 30; the fixed key now reserves 30 bits and a 25-objective fixture exercises the former alias; (b) beam's later cardinality-derived numeric flipper radix still uses an int32 shift and is unsound at the validator's 31/32-filter boundary (open above). Re-audit consumers whenever cardinality or encoding contracts change.
+- Do **not** treat an earlier packing audit as blanket closure. The 2026-08 hardening pass found two later counterexamples created by domain/representation drift: (a) must-pass lower-bound memoization reserved only 24 mask bits although normalized must-pass/must-turn cardinality is schema-valid through 30; the fixed key now reserves 30 bits and a 25-objective fixture exercises the former alias; (b) beam's later cardinality-derived numeric flipper radix used an int32 shift and was unsound at the validator's 31/32-filter boundary (fixed 2026-09-02, see "Closed correctness defect" above). Re-audit consumers whenever cardinality or encoding contracts change.
 - The MITM frontier key was fixed for missing future state and rerun; exact frontier growth is now the conclusion.
 - Flipping-filter single-use/global crossing-order parity is settled semantics; the open beam bug above is representation identity, not mechanic semantics.
 - Sparse ablation normalization is centralized; extend its registry/tests instead of adding default logic.

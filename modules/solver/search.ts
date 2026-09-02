@@ -444,9 +444,11 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // are filled from the global top of the score-sorted list.
 // `sorted` must already be sorted descending by score; bucketed by a numeric stateKey
 // (`mustCrossMask * flipperBase + flipperUsedMask`, `flipperBase` the caller's precomputed
-// `1 << flipperCount` — always strictly larger than any real `flipperUsedMask`, so this is an
-// exact, always-collision-free positional encoding, same reasoning as beamNumericCoarseStateKey's own
-// comment). Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than
+// `2 ** flipperCount` — always strictly larger than any real UNSIGNED `flipperUsedMask`, so this is
+// an exact, always-collision-free positional encoding, same reasoning as beamNumericCoarseStateKey's
+// own comment; both the base and the composed `flipperUsedMask` need `>>> 0` normalization at the
+// call site below, since `validateRawLevel` permits up to 32 flipping filters and a real 32-filter
+// level's mask legitimately sets bit 31). Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than
 // the coarse-state key's old bug (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted
 // range, so it can't corrupt flipperUsedMask's bits the way the old coarse-state key's fields corrupted
 // each other), but still the same root cause: mustCrossMask silently ALIASES (bits above the 4th
@@ -455,13 +457,17 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // both truncated to the same bucket. Same class of bug, just feeding a soft diversity heuristic
 // rather than a hard merge/discard decision, so it degraded bucketing precision rather than
 // costing solves outright. Fixed alongside the coarse-state key, 2026-08-06 — see
-// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. `flipperBase` is always small
-// (well under 2^16 even at stress-corpus-2's raised 8-cell caps), so unlike the coarse-state key this
-// needs no per-level overflow fallback.
+// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. `mustCrossMask` is always small
+// (well under 2^16 even at stress-corpus-2's raised 8-cell caps) and `flipperBase` stays a safe
+// integer through the schema's full 32-filter cap (`2 ** 32` is exact as an ordinary float), so
+// unlike the coarse-state key this needs no per-level overflow fallback — only the sign
+// normalization above.
 function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
     const buckets = new Map<number, BeamNode[]>();
     for (const c of sorted) {
-        const key = c.mustCrossMask * flipperBase + c.flipperUsedMask;
+        // c.flipperUsedMask >>> 0: same unsigned-normalization reason as beamNumericCoarseStateKey's
+        // own comment — a real 32-flipper-filter level can set bit 31, making the raw int32 negative.
+        const key = c.mustCrossMask * flipperBase + (c.flipperUsedMask >>> 0);
         let b = buckets.get(key);
         if (!b) { b = []; buckets.set(key, b); }
         b.push(c);
@@ -483,6 +489,27 @@ function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBas
     }
     return result;
 }
+
+/** Standalone (extract-only, zero behavior change) composition of the fast numeric coarse-state
+ *  key documented in `beamSearchFromGate`'s own comment above the `_flipperBase`/`_mcBase`/etc.
+ *  declarations — pulled out of that closure so it is directly unit-testable (see
+ *  `__composeBeamNumericCoarseStateKeyForTests` and search.test.ts's 31/32-flipper-filter
+ *  counterexamples) without needing to run a live beam search. `bases` mirrors that closure's own
+ *  locals exactly; every field must already be normalized (masks unsigned via `>>> 0`) the same way
+ *  the call site does. */
+function _composeBeamNumericCoarseStateKey(bases: {
+    turnBase: number; surroundBase: number; flipperBase: number; mcBase: number; mpBase: number; intsBase: number;
+}, c: BeamNode): number {
+    return (((((((c.adjTurnMask) * bases.turnBase + c.mustTurnMask) * bases.surroundBase + c.surroundMask)
+        * bases.flipperBase + (c.flipperUsedMask >>> 0)) * bases.mcBase + c.mustCrossMask)
+        * bases.mpBase + c.mpVisitedMask) * bases.intsBase + c.ints) * KEY_SPACE + c.key;
+}
+
+/** Test-only alias, same naming convention as __pruneFirstStepNeighborsForTests/
+ *  __reconstructBeamPathForTests below. */
+export const __mechanicBucketSelectForTests = _mechanicBucketSelect;
+/** Test-only alias for _composeBeamNumericCoarseStateKey (see its own comment). */
+export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoarseStateKey;
 
 // Synchronous beam search using parent-pointer frontier nodes to eliminate
 // O(depth) path-array copies. Each frontier entry is { key, prev, depth, score };
@@ -527,7 +554,15 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // only speed does. See reports/2026-08-23-beam-dedup-numeric-key-arena.md.
     const _mpBase = 1 << level.mustPassKeys.length;
     const _mcBase = 1 << level.mustCrossKeys.length;
-    const _flipperBase = 1 << prep.flipperKeys.length;
+    // Arithmetic power, NOT a bitwise shift: `validateRawLevel` permits up to 32 flipping filters
+    // (flipperUsedMask legitimately uses all 32 int32 bits — see flipper-cardinality.test.ts), but
+    // JS `<<` is int32-only. `1 << 31` becomes -2147483648 and `1 << 32` wraps the shift count back
+    // to `1 << 0 === 1` — both silently wrong radixes. `2 ** n` stays exact (as an ordinary float,
+    // well under Number.MAX_SAFE_INTEGER) through n=32, and equals `1 << n` bit-for-bit for every
+    // n <= 30, so the ordinary small-cardinality path is unchanged. See
+    // docs/solver-correctness-hardening.md's "Open correctness defect: 31-32 flipping-filter beam
+    // identity" for the full defect writeup this fixes.
+    const _flipperBase = 2 ** prep.flipperKeys.length;
     const _surroundBase = (prep.initialSurroundMask ?? 0) + 1;
     const _turnBase = (prep.initialMustTurnMask ?? 0) + 1;
     const _adjBase = (prep.initialAdjTurnMask ?? 0) + 1;
@@ -539,11 +574,14 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // `evaluatePrunedMove`'s own `state.ints > level.requiredIntersections` reject, so always `<= requiredIntersections`;
     // packed cell keys are always `< KEY_SPACE` for a `<=15x15` grid), so distinct tuples can never
     // collide to the same number. Order of composition is arbitrary but must stay internally
-    // consistent (it is: this is the only place either key is built).
+    // consistent (it is: this is the only place either key is built). Delegates to the standalone
+    // _composeBeamNumericCoarseStateKey (defined above _mechanicBucketSelect) so the composition
+    // itself is directly unit-testable without needing a live beam search.
     const beamNumericCoarseStateKey = (c: BeamNode): number =>
-        (((((((c.adjTurnMask) * _turnBase + c.mustTurnMask) * _surroundBase + c.surroundMask)
-            * _flipperBase + c.flipperUsedMask) * _mcBase + c.mustCrossMask)
-            * _mpBase + c.mpVisitedMask) * _intsBase + c.ints) * KEY_SPACE + c.key;
+        _composeBeamNumericCoarseStateKey(
+            { turnBase: _turnBase, surroundBase: _surroundBase, flipperBase: _flipperBase, mcBase: _mcBase, mpBase: _mpBase, intsBase: _intsBase },
+            c,
+        );
     // Root node: prev=null, key=startKey, depth=0
     let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 }];
     let lastYield = startTime;

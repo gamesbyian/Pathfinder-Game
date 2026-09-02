@@ -1,11 +1,11 @@
 /** Unit tests for Solver topology, false-goal trigger search, and DFS/beam search loops. */
 import assert from 'node:assert/strict';
 import { test, vi } from 'vitest';
-import { PACK } from './encoding.js';
+import { KEY_SPACE, PACK } from './encoding.js';
 import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
-import { __pruneFirstStepNeighborsForTests, __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
+import { __composeBeamNumericCoarseStateKeyForTests, __mechanicBucketSelectForTests, __pruneFirstStepNeighborsForTests, __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
 import { applyMove, createState } from './search-state.js';
 import { findTriggerableFalseGoalCells, classifyFalseGoalTriggerability, isParityCompatibleEndpoint } from './false-goal-trigger-search.js';
 import { isConnected } from './topology.js';
@@ -369,6 +369,87 @@ test('beamSearchFromGate numeric coarse-state key reproduces the string-key fall
   assert.deepEqual(numericPath, stringPath, 'numeric and string coarse-state keys must reach an identical solution path with mechanicBucketRetention on');
   assert.equal(numeric._metrics!.nodesExpanded, stringKey._metrics!.nodesExpanded,
     'numeric and string coarse-state keys must expand an identical number of nodes with mechanicBucketRetention on');
+});
+
+// 2026-09-02: counterexamples for docs/solver-correctness-hardening.md's "Open correctness defect:
+// 31-32 flipping-filter beam identity". `validateRawLevel` permits up to 32 flipping filters
+// (level-schema.test.ts's "accepts 32 flipping filters" test), but the OLD `_flipperBase =
+// 1 << flipperCount` was int32-only: `1 << 31 === -2147483648` and `1 << 32` wraps the shift count
+// back to `1 << 0 === 1` — both silently wrong radixes for the two numeric keys below. The fix
+// (search.ts) uses `2 ** flipperCount` and normalizes `flipperUsedMask >>> 0` before composing
+// either key. These test the extracted, directly-callable pieces (`_mechanicBucketSelect`,
+// `_composeBeamNumericCoarseStateKey`) rather than trying to force a full beam search into this
+// exact 32-filter high-bit divergence, since the underlying arithmetic bug is precisely
+// reproducible without one.
+function makeBeamNodeFixture(overrides: Record<string, number> = {}) {
+  return {
+    key: 0, prev: null, depth: 0, insOrd: 0, treeOrd: 0,
+    score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0,
+    surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0,
+    ...overrides,
+  };
+}
+
+test('_mechanicBucketSelect: the OLD 1<<32 base (wraps to 1) aliased distinct (mustCrossMask, flipperUsedMask) states; the fixed 2**32 base does not', () => {
+  // Two genuinely distinct states that collide under the buggy formula
+  // mustCrossMask*base+flipperUsedMask when base=1: (mustCrossMask=1, flipperUsedMask=0) -> 1,
+  // (mustCrossMask=0, flipperUsedMask=1) -> 1. Pin that the old formula really did collide, so
+  // this counterexample is not merely asserted but demonstrated, then prove the fix keeps them apart.
+  const a = makeBeamNodeFixture({ mustCrossMask: 1, flipperUsedMask: 0, score: 10 });
+  const b = makeBeamNodeFixture({ mustCrossMask: 0, flipperUsedMask: 1, score: 9 });
+  const buggyBase = 1 << 32; // what `1 << prep.flipperKeys.length` produced at exactly 32 flippers
+  assert.equal(buggyBase, 1, 'sanity: JS shift-count wraparound really does reduce 1<<32 to 1');
+  assert.equal(a.mustCrossMask * buggyBase + a.flipperUsedMask, b.mustCrossMask * buggyBase + b.flipperUsedMask,
+    'pin the bug: the old base=1 formula really did alias these two distinct states');
+
+  const fixedBase = 2 ** 32;
+  const selected = __mechanicBucketSelectForTests([a, b] as any, 2, fixedBase);
+  assert.equal(selected.length, 2, 'both distinct states must survive selection under the fixed base');
+  assert.ok(selected.includes(a as any) && selected.includes(b as any));
+});
+
+test('_mechanicBucketSelect: a real 32nd-flipper state (bit 31 set, negative int32) buckets distinctly from an unused mask', () => {
+  const bit31 = 1 << 31;
+  assert.equal(bit31, -2147483648, 'sanity: JS bit 31 is a signed int32 value');
+  const usedSignBit = makeBeamNodeFixture({ mustCrossMask: 0, flipperUsedMask: bit31, score: 10 });
+  const unused = makeBeamNodeFixture({ mustCrossMask: 0, flipperUsedMask: 0, score: 9 });
+  const selected = __mechanicBucketSelectForTests([usedSignBit, unused] as any, 2, 2 ** 32);
+  assert.equal(selected.length, 2, 'the sign-bit flipper state and the unused state are genuinely distinct and must both survive');
+});
+
+test('_composeBeamNumericCoarseStateKey: the OLD base=1 (32-filter wrap) aliased two distinct (surroundMask, flipperUsedMask) states; the fixed base does not', () => {
+  // With surroundBase=2 and every field before surroundMask held at 0, the subtotal entering the
+  // flipper term is exactly surroundMask, so (surroundMask=1, flipperUsedMask=0) and
+  // (surroundMask=0, flipperUsedMask=1) alias under the buggy base=1 formula (1*1+0 === 0*1+1) but
+  // must stay distinct once the base correctly reflects a 32-filter level's true radix.
+  const buggyBases = { turnBase: 1, surroundBase: 2, flipperBase: 1, mcBase: 1, mpBase: 1, intsBase: 1 };
+  const fixedBases = { ...buggyBases, flipperBase: 2 ** 32 };
+  const withSurround = makeBeamNodeFixture({ key: 7, surroundMask: 1, flipperUsedMask: 0 });
+  const withFlipper = makeBeamNodeFixture({ key: 7, surroundMask: 0, flipperUsedMask: 1 });
+
+  assert.equal(
+    __composeBeamNumericCoarseStateKeyForTests(buggyBases, withSurround as any),
+    __composeBeamNumericCoarseStateKeyForTests(buggyBases, withFlipper as any),
+    'pin the bug: the old base=1 formula really did alias these two distinct states',
+  );
+  assert.notEqual(
+    __composeBeamNumericCoarseStateKeyForTests(fixedBases, withSurround as any),
+    __composeBeamNumericCoarseStateKeyForTests(fixedBases, withFlipper as any),
+    'the fixed base must keep them distinct',
+  );
+});
+
+test('_composeBeamNumericCoarseStateKey: a real 32nd-flipper state (bit 31 set) composes exactly as the unsigned-normalized arithmetic predicts', () => {
+  const bases = { turnBase: 1, surroundBase: 1, flipperBase: 2 ** 32, mcBase: 1, mpBase: 1, intsBase: 1 };
+  const bit31 = 1 << 31;
+  const withFlipper31 = makeBeamNodeFixture({ key: 5, flipperUsedMask: bit31 });
+  const withoutFlipper31 = makeBeamNodeFixture({ key: 5, flipperUsedMask: 0 });
+  const keyWith = __composeBeamNumericCoarseStateKeyForTests(bases, withFlipper31 as any);
+  const keyWithout = __composeBeamNumericCoarseStateKeyForTests(bases, withoutFlipper31 as any);
+  assert.notEqual(keyWith, keyWithout, 'crossing the 32nd flipper must change the composed coarse-state key');
+  // Every other field/base is 0/1, so the composed value collapses to (flipperUsedMask >>> 0) * KEY_SPACE + key.
+  assert.equal(keyWith, (bit31 >>> 0) * KEY_SPACE + 5);
+  assert.equal(keyWithout, 5);
 });
 
 test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {
