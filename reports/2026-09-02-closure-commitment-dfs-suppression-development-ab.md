@@ -1,10 +1,10 @@
 # `dfs|score=closureCommitment` suppression: smallest production-shaped repricing candidate
 
-> **Status:** active
-> **Last evidence:** 2026-09-02 — joined corrected-EW1 × exact-current-head production reach/work (GHA run [`33588487486`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33588487486), `reports/stress/capability-runs/33588487486/equal-work-production-reach.md`)
-> **Decision:** candidate selected and protocol locked before running the development A/B, per [`2026-09-02-production-shaped-repricing-ab-preflight.md`](2026-09-02-production-shaped-repricing-ab-preflight.md)'s already-fixed mechanical rules.
-> **Remaining gate:** run the development A/B on the EW1 60-level sample under `strictTotalWorkBudget`; if it passes the frozen acceptance rule, a locked confirmation cohort next — do not promote from development evidence alone.
-> **Evidence role:** development (candidate selection + first A/B); confirmation is a separate, later step
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-02 — development A/B on the EW1 60-level sample under `strictTotalWorkBudget` (control [`33598928296`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33598928296), treatment [`33598934794`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33598934794))
+> **Decision:** close `PROFILE_closureCommitment` suppression as tested — zero losses but no gain and no material work reduction (+0.004%, wrong direction), failing the frozen zero-loss/gain-or-≥10%-work acceptance rule. Do not promote; do not run a confirmation cohort (development itself failed).
+> **Remaining gate:** none for this candidate. Gate-sequence step (C) itself remains open — the join's `nearClosureRescue` row is a larger, untested candidate of the same shape, noted but not selected here.
+> **Evidence role:** development (candidate selection + first A/B) — concluded without reaching confirmation
 > **Selection:** the candidate was chosen from the joined table's own numbers, using a fixed, mechanical rule (see "Why this candidate") — not tuned after any A/B outcome, since no A/B has run yet at the time this section was written
 
 ## Why this candidate
@@ -65,4 +65,22 @@ Note: this workflow's `run-name` template (`flags=${{ inputs.enable_flags || 'co
 
 ## Result
 
-_Pending — filled in after both runs complete._
+Both runs completed (control [`33598928296`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33598928296), treatment [`33598934794`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33598934794); "Combine shard results" job log in each, since this workflow is artifact-only and does not commit):
+
+| metric | control | treatment |
+|---|---:|---:|
+| solved | 3/60 | 3/60 |
+| solved set | `R03171`, `R02657`, `R02651` | `R02657`, `R02651`, `R03171` (same set) |
+| aggregate `workSpent` | 586,813,728 | 586,837,354 |
+| work delta | — | **+23,626 (+0.004%)** |
+| aggregate `nodesExpanded` | 262,561,189 | 262,549,594 |
+
+Zero gained, zero lost — the solved set is identical. But aggregate `workSpent` did not drop by the required margin; it is flat to within noise (+0.004%, the wrong direction if anything). **This fails the frozen acceptance rule** (zero losses + (gain OR ≥10% lower work)): zero losses holds, but there is neither a gain nor a material work reduction.
+
+## Interpretation
+
+This is a real, informative null, not a wasted run. The joined table's `dfs|score=closureCommitment|bias=none` row (54,097,041 `workSpent`, 0 wins) is a **corpus-wide** total across all 1,802 current-production rows — the action's actual footprint on this specific 60-level EW1 sample is evidently small enough that removing it from the ladder doesn't move the sample's own aggregate work outside noise. The two ordinary DFS profiles the closed two-DFS-suppression form removed (`objectiveFirst`/`intersectionHarvest`) were both far larger contributors (195M/141M work in the 2026-08-25 60-level sample, vs. this candidate's 54M corpus-wide, likely a small fraction of that on just these 60 levels) — this result is consistent with "the smallest, safest candidate is also too small to matter," not with any defect in the suppression mechanism itself (the ablation flag did exactly what it says: same solved set, small work-ordering noise from a slightly different ladder shape).
+
+## Disposition
+
+**Close this exact candidate as a clean null; do not promote `PROFILE_closureCommitment` suppression.** No confirmation cohort is warranted (development already failed the frozen rule). This does not close the broader repricing gate-sequence step (C): the join's own table still lists `dfs|score=nearClosureRescue|bias=none` (96,138,442 `workSpent`, 0/60 EW1, 0 production wins) as an untested candidate of the same shape but larger corpus-wide footprint — nearly double `closureCommitment`'s — and, per the earlier "Why this candidate" analysis, it does entangle with the admissible-order `nearClosureRescue` tie-break's own real 2/60 EW1 capability if suppressed via the same shared `PROFILE_nearClosureRescue` flag; a future attempt would need either accepting that entanglement (and checking whether it costs anything on a broader sample) or a narrower flag that touches only the ordinary-DFS use. Neither this report nor the join select that as the next candidate — that is a decision for whoever picks up gate-sequence step (C) next, not an automatic escalation from this negative result.
