@@ -34,31 +34,35 @@ This is explicitly **not** a reopening of the closed global two-DFS suppression 
 6. **Rare-capability guardrail:** cross-check any changed level against the 2026-09-01 technique-niches singleton/doubleton list before concluding no capability was lost.
 7. **Reporting:** gains/losses by level ID, aggregate `workSpent` delta, wall cost, actions touched.
 
-## Commands (fixed before running)
+## Execution note: moved from local to GHA mid-flight
+
+The first attempt ran both arms locally (`scripts/level-blind-capability-sweep.mjs` directly, `--workers=4`, against a hand-extracted 60-level corpus subset). This was stopped after control reached 33/60 and treatment 8/60, for two reasons raised in review: (1) every prior repricing development/confirmation A/B in this program (the closed two-DFS suppression's `32901181013`/`32908734154`, the mustcross-flipper/reserve-widen A/Bs, `confirm-transfer-topology-001`, the level-blind targeted sweeps) is anchored to a citable, immutable GHA run ID, not a local session transcript; (2) this session had already lost partial CP-SAT bisection work once earlier to a local background process dying silently mid-run (Workstream 6's own batch-2 recovery, this same day) — a demonstrated reliability gap for uncommitted local compute in this sandbox. `solver-level-blind-targeted-sweep.yml` (`.github/workflows/`) exists for exactly this shape (explicit id list, one-off ablation-flag comparison, no baseline/hint writes) and was used instead.
+
+## Commands (as actually dispatched)
 
 ```bash
-# Build the fixed 60-level EW1 corpus subset once (level IDs from the pricing snapshot's own results)
-python3 - <<'PY'
+# 60 level IDs from the EW1 pricing snapshot's own results (all corpus2)
+ids=$(python3 -c "
 import json
 snap = json.load(open('reports/stress/ew1/33156541827-pricing-snapshot.json'))
-ids = sorted({r['levelId'] for r in snap['results']})
-corpus = json.load(open('data/stress/stress-levels-random.json'))
-byid = {l['id']: l for l in corpus['levels']}
-json.dump({'levels': [byid[i] for i in ids]}, open('/tmp/ew1-60level-corpus.json', 'w'))
-PY
+print(','.join(sorted({r['levelId'] for r in snap['results']})))
+")
 
-# Control
-node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
-  --corpus=/tmp/ew1-60level-corpus.json --strict-total-work-budget --work-budget=10000000 \
-  --workers=4 --out=/tmp/closure-commitment-ab-control.json --summary-out=/tmp/closure-commitment-ab-control-summary.md
-
-# Treatment
-node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
-  --corpus=/tmp/ew1-60level-corpus.json --strict-total-work-budget --work-budget=10000000 \
-  --workers=4 --disable-flags=PROFILE_closureCommitment \
-  --out=/tmp/closure-commitment-ab-treatment.json --summary-out=/tmp/closure-commitment-ab-treatment-summary.md
+# node_budget chosen so node_budget*134/100 (this workflow's own node->work conversion,
+# see solver-level-blind-targeted-sweep.yml) floors to exactly 10,000,000 -- EW1's own
+# canonical per-cell work -- under --strict-total-work-budget=true.
+node_budget=7462687   # 7462687*134/100 = 10,000,000 exactly (integer floor)
 ```
+
+Dispatched via `mcp__github__actions_run_trigger` (`run_workflow`, `ref=main`) with `ids=<60 ids>`, `node_budget=7462687`, `strict_total_work_budget=true`:
+
+- **Control** (`disable_flags=""`): run [`33598928296`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33598928296)
+- **Treatment** (`disable_flags=PROFILE_closureCommitment`): run [`33598934794`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33598934794)
+
+Both dispatched against `main` head at the time (post-capability-refresh commit `df614a5a`); no source change was needed since the suppression uses only the pre-existing `PROFILE_closureCommitment` ablation flag.
+
+Note: this workflow's `run-name` template (`flags=${{ inputs.enable_flags || 'control' }}`) only reflects `enable_flags`, not `disable_flags` — both runs display `flags=control` in the GitHub UI. This is a display-only artifact of the run-name template; the actual dispatch correctly threads `disable_flags` into the solve step's `--disable-flags` argument (verified in the workflow source, `solver-level-blind-targeted-sweep.yml` lines ~193-194). Worth a follow-up doc/template fix, not a correctness issue for this A/B.
 
 ## Result
 
-_Pending — filled in after both arms complete._
+_Pending — filled in after both runs complete._
