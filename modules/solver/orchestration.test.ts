@@ -2679,6 +2679,67 @@ test('connectivity-axis-prune-disabled-retry now honors an explicit baseWorkBudg
         'an explicit baseWorkBudget must now size this tier\'s own dose');
 });
 
+// 2026-09-02: guidance-goal-distance-retry is the sixth tier migrated off queue #2 step 3's
+// ms-derived work-dose debt (following coarse-state-near-tie-retention, repair-fallback,
+// admissible-order-non-default-retry, connectivity-axis-prune-disabled-retry, and
+// must-cross-neighbor-prune-disabled-retry). Same ownership invariant as its five predecessors: a
+// non-binding wall deadline must not resize an explicit-work retry dose, and explicit
+// baseWorkBudget must size the fresh pool. The tier's ms total remains a wall-deadline bound.
+// Unlike its siblings this tier has no budget-fraction override plumbing yet (first-landing
+// scope, per its own comment in stage-budget.ts), so isolation here disables every OTHER
+// default-on last-resort tier via their own overrides/ablation and leaves this one at its
+// default-ON fraction (1.0) via cfg=null.
+function isolateGoalAttractionGuidanceDistanceRetryWorkDoseOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        attemptBudgetTelemetry: true,
+        ablation: {
+            STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: true,
+        },
+        repairAdditiveBudgetMultiplierOverride: 0,
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
+        ...overrides,
+    };
+}
+
+test('guidance-goal-distance-retry work dose no longer resizes with a non-binding deadline change', async () => {
+    const run = (timeBudgetMs: number) => solveLevel(
+        makeGoalAttractionDisabledRetryGatedInfeasibleLevel(),
+        isolateGoalAttractionGuidanceDistanceRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }),
+    );
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.stageId === 'guidance-goal-distance-retry')
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one guidance-goal-distance-retry attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the non-binding deadline');
+});
+
+test('guidance-goal-distance-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const solveWith = (baseWorkBudget: number) => solveLevel(
+        makeGoalAttractionDisabledRetryGatedInfeasibleLevel(),
+        isolateGoalAttractionGuidanceDistanceRetryWorkDoseOpts({ timeBudgetMs: 1000, baseWorkBudget }),
+    );
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.stageId === 'guidance-goal-distance-retry')?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null,
+        'expected a guidance-goal-distance-retry attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
 // ── STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY ─────────────────────────────────────
 //
 // Opt-in, default OFF (see REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION's own comment in
@@ -2778,6 +2839,53 @@ test('disableExtraBudgetPasses suppresses newer additive tiers, while explicit t
     assert.ok(lateProbeOverridden.attempts.some(a => a.stageId === 'late-repair-search'));
 });
 
+// 2026-09-02: repair-elite-prefix-dfs-retry is the seventh tier migrated off queue #2 step 3's
+// ms-derived work-dose debt, and the second (after repair-fallback itself) to use the
+// withWorkCapScope fresh-pool shape rather than runWholeLadderRetryTier. Same ownership invariant
+// as its predecessors: a non-binding wall deadline must not resize an explicit-work retry dose,
+// and explicit baseWorkBudget must size the fresh pool. Isolated via disableExtraBudgetPasses
+// (this tier is opt-in/default-OFF, so an explicit fraction override is required to force it on
+// even with every sibling tier suppressed — see the "explicit tier overrides still win" test above).
+function isolateRepairElitePrefixDfsRetryWorkDoseOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_REPAIR_ELITE_PREFIX_DFS_RETRY: true },
+        repairElitePrefixDfsRetryBudgetFractionOverride: 1,
+        attemptSearchForTesting: exhaustingDispatch,
+        attemptBudgetTelemetry: true,
+        ...overrides,
+    };
+}
+
+test('repair-elite-prefix-dfs-retry work dose no longer resizes with a non-binding deadline change', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateRepairElitePrefixDfsRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.stageId === 'repair-elite-prefix-dfs-retry')
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one repair-elite-prefix-dfs-retry attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the non-binding deadline');
+});
+
+test('repair-elite-prefix-dfs-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const solveWith = (baseWorkBudget: number) => solveLevel(level, isolateRepairElitePrefixDfsRetryWorkDoseOpts({ timeBudgetMs: 1000, baseWorkBudget }));
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.stageId === 'repair-elite-prefix-dfs-retry')?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null,
+        'expected a repair-elite-prefix-dfs-retry attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
 test('late-repair-search does not fire when repairConfigs is empty only because STRATEGY_REPAIR_FALLBACK was ablated off (regression, fixed 2026-08-20)', async () => {
     // makeRepairGatedInfeasibleLevel() genuinely needs repair fallback (needsRepairFallback(f) is
     // true for it), unlike makeGoalAttractionDisabledRetryGatedInfeasibleLevel() above, which the late
@@ -2796,6 +2904,53 @@ test('late-repair-search does not fire when repairConfigs is empty only because 
         'STRATEGY_REPAIR_FALLBACK: false must not be silently undone by the late-probe tier');
     assert.equal(result.attempts.some(a => a.repair === true), false,
         'no repair attempt of any kind should run when the fallback is explicitly disabled');
+});
+
+// 2026-09-02: late-repair-search is the eighth tier migrated off queue #2 step 3's ms-derived
+// work-dose debt, and the first found outside the original nine-site CI inventory (its
+// `repairLateProbeTotalBudget = timeBudgetMs` line has no `* fraction` multiplication, so the
+// ratchet's own regex-based scan never flagged it as debt — see
+// scripts/check-solver-budget-boundaries.mjs's own comment on this site). Same ownership
+// invariant as its seven predecessors: a non-binding wall deadline must not resize an
+// explicit-work retry dose, and explicit baseWorkBudget must size the fresh pool.
+function isolateLateRepairSearchWorkDoseOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_REPAIR_LATE_PROBE: true },
+        repairLateProbeNodeBudgetOverride: 100,
+        attemptSearchForTesting: exhaustingDispatch,
+        attemptBudgetTelemetry: true,
+        ...overrides,
+    };
+}
+
+test('late-repair-search work dose no longer resizes with a non-binding deadline change', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateLateRepairSearchWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.stageId === 'late-repair-search')
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one late-repair-search attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own work pool must depend on workBudget, not on the non-binding deadline');
+});
+
+test('late-repair-search now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const solveWith = (baseWorkBudget: number) => solveLevel(level, isolateLateRepairSearchWorkDoseOpts({ timeBudgetMs: 1000, baseWorkBudget }));
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.stageId === 'late-repair-search')?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null,
+        'expected a late-repair-search attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
 });
 
 test('adaptive gate weighting cannot claim more than the remaining tier budget (regression, fixed 2026-08-20)', async () => {

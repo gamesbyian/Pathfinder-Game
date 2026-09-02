@@ -2372,8 +2372,16 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         prep._cfg = repairElitePrefixDfsRetryCfg;
         // FRESH, ADDITIVE work scope — same "extend, don't share the depleted pool" philosophy as
         // the non-default-retry tier above, but with lexical ownership/restoration.
+        // Queue #2 step-3 work-dose migration (2026-09-02, seventh migrated site): size this tier's
+        // fresh work pool from the solve's already-resolved canonical workBudget instead of
+        // independently converting its timeBudgetMs-derived wall allocation back into work.
+        // REPAIR_ELITE_PREFIX_DFS_RETRY_BUDGET_FRACTION is 1.0, so the plain-default/no-explicit-work
+        // call shape is algebraically identical (and this opt-in/default-OFF tier is unreachable
+        // there regardless); explicit-work research callers now get the work dose they actually
+        // requested. The ms total remains below solely as the tier's wall-clock safety deadline.
+        // Same pattern as repair-fallback's own migration (also a withWorkCapScope fresh pool).
         const repairElitePrefixDfsRetryTotalBudget = Math.floor(timeBudgetMs * repairElitePrefixDfsRetryBudgetFraction);
-        const repairElitePrefixDfsRetryWorkBudget = legacyMsToWork(repairElitePrefixDfsRetryTotalBudget, MIN_ATTEMPT_WORK);
+        const repairElitePrefixDfsRetryWorkBudget = scaledStageWorkBudget(workBudget, repairElitePrefixDfsRetryBudgetFraction, MIN_ATTEMPT_WORK);
         try {
             await withWorkCapScope(prep, prep._workMeter.units + repairElitePrefixDfsRetryWorkBudget, async () => {
                 // Same per-config/per-gate loop shape as the ordinary repair fallback loop above.
@@ -2525,7 +2533,19 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // `prep._workMeter.units >= (prep._workCap ?? Infinity)` as a hard stop, so a stale, already-spent
         // cap would make this tier's very first `runAttempt` call terminate immediately regardless of
         // its own generous node/time budget.
-        const repairLateProbeWorkBudget = legacyMsToWork(repairLateProbeTotalBudget, MIN_ATTEMPT_WORK);
+        // Queue #2 step-3 work-dose migration (2026-09-02, eighth migrated site, and the first found
+        // outside the original nine-site CI-ratchet inventory: this site's `repairLateProbeTotalBudget
+        // = timeBudgetMs` line has no `* fraction` multiplication, so it never matched the ratchet's
+        // regex-based debt scan even though it shares the exact same legacyMsToWork(totalBudget-shaped
+        // ms) -> fresh-work-cap pattern as every sibling tier above). Size the fresh cap from the
+        // solve's already-resolved canonical workBudget (fraction 1, matching the implicit `* 1`
+        // this site's ms total always had) instead of reconverting timeBudgetMs. The plain-default/
+        // no-explicit-work call shape is algebraically identical (workBudget itself is already
+        // the legacy ms-to-work compatibility conversion of timeBudgetMs there — see workBudget's own
+        // resolution above); explicit-
+        // work research callers now get the work dose they actually requested. The ms total remains
+        // above solely as this tier's own per-gate time-slicing/wall-clock safety input.
+        const repairLateProbeWorkBudget = scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK);
         await withWorkCapScope(prep, prep._workMeter.units + repairLateProbeWorkBudget, async () => {
             for (let gi = 0; gi < activeGates.length; gi++) {
                 if (prep._metrics!.nodesExpanded >= repairLateProbeNodeCeiling) break;
@@ -2572,13 +2592,21 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     // goalAttractionGuidanceDistanceRetryNodeReserve is derived from (stage-budget.ts) — the two must
     // stay in lockstep.
     if (!result.solution && goalAttractionGuidanceDistanceRetryTierWillRun && prep._metrics.nodesExpanded < goalAttractionGuidanceDistanceRetryNodeCeiling) {
+        // Queue #2 step-3 work-dose migration (2026-09-02, sixth migrated site): size this tier's
+        // fresh work pool from the solve's already-resolved canonical workBudget instead of
+        // independently converting its timeBudgetMs-derived wall allocation back into work.
+        // GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY_BUDGET_FRACTION is 1.0, so the plain-default/
+        // no-explicit-work call shape is algebraically identical; explicit-work research callers now
+        // get the work dose they actually requested. The ms total remains below solely as the tier's
+        // wall-clock safety deadline. Same pattern as connectivity-axis-prune-disabled-retry and
+        // must-cross-neighbor-prune-disabled-retry's own migrations.
         const goalAttractionGuidanceDistanceRetryTotalBudget = Math.floor(timeBudgetMs * goalAttractionGuidanceDistanceRetryBudgetFraction);
         const goalAttractionGuidanceDistanceRetryResult = await runWholeLadderRetryTier({
             stageId: 'guidance-goal-distance-retry', proxyOverrides: { SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE: true },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: goalAttractionGuidanceDistanceRetryTotalBudget, nodeCeiling: goalAttractionGuidanceDistanceRetryNodeCeiling,
-            workBudget: legacyMsToWork(goalAttractionGuidanceDistanceRetryTotalBudget, MIN_ATTEMPT_WORK),
+            workBudget: scaledStageWorkBudget(workBudget, goalAttractionGuidanceDistanceRetryBudgetFraction, MIN_ATTEMPT_WORK),
             workStart: prep._workMeter.units,
             staircase: retryTierStaircase,
         });

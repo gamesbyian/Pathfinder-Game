@@ -75,7 +75,17 @@ assert.deepEqual(directMsToWorkLines.filter(line => !approvedDirectMsToWorkSites
 // sites in that set carry. Guard against silently reintroducing the old work-dose pattern for each
 // migrated tier. See reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the full
 // account of what this pattern does and does not preserve.
-const migratedWorkDoseSites = ['coarseStateNearTieRetentionRetryTotalBudget', 'repairFallbackTotalBudget', 'nonDefaultRetryTotalBudget', 'connectivityRetryTotalBudget', 'mcNeighborBudgetRetryTotalBudget'];
+//
+// 2026-09-02: `repairLateProbeTotalBudget` (late-repair-search) is included here even though it was
+// NEVER one of the nine names in approvedLegacyTimeDerivedAllocations above: its ms line is a bare
+// `= timeBudgetMs` assignment with no `* fraction` multiplication, so it never matched that set's
+// regex-based scan and was undetected debt of the identical work-dose pattern for as long as every
+// other site above carried it. If a future site reconverts a `totalBudget`-shaped ms value back into
+// work via legacyMsToWork without going through an approved/migrated name tracked in one of these
+// two lists, it can currently slip past this ratchet the same way — search the source directly
+// (`grep -n legacyMsToWork modules/solver/orchestration.ts`) when auditing for new debt rather than
+// trusting this list's completeness alone.
+const migratedWorkDoseSites = ['coarseStateNearTieRetentionRetryTotalBudget', 'repairFallbackTotalBudget', 'nonDefaultRetryTotalBudget', 'connectivityRetryTotalBudget', 'mcNeighborBudgetRetryTotalBudget', 'goalAttractionGuidanceDistanceRetryTotalBudget', 'repairElitePrefixDfsRetryTotalBudget', 'repairLateProbeTotalBudget'];
 for (const site of migratedWorkDoseSites) {
     assert.equal(orchestration.includes(`legacyMsToWork(${site}`), false,
         `${site}'s work dose regressed back to a timeBudgetMs-derived legacyMsToWork conversion`);
