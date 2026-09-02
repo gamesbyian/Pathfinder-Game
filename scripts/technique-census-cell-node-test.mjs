@@ -211,6 +211,63 @@ test('cell.perTechniqueWorkCap wider than the gate leftover never widens anythin
     assert.equal(result.perTechniqueWorkCap, 1_000_000_000);
 });
 
+test('cell.perTechniqueWorkCap: a technique right-censored at its OWN small cap hands off to the next technique, not deadlineTruncated', async () => {
+    // Regression test for a real bug found empirically (reports/2026-09-02-static-portfolio-
+    // construction-pilot.md): config A "times out" (right-censors) at its own small
+    // perTechniqueWorkCap share while the gate ceiling still has plenty left for config B. The
+    // original deadlineTruncated check compared spent-vs-gateCeiling, which was only a valid
+    // wall-clock inference when a single technique could claim the WHOLE remaining share --
+    // exactly the invariant perTechniqueWorkCap breaks. This must be treated as an ordinary
+    // hand-off to config B, not a cell-aborting deadline problem.
+    let step = 0;
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        step++;
+        if (step === 1) {
+            // Config A spends exactly its own 1,000 perTechniqueWorkCap share and reports
+            // 'timed-out' (right-censored at its own cap), same shape a real non-terminating
+            // search reports when cut off by prep._workCap without a natural exhaustion state.
+            prep._workMeter.units += 1_000;
+            prep._metrics.nodesExpanded += 1;
+            return { path: null, outcome: 'timed-out' };
+        }
+        // Config B then solves with plenty of the gate's own budget still available.
+        prep._workMeter.units += 50;
+        prep._metrics.nodesExpanded += 1;
+        return { path: [1, 2, 3], outcome: 'success' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const result = await runCell({
+        ...baseCell, techniqueKeys: ['dfs|score=nearClosureRescue|bias=none', 'dfs|score=default|bias=none'],
+        workBudget: 100_000_000, perTechniqueWorkCap: 1_000,
+    });
+
+    // Config B must have been reached at all (2 calls, not 1) -- the bug made this cell abort
+    // after config A's very first attempt.
+    assert.equal(calls.length, 2);
+    assert.equal(result.deadlineTruncated, false);
+    assert.equal(result.status, 'referee-invalid', 'a stubbed non-real path is never referee-valid; the point here is deadlineTruncated staying false, not a real solve');
+    assert.equal(result.winningConfigKey, 'dfs|score=default|bias=none');
+});
+
+test('a genuine wall-clock timeout well short of even a small perTechniqueWorkCap still deadlineTruncates', async () => {
+    // The other half of the same discriminator: a real wall-clock problem (stops far short of ITS
+    // OWN small cap, not just short of the whole gate ceiling) must still be caught.
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._workMeter.units += 5; // far below the 1,000 perTechniqueWorkCap share
+        prep._metrics.nodesExpanded += 1;
+        return { path: null, outcome: 'timed-out' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const result = await runCell({
+        ...baseCell, techniqueKeys: ['dfs|score=nearClosureRescue|bias=none', 'dfs|score=default|bias=none'],
+        workBudget: 100_000_000, perTechniqueWorkCap: 1_000,
+    });
+
+    assert.equal(calls.length, 1, 'the whole cell stops at the first genuine wall-clock timeout, same as the no-cap case');
+    assert.equal(result.deadlineTruncated, true);
+    assert.equal(result.status, 'deadline-truncated');
+});
+
 test('node-budget cell ignores perTechniqueWorkCap entirely (work-only field)', async () => {
     const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
         prep._metrics.nodesExpanded += 10;
