@@ -1,9 +1,9 @@
 # Static portfolio construction pilot: EW1 greedy ranking vs. real production win frequency
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-02 — this report
-> **Decision:** Do not build a rung-2 fixed-work static portfolio from the EW1 60-level greedy ranking alone; it is a hard-residual-stratum sample and 3 of its top-7 picks never win in real production. Any future rung-2 candidate construction/A/B must anchor on the real production win-frequency ranking below (or a materially larger/representative sample), using EW1 only for its complementary oracle-exclusivity signal.
-> **Remaining gate:** none for this pilot. The next gate-sequence (C) step is a materially larger design/implementation effort (a real bounded fixed-work portfolio scheduler mode + population-scale A/B), not yet started — see "Next gate" below.
+> **Status:** active
+> **Last evidence:** 2026-09-02 — this report, including the shared-envelope execution addendum below
+> **Decision:** Do not build a rung-2 fixed-work static portfolio from the EW1 60-level greedy ranking alone; it is a hard-residual-stratum sample and 3 of its top-7 picks never win in real production. Any future rung-2 candidate construction/A/B must anchor on the real production win-frequency ranking below (or a materially larger/representative sample), using EW1 only for its complementary oracle-exclusivity signal. A real bounded shared-envelope execution mode now exists and needed no `attempts.ts` change (see addendum); its first run (10M shared budget) was degenerate/uninformative (budget starvation before the tail was ever reached), and a second run (67M shared budget, matching this program's own established envelope) was in flight as of this report's last edit.
+> **Remaining gate:** the 67M-envelope `full-menu` vs. `portfolio-11` run's result (see addendum) — once it lands, report whether the top-11 portfolio matches full-menu coverage/work under an envelope large enough for the tail to actually be reached, then decide whether a fresh (non-EW1) population-scale confirmation is warranted.
 > **Evidence role:** discovery
 > **Selection:** observational — both rankings report their full curve (all 34 techniques), not a cherry-picked cardinality
 
@@ -92,9 +92,30 @@ Per the workstream's cross-item guardrail ("Scheduler/repricing experiments must
 
 ## Next gate
 
-This pilot nominates a much better-informed starting point than either ranking alone: **a real rung-2 candidate portfolio should anchor on the real-production top ranks (roughly the top 11, which already cover 88.3% of wins) plus deliberately retained narrow specialists identified by a *representative* (not hard-residual-only) equal-work census**, not the EW1 60-level sample by itself. Building and dispatching that candidate requires:
+This pilot nominates a much better-informed starting point than either ranking alone: **a real rung-2 candidate portfolio should anchor on the real-production top ranks (roughly the top 11, which already cover 88.3% of wins) plus deliberately retained narrow specialists identified by a *representative* (not hard-residual-only) equal-work census**, not the EW1 60-level sample by itself. This report does not itself run that population-scale development A/B; it closes the "smallest value-of-information pilot" step and hands the next agent a concrete, evidence-informed starting candidate design instead of an unguided rung-2 search.
 
-1. a real bounded fixed-work portfolio execution mode (an explicit ordered technique list run under `strictTotalWorkBudget`, bypassing `ATTEMPT_POLICY` routing) — a materially larger design/implementation effort against `modules/solver/attempts.ts`'s production orchestration, appropriately left as its own gate per the ladder rather than folded into this offline pilot;
-2. a population-scale development A/B on a population that is not the already-heavily-mined EW1 60-level sample, following the usual selection/confirmation rules in [`solver-evaluation-evidence.md`](../docs/solver-evaluation-evidence.md).
+## Addendum (same day): a real shared-envelope execution mode already exists — no `attempts.ts` change needed
 
-This report does not implement or dispatch either; it closes the "smallest value-of-information pilot" step and hands the next agent a concrete, evidence-informed starting candidate design instead of an unguided rung-2 search.
+The original version of this section proposed that a real fixed-work portfolio A/B needs "a materially larger design/implementation effort against `modules/solver/attempts.ts`'s production orchestration." **That premise was wrong; correcting it here rather than leaving a stale claim in place.** `scripts/technique-census-cell.mjs`'s existing `runCell` already runs an arbitrary ordered technique-key list against one level under one cumulative shared work budget, stopping at the first solve — exactly the semantics a real sequential portfolio needs, and the same execution path EW1's own pricing snapshot used. New tool `scripts/build-static-portfolio-plan.mjs` (paired test: `scripts/build-static-portfolio-plan-node-test.mjs`) constructs a `technique-census.mjs`-compatible plan from a population plus named arms (ordered technique-key lists) plus one shared work budget, with no solver/production code touched at all.
+
+### First run (10,000,000 shared budget): degenerate, not informative
+
+Ran three arms — `full-menu` (all 34 techniques, real-production-rank order), `portfolio-11`, `portfolio-15` (the same order's first 11/15) — on the same 60 EW1 levels, sharing **10,000,000** total work per cell (EW1's own per-technique unit, chosen for continuity/cheap first pass):
+
+```
+node scripts/run-bundled.mjs scripts/build-static-portfolio-plan.mjs -- \
+  --population=reports/stress/ew1/33156541827-pricing-snapshot.json --arms=arms.json \
+  --work-budget=10000000 --out=plan.json
+node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+  --plan=plan.json --shard=1 --shards=1 --workers=4 --out=result.json
+```
+
+**All three arms came back byte-identical**: 2/60 solved, 589,430,137 total charged work, 58/60 cells hitting `work-budget-reached` — every arm, no differences whatsoever. This is not a null result about the portfolio; it is a **degenerate, uninformative run**. At a 10M shared budget, the front-ranked techniques (`repair|score=repair|guidance=standard`, the top beams) already consume the entire budget on 58/60 levels before the list ever reaches position 12 (or even, on many levels, position 4-5) — the tail literally never gets a turn to run in either arm, so of course removing it changes nothing. This repeats, at execution scale, the exact lesson gate-sequence (C) rung 1 already learned from population choice: **a shared budget too small to ever reach the compared techniques cannot test whether they matter.**
+
+### Second run (67,000,000 shared budget, `full-menu` vs. `portfolio-11` only): in flight
+
+Relaunched with the same 60 levels at **67,000,000** shared work per cell — the envelope this program's own prior real A/Bs used (`node_budget=50,000,000` → `work=67,000,000`, e.g. the `finishFirst` concentrated-population A/B) — and only two arms (`full-menu`, `portfolio-11`; dropping `portfolio-15` since it can only ever match one of the other two once the shared 11-technique prefix's budget is spent, and cutting it saves a third of the compute). This run was still in progress when this report was last edited; see the update below (or `reports/stress/portfolio/` for the raw result) for its outcome before treating any 67M-envelope conclusion as final.
+
+### Addendum: the zero-production-win tail is reached often, not just theoretically dead
+
+A related offline check against the same `33588487486` join's per-level rows (`reports/stress/capability-runs/33588487486/per-level-corpus{1,2}.json`, counting each zero-win technique's appearances in `failedStrategies` across both corpora) sharpens the rung-1 zero-win-tail accounting: the three `admissible-order` tie-break variants (`intersectionHarvest`, `mustCrossFirst`, `nearClosureRescue`) are **never attempted at all** (0/1,802 rows — `STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE` is a closed default-off opt-in, so these are architecturally unreachable in current production, not merely unlucky). But the other five zero-win techniques are reached often and still never win: `dfs|score=finishFirst` (445/1,802 rows, 24.7%), `dfs|score=nearClosureRescue` (444, 24.6%), `dfs|score=closureCommitment` (443, 24.6%), and the two zero-width-2000 beams `beam|score=harvestThenFinish`/`beam|score=knotBuilder` (157 each, 8.7%). Being tried on up to a quarter of all levels and never once winning is stronger evidence of genuine dead weight than the raw win-count table alone shows — these five are not rare unlucky misses, they are a real reached fraction of the ladder that costs real work whenever reached for zero return.
