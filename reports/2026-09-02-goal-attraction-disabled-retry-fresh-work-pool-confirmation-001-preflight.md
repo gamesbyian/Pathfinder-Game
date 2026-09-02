@@ -59,6 +59,8 @@ Workflow: `solver-level-blind-targeted-sweep.yml`, `ids_file=data/stress/goal-at
 
 Both dispatches share `solver-level-blind-targeted-sweep.yml`'s own concurrency group, so they run sequentially (control first), same as the development A/B.
 
+Dispatched: control run [`33692825450`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33692825450), treatment run [`33692832891`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33692832891), both at commit `a91ee876`.
+
 ## Result
 
 [Recorded once both runs complete.]
