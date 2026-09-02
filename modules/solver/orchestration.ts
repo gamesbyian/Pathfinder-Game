@@ -2032,17 +2032,44 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // reduced ceiling this pass shares with the other early tiers, so it cannot spend the
         // admissible-order-fallback tier's reserve.
         //
-        // WORK POOL: the OUTER, already-depleting (workBudget, workStart) — unlike every promoted
-        // retry tier below, deliberately NOT a fresh one (this pass predates that fix and has never
-        // been re-measured with it; see coarse-state-near-tie-retention-disabled-retry's own call site for why a fresh pool
-        // matters for a tier whose ceiling is genuinely protected but whose work share isn't).
+        // WORK POOL: the OUTER, already-depleting (workBudget, workStart) by default — unlike every
+        // promoted retry tier below, deliberately NOT a fresh one (this pass predates that fix and
+        // was, until 2026-09-02, never re-measured with it). 2026-09-02 telemetry
+        // (reports/2026-09-02-goal-attraction-disabled-retry-work-pool-starvation.md) found this
+        // starves 64% of otherwise-eligible attempts to zero real search even when
+        // STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE genuinely protects the NODE
+        // dimension: every zero-attempt level showed the shared work pool already 1.0x-2.4x over
+        // `workBudget` while `nodesExpanded` sat comfortably under its own protected ceiling.
+        //
+        // STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL (opt-in, default OFF — NEW,
+        // unvalidated mechanism, landed 2026-09-02 directly motivated by the starvation telemetry
+        // above): when enabled, gives this pass the same "extend, don't share the depleted pool"
+        // treatment coarse-state-near-tie-retention-disabled-retry's own call site already has (see
+        // that site's own comment for the full derivation and its own R00180 measurement) — a fresh
+        // `prep._workMeter.units` mark plus a work budget sized off this tier's own
+        // `diversityBudgetFraction` of the solve's resolved `workBudget` (`GOAL_ATTRACTION_
+        // DISABLED_RETRY_BUDGET_FRACTION` is the integer `1.0`, so this is a full-sized fresh pool
+        // when enabled, matching this tier's own "whole extra ladder rerun" self-conception — see
+        // the fraction constant's own comment — not a small slice). OPT-IN convention (`cfg &&
+        // cfg.FLAG === true`), matching every other brand-new/unvalidated reserve mechanism in this
+        // file: this is a genuine allocation-shape change (not a currency swap of an existing fresh
+        // pool), so it needs its own before/after population evidence before any promotion, per
+        // docs/solver-budget-determinism.md's own entry for this tier. Zero live-play risk either
+        // way: both real interactive callers pass `disableExtraBudgetPasses: true`, which zeroes
+        // `diversityBudgetFraction` and skips this whole block regardless of pool sizing (see the
+        // override comment above).
+        const freshWorkPoolEnabled = !!(cfg && cfg.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL === true);
+        const diversityWorkBudget = freshWorkPoolEnabled
+            ? scaledStageWorkBudget(workBudget, diversityBudgetFraction, MIN_ATTEMPT_WORK)
+            : workBudget;
+        const diversityWorkStart = freshWorkPoolEnabled ? prep._workMeter.units : workStart;
         const diversityResult = await runWholeLadderRetryTier({
             stageId: 'goal-attraction-disabled-retry',
             proxyOverrides: Object.fromEntries((GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS as readonly string[]).map(flag => [flag, false])),
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
             totalBudgetMs: Math.floor(timeBudgetMs * diversityBudgetFraction),
-            nodeCeiling: diversityNodeCeiling, workBudget, workStart,
+            nodeCeiling: diversityNodeCeiling, workBudget: diversityWorkBudget, workStart: diversityWorkStart,
             staircase: retryTierStaircase,
         });
         result.attempts.push(...diversityResult.attempts);

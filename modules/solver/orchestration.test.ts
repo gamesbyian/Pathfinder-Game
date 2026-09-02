@@ -1437,6 +1437,62 @@ test('goal-attraction-disabled-retry reserve is a no-op when repairFallbackNodeR
     assert.equal(result.nodesExpanded, 1000, 'all 1000 nodes accounted for: 700 early + 300 repair fallback, nothing stranded');
 });
 
+// STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL (opt-in, default OFF — see
+// reports/2026-09-02-goal-attraction-disabled-retry-work-pool-starvation.md for the population-scale
+// telemetry motivating this). Same work-expensive-overshoot mock as the main-search-reserve WORK
+// tests above (prep._workMeter.units += a fixed amount per attempt, node count left small), so a
+// modest workBudget is exhausted by main-search alone long before goal-attraction-disabled-retry's
+// own (purely node-gated) eligibility check is even reached.
+test('goal-attraction-disabled-retry fresh work pool gives the pass real room even after the shared pool is already spent', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const mainConfigs = getConfiguredAttemptConfigs(level, null).filter(config => !config.repair && !config.admissibleOrder);
+    const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
+        const [, , , prep, , , , , , out] = args;
+        prep._workMeter.units += 100_000;
+        if (prep._metrics) prep._metrics.nodesExpanded += 1;
+        if (out) { out.nodesExpanded = 1; out.timedOut = true; }
+        return null;
+    };
+    const opts = {
+        timeBudgetMs: 1000,
+        nodeBudget: 1_000_000, // generous -- the node dimension must never be what this test exercises
+        workBudget: 50_000, // a single mocked attempt (100,000) overshoots this 2x, so main-search
+        // alone leaves the shared pool decisively (not just marginally) over budget by the time
+        // diversity's own gate is reached -- avoids an exact-equality boundary race with the
+        // `workSpent >= workBudget` check's own before-dispatch timing.
+        attemptBudgetTelemetry: true, // required for Attempt.workSpent to be populated at all
+        admissibleOrderBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+        connectivityAxisExhaustedRetryBudgetFractionOverride: 0,
+        mcNeighborBudgetRetryBudgetFractionOverride: 0,
+        repairLateProbeNodeBudgetOverride: 0,
+        attemptSearchForTesting: dispatch,
+    };
+    assert.ok(mainConfigs.length >= 1, 'fixture sanity: at least one main-search attempt must run to spend the shared pool');
+    const off = await solveLevel(level, {
+        ...opts,
+        ablation: { STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false, STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL: false },
+    });
+    const on = await solveLevel(level, {
+        ...opts,
+        ablation: { STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY: false, STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL: true },
+    });
+    const diversityAttempts = (result: typeof off) => result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry');
+    // OFF: the shared (workBudget, workStart) pool main-search already exhausted (workSpent >=
+    // workBudget) is what diversity's own runGateSerialAttempts call reads too, so its very first
+    // per-gate check bails out before dispatching anything at all -- zero attempts, not merely
+    // zero-work ones (this is the exact `attemptCount: 0` signature the population telemetry in
+    // reports/2026-09-02-goal-attraction-disabled-retry-work-pool-starvation.md found).
+    assert.equal(diversityAttempts(off).length, 0,
+        'off: the shared pool is already fully spent by main-search alone, so diversity never even gets dispatched');
+    // ON: a fresh prep._workMeter.units mark plus a fraction-1.0 (i.e. full-sized) fresh pool sized
+    // off the same workBudget gives diversity real room regardless of what main-search already spent.
+    assert.ok(diversityAttempts(on).length > 0, 'on: diversity gets a real dispatch from its own fresh pool');
+    assert.ok(diversityAttempts(on).some(a => (a.workSpent ?? 0) > 0),
+        'on: at least one diversity attempt gets real work room from its own fresh pool');
+});
+
 // STRATEGY_ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE (opt-in, default OFF — see
 // ADMISSIBLE_ORDER_PROFILE_NODE_RESERVE_FRACTION's own comment and the read site's, which documents
 // the R03148 precedent this targets and the asymmetric-risk caution specific to this mechanism).
