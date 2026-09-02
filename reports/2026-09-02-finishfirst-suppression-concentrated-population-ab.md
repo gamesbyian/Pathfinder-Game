@@ -1,9 +1,9 @@
 # `dfs|score=finishFirst` suppression, retested on a population where its cost concentrates
 
-> **Status:** active
-> **Last evidence:** 2026-09-02 — development A/B dispatched, population selected as described below
-> **Decision:** pending — this report is prespecified before either arm's outcome is known
-> **Remaining gate:** both dispatched runs must complete and be evaluated against the frozen zero-loss/gain-or-≥10%-work acceptance rule
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-02 — development A/B on the 60-level concentrated-population sample under `strictTotalWorkBudget` (control [`33605009054`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33605009054), treatment [`33605017539`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33605017539))
+> **Decision:** close `PROFILE_finishFirst` suppression as tested on this population too — 0/60 solved in both arms (trivially zero losses, zero gains), work delta -0.00008% (essentially zero, and even this tiny movement is in the "right" direction but three orders of magnitude short of the ≥10% bar). Even a population specifically constructed so every sampled level reaches the exact stage this action's cost concentrates in shows no detectable effect from removing it. This closes not just this candidate but the whole "population change alone rescues single small-action suppression" hypothesis the prior closed report's disposition raised.
+> **Remaining gate:** none for this candidate or this population-construction approach. Gate-sequence step (C) itself remains open, but the complexity ladder's rung 1 ("prune/race existing actions" via single/paired-action suppression) now has four closed-negative results across two materially different populations — see disposition for the recommended next rung.
 > **Evidence role:** development (population change + re-test of an already-designed candidate) — prespecified before either arm's outcome is known
 > **Selection:** candidate unchanged from the prior closed-negative report (not re-selected); population chosen by a fixed, mechanical rule from historical per-level stage-reach data (see below), sampled with a fixed seed before either arm ran
 
@@ -48,8 +48,25 @@ Dispatched via `mcp__github__actions_run_trigger` (`run_workflow`, `ref=main`), 
 
 ## Result
 
-*(pending — filled in once both runs complete)*
+Both runs completed (control [`33605009054`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33605009054), treatment [`33605017539`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33605017539); "Combine shard results" job log in each, since this workflow is artifact-only and does not commit):
+
+| metric | control | treatment |
+|---|---:|---:|
+| solved | 0/60 | 0/60 |
+| aggregate `workSpent` | 4,020,350,808 | 4,020,347,464 |
+| work delta | — | **-3,344 (-0.00008%)** |
+| aggregate `nodesExpanded` | 3,052,368,901 | 3,050,296,040 |
+
+Zero levels solved in either arm — this specific 60-level sample turned out to be uniformly hard at this envelope (consistent with the historical join's own 42/771 ≈ 5.4% success rate for this population; a random 60-level draw landing on zero successes has roughly a 4% chance under that rate, not an anomaly). Zero gains and zero losses follow trivially. Aggregate `workSpent` moved by essentially nothing — -0.00008%, three orders of magnitude short of the ≥10% bar, and while technically in the direction a real suppression effect would produce, a movement this small is indistinguishable from noise. **This fails the frozen acceptance rule decisively** (zero losses holds; no gain; no material work reduction — not even close).
+
+## Interpretation
+
+This is a stronger, more decisive null than any of the three prior candidates, not merely a repeat. This population was specifically constructed so that every one of the 60 sampled levels reaches `guidance-goal-distance-retry` — the exact stage that accounts for 257M of `finishFirst`'s 279M corpus-wide `workSpent` — at the exact envelope (`node_budget=50,000,000`) that reach data was measured at. If concentrating the population on "reach" alone were sufficient to expose this candidate's cost, this is the population that should have shown it. It did not, by nearly five orders of magnitude relative to the 10% threshold.
+
+The likely reason: "reaching" a stage is necessary but nowhere near sufficient for an action to dominate that stage's own cost, let alone the level's total cost. `guidance-goal-distance-retry` itself runs the same broad multi-profile ladder every other stage does (`profilesFirst([...])`, of which `finishFirst` is only one of several profiles tried) — reaching the stage means the *stage* got invoked, not that `finishFirst` specifically consumed a meaningful share of that stage's own work on any *individual* level in this sample, even though its aggregate corpus-wide total (summed across all 771 reaching levels) is large. A corpus-wide total that looks large in aggregate can still be a thin, unconcentrated spread across many levels rather than genuinely concentrated on any usefully-sized subset — the opposite of what "cost concentrates in this stage" was assumed to mean when this population was built.
 
 ## Disposition
 
-*(pending)*
+**Close `PROFILE_finishFirst` suppression as tested on this population; no confirmation cohort warranted.** More importantly, this closes the broader hypothesis the prior closed report's disposition raised: that a differently-constructed *population* alone (as opposed to a materially different *candidate mechanism*) could rescue single/paired small-action suppression on gate-sequence step (C). Four candidates now span two populations (EW1's 60-level frozen-gap sample; this stage-reach-concentrated 60-level sample) and roughly a 5x within-EW1 footprint range, with the same non-result every time — three flat-to-slightly-wrong-direction, one flat-to-negligibly-right-direction, none within two orders of magnitude of the acceptance bar.
+
+Per `solver-scheduling-policy.md`'s own "Configuration and portfolio search" complexity ladder, this candidate class **is rung 1** ("prune/race existing actions" via single/paired-action suppression). Rung 1 is now closed for gate-sequence step (C) on ordinary small DFS-tail actions specifically — not because suppression as a mechanism is unsound (the ablation flags do exactly what they say), but because no single named action's own removal moves aggregate work outside noise on any population tried so far, regardless of that action's own reported corpus-wide total. The next gate-sequence (C) attempt should move to **rung 2** ("construct a small fixed-work static portfolio") rather than searching for a fifth single-action candidate or a third population: a genuinely different mechanism — evaluating a curated subset of the existing action grammar as a whole under a fixed work envelope, rather than toggling one action on/off — is what the ladder itself prescribes once rung 1 stops producing signal. That is a materially larger design/implementation effort than any of the four candidates tested so far and is left as its own gate, not attempted in this report.
