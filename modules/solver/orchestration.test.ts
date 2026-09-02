@@ -1697,6 +1697,100 @@ test('a non-binding deadline cannot resize an explicit-work main-ladder trajecto
         'deadline headroom is latency protection, not a search-allocation input');
 });
 
+// 2026-09-02: queue #2 step 4 (docs/solver-budget-determinism.md's "Migration priority" list) —
+// now that every ms-derived additive-tier work-dose site is migrated (see that doc's "Remaining
+// ms-shaped allocation debt" section), widen the invariant above from the isolated main ladder to
+// the WHOLE default-on production ladder: every additive last-resort tier reachable under cfg=null
+// participates at once, not one at a time in isolation. exhaustingDispatch keeps this fast (no real
+// search cost) while still exercising orchestration.ts's own budget bookkeeping.
+//
+// One fixture cannot reach every last-resort tier: `late-repair-search`'s own eligibility gate is
+// `repairConfigsCount === 0` (see stage-budget.ts) — the OPPOSITE polarity of `early-repair-search`/
+// `repair-fallback`'s `needsRepairFallback` gate, and deliberately so (it exists specifically for
+// the population ordinary repair never got a chance on). No single level can satisfy both, so this
+// invariant needs two complementary fixtures, split along exactly that inherent eligibility
+// boundary, not a test gap:
+//
+// 1. makeRepairGatedInfeasibleLevel() (mustPassKeys + mustCrossKeys present, needsRepairFallback):
+//    early-repair-search, repair-fallback, and the two mechanic-specific prune-disabled retries
+//    (connectivity-axis, must-cross-neighbor, which each require their own mechanic present) plus
+//    every general whole-ladder rerun tier.
+// 2. makeGoalAttractionDisabledRetryGatedInfeasibleLevel() (no mustPass/mustCross, no repair need):
+//    late-repair-search, plus the same general whole-ladder rerun tiers (which aren't gated on
+//    mustPass/mustCross presence).
+//
+// Together the two runs cover all eight migrated work-dose sites' deadline-independence holding
+// SIMULTANEOUSLY with every sibling tier, not just in per-tier isolation.
+function assertWholeLadderDeadlineIndependent(shortDeadline: any, longDeadline: any, expectedStageIds: string[]) {
+    const trajectory = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts.map(attempt => ({
+        stageId: attempt.stageId,
+        gateKey: attempt.gateKey,
+        scoringProfileId: attempt.scoringProfileId,
+        orderingBias: attempt.orderingBiasId,
+        beamWidth: attempt.beamWidth,
+        outcome: attempt.outcome,
+        nodesExpanded: attempt.nodesExpanded,
+        allocatedWorkCeiling: attempt.allocatedWorkCeiling,
+        workSpent: attempt.workSpent,
+    }));
+
+    // Both fixtures are deterministically unsolvable, so (unlike the plain main-ladder test above,
+    // whose makeLineLevel() solves and leaves deadlineTruncated unset) both runs reach the final
+    // `ok: false` result path, which always resolves deadlineTruncated to an explicit boolean —
+    // false here since exhaustingDispatch finishes the whole ladder well inside either deadline.
+    assert.equal(shortDeadline.deadlineTruncated, false);
+    assert.equal(longDeadline.deadlineTruncated, false);
+    assert.equal(longDeadline.ok, shortDeadline.ok);
+    assert.deepEqual(longDeadline.solution, shortDeadline.solution);
+    assert.equal(longDeadline.nodesExpanded, shortDeadline.nodesExpanded);
+    assert.equal(longDeadline.workSpent, shortDeadline.workSpent);
+    assert.deepEqual(trajectory(longDeadline), trajectory(shortDeadline),
+        'deadline headroom must be latency protection everywhere in the ladder, not a search-allocation input on any additive tier');
+
+    // Guard against a vacuous pass: confirm the additive tiers this test exists to cover actually
+    // ran (not just the main loop/early-repair-search), on BOTH runs, so a future refactor that
+    // silently short-circuits the ladder before reaching them cannot pass this test unnoticed.
+    const stageIds = new Set(shortDeadline.attempts.map((a: { stageId: string }) => a.stageId));
+    for (const expected of expectedStageIds) {
+        assert.ok(stageIds.has(expected), `expected the whole-ladder run to reach ${expected}; got stageIds: ${[...stageIds].join(', ')}`);
+    }
+}
+
+test('a non-binding deadline cannot resize an explicit-work trajectory across the WHOLE default-on production ladder (repair-eligible population)', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const run = (timeBudgetMs: number) => solveLevel(level, {
+        timeBudgetMs,
+        workBudget: 200_000,
+        attemptBudgetTelemetry: true,
+        attemptSearchForTesting: exhaustingDispatch,
+    });
+    const shortDeadline = await run(60_000);
+    const longDeadline = await run(600_000);
+    assertWholeLadderDeadlineIndependent(shortDeadline, longDeadline, [
+        'repair-fallback', 'goal-attraction-disabled-retry', 'admissible-order-fallback',
+        'admissible-order-alternate-tiebreak-retry', 'coarse-state-near-tie-retention-disabled-retry',
+        'connectivity-axis-prune-disabled-retry', 'must-cross-neighbor-prune-disabled-retry',
+        'guidance-goal-distance-retry',
+    ]);
+});
+
+test('a non-binding deadline cannot resize an explicit-work trajectory across the WHOLE default-on production ladder (repair-ineligible population, covers late-repair-search)', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const run = (timeBudgetMs: number) => solveLevel(level, {
+        timeBudgetMs,
+        workBudget: 200_000,
+        attemptBudgetTelemetry: true,
+        attemptSearchForTesting: exhaustingDispatch,
+    });
+    const shortDeadline = await run(60_000);
+    const longDeadline = await run(600_000);
+    assertWholeLadderDeadlineIndependent(shortDeadline, longDeadline, [
+        'goal-attraction-disabled-retry', 'admissible-order-fallback',
+        'admissible-order-alternate-tiebreak-retry', 'coarse-state-near-tie-retention-disabled-retry',
+        'guidance-goal-distance-retry', 'late-repair-search',
+    ]);
+});
+
 test('strictTotalWorkBudget installs one remaining-work cap across every additive path', async () => {
     const dispatch = async (...args: Parameters<typeof runAttemptSearch>) => {
         const [, , , prep, , , , , , out] = args;
@@ -2949,6 +3043,54 @@ test('late-repair-search now honors an explicit baseWorkBudget instead of silent
     const largeCeiling = ceiling(large);
     assert.ok(smallCeiling != null && largeCeiling != null,
         'expected a late-repair-search attempt in both runs');
+    assert.ok((largeCeiling as number) > (smallCeiling as number),
+        'an explicit baseWorkBudget must now size this tier\'s own dose');
+});
+
+// 2026-09-02: late-repair-multiseed-retry is the ninth migrated work-dose site, and was found only
+// because the whole-ladder deadline-independence test above (queue #2 step 4) exercises this exact
+// tier alongside its siblings and empirically caught its allocatedWorkCeiling resizing 10x between
+// a 60s and a 600s non-binding deadline — this tier had no dedicated test of its own before. Same
+// ownership invariant as its eight predecessors. Unlike late-repair-search itself, this tier needs
+// BOTH STRATEGY_REPAIR_LATE_PROBE (so repairLateProbeTierWillRun, its own prerequisite, is true)
+// and STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY explicitly enabled in the ablation object, since a
+// non-null cfg object no longer defaults every unmentioned flag to its promoted ON state.
+function isolateLateRepairMultiSeedRetryWorkDoseOpts(overrides: Record<string, unknown> = {}) {
+    return {
+        disableExtraBudgetPasses: true,
+        ablation: { STRATEGY_REPAIR_LATE_PROBE: true, STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY: true },
+        repairLateProbeNodeBudgetOverride: 100,
+        attemptSearchForTesting: exhaustingDispatch,
+        attemptBudgetTelemetry: true,
+        ...overrides,
+    };
+}
+
+test('late-repair-multiseed-retry work dose no longer resizes with a non-binding deadline change', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const run = (timeBudgetMs: number) => solveLevel(level, isolateLateRepairMultiSeedRetryWorkDoseOpts({ timeBudgetMs, workBudget: 200_000 }));
+    const shortDeadline = await run(1000);
+    const longDeadline = await run(600_000);
+    const dose = (result: Awaited<ReturnType<typeof solveLevel>>) => result.attempts
+        .filter(a => a.stageId === 'late-repair-multiseed-retry')
+        .map(a => a.allocatedWorkCeiling);
+    const shortDose = dose(shortDeadline);
+    assert.ok(shortDose.length > 0, 'expected at least one late-repair-multiseed-retry attempt');
+    assert.deepEqual(dose(longDeadline), shortDose,
+        'this tier\'s own per-round work pool must depend on workBudget, not on the non-binding deadline');
+});
+
+test('late-repair-multiseed-retry now honors an explicit baseWorkBudget instead of silently re-deriving its pool from timeBudgetMs', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const solveWith = (baseWorkBudget: number) => solveLevel(level, isolateLateRepairMultiSeedRetryWorkDoseOpts({ timeBudgetMs: 1000, baseWorkBudget }));
+    const small = await solveWith(200_000);
+    const large = await solveWith(20_000_000);
+    const ceiling = (result: Awaited<ReturnType<typeof solveLevel>>) =>
+        result.attempts.find(a => a.stageId === 'late-repair-multiseed-retry')?.allocatedWorkCeiling ?? null;
+    const smallCeiling = ceiling(small);
+    const largeCeiling = ceiling(large);
+    assert.ok(smallCeiling != null && largeCeiling != null,
+        'expected a late-repair-multiseed-retry attempt in both runs');
     assert.ok((largeCeiling as number) > (smallCeiling as number),
         'an explicit baseWorkBudget must now size this tier\'s own dose');
 });

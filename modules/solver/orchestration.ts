@@ -2637,7 +2637,23 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
                 const roundStart = Date.now();
                 const roundEntryNodes = prep._metrics.nodesExpanded;
-                const roundWorkBudget = legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);
+                // Queue #2 step-3 work-dose migration (2026-09-02, ninth migrated site, found by the
+                // step-4 whole-ladder deadline-independence test below empirically catching a 10x
+                // allocatedWorkCeiling swing between a 60s and a 600s non-binding timeBudgetMs on this
+                // exact tier): each round's fresh prep._workCap extension used to reconvert the raw
+                // caller timeBudgetMs directly, the same debt pattern as every sibling tier above, just
+                // without a `*TotalBudget` intermediate — this line was the OTHER of the two names the
+                // ratchet's approvedDirectMsToWorkSites set treated as a permanent, legitimate
+                // conversion, which this empirical finding disproves for this call site specifically.
+                // Size it from the solve's already-resolved canonical workBudget instead (fraction 1,
+                // matching late-repair-search's own migration and this tier's own historical dose,
+                // which was never scaled by any fraction of its own). Algebraically identical in the
+                // plain-default call shape, where workBudget itself already equals the legacy
+                // ms-to-work compatibility conversion of timeBudgetMs — see workBudget's own resolution
+                // above. `timeBudgetMs` remains used below solely for this round's per-gate
+                // time-slicing/wall-clock safety input, exactly as every migrated sibling tier's own ms
+                // total does.
+                const roundWorkBudget = scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK);
                 prep._workCap = Math.min(prep._workMeter.units + roundWorkBudget, prep._strictWorkCap ?? Infinity);
                 for (let gi = 0; gi < activeGates.length; gi++) {
                     if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;

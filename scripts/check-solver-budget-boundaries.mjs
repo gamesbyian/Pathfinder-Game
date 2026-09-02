@@ -56,9 +56,18 @@ const unapprovedLegacyLines = liveLegacyLines.filter(line => !approvedLegacyTime
 assert.deepEqual(unapprovedLegacyLines, [],
     `new wall-derived allocation site(s) found: ${unapprovedLegacyLines.join(' | ')}. Use work, or explicitly document/migrate the debt rather than extending it.`);
 
+// 2026-09-02: `const roundWorkBudget = legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);`
+// (late-repair-multiseed-retry's own per-seed fresh workCap) used to be approved here as a second
+// "intentional compatibility boundary" alongside workBudget's own resolution below. It was not: a
+// widened whole-ladder deadline-independence test (orchestration.test.ts) empirically caught this
+// exact tier resizing its allocatedWorkCeiling 10x between a 60s and a 600s non-binding
+// timeBudgetMs, proving it was undetected work-dose debt of the same shape as every migrated site
+// above, not a deliberate boundary. Now migrated (ninth site) to
+// scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK) — see its own call-site comment in
+// orchestration.ts. Only ONE direct conversion of that ms field to work remains approved:
+// `workBudget`'s own resolution, the genuine, singular legacy compatibility boundary.
 const approvedDirectMsToWorkSites = new Set([
     'const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);',
-    'const roundWorkBudget = legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);',
 ]);
 const directMsToWorkLines = orchestration.split('\n')
     .map(line => line.trim())
