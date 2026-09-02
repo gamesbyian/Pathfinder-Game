@@ -46,9 +46,11 @@ const ATTEMPT_BUDGET_MS = 600000;
  * @param {Record<string, string[]>} arms
  * @param {number} workBudget
  * @param {number | null} [perTechniqueWorkCap] optional; see this file's header comment
+ * @param {number} [attemptBudgetMs] per-attempt wall-safety deadline (non-binding by default;
+ *   work_budget/perTechniqueWorkCap govern allocation) — defaults to ATTEMPT_BUDGET_MS
  * @returns {{ budgetProtocol: string, equalCostAcrossTechniques: boolean, cells: object[] }}
  */
-export function buildPlan(population, arms, workBudget, perTechniqueWorkCap = null) {
+export function buildPlan(population, arms, workBudget, perTechniqueWorkCap = null, attemptBudgetMs = ATTEMPT_BUDGET_MS) {
     if (!Array.isArray(population) || population.length === 0) {
         throw new Error('buildPlan: population must be a non-empty array');
     }
@@ -69,7 +71,7 @@ export function buildPlan(population, arms, workBudget, perTechniqueWorkCap = nu
                 variantLabel: armName,
                 techniqueKeys: arms[armName],
                 workBudget,
-                budgetMs: ATTEMPT_BUDGET_MS,
+                budgetMs: attemptBudgetMs,
                 ablation: null,
                 ...(Number.isFinite(perTechniqueWorkCap) ? { perTechniqueWorkCap } : {}),
             });
@@ -100,17 +102,18 @@ if (isMain) {
     const armsPath = argMap.get('--arms');
     const workBudget = Number(argMap.get('--work-budget'));
     const perTechniqueWorkCap = argMap.has('--per-technique-work-cap') ? Number(argMap.get('--per-technique-work-cap')) : null;
+    const attemptBudgetMs = argMap.has('--attempt-budget-ms') ? Number(argMap.get('--attempt-budget-ms')) : ATTEMPT_BUDGET_MS;
     const outFile = argMap.get('--out');
     if (!populationPath || !armsPath || !Number.isFinite(workBudget) || !outFile) {
-        console.error('Usage: --population=<path> --arms=<path> --work-budget=<number> [--per-technique-work-cap=<number>] --out=<path>');
+        console.error('Usage: --population=<path> --arms=<path> --work-budget=<number> [--per-technique-work-cap=<number>] [--attempt-budget-ms=<number>] --out=<path>');
         process.exit(1);
     }
     const population = loadPopulation(JSON.parse(readFileSync(path.resolve(root, populationPath), 'utf8')));
     const arms = JSON.parse(readFileSync(path.resolve(root, armsPath), 'utf8'));
-    const plan = buildPlan(population, arms, workBudget, perTechniqueWorkCap);
+    const plan = buildPlan(population, arms, workBudget, perTechniqueWorkCap, attemptBudgetMs);
 
     mkdirSync(path.dirname(path.resolve(root, outFile)), { recursive: true });
     writeFileSync(path.resolve(root, outFile), JSON.stringify(plan, null, 2) + '\n');
     console.log(`Wrote ${outFile}: ${plan.cells.length} cells (${population.length} levels x ${Object.keys(arms).length} arms), workBudget=${workBudget}`
-        + (Number.isFinite(perTechniqueWorkCap) ? `, perTechniqueWorkCap=${perTechniqueWorkCap}` : ''));
+        + (Number.isFinite(perTechniqueWorkCap) ? `, perTechniqueWorkCap=${perTechniqueWorkCap}` : '') + `, attemptBudgetMs=${attemptBudgetMs}`);
 }

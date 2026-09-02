@@ -106,6 +106,7 @@ jobs:
             --arms="${{ inputs.arms_file }}" \
             --work-budget="${{ inputs.work_budget }}" \
             --per-technique-work-cap="${{ inputs.per_technique_work_cap }}" \
+            --attempt-budget-ms="${{ inputs.budget_ms }}" \
             --out=logs/static-portfolio-confirmation/plan.json
 
       - name: Compute the shard index list

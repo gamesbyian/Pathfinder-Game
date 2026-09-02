@@ -29,6 +29,13 @@ assert.equal(Object.hasOwn(fullMenuCellForLevel5, 'perTechniqueWorkCap'), false)
 const capped = buildPlan(population, arms, 67_000_000, 10_000_000);
 assert.equal(capped.cells[0].perTechniqueWorkCap, 10_000_000);
 
+// attemptBudgetMs: defaults to 600,000 (the historical ATTEMPT_BUDGET_MS constant) when omitted,
+// and every cell honors an explicit override -- regression coverage for a real bug where the
+// workflow's budget_ms input was documented but never actually reached this file.
+assert.equal(fullMenuCellForLevel5.budgetMs, 600_000);
+const customDeadline = buildPlan(population, arms, 67_000_000, null, 120_000);
+assert.ok(customDeadline.cells.every((c) => c.budgetMs === 120_000));
+
 assert.throws(() => buildPlan([], arms, 1), /non-empty array/);
 assert.throws(() => buildPlan(population, {}, 1), /at least one named arm/);
 assert.throws(() => buildPlan(population, { empty: [] }, 1), /non-empty technique-key array/);
