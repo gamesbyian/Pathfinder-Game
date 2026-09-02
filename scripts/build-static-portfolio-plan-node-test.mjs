@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { buildPlan } from './build-static-portfolio-plan.mjs';
+
+const population = [
+    { corpus: 'corpus2', levelPos: 5, levelId: 'R00005' },
+    { corpus: 'corpus2', levelPos: 9, levelId: 'R00009' },
+];
+const arms = {
+    'full-menu': ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain', 'dfs|score=default|bias=none'],
+    'portfolio-1': ['beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
+};
+
+const plan = buildPlan(population, arms, 67_000_000);
+
+assert.equal(plan.cells.length, 4); // 2 levels x 2 arms
+assert.equal(plan.budgetProtocol, 'static-portfolio-shared-work');
+const fullMenuCellForLevel5 = plan.cells.find((c) => c.levelPos === 5 && c.variantLabel === 'full-menu');
+assert.deepEqual(fullMenuCellForLevel5.techniqueKeys, arms['full-menu']);
+assert.equal(fullMenuCellForLevel5.workBudget, 67_000_000);
+assert.equal(fullMenuCellForLevel5.corpus, 'corpus2');
+assert.equal(fullMenuCellForLevel5.levelId, 'R00005');
+const portfolioCellForLevel9 = plan.cells.find((c) => c.levelPos === 9 && c.variantLabel === 'portfolio-1');
+assert.deepEqual(portfolioCellForLevel9.techniqueKeys, arms['portfolio-1']);
+// Cell ids must be unique across the whole plan.
+assert.equal(new Set(plan.cells.map((c) => c.cellId)).size, plan.cells.length);
+
+assert.throws(() => buildPlan([], arms, 1), /non-empty array/);
+assert.throws(() => buildPlan(population, {}, 1), /at least one named arm/);
+assert.throws(() => buildPlan(population, { empty: [] }, 1), /non-empty technique-key array/);
+
+console.log('build-static-portfolio-plan tests passed');
