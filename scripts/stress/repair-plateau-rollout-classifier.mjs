@@ -180,6 +180,7 @@ if (!retreatFile) console.error(`Sampled ${targetIds.length} levels: ${targetIds
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
 const { repairSearchFromGate, __takePlyForTests: takePly, __searchCompletionFromPartialPathForTests: searchCompletionFromPartialPath } = await import('../../modules/solver/repair-search.ts');
+const { isSolutionState } = await import('../../modules/solver/solution.ts');
 const Solver = createSolver();
 
 const EPSILON_CHOICES = [0.15, 0.35, 0.6]; // same values as repair-search.ts's own EPSILON_LADDER
@@ -207,7 +208,11 @@ function buildStateAtPath(pathKeys, level, prep) {
 function closeGapAtDepth(elitePath, depth, level, prep, nodeBudget) {
     const branchPrefix = elitePath.slice(0, depth + 1);
     const { state, liveUndo } = buildStateAtPath(branchPrefix, level, prep);
-    return searchCompletionFromPartialPath(state, level, prep, api.SCORING_PROFILES.repair, null, prep._cfg, liveUndo, 0, nodeBudget);
+    const result = searchCompletionFromPartialPath(state, level, prep, api.SCORING_PROFILES.repair, null, prep._cfg, liveUndo, 0, nodeBudget);
+    // state.path is mutated in place by searchCompletionFromPartialPath; only meaningful on solved,
+    // exposed here so callers can independently referee-verify a claimed solve rather than trusting
+    // this function's own `solved` flag (same rigor this program's manual verifications have used).
+    return result.solved ? { ...result, path: state.path.slice() } : result;
 }
 
 /** Runs `trials` rollouts from ONE fixed branch point (elitePath truncated to `depth` cells). */
@@ -302,6 +307,20 @@ if (retreatFile) {
             searchCompletionFromPartialPathResult = closeGapAtDepth(elite.path, r.low, level, prep, closeGapNodeBudget);
             console.error(`  searchCompletionFromPartialPath(floor=0, nodeBudget=${closeGapNodeBudget}) from depth=${r.low}: `
                 + `${searchCompletionFromPartialPathResult.solved ? 'SOLVED' : 'failed'} (${searchCompletionFromPartialPathResult.nodes} nodes)`);
+            if (searchCompletionFromPartialPathResult.solved) {
+                // Independent referee verification, same rigor this program's manual case-by-case
+                // verifications have used: the canonical referee on the returned path, plus a
+                // from-scratch replay through fresh state confirming isSolutionState directly (not
+                // trusting closeGapAtDepth's own `solved` flag alone).
+                const referee = Solver.validateCandidatePath(level, searchCompletionFromPartialPathResult.path);
+                const { state: replayState } = buildStateAtPath(searchCompletionFromPartialPathResult.path, level, prep);
+                const replayValid = isSolutionState(replayState, level);
+                searchCompletionFromPartialPathResult.refereeValid = referee.ok;
+                searchCompletionFromPartialPathResult.refereeReason = referee.ok ? null : referee.reason;
+                searchCompletionFromPartialPathResult.independentReplayValid = replayValid;
+                console.error(`  independent verification: referee=${referee.ok ? 'ok' : `FAILED (${referee.reason})`}, `
+                    + `fresh-replay isSolutionState=${replayValid}`);
+            }
         }
         levelResults.push({
             ...levelBase(id, raw, level), eliteId, verifiedFeasibleDepth: r.low, verifiedInfeasibleDepth: r.high,
