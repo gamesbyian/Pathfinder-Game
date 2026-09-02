@@ -1,9 +1,9 @@
 # static-portfolio-confirmation-003: coverage/work Pareto frontier preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-02 — protocol fixed, population drawn, run not yet dispatched
-> **Decision:** not yet made; this report fixes the candidates, population, envelope, and reporting frame before any run
-> **Remaining gate:** dispatch `static-portfolio-confirmation.yml` with `cohort_id=static-portfolio-confirmation-003` and record the result below
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-02 — run [33669749365](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33669749365) completed; see "Result" below
+> **Decision:** at equal cardinality (18), the curated `portfolio-18-specialists` Pareto-dominates the plain `top-18-prefix` — fewer losses (1 vs. 3) **and** less work (3,176,947,976 vs. 3,334,348,752). It also Pareto-dominates the much larger `top-26-prefix` — identical coverage (1 loss each) for 49% less work. Across two independent fresh confirmation populations (`-002` and this one), `portfolio-18-specialists` lands at ~98% coverage / ~45-48% work-saving both times, each time missing exactly one level to a *different* single technique outside its curated 18 — direct empirical confirmation of `-002`'s own prediction that a long tail of individually-rare singletons, not a fixable design flaw, is what stands between any sub-34 menu and zero losses.
+> **Remaining gate:** none for this exact five-candidate design. If gate-sequence (C) rung 2 continues at all, the open question is no longer "which cardinality/composition" (this report answers that: curated ~18 is the practical frontier) but whether translating a research-vehicle menu like this into real production scheduling policy is itself worth pursuing — a separate, larger decision this offline `technique-census-cell.mjs` harness cannot answer and does not attempt to here.
 > **Evidence role:** confirmation for each individual cardinality's coverage/work figure on a population none of them were selected from; the frontier comparison itself (which cardinality is the best trade) is a development-level synthesis of these figures, not a fresh independent claim
 > **Selection:** `portfolio-11` and `portfolio-18-specialists` were both designed from earlier populations' own outcomes (see `confirmation-001`/`-002`); `top-18-prefix` and `top-26-prefix` are plain rank-order prefixes fixed entirely from the pre-existing production win-count ranking (no outcome from any prior static-portfolio confirmation run informed where to cut them — 18 was chosen to size-match `portfolio-18-specialists` for a same-cardinality curation comparison, and 26 because it is the exact rank where [`the construction pilot's`](2026-09-02-static-portfolio-construction-pilot.md) own production ranking first reaches 100.0% cumulative win coverage). This report's own population is fresh and disjoint from every population any of the five arms' composition depended on.
 
@@ -62,4 +62,56 @@ Workflow dispatch: `static-portfolio-confirmation.yml`, `cohort_id=static-portfo
 
 ## Result
 
-[Recorded once the run completes.]
+Run [33669749365](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33669749365) completed in ~12 minutes (18:51:06–19:03:21 UTC) with all 20 shards and the combine job succeeding (`Combined 20 shard file(s), 750 cells, 5 arms.`). Recovered from the combine job's own console log, same method as `-001`/`-002` (raw artifact blob-storage host still blocked by this session's egress policy):
+
+| arm | cardinality | cells | solved | work |
+|---|---:|---:|---:|---:|
+| `full-menu` | 34 | 150 | 59 | 6,054,243,441 |
+| `portfolio-11` | 11 | 150 | 56 | 2,091,688,630 |
+| `top-18-prefix` | 18 | 150 | 56 | 3,334,348,752 |
+| `portfolio-18-specialists` | 18 | 150 | 58 | 3,176,947,976 |
+| `top-26-prefix` | 26 | 150 | 58 | 4,736,715,110 |
+
+Pairwise comparisons vs. `full-menu` (all four are gained: 0, as expected for ordered sub-selections):
+
+| arm | lost | lost levels | work delta |
+|---|---:|---|---:|
+| `portfolio-11` | 3 | `R02971`, `R03261`, `R03338` | −65.45% |
+| `top-18-prefix` | 3 | `R02971`, `R03261`, `R03338` | −44.93% |
+| `portfolio-18-specialists` | 1 | `R03261` | −47.53% |
+| `top-26-prefix` | 1 | `R03261` | −21.76% |
+
+**Attribution of every distinct lost level** (recovered the same way as prior reports — a local `full-menu` reproduction against just these 3 levels, same commit `bf8211db`/envelope):
+
+| level | winning technique | production rank | in `top-18-prefix`? | in `portfolio-18-specialists`? | in `top-26-prefix`? |
+|---|---|---:|---|---|---|
+| `R02971` | `beam\|score=mustCrossFirst\|bias=none\|width=2000\|retention=plain` | 19 | no | **yes** | yes |
+| `R03338` | `beam\|score=mustCrossFirst\|bias=none\|width=2000\|retention=plain` | 19 | no | **yes** | yes |
+| `R03261` | `beam\|score=knotBuilder\|bias=none\|width=2000\|retention=plain` | 31 | no | no | no |
+
+`R02971`/`R03338` are both rescued by the same rank-19 technique — present in `portfolio-18-specialists` (one of its 7 curated specialists) and in `top-26-prefix` (a plain prefix reaching rank 26), but absent from `top-18-prefix` (ranks 1-18 only), exactly explaining the observed pattern with no ambiguity. `R03261` is rescued only by a rank-31 technique — a member of the **zero-aggregate-production-win tail** (ranks 27-34, [`the construction pilot's`](2026-09-02-static-portfolio-construction-pilot.md) own closed rung-1 candidate class) — present in none of the four candidate arms, which is exactly why all four lose it despite three of them otherwise reaching much higher coverage. This is a concrete, out-of-sample instance of the scheduling-policy guardrail ("report ... which rare/exclusive solves disappear as the portfolio shrinks"): a technique with **zero wins across the entire 1,802-row aggregate production corpus** is nonetheless the sole rescuer for one specific level in a fresh sample neither the aggregate corpus nor this candidate's own design ever saw.
+
+### Same-cardinality curation comparison: `top-18-prefix` vs. `portfolio-18-specialists`
+
+At equal cardinality (18 techniques each), curation wins decisively and on both axes: `portfolio-18-specialists` loses 1 level where `top-18-prefix` loses 3, **and** costs less work (3,176,947,976 vs. 3,334,348,752 — `top-18-prefix` is not even cheaper). `portfolio-18-specialists` Pareto-dominates `top-18-prefix` outright on this population. The value of choosing techniques by demonstrated rescue capability (from `-001`'s own losses) rather than raw rank order is now directly demonstrated, not merely argued.
+
+### Frontier shape: does the curve keep improving past 18?
+
+`top-26-prefix` (26 techniques, adding 8 more ranks over `top-18-prefix`) matches `portfolio-18-specialists`'s exact coverage (1 loss, same level) but at 49% more work (4,736,715,110 vs. 3,176,947,976). `portfolio-18-specialists` Pareto-dominates `top-26-prefix` too. The 8 additional plain-prefix techniques (ranks 19-26) buy nothing over the curated 18 on this population — consistent with the construction pilot's own finding that raw production rank order and real held-out-population value diverge once curation is available.
+
+### Cross-population consistency for `portfolio-18-specialists`
+
+| population | solved (of control) | lost level | rescuing technique (not in the 18) | coverage | work saving |
+|---|---:|---|---|---:|---:|
+| `confirmation-002` | 65/66 | `R03132` | rank 21, `dfs\|score=portalCommitted\|bias=none` | 98.5% | −44.4% |
+| `confirmation-003` | 58/59 | `R03261` | rank 31, `beam\|score=knotBuilder\|bias=none\|width=2000\|retention=plain` | 98.3% | −47.5% |
+
+Two independent fresh populations, two different single rescuing techniques (rank 21 and rank 31 respectively, both outside the curated 18), both landing at ~98% coverage for roughly half the work. This is exactly the pattern `-002`'s own disposition predicted before this run existed ("a long tail of individually-rare specialists will keep surfacing one at a time on successive fresh samples") — not a coincidence, and not a fixable gap in this specific candidate's curation, but a structural property of any menu smaller than the full 34.
+
+## Disposition
+
+This report answers both questions it was designed to answer: **(1) curation beats a naive same-size prefix** (`portfolio-18-specialists` Pareto-dominates `top-18-prefix`: fewer losses and less work at equal cardinality), and **(2) the coverage/work curve bends around cardinality ~18** (`top-26-prefix`'s extra 8 techniques buy zero additional coverage over `portfolio-18-specialists` for 49% more work). Combined with `confirmation-002`, `portfolio-18-specialists` now has **two independent fresh-population confirmations**, both landing at ~98% coverage for ~45-48% less work than `full-menu`, each time losing exactly one level to a different single rare-tail technique.
+
+**Close gate-sequence (C) rung 2's "which cardinality/composition" question as sufficiently characterized.** A curated ~18-technique menu is the practical frontier point this line of evidence supports; chasing the remaining ~2% coverage gap by adding yet another one-off rescuer is not recommended (per `-002`'s own reasoning, reconfirmed here with a second, different singleton) — it would not converge to zero without approaching `full-menu` itself, since each fresh population surfaces its own distinct rare-tail rescuer.
+
+**What this report does not answer, and is not attempting to:** whether a menu like `portfolio-18-specialists`, evaluated here entirely through `technique-census-cell.mjs`'s bounded-per-technique-share research harness, should ever become real production scheduling policy. That would require: (a) resolving the admissible-order-reserve caveat already flagged in `-001`'s addendum for any candidate using tie-break profiles (not applicable to `portfolio-18-specialists` itself, which contains none), (b) a production-envelope confirmation at real interactive budgets rather than this program's `work_budget=67,000,000`/`per_technique_work_cap=2,000,000` research envelope, (c) explicit rare-capability retention auditing at the scale the scheduling-policy guardrail requires, and (d) a real implementation design for how a fixed ordered-menu-with-per-technique-caps policy would replace or coexist with the current stage/reserve-based scheduler this same workstream's budget-model program (steps 1-5) spent significant effort building. That is a materially larger, separate decision for whoever picks up this workstream next — this report hands them a validated candidate and a clear characterization, not an implementation.
