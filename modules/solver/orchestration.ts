@@ -631,6 +631,14 @@ export async function runAttempt(
     const attMs = Date.now() - attStart;
     const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
     const workAfter = prep._workMeter.units;
+    // A 'budget-starved' outcome below is computed purely from this pre-dispatch snapshot, not from
+    // what the search actually did. For a dispatch whose search primitive doesn't consult
+    // prep._workCap in its hot loop (admissibleOrderSearch is the current example -- see its own
+    // comment: it checks only prep._strictWorkCap, deliberately ignoring the soft cap outside the
+    // opt-in equal-work research harness), allocatedWorkCeiling can read 0 here while the search
+    // still runs its full node/ms allowance regardless -- 'budget-starved' then describes the soft
+    // accounting, not "no real search happened." See reports/2026-08-28-admissible-order-work-cap-
+    // gap-discovery.md's 2026-09-02 resolution for the empirical trace that found this.
     const budgetStarvedAtDispatch = prep._attemptBudgetTelemetry
         && (allocatedWorkCeiling === 0 || (Number.isFinite(nodeBudget) && nodeBudget === 0));
     return {
