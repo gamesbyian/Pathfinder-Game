@@ -154,6 +154,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
                     // stopped correctly, destroying cross-family comparability.
                     prep._strictWorkCap = attemptWorkCap;
                 }
+                const spentBeforeAttempt = spentUnits();
                 const r = await runAttempt(gateKey, level, prep, config, cell.budgetMs, Date.now(), null, useWork ? Infinity : remaining);
                 attempts.push({ configKey: key, gateKey, ...r.attempt });
                 if (r.path) { solution = r.path; winningKey = key; winningGate = gateKey; break outer; }
@@ -161,8 +162,16 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
                 // the cell's work evidence — mirrors method-probe.mjs's --work-budget
                 // deadlineTruncated discipline (docs/solver-budget-determinism.md's "Deadline
                 // truncation" rules): such a row must not be recorded as ordinary unsolved-at-budget
-                // evidence.
-                if (useWork && r.attempt.outcome === 'timed-out' && spentUnits() < gateCeiling) {
+                // evidence. Compares against THIS ATTEMPT's own allocated share (`attemptRemaining`),
+                // not the whole gate's `gateCeiling`: without cell.perTechniqueWorkCap those are
+                // identical (attemptRemaining === remaining === gateCeiling - spentBeforeAttempt), so
+                // this reduces to the original `spentUnits() < gateCeiling` check byte-for-byte. WITH
+                // a per-technique cap, an attempt can legitimately right-censor at its own small share
+                // while the gate ceiling still has plenty left for the NEXT technique — comparing
+                // against gateCeiling would misclassify that ordinary hand-off as a wall-clock problem
+                // and wrongly abort the whole cell instead of moving on.
+                const spentThisAttempt = spentUnits() - spentBeforeAttempt;
+                if (useWork && r.attempt.outcome === 'timed-out' && spentThisAttempt < attemptRemaining) {
                     deadlineTruncated = true;
                     break outer;
                 }
