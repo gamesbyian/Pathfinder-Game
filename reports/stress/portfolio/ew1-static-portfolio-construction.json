@@ -1,0 +1,1012 @@
+{
+  "ew1": {
+    "schemaVersion": 1,
+    "sourceRunId": 33156541827,
+    "sourceHeadSha": "d1d02501a9fb833a732e918fc978a36da405396d",
+    "evidenceRole": "discovery",
+    "selection": "observational (full greedy ranking reported, not a single chosen cardinality)",
+    "levelCount": 60,
+    "techniqueCount": 34,
+    "oracleUnionCount": 12,
+    "techniqueStats": [
+      {
+        "technique": "admissible-order|tieBreak=default|lds=off",
+        "family": "ida",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 9916850.016666668
+      },
+      {
+        "technique": "admissible-order|tieBreak=intersectionHarvest|lds=off",
+        "family": "ida",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000180.05
+      },
+      {
+        "technique": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+        "family": "ida",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000157.933333334
+      },
+      {
+        "technique": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+        "family": "ida",
+        "eligibleLevels": 60,
+        "solvedLevels": 2,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 9746449.4
+      },
+      {
+        "technique": "admissible-order|tieBreak=none|lds=off",
+        "family": "ida",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 1,
+        "meanWorkSpent": 9890850.35
+      },
+      {
+        "technique": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 3,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 1170424.9333333333
+      },
+      {
+        "technique": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 2,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 1158344.4333333333
+      },
+      {
+        "technique": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 5,
+        "exclusiveLevels": 1,
+        "meanWorkSpent": 3341313.8833333333
+      },
+      {
+        "technique": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 3,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 2927473.9
+      },
+      {
+        "technique": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 3,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 1177467.9166666667
+      },
+      {
+        "technique": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 3,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 1182010.4666666666
+      },
+      {
+        "technique": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 2,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 1182440.4833333334
+      },
+      {
+        "technique": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 3,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 3330129.3666666667
+      },
+      {
+        "technique": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 3,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 2943330.45
+      },
+      {
+        "technique": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 4,
+        "exclusiveLevels": 2,
+        "meanWorkSpent": 1483292.8833333333
+      },
+      {
+        "technique": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+        "family": "beam",
+        "eligibleLevels": 60,
+        "solvedLevels": 2,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 1393775.7333333334
+      },
+      {
+        "technique": "dfs|score=closureCommitment|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000085.116666667
+      },
+      {
+        "technique": "dfs|score=default|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 9887412
+      },
+      {
+        "technique": "dfs|score=finishFirst|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 1,
+        "meanWorkSpent": 9843075.383333333
+      },
+      {
+        "technique": "dfs|score=harvestThenFinish|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 9887427.416666666
+      },
+      {
+        "technique": "dfs|score=intersectionHarvest|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000090.116666667
+      },
+      {
+        "technique": "dfs|score=knotBuilder|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 9887272.383333333
+      },
+      {
+        "technique": "dfs|score=mustCrossFirst|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000092.55
+      },
+      {
+        "technique": "dfs|score=nearClosureRescue|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000092.783333333
+      },
+      {
+        "technique": "dfs|score=objectiveFirst|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000098.05
+      },
+      {
+        "technique": "dfs|score=perimeterSweep|bias=cornerHarvest",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000083.116666667
+      },
+      {
+        "technique": "dfs|score=perimeterSweep|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 9886840.033333333
+      },
+      {
+        "technique": "dfs|score=perimeterSweep|bias=perimeterCCW",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000092.383333333
+      },
+      {
+        "technique": "dfs|score=perimeterSweep|bias=perimeterCW",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000090.466666667
+      },
+      {
+        "technique": "dfs|score=perimeterSweep|bias=sideCommitment",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000100.683333334
+      },
+      {
+        "technique": "dfs|score=portalCommitted|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000086.316666666
+      },
+      {
+        "technique": "dfs|score=portalFirstTransfer|bias=none",
+        "family": "dfs",
+        "eligibleLevels": 60,
+        "solvedLevels": 1,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 9887366.283333333
+      },
+      {
+        "technique": "repair|score=repair|guidance=must-turn-biased",
+        "family": "repair",
+        "eligibleLevels": 35,
+        "solvedLevels": 0,
+        "exclusiveLevels": 0,
+        "meanWorkSpent": 10000047.17142857
+      },
+      {
+        "technique": "repair|score=repair|guidance=standard",
+        "family": "repair",
+        "eligibleLevels": 60,
+        "solvedLevels": 2,
+        "exclusiveLevels": 1,
+        "meanWorkSpent": 9823835.616666667
+      }
+    ],
+    "ranking": [
+      "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+      "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+      "admissible-order|tieBreak=nearClosureRescue|lds=off",
+      "repair|score=repair|guidance=standard",
+      "dfs|score=finishFirst|bias=none",
+      "admissible-order|tieBreak=none|lds=off",
+      "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+      "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+      "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+      "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+      "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "dfs|score=perimeterSweep|bias=none",
+      "dfs|score=knotBuilder|bias=none",
+      "dfs|score=portalFirstTransfer|bias=none",
+      "dfs|score=default|bias=none",
+      "dfs|score=harvestThenFinish|bias=none",
+      "admissible-order|tieBreak=default|lds=off",
+      "repair|score=repair|guidance=must-turn-biased",
+      "dfs|score=perimeterSweep|bias=cornerHarvest",
+      "dfs|score=closureCommitment|bias=none",
+      "dfs|score=portalCommitted|bias=none",
+      "dfs|score=intersectionHarvest|bias=none",
+      "dfs|score=perimeterSweep|bias=perimeterCW",
+      "dfs|score=perimeterSweep|bias=perimeterCCW",
+      "dfs|score=mustCrossFirst|bias=none",
+      "dfs|score=nearClosureRescue|bias=none",
+      "dfs|score=objectiveFirst|bias=none",
+      "dfs|score=perimeterSweep|bias=sideCommitment",
+      "admissible-order|tieBreak=mustCrossFirst|lds=off",
+      "admissible-order|tieBreak=intersectionHarvest|lds=off"
+    ],
+    "curve": [
+      {
+        "cardinality": 1,
+        "addedTechnique": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 5,
+        "cumulativeCoverageFractionOfOracleUnion": 0.4166666666666667,
+        "aggregateWork": 200478833,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 5
+      },
+      {
+        "cardinality": 2,
+        "addedTechnique": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 7,
+        "cumulativeCoverageFractionOfOracleUnion": 0.5833333333333334,
+        "aggregateWork": 283510891,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 3
+      },
+      {
+        "cardinality": 3,
+        "addedTechnique": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 8,
+        "cumulativeCoverageFractionOfOracleUnion": 0.6666666666666666,
+        "aggregateWork": 346195321,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 3
+      },
+      {
+        "cardinality": 4,
+        "addedTechnique": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+        "addedTechniqueFamily": "ida",
+        "cumulativeCoverage": 9,
+        "cumulativeCoverageFractionOfOracleUnion": 0.75,
+        "aggregateWork": 860972500,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 3
+      },
+      {
+        "cardinality": 5,
+        "addedTechnique": "repair|score=repair|guidance=standard",
+        "addedTechniqueFamily": "repair",
+        "cumulativeCoverage": 10,
+        "cumulativeCoverageFractionOfOracleUnion": 0.8333333333333334,
+        "aggregateWork": 1370175861,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 2
+      },
+      {
+        "cardinality": 6,
+        "addedTechnique": "dfs|score=finishFirst|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 11,
+        "cumulativeCoverageFractionOfOracleUnion": 0.9166666666666666,
+        "aggregateWork": 1860759554,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 1
+      },
+      {
+        "cardinality": 7,
+        "addedTechnique": "admissible-order|tieBreak=none|lds=off",
+        "addedTechniqueFamily": "ida",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2344208536,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 8,
+        "addedTechnique": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2401274544,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 9,
+        "addedTechnique": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2458480292,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 10,
+        "addedTechnique": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2516879993,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 11,
+        "addedTechnique": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2575379247,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 12,
+        "addedTechnique": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2643577267,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 13,
+        "addedTechnique": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2787981391,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 14,
+        "addedTechnique": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 2933989878,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 15,
+        "addedTechnique": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+        "addedTechniqueFamily": "beam",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 3099718309,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 16,
+        "addedTechnique": "dfs|score=perimeterSweep|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 3579722892,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 17,
+        "addedTechnique": "dfs|score=knotBuilder|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 4059727309,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 18,
+        "addedTechnique": "dfs|score=portalFirstTransfer|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 4539731214,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 19,
+        "addedTechnique": "dfs|score=default|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 5019735538,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 20,
+        "addedTechnique": "dfs|score=harvestThenFinish|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 5499740186,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 21,
+        "addedTechnique": "admissible-order|tieBreak=default|lds=off",
+        "addedTechniqueFamily": "ida",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 5979747510,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 22,
+        "addedTechnique": "repair|score=repair|guidance=must-turn-biased",
+        "addedTechniqueFamily": "repair",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 6279748879,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 23,
+        "addedTechnique": "dfs|score=perimeterSweep|bias=cornerHarvest",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 6759752942,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 24,
+        "addedTechnique": "dfs|score=closureCommitment|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 7239757163,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 25,
+        "addedTechnique": "dfs|score=portalCommitted|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 7719761188,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 26,
+        "addedTechnique": "dfs|score=intersectionHarvest|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 8199765617,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 27,
+        "addedTechnique": "dfs|score=perimeterSweep|bias=perimeterCW",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 8679770186,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 28,
+        "addedTechnique": "dfs|score=perimeterSweep|bias=perimeterCCW",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 9159774679,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 29,
+        "addedTechnique": "dfs|score=mustCrossFirst|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 9639779289,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 30,
+        "addedTechnique": "dfs|score=nearClosureRescue|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 10119783491,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 31,
+        "addedTechnique": "dfs|score=objectiveFirst|bias=none",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 10599788054,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 32,
+        "addedTechnique": "dfs|score=perimeterSweep|bias=sideCommitment",
+        "addedTechniqueFamily": "dfs",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 11079792695,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 33,
+        "addedTechnique": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+        "addedTechniqueFamily": "ida",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 11559800248,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      },
+      {
+        "cardinality": 34,
+        "addedTechnique": "admissible-order|tieBreak=intersectionHarvest|lds=off",
+        "addedTechniqueFamily": "ida",
+        "cumulativeCoverage": 12,
+        "cumulativeCoverageFractionOfOracleUnion": 1,
+        "aggregateWork": 12039808152,
+        "workBudgetReachedShareOfSolves": 0,
+        "exclusiveLevelsMissing": 0
+      }
+    ]
+  },
+  "productionRanking": {
+    "schemaVersion": 1,
+    "evidenceRole": "discovery",
+    "totalWins": 1073,
+    "totalWork": 203754701458,
+    "curve": [
+      {
+        "cardinality": 1,
+        "technique": "repair|score=repair|guidance=standard",
+        "family": "repair",
+        "winningLevels": 224,
+        "cumulativeWinningLevels": 224,
+        "cumulativeCoverageFractionOfWins": 0.2087604846225536,
+        "cumulativeWork": 48927394645,
+        "cumulativeWorkFractionOfTotal": 0.24012891135709777
+      },
+      {
+        "cardinality": 2,
+        "technique": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+        "family": "beam",
+        "winningLevels": 170,
+        "cumulativeWinningLevels": 394,
+        "cumulativeCoverageFractionOfWins": 0.36719478098788444,
+        "cumulativeWork": 52113975514,
+        "cumulativeWorkFractionOfTotal": 0.255768211192625
+      },
+      {
+        "cardinality": 3,
+        "technique": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+        "family": "beam",
+        "winningLevels": 121,
+        "cumulativeWinningLevels": 515,
+        "cumulativeCoverageFractionOfWins": 0.47996272134203166,
+        "cumulativeWork": 59364777178,
+        "cumulativeWorkFractionOfTotal": 0.2913541466930856
+      },
+      {
+        "cardinality": 4,
+        "technique": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+        "family": "beam",
+        "winningLevels": 93,
+        "cumulativeWinningLevels": 608,
+        "cumulativeCoverageFractionOfWins": 0.5666356011183598,
+        "cumulativeWork": 67942187003,
+        "cumulativeWorkFractionOfTotal": 0.3334508922583312
+      },
+      {
+        "cardinality": 5,
+        "technique": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+        "family": "beam",
+        "winningLevels": 90,
+        "cumulativeWinningLevels": 698,
+        "cumulativeCoverageFractionOfWins": 0.6505125815470643,
+        "cumulativeWork": 76365734068,
+        "cumulativeWorkFractionOfTotal": 0.37479250059779007
+      },
+      {
+        "cardinality": 6,
+        "technique": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+        "family": "beam",
+        "winningLevels": 76,
+        "cumulativeWinningLevels": 774,
+        "cumulativeCoverageFractionOfWins": 0.7213420316868593,
+        "cumulativeWork": 80104490612,
+        "cumulativeWorkFractionOfTotal": 0.3931418025635691
+      },
+      {
+        "cardinality": 7,
+        "technique": "admissible-order|tieBreak=default|lds=off",
+        "family": "ida",
+        "winningLevels": 48,
+        "cumulativeWinningLevels": 822,
+        "cumulativeCoverageFractionOfWins": 0.766076421248835,
+        "cumulativeWork": 93705833234,
+        "cumulativeWorkFractionOfTotal": 0.4598953180636944
+      },
+      {
+        "cardinality": 8,
+        "technique": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+        "family": "beam",
+        "winningLevels": 36,
+        "cumulativeWinningLevels": 858,
+        "cumulativeCoverageFractionOfWins": 0.7996272134203168,
+        "cumulativeWork": 100336684444,
+        "cumulativeWorkFractionOfTotal": 0.4924386221570569
+      },
+      {
+        "cardinality": 9,
+        "technique": "repair|score=repair|guidance=must-turn-biased",
+        "family": "repair",
+        "winningLevels": 31,
+        "cumulativeWinningLevels": 889,
+        "cumulativeCoverageFractionOfWins": 0.8285181733457595,
+        "cumulativeWork": 107649146550,
+        "cumulativeWorkFractionOfTotal": 0.5283271786108442
+      },
+      {
+        "cardinality": 10,
+        "technique": "admissible-order|tieBreak=none|lds=off",
+        "family": "ida",
+        "winningLevels": 29,
+        "cumulativeWinningLevels": 918,
+        "cumulativeCoverageFractionOfWins": 0.8555452003727866,
+        "cumulativeWork": 120161462593,
+        "cumulativeWorkFractionOfTotal": 0.5897359017149791
+      },
+      {
+        "cardinality": 11,
+        "technique": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "winningLevels": 29,
+        "cumulativeWinningLevels": 947,
+        "cumulativeCoverageFractionOfWins": 0.8825722273998136,
+        "cumulativeWork": 121651403139,
+        "cumulativeWorkFractionOfTotal": 0.5970483246202593
+      },
+      {
+        "cardinality": 12,
+        "technique": "dfs|score=perimeterSweep|bias=perimeterCW",
+        "family": "dfs",
+        "winningLevels": 21,
+        "cumulativeWinningLevels": 968,
+        "cumulativeCoverageFractionOfWins": 0.902143522833178,
+        "cumulativeWork": 130581474893,
+        "cumulativeWorkFractionOfTotal": 0.6408758863407958
+      },
+      {
+        "cardinality": 13,
+        "technique": "dfs|score=perimeterSweep|bias=cornerHarvest",
+        "family": "dfs",
+        "winningLevels": 16,
+        "cumulativeWinningLevels": 984,
+        "cumulativeCoverageFractionOfWins": 0.9170549860205033,
+        "cumulativeWork": 131390387995,
+        "cumulativeWorkFractionOfTotal": 0.6448459203876752
+      },
+      {
+        "cardinality": 14,
+        "technique": "dfs|score=portalFirstTransfer|bias=none",
+        "family": "dfs",
+        "winningLevels": 16,
+        "cumulativeWinningLevels": 1000,
+        "cumulativeCoverageFractionOfWins": 0.9319664492078286,
+        "cumulativeWork": 132971451584,
+        "cumulativeWorkFractionOfTotal": 0.6526055626324256
+      },
+      {
+        "cardinality": 15,
+        "technique": "dfs|score=objectiveFirst|bias=none",
+        "family": "dfs",
+        "winningLevels": 14,
+        "cumulativeWinningLevels": 1014,
+        "cumulativeCoverageFractionOfWins": 0.9450139794967382,
+        "cumulativeWork": 162641349535,
+        "cumulativeWorkFractionOfTotal": 0.7982213336487124
+      },
+      {
+        "cardinality": 16,
+        "technique": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "winningLevels": 12,
+        "cumulativeWinningLevels": 1026,
+        "cumulativeCoverageFractionOfWins": 0.9561975768872321,
+        "cumulativeWork": 164152793072,
+        "cumulativeWorkFractionOfTotal": 0.8056392902709872
+      },
+      {
+        "cardinality": 17,
+        "technique": "dfs|score=perimeterSweep|bias=perimeterCCW",
+        "family": "dfs",
+        "winningLevels": 11,
+        "cumulativeWinningLevels": 1037,
+        "cumulativeCoverageFractionOfWins": 0.9664492078285182,
+        "cumulativeWork": 170679900643,
+        "cumulativeWorkFractionOfTotal": 0.837673434878666
+      },
+      {
+        "cardinality": 18,
+        "technique": "dfs|score=intersectionHarvest|bias=none",
+        "family": "dfs",
+        "winningLevels": 9,
+        "cumulativeWinningLevels": 1046,
+        "cumulativeCoverageFractionOfWins": 0.9748369058713886,
+        "cumulativeWork": 191677060190,
+        "cumulativeWorkFractionOfTotal": 0.9407246007990173
+      },
+      {
+        "cardinality": 19,
+        "technique": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "winningLevels": 8,
+        "cumulativeWinningLevels": 1054,
+        "cumulativeCoverageFractionOfWins": 0.9822926374650512,
+        "cumulativeWork": 191906761603,
+        "cumulativeWorkFractionOfTotal": 0.941851943684145
+      },
+      {
+        "cardinality": 20,
+        "technique": "dfs|score=perimeterSweep|bias=sideCommitment",
+        "family": "dfs",
+        "winningLevels": 5,
+        "cumulativeWinningLevels": 1059,
+        "cumulativeCoverageFractionOfWins": 0.9869524697110904,
+        "cumulativeWork": 194967761780,
+        "cumulativeWorkFractionOfTotal": 0.9568749107867273
+      },
+      {
+        "cardinality": 21,
+        "technique": "dfs|score=portalCommitted|bias=none",
+        "family": "dfs",
+        "winningLevels": 5,
+        "cumulativeWinningLevels": 1064,
+        "cumulativeCoverageFractionOfWins": 0.9916123019571296,
+        "cumulativeWork": 196312012658,
+        "cumulativeWorkFractionOfTotal": 0.9634723088756106
+      },
+      {
+        "cardinality": 22,
+        "technique": "dfs|score=harvestThenFinish|bias=none",
+        "family": "dfs",
+        "winningLevels": 4,
+        "cumulativeWinningLevels": 1068,
+        "cumulativeCoverageFractionOfWins": 0.9953401677539608,
+        "cumulativeWork": 197672854112,
+        "cumulativeWorkFractionOfTotal": 0.9701511312255356
+      },
+      {
+        "cardinality": 23,
+        "technique": "dfs|score=knotBuilder|bias=none",
+        "family": "dfs",
+        "winningLevels": 2,
+        "cumulativeWinningLevels": 1070,
+        "cumulativeCoverageFractionOfWins": 0.9972041006523765,
+        "cumulativeWork": 201356220939,
+        "cumulativeWorkFractionOfTotal": 0.9882285880922634
+      },
+      {
+        "cardinality": 24,
+        "technique": "dfs|score=default|bias=none",
+        "family": "dfs",
+        "winningLevels": 1,
+        "cumulativeWinningLevels": 1071,
+        "cumulativeCoverageFractionOfWins": 0.9981360671015843,
+        "cumulativeWork": 201437573244,
+        "cumulativeWorkFractionOfTotal": 0.9886278539959107
+      },
+      {
+        "cardinality": 25,
+        "technique": "dfs|score=mustCrossFirst|bias=none",
+        "family": "dfs",
+        "winningLevels": 1,
+        "cumulativeWinningLevels": 1072,
+        "cumulativeCoverageFractionOfWins": 0.9990680335507922,
+        "cumulativeWork": 202274150961,
+        "cumulativeWorkFractionOfTotal": 0.9927336621613848
+      },
+      {
+        "cardinality": 26,
+        "technique": "dfs|score=perimeterSweep|bias=none",
+        "family": "dfs",
+        "winningLevels": 1,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203025311609,
+        "cumulativeWorkFractionOfTotal": 0.9964202551215715
+      },
+      {
+        "cardinality": 27,
+        "technique": "admissible-order|tieBreak=intersectionHarvest|lds=off",
+        "family": "ida",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203025311609,
+        "cumulativeWorkFractionOfTotal": 0.9964202551215715
+      },
+      {
+        "cardinality": 28,
+        "technique": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+        "family": "ida",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203025311609,
+        "cumulativeWorkFractionOfTotal": 0.9964202551215715
+      },
+      {
+        "cardinality": 29,
+        "technique": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+        "family": "ida",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203025311609,
+        "cumulativeWorkFractionOfTotal": 0.9964202551215715
+      },
+      {
+        "cardinality": 30,
+        "technique": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203175934358,
+        "cumulativeWorkFractionOfTotal": 0.9971594908198017
+      },
+      {
+        "cardinality": 31,
+        "technique": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+        "family": "beam",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203325102413,
+        "cumulativeWorkFractionOfTotal": 0.997891587080318
+      },
+      {
+        "cardinality": 32,
+        "technique": "dfs|score=closureCommitment|bias=none",
+        "family": "dfs",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203379199454,
+        "cumulativeWorkFractionOfTotal": 0.9981570879036752
+      },
+      {
+        "cardinality": 33,
+        "technique": "dfs|score=finishFirst|bias=none",
+        "family": "dfs",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203658563016,
+        "cumulativeWorkFractionOfTotal": 0.9995281657732947
+      },
+      {
+        "cardinality": 34,
+        "technique": "dfs|score=nearClosureRescue|bias=none",
+        "family": "dfs",
+        "winningLevels": 0,
+        "cumulativeWinningLevels": 1073,
+        "cumulativeCoverageFractionOfWins": 1,
+        "cumulativeWork": 203754701458,
+        "cumulativeWorkFractionOfTotal": 1
+      }
+    ]
+  }
+}
