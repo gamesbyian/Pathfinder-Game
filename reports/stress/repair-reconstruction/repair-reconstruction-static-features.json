@@ -1,0 +1,1044 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "discovery",
+  "n": 32,
+  "reconstructableCount": 8,
+  "operatorIncapableCount": 24,
+  "rows": [
+    {
+      "levelId": "R00648",
+      "outcome": "operator-incapable",
+      "source": "original-mined",
+      "features": {
+        "w": 15,
+        "h": 15,
+        "area": 225,
+        "aspect": 1,
+        "reqLen": 141,
+        "reqInt": 4,
+        "requiredPathCoverageRatio": 0.6714285714285714,
+        "gates": 1,
+        "blocks": 14,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 7,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R03176",
+      "outcome": "operator-incapable",
+      "source": "original-mined",
+      "features": {
+        "w": 15,
+        "h": 15,
+        "area": 225,
+        "aspect": 1,
+        "reqLen": 141,
+        "reqInt": 10,
+        "requiredPathCoverageRatio": 0.6682464454976303,
+        "gates": 1,
+        "blocks": 7,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 6,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R00630",
+      "outcome": "reconstructable",
+      "costMultiple": 0.81175,
+      "source": "original-mined",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 70,
+        "reqInt": 5,
+        "requiredPathCoverageRatio": 0.7526881720430108,
+        "gates": 1,
+        "blocks": 20,
+        "mustPass": 6,
+        "mustCross": 5,
+        "portalPairs": 6,
+        "flippers": 5,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 7,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 5
+      }
+    },
+    {
+      "levelId": "R02449",
+      "outcome": "reconstructable",
+      "costMultiple": 317.045,
+      "source": "original-mined",
+      "features": {
+        "w": 12,
+        "h": 12,
+        "area": 144,
+        "aspect": 1,
+        "reqLen": 76,
+        "reqInt": 2,
+        "requiredPathCoverageRatio": 0.6440677966101694,
+        "gates": 1,
+        "blocks": 20,
+        "mustPass": 0,
+        "mustCross": 2,
+        "portalPairs": 6,
+        "flippers": 5,
+        "staticFilters": 0,
+        "geese": 5,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R02257",
+      "outcome": "reconstructable",
+      "costMultiple": 1.17,
+      "source": "batch1",
+      "features": {
+        "w": 14,
+        "h": 14,
+        "area": 196,
+        "aspect": 1,
+        "reqLen": 110,
+        "reqInt": 9,
+        "requiredPathCoverageRatio": 0.6077348066298343,
+        "gates": 1,
+        "blocks": 6,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 8,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 8,
+        "surround": 1,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R02426",
+      "outcome": "reconstructable",
+      "costMultiple": 1.27,
+      "source": "batch1",
+      "features": {
+        "w": 12,
+        "h": 12,
+        "area": 144,
+        "aspect": 1,
+        "reqLen": 86,
+        "reqInt": 7,
+        "requiredPathCoverageRatio": 0.6615384615384615,
+        "gates": 1,
+        "blocks": 6,
+        "mustPass": 7,
+        "mustCross": 7,
+        "portalPairs": 4,
+        "flippers": 7,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 7,
+        "surround": 0,
+        "mustTurn": 6,
+        "adjTurn": 6
+      }
+    },
+    {
+      "levelId": "R03097",
+      "outcome": "operator-incapable",
+      "source": "batch1",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 64,
+        "reqInt": 1,
+        "requiredPathCoverageRatio": 0.6808510638297872,
+        "gates": 1,
+        "blocks": 19,
+        "mustPass": 5,
+        "mustCross": 1,
+        "portalPairs": 7,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 7,
+        "falseGoals": 0,
+        "surround": 3,
+        "mustTurn": 7,
+        "adjTurn": 6
+      }
+    },
+    {
+      "levelId": "R02644",
+      "outcome": "operator-incapable",
+      "source": "batch1",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 68,
+        "reqInt": 3,
+        "requiredPathCoverageRatio": 0.723404255319149,
+        "gates": 1,
+        "blocks": 21,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portalPairs": 5,
+        "flippers": 5,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 5,
+        "surround": 1,
+        "mustTurn": 0,
+        "adjTurn": 6
+      }
+    },
+    {
+      "levelId": "R02975",
+      "outcome": "operator-incapable",
+      "source": "batch1",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 69,
+        "reqInt": 2,
+        "requiredPathCoverageRatio": 0.7419354838709677,
+        "gates": 1,
+        "blocks": 19,
+        "mustPass": 6,
+        "mustCross": 2,
+        "portalPairs": 6,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 8,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 7
+      }
+    },
+    {
+      "levelId": "R02575",
+      "outcome": "operator-incapable",
+      "source": "batch1",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 64,
+        "reqInt": 7,
+        "requiredPathCoverageRatio": 0.7111111111111111,
+        "gates": 1,
+        "blocks": 16,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 8,
+        "staticFilters": 0,
+        "geese": 6,
+        "falseGoals": 8,
+        "surround": 0,
+        "mustTurn": 5,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R02271",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 15,
+        "h": 15,
+        "area": 225,
+        "aspect": 1,
+        "reqLen": 137,
+        "reqInt": 6,
+        "requiredPathCoverageRatio": 0.7405405405405405,
+        "gates": 1,
+        "blocks": 39,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 6,
+        "flippers": 8,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R02293",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 13,
+        "h": 13,
+        "area": 169,
+        "aspect": 1,
+        "reqLen": 108,
+        "reqInt": 9,
+        "requiredPathCoverageRatio": 0.8852459016393442,
+        "gates": 1,
+        "blocks": 40,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 6,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 8
+      }
+    },
+    {
+      "levelId": "R02459",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 82,
+        "reqInt": 5,
+        "requiredPathCoverageRatio": 0.9318181818181818,
+        "gates": 1,
+        "blocks": 25,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 7,
+        "surround": 0,
+        "mustTurn": 7,
+        "adjTurn": 8
+      }
+    },
+    {
+      "levelId": "R03297",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 14,
+        "h": 14,
+        "area": 196,
+        "aspect": 1,
+        "reqLen": 113,
+        "reqInt": 6,
+        "requiredPathCoverageRatio": 0.5978835978835979,
+        "gates": 1,
+        "blocks": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 7,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 5,
+        "surround": 1,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R03171",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 66,
+        "reqInt": 2,
+        "requiredPathCoverageRatio": 0.717391304347826,
+        "gates": 1,
+        "blocks": 23,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 6,
+        "staticFilters": 0,
+        "geese": 5,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 7
+      }
+    },
+    {
+      "levelId": "R03162",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 71,
+        "reqInt": 5,
+        "requiredPathCoverageRatio": 0.8068181818181818,
+        "gates": 1,
+        "blocks": 24,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 8,
+        "falseGoals": 0,
+        "surround": 2,
+        "mustTurn": 5,
+        "adjTurn": 8
+      }
+    },
+    {
+      "levelId": "R02596",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 12,
+        "h": 12,
+        "area": 144,
+        "aspect": 1,
+        "reqLen": 91,
+        "reqInt": 5,
+        "requiredPathCoverageRatio": 0.91,
+        "gates": 1,
+        "blocks": 30,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 7,
+        "falseGoals": 6,
+        "surround": 0,
+        "mustTurn": 7,
+        "adjTurn": 7
+      }
+    },
+    {
+      "levelId": "R02816",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 12,
+        "h": 12,
+        "area": 144,
+        "aspect": 1,
+        "reqLen": 77,
+        "reqInt": 1,
+        "requiredPathCoverageRatio": 0.6260162601626016,
+        "gates": 1,
+        "blocks": 20,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 4,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 3,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R00260",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 15,
+        "h": 15,
+        "area": 225,
+        "aspect": 1,
+        "reqLen": 116,
+        "reqInt": 5,
+        "requiredPathCoverageRatio": 0.6373626373626373,
+        "gates": 1,
+        "blocks": 36,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 8,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 6,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 7
+      }
+    },
+    {
+      "levelId": "R02075",
+      "outcome": "operator-incapable",
+      "source": "batch2",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 67,
+        "reqInt": 4,
+        "requiredPathCoverageRatio": 0.5826086956521739,
+        "gates": 1,
+        "blocks": 5,
+        "mustPass": 0,
+        "mustCross": 4,
+        "portalPairs": 5,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 8,
+        "adjTurn": 5
+      }
+    },
+    {
+      "levelId": "R02958",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 12,
+        "h": 12,
+        "area": 144,
+        "aspect": 1,
+        "reqLen": 101,
+        "reqInt": 3,
+        "requiredPathCoverageRatio": 0.7890625,
+        "gates": 1,
+        "blocks": 15,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 7,
+        "flippers": 6,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R02134",
+      "outcome": "reconstructable",
+      "costMultiple": 0.22,
+      "source": "batch3",
+      "features": {
+        "w": 13,
+        "h": 13,
+        "area": 169,
+        "aspect": 1,
+        "reqLen": 82,
+        "reqInt": 2,
+        "requiredPathCoverageRatio": 0.5030674846625767,
+        "gates": 1,
+        "blocks": 5,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portalPairs": 7,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 8,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R02344",
+      "outcome": "reconstructable",
+      "costMultiple": 19.76,
+      "source": "batch3",
+      "features": {
+        "w": 13,
+        "h": 13,
+        "area": 169,
+        "aspect": 1,
+        "reqLen": 94,
+        "reqInt": 6,
+        "requiredPathCoverageRatio": 0.7121212121212122,
+        "gates": 1,
+        "blocks": 25,
+        "mustPass": 5,
+        "mustCross": 6,
+        "portalPairs": 0,
+        "flippers": 5,
+        "staticFilters": 0,
+        "geese": 5,
+        "falseGoals": 6,
+        "surround": 0,
+        "mustTurn": 8,
+        "adjTurn": 5
+      }
+    },
+    {
+      "levelId": "R02413",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 62,
+        "reqInt": 2,
+        "requiredPathCoverageRatio": 0.7380952380952381,
+        "gates": 1,
+        "blocks": 30,
+        "mustPass": 0,
+        "mustCross": 2,
+        "portalPairs": 0,
+        "flippers": 7,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 6,
+        "surround": 4,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R02990",
+      "outcome": "reconstructable",
+      "costMultiple": 115.4,
+      "source": "batch3",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 68,
+        "reqInt": 1,
+        "requiredPathCoverageRatio": 0.6238532110091743,
+        "gates": 1,
+        "blocks": 6,
+        "mustPass": 5,
+        "mustCross": 1,
+        "portalPairs": 4,
+        "flippers": 7,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 5,
+        "surround": 0,
+        "mustTurn": 5,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R03020",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 77,
+        "reqInt": 3,
+        "requiredPathCoverageRatio": 0.7,
+        "gates": 1,
+        "blocks": 10,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portalPairs": 5,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 2,
+        "mustTurn": 0,
+        "adjTurn": 8
+      }
+    },
+    {
+      "levelId": "R03104",
+      "outcome": "reconstructable",
+      "costMultiple": 22.7,
+      "source": "batch3",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 80,
+        "reqInt": 6,
+        "requiredPathCoverageRatio": 0.851063829787234,
+        "gates": 1,
+        "blocks": 19,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portalPairs": 4,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 7,
+        "surround": 0,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R00500",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 12,
+        "h": 12,
+        "area": 144,
+        "aspect": 1,
+        "reqLen": 80,
+        "reqInt": 4,
+        "requiredPathCoverageRatio": 0.6779661016949152,
+        "gates": 1,
+        "blocks": 18,
+        "mustPass": 7,
+        "mustCross": 4,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 7,
+        "surround": 0,
+        "mustTurn": 6,
+        "adjTurn": 8
+      }
+    },
+    {
+      "levelId": "R01936",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 12,
+        "h": 12,
+        "area": 144,
+        "aspect": 1,
+        "reqLen": 99,
+        "reqInt": 8,
+        "requiredPathCoverageRatio": 0.8048780487804879,
+        "gates": 1,
+        "blocks": 20,
+        "mustPass": 5,
+        "mustCross": 5,
+        "portalPairs": 4,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 4,
+        "mustTurn": 0,
+        "adjTurn": 0
+      }
+    },
+    {
+      "levelId": "R03187",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 63,
+        "reqInt": 5,
+        "requiredPathCoverageRatio": 0.5526315789473685,
+        "gates": 1,
+        "blocks": 6,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 7,
+        "adjTurn": 6
+      }
+    },
+    {
+      "levelId": "R00479",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 72,
+        "reqInt": 6,
+        "requiredPathCoverageRatio": 0.8571428571428571,
+        "gates": 1,
+        "blocks": 30,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portalPairs": 7,
+        "flippers": 8,
+        "staticFilters": 0,
+        "geese": 6,
+        "falseGoals": 0,
+        "surround": 1,
+        "mustTurn": 6,
+        "adjTurn": 6
+      }
+    },
+    {
+      "levelId": "R02265",
+      "outcome": "operator-incapable",
+      "source": "batch3",
+      "features": {
+        "w": 11,
+        "h": 11,
+        "area": 121,
+        "aspect": 1,
+        "reqLen": 80,
+        "reqInt": 9,
+        "requiredPathCoverageRatio": 0.8163265306122449,
+        "gates": 1,
+        "blocks": 22,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portalPairs": 0,
+        "flippers": 0,
+        "staticFilters": 0,
+        "geese": 0,
+        "falseGoals": 0,
+        "surround": 0,
+        "mustTurn": 5,
+        "adjTurn": 7
+      }
+    }
+  ],
+  "operatorIncapableVsReconstructableEffects": [
+    {
+      "feature": "falseGoals",
+      "groupAMean": 2.4166666666666665,
+      "groupBMean": 5,
+      "standardizedDifference": 0.8346431653605906
+    },
+    {
+      "feature": "blocks",
+      "groupAMean": 20.416666666666668,
+      "groupBMean": 13.375,
+      "standardizedDifference": -0.7747282385506687
+    },
+    {
+      "feature": "surround",
+      "groupAMean": 0.875,
+      "groupBMean": 0.125,
+      "standardizedDifference": -0.7724539357611742
+    },
+    {
+      "feature": "adjTurn",
+      "groupAMean": 4.333333333333333,
+      "groupBMean": 2,
+      "standardizedDifference": -0.7660459172304158
+    },
+    {
+      "feature": "requiredPathCoverageRatio",
+      "groupAMean": 0.732031878648142,
+      "groupBMean": 0.6695168718002091,
+      "standardizedDifference": -0.6331429695654291
+    },
+    {
+      "feature": "flippers",
+      "groupAMean": 2.625,
+      "groupBMean": 4.625,
+      "standardizedDifference": 0.6303252184499426
+    },
+    {
+      "feature": "mustCross",
+      "groupAMean": 1.1666666666666667,
+      "groupBMean": 2.625,
+      "standardizedDifference": 0.6230658553105556
+    },
+    {
+      "feature": "mustPass",
+      "groupAMean": 2.9166666666666665,
+      "groupBMean": 4.5,
+      "standardizedDifference": 0.5242501487841376
+    },
+    {
+      "feature": "portalPairs",
+      "groupAMean": 2.625,
+      "groupBMean": 3.875,
+      "standardizedDifference": 0.4588314677411235
+    },
+    {
+      "feature": "geese",
+      "groupAMean": 2.125,
+      "groupBMean": 1.25,
+      "standardizedDifference": -0.33115038035993954
+    },
+    {
+      "feature": "reqLen",
+      "groupAMean": 87.875,
+      "groupBMean": 83.25,
+      "standardizedDifference": -0.2315448949956088
+    },
+    {
+      "feature": "mustTurn",
+      "groupAMean": 2.625,
+      "groupBMean": 3.375,
+      "standardizedDifference": 0.2245967895782061
+    },
+    {
+      "feature": "w",
+      "groupAMean": 12.083333333333334,
+      "groupBMean": 12.125,
+      "standardizedDifference": 0.03218280256507328
+    },
+    {
+      "feature": "h",
+      "groupAMean": 12.083333333333334,
+      "groupBMean": 12.125,
+      "standardizedDifference": 0.03218280256507328
+    },
+    {
+      "feature": "reqInt",
+      "groupAMean": 4.791666666666667,
+      "groupBMean": 4.75,
+      "standardizedDifference": -0.01633102038954085
+    },
+    {
+      "feature": "area",
+      "groupAMean": 148.25,
+      "groupBMean": 148.125,
+      "standardizedDifference": -0.003789360655880867
+    },
+    {
+      "feature": "aspect",
+      "groupAMean": 1,
+      "groupBMean": 1,
+      "standardizedDifference": 0
+    },
+    {
+      "feature": "gates",
+      "groupAMean": 1,
+      "groupBMean": 1,
+      "standardizedDifference": 0
+    },
+    {
+      "feature": "staticFilters",
+      "groupAMean": 0,
+      "groupBMean": 0,
+      "standardizedDifference": 0
+    }
+  ],
+  "reconstructableCostLogCorrelations": [
+    {
+      "feature": "mustPass",
+      "spearman": -0.6260614855788013
+    },
+    {
+      "feature": "geese",
+      "spearman": 0.5039526306789696
+    },
+    {
+      "feature": "blocks",
+      "spearman": 0.392822892912189
+    },
+    {
+      "feature": "w",
+      "spearman": -0.37062465833055064
+    },
+    {
+      "feature": "h",
+      "spearman": -0.37062465833055064
+    },
+    {
+      "feature": "area",
+      "spearman": -0.37062465833055064
+    },
+    {
+      "feature": "reqLen",
+      "spearman": -0.35714285714285715
+    },
+    {
+      "feature": "reqInt",
+      "spearman": -0.2891776156271279
+    },
+    {
+      "feature": "falseGoals",
+      "spearman": -0.2823414542806359
+    },
+    {
+      "feature": "mustTurn",
+      "spearman": -0.2681749582253684
+    },
+    {
+      "feature": "adjTurn",
+      "spearman": -0.2611822646334021
+    },
+    {
+      "feature": "surround",
+      "spearman": -0.24743582965269675
+    },
+    {
+      "feature": "requiredPathCoverageRatio",
+      "spearman": 0.23809523809523808
+    },
+    {
+      "feature": "portalPairs",
+      "spearman": -0.22237479499833038
+    },
+    {
+      "feature": "mustCross",
+      "spearman": 0.12198750911856665
+    },
+    {
+      "feature": "flippers",
+      "spearman": 0.09883324222148017
+    },
+    {
+      "feature": "aspect",
+      "spearman": 0
+    },
+    {
+      "feature": "gates",
+      "spearman": 0
+    },
+    {
+      "feature": "staticFilters",
+      "spearman": 0
+    }
+  ],
+  "costSampleSize": 8
+}
