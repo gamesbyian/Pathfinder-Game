@@ -22,6 +22,15 @@
  * scale is itself a decision-bearing research choice needing its own premise/pilot, not plumbing.
  * See reports/2026-08-28-discovery-work-meter-session-scope-fix.md and the queue's item #2.
  *
+ * cell.perTechniqueWorkCap (2026-09-02, opt-in, additive, work-mode only): narrows every individual
+ * technique attempt's own share of the gate ceiling to at most this many work units, so one
+ * non-naturally-terminating technique (repair right-censors at whatever cap it is given rather than
+ * exhausting) cannot silently consume an entire shared cell.workBudget and starve every later
+ * technique in cell.techniqueKeys regardless of budget size. Only ever narrows an attempt's cap
+ * (`Math.min(remaining, perTechniqueWorkCap)`), never widens it; omitting the field reproduces the
+ * exact pre-existing gate-ceiling-only math. See reports/2026-09-02-static-portfolio-construction-
+ * pilot.md for the motivating finding and scripts/build-static-portfolio-plan.mjs for a consumer.
+ *
  * Usage:
  *   import { createCellRunner } from './technique-census-cell.mjs';
  *   const { runCell } = await createCellRunner();
@@ -111,16 +120,31 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             for (const { key, config } of configs) {
                 if (spentUnits() >= gateCeiling) break;
                 const remaining = gateCeiling === Infinity ? Infinity : Math.max(0, gateCeiling - spentUnits());
+                // cell.perTechniqueWorkCap (2026-09-02, opt-in, additive): when set, no single
+                // technique in cell.techniqueKeys may claim more than this share of the gate's
+                // remaining work, even if nothing later in the list would otherwise ever get a turn.
+                // Motivated by the static-portfolio pilot (reports/2026-09-02-static-portfolio-
+                // construction-pilot.md): a naive shared budget lets a non-naturally-terminating
+                // technique (e.g. repair, which right-censors at whatever cap it is given rather than
+                // exhausting) consume the entire remainder regardless of budget size, starving every
+                // later list position and making the technique list's own composition untestable.
+                // Unused share still rolls forward to the next technique exactly as before (this only
+                // ever narrows `remaining`, never widens it) — every existing caller that never sets
+                // this field is completely unaffected; see this file's own equal-work-cell precedent
+                // in the header comment for why an unconditional new cap dimension needs the same
+                // explicit-opt-in treatment.
+                const attemptRemaining = (useWork && Number.isFinite(cell.perTechniqueWorkCap))
+                    ? Math.min(remaining, cell.perTechniqueWorkCap) : remaining;
                 // Work mode bounds the attempt via prep._workCap (read internally by runAttempt/
                 // search primitives) and passes nodeBudget=Infinity — nodesExpanded stays a
-                // diagnostic remainder, not the bounding currency. `remaining` is always finite here
-                // whenever useWork is true (totalBudget is finite by useWork's own precondition, and
-                // every derived share/ceiling/remaining above is finite whenever totalBudget is), so
-                // no Infinity-guard is needed on this assignment. Node mode is completely unchanged:
-                // it still bounds via runAttempt's own nodeBudget param, exactly as before this cell
-                // gained work-budget support.
+                // diagnostic remainder, not the bounding currency. `attemptRemaining` is always finite
+                // here whenever useWork is true (totalBudget is finite by useWork's own precondition,
+                // and every derived share/ceiling/remaining above is finite whenever totalBudget is),
+                // so no Infinity-guard is needed on this assignment. Node mode is completely
+                // unchanged: it still bounds via runAttempt's own nodeBudget param using `remaining`
+                // directly, exactly as before this cell gained work-budget support.
                 if (useWork) {
-                    const attemptWorkCap = prep._workMeter.units + remaining;
+                    const attemptWorkCap = prep._workMeter.units + attemptRemaining;
                     prep._workCap = attemptWorkCap;
                     // admissible-order / ida search intentionally ignores the historical soft
                     // _workCap and only obeys _strictWorkCap inside its hot loop. Equal-work census
@@ -165,6 +189,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             pairLabel: cell.pairLabel ?? null, flagExperiment: cell.flagExperiment ?? null,
             ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
             ...(useWork ? { workBudget: cell.workBudget, workSpent, deadlineTruncated } : {}),
+            ...(useWork && Number.isFinite(cell.perTechniqueWorkCap) ? { perTechniqueWorkCap: cell.perTechniqueWorkCap } : {}),
             ok, status, refereeValid, winningConfigKey: winningKey, winningGate,
             gateSummaries: level.gateKeys.length > 1 ? gateSummaries : undefined,
             nodesExpanded, totalMs,

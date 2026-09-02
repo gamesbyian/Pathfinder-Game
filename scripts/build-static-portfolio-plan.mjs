@@ -21,12 +21,20 @@
  *     --population=reports/stress/ew1/33156541827-pricing-snapshot.json \
  *     --arms=path/to/arms.json \
  *     --work-budget=67000000 \
+ *     [--per-technique-work-cap=10000000] \
  *     --out=path/to/plan.json
  *
  * --population accepts either an EW1-shaped pricing snapshot ({ results: [{ levelId, corpus,
  * levelPos }, ...] }, deduplicated by levelId) or a plain JSON array of { corpus, levelPos } rows.
  * --arms is a JSON object mapping arm name -> ordered array of technique-identity-key strings
  * (the same compact vocabulary as EW1 cell techniqueKeys / modules/solver/attempt-identity.mjs).
+ *
+ * --per-technique-work-cap (optional): sets technique-census-cell.mjs's `cell.perTechniqueWorkCap`
+ * on every generated cell, so no single technique in an arm's list can consume more than this share
+ * of --work-budget regardless of how the rest of the list is ordered. Omit this for the original
+ * naive first-come-first-served semantics (see reports/2026-09-02-static-portfolio-construction-
+ * pilot.md for why that naive form starved every position after a non-terminating technique like
+ * repair, independent of --work-budget's own size).
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -37,9 +45,10 @@ const ATTEMPT_BUDGET_MS = 600000;
  * @param {{ corpus: string, levelPos: number, levelId?: string }[]} population
  * @param {Record<string, string[]>} arms
  * @param {number} workBudget
+ * @param {number | null} [perTechniqueWorkCap] optional; see this file's header comment
  * @returns {{ budgetProtocol: string, equalCostAcrossTechniques: boolean, cells: object[] }}
  */
-export function buildPlan(population, arms, workBudget) {
+export function buildPlan(population, arms, workBudget, perTechniqueWorkCap = null) {
     if (!Array.isArray(population) || population.length === 0) {
         throw new Error('buildPlan: population must be a non-empty array');
     }
@@ -62,6 +71,7 @@ export function buildPlan(population, arms, workBudget) {
                 workBudget,
                 budgetMs: ATTEMPT_BUDGET_MS,
                 ablation: null,
+                ...(Number.isFinite(perTechniqueWorkCap) ? { perTechniqueWorkCap } : {}),
             });
         }
     }
@@ -89,16 +99,18 @@ if (isMain) {
     const populationPath = argMap.get('--population');
     const armsPath = argMap.get('--arms');
     const workBudget = Number(argMap.get('--work-budget'));
+    const perTechniqueWorkCap = argMap.has('--per-technique-work-cap') ? Number(argMap.get('--per-technique-work-cap')) : null;
     const outFile = argMap.get('--out');
     if (!populationPath || !armsPath || !Number.isFinite(workBudget) || !outFile) {
-        console.error('Usage: --population=<path> --arms=<path> --work-budget=<number> --out=<path>');
+        console.error('Usage: --population=<path> --arms=<path> --work-budget=<number> [--per-technique-work-cap=<number>] --out=<path>');
         process.exit(1);
     }
     const population = loadPopulation(JSON.parse(readFileSync(path.resolve(root, populationPath), 'utf8')));
     const arms = JSON.parse(readFileSync(path.resolve(root, armsPath), 'utf8'));
-    const plan = buildPlan(population, arms, workBudget);
+    const plan = buildPlan(population, arms, workBudget, perTechniqueWorkCap);
 
     mkdirSync(path.dirname(path.resolve(root, outFile)), { recursive: true });
     writeFileSync(path.resolve(root, outFile), JSON.stringify(plan, null, 2) + '\n');
-    console.log(`Wrote ${outFile}: ${plan.cells.length} cells (${population.length} levels x ${Object.keys(arms).length} arms), workBudget=${workBudget}`);
+    console.log(`Wrote ${outFile}: ${plan.cells.length} cells (${population.length} levels x ${Object.keys(arms).length} arms), workBudget=${workBudget}`
+        + (Number.isFinite(perTechniqueWorkCap) ? `, perTechniqueWorkCap=${perTechniqueWorkCap}` : ''));
 }

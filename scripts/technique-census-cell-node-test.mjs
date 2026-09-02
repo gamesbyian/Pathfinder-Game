@@ -163,6 +163,67 @@ test('multi-technique cell: the first config gets the whole gate share, the seco
     assert.equal(result.attempts, undefined);
 });
 
+test('cell.perTechniqueWorkCap narrows each technique\'s own share without widening the gate ceiling', async () => {
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._workMeter.units += 20;
+        prep._metrics.nodesExpanded += 1;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const result = await runCell({
+        ...baseCell, techniqueKeys: ['dfs|score=nearClosureRescue|bias=none', 'dfs|score=default|bias=none'],
+        workBudget: 100_000_000, perTechniqueWorkCap: 10_000_000,
+    });
+
+    // Same 2-gates x 2-configs shape as the sibling "multi-technique cell" test above -- nothing
+    // here ever reaches either cap, so every config still gets a turn in every gate.
+    assert.equal(calls.length, 4);
+    // Gate 0's own ceiling would ordinarily be 50,000,000 (half the total budget across 2 gates);
+    // the per-technique cap narrows config A's own share down to 10,000,000 instead of the full
+    // gate ceiling -- this only ever narrows, it must never make an attempt's cap LARGER than the
+    // plain gate-ceiling math the sibling test above already pins.
+    assert.equal(calls[0].workCapBefore, 10_000_000);
+    // Config B is capped by its OWN 10,000,000 share on top of what config A already spent (20),
+    // not the full gate-ceiling leftover (which would be 49,999,980) -- proving the cap applies
+    // per technique, not once per gate.
+    assert.equal(calls[1].workCapBefore, 10_000_020);
+    assert.equal(calls[0].strictWorkCapBefore, calls[0].workCapBefore);
+    assert.equal(result.perTechniqueWorkCap, 10_000_000);
+});
+
+test('cell.perTechniqueWorkCap wider than the gate leftover never widens anything (narrower of the two always binds)', async () => {
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._workMeter.units += 20;
+        prep._metrics.nodesExpanded += 1;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    // A per-technique cap far larger than the whole budget must reproduce the exact pre-existing
+    // (no perTechniqueWorkCap) gate-ceiling math -- byte-identical to the sibling test above.
+    const result = await runCell({
+        ...baseCell, techniqueKeys: ['dfs|score=nearClosureRescue|bias=none', 'dfs|score=default|bias=none'],
+        workBudget: 100_000_000, perTechniqueWorkCap: 1_000_000_000,
+    });
+
+    assert.equal(calls.length, 4);
+    assert.equal(calls[0].workCapBefore, 50_000_000, 'gate 0 ceiling, unwidened by an oversized per-technique cap');
+    assert.equal(calls[1].workCapBefore, 50_000_000, 'config B still shares the SAME gate ceiling as config A, not a fresh cap');
+    assert.equal(result.perTechniqueWorkCap, 1_000_000_000);
+});
+
+test('node-budget cell ignores perTechniqueWorkCap entirely (work-only field)', async () => {
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._metrics.nodesExpanded += 10;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const result = await runCell({ ...baseCell, nodeBudget: 5, perTechniqueWorkCap: 1 });
+
+    assert.equal(result.status, 'node-budget-reached');
+    assert.equal(Object.hasOwn(result, 'perTechniqueWorkCap'), false);
+    assert.ok(calls.every(c => c.workCapBefore === undefined));
+});
+
 test('real solver, generous work budget: workSpent matches the unconstrained solve exactly (no distortion)', async () => {
     const { runCell } = await createCellRunner();
     const result = await runCell({ ...baseCell, workBudget: 5_000_000 });
