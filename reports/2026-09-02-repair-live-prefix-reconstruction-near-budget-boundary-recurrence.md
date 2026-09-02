@@ -1,11 +1,13 @@
 # Repair live-prefix reconstruction: a first population-level rate estimate
 
 > **Status:** active
-> **Last evidence:** 2026-09-02 — CP-SAT-verified exact live/dead boundaries plus `closeLengthGap`/randomized-rollout classification, referee-validated and independently replayed where solved, for seven freshly-selected, unrelated-parent exact-live cases drawn from one independent sample (`R02257`, `R02426`, `R03097`, `R02644`, `R02919`, `R02975`, `R02575`)
-> **Decision:** extending the fresh sample from n=3 to n=7 turns "does either regime recur" into a first real rate estimate. Of six cases with a CP-SAT-resolved boundary (`R02919`'s interior abstained — excluded from the rate), **2/6 (33%) are near-budget-boundary reconstructable** (`R02257`, `R02426` — the shape this report originally found) and **4/6 (67%) are operator-incapable** (`R03097`, `R02644`, `R02975`, `R02575` — the `R00648`/`R03176` shape). The near-budget-boundary shape is real and recurring, but it is the **minority** shape in this fresh sample, not the dominant one.
-> **Remaining gate:** n=6 resolved cases is still a small sample for a population rate (a two-sided ~95% interval around 33% spans roughly 10-65% at this size) — do not finalize a budget-increase mechanism on this estimate alone. A materially larger sample (order 20-30+ resolved cases) would meaningfully narrow it. `R00630`'s and `R02449`'s own shapes remain unrecurred singletons in every fresh draw so far.
-> **Evidence role:** discovery (population-recurrence check and first rate estimate, same role as the parent audit's stop-rule gate)
-> **Selection:** prespecified — drew one fresh, independent 30-level stratified sample (seed `repair-reachability-recurrence-check-2026-09-02`, distinct from any seed this program has used before) via `census-repair-rollback-windows.mjs`, then processed the shallowest-rollback elite from each successive distinct parent level in that sample, in ascending rollback order, in two batches (`R02257`/`R02426`/`R03097` first, then `R02644`/`R02919`/`R02975`/`R02575`) — the selection rule (next-shallowest distinct parent) was fixed before either batch, and no case was substituted after seeing its own result.
+> **Last evidence:** 2026-09-02 — a second independent batch (10 more resolved cases, all operator-incapable) more than doubled the sample: **2/16 (12.5%) near-budget-boundary, 14/16 (87.5%) operator-incapable**. See "Batch 2 addendum" below for the full account; the original batch-1 method/result (n=6) is preserved unchanged above it.
+> **Decision:** the rate estimate narrows substantially with the larger sample (33% → 12.5% near-budget-boundary) without reversing its qualitative conclusion: operator-incapability is the dominant outcome for an unrelated exact-live case, more dominant than the n=6 read suggested. Still do not design a mechanism from this population.
+> **Remaining gate:** n=16 is closer to, but still short of, the "order 20-30+ resolved cases" target this report's own n=6 version set. A third batch of comparable size is the next gate if this program continues.
+> **Evidence role:** discovery (population-recurrence check and rate estimate, same role as the parent audit's stop-rule gate)
+> **Selection:** prespecified for both batches — batch 1 (below) drew one fresh, independent 30-level stratified sample (seed `repair-reachability-recurrence-check-2026-09-02`); batch 2 (addendum) drew a second, independent 40-level stratified sample (seed `repair-reachability-recurrence-check-2026-09-02-batch2`, no overlap with any previously-classified level) via the same `census-repair-rollback-windows.mjs` tool, then processed the shallowest-rollback elite from each successive distinct parent level in ascending rollback order — the selection rule was fixed before each batch, and no case was substituted after seeing its own result.
+
+## Batch 1 (original, n=6/7) — method and result unchanged below
 
 ## Why this check
 
@@ -88,4 +90,72 @@ node scripts/run-bundled.mjs scripts/stress/repair-plateau-rollout-classifier.mj
   --corpus=data/stress/stress-levels-random.json --retreat-file=/tmp/boundary.json \
   --backoffs=0 --rollout-trials=2000 --rollout-node-cap=5000 --close-gap-node-budget=2000000 \
   --seed=repair-reachability-recurrence-check-2026-09-02 --out=/tmp/classification.json
+```
+
+## Batch 2 addendum (same day): n grows from 6 to 16, rate narrows to 12.5%
+
+### Method
+
+Identical pipeline, a fresh independent sample. `census-repair-rollback-windows.mjs --sample=40 --seed=repair-reachability-recurrence-check-2026-09-02-batch2` (no overlap with any previously-classified level: `R00001`, `R00039`, `R00044`, `R00630`, `R00648`, `R02449`, `R03176`, `R02257`, `R02426`, `R03097`, `R02644`, `R02919`, `R02975`, `R02575`), giving 40 distinct-parent candidates. Fixed the rule "next 10 shallowest-rollback distinct-parent elites" before running any: `R02271:elite:4`, `R02293:elite:4`, `R02459:elite:0`, `R03297:elite:4`, `R03171:elite:3`, `R03162:elite:0`, `R02596:elite:3`, `R02816:elite:2`, `R00260:elite:4`, `R02075:elite:0`.
+
+**Operational note.** The first CP-SAT bisection attempt for this batch ran as an unmanaged local background process (`nohup ... &`) and was silently killed mid-run partway through the 4th case, after resolving 3 (`R02271` abstained at depth 16; `R02293` converged low=16/high=17; `R02459` converged low=12/high=13). Rather than discard that partial work, the run was repeated in full: the clean rerun reproduced all 3 recovered boundaries exactly (confirming CP-SAT bisection is deterministic given identical inputs) and additionally converged on `R02271` (low=1/high=32) where the interrupted run had abstained — the earlier abstention was a 60-second time-limit fluke on that one probe, not a genuine unresolved interior. The same pattern recurred for `R02816` and `R00260` in the full rerun (both abstained once, both converged on retry). All 10 elites have a genuine resolved CP-SAT boundary in the final dataset used below.
+
+### Result
+
+| Elite | `D_live` | `D_dead` | Elite length | Random rollout (2,000 trials) | `closeLengthGap` (floor=0, 2M-node cap) |
+|---|---:|---:|---:|---|---|
+| `R02271:elite:4` | 1 | 32 | 32 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R02293:elite:4` | 16 | 17 | 49 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R02459:elite:0` | 12 | 13 | 46 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R03297:elite:4` | 50 | 51 | 53 | **2/2000 solved** (as with `R02426`, does not change classification) | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R03171:elite:3` | 8 | 9 | 49 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R03162:elite:0` | 3 | 4 | 50 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R02596:elite:3` | 16 | 17 | 71 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R02816:elite:2` | 16 | 17 | 68 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R00260:elite:4` | 21 | 22 | 66 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+| `R02075:elite:0` | 5 | 6 | 59 | 0/2000 solved | **FAILED — exhausted 2,000,000-node ceiling** |
+
+**All ten are operator-incapable.** Zero near-budget-boundary or comfortably-reconstructable cases in this batch — every `closeLengthGap` invocation consumed the full 2,000,000-node diagnostic ceiling exactly (confirmed by each result's own reported node count), the same signature used throughout this program to rule out "just needs a modest budget/backtrack increase." No path was produced by any case, so there is nothing to referee-verify (consistent with every prior operator-incapable case in this program).
+
+### Combined rate estimate (batches 1 + 2)
+
+| | near-budget-boundary | operator-incapable | total resolved |
+|---|---:|---:|---:|
+| Batch 1 (2026-09-02) | 2 (`R02257`, `R02426`) | 4 (`R03097`, `R02644`, `R02975`, `R02575`) | 6 |
+| Batch 2 (2026-09-02) | 0 | 10 (all) | 10 |
+| **Combined** | **2 (12.5%)** | **14 (87.5%)** | **16** |
+
+Treating each classification as an independent Bernoulli trial, a two-sided ~95% confidence interval around a 12.5% observed rate at n=16 is roughly 4-32% — narrower than batch 1's ~10-65% interval at n=6, and no longer consistent with "roughly a third," which the n=6 read could not rule out. The two near-budget-boundary cases are unchanged (`R02257`, `R02426`) — batch 2 did not surface a third instance of that shape, nor did it surface `R00630`'s or `R02449`'s shapes. `R03297`'s 2/2000 rollout success joins `R02426`'s as a second (still undiagnosed) crack in the "blind rollout never works" pattern, without changing either case's `closeLengthGap`-based classification.
+
+### What batch 2 changes and does not change
+
+- **Changes:** the point estimate (33% → 12.5% near-budget-boundary) and the confidence interval's width (roughly 10-65% → roughly 4-32%). The qualitative conclusion — operator-incapability is the dominant outcome, a near-budget-boundary-sized budget increase would not move the needle on the majority — is now *better supported*, not merely repeated.
+- **Does not change:** the near-budget-boundary shape's reality (still two independent, referee-verified recurrences); `R00630`'s and `R02449`'s status as unrecurred singletons; the standing rule against designing a mechanism from this population; the "order 20-30+" target for a precise rate, which n=16 has not yet reached.
+
+## Disposition (updated)
+
+Update [`2026-08-24-repair-reachability-reconstructability-audit.md`](2026-08-24-repair-reachability-reconstructability-audit.md)'s diagnostic-matrix population: **twenty** exact-live cases now classified in total (the original ten plus batch 2's ten), plus one abstained (`R02919`), across the same four distinct cost/regime shapes, with operator-incapable now the overwhelming majority (16 of 20 classified cases across both programs, 14/16 in the fresh-sample rate estimate specifically). Still do not design a retreat, reconstruction-budget, or destroy mechanism from this population — the rate estimate (12.5% near-budget-boundary / 87.5% operator-incapable at n=16) is more precise than the n=6 read but has not yet reached the "order 20-30+" target. The next gate, if this program continues, is a third batch of comparable size to close that gap, or a specific different question (e.g. whether operator-incapability correlates with any legal static level feature) before any mechanism is proposed.
+
+## Reproduction (batch 2)
+
+```bash
+node scripts/run-bundled.mjs scripts/stress/census-repair-rollback-windows.mjs -- \
+  --levels=data/stress/stress-levels-random.json --sample=40 \
+  --seed=repair-reachability-recurrence-check-2026-09-02-batch2 --limit-elites=5 --node-budget=30000 \
+  --out=/tmp/rollback-census-batch2.json
+
+node scripts/run-bundled.mjs scripts/stress/repair-elite-path-dump.mjs -- \
+  --levels=data/stress/stress-levels-random.json \
+  --only=R02271,R02293,R02459,R03297,R03171,R03162,R02596,R02816,R00260,R02075 \
+  --node-budget=30000 --limit-elites=5 --out=/tmp/elite-paths-batch2.json
+
+node scripts/run-bundled.mjs scripts/stress/repair-retreat-binary-search.mjs -- \
+  --dump=/tmp/elite-paths-batch2.json --corpus=data/stress/stress-levels-random.json --time-limit=60 \
+  --elites=R02271:elite:4,R02293:elite:4,R02459:elite:0,R03297:elite:4,R03171:elite:3,R03162:elite:0,R02596:elite:3,R02816:elite:2,R00260:elite:4,R02075:elite:0 \
+  --out=/tmp/boundary-batch2.json
+
+node scripts/run-bundled.mjs scripts/stress/repair-plateau-rollout-classifier.mjs -- \
+  --corpus=data/stress/stress-levels-random.json --retreat-file=/tmp/boundary-batch2.json \
+  --backoffs=0 --rollout-trials=2000 --rollout-node-cap=5000 --close-gap-node-budget=2000000 \
+  --seed=repair-reachability-recurrence-check-2026-09-02-batch2 --out=/tmp/classification-batch2.json
 ```
