@@ -1,0 +1,271 @@
+# Fixed-work static-portfolio A/B: runs a named "arm" (an ORDERED list of technique-identity keys)
+# against a fixed population under one shared, per-technique-capped work budget, and reports
+# coverage/work against a control arm. This is gate-sequence (C) rung 2's population-scale
+# confirmation step (docs/solver-optimization-workstreams.md Workstream 2), following the
+# development pilot in reports/2026-09-02-static-portfolio-construction-pilot.md.
+#
+# WHY A NEW WORKFLOW rather than reusing technique-census.yml or solver-level-blind-targeted-
+# sweep.yml: technique-census.yml's plan->shard->combine shape is the right one, but its plan
+# builder and combiner are tightly coupled to its own T1-T4 tier semantics, baseline-solved
+# bookkeeping, and hint capture -- none of which apply to a fixed-arm coverage/work comparison.
+# solver-level-blind-targeted-sweep.yml's dynamic-shard/artifact/no-commit shape is the right
+# template (borrowed directly below) but it drives portfolio-solve-sweep.mjs's ordinary ablation-
+# flag ladder, not an explicit multi-technique list under one shared budget.
+# scripts/technique-census.mjs's shard EXECUTION stage is already fully generic (it just runs
+# whatever cells a plan lists, see technique-census-cell.mjs's own cell.perTechniqueWorkCap
+# addition) and is reused here as-is; only the plan-building
+# (scripts/build-static-portfolio-plan.mjs) and combine (scripts/combine-static-portfolio-
+# shards.mjs) stages are purpose-built.
+#
+# ARTIFACT-ONLY, NO COMMIT: same invariant as solver-level-blind-targeted-sweep.yml -- this never
+# writes to main, never touches hints/baselines/heatmaps. Population and arms are committed,
+# reviewable, versioned files (data/stress/static-portfolio-confirmation-001-*.json), not pasted at
+# dispatch time, matching this program's own "write down the intended test before dispatch"
+# convention (docs/investigation-report-conventions.md).
+name: Static portfolio confirmation A/B
+run-name: "Static portfolio · ${{ inputs.cohort_id }} · control=${{ inputs.control_arm }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      cohort_id:
+        description: 'Human-readable cohort id for artifact/report naming (e.g. static-portfolio-confirmation-001). Should match the population/arms file prefix for provenance.'
+        required: true
+        default: 'static-portfolio-confirmation-001'
+      population_file:
+        description: 'In-repo path to the population file (JSON array of { corpus, levelPos, levelId }), built with scripts/stress/select-random-sample.mjs.'
+        required: false
+        default: 'data/stress/static-portfolio-confirmation-001-population.json'
+      arms_file:
+        description: 'In-repo path to the arms file (JSON object: arm name -> ordered technique-identity-key array).'
+        required: false
+        default: 'data/stress/static-portfolio-confirmation-001-arms.json'
+      control_arm:
+        description: 'Which arm in arms_file is the control the others are compared against.'
+        required: false
+        default: 'full-menu'
+      work_budget:
+        description: 'Shared canonical WORK budget per cell (work-meter.ts units), split across gates the same way every technique-census cell already does.'
+        required: false
+        default: '67000000'
+      per_technique_work_cap:
+        description: 'technique-census-cell.mjs cell.perTechniqueWorkCap -- no single technique in an arm may claim more than this share of work_budget. See reports/2026-09-02-static-portfolio-construction-pilot.md for why this is required (a non-terminating technique otherwise starves every later list position regardless of work_budget size).'
+        required: false
+        default: '2000000'
+      budget_ms:
+        description: 'Per-attempt wall-safety deadline (non-binding; work_budget/per_technique_work_cap govern allocation).'
+        required: false
+        default: '600000'
+      shards:
+        description: 'Fixed shard count (cells are split evenly by index, same convention as technique-census.yml).'
+        required: false
+        default: '15'
+      workers:
+        description: 'Cross-cell worker processes per shard (GH-hosted ubuntu-latest runners have 4 vCPUs).'
+        required: false
+        default: '4'
+
+concurrency:
+  group: static-portfolio-confirmation
+  cancel-in-progress: false
+
+jobs:
+  # Builds the plan ONCE and distributes it as an artifact so every shard slices the identical cell
+  # list by index -- same reason technique-census.yml's own plan job exists (a plan built
+  # independently per shard could drift on data/random inputs; ours only reads committed files, but
+  # keeping one canonical plan build is still the safer, auditable shape).
+  build-plan:
+    name: Build static-portfolio plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      shard_list: ${{ steps.shard_list.outputs.shard_list }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the plan
+        shell: bash
+        run: |
+          mkdir -p logs/static-portfolio-confirmation
+          node scripts/run-bundled.mjs scripts/build-static-portfolio-plan.mjs -- \
+            --population="${{ inputs.population_file }}" \
+            --arms="${{ inputs.arms_file }}" \
+            --work-budget="${{ inputs.work_budget }}" \
+            --per-technique-work-cap="${{ inputs.per_technique_work_cap }}" \
+            --out=logs/static-portfolio-confirmation/plan.json
+
+      - name: Compute the shard index list
+        id: shard_list
+        shell: bash
+        run: |
+          shard_list=$(node -e "console.log(JSON.stringify(Array.from({length: ${{ inputs.shards }}}, (_, i) => i + 1)))")
+          echo "shard_list=${shard_list}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the plan for every shard to download
+        uses: actions/upload-artifact@v7
+        with:
+          name: static-portfolio-plan
+          path: logs/static-portfolio-confirmation/plan.json
+          retention-days: 90
+
+  run-shards:
+    name: Static-portfolio shard ${{ matrix.shard }}/${{ inputs.shards }}
+    needs: [build-plan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        shard: ${{ fromJson(needs.build-plan.outputs.shard_list) }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the shared plan
+        uses: actions/download-artifact@v8
+        with:
+          name: static-portfolio-plan
+          path: logs/static-portfolio-confirmation
+
+      - name: Run this shard's slice of the plan
+        id: run
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p logs/static-portfolio-confirmation
+          timeout -k 30s --preserve-status 170m node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=logs/static-portfolio-confirmation/plan.json \
+            --shard="${{ matrix.shard }}" --shards="${{ inputs.shards }}" \
+            --workers="${{ inputs.workers }}" \
+            --out="logs/static-portfolio-confirmation/shard-${{ matrix.shard }}.json" \
+            2>&1 | tee -a "logs/static-portfolio-confirmation/shard-${{ matrix.shard }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload this shard's raw results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: static-portfolio-shard-${{ matrix.shard }}
+          path: |
+            logs/static-portfolio-confirmation/shard-${{ matrix.shard }}.json
+            logs/static-portfolio-confirmation/shard-${{ matrix.shard }}.console.log
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Fail the job if the shard failed for a reason other than its own timeout wrapper
+        if: >-
+          always() &&
+          steps.run.outputs.exit_code != '0' &&
+          steps.run.outputs.exit_code != '124' &&
+          steps.run.outputs.exit_code != '143'
+        run: |
+          echo "shard exit_code=${{ steps.run.outputs.exit_code }}"
+          exit 1
+
+  combine:
+    name: Combine shard results
+    needs: [build-plan, run-shards]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Download the plan
+        uses: actions/download-artifact@v8
+        with:
+          name: static-portfolio-plan
+          path: logs/static-portfolio-confirmation
+
+      - name: Download every shard's artifact
+        uses: actions/download-artifact@v8
+        with:
+          pattern: 'static-portfolio-shard-*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Combine every shard into one report
+        shell: bash
+        run: |
+          node scripts/combine-static-portfolio-shards.mjs \
+            --staging-dir=artifact-staging/downloaded \
+            --control-arm="${{ inputs.control_arm }}" \
+            --plan=logs/static-portfolio-confirmation/plan.json \
+            --out=logs/static-portfolio-confirmation/combined.json \
+            --summary-out=logs/static-portfolio-confirmation/combined-summary.md
+
+      - name: Print the combined summary to the job log
+        shell: bash
+        run: |
+          cat logs/static-portfolio-confirmation/combined-summary.md >> "$GITHUB_STEP_SUMMARY"
+          cat logs/static-portfolio-confirmation/combined-summary.md
+
+      - name: Upload the combined result as an artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: static-portfolio-combined
+          path: |
+            logs/static-portfolio-confirmation/combined.json
+            logs/static-portfolio-confirmation/combined-summary.md
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="logs/static-portfolio-confirmation/combined.json" \
+            --include="logs/static-portfolio-confirmation/combined-summary.md" \
+            --shards-expected="${{ inputs.shards }}" \
+            --shards-observed="$(find logs/static-portfolio-confirmation -maxdepth 1 -name 'shard-*.json' | wc -l | tr -d ' ')" \
+            --source-artifact="static-portfolio-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
