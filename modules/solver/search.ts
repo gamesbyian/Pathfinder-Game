@@ -611,13 +611,19 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // `if (_BEAM_DEBUG)` so there is no cost on the production path.
     let _dbgReplayNs = 0n, _dbgCandGenNs = 0n, _dbgSortNs = 0n, _dbgCoarseMergeNs = 0n, _dbgConnNs = 0n;
     let _dbgReplaySteps = 0, _dbgCandCount = 0, _dbgFrontierNodes = 0, _dbgPhases = 0, _dbgConnCalls = 0;
+    // 2026-09-02: nested sub-span (like _dbgConnNs) isolating getNeighbors's own share of candGen,
+    // to value-of-information-check the "fixed neighbor slots to avoid getNeighbors's per-node
+    // array allocation" candidate named in solver-architectural-speed-opportunities.md's "Fused
+    // move/state kernel" entry before attempting any implementation — see
+    // reports/2026-09-02-getneighbors-allocation-share-pilot.md.
+    let _dbgNeighborsNs = 0n, _dbgNeighborsCalls = 0;
     // Returns 0n when _BEAM_DEBUG is off (call sites are still gated by `if (_BEAM_DEBUG)`
     // for the accumulation itself; this just keeps the `bigint` type consistent unconditionally).
     const _hrtNow = (): bigint => (_BEAM_DEBUG ? (_proc as unknown as { hrtime: { bigint: () => bigint } }).hrtime.bigint() : 0n);
     const _dbgFlush = (outcome: string) => {
         if (!_BEAM_DEBUG) return;
         const ms = (n: bigint) => (Number(n) / 1e6).toFixed(1);
-        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms coarseMerge=${ms(_dbgCoarseMergeNs)}ms sort=${ms(_dbgSortNs)}ms`);
+        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} neighborsCalls=${_dbgNeighborsCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms neighbors=${ms(_dbgNeighborsNs)}ms coarseMerge=${ms(_dbgCoarseMergeNs)}ms sort=${ms(_dbgSortNs)}ms`);
     };
 
     const yieldIfNeeded = async () => {
@@ -722,6 +728,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
 
             const _t1 = _hrtNow();
             let neighbors = getNeighbors(pos, ws, level, prep);
+            if (_BEAM_DEBUG) { _dbgNeighborsNs += _hrtNow() - _t1; _dbgNeighborsCalls++; }
             if (pos === startKey) {
                 const beforeForced = research ? [...neighbors] : null;
                 const diagnostics: PruneDiagnostics | undefined = research ? { reached: {}, rejected: {} } : undefined;
