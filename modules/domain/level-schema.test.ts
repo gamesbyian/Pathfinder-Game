@@ -334,7 +334,7 @@ test('still rejects a block at a mustPass-role landmark cell (mismatched role, n
 });
 
 // Regression coverage for the (1<<n)-1 mechanic-cardinality gap documented in
-// docs/mechanic-state-contracts.md's "Cardinality risk" section: solver/prep.ts's initial bitmask
+// docs/mechanic-state-contracts.md's "Cardinality bound: (1 << n) - 1" section: solver/prep.ts's initial bitmask
 // for must-pass/must-cross/surround/mustTurn/adjacentTurn is only correct for n <= 30 objects
 // (1 << 31 is JS's int32 sign bit, not +2^31). mustPass/mustCross were already safe via a
 // documented 4-object design maximum; these tests cover the previously-unguarded landmark roles.

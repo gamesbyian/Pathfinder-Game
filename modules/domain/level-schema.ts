@@ -258,7 +258,7 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     // intuition suggests. mustPass/mustCross stay safe only because of the documented 4-object
     // design maximum; surround/mustTurn/adjacentTurn have no such maximum, so nothing else stops a
     // level from silently miscomputing its own win-condition bitmask. See
-    // docs/mechanic-state-contracts.md's "Cardinality risk" section for the full derivation.
+    // docs/mechanic-state-contracts.md's "Cardinality bound: (1 << n) - 1" section for the full derivation.
     const MAX_MECHANIC_CARDINALITY = 30;
     const landmarkRoleCounts: Record<string, number> = { mustPass: 0, mustTurn: 0, surround: 0, adjacentTurn: 0 };
     (raw.landmarks || []).forEach((lm: any) => {
@@ -268,7 +268,7 @@ export function validateRawLevel(raw: any): { ok: boolean; errors: string[] } {
     });
     const checkCardinality = (label: string, count: number) => {
         if (count > MAX_MECHANIC_CARDINALITY) {
-            errors.push(`${label} count (${count}) exceeds the maximum of ${MAX_MECHANIC_CARDINALITY} — its solver bitmask encoding is unsound beyond this bound (see docs/mechanic-state-contracts.md's "Cardinality risk")`);
+            errors.push(`${label} count (${count}) exceeds the maximum of ${MAX_MECHANIC_CARDINALITY} — its solver bitmask encoding is unsound beyond this bound (see docs/mechanic-state-contracts.md's "Cardinality bound: (1 << n) - 1")`);
         }
     };
     // buildWireLevelData deliberately re-declares a mustPass/mustTurn landmark's own cell in
