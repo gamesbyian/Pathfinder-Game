@@ -1,6 +1,9 @@
 # `dfs|score=finishFirst` suppression: next-rung zero-production-win DFS-tail candidate
 
-> **Status:** prespecified, dispatched
+> **Status:** active
+> **Last evidence:** 2026-09-02 — development A/B dispatched on the EW1 60-level sample (control [`33601212956`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601212956), treatment [`33601220410`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33601220410))
+> **Decision:** pending — this report is prespecified before either arm's outcome is known; do not read "Why this candidate" as a post-hoc justification
+> **Remaining gate:** both dispatched runs must complete and be evaluated against the frozen zero-loss/gain-or-≥10%-work acceptance rule
 > **Evidence role:** development (candidate selection + first A/B) — prespecified before either arm's outcome is known
 > **Selection:** chosen from the join's own numbers by a fixed, mechanical rule (see "Why this candidate"), not tuned after any A/B outcome
 
