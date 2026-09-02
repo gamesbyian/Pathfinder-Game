@@ -23,7 +23,13 @@ if (!outFile) throw new Error('--out required');
 
 const dump = JSON.parse(readFileSync(dumpFile, 'utf8'));
 const eliteById = new Map();
-for (const lvl of dump.levels) for (const e of lvl.elites) eliteById.set(e.id, { ...e, levelId: lvl.levelId, reqLen: lvl.reqLen });
+// lvl.reqLen: historical field name from the original 2026-08-13 broadened-sample dump file
+// (reports/stress/repair-retreat-broaden-elite-paths-2026-08-13.json). Current
+// repair-elite-path-dump.mjs instead emits `requiredLength` (matching census-repair-rollback-
+// windows.mjs's own field) -- fall back to it so a fresh dump doesn't silently print
+// "reqLen=undefined" in this file's own console.error below (cosmetic only: reqLen is never used
+// in the actual bisection logic, just the per-elite log line).
+for (const lvl of dump.levels) for (const e of lvl.elites) eliteById.set(e.id, { ...e, levelId: lvl.levelId, reqLen: lvl.reqLen ?? lvl.requiredLength });
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
