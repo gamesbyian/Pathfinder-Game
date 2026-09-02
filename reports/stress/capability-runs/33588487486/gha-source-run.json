@@ -1,0 +1,30 @@
+{
+  "kind": "pathfinder-gha-source-run",
+  "workflow": "Solver stress-corpus refresh (level-blind capability)",
+  "runId": "33588487486",
+  "runAttempt": "1",
+  "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33588487486",
+  "sha": "a3a7bb109b8212bd8e3afe37b09bcfcd2d74abcf",
+  "ref": "refs/heads/main",
+  "refName": "main",
+  "event": "workflow_dispatch",
+  "dispatchInputs": {
+    "corpus2_budget_ms": "86400000",
+    "corpus2_node_budget": "50000000",
+    "strict_total_work_budget": "false",
+    "corpus2_workers": "4",
+    "corpus1_budget_ms": "86400000",
+    "corpus1_node_budget": "50000000",
+    "corpus1_workers": "4",
+    "deterministic": "false",
+    "lifecycle_telemetry": "true",
+    "shard_count": "60",
+    "max_parallel": "20"
+  },
+  "shardCompleteness": {
+    "expected": 60,
+    "observed": 60,
+    "complete": true,
+    "basis": null
+  }
+}
