@@ -1,10 +1,10 @@
 # `closureCommitment` + `nearClosureRescue` DFS suppression: second repricing candidate
 
-> **Status:** active
-> **Last evidence:** 2026-09-02 — closed-negative result on `PROFILE_closureCommitment` alone ([`closureCommitment suppression development A/B`](2026-09-02-closure-commitment-dfs-suppression-development-ab.md))
-> **Decision:** candidate selected and protocol locked before running the treatment arm.
-> **Remaining gate:** run the treatment arm and compare to the existing control (reused, not re-run).
-> **Evidence role:** development
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-02 — treatment run [`33599749870`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33599749870) vs. reused control [`33598928296`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33598928296)
+> **Decision:** close this combined candidate too — same solved set, work flat to within noise (+0.0089%, wrong direction). This closes the entire "smallest zero-EW1/zero-production-win ordinary-DFS-tail action(s)" candidate class on the EW1 60-level sample: both members tested (alone and combined), same null both times.
+> **Remaining gate:** none for this candidate class. Gate-sequence step (C) itself remains open — see Disposition for what a future attempt needs.
+> **Evidence role:** development — concluded without reaching confirmation
 > **Selection:** the joined table's own numbers, following the same fixed rule as the first candidate — chosen without seeing this arm's own outcome (only the already-published closureCommitment-alone result, which is a distinct candidate)
 
 ## Why this candidate
@@ -43,4 +43,22 @@ Treatment dispatched via `mcp__github__actions_run_trigger` (`solver-level-blind
 
 ## Result
 
-_Pending — filled in once the treatment run completes._
+Treatment run [`33599749870`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33599749870) completed ("Combine shard results" job log):
+
+| metric | control (reused, `33598928296`) | treatment |
+|---|---:|---:|
+| solved | 3/60 | 3/60 |
+| solved set | `R03171`, `R02657`, `R02651` | `R03171`, `R02651`, `R02657` (same set) |
+| aggregate `workSpent` | 586,813,728 | 586,866,104 |
+| work delta | — | **+52,376 (+0.0089%)** |
+| aggregate `nodesExpanded` | 262,561,189 | 262,530,633 |
+
+Same result shape as `closureCommitment` alone: zero gained, zero lost, work flat to within noise (wrong direction again). **Fails the frozen acceptance rule** the same way.
+
+## Interpretation
+
+Doubling the combined-suppression footprint (54.1M → ~150.2M corpus-wide `workSpent`) did not produce a measurable effect on this specific 60-level sample either. This strengthens, not just repeats, the first candidate's conclusion: it is not that `closureCommitment` specifically was too small a slice — the *entire zero-EW1/zero-production-win ordinary-DFS-tail action class*, on this particular 60-level EW1 sample, contributes work/solve outcomes indistinguishable from noise. The corpus-wide `workSpent` figures that motivated both candidates are real but are dominated by levels outside this 60-level sample; EW1's own 60 levels are a frozen-gap stratum (each already hard enough to defeat the equal-work census at 10M work), not a representative draw of where these actions actually spend their corpus-wide total.
+
+## Disposition
+
+**Close this exact combined candidate as a clean null too; do not promote either suppression.** No confirmation cohort warranted (development failed for both). This closes the "smallest zero-EW1/zero-production-win ordinary-DFS-tail action(s)" candidate class on the EW1 60-level sample specifically — both members of it were tested (individually and combined) with the same null result. Gate-sequence step (C) remains open. A future attempt needs either: (a) a materially different, larger-footprint candidate (accepting more scrutiny/risk, per the complexity ladder's next rung), or (b) evaluation on a population where these actions' corpus-wide cost is actually concentrated (a fresh sample or the full current-production corpus itself, not the frozen-gap EW1 stratum) — not another small action drawn from the same EW1-null-footprint pool.
