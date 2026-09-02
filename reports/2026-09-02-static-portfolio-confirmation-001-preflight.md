@@ -1,9 +1,9 @@
 # static-portfolio-confirmation-001: population-scale rung-2 confirmation preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-02 — this report; dispatch follows immediately after
-> **Decision:** Dispatching `static-portfolio-confirmation.yml` with the exact protocol below. This report exists so the acceptance rule is fixed before any outcome is inspected.
-> **Remaining gate:** the run's own result — see "Acceptance rule" below.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-02 — run [33664473923](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33664473923) completed; see "Result" below
+> **Decision:** `portfolio-11` is **not** coverage-safe on this population: it loses 11 of `full-menu`'s 74 solved levels (14.9%) for a 61.8% aggregate work saving. Per the prespecified acceptance rule, this blocks any recommendation to shrink the production technique menu to the top-11 by win-count. The small-scale EW1 demonstration's 0-losses result is now understood as an artifact of severe under-powering (2/60 solved), not a real signal.
+> **Remaining gate:** none for this exact candidate/population. If gate-sequence (C) rung 2 continues, the next step is a materially different portfolio (e.g. top-15/top-20, or specialist techniques added back individually) tested fresh, not a re-run of this one.
 > **Evidence role:** confirmation
 > **Selection:** prespecified — candidate, population, envelope, and acceptance rule are all fixed in this report before dispatch; the population was drawn by a seeded deterministic sampler, not hand-picked
 
@@ -51,3 +51,24 @@ node scripts/stress/select-random-sample.mjs \
 ```
 
 Workflow dispatch: `static-portfolio-confirmation.yml`, `cohort_id=static-portfolio-confirmation-001`, all other inputs at their defaults (which already match this protocol).
+
+## Result
+
+Run [33664473923](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33664473923) completed in ~7 minutes (17:59:40–18:06:46 UTC) with all 15 shards and the combine job succeeding. Combined result (reconstructed from the combine job's own console log — see the note in [`static-portfolio-confirmation-001-combined.json`](stress/portfolio/static-portfolio-confirmation-001-combined.json), since the raw artifact's blob-storage URL is blocked by this session's own egress policy, not by the workflow):
+
+| arm | cells | solved | work |
+|---|---:|---:|---:|
+| `full-menu` (34 techniques) | 150 | 74 | 5,548,131,339 |
+| `portfolio-11` | 150 | 63 | 2,118,679,297 |
+
+**Gained: 0** (expected — `portfolio-11` is a strict prefix, it cannot gain).
+**Lost: 11** (14.9% of `full-menu`'s own 74 solves): `R01215`, `R01554`, `R02055`, `R02186`, `R02214`, `R02306`, `R02450`, `R02492`, `R02783`, `R03071`, `R03112`.
+**Work delta: −3,429,452,042 (−61.8%)** — `portfolio-11` costs substantially less aggregate work, as expected for a shorter list that gives up sooner on levels it cannot solve.
+
+**Per the prespecified acceptance rule: lost levels ≠ 0, so `portfolio-11` is rejected as coverage-safe on this population.** This is a decisive, well-powered result (74 solves on the control arm, versus the small-scale demonstration's 2) — the tail (positions 12–34) contributes real, non-trivial coverage on a representative population, not just theoretical/rare-case coverage. This directly explains why the earlier small-scale local demonstration (`reports/2026-09-02-static-portfolio-construction-pilot.md`'s third run) came back 0 losses: at only 2/60 solved, it never had enough solved cells to have a realistic chance of observing a loss at all — a clean illustration of why that run was explicitly labeled "not yet powered enough to confirm," not a real safety signal.
+
+**Correction to the acceptance rule's own text above:** it said each lost level should be "cross-checked against the EW1 oracle-exclusivity table." That table only covers the 60 EW1-sample levels; none of these 11 lost levels are members of that sample (this population was deliberately drawn disjoint from it), so no such cross-check is possible or meaningful here — the EW1 table simply does not apply to a different population's lost levels. The correct generalization of that guardrail, unavailable without extra tooling this run did not need (the primary outcome already gives a clean answer), would be per-level winning-technique attribution within `full-menu`'s own solves — which specific tail technique(s) rescued each of the 11 lost levels. That would matter for design (concentrated in one or two techniques vs. spread across many specialists) but not for this report's own accept/reject question, which the zero-losses threshold already answers unambiguously.
+
+## Disposition
+
+Close the top-11-by-win-count portfolio candidate as tested: it is not coverage-safe on a representative population, contrary to what the underpowered small-scale demonstration suggested. Do not promote this exact candidate. If gate-sequence (C) rung 2 continues, next candidates could include a larger cardinality (top-15/top-20, trading less work-saving for less lost coverage) or per-level winning-technique attribution on this same population's already-collected data to see whether the 11 losses concentrate in a small number of specialist techniques worth adding back individually — both are fresh design questions, not implemented here.
