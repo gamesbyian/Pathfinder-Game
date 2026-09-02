@@ -24,6 +24,11 @@ assert.deepEqual(portfolioCellForLevel9.techniqueKeys, arms['portfolio-1']);
 // Cell ids must be unique across the whole plan.
 assert.equal(new Set(plan.cells.map((c) => c.cellId)).size, plan.cells.length);
 
+// perTechniqueWorkCap: omitted by default (backward compatible), set explicitly when passed.
+assert.equal(Object.hasOwn(fullMenuCellForLevel5, 'perTechniqueWorkCap'), false);
+const capped = buildPlan(population, arms, 67_000_000, 10_000_000);
+assert.equal(capped.cells[0].perTechniqueWorkCap, 10_000_000);
+
 assert.throws(() => buildPlan([], arms, 1), /non-empty array/);
 assert.throws(() => buildPlan(population, {}, 1), /at least one named arm/);
 assert.throws(() => buildPlan(population, { empty: [] }, 1), /non-empty technique-key array/);
