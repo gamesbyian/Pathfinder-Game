@@ -617,13 +617,20 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // move/state kernel" entry before attempting any implementation — see
     // reports/2026-09-02-getneighbors-allocation-share-pilot.md.
     let _dbgNeighborsNs = 0n, _dbgNeighborsCalls = 0;
+    // 2026-09-02, same day: a second nested sub-span isolating the per-candidate BeamNode object-
+    // literal construction (the `cands.push({...})` allocation below) from applyMove/undoMove/
+    // evaluatePrunedMove/scoreMove's own share of candGen -- value-of-information-checking
+    // "batched candidates" (solver-architectural-speed-opportunities.md's own "still-untested
+    // direction" note) the same way the getNeighbors sub-span above checked fixed neighbor slots,
+    // before any struct-of-arrays/batched-allocation implementation is attempted.
+    let _dbgCandBuildNs = 0n, _dbgCandBuildCalls = 0;
     // Returns 0n when _BEAM_DEBUG is off (call sites are still gated by `if (_BEAM_DEBUG)`
     // for the accumulation itself; this just keeps the `bigint` type consistent unconditionally).
     const _hrtNow = (): bigint => (_BEAM_DEBUG ? (_proc as unknown as { hrtime: { bigint: () => bigint } }).hrtime.bigint() : 0n);
     const _dbgFlush = (outcome: string) => {
         if (!_BEAM_DEBUG) return;
         const ms = (n: bigint) => (Number(n) / 1e6).toFixed(1);
-        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} neighborsCalls=${_dbgNeighborsCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms neighbors=${ms(_dbgNeighborsNs)}ms coarseMerge=${ms(_dbgCoarseMergeNs)}ms sort=${ms(_dbgSortNs)}ms`);
+        console.error(`  [beam] gate=${startKey} bw=${beamWidth} outcome=${outcome} phases=${_dbgPhases} frontierNodes=${_dbgFrontierNodes} replaySteps=${_dbgReplaySteps} cands=${_dbgCandCount} connCalls=${_dbgConnCalls} neighborsCalls=${_dbgNeighborsCalls} candBuildCalls=${_dbgCandBuildCalls} | replay=${ms(_dbgReplayNs)}ms candGen=${ms(_dbgCandGenNs)}ms conn=${ms(_dbgConnNs)}ms neighbors=${ms(_dbgNeighborsNs)}ms candBuild=${ms(_dbgCandBuildNs)}ms coarseMerge=${ms(_dbgCoarseMergeNs)}ms sort=${ms(_dbgSortNs)}ms`);
     };
 
     const yieldIfNeeded = async () => {
@@ -817,11 +824,13 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     // so scoreRank*4 + childIdx is a collision-free key for "the index this
                     // candidate would have had under a score-order walk".
                     const _ci = _childIdx++;
+                    const _tb = _BEAM_DEBUG ? _hrtNow() : 0n;
                     cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
                                  ints: ws.ints, mpVisitedMask: ws.mpVisitedMask, mustCrossMask: ws.mustCrossMask,
                                  flipperUsedMask: ws.flipperUsedMask, surroundMask: ws.surroundMask,
                                  mustTurnMask: ws.mustTurnMask, adjTurnMask: ws.adjTurnMask,
                                  insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
+                    if (_BEAM_DEBUG) { _dbgCandBuildNs += _hrtNow() - _tb; _dbgCandBuildCalls++; }
                 }
                 undoMove(undo, ws);
             }
