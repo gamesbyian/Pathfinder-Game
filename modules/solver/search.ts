@@ -5,7 +5,7 @@ import { computeBadness, getRealLengthFromState, isSolutionState } from './solut
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias } from './types.js';
+import type { PrepLevel, UndoToken, ScoringProfile, StructuralOrderingBias, SolverSearchState } from './types.js';
 
 /** A yield callback (cooperative scheduling); throws on cancellation. */
 type YieldFn = (() => Promise<void>) | null;
@@ -33,6 +33,23 @@ interface BeamNode extends BeamPathNode {
     prev: BeamNode | null; score: number; insOrd: number; treeOrd: number;
     ints: number; mpVisitedMask: number; mustCrossMask: number; flipperUsedMask: number;
     surroundMask: number; mustTurnMask: number; adjTurnMask: number;
+}
+
+/** Research-only (docs/solver-search-resumability.md): a captured beam continuation at a phase
+ *  boundary (the top of beamSearchFromGate's own `while` loop, before the next generation starts).
+ *  Deliberately an EXECUTION snapshot, not a serialized/portable format: `ws`/`liveUndo` are the
+ *  actual live mutable objects the paused call was using (see beamSearchFromGate's header comment
+ *  for why they must be carried over rather than rebuilt — a from-scratch `ws` would silently
+ *  overcharge `prep._workMeter.units` on resume). Only ever meant to be handed straight back into
+ *  the SAME process's next `beamSearchFromGate` call via `resumeFrom`, sharing the same `prep`
+ *  (for cumulative work accounting) and the same `level`/`profile`/`orderingBias`/`beamWidth`/
+ *  `mechanicBucketRetention` this beam action was already running with. */
+export interface BeamContinuation {
+    frontier: BeamNode[];
+    phasesCompleted: number;
+    nodesExpandedTotal: number;
+    ws: SolverSearchState;
+    liveUndo: UndoToken[];
 }
 // String fallback for beamNumericCoarseStateKey (see its comment): used only on the rare level where
 // the numeric encoding would not fit under Number.MAX_SAFE_INTEGER. Delimited, not a bit-packed
@@ -527,8 +544,40 @@ export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoa
 // search state — at that instant; `ws` always reflects a real reached position (whichever
 // frontier node it was last replayed to), never garbage, but is not a tracked best-ever minimum
 // the way repair-search's bestBadness is.
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
-    const ws = createState(startKey, level, prep, STATE_BUF_BEAM);
+//
+// resumeFrom/pauseAfterPhases (2026-09-03, docs/solver-search-resumability.md feasibility pilot,
+// research-only): both default to undefined/off, so every existing call site (positional args,
+// none of them reaching this far) is byte-for-byte unaffected. `resumeFrom` seeds `frontier`/
+// `phasesCompleted`/`nodesExpandedTotal` from a prior call's `out.pausedContinuation` instead of
+// the root node. Critically, it ALSO carries over the live `ws`/`_liveUndo` objects themselves
+// (skipping the `createState` call below entirely) rather than rebuilding them fresh: an earlier
+// version of this comment argued a from-scratch `ws` was fine because the diff/replay loop below
+// reconstructs any node's state from its parent-pointer chain regardless — true for search
+// SEMANTICS (which moves are scored/pruned/selected is unaffected either way), but false for WORK
+// ACCOUNTING. `applyMove` (search-state.ts) charges `prep._workMeter.units` for every move it
+// replays, not only for genuinely new candidate probes, so a from-scratch `ws` makes the first
+// node touched after a resume pay a full root-to-node replay that an uninterrupted run would
+// normally have skipped via a cheap diff against wherever `ws` was last positioned — a measured,
+// real discrepancy (docs/solver-search-resumability.md's own required "same cumulative workSpent"
+// success bar), not a hypothetical one. Carrying the live `ws`/`_liveUndo` forward instead makes a
+// resumed call's first diff exactly as cheap as an uninterrupted run's would have been, because the
+// resumed call is, from `ws`'s point of view, indistinguishable from the SAME call having simply
+// kept going — this is also why the `createState(startKey, ...)` call must be skipped rather than
+// merely have its result discarded: with a `bufSlot`, it clears this prep's own shared
+// `visited`/`edgeUsage` buffers as a side effect (search-state.ts's per-call-site buffer-pool
+// comment), which would otherwise corrupt the very `ws` being carried over. `pauseAfterPhases`,
+// when set, makes the function return `null` with `out.pausedContinuation` populated as soon as
+// `phasesCompleted` reaches it, at the same phase-boundary check as the existing budget/maxPhases
+// exits — deliberately NOT credited to `prep._metrics.nodesExpanded` there (unlike every other
+// return path), so that a later resumed call's own eventual terminal return — which starts
+// counting from this call's cumulative `nodesExpandedTotal`, per `resumeFrom` above — credits the
+// correct cumulative total exactly once instead of double-counting the pre-pause work.
+// `prep._workMeter.units` needs no equivalent care: it is incremented unconditionally inside
+// applyMove/isConnected regardless of which call or phase is running, so reusing the same `prep`
+// (and, per above, the same live `ws`) across a pause/resume pair already makes it cumulative and
+// canonical for free.
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number): Promise<number[] | null> {
+    const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
     const emit = (stage: import('./types.js').BeamResearchStage, nodes: BeamNode[], details?: Record<string, unknown>): void => {
@@ -582,17 +631,21 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             { turnBase: _turnBase, surroundBase: _surroundBase, flipperBase: _flipperBase, mcBase: _mcBase, mpBase: _mpBase, intsBase: _intsBase },
             c,
         );
-    // Root node: prev=null, key=startKey, depth=0
-    let frontier: BeamNode[] = [{ key: startKey, prev: null, depth: 0, score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 }];
+    // Root node: prev=null, key=startKey, depth=0. resumeFrom (see header comment) substitutes a
+    // prior call's paused frontier/counters here instead of starting a fresh search from the gate.
+    let frontier: BeamNode[] = resumeFrom ? resumeFrom.frontier
+        : [{ key: startKey, prev: null, depth: 0, score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 }];
     let lastYield = startTime;
     // Work-based budget: beam search terminates in at most requiredLength + portal-pair phases.
     const maxPhases = level.requiredLength + Math.floor(level.portalMap.size / 2);
-    let phasesCompleted = 0;
+    let phasesCompleted = resumeFrom?.phasesCompleted ?? 0;
     let frontierIndex = 0;
     // Sum of every COMPLETED phase's frontier size. frontierIndex tracks only the current phase and
     // resets each pass, so crediting it alone (as every return path used to) reports just the final
     // phase. Every return below credits nodesExpandedTotal + frontierIndex = all phases worked.
-    let nodesExpandedTotal = 0;
+    // resumeFrom seeds this with the paused call's own cumulative total (see header comment on why
+    // the pause return itself must NOT have already credited it to prep._metrics).
+    let nodesExpandedTotal = resumeFrom?.nodesExpandedTotal ?? 0;
     // Reusable scratch array for path reconstruction from parent pointers
     const _scratch: number[] = [];
     // Undo-token stack mirroring ws's current live path (ws.path[0] is always startKey with
@@ -604,8 +657,10 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // is a deterministic function of (state, move), and a shared index prefix means an identical
     // move sequence from an identical start state, the resulting ws is byte-identical to a full
     // reset+replay — this changes only how the state is computed, never which moves are scored,
-    // pruned, or selected, so search behaviour and the returned path are unaffected.
-    const _liveUndo: UndoToken[] = [];
+    // pruned, or selected, so search behaviour and the returned path are unaffected. resumeFrom
+    // carries this stack over too (see beamSearchFromGate's header comment) — it must stay in sync
+    // with `ws`, since together they describe one live, currently-diffed position.
+    const _liveUndo: UndoToken[] = resumeFrom ? resumeFrom.liveUndo : [];
 
     // _BEAM_DEBUG-only cost breakdown accumulators (ns). All reads/writes are gated behind
     // `if (_BEAM_DEBUG)` so there is no cost on the production path.
@@ -658,6 +713,11 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         // node count stay consistent. timedOut=true matches dfsFromGate's node-budget exit.
         if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
         if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
+        // pauseAfterPhases (research-only, see header comment): a clean, deterministic work-boundary
+        // exit for the resumability pilot. Deliberately does NOT credit prep._metrics here — the
+        // eventual resumed call's own terminal return credits the correct cumulative total once,
+        // using nodesExpandedTotal carried over via resumeFrom.
+        if (pauseAfterPhases !== undefined && phasesCompleted >= pauseAfterPhases) { _dbgFlush('pausedContinuation'); if (out) out.pausedContinuation = { frontier, phasesCompleted, nodesExpandedTotal, ws, liveUndo: _liveUndo }; return null; }
         phasesCompleted++;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation

@@ -2,6 +2,7 @@
 
 > **Status:** bounded feasibility research. The live gate is owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Motivation:** the 2026-09-03 dynamic tranche-value pilot found real continuation-value information, but current attempts cannot resume; allocating more work requires restarting and repaying prior work.
+> **2026-09-03: rung 1 (same beam, same policy: pause/resume equivalence) is concluded-positive.** `beamSearchFromGate` (`modules/solver/search.ts`) gained opt-in `resumeFrom`/`pauseAfterPhases` params — default off, no effect on any existing call site — that pause at a phase boundary and resume later, reproducing an uninterrupted run's solve/unsolved outcome, solution, and cumulative canonical work exactly. The continuation must carry the search's live mutable state (`ws`/undo stack) forward, not just the frontier — an initial frontier-only design silently overcharged work accounting by replaying from scratch on resume; see [`2026-09-03-beam-resumability-feasibility-pilot-001.md`](../reports/2026-09-03-beam-resumability-feasibility-pilot-001.md) for the full mechanism, measurement, and fix. This is a working primitive, not yet a scheduling win — rung 2 (below) is the next open step.
 
 ## Question
 
@@ -41,6 +42,8 @@ A continuation may need to own, at minimum:
 The continuation object must not own level identity-derived policy or hidden historical outcomes.
 
 ## Feasibility pilot
+
+**2026-09-03: complete, concluded-positive.** See [`2026-09-03-beam-resumability-feasibility-pilot-001.md`](../reports/2026-09-03-beam-resumability-feasibility-pilot-001.md) and the status-block addendum above. The rest of this section is retained as the original pilot specification, not a still-open task.
 
 Use one existing deterministic beam action on a small set of real levels.
 
