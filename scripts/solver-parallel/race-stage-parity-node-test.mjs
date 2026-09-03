@@ -35,6 +35,11 @@ test('race.mjs intentionally supports a documented SUBSET of the full sequential
         'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search',
         'guidance-goal-distance-retry', 'late-repair-multiseed-retry',
         'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback',
+        // 'static-portfolio' (2026-09-03, orchestration.ts's runStaticPortfolio): an opt-in
+        // standalone schedulerMode, only entered when opts.staticPortfolio is set — same
+        // "additive, sequential-only tier" shape as the legacy-latency-portfolio pair above, not a
+        // gap in race.mjs's raced-engine coverage.
+        'static-portfolio',
     ]);
 });
 
