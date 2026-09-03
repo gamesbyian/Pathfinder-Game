@@ -1,6 +1,6 @@
 # portfolio-18-specialists production-envelope confirmation 002: tail-percentile cap map v2
 
-> **Status:** confirmed-positive on this population; independent replication recommended before treating as stronger than `portfolio-18-flat-2m` for production purposes
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-03 — GHA run [`33707473373`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33707473373), complete, all 15 shards succeeded.
 > **Decision:** `portfolio-18-tranche-v2` solved **62/150** — 8 more than `portfolio-18-flat-2m` (54/150), 13 more than `portfolio-18-tranche-v1` (49/150), and **7 more than the uncapped 34-technique `full-menu`** (55/150), while spending less aggregate work than `full-menu` (5,725,486,940 vs. 6,507,179,632). This is not a close call, and it is the first `static-portfolio` treatment measured in this entire research line to beat the full menu's own coverage rather than trade a small coverage loss for work savings. Per this program's confirmation-strength norms (matching `portfolio-18-specialists`' own two-independent-confirmation history), one population is not yet enough to call this the new default treatment — see confirmation-003 for the independent fresh-population replication this result earns.
 > **Remaining gate:** independent replication on a fresh, disjoint population — dispatched as `2026-09-03-portfolio-18-specialists-production-envelope-confirmation-003-preflight.md`.

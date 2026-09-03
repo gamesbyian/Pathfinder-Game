@@ -1,7 +1,7 @@
 # portfolio-18-tranche-v2 cross-generator transfer 001: preflight
 
-> **Status:** dispatched, awaiting result
-> **Last evidence:** none yet — protocol written before dispatch per `docs/investigation-report-conventions.md`.
+> **Status:** active
+> **Last evidence:** 2026-09-03 — protocol written before dispatch per `docs/investigation-report-conventions.md`; both dispatches queued, no result yet.
 > **Decision:** pending.
 > **Remaining gate:** run both dispatches; compare `portfolio-18-tranche-v2` against `full-menu` and `portfolio-18-flat-2m` on Corpus 1 — a genuinely different generator from every population this candidate has been tested on so far.
 > **Evidence role:** cross-generator transfer/challenge — `docs/solver-scheduling-policy.md`'s promotion-path step 8 ("sample-independent confirmation and cross-distribution transfer/challenge evidence appropriate to the policy's selection pressure and claim scope"), not yet exercised for this candidate.

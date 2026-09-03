@@ -1,6 +1,6 @@
 # portfolio-18-specialists tail-percentile cost probe 001: preflight
 
-> **Status:** complete
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-03 — GHA run [`33706241144`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33706241144), complete, all 48 shards succeeded.
 > **Decision:** all 18 techniques solved a usable number of cells (7-33/120 each — every technique cleared the "at least a handful of real solves" bar this probe's own stop condition required, unlike the admissible-order probe's thinnest cases). `data/stress/portfolio-18-tail-percentile-cost-probe-001-result.json` records the full per-arm `solvedWorkStats`. Built `data/stress/portfolio-18-specialists-tranche-cap-map-v2.json` from each technique's own p75, uniformly scaled to the 67,000,000 envelope (same scaling method as v1, only the source statistic changes) — see Interpretation below for why this already looks structurally healthier than v1.
 > **Remaining gate:** dispatch a v2 production-envelope confirmation on `2026-09-03-portfolio-18-specialists-production-envelope-confirmation-001-preflight.md`'s own population, comparing `portfolio-18-tranche-v2` against the already-recorded `portfolio-18-flat-2m` (54/150) and `portfolio-18-tranche-v1` (49/150) results.

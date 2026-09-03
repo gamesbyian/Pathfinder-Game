@@ -1,9 +1,9 @@
 # Frozen technique census staleness: a 12-cell spot-check
 
-> **Status:** concluded — motivates a scoped census refresh as future work, not executed here
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-03 — local reproduction of 12 frozen T1 census cells against current HEAD (commit `9b87958`)
 > **Decision:** the frozen T1 technique census (run `32240161854`, generated **2026-08-20** — two weeks before this session, not 2026-09-01 as `technique-niches`' own join date might suggest) is measurably stale. 3 of 12 spot-checked cheap frozen wins (25%) no longer solve at current HEAD within the same node budget; 2 became dramatically cheaper (IDA); 1 became dramatically more expensive but still solves (repair). This is not evidence of a correctness bug — it is exactly the ordinary capability drift two weeks of real heuristic/scheduling changes produce — but it is concrete, cheap evidence that decision-bearing work should not treat the frozen census/technique-niches capability map as current without accounting for this.
-> **Remaining gate:** none dispatched here. A full re-census (78,553 cells) is a large, separately-justified undertaking; this report's job is to establish that the motivation now exists with real evidence, not to schedule or execute the refresh itself.
+> **Remaining gate:** none for this spot-check itself — it established that a refresh is motivated, not that one is scheduled. **Superseded by action:** [`2026-09-03-technique-census-refresh-001-preflight.md`](2026-09-03-technique-census-refresh-001-preflight.md) subsequently dispatched the full re-census this report motivated.
 > **Evidence role:** development — a tiny, non-random-selected spot-check (first N cheap cells per family by a fixed seed, not cherry-picked on outcome), sized only to answer "is a refresh motivated at all," not to characterize the full extent of drift.
 
 ## Why this check

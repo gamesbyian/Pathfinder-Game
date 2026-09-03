@@ -1,6 +1,6 @@
 # portfolio-18-specialists production-envelope confirmation 003: independent replication of cap map v2
 
-> **Status:** confirmed-positive — replicates cleanly
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-03 — GHA runs [`33708100385`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33708100385) (dispatch A) and [`33708101847`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33708101847) (dispatch B), both complete.
 > **Decision:** `portfolio-18-tranche-v2` solved **68/150** on this fresh population — beating `full-menu` (64/150) and `portfolio-18-flat-2m` (62/150) again, replicating confirmation-002's pattern (62 vs. 55 vs. 54 on the first population) exactly: v2 beats everything on both populations tested. This is now **two independent confirmations**, the same bar `portfolio-18-specialists` itself needed before being treated as validated. `portfolio-18-tranche-v2` is the strongest `static-portfolio` treatment this research line has produced.
 > **Remaining gate:** none for the cap-map candidacy itself. The next real gate is a production-wiring decision (whether to actually flip a production caller onto `schedulerMode: 'static-portfolio'` with this cap map) — a separate, larger decision this report does not make.

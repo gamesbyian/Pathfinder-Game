@@ -1,6 +1,6 @@
 # Technique census refresh 001: preflight
 
-> **Status:** dispatched
+> **Status:** active
 > **Last evidence:** 2026-09-03 — 24-cell local calibration at current HEAD, informing shard sizing below; protocol written before dispatch per `docs/investigation-report-conventions.md`.
 > **Decision:** dispatch a full refresh of the T1/T3 technique census (`technique-census.yml`), full population parity preserved (every level in all 3 corpora, solved and unsolved — not sampled), because [`2026-09-03-frozen-technique-census-staleness-spotcheck.md`](2026-09-03-frozen-technique-census-staleness-spotcheck.md) already found real motivation (3/12 cheap spot-checked cells regressed from solved to unsolved against the 2026-08-20 census).
 > **Remaining gate:** run to completion; recombine/rejoin the technique-niches capability map from the fresh combined artifact once done.

@@ -1,6 +1,6 @@
 # A fixed-cap portfolio scheduler as an opt-in `solveLevel()` mode: implementation design
 
-> **Status:** implemented (step 1) and real-data-verified (step 2 of "Suggested next steps" below) as of 2026-09-03
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-03 — `schedulerMode: 'static-portfolio'`/`runStaticPortfolio` is merged in `modules/solver/orchestration.ts`, covered by unit tests (`orchestration.test.ts`), and now also verified against real corpus data: [`2026-09-03-static-portfolio-entrypoint-parity-check.md`](2026-09-03-static-portfolio-entrypoint-parity-check.md) found 15/15 exact matches between this entrypoint and the research harness (`technique-census-cell.mjs`) on `portfolio-18-tranche-v2`'s own confirmed configuration.
 > **Decision:** the design below (proposed as design-only on 2026-09-03) is implemented as designed — no deviation beyond `techniqueConfigs: AttemptConfig[]` replacing the originally-sketched `techniqueKeys: string[]` (parsing is a caller/tooling concern, kept out of this browser-free core module, per the type's own doc comment).
 > **Remaining gate:** step 3 below (wiring `static-portfolio-confirmation.yml`/`build-static-portfolio-plan.mjs` with a thin adapter to dispatch through this entrypoint by default, and/or running an actual confirmation-scale dispatch through it) is future infrastructure work, not blocking any current conclusion — the parity check above already establishes that today's confirmed results would reproduce through this entrypoint.
