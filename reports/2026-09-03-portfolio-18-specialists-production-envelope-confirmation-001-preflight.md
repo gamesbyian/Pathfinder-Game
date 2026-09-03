@@ -1,7 +1,7 @@
 # portfolio-18-specialists production-envelope confirmation 001: tranche cap map vs. the flat research cap
 
 > **Status:** active
-> **Last evidence:** 2026-09-03 — dispatched via GHA; results pending at prespecification time
+> **Last evidence:** 2026-09-03 — dispatched via GHA: dispatch A run [`33703097166`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703097166), dispatch B run [`33703099051`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703099051) (queued behind A — both dispatches share the workflow's own `static-portfolio-confirmation` concurrency group, so they run sequentially, not in parallel); results pending at prespecification time
 > **Decision:** none yet; this is the prespecification, written before either dispatch runs.
 > **Remaining gate:** both dispatches completing and being read back into this report's Result section.
 > **Evidence role:** confirmation — a single-variable A/B (cap treatment only; menu, order, population, and total envelope all held fixed against the already-validated flat-cap baseline).
