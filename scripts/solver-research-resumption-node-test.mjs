@@ -171,8 +171,19 @@ assert.match(pkg.scripts['solver:analyze-equal-work-production-reach'],
 
 // Workstream 2 remains the active foundation. Naming work must not silently reorder the research
 // queue. The current preflight must accept a tiny strict-total-work control manifest.
+//
+// The original form of this assertion pinned the literal state-cell text "ACTIVE FOUNDATION",
+// which was current when this Phase-15i gate was written but not meant to be permanent -- ordinary
+// research progress legitimately rewords a workstream's own state cell as gates close/characterize
+// (e.g. "BUDGET SEMANTICS COMPLETE; GATE-SEQUENCE (C) RUNG 1 CLOSED...", current as of 2026-09-02).
+// That is exactly the "silently reorder the research queue" this gate exists to catch turning into
+// a false positive on legitimate progress. The durable invariant is that Workstream 2 still exists
+// AND still leads "Current ordered execution priority" (item 1) -- not any particular wording of
+// its own state cell.
 const workstreams = readFileSync('docs/solver-optimization-workstreams.md', 'utf8');
-assert.match(workstreams, /\| 2 \|[^\n]*\*\*ACTIVE FOUNDATION/u);
+assert.match(workstreams, /^\| 2 \|/mu, 'Workstream 2 row must still exist in the Active workstreams table');
+assert.match(workstreams, /Current ordered execution priority:\n\n1\.\s+\*\*Workstream 2\b/u,
+  'Workstream 2 must remain item 1 of Current ordered execution priority -- naming/research work must not silently reorder the queue');
 mkdirSync('tmp', { recursive: true });
 const preflightPath = 'tmp/phase15i-post-naming-preflight.json';
 execFileSync(process.execPath, [
