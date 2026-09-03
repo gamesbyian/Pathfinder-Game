@@ -1,0 +1,22 @@
+{
+  "portfolio-18-tranche-v1": [
+    "repair|score=repair|guidance=standard",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+    "repair|score=repair|guidance=must-turn-biased",
+    "admissible-order|tieBreak=none|lds=off",
+    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+    "dfs|score=portalFirstTransfer|bias=none",
+    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+    "dfs|score=perimeterSweep|bias=perimeterCCW",
+    "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+    "dfs|score=perimeterSweep|bias=sideCommitment",
+    "admissible-order|tieBreak=mustCrossFirst|lds=off",
+    "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"
+  ]
+}

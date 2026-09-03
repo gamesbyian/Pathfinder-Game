@@ -49,9 +49,13 @@ on:
         required: false
         default: '67000000'
       per_technique_work_cap:
-        description: 'technique-census-cell.mjs cell.perTechniqueWorkCap -- no single technique in an arm may claim more than this share of work_budget. See reports/2026-09-02-static-portfolio-construction-pilot.md for why this is required (a non-terminating technique otherwise starves every later list position regardless of work_budget size).'
+        description: 'technique-census-cell.mjs cell.perTechniqueWorkCap -- no single technique in an arm may claim more than this share of work_budget. See reports/2026-09-02-static-portfolio-construction-pilot.md for why this is required (a non-terminating technique otherwise starves every later list position regardless of work_budget size). Ignored for a technique-key present in per_technique_work_cap_map, if set.'
         required: false
         default: '2000000'
+      per_technique_work_cap_map:
+        description: 'Optional in-repo path to a JSON file mapping technique-key -> cap (cell.perTechniqueWorkCapByKey), for a tranche-weighted allocation instead of one flat per_technique_work_cap for every technique. A technique absent from the map falls back to per_technique_work_cap. Leave blank to use only the flat cap, unchanged from before this input existed.'
+        required: false
+        default: ''
       budget_ms:
         description: 'Per-attempt wall-safety deadline (non-binding; work_budget/per_technique_work_cap govern allocation).'
         required: false
@@ -101,12 +105,17 @@ jobs:
         shell: bash
         run: |
           mkdir -p logs/static-portfolio-confirmation
+          map_arg=()
+          if [ -n "${{ inputs.per_technique_work_cap_map }}" ]; then
+            map_arg=(--per-technique-work-cap-map="${{ inputs.per_technique_work_cap_map }}")
+          fi
           node scripts/run-bundled.mjs scripts/build-static-portfolio-plan.mjs -- \
             --population="${{ inputs.population_file }}" \
             --arms="${{ inputs.arms_file }}" \
             --work-budget="${{ inputs.work_budget }}" \
             --per-technique-work-cap="${{ inputs.per_technique_work_cap }}" \
             --attempt-budget-ms="${{ inputs.budget_ms }}" \
+            "${map_arg[@]}" \
             --out=logs/static-portfolio-confirmation/plan.json
 
       - name: Compute the shard index list
