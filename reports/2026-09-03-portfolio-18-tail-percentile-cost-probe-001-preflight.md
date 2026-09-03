@@ -1,9 +1,9 @@
 # portfolio-18-specialists tail-percentile cost probe 001: preflight
 
-> **Status:** dispatched, awaiting result
-> **Last evidence:** none yet — this report is written before dispatch per this repo's own "write down the intended test before dispatch" convention (`docs/investigation-report-conventions.md`).
-> **Decision:** pending.
-> **Remaining gate:** run the probe; if it produces usable per-technique cost distributions, derive a v2 tail-percentile tranche cap map and dispatch the same production-envelope-confirmation shape `2026-09-03-portfolio-18-specialists-production-envelope-confirmation-001-preflight.md` already used, comparing v2 against both `portfolio-18-flat-2m` and cap-map v1.
+> **Status:** complete
+> **Last evidence:** 2026-09-03 — GHA run [`33706241144`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33706241144), complete, all 48 shards succeeded.
+> **Decision:** all 18 techniques solved a usable number of cells (7-33/120 each — every technique cleared the "at least a handful of real solves" bar this probe's own stop condition required, unlike the admissible-order probe's thinnest cases). `data/stress/portfolio-18-tail-percentile-cost-probe-001-result.json` records the full per-arm `solvedWorkStats`. Built `data/stress/portfolio-18-specialists-tranche-cap-map-v2.json` from each technique's own p75, uniformly scaled to the 67,000,000 envelope (same scaling method as v1, only the source statistic changes) — see Interpretation below for why this already looks structurally healthier than v1.
+> **Remaining gate:** dispatch a v2 production-envelope confirmation on `2026-09-03-portfolio-18-specialists-production-envelope-confirmation-001-preflight.md`'s own population, comparing `portfolio-18-tranche-v2` against the already-recorded `portfolio-18-flat-2m` (54/150) and `portfolio-18-tranche-v1` (49/150) results.
 > **Evidence role:** development — a characterization measurement (like `2026-09-03-admissible-order-profile-cost-probe-001-preflight.md`), not itself a comparative confirmation.
 
 ## Question
@@ -55,4 +55,60 @@ Workflow dispatch: `static-portfolio-confirmation.yml`, `cohort_id=portfolio-18-
 
 ## Result
 
-_Pending — filled in once the GHA run completes._
+Run [`33706241144`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33706241144) completed in ~11 minutes with all 48 shards and the combine job succeeding (`Combined 48 shard file(s), 2160 cells, 18 arms`). Recovered from the combine job's own console log (raw artifact blob storage remains blocked by this environment's egress policy, same as every prior report in this line):
+
+| arm | cells | solved | solvedWork min | median | mean | p75 | p90 | max |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `admissible-order-default` | 120 | 13 | 510 | 2,507,061 | 4,051,726 | 6,249,790 | 9,489,700 | 11,267,930 |
+| `admissible-order-mustCrossFirst` | 120 | 13 | 510 | 2,505,255 | 3,933,818 | 6,226,188 | 8,894,198 | 11,288,692 |
+| `admissible-order-none` | 120 | 14 | 2,936 | 45,346.5 | 3,993,363 | 5,035,829 | 6,658,702 | 18,581,089 |
+| `beam-harvestThenFinish-w2000-plain` | 120 | 16 | 683,273 | 1,354,709 | 1,422,607 | 1,953,775 | 2,035,936 | 2,312,292 |
+| `beam-intersectionHarvest-w2000-plain` | 120 | 14 | 735,551 | 1,174,454.5 | 1,376,691 | 1,862,277 | 2,119,876 | 2,282,270 |
+| `beam-intersectionHarvest-w5000-buckets` | 120 | 33 | 949,760 | 3,756,202 | 3,636,593 | 4,766,353 | 5,348,904 | 7,280,773 |
+| `beam-intersectionHarvest-w5000-plain` | 120 | 22 | 949,760 | 3,624,611.5 | 3,332,323 | 4,464,648 | 4,771,055 | 5,364,482 |
+| `beam-mustCrossFirst-w2000-plain` | 120 | 20 | 516,280 | 1,383,410.5 | 1,449,551 | 1,943,827 | 2,217,371 | 2,781,823 |
+| `beam-objectiveFirst-w2000-plain` | 120 | 17 | 606,051 | 1,364,473 | 1,423,261 | 2,028,238 | 2,086,931 | 2,338,658 |
+| `beam-objectiveFirst-w5000-buckets` | 120 | 28 | 882,729 | 3,625,145.5 | 3,582,858 | 4,766,051 | 5,771,826 | 6,265,747 |
+| `beam-objectiveFirst-w5000-plain` | 120 | 24 | 882,729 | 3,653,329.5 | 3,349,333 | 4,664,872 | 5,033,860 | 5,422,770 |
+| `beam-perimeterCCW-w2000-plain` | 120 | 21 | 417,841 | 1,703,636 | 1,597,972 | 2,081,212 | 2,279,560 | 2,698,200 |
+| `beam-perimeterCW-w2000-plain` | 120 | 20 | 447,862 | 1,864,680.5 | 1,627,101 | 2,115,916 | 2,440,373 | 2,703,287 |
+| `dfs-perimeterCCW` | 120 | 12 | 116,596 | 2,336,141.5 | 4,110,582 | 4,497,574 | 5,919,822 | 18,378,893 |
+| `dfs-portalFirstTransfer` | 120 | 8 | 686,860 | 2,792,582 | 4,604,304 | 4,463,514 | 8,170,570 | 14,130,398 |
+| `dfs-sideCommitment` | 120 | 7 | 289,433 | 7,454,581 | 6,810,180 | 7,526,532 | 14,314,989 | 15,762,717 |
+| `repair-mustTurnBiased` | 120 | 20 | 3,436 | 924,646.5 | 3,593,536 | 3,537,003 | 12,851,153 | 19,193,173 |
+| `repair-standard` | 120 | 19 | 3,436 | 810,617 | 3,795,367 | 3,991,865 | 12,851,153 | 18,940,437 |
+
+Full per-arm data (including aggregate censored-dominated `work`) is in `data/stress/portfolio-18-tail-percentile-cost-probe-001-result.json`. Every technique solved at least 7/120 cells — no technique came back too thin to use, unlike the earlier admissible-order probe's own sparsest cases.
+
+### v2 cap map derivation
+
+Following the same uniform-scaling method v1 used (scale every technique's chosen statistic by one constant so the worst-case cumulative sum, walked in the menu's own committed order, lands at exactly 67,000,000), but using **p75 of this probe's own isolated solvedWorkStats** instead of v1's raw production `meanAttemptWork`:
+
+Raw p75 sum across all 18 techniques: 72,175,464 — much closer to the 67,000,000 envelope than v1's raw-mean sum (83,495,813), requiring only a mild 0.928x scale-down instead of v1's 0.802x. This is a direct consequence of using a consistent, uncensored, isolated measurement instead of production's `meanAttemptWork`, which mixes in partial/censored attempts under the current ladder's own allocation and runs measurably higher for the expensive families (e.g. `repair-standard`'s production mean was 11,331,032 vs. this probe's own isolated p75 of only 3,991,865; `admissible-order-default`'s production mean was 14,751,999 vs. an isolated p75 of 6,249,790).
+
+| rank (menu order) | technique | p75 (raw) | scaled cap | cumulative worst-case |
+|---:|---|---:|---:|---:|
+| 1 | `repair\|score=repair\|guidance=standard` | 3,991,865 | 3,705,622 | 3,705,622 |
+| 2 | `beam\|score=perimeterSweep\|bias=perimeterCW\|width=2000\|retention=plain` | 2,115,916 | 1,964,191 | 5,669,813 |
+| 3 | `beam\|score=intersectionHarvest\|bias=none\|width=5000\|retention=mechanic-buckets` | 4,766,353 | 4,424,574 | 10,094,387 |
+| 4 | `beam\|score=intersectionHarvest\|bias=none\|width=5000\|retention=plain` | 4,464,648 | 4,144,503 | 14,238,890 |
+| 5 | `beam\|score=objectiveFirst\|bias=none\|width=5000\|retention=plain` | 4,664,872 | 4,330,369 | 18,569,259 |
+| 6 | `beam\|score=perimeterSweep\|bias=perimeterCCW\|width=2000\|retention=plain` | 2,081,212 | 1,931,975 | 20,501,234 |
+| 7 | `admissible-order\|tieBreak=default\|lds=off` | 6,249,790 | 5,801,638 | 26,302,872 |
+| 8 | `beam\|score=objectiveFirst\|bias=none\|width=5000\|retention=mechanic-buckets` | 4,766,051 | 4,424,293 | 30,727,165 |
+| 9 | `repair\|score=repair\|guidance=must-turn-biased` | 3,537,003 | 3,283,376 | 34,010,541 |
+| 10 | `admissible-order\|tieBreak=none\|lds=off` | 5,035,829 | 4,674,726 | 38,685,267 |
+| 11 | `beam\|score=intersectionHarvest\|bias=none\|width=2000\|retention=plain` | 1,862,277 | 1,728,739 | 40,414,006 |
+| 12 | `dfs\|score=portalFirstTransfer\|bias=none` | 4,463,514 | 4,143,450 | 44,557,456 |
+| 13 | `beam\|score=objectiveFirst\|bias=none\|width=2000\|retention=plain` | 2,028,238 | 1,882,800 | 46,440,256 |
+| 14 | `dfs\|score=perimeterSweep\|bias=perimeterCCW` | 4,497,574 | 4,175,068 | 50,615,324 |
+| 15 | `beam\|score=mustCrossFirst\|bias=none\|width=2000\|retention=plain` | 1,943,827 | 1,804,442 | 52,419,766 |
+| 16 | `dfs\|score=perimeterSweep\|bias=sideCommitment` | 7,526,532 | 6,986,829 | 59,406,595 |
+| 17 | `admissible-order\|tieBreak=mustCrossFirst\|lds=off` | 6,226,188 | 5,779,729 | 65,186,324 |
+| 18 | `beam\|score=harvestThenFinish\|bias=none\|width=2000\|retention=plain` | 1,953,775 | 1,813,676 | 67,000,000 |
+
+`data/stress/portfolio-18-specialists-tranche-cap-map-v2.json` holds this map. Every technique's scaled cap keeps ~93% of its own raw p75 headroom (vs. v1's ~80% of raw mean), and — unlike v1 — every raw statistic feeding this map came from the exact same isolated, uncensored measurement method, so the relative weights reflect real differences in techniques' own cost distributions rather than an artifact of how censored each technique's production attempts happened to be.
+
+### Interpretation
+
+This does not yet establish that `portfolio-18-tranche-v2` beats the flat cap or v1 in a real fixed-envelope confirmation — that is the next dispatch (`portfolio-18-tranche-v2` confirmation, not yet run as of this writing). What this probe does establish: v1's failure mode (a few expensive early-menu techniques consuming a disproportionate envelope share, starving later positions) is structurally less likely to recur here, because (a) the source statistic no longer inherits production's censoring-driven inflation for expensive families, and (b) the milder 0.928x scale leaves more absolute headroom everywhere. Whether that translates into more solved levels than the flat cap is an empirical question for the confirmation dispatch, not something this probe alone can answer.

@@ -1,0 +1,20 @@
+{
+  "repair|score=repair|guidance=standard": 3705622,
+  "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain": 1964191,
+  "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets": 4424574,
+  "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain": 4144503,
+  "beam|score=objectiveFirst|bias=none|width=5000|retention=plain": 4330369,
+  "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain": 1931975,
+  "admissible-order|tieBreak=default|lds=off": 5801638,
+  "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets": 4424293,
+  "repair|score=repair|guidance=must-turn-biased": 3283376,
+  "admissible-order|tieBreak=none|lds=off": 4674726,
+  "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain": 1728739,
+  "dfs|score=portalFirstTransfer|bias=none": 4143450,
+  "beam|score=objectiveFirst|bias=none|width=2000|retention=plain": 1882800,
+  "dfs|score=perimeterSweep|bias=perimeterCCW": 4175068,
+  "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain": 1804442,
+  "dfs|score=perimeterSweep|bias=sideCommitment": 6986829,
+  "admissible-order|tieBreak=mustCrossFirst|lds=off": 5779729,
+  "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain": 1813676
+}

@@ -1,0 +1,25 @@
+{
+  "_provenance": "Recovered from the combine job's own console log (run https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33706241144, job 100497965431), not the raw combined.json artifact -- raw per-cell shard artifacts remain blocked by this environment's blob-storage egress policy, same block every prior report in this research line has documented. controlArm is nominal only (repair-standard); see the preflight report's Protocol section.",
+  "sourceRunId": 33706241144,
+  "totalCells": 2160,
+  "armSummaries": {
+    "admissible-order-default": { "cells": 120, "solved": 13, "work": 2192692169, "solvedWorkStats": { "count": 13, "min": 510, "median": 2507061, "mean": 4051726, "p75": 6249790, "p90": 9489700, "max": 11267930 } },
+    "admissible-order-mustCrossFirst": { "cells": 120, "solved": 13, "work": 2191158545, "solvedWorkStats": { "count": 13, "min": 510, "median": 2505255, "mean": 3933818, "p75": 6226188, "p90": 8894198, "max": 11288692 } },
+    "admissible-order-none": { "cells": 120, "solved": 14, "work": 2175925113, "solvedWorkStats": { "count": 14, "min": 2936, "median": 45346.5, "mean": 3993363, "p75": 5035829, "p90": 6658702, "max": 18581089 } },
+    "beam-harvestThenFinish-w2000-plain": { "cells": 120, "solved": 16, "work": 150747048, "solvedWorkStats": { "count": 16, "min": 683273, "median": 1354709, "mean": 1422607, "p75": 1953775, "p90": 2035936, "max": 2312292 } },
+    "beam-intersectionHarvest-w2000-plain": { "cells": 120, "solved": 14, "work": 150792041, "solvedWorkStats": { "count": 14, "min": 735551, "median": 1174454.5, "mean": 1376691, "p75": 1862277, "p90": 2119876, "max": 2282270 } },
+    "beam-intersectionHarvest-w5000-buckets": { "cells": 120, "solved": 33, "work": 419492470, "solvedWorkStats": { "count": 33, "min": 949760, "median": 3756202, "mean": 3636593, "p75": 4766353, "p90": 5348904, "max": 7280773 } },
+    "beam-intersectionHarvest-w5000-plain": { "cells": 120, "solved": 22, "work": 376686552, "solvedWorkStats": { "count": 22, "min": 949760, "median": 3624611.5, "mean": 3332323, "p75": 4464648, "p90": 4771055, "max": 5364482 } },
+    "beam-mustCrossFirst-w2000-plain": { "cells": 120, "solved": 20, "work": 156469051, "solvedWorkStats": { "count": 20, "min": 516280, "median": 1383410.5, "mean": 1449551, "p75": 1943827, "p90": 2217371, "max": 2781823 } },
+    "beam-objectiveFirst-w2000-plain": { "cells": 120, "solved": 17, "work": 151479382, "solvedWorkStats": { "count": 17, "min": 606051, "median": 1364473, "mean": 1423261, "p75": 2028238, "p90": 2086931, "max": 2338658 } },
+    "beam-objectiveFirst-w5000-buckets": { "cells": 120, "solved": 28, "work": 423905861, "solvedWorkStats": { "count": 28, "min": 882729, "median": 3625145.5, "mean": 3582858, "p75": 4766051, "p90": 5771826, "max": 6265747 } },
+    "beam-objectiveFirst-w5000-plain": { "cells": 120, "solved": 24, "work": 384515568, "solvedWorkStats": { "count": 24, "min": 882729, "median": 3653329.5, "mean": 3349333, "p75": 4664872, "p90": 5033860, "max": 5422770 } },
+    "beam-perimeterCCW-w2000-plain": { "cells": 120, "solved": 21, "work": 182584174, "solvedWorkStats": { "count": 21, "min": 417841, "median": 1703636, "mean": 1597972, "p75": 2081212, "p90": 2279560, "max": 2698200 } },
+    "beam-perimeterCW-w2000-plain": { "cells": 120, "solved": 20, "work": 179236677, "solvedWorkStats": { "count": 20, "min": 447862, "median": 1864680.5, "mean": 1627101, "p75": 2115916, "p90": 2440373, "max": 2703287 } },
+    "dfs-perimeterCCW": { "cells": 120, "solved": 12, "work": 2209338905, "solvedWorkStats": { "count": 12, "min": 116596, "median": 2336141.5, "mean": 4110582, "p75": 4497574, "p90": 5919822, "max": 18378893 } },
+    "dfs-portalFirstTransfer": { "cells": 120, "solved": 8, "work": 2276847712, "solvedWorkStats": { "count": 8, "min": 686860, "median": 2792582, "mean": 4604304, "p75": 4463514, "p90": 8170570, "max": 14130398 } },
+    "dfs-sideCommitment": { "cells": 120, "solved": 7, "work": 2307686202, "solvedWorkStats": { "count": 7, "min": 289433, "median": 7454581, "mean": 6810180, "p75": 7526532, "p90": 14314989, "max": 15762717 } },
+    "repair-mustTurnBiased": { "cells": 120, "solved": 20, "work": 2071927261, "solvedWorkStats": { "count": 20, "min": 3436, "median": 924646.5, "mean": 3593536, "p75": 3537003, "p90": 12851153, "max": 19193173 } },
+    "repair-standard": { "cells": 120, "solved": 19, "work": 2092196913, "solvedWorkStats": { "count": 19, "min": 3436, "median": 810617, "mean": 3795367, "p75": 3991865, "p90": 12851153, "max": 18940437 } }
+  }
+}
