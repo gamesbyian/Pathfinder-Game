@@ -31,6 +31,28 @@ assert.equal(portfolio11.solved, 1);
 assert.equal(fullMenu.work, 100 + 500 + 900);
 assert.equal(portfolio11.work, 100 + 300 + 900);
 
+// solvedWorkStats: computed only from solved (ok:true) cells' workSpent, not the aggregate `work`
+// column above (which includes censored/unsolved cells' spend too).
+assert.deepEqual(fullMenu.solvedWorkStats, { count: 2, min: 100, median: 300, mean: 300, max: 500 });
+assert.deepEqual(portfolio11.solvedWorkStats, { count: 1, min: 100, median: 100, mean: 100, max: 100 });
+
+// An arm with zero solved cells gets null, not a zero/NaN placeholder.
+const zeroSolvedShard = { results: [cell('SP-c2-4-never-solves', 'L4', 'never-solves', false, 700)] };
+const zeroSolvedResult = combine([zeroSolvedShard], 'never-solves');
+assert.equal(zeroSolvedResult.armSummaries[0].solvedWorkStats, null);
+
+// Even-count median averages the two middle values.
+const evenMedianShard = {
+    results: [
+        cell('SP-c2-5-arm', 'L5', 'arm', true, 100, 'success'),
+        cell('SP-c2-6-arm', 'L6', 'arm', true, 300, 'success'),
+        cell('SP-c2-7-arm', 'L7', 'arm', true, 500, 'success'),
+        cell('SP-c2-8-arm', 'L8', 'arm', true, 900, 'success'),
+    ],
+};
+const evenMedianResult = combine([evenMedianShard], 'arm');
+assert.deepEqual(evenMedianResult.armSummaries[0].solvedWorkStats, { count: 4, min: 100, median: (300 + 500) / 2, mean: (100 + 300 + 500 + 900) / 4, max: 900 });
+
 assert.equal(result.comparisons.length, 1);
 const cmp = result.comparisons[0];
 assert.equal(cmp.arm, 'portfolio-11');

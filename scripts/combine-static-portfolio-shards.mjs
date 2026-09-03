@@ -73,7 +73,28 @@ export function combine(shardOutputs, controlArm, plan = null) {
         const work = rows.reduce((sum, r) => sum + (r.workSpent ?? 0), 0);
         const statusCounts = {};
         for (const r of rows) statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1;
-        return { arm, cells: rows.length, solved: solvedLevels.length, solvedLevels, work, statusCounts };
+        // solvedWorkStats (2026-09-03, additive): min/median/mean/max workSpent among only the
+        // SOLVED cells, not the arm's aggregate `work` above (which is dominated by censored/
+        // unsolved cells at whatever cap the run used and cannot answer "what does this technique
+        // actually cost when it succeeds"). Motivated directly by admissible-order-profile-cost-
+        // probe-001 (2026-09-03): the raw per-cell shard artifacts needed to compute this after the
+        // fact are blocked by this environment's own egress policy (blob-storage host denied by
+        // organization policy, the same block every prior report in this research line already
+        // documents), but the combine job's own console log/summary-out file IS always reachable —
+        // so this statistic belongs in that summary, not only in the blocked raw JSON, or every
+        // future cost-characterization probe has to re-derive it by hand from aggregate counts.
+        // `null` when zero cells solved (nothing to summarize, not a zero/NaN placeholder).
+        const solvedWork = rows.filter((r) => r.ok).map((r) => r.workSpent ?? 0).sort((x, y) => x - y);
+        const solvedWorkStats = solvedWork.length === 0 ? null : {
+            count: solvedWork.length,
+            min: solvedWork[0],
+            median: solvedWork.length % 2 === 1
+                ? solvedWork[(solvedWork.length - 1) / 2]
+                : (solvedWork[solvedWork.length / 2 - 1] + solvedWork[solvedWork.length / 2]) / 2,
+            mean: solvedWork.reduce((sum, w) => sum + w, 0) / solvedWork.length,
+            max: solvedWork[solvedWork.length - 1],
+        };
+        return { arm, cells: rows.length, solved: solvedLevels.length, solvedLevels, work, statusCounts, solvedWorkStats };
     });
 
     const controlSummary = armSummaries.find((a) => a.arm === controlArm);
@@ -105,6 +126,22 @@ function toMarkdown(result) {
         lines.push(`| \`${a.arm}\` | ${a.cells} | ${a.solved} | ${a.work.toLocaleString('en-US')} |`);
     }
     lines.push('');
+    // Only worth a second table when at least one arm solved something and workSpent is even
+    // recorded (workBudget-mode cells only — see technique-census-cell.mjs; node-budget-only cells
+    // never carry workSpent, so solvedWorkStats is null for every arm in that mode).
+    if (result.armSummaries.some((a) => a.solvedWorkStats)) {
+        lines.push('workSpent among solved cells only (not the aggregate `work` column above, which is dominated by censored/unsolved cells):');
+        lines.push('');
+        lines.push('| arm | solved | min | median | mean | max |');
+        lines.push('|---|---:|---:|---:|---:|---:|');
+        for (const a of result.armSummaries) {
+            const s = a.solvedWorkStats;
+            lines.push(s
+                ? `| \`${a.arm}\` | ${s.count} | ${s.min.toLocaleString('en-US')} | ${s.median.toLocaleString('en-US')} | ${Math.round(s.mean).toLocaleString('en-US')} | ${s.max.toLocaleString('en-US')} |`
+                : `| \`${a.arm}\` | 0 | n/a | n/a | n/a | n/a |`);
+        }
+        lines.push('');
+    }
     for (const c of result.comparisons) {
         lines.push(`### \`${c.arm}\` vs. \`${c.controlArm}\``);
         lines.push('');
