@@ -6,7 +6,7 @@ import { SOLVER_STAGE_IDS, normalizeSolverStageId } from './stage-id-normalizati
 export { SOLVER_STAGE_IDS, normalizeSolverStageId };
 export type SolverStageId = typeof SOLVER_STAGE_IDS[number];
 export type SolverStagePolicyStatus = 'production-default' | 'opt-in' | 'experiment-only';
-export type SolverSchedulerPhase = 'prime' | 'probe' | 'main' | 'fallback' | 'retry' | 'legacy-latency-portfolio';
+export type SolverSchedulerPhase = 'prime' | 'probe' | 'main' | 'fallback' | 'retry' | 'legacy-latency-portfolio' | 'static-portfolio';
 export type StageBudgetPolicyId = 'caller-main' | 'fixed-probe' | 'additive-wall-multiplier' | 'withheld-node-reserve' | 'additive-node-headroom' | 'fixed-node-cap' | 'portfolio-pass';
 export interface SolverStageSpec {
     id: SolverStageId; order: number; disposition: SolverStagePolicyStatus;
@@ -36,6 +36,7 @@ const rows = [
     ['late-repair-multiseed-retry', 128, 'production-default', 'retry', 'late-repair-search multi-seed retry enabled and late-repair-search itself eligible', 'configured-repair', 'additive-node-headroom', 'late-repair-multiseed-retry'],
     ['legacy-latency-portfolio-pass', 20, 'experiment-only', 'legacy-latency-portfolio', 'portfolio pass includes config', 'portfolio', 'portfolio-pass', null],
     ['legacy-latency-portfolio-fallback', 130, 'experiment-only', 'legacy-latency-portfolio', 'portfolio passes did not solve', 'configured-main', 'caller-main', null],
+    ['static-portfolio', 20, 'experiment-only', 'static-portfolio', 'schedulerMode "static-portfolio" with opts.staticPortfolio set', 'portfolio', 'portfolio-pass', null],
 ] as const;
 export const SOLVER_STAGE_SPECS = Object.freeze(Object.fromEntries(rows.map(([id, order, disposition, schedulerPhase, eligibility, attemptSource, budgetPolicy, retryIdentity]) => [id, Object.freeze({ id, order, disposition, schedulerPhase, eligibility, attemptSource, budgetPolicy, telemetryLabel: id, retryIdentity })])) as unknown as Record<SolverStageId, SolverStageSpec>);
 export function solverStageSpec(id: SolverStageId | string): SolverStageSpec {

@@ -42,7 +42,7 @@ export interface SolveResult {
     deadlineTruncated?: boolean;
     solvedByPrime?: boolean;
     stageLifecycle?: Record<string, unknown>;
-    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment';
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio';
     legacyLatencyPortfolioExperiment?: {
         solvedBeforeFallback: boolean;
         fallbackAttemptCount: number;
@@ -56,6 +56,7 @@ export interface SolveResult {
             totalMs: number;
         };
     };
+    staticPortfolioWinningConfigKey?: string;
 }
 
 /** `data` — the level/theme data store built by `createData`. */

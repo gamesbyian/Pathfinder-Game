@@ -7,7 +7,7 @@
  * source of truth for the ID list and the legacy alias map — do not duplicate either one.
  */
 
-/** @type {readonly ['explicit-prime', 'early-repair-search', 'main-search', 'repair-fallback', 'goal-attraction-disabled-retry', 'repair-shrink-recovery', 'admissible-order-fallback', 'coarse-state-near-tie-retention-disabled-retry', 'admissible-order-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry', 'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search', 'guidance-goal-distance-retry', 'late-repair-multiseed-retry', 'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback']} */
+/** @type {readonly ['explicit-prime', 'early-repair-search', 'main-search', 'repair-fallback', 'goal-attraction-disabled-retry', 'repair-shrink-recovery', 'admissible-order-fallback', 'coarse-state-near-tie-retention-disabled-retry', 'admissible-order-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry', 'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search', 'guidance-goal-distance-retry', 'late-repair-multiseed-retry', 'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback', 'static-portfolio']} */
 export const SOLVER_STAGE_IDS = Object.freeze([
     'explicit-prime', 'early-repair-search', 'main-search', 'repair-fallback', 'goal-attraction-disabled-retry',
     'repair-shrink-recovery', 'admissible-order-fallback', 'coarse-state-near-tie-retention-disabled-retry',
@@ -15,6 +15,7 @@ export const SOLVER_STAGE_IDS = Object.freeze([
     'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search',
     'guidance-goal-distance-retry', 'late-repair-multiseed-retry',
     'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback',
+    'static-portfolio',
 ]);
 
 /** @type {Readonly<Record<string, typeof SOLVER_STAGE_IDS[number]>>} */
