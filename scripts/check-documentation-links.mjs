@@ -233,7 +233,11 @@ for (const name of readdirSync(resolve(ROOT, 'reports')).filter((name) => /^\d{4
   const source = readFileSync(resolve(ROOT, 'reports', name), 'utf8');
   if (source.includes('<!-- report-metadata: generated -->')) continue;
   if (!reportMetadataPattern.test(source)) {
-    failures.push(`reports/${name}: missing or malformed Status / Last evidence / Decision / Remaining gate block`);
+    failures.push(`reports/${name}: missing or malformed Status / Last evidence / Decision / Remaining gate block `
+      + `(expected right after the title: "> **Status:** <${reportStatusValues}>", `
+      + '"> **Last evidence:** YYYY-MM-DD — ...", "> **Decision:** ...", "> **Remaining gate:** ..." — '
+      + 'a free-text Status value, or a Last-evidence line missing its leading date, is the usual cause; '
+      + 'see docs/investigation-report-conventions.md)');
   }
 }
 
