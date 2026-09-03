@@ -122,7 +122,7 @@ Only after static scheduling shows confirmed value and residual headroom, add cu
 
 Empirical tranche tables precede survival/hazard models; bandit/value-of-computation control is later still.
 
-The 2026-09-03 dynamic tranche pilot also exposed an execution prerequisite: a predictive continuation signal is not economically actionable when the search must restart and repay prior work. Before richer dynamic allocation, the live queue carried a bounded in-memory beam-resumability feasibility gate; its rung 1 (pause/resume equivalence for one deterministic beam action) is now done and concluded-positive — a working primitive with no scheduling value shown yet. See [`solver-search-resumability.md`](solver-search-resumability.md) for the mechanism and its research ladder's next open rung.
+The 2026-09-03 dynamic tranche pilot also exposed an execution prerequisite: a predictive continuation signal is not economically actionable when the search must restart and repay prior work. Before richer dynamic allocation, the live queue carried a bounded in-memory beam-resumability feasibility gate; its rung 1 (pause/resume equivalence for one deterministic beam action) and rung 2 (same frontier, changed policy — fixed-work complementarity) are now both done, each concluded-positive — rung 1 a working primitive with no scheduling value shown on its own, rung 2 a small/narrow-scope real complementarity signal (2/60 sampled levels solved only via frontier inheritance). Neither is yet a production-wiring recommendation. See [`solver-search-resumability.md`](solver-search-resumability.md) for the mechanisms and the research ladder's next open rung.
 
 ### Typed producer signals
 

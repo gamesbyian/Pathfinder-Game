@@ -2,7 +2,8 @@
 
 > **Status:** bounded feasibility research. The live gate is owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Motivation:** the 2026-09-03 dynamic tranche-value pilot found real continuation-value information, but current attempts cannot resume; allocating more work requires restarting and repaying prior work.
-> **2026-09-03: rung 1 (same beam, same policy: pause/resume equivalence) is concluded-positive.** `beamSearchFromGate` (`modules/solver/search.ts`) gained opt-in `resumeFrom`/`pauseAfterPhases` params — default off, no effect on any existing call site — that pause at a phase boundary and resume later, reproducing an uninterrupted run's solve/unsolved outcome, solution, and cumulative canonical work exactly. The continuation must carry the search's live mutable state (`ws`/undo stack) forward, not just the frontier — an initial frontier-only design silently overcharged work accounting by replaying from scratch on resume; see [`2026-09-03-beam-resumability-feasibility-pilot-001.md`](../reports/2026-09-03-beam-resumability-feasibility-pilot-001.md) for the full mechanism, measurement, and fix. This is a working primitive, not yet a scheduling win — rung 2 (below) is the next open step.
+> **2026-09-03: rung 1 (same beam, same policy: pause/resume equivalence) is concluded-positive.** `beamSearchFromGate` (`modules/solver/search.ts`) gained opt-in `resumeFrom`/`pauseAfterPhases` params — default off, no effect on any existing call site — that pause at a phase boundary and resume later, reproducing an uninterrupted run's solve/unsolved outcome, solution, and cumulative canonical work exactly. The continuation must carry the search's live mutable state (`ws`/undo stack) forward, not just the frontier — an initial frontier-only design silently overcharged work accounting by replaying from scratch on resume; see [`2026-09-03-beam-resumability-feasibility-pilot-001.md`](../reports/2026-09-03-beam-resumability-feasibility-pilot-001.md) for the full mechanism, measurement, and fix.
+> **2026-09-03: rung 2 (same beam frontier, changed beam policy: fixed-work complementarity test) is concluded-positive at small/narrow scope.** A further opt-in `captureContinuationOnBudgetExit` param lets a pause land at `prep._workCap`'s own exact work ceiling (rung 2's currency is work, not phase count) — but only reliably fires at `beamWidth <= 256`, because a separate mid-phase check (every 256 frontier nodes) otherwise always wins the race first; see the report for the full mechanism and a real corpus2 calibration. Two independent 30-level uniform corpus2 samples (60 levels) found `intersectionHarvest`→`objectiveFirst` frontier inheritance solves 2/60 levels that neither policy alone nor a fresh-restart switch could solve at the same total work, and 0/60 the other direction — real, one-directional signal, but rare (~3%) and not yet cross-generator-confirmed. See [`2026-09-03-beam-policy-switch-complementarity-pilot-001.md`](../reports/2026-09-03-beam-policy-switch-complementarity-pilot-001.md). Rung 3 (below) is the next open step, not yet started.
 
 ## Question
 
@@ -132,8 +133,8 @@ This is related to, but narrower than, the producer→consumer artifact idea in 
 
 Do not skip rungs:
 
-1. same beam, same policy: pause/resume equivalence;
-2. same beam frontier, changed beam policy: fixed-work complementarity test;
+1. **done, concluded-positive (2026-09-03)** — same beam, same policy: pause/resume equivalence. See the status-block addendum above.
+2. **done, concluded-positive at small/narrow scope (2026-09-03)** — same beam frontier, changed beam policy: fixed-work complementarity test. See the status-block addendum above; do not treat this as license to skip to 3 without either a larger replication of 2 or accepting its current small-n/single-pair scope.
 3. shared beam frontier among multiple beam policies;
 4. bounded beam → DFS handoff from selected frontier states;
 5. only after repeated positives, consider a generalized shared search-state/operator architecture.

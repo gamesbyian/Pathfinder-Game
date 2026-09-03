@@ -583,6 +583,25 @@ export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoa
 // `beamWidth`/`mechanicBucketRetention` to match the paused call's own — a resumed call may pass
 // different values for any of them, which is precisely what a same-frontier/changed-policy
 // experiment needs; only `startKey`/`level`/`prep` must stay the same instance.
+// CAVEAT (found running the rung-2 pilot, scripts/beam-policy-switch-complementarity-pilot.mjs —
+// see reports/2026-09-03-beam-policy-switch-complementarity-pilot-001.md's "Finding 1"):
+// `captureContinuationOnBudgetExit` only ever fires at THIS top-of-loop check — the separate
+// mid-phase budget check further down (every 256 frontier nodes, inside one phase's own candidate
+// walk) intentionally still does a plain discard-and-timeout, never a capture, because mid-phase
+// `cands` is a partially-built array and resuming from it would either lose that partial work or
+// (if the current phase's `frontier` were reprocessed from its own start) double-charge whatever
+// work it already did — an accounting corruption, not a savings. The mid-phase check evaluates
+// unconditionally every 256 frontier nodes, independent of how large `prep._workCap` is — so for
+// any `beamWidth > 256` it is *always* the first of the two to notice a crossed cap (it simply
+// checks more often within a phase than the top-of-loop check does between phases), and
+// `captureContinuationOnBudgetExit` silently never fires — no error, just a plain
+// `out.timedOut = true` with no continuation, exactly as if the flag had been left off. The pilot
+// confirmed this directly: at `beamWidth=5000` no capture ever landed at any tested cap from
+// 500,000 up to 40,000,000; at `beamWidth=200` (<= 256, so a phase always completes before the
+// 256-node mid-phase checkpoint) the identical mechanism captured correctly on the first try. A
+// caller wanting a reliable capture at a real production width needs either `beamWidth <= 256` or
+// mid-phase capture support this pilot deliberately did not add (see this comment's second
+// paragraph for why that is not a small change).
 export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number, captureContinuationOnBudgetExit?: boolean): Promise<number[] | null> {
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;

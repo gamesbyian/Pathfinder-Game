@@ -197,6 +197,66 @@ test('beam pause/resume: captureContinuationOnBudgetExit pauses at prep._workCap
   assertEquivalent({ result, workUnits: prep._workMeter.units, nodesExpanded: prep._metrics.nodesExpanded }, reference, 'work-cap pause/resume');
 });
 
+// Locks in a real discovery from running the rung-2 pilot script (see search.ts's own
+// "CAVEAT (found running the rung-2 pilot...)" comment and reports/2026-09-03-beam-policy-switch-
+// complementarity-pilot-001.md's "Finding 1"): the SEPARATE mid-phase budget check (every 256
+// frontier nodes, inside one phase's own candidate walk) evaluates unconditionally, independent of
+// prep._workCap's size, so for any beamWidth > 256 it always notices a crossed cap before the
+// top-of-loop check gets a turn, once a single phase's own frontier is actually bigger than 256 --
+// captureContinuationOnBudgetExit then silently never fires (no error, just a plain timeout,
+// identical to leaving the flag off). Rather than relying on organic multi-phase branching to grow
+// a >256 frontier (calibration on several real level shapes found coarse-state-merge collapses
+// candidates down well before that on every level shape tried), this manufactures an oversized
+// frontier directly: pause a real, valid, small SOLVED_LEVEL search after one phase, then splice
+// its own single frontier node 300 times into a synthetic resumeFrom. Every one of those 300
+// "positions" is byte-identical and legitimately reachable (it's a real captured node, just
+// listed many times) -- the mid-phase check only counts iterations of the walk, so this is a
+// faithful, minimal way to force a >256-node single phase without needing a level big enough to
+// grow one organically.
+test('beam pause/resume: captureContinuationOnBudgetExit cannot capture past the mid-phase check once a phase is bigger than 256, at beamWidth > 256', async () => {
+  const seedPrep = prepLevel(SOLVED_LEVEL);
+  seedPrep._cfg = null;
+  const seedOut: { pausedContinuation?: BeamContinuation } = {};
+  await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, seedOut, Infinity, undefined, 1);
+  const seed = seedOut.pausedContinuation!;
+  const oversizedFrontier = Array.from({ length: 300 }, () => seed.frontier[0]);
+  const syntheticContinuation: BeamContinuation = { ...seed, frontier: oversizedFrontier };
+
+  const prep = prepLevel(SOLVED_LEVEL);
+  prep._cfg = null;
+  prep._workCap = seed.nodesExpandedTotal + 200; // well inside the 300-node synthetic phase's own walk
+  const out: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
+  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 300, null, false, out, Infinity, syntheticContinuation, undefined, true);
+  assert.equal(path, null);
+  assert.equal(out.timedOut, true, 'beamWidth > 256 with a >256-node phase means the mid-phase check (never capture-aware) wins the race, so this degrades to a plain timeout');
+  assert.equal(out.pausedContinuation, undefined, 'no continuation is ever attached once the mid-phase check has already returned');
+});
+
+test('beam pause/resume: the mid-phase check is governed by actual phase size, not the nominal beamWidth parameter', async () => {
+  const seedPrep = prepLevel(SOLVED_LEVEL);
+  seedPrep._cfg = null;
+  const seedOut: { pausedContinuation?: BeamContinuation } = {};
+  await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, seedOut, Infinity, undefined, 1);
+  const seed = seedOut.pausedContinuation!;
+  const oversizedFrontier = Array.from({ length: 300 }, () => seed.frontier[0]);
+  const syntheticContinuation: BeamContinuation = { ...seed, frontier: oversizedFrontier };
+
+  const prep = prepLevel(SOLVED_LEVEL);
+  prep._cfg = null;
+  prep._workCap = seed.nodesExpandedTotal + 200;
+  const out: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
+  // beamWidth itself stays irrelevant to how many nodes THIS phase walks (that's resumeFrom's
+  // frontier length, already fixed at 300) -- what beamWidth controls here is only the mid-phase
+  // check's OWN threshold comparison base (frontierIndex, incremented once per node exactly the
+  // same way regardless of beamWidth). The real controlling constant is the hardcoded 256 in the
+  // `(frontierIndex & 255) === 0` check itself, not beamWidth -- pass an arbitrary small beamWidth
+  // here to isolate that: even a tiny nominal beamWidth cannot stop this pre-supplied 300-node
+  // frontier from tripping the same mid-phase counter once frontierIndex reaches 256.
+  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, out, Infinity, syntheticContinuation, undefined, true);
+  assert.equal(path, null);
+  assert.equal(out.timedOut, true, 'the mid-phase check counts walked nodes, not beamWidth -- a 300-node phase still trips it regardless of the nominal beamWidth');
+});
+
 test('beam pause/resume: captureContinuationOnBudgetExit left false (default) leaves the existing budget-exit contract byte-for-byte unaffected', async () => {
   // Mirrors search.test.ts's own nodeBudget contract test, just re-asserted here as a regression
   // guard for THIS exact code path (the budget exit now branches on captureContinuationOnBudgetExit
