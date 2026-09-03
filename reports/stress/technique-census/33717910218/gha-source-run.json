@@ -1,0 +1,26 @@
+{
+  "kind": "pathfinder-gha-source-run",
+  "workflow": "Technique capability census (isolated single-/paired-/flag-technique, full budget)",
+  "runId": "33717910218",
+  "runAttempt": "1",
+  "runUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33717910218",
+  "sha": "277ca21be521bb7e03c268666ad868ad963f2cb5",
+  "ref": "refs/heads/claude/solver-dev-queue-wmrxlo",
+  "refName": "claude/solver-dev-queue-wmrxlo",
+  "event": "workflow_dispatch",
+  "dispatchInputs": {
+    "baseline": "reports/stress/capability-runs/31918095910/summary.json",
+    "t1_sample_size": "all",
+    "t3t4_sample_size": "200",
+    "t1_node_budget": "50000000",
+    "seed": "20260819",
+    "workers": "4",
+    "max_parallel": "20"
+  },
+  "shardCompleteness": {
+    "expected": 120,
+    "observed": 120,
+    "complete": true,
+    "basis": null
+  }
+}
