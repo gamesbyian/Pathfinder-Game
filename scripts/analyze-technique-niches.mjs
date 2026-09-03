@@ -136,6 +136,15 @@ export function analyze({ cells, coverage, levels, sourceIdentities = {} }) {
     };
 }
 
+// The default --out below points at a FROZEN dated snapshot (reports/stress/technique-niches/
+// 2026-09-01/level-capability.json), committed as evidence for that date. Running this script bare
+// silently overwrites it. If the code's own key-insertion order has drifted since the snapshot was
+// written (e.g. a later refactor of `analyze()`'s object literals), a bare re-run against otherwise
+// UNCHANGED inputs produces a large but purely cosmetic key-reordering diff — confirmed directly:
+// 2026-09-03 hit exactly this (diff normalized identically after sorting keys, zero value changes)
+// before being caught and reverted. Always diff a regenerated file against the committed one before
+// deciding it represents new evidence, and use a NEW dated --out for an intentional refresh rather
+// than overwriting the frozen snapshot in place.
 async function main() {
     const args = new Map(process.argv.slice(2).map((arg) => arg.split('=', 2)));
     const cellsPath = args.get('--cells') ?? 'reports/stress/technique-census/32240161854/combined-cells.json';
