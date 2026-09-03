@@ -1,10 +1,10 @@
 # A fixed-cap portfolio scheduler as an opt-in `solveLevel()` mode: implementation design
 
-> **Status:** active
-> **Last evidence:** 2026-09-03 — design analysis only, grounded in current `modules/solver/orchestration.ts` (no code written or changed)
-> **Decision:** propose implementing the fixed ordered-menu-with-per-technique-caps policy `docs/solver-optimization-workstreams.md`'s Workstream 2 item (d) asks for as a genuinely separate, opt-in `SolveOpts.schedulerMode` value on `solveLevel()` — mirroring the precedent `schedulerMode: 'legacy-latency-portfolio-experiment'` already establishes — rather than modifying the existing stage/reserve ladder in place. Design only; not implemented here.
-> **Remaining gate:** review/agreement on this design, then implementation + the promotion-path steps (`solver-scheduling-policy.md`: shadow → matched-work A/B → confirmation) before any production-policy claim.
-> **Evidence role:** development — an implementation design proposal, not itself an experiment or a scheduler promotion.
+> **Status:** implemented (step 1) and real-data-verified (step 2 of "Suggested next steps" below) as of 2026-09-03
+> **Last evidence:** 2026-09-03 — `schedulerMode: 'static-portfolio'`/`runStaticPortfolio` is merged in `modules/solver/orchestration.ts`, covered by unit tests (`orchestration.test.ts`), and now also verified against real corpus data: [`2026-09-03-static-portfolio-entrypoint-parity-check.md`](2026-09-03-static-portfolio-entrypoint-parity-check.md) found 15/15 exact matches between this entrypoint and the research harness (`technique-census-cell.mjs`) on `portfolio-18-tranche-v2`'s own confirmed configuration.
+> **Decision:** the design below (proposed as design-only on 2026-09-03) is implemented as designed — no deviation beyond `techniqueConfigs: AttemptConfig[]` replacing the originally-sketched `techniqueKeys: string[]` (parsing is a caller/tooling concern, kept out of this browser-free core module, per the type's own doc comment).
+> **Remaining gate:** step 3 below (wiring `static-portfolio-confirmation.yml`/`build-static-portfolio-plan.mjs` with a thin adapter to dispatch through this entrypoint by default, and/or running an actual confirmation-scale dispatch through it) is future infrastructure work, not blocking any current conclusion — the parity check above already establishes that today's confirmed results would reproduce through this entrypoint.
+> **Evidence role:** development — an implementation design, now with both the implementation and a real-data behavior-preservation check; still not itself a scheduler promotion or production-wiring decision.
 
 ## What (d) is actually asking
 
