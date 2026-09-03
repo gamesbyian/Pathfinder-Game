@@ -122,6 +122,8 @@ Only after static scheduling shows confirmed value and residual headroom, add cu
 
 Empirical tranche tables precede survival/hazard models; bandit/value-of-computation control is later still.
 
+The 2026-09-03 dynamic tranche pilot also exposed an execution prerequisite: a predictive continuation signal is not economically actionable when the search must restart and repay prior work. Before richer dynamic allocation, the live queue now carries a bounded in-memory beam-resumability feasibility gate. See [`solver-search-resumability.md`](solver-search-resumability.md).
+
 ### Typed producer signals
 
 Only after one stage demonstrably emits useful information another action cannot cheaply rediscover should a typed artifact enter scheduler state. Follow the producer→consumer contract in [`solver-research-operating-model.md`](solver-research-operating-model.md); no general blackboard.
