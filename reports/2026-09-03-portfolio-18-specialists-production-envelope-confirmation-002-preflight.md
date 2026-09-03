@@ -1,10 +1,10 @@
 # portfolio-18-specialists production-envelope confirmation 002: tail-percentile cap map v2
 
-> **Status:** dispatched, awaiting result
-> **Last evidence:** none yet — protocol written before dispatch per `docs/investigation-report-conventions.md`.
-> **Decision:** pending.
-> **Remaining gate:** run the dispatch; compare `portfolio-18-tranche-v2` against the already-recorded `portfolio-18-flat-2m` (54/150, confirmation-001 dispatch A) and `portfolio-18-tranche-v1` (49/150, confirmation-001 dispatch B) on the identical population/envelope/menu.
-> **Evidence role:** confirmation — a single-variable comparison (cap-map version only; menu, order, population, and total envelope all held fixed against confirmation-001's two already-recorded arms).
+> **Status:** confirmed-positive on this population; independent replication recommended before treating as stronger than `portfolio-18-flat-2m` for production purposes
+> **Last evidence:** 2026-09-03 — GHA run [`33707473373`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33707473373), complete, all 15 shards succeeded.
+> **Decision:** `portfolio-18-tranche-v2` solved **62/150** — 8 more than `portfolio-18-flat-2m` (54/150), 13 more than `portfolio-18-tranche-v1` (49/150), and **7 more than the uncapped 34-technique `full-menu`** (55/150), while spending less aggregate work than `full-menu` (5,725,486,940 vs. 6,507,179,632). This is not a close call, and it is the first `static-portfolio` treatment measured in this entire research line to beat the full menu's own coverage rather than trade a small coverage loss for work savings. Per this program's confirmation-strength norms (matching `portfolio-18-specialists`' own two-independent-confirmation history), one population is not yet enough to call this the new default treatment — see confirmation-003 for the independent fresh-population replication this result earns.
+> **Remaining gate:** independent replication on a fresh, disjoint population — dispatched as `2026-09-03-portfolio-18-specialists-production-envelope-confirmation-003-preflight.md`.
+> **Evidence role:** confirmation — a single-variable comparison (cap-map version only; menu, order, population, and total envelope all held fixed against confirmation-001's two already-recorded arms), on one population. A second independent population is needed before this graduates to a validated production candidate.
 
 ## Question
 
@@ -36,4 +36,31 @@ Dispatch: `static-portfolio-confirmation.yml`, `cohort_id=portfolio-18-specialis
 
 ## Result
 
-_Pending — filled in once the GHA run completes._
+Run [`33707473373`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33707473373) completed in ~5 minutes with all 15 shards and the combine job succeeding (`Combined 15 shard file(s), 150 cells, 1 arms`). Recovered from the combine job's own console log (raw artifact blob storage remains blocked by this environment's egress policy, same as every prior report in this line):
+
+| arm | cells | solved | work (aggregate) |
+|---|---:|---:|---:|
+| `portfolio-18-tranche-v2` | 150 | **62** | 5,725,486,940 |
+
+`workSpent` among solved cells only:
+
+| arm | solved | min | median | mean | p75 | p90 | max |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `portfolio-18-tranche-v2` | 62 | 2,021 | 5,096,026.5 | 8,342,282 | 12,596,862 | 16,631,969 | 46,477,192 |
+
+### Cross-dispatch comparison (same population, same 67,000,000 envelope, same 18-technique menu/order except `full-menu`)
+
+| arm | solved / 150 | aggregate work |
+|---|---:|---:|
+| `full-menu` (34 techniques, confirmation-001 dispatch A) | 55 | 6,507,179,632 |
+| `portfolio-18-flat-2m` (flat 2M cap, confirmation-001 dispatch A) | 54 | 3,490,712,525 |
+| `portfolio-18-tranche-v1` (mean-scaled cap map, confirmation-001 dispatch B) | 49 | 7,221,532,626 |
+| `portfolio-18-tranche-v2` (p75-scaled cap map, this dispatch) | **62** | 5,725,486,940 |
+
+`portfolio-18-tranche-v2` beats every other treatment measured on this population: +8 over the flat cap, +13 over v1, and **+7 over the uncapped 34-technique full menu itself**, at less aggregate work than the full menu (5.73B vs. 6.51B). Exact per-level gain/loss identities are not extracted here (raw per-cell artifacts remain blob-blocked in this environment, same limitation every prior report in this line has documented); the aggregate result is unambiguous enough that attribution is not needed to see the direction and size of the effect.
+
+### Decision
+
+`portfolio-18-tranche-v2` is a genuine, large, clean win on this population — the first `static-portfolio` treatment in this research line to beat `full-menu`'s own coverage rather than trade a small coverage loss for work savings. This is real evidence that a well-grounded, uncensored per-technique cost distribution (isolated p75, not production's censored mean) makes tranche-weighted allocation work where the mean-scaled v1 attempt failed.
+
+Per this program's own confirmation-strength norms — `portfolio-18-specialists`' own promotion took two independent fresh-population confirmations before being treated as validated — one population, however striking, is development-tier evidence for a candidate this consequential. **Does not yet replace `portfolio-18-flat-2m` as the validated treatment.** See `2026-09-03-portfolio-18-specialists-production-envelope-confirmation-003-preflight.md` for the independent replication this result earns.
