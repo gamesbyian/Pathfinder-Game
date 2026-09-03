@@ -25,9 +25,10 @@ test('buildSolverStagePlan covers every SOLVER_STAGE_IDS entry, in declared orde
     assert.equal(plan.find(entry => entry.spec.id === 'legacy-latency-portfolio-pass')!.eligible, undefined);
     assert.equal(plan.find(entry => entry.spec.id === 'legacy-latency-portfolio-fallback')!.eligible, undefined);
     assert.equal(plan.find(entry => entry.spec.id === 'repair-shrink-recovery')!.eligible, undefined);
+    assert.equal(plan.find(entry => entry.spec.id === 'static-portfolio')!.eligible, undefined);
     // Every other stage resolves to a real boolean.
     for (const entry of plan) {
-        if (['explicit-prime', 'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback', 'repair-shrink-recovery'].includes(entry.spec.id)) continue;
+        if (['explicit-prime', 'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback', 'repair-shrink-recovery', 'static-portfolio'].includes(entry.spec.id)) continue;
         assert.equal(typeof entry.eligible, 'boolean', `${entry.spec.id} must resolve to a boolean`);
     }
 });

@@ -3268,3 +3268,104 @@ test('retry-tier config Proxies do not leak unrelated opt-in flags to true (regr
     });
     assert.notEqual(observedPortalParity, true, 'an unrelated opt-in flag must not read true under a retry-tier Proxy with cfg=null');
 });
+
+// schedulerMode: 'static-portfolio' (2026-09-03, docs/solver-optimization-workstreams.md
+// Workstream 2 item (d) — see reports/2026-09-03-fixed-cap-portfolio-scheduler-implementation-
+// design.md). These tests cover the ORCHESTRATION-level wiring (prep, runAttempt, cap fields, the
+// gate loop, no-fallback behavior) through the real solveLevel() entrypoint; the underlying
+// gate-share/per-technique-cap arithmetic itself is already exhaustively covered by
+// scripts/technique-census-cell-node-test.mjs against the research harness this mode promotes to
+// production, and is not re-derived case-by-case here.
+const DEFAULT_CONFIG = { scoringProfileId: 'default', orderingBias: null };
+
+test('static-portfolio: solves a simple level and reports the winning technique', async () => {
+    const level = makeLineLevel();
+    const result = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: { techniqueConfigs: [DEFAULT_CONFIG], workBudget: 1_000_000 },
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.status, 'success');
+    assert.deepEqual(result.solution, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
+    assert.equal(result.schedulerMode, 'static-portfolio');
+    assert.equal(result.staticPortfolioWinningConfigKey, attemptConfigKey(DEFAULT_CONFIG));
+    assert.equal(result.attempts.every(a => a.stageId === 'static-portfolio'), true);
+    assert.equal(result.attempts.every(a => a.configKey === attemptConfigKey(DEFAULT_CONFIG)), true);
+    assert.equal(typeof result.workSpent, 'number');
+    assert.equal(result.workBudget, 1_000_000);
+});
+
+test('static-portfolio: no automatic fallback — an unsolved result carries only the listed techniques\' own attempts', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const result = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: { techniqueConfigs: [DEFAULT_CONFIG], workBudget: 50_000 },
+    });
+    assert.equal(result.ok, false);
+    // Exactly one attempt per gate (one technique in the list, one gate on this fixture) -- proof
+    // this mode never reaches for the ordinary ladder's repair/admissible-order/retry tiers the
+    // way runLegacyLatencyPortfolioExperiment's own fallback deliberately does.
+    assert.equal(result.attempts.length, level.gateKeys.length);
+    assert.equal(result.attempts.every(a => !a.repair && !a.admissibleOrder), true);
+});
+
+test('static-portfolio: solveLevel requires opts.staticPortfolio for this schedulerMode', async () => {
+    await assert.rejects(
+        () => solveLevel(makeLineLevel(), { schedulerMode: 'static-portfolio' }),
+        /staticPortfolio/,
+    );
+});
+
+test('static-portfolio: perTechniqueWorkCap narrows each technique\'s own share without widening the gate ceiling', async () => {
+    let calls = 0;
+    const dispatch: typeof runAttemptSearch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        calls++;
+        const prep = args[3];
+        prep._workMeter.units += 20;
+        return null;
+    }) as typeof runAttemptSearch;
+    const configB = { scoringProfileId: 'objectiveFirst', orderingBias: null };
+    const result = await solveLevel(makeLineLevel(), {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: {
+            techniqueConfigs: [DEFAULT_CONFIG, configB],
+            workBudget: 100_000_000,
+            perTechniqueWorkCap: 10_000_000,
+        },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.status, 'exhausted');
+    // makeLineLevel() has exactly one gate, so this is exactly the two techniques' own attempts.
+    // allocatedWorkCeiling is runAttempt's own RELATIVE remaining-share reading (prep._workCap
+    // minus prep._workMeter.units at that attempt's own start) — both configs get the same
+    // 10,000,000 perTechniqueWorkCap share of the gate ceiling regardless of what the earlier
+    // config already spent, proving the cap narrows per technique, not once per gate.
+    assert.equal(calls, 2);
+    assert.equal(result.attempts[0].allocatedWorkCeiling, 10_000_000);
+    assert.equal(result.attempts[1].allocatedWorkCeiling, 10_000_000);
+});
+
+test('static-portfolio: perTechniqueWorkCapByKey overrides the flat cap for one technique only', async () => {
+    const calls: number[] = [];
+    const dispatch: typeof runAttemptSearch = (async (...args: Parameters<typeof runAttemptSearch>) => {
+        const prep = args[3];
+        calls.push(prep._workCap ?? -1);
+        prep._workMeter.units += 20;
+        return null;
+    }) as typeof runAttemptSearch;
+    const configB = { scoringProfileId: 'objectiveFirst', orderingBias: null };
+    await solveLevel(makeLineLevel(), {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: {
+            techniqueConfigs: [DEFAULT_CONFIG, configB],
+            workBudget: 100_000_000,
+            perTechniqueWorkCap: 10_000_000,
+            perTechniqueWorkCapByKey: { [attemptConfigKey(DEFAULT_CONFIG)]: 3_000_000 },
+        },
+        attemptSearchForTesting: dispatch,
+    });
+    assert.equal(calls.length, 2);
+    assert.equal(calls[0], 3_000_000, 'config A has its own per-key override, not the flat cap');
+    assert.equal(calls[1], 10_000_020, 'config B falls back to the flat cap, unaffected by A\'s narrower per-key cap');
+});

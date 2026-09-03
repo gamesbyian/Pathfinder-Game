@@ -286,7 +286,26 @@ export interface SolveOpts {
     attemptBudgetTelemetry?: boolean;
     /** Opt-in per-technique lifecycle/progress summary for experiment artifacts. */
     lifecycleTelemetry?: boolean;
-    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'legacy' | 'portfolio-experiment';
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'legacy' | 'portfolio-experiment' | 'static-portfolio';
+    /** Only read when schedulerMode === 'static-portfolio'. An ordered technique list sharing one
+     *  cumulative work budget, each technique's own share additionally boundable by a flat or
+     *  per-key cap — see runStaticPortfolio's own header comment and `2026-09-03-fixed-cap-
+     *  portfolio-scheduler-implementation-design.md`. `techniqueConfigs` are already-parsed
+     *  AttemptConfig objects, not string keys: parsing a canonical technique-identity string (e.g.
+     *  `scripts/build-static-portfolio-plan.mjs`'s arm lists) into one is a caller/tooling concern
+     *  (`scripts/attempt-config-key.mjs`), kept out of this browser-free core module. */
+    staticPortfolio?: {
+        techniqueConfigs: AttemptConfig[];
+        workBudget: number;
+        perTechniqueWorkCap?: number;
+        /** Keyed by attemptConfigKey(config) — i.e. the same canonical string identity every other
+         *  technique-key consumer in this codebase uses. A technique absent from this map falls
+         *  back to perTechniqueWorkCap (or uncapped, if that is also absent). */
+        perTechniqueWorkCapByKey?: Record<string, number>;
+        /** Per-attempt wall-safety deadline; non-binding relative to the work-based allocation
+         *  above. Defaults to STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS (600,000ms) when omitted. */
+        attemptBudgetMs?: number;
+    };
     /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
     attemptSearchForTesting?: AttemptSearchDispatch;
     /** Research-only isConnected() rejection observer (see ConnectivityRejectionObserver's doc in
@@ -538,7 +557,13 @@ interface SolveResult { ok: boolean; status: string; solution: number[] | null; 
      *  lets external tooling inspect the exact wall/node ceiling and headroom every stage was
      *  allotted without re-deriving it. Not read by any solving logic. */
     stageBudgetEnvelopes?: Partial<Record<SolverStageId, import('./stage-policy.js').BudgetEnvelope>>;
-    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment'; legacyLatencyPortfolioExperiment?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; }; }
+    schedulerMode?: 'production' | 'legacy-latency-portfolio-experiment' | 'static-portfolio'; legacyLatencyPortfolioExperiment?: { solvedBeforeFallback: boolean; fallbackAttemptCount: number; repeatedAttemptElapsedMs: number; repeatedPrefixNodeUpperBound: number; runtimeBreakdown?: { prepMs: number; portfolioAttemptSearchMs: number; schedulerOverheadMs: number; fallbackSearchMs: number; totalMs: number; }; };
+    /** schedulerMode === 'static-portfolio' only: the winning technique's canonical configKey, or
+     *  absent on an unsolved result. Every attempt already carries its own configKey; this is a
+     *  convenience mirror of technique-census-cell.mjs's own winningConfigKey field so tooling
+     *  built against that shape needs minimal adaptation. */
+    staticPortfolioWinningConfigKey?: string;
+}
 
 function hasAttemptError(attempts: readonly Attempt[]): boolean {
     return attempts.some(attempt => attempt.outcome === 'error');
@@ -1613,6 +1638,117 @@ async function runLegacyLatencyPortfolioExperiment(
     };
 }
 
+// Per-attempt wall-safety deadline for the static-portfolio scheduler mode: non-binding relative
+// to the real allocation currency (cell.perTechniqueWorkCap/workBudget below), same role and same
+// value as build-static-portfolio-plan.mjs's own ATTEMPT_BUDGET_MS constant (kept as a literal
+// here, not a shared import, because modules/solver/ is browser-free core logic and must not
+// depend on a scripts/ tooling file — see AGENTS.md's architecture-boundary rule).
+const STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS = 600_000;
+
+/** Fixed ordered-menu/per-technique-work-cap scheduler (`docs/solver-optimization-workstreams.md`
+ *  Workstream 2 item (d); design: `reports/2026-09-03-fixed-cap-portfolio-scheduler-implementation-
+ *  design.md`). Promotes `technique-census-cell.mjs`'s already-tested execution semantics — an
+ *  ordered technique list sharing one cumulative work budget, each technique's own share
+ *  additionally bounded by an optional flat or per-key cap, early-exit on first solve — into a
+ *  real `solveLevel()` entrypoint, so a static-portfolio candidate can be measured and (eventually)
+ *  A/B'd through the same code path every other caller uses instead of only through a standalone
+ *  research script.
+ *
+ *  DELIBERATELY NO AUTOMATIC FALLBACK to the production ladder, unlike
+ *  `runLegacyLatencyPortfolioExperiment`: this mode exists to evaluate the static-portfolio policy
+ *  on its own terms — the same thing `technique-census-cell.mjs`/`static-portfolio-confirmation.yml`
+ *  already measure — not to blend it into production behavior. A caller wanting graceful
+ *  degradation composes it explicitly (call this mode, then `solveLevel` with the default
+ *  `schedulerMode` on failure), matching how the legacy portfolio mode's own fallback is written.
+ *
+ *  Work-only (no node-budget variant): this whole research line's canonical cross-technique
+ *  currency is `workSpent`, not raw nodes (`docs/solver-budget-determinism.md`), so mixing in a
+ *  node-budget mode here would just reintroduce the currency ambiguity that line already closed. */
+async function runStaticPortfolio(level: NormalizedLevel, opts: SolveOpts): Promise<SolveResult> {
+    const staticPortfolio = opts.staticPortfolio!;
+    const portfolioStart = Date.now();
+    const prep = prepLevel(level);
+    const workStart = prep._workMeter.units;
+    if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
+    if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
+    prep._attemptBudgetTelemetry = true;
+    const cfg = normalizeAblationConfig(opts.ablation);
+    prep._cfg = cfg;
+    prep._metrics = { nodesExpanded: 0 };
+    prep._forcedFirstStepKey = (opts.forcedFirstStepKey != null) ? opts.forcedFirstStepKey : null;
+    prep._forcedPortalExitKey = (opts.forcedPortalExitKey != null) ? opts.forcedPortalExitKey : null;
+
+    const activeGates = getActiveGates(level, Array.isArray(level.gateKeys) ? level.gateKeys : [], cfg);
+    const configs = staticPortfolio.techniqueConfigs.map(config => ({ key: attemptConfigKey(config), config }));
+    const attemptBudgetMs = staticPortfolio.attemptBudgetMs ?? STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS;
+    const workBudget = staticPortfolio.workBudget;
+
+    const attempts: Attempt[] = [];
+    let solution: number[] | null = null;
+    let winningKey: string | null = null;
+    let deadlineTruncated = false;
+    const spentUnits = () => prep._workMeter.units - workStart;
+
+    outer:
+    for (let gi = 0; gi < activeGates.length; gi++) {
+        const gateKey = activeGates[gi];
+        const remainingTotal = Math.max(0, workBudget - spentUnits());
+        if (remainingTotal <= 0) break outer;
+        const gatesLeft = activeGates.length - gi;
+        const gateCeiling = spentUnits() + Math.floor(remainingTotal / gatesLeft);
+        for (const { key, config } of configs) {
+            if (spentUnits() >= gateCeiling) break;
+            const remaining = Math.max(0, gateCeiling - spentUnits());
+            const effectiveCap = staticPortfolio.perTechniqueWorkCapByKey?.[key] ?? staticPortfolio.perTechniqueWorkCap;
+            const attemptRemaining = Number.isFinite(effectiveCap) ? Math.min(remaining, effectiveCap as number) : remaining;
+            const attemptWorkCap = prep._workMeter.units + attemptRemaining;
+            // Both caps set to the same value for the same reason technique-census-cell.mjs's own
+            // header comment documents: admissible-order/IDA's hot loop only consults
+            // prep._strictWorkCap, not the historical soft prep._workCap, outside this kind of
+            // explicit equal-work-shaped opt-in.
+            prep._workCap = attemptWorkCap;
+            prep._strictWorkCap = attemptWorkCap;
+            const spentBeforeAttempt = spentUnits();
+            const r = await runAttempt(gateKey, level, prep, config, attemptBudgetMs, Date.now(), opts.yieldFn ?? null, Infinity);
+            attempts.push(withSolverStage({ configKey: key, ...r.attempt }, 'static-portfolio'));
+            if (r.path) { solution = r.path; winningKey = key; break outer; }
+            const spentThisAttempt = spentUnits() - spentBeforeAttempt;
+            if (r.attempt.outcome === 'timed-out' && spentThisAttempt < attemptRemaining) {
+                deadlineTruncated = true;
+                break outer;
+            }
+        }
+    }
+
+    const workSpent = spentUnits();
+    const totalMs = Date.now() - portfolioStart;
+    // No referee re-validation step here, matching every other solveLevel() scheduler mode in
+    // this file (the main ladder and runLegacyLatencyPortfolioExperiment both trust `!!path`
+    // directly) — the search primitives' own correctness is proven in-code, not re-checked
+    // defensively per solve. technique-census-cell.mjs's own referee step is a research-harness-
+    // only safety net for that offline tool's own wider surface of ad hoc/adversarial configs, not
+    // a normal production behavior this entrypoint should reproduce.
+    const ok = !!solution;
+    return {
+        ok,
+        status: ok ? 'success'
+            : deadlineTruncated ? 'deadline-truncated'
+            : hasAttemptError(attempts) ? 'attempt-error'
+            : workSpent >= workBudget ? 'work-budget-reached'
+            : 'exhausted',
+        solution: ok ? solution : null,
+        solutions: ok && solution ? [solution] : [],
+        attempts,
+        totalMs,
+        nodesExpanded: prep._metrics.nodesExpanded,
+        workSpent,
+        workBudget,
+        deadlineTruncated,
+        schedulerMode: 'static-portfolio',
+        ...(winningKey ? { staticPortfolioWinningConfigKey: winningKey } : {}),
+    };
+}
+
 export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): Promise<SolveResult> {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const nodeBudget = Number(opts.nodeBudget) > 0 ? Number(opts.nodeBudget) : Infinity;
@@ -1633,6 +1769,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             : opts.schedulerMode;
     if (schedulerMode === 'legacy-latency-portfolio-experiment') {
         return runLegacyLatencyPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
+    }
+    if (schedulerMode === 'static-portfolio') {
+        if (!opts.staticPortfolio) throw new Error("solveLevel: schedulerMode 'static-portfolio' requires opts.staticPortfolio");
+        return runStaticPortfolio(level, opts);
     }
     const levelStartTime = Date.now();
     const prep = prepLevel(level);
