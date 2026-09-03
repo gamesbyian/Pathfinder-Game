@@ -22,6 +22,7 @@
  *     --arms=path/to/arms.json \
  *     --work-budget=67000000 \
  *     [--per-technique-work-cap=10000000] \
+ *     [--per-technique-work-cap-map=path/to/cap-map.json] \
  *     --out=path/to/plan.json
  *
  * --population accepts either an EW1-shaped pricing snapshot ({ results: [{ levelId, corpus,
@@ -35,6 +36,15 @@
  * naive first-come-first-served semantics (see reports/2026-09-02-static-portfolio-construction-
  * pilot.md for why that naive form starved every position after a non-terminating technique like
  * repair, independent of --work-budget's own size).
+ *
+ * --per-technique-work-cap-map (optional, 2026-09-03): a path to a JSON file mapping
+ * technique-key -> cap, forwarded verbatim as technique-census-cell.mjs's own
+ * `cell.perTechniqueWorkCapByKey` on every generated cell. Use this instead of (or alongside)
+ * --per-technique-work-cap when different techniques should get different protected shares — e.g. a
+ * tranche-weighted allocation sized from each technique's own EW1/production cost, rather than one
+ * flat cap for every technique in the menu. A technique absent from the map falls back to
+ * --per-technique-work-cap (or uncapped, if that is also omitted); see technique-census-cell.mjs's
+ * own header comment for the exact precedence/fallback contract.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -48,9 +58,11 @@ const ATTEMPT_BUDGET_MS = 600000;
  * @param {number | null} [perTechniqueWorkCap] optional; see this file's header comment
  * @param {number} [attemptBudgetMs] per-attempt wall-safety deadline (non-binding by default;
  *   work_budget/perTechniqueWorkCap govern allocation) — defaults to ATTEMPT_BUDGET_MS
+ * @param {Record<string, number> | null} [perTechniqueWorkCapByKey] optional; see this file's own
+ *   header comment and technique-census-cell.mjs's own header comment for the precedence contract
  * @returns {{ budgetProtocol: string, equalCostAcrossTechniques: boolean, cells: object[] }}
  */
-export function buildPlan(population, arms, workBudget, perTechniqueWorkCap = null, attemptBudgetMs = ATTEMPT_BUDGET_MS) {
+export function buildPlan(population, arms, workBudget, perTechniqueWorkCap = null, attemptBudgetMs = ATTEMPT_BUDGET_MS, perTechniqueWorkCapByKey = null) {
     if (!Array.isArray(population) || population.length === 0) {
         throw new Error('buildPlan: population must be a non-empty array');
     }
@@ -74,6 +86,7 @@ export function buildPlan(population, arms, workBudget, perTechniqueWorkCap = nu
                 budgetMs: attemptBudgetMs,
                 ablation: null,
                 ...(Number.isFinite(perTechniqueWorkCap) ? { perTechniqueWorkCap } : {}),
+                ...(perTechniqueWorkCapByKey && Object.keys(perTechniqueWorkCapByKey).length > 0 ? { perTechniqueWorkCapByKey } : {}),
             });
         }
     }
@@ -102,18 +115,22 @@ if (isMain) {
     const armsPath = argMap.get('--arms');
     const workBudget = Number(argMap.get('--work-budget'));
     const perTechniqueWorkCap = argMap.has('--per-technique-work-cap') ? Number(argMap.get('--per-technique-work-cap')) : null;
+    const perTechniqueWorkCapMapPath = argMap.get('--per-technique-work-cap-map');
     const attemptBudgetMs = argMap.has('--attempt-budget-ms') ? Number(argMap.get('--attempt-budget-ms')) : ATTEMPT_BUDGET_MS;
     const outFile = argMap.get('--out');
     if (!populationPath || !armsPath || !Number.isFinite(workBudget) || !outFile) {
-        console.error('Usage: --population=<path> --arms=<path> --work-budget=<number> [--per-technique-work-cap=<number>] [--attempt-budget-ms=<number>] --out=<path>');
+        console.error('Usage: --population=<path> --arms=<path> --work-budget=<number> [--per-technique-work-cap=<number>] [--per-technique-work-cap-map=<path>] [--attempt-budget-ms=<number>] --out=<path>');
         process.exit(1);
     }
     const population = loadPopulation(JSON.parse(readFileSync(path.resolve(root, populationPath), 'utf8')));
     const arms = JSON.parse(readFileSync(path.resolve(root, armsPath), 'utf8'));
-    const plan = buildPlan(population, arms, workBudget, perTechniqueWorkCap, attemptBudgetMs);
+    const perTechniqueWorkCapByKey = perTechniqueWorkCapMapPath
+        ? JSON.parse(readFileSync(path.resolve(root, perTechniqueWorkCapMapPath), 'utf8')) : null;
+    const plan = buildPlan(population, arms, workBudget, perTechniqueWorkCap, attemptBudgetMs, perTechniqueWorkCapByKey);
 
     mkdirSync(path.dirname(path.resolve(root, outFile)), { recursive: true });
     writeFileSync(path.resolve(root, outFile), JSON.stringify(plan, null, 2) + '\n');
     console.log(`Wrote ${outFile}: ${plan.cells.length} cells (${population.length} levels x ${Object.keys(arms).length} arms), workBudget=${workBudget}`
-        + (Number.isFinite(perTechniqueWorkCap) ? `, perTechniqueWorkCap=${perTechniqueWorkCap}` : '') + `, attemptBudgetMs=${attemptBudgetMs}`);
+        + (Number.isFinite(perTechniqueWorkCap) ? `, perTechniqueWorkCap=${perTechniqueWorkCap}` : '')
+        + (perTechniqueWorkCapByKey ? `, perTechniqueWorkCapByKey keys=${Object.keys(perTechniqueWorkCapByKey).length}` : '') + `, attemptBudgetMs=${attemptBudgetMs}`);
 }

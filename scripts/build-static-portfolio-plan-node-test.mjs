@@ -40,4 +40,16 @@ assert.throws(() => buildPlan([], arms, 1), /non-empty array/);
 assert.throws(() => buildPlan(population, {}, 1), /at least one named arm/);
 assert.throws(() => buildPlan(population, { empty: [] }, 1), /non-empty technique-key array/);
 
+// perTechniqueWorkCapByKey: omitted by default (backward compatible); forwarded verbatim to every
+// cell when passed, alongside a flat perTechniqueWorkCap fallback for keys the map doesn't cover.
+assert.equal(Object.hasOwn(fullMenuCellForLevel5, 'perTechniqueWorkCapByKey'), false);
+const capMap = { 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain': 3_000_000 };
+const withMap = buildPlan(population, arms, 67_000_000, 10_000_000, undefined, capMap);
+assert.deepEqual(withMap.cells[0].perTechniqueWorkCapByKey, capMap);
+assert.equal(withMap.cells[0].perTechniqueWorkCap, 10_000_000, 'flat cap still set alongside the map, as the fallback for keys absent from it');
+// An empty/null map must not add a spurious field -- same "purely additive, no-op when unused"
+// contract technique-census-cell.mjs's own header comment promises.
+const withEmptyMap = buildPlan(population, arms, 67_000_000, null, undefined, {});
+assert.equal(Object.hasOwn(withEmptyMap.cells[0], 'perTechniqueWorkCapByKey'), false);
+
 console.log('build-static-portfolio-plan tests passed');
