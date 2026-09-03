@@ -3,7 +3,7 @@ import { classifyRoutingRegime, normalizeRoutingRegime } from './routing-regime.
 import { buildDistMap } from './distance.js';
 import { normalizeRawLevel } from './normalization.js';
 import { prepLevel } from './prep.js';
-import { createState, getNeighbors, applyMove } from './search-state.js';
+import { createState, getNeighbors, applyMove, undoMove } from './search-state.js';
 import { buildCurUrgencyContext, scoreAndSort, scoreMove } from './scoring.js';
 import { isSolutionState } from './solution.js';
 import { SCORING_PROFILES } from './policy.js';
@@ -31,6 +31,12 @@ export function createSolverTestingApi() {
         createState,
         getNeighbors,
         applyMove,
+        // undoMove (2026-09-03, added for scripts/beam-to-dfs-handoff-pilot.mjs — rung 4 of
+        // docs/solver-search-resumability.md's research ladder): applyMove's own comment already
+        // requires callers to undo in exact LIFO order; exposing it alongside applyMove lets
+        // external tooling replicate dfsFromGate's own backtracking loop (push a child via
+        // applyMove, undoMove it if the branch fails) without duplicating dfsFromGate's internals.
+        undoMove,
         scoreAndSort,
         scoreMove,
         buildCurUrgencyContext,
