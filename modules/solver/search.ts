@@ -575,8 +575,15 @@ export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoa
 // `prep._workMeter.units` needs no equivalent care: it is incremented unconditionally inside
 // applyMove/isConnected regardless of which call or phase is running, so reusing the same `prep`
 // (and, per above, the same live `ws`) across a pause/resume pair already makes it cumulative and
-// canonical for free.
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number): Promise<number[] | null> {
+// canonical for free. `captureContinuationOnBudgetExit` (2026-09-03, rung 2 — same beam frontier,
+// changed policy: a fixed-WORK complementarity test) extends the SAME capture to the existing
+// work/time budget exit above (`prep._workCap`'s own real ceiling, not just a phase count),
+// default false so every production timeout (the overwhelming majority of real `out`-passing
+// callers) is completely unaffected. `resumeFrom` never constrains `profile`/`orderingBias`/
+// `beamWidth`/`mechanicBucketRetention` to match the paused call's own — a resumed call may pass
+// different values for any of them, which is precisely what a same-frontier/changed-policy
+// experiment needs; only `startKey`/`level`/`prep` must stay the same instance.
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number, captureContinuationOnBudgetExit?: boolean): Promise<number[] | null> {
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
@@ -711,7 +718,19 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         // (offline batch tooling only, same as dfsFromGate's). Counted in the exact quantity credited
         // to prep._metrics below (nodesExpandedTotal + frontierIndex), so the cap and the reported
         // node count stay consistent. timedOut=true matches dfsFromGate's node-budget exit.
-        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null; }
+        if (Date.now() - startTime >= budgetMs || nodesExpandedTotal + frontierIndex >= nodeBudget || prep._workMeter.units >= (prep._workCap ?? Infinity)) {
+            // captureContinuationOnBudgetExit (research-only, rung 2 of solver-search-resumability.md's
+            // ladder — a fixed-WORK complementarity test needs a resumable state at prep._workCap's own
+            // exact work-based ceiling, not just at a phase count): default false, so ordinary production
+            // timeouts (every real caller) are completely unaffected — this exit already credits
+            // prep._metrics unconditionally below because most callers never resume from a timeout, and
+            // changing that for everyone would be a real, unwanted behavior change. Only when a caller
+            // opts in do we skip that credit here (the eventual resumed call's own terminal return
+            // credits the correct cumulative total once, exactly like pauseAfterPhases below) and attach
+            // the same continuation shape instead.
+            if (out && captureContinuationOnBudgetExit) { _dbgFlush('pausedContinuation-budget'); out.pausedContinuation = { frontier, phasesCompleted, nodesExpandedTotal, ws, liveUndo: _liveUndo }; return null; }
+            if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null;
+        }
         if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
         // pauseAfterPhases (research-only, see header comment): a clean, deterministic work-boundary
         // exit for the resumability pilot. Deliberately does NOT credit prep._metrics here — the

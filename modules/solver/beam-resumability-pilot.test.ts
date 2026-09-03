@@ -170,3 +170,45 @@ test('beam pause/resume: pauseAfterPhases/resumeFrom left undefined leaves exist
   const path = await beamSearchFromGate(PACK(0, 0), level, prep, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)]);
 });
+
+// captureContinuationOnBudgetExit (rung 2 prerequisite): the existing prep._workCap-based budget
+// exit is a real, exact-work ceiling already used throughout the production ladder — a fixed-WORK
+// complementarity test (rung 2 of solver-search-resumability.md's research ladder) needs to pause
+// AT that ceiling, not just at a chosen phase count. Proves the same pause/resume equivalence as
+// the pauseAfterPhases tests above, but triggered by prep._workCap instead.
+test('beam pause/resume: captureContinuationOnBudgetExit pauses at prep._workCap and resumes to an equivalent uninterrupted run', async () => {
+  const reference = await runUninterrupted(SOLVED_LEVEL, 16, false);
+  assert.ok(reference.result);
+
+  const prep = prepLevel(SOLVED_LEVEL);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  prep._workCap = Math.floor(reference.workUnits / 3);
+  const paused: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
+  const firstResult = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, paused, Infinity, undefined, undefined, true);
+  assert.equal(firstResult, null, 'a work cap well below the solve cost must not solve');
+  assert.equal(paused.timedOut, undefined, 'a captured-continuation budget exit is a pause, not a plain timeout — out.timedOut stays unset, same convention as pauseAfterPhases');
+  assert.ok(paused.pausedContinuation, 'captureContinuationOnBudgetExit=true must populate a continuation at the work-cap exit');
+  assert.ok(prep._workMeter.units >= prep._workCap, 'the pause must actually be at/past the requested work cap');
+
+  prep._workCap = Infinity; // lift the cap so the resumed call can run to completion
+  const resumed: { pausedContinuation?: BeamContinuation } = {};
+  const result = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, resumed, Infinity, paused.pausedContinuation, undefined);
+  assertEquivalent({ result, workUnits: prep._workMeter.units, nodesExpanded: prep._metrics.nodesExpanded }, reference, 'work-cap pause/resume');
+});
+
+test('beam pause/resume: captureContinuationOnBudgetExit left false (default) leaves the existing budget-exit contract byte-for-byte unaffected', async () => {
+  // Mirrors search.test.ts's own nodeBudget contract test, just re-asserted here as a regression
+  // guard for THIS exact code path (the budget exit now branches on captureContinuationOnBudgetExit
+  // before doing anything else) rather than trusting the untouched search.test.ts copy alone.
+  const level = makeLevel({ grid: { w: 9, h: 9 }, requiredLength: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  prep._workCap = 1000;
+  const out: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
+  const path = await beamSearchFromGate(PACK(0, 0), level, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 40, null, false, out);
+  assert.equal(path, null);
+  assert.equal(out.timedOut, true, 'without opting in, a work-cap exit must still report a plain timeout, exactly as before this change');
+  assert.equal(out.pausedContinuation, undefined, 'without opting in, no continuation should ever be attached');
+});
