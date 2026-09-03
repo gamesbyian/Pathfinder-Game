@@ -68,23 +68,9 @@ Unconditional must-cross attraction is closed. A future form must use legal live
 
 **Stop:** reject family identifiers, selected-case-only effects, or runtime dependence on known solutions.
 
-### Guidance distance distinct from pruning distance
+### Promoted search-quality gates
 
-The global legacy-guidance swap was net negative; its dead-last retry bought a few additive rescues. Reopen only for a genuinely new guidance quantity supported by first-divergence evidence, not another blend/threshold of the old map.
-
-**Pilot:** recurring ranking error attributable specifically to distance guidance, corrected in paired/shadow traces without weakening pruning truth.
-
-**Stop:** no recurring mechanism, or only selected-population recovery.
-
-### Orientation / symmetry equivariance diagnosis
-
-Detailed family policy lives in [`variant-level-research.md`](variant-level-research.md). The question is not whether every transformed trace is identical, but whether the same **harmful** first non-equivariant decision recurs across unrelated symmetry-controlled parents.
-
-Possible sources include successor/tie order, retention/dedup, coordinate-derived identity, and PRNG-consumption order. Structural descriptors should declare expected invariance/equivariance.
-
-**Pilot:** one first-divergence mechanism recurs and materially changes solve/work.
-
-**Stop:** if cliffs are heterogeneous/directionally balanced and provide complementary coverage, treat them as finite-budget diversity rather than canonicalization debt.
+Orientation/symmetry first-divergence and guidance-distance first-divergence now have live gates in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). Keep chronology there only as short gate state; detailed evidence belongs in reports.
 
 ## Deferred interoperability / infrastructure
 
@@ -118,7 +104,7 @@ Do not reopen unchanged without materially new evidence:
 - broad CDCL/LCG learning without a recurring compact sound reason family;
 - generic RCSP/label-setting or exact-resource dominance without a sound completion-subsumption proof;
 - broad symmetry canonicalization/rotate-mirror retries instead of causal first-divergence diagnosis;
-- survival/hazard/bandit/VOC scheduling before simple fixed-work tranche repricing shows residual headroom;
+- hazard/bandit/ML scheduler machinery before the queue's simpler dynamic tranche-value pilot shows held-out incremental value;
 - giant variant generation without an unanswered question and analysis plan;
 - full-corpus A/Bs for ideas already falsified causally;
 - retaining closed experiment code solely as archive;
