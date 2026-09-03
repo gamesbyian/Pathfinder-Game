@@ -50,4 +50,4 @@ Workflow dispatch: `technique-census.yml` on ref `claude/solver-dev-queue-wmrxlo
 
 ## Result
 
-_Pending — filled in once the run completes (expected ~14-20 hours per the estimate above)._
+Dispatched as GHA run [`33717910218`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33717910218) on `claude/solver-dev-queue-wmrxlo` (commit `277ca21b`). In progress as of dispatch; expected ~14-20 hours per the estimate above. _Filled in further once the run completes._
