@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "development-shadow",
+  "prespecification": {
+    "success": "disabled guidance ranks rescue paths better and enabled guidance ranks unrelated control paths better with a recurring first-divergence pattern",
+    "stop": "mixed directions, no rescue/control separation, or only selected-level recovery"
+  },
+  "roles": {
+    "rescue": {
+      "n": 1,
+      "disabledRanksPathBetter": 1,
+      "disabledRanksPathWorse": 0,
+      "tied": 0,
+      "meanDelta": -1
+    },
+    "control": {
+      "n": 6,
+      "disabledRanksPathBetter": 3,
+      "disabledRanksPathWorse": 2,
+      "tied": 1,
+      "meanDelta": -0.8333333333333334
+    }
+  },
+  "rows": [
+    {
+      "levelId": "R00355",
+      "role": "rescue",
+      "witnessExpectedGoalAttractionDisabled": true,
+      "witnessNodesExpanded": 374227,
+      "enabledDiscrepancy": 42,
+      "disabledDiscrepancy": 41,
+      "disabledMinusEnabled": -1,
+      "firstMeaningfulDivergence": {
+        "step": 50,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      }
+    },
+    {
+      "levelId": "R00094",
+      "role": "control",
+      "witnessExpectedGoalAttractionDisabled": false,
+      "witnessNodesExpanded": 251810,
+      "enabledDiscrepancy": 36,
+      "disabledDiscrepancy": 38,
+      "disabledMinusEnabled": 2,
+      "firstMeaningfulDivergence": {
+        "step": 69,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      }
+    },
+    {
+      "levelId": "R00108",
+      "role": "control",
+      "witnessExpectedGoalAttractionDisabled": false,
+      "witnessNodesExpanded": 113936,
+      "enabledDiscrepancy": 30,
+      "disabledDiscrepancy": 28,
+      "disabledMinusEnabled": -2,
+      "firstMeaningfulDivergence": {
+        "step": 49,
+        "leftRank": 1,
+        "rightRank": 0,
+        "rankDelta": -1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      }
+    },
+    {
+      "levelId": "R00118",
+      "role": "control",
+      "witnessExpectedGoalAttractionDisabled": false,
+      "witnessNodesExpanded": 297558,
+      "enabledDiscrepancy": 47,
+      "disabledDiscrepancy": 47,
+      "disabledMinusEnabled": 0,
+      "firstMeaningfulDivergence": null
+    },
+    {
+      "levelId": "R00137",
+      "role": "control",
+      "witnessExpectedGoalAttractionDisabled": false,
+      "witnessNodesExpanded": 446438,
+      "enabledDiscrepancy": 62,
+      "disabledDiscrepancy": 55,
+      "disabledMinusEnabled": -7,
+      "firstMeaningfulDivergence": {
+        "step": 8,
+        "leftRank": 1,
+        "rightRank": 0,
+        "rankDelta": -1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      }
+    },
+    {
+      "levelId": "R00143",
+      "role": "control",
+      "witnessExpectedGoalAttractionDisabled": false,
+      "witnessNodesExpanded": 493894,
+      "enabledDiscrepancy": 63,
+      "disabledDiscrepancy": 59,
+      "disabledMinusEnabled": -4,
+      "firstMeaningfulDivergence": {
+        "step": 19,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 2,
+        "rightCandidates": 2,
+        "candidateDelta": 0
+      }
+    },
+    {
+      "levelId": "R00153",
+      "role": "control",
+      "witnessExpectedGoalAttractionDisabled": false,
+      "witnessNodesExpanded": 407988,
+      "enabledDiscrepancy": 40,
+      "disabledDiscrepancy": 46,
+      "disabledMinusEnabled": 6,
+      "firstMeaningfulDivergence": {
+        "step": 26,
+        "leftRank": 0,
+        "rightRank": 1,
+        "rankDelta": 1,
+        "leftCandidates": 3,
+        "rightCandidates": 3,
+        "candidateDelta": 0
+      }
+    }
+  ]
+}

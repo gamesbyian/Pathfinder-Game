@@ -1,18 +1,21 @@
 # Dynamic tranche-value pilot 001: lifecycle-only shadow screen
 
-> **Status:** inconclusive
-> **Last evidence:** 2026-09-03 — local 12-level, three-action split-sample shadow pilot.
-> **Decision:** first-tranche lifecycle outcome supplied no incremental information in this sample. Do not build a dynamic scheduler from this result.
-> **Remaining gate:** only a deliberately mixed continuation-value population plus one small generic progress/frontier bundle; do not enlarge this lifecycle-only form unchanged.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-03 — local 24-level, three-action split-sample shadow pilot.
+> **Decision:** natural exhaustion versus cap censoring is predictive, but not actionable in the tested scheduler shape. The bounded matched-envelope shadow A/B dispatched zero continuations because current searches cannot resume and no level's unused first-tranche work could fund the required 2×-cap restart. Close this lifecycle-only dynamic form.
+> **Remaining gate:** none. Reopen only if resumable search state makes a continuation cost one incremental tranche, or a materially different same-envelope allocation mechanism avoids paying again for the first tranche.
 > **Evidence role:** local development shadow pilot.
 
 ## Prespecification
 
 The smallest available legal signal was the existing attempt lifecycle outcome. Three operationally
 different `portfolio-18-tranche-v2` actions (CW perimeter beam, diverse objective beam, and
-portal-first DFS) were run independently at half their v2 cap and at the full v2 cap on the first 12
-levels of the already-fixed confirmation-001 population. A continuation benefit means half-cap
-failed and full-cap solved. Odd/even population positions were fixed as train/test before results.
+portal-first DFS) were run independently at their v2 cap and at twice that cap on the first 24 levels
+of the already-fixed confirmation-001 population. A continuation benefit means the static-v2 tranche
+failed and one additional equal tranche solved. Odd/even population positions were fixed as
+train/test before results. This directly asks about allocation beyond the static map; an earlier
+half-v2/full-v2 draft was corrected before this decision-bearing artifact because it merely
+re-measured the already-confirmed static allocation rather than next-tranche value.
 
 Success required lifecycle outcome to improve held-out Brier score beyond technique identity and
 to separate continuation value in the same direction in both splits. The stop rule was no held-out
@@ -21,23 +24,42 @@ both arms; no level identity enters a candidate policy.
 
 ## Result
 
-All 36 half-cap risk rows reported `timed-out`; there were no naturally exhausted rows. Exactly one
-full-cap rescue occurred (1/36, 2.8%), in the training split, and none occurred in test. Technique-only
-and technique-plus-outcome held-out Brier scores were identical (`0.03125`). The lifecycle descriptor
-therefore cannot discriminate these continuation decisions: the cap makes every observed first shot
-look the same. The tested lifecycle-only form meets its stop condition.
+Of 69 unsolved static-tranche risk rows, 39 naturally exhausted and 30 were capped (`timed-out` in
+the attempt lifecycle vocabulary). The added tranche rescued 3/30 capped rows (10%) and 0/39
+naturally exhausted rows. Direction held in both fixed splits: train 1/14 versus 0/20; test 2/16
+versus 0/19. Adding lifecycle outcome to technique identity reduced held-out Brier score from
+`0.055766` to `0.037311` (33.1%). The rescues span two actions and three unrelated level ids
+(`R00181`, `R00546`, `R01151`), rather than one action/family.
 
-This is not evidence that richer legal progress/frontier signals lack value. It establishes the
-smaller result needed before adding them: existing lifecycle outcome alone does not earn a dynamic
-A/B, and a future pilot must deliberately select action/level/tranche cells with an observable mix
-of continuation benefits and telemetry states rather than merely enlarging this uniform sample.
+This passes the prespecified predictive gate and gives an interpretable diagnostic rule:
+never continue a search that reports natural exhaustion; a capped search remains at risk of benefit.
+It does **not** establish that simply doubling every capped action is worthwhile under a shared
+portfolio envelope. The actionability check below therefore keeps total work matched and permits
+only same-solve work left unused by naturally exhausted first tranches to fund a larger retry.
+
+## Matched-envelope actionability check
+
+The solver has no resumable frontier contract for these actions. After observing censoring, the
+smallest executable counterpart to the 2×-cap measurement is therefore a fresh 2×-cap restart; its
+cost is the whole larger attempt, not merely the second tranche. A bounded shadow policy ran the
+three ordinary v2 tranches first, then considered capped actions in static order only when work left
+unused by naturally exhausted actions could fund that full restart. The per-level envelope was the
+sum of the three v2 caps (`10,531,934` work).
+
+Across all 24 levels, this policy dispatched **zero** continuations: unused work ranged from zero to
+about 3.11M, below every eligible 2× restart cost. Control and treatment consequently both solved
+3/24. This is the decisive scheduler result: the signal predicts which actions are futile to
+continue, but current execution cannot monetize that information under the same envelope. Building
+a dynamic scheduler, adding more signals, or running a population-scale A/B would not repair the
+missing continuation primitive. The tested form is closed negative despite its positive conditional
+correlation.
 
 Machine-readable rows: `reports/stress/portfolio/dynamic-tranche-value-pilot-001.json`.
 
 ## Reproduction
 
 ```bash
-npm run solver:dynamic-tranche-value-pilot -- --limit=12 --out=reports/stress/portfolio/dynamic-tranche-value-pilot-001.json
+npm run solver:dynamic-tranche-value-pilot -- --limit=24 --out=reports/stress/portfolio/dynamic-tranche-value-pilot-001.json
 ```
 
 The script fails on wall-censored cells rather than treating them as deterministic evidence. Its
