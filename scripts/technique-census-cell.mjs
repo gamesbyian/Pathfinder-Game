@@ -225,7 +225,10 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             ok, status, refereeValid, winningConfigKey: winningKey, winningGate,
             gateSummaries: level.gateKeys.length > 1 ? gateSummaries : undefined,
             nodesExpanded, totalMs,
-            attempts: ok ? attempts : undefined,
+            // Shadow scheduling pilots need the already-produced lifecycle outcome for an
+            // unsuccessful, capped attempt. Keep the historical compact result by default; this
+            // opt-in only exposes existing generic telemetry and does not alter execution.
+            attempts: (ok || cell.collectAttemptTelemetry === true) ? attempts : undefined,
             solution: ok ? solution : undefined,
         };
     }

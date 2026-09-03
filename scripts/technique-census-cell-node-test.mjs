@@ -377,6 +377,22 @@ test('real solver, work budget too small for a losing technique: work-budget-rea
     assert.ok(result.workSpent >= 50_000, `workSpent (${result.workSpent}) should have reached the 50,000 ceiling`);
 });
 
+test('collectAttemptTelemetry exposes losing attempt lifecycle without changing the compact default', async () => {
+    const { runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._metrics.nodesExpanded += 1;
+        prep._workMeter.units += 10;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const compact = await runCell({ ...baseCell, workBudget: 100 });
+    const observed = await runCell({ ...baseCell, workBudget: 100, collectAttemptTelemetry: true });
+
+    assert.equal(compact.attempts, undefined);
+    assert.equal(observed.ok, false);
+    assert.ok((observed.attempts?.length ?? 0) >= 1);
+    assert.ok(observed.attempts?.every(attempt => attempt.outcome === 'exhausted'));
+});
+
 test('real admissible-order/IDA cell obeys the equal-work cap instead of overshooting by orders of magnitude', async () => {
     const { runCell } = await createCellRunner();
     // Use the always-present published fixture so this contract stays covered by CI's deliberately

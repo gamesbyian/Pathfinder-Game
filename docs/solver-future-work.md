@@ -32,59 +32,9 @@ Check current code, queue, ledger, [`tooling-catalog.md`](tooling-catalog.md), a
 
 ## Deferred representation / search-quality questions
 
-### Residual interfaces and bounded future models
+### Promoted residual/search-quality gates
 
-Durable vocabulary lives in [`solver-residual-state-representation.md`](solver-residual-state-representation.md). The deferred question is whether any bounded residual family admits a compact representation that adds information beyond current prunes/search state without approaching full state.
-
-Candidate forms include exact boundary/interface state, restricted representative future sets, safe relaxed future models, and counterexample-guided refinement of coarse signatures.
-
-**Pilot:** on a small exact-labelled population, show one recurring compact structure that answers a current decision better than existing descriptors.
-
-**Stop:** if interface width/state explodes, exact counterexamples require idiosyncratic history, or a relaxation merely duplicates current prunes, do not build DD/ZDD/CEGAR/backdoor infrastructure.
-
-### Residual opportunity beyond current prunes
-
-Among states already passing the hard-prune pipeline, can a cheap safe quantity separate exact-live from exact-dead earlier?
-
-Prespecified families worth considering only when a ranked question needs them:
-
-- upper residual capacity complementing lower bounds;
-- parity/congruence or small attainable-value summaries for exact resources;
-- component/cut/bridge/corridor capacity;
-- joint obligation/topology summaries;
-- finite-state/resource propagation for a genuinely compact mechanic subset.
-
-A proved one-sided condition may become a prune; a safe relaxation a bound; an unsound predictor only ranking/retention guidance; an expensive exact computation only an offline oracle. For exact targets, “less resource used” is not automatically dominant.
-
-**Pilot:** reproducible early live/dead separation beyond current prunes across unrelated parents with plausible check cost.
-
-**Stop:** if summaries mostly duplicate current checks or require near-exact residual solving, close the generic direction.
-
-### State-conditioned must-cross policy
-
-Unconditional must-cross attraction is closed. A future form must use legal live state to distinguish target/defer/reserve-second-approach decisions and recur across unrelated parents.
-
-**Pilot:** a compact state descriptor separates exact-live/dead or successful/failing choices better than current local heuristics on held-out parents.
-
-**Stop:** reject family identifiers, selected-case-only effects, or runtime dependence on known solutions.
-
-### Guidance distance distinct from pruning distance
-
-The global legacy-guidance swap was net negative; its dead-last retry bought a few additive rescues. Reopen only for a genuinely new guidance quantity supported by first-divergence evidence, not another blend/threshold of the old map.
-
-**Pilot:** recurring ranking error attributable specifically to distance guidance, corrected in paired/shadow traces without weakening pruning truth.
-
-**Stop:** no recurring mechanism, or only selected-population recovery.
-
-### Orientation / symmetry equivariance diagnosis
-
-Detailed family policy lives in [`variant-level-research.md`](variant-level-research.md). The question is not whether every transformed trace is identical, but whether the same **harmful** first non-equivariant decision recurs across unrelated symmetry-controlled parents.
-
-Possible sources include successor/tie order, retention/dedup, coordinate-derived identity, and PRNG-consumption order. Structural descriptors should declare expected invariance/equivariance.
-
-**Pilot:** one first-divergence mechanism recurs and materially changes solve/work.
-
-**Stop:** if cliffs are heterogeneous/directionally balanced and provide complementary coverage, treat them as finite-budget diversity rather than canonicalization debt.
+Residual opportunity beyond current prunes and state-conditioned MustCross diagnosis now have live gates in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). Residual interfaces/bounded future models remain conditional there on first finding a recurring compact interface; do not build framework machinery in advance.
 
 ## Deferred interoperability / infrastructure
 
@@ -118,7 +68,7 @@ Do not reopen unchanged without materially new evidence:
 - broad CDCL/LCG learning without a recurring compact sound reason family;
 - generic RCSP/label-setting or exact-resource dominance without a sound completion-subsumption proof;
 - broad symmetry canonicalization/rotate-mirror retries instead of causal first-divergence diagnosis;
-- survival/hazard/bandit/VOC scheduling before simple fixed-work tranche repricing shows residual headroom;
+- hazard/bandit/ML scheduler machinery before the queue's simpler dynamic tranche-value pilot shows held-out incremental value;
 - giant variant generation without an unanswered question and analysis plan;
 - full-corpus A/Bs for ideas already falsified causally;
 - retaining closed experiment code solely as archive;
