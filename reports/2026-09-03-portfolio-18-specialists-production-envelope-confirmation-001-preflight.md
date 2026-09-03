@@ -1,9 +1,9 @@
 # portfolio-18-specialists production-envelope confirmation 001: tranche cap map vs. the flat research cap
 
-> **Status:** active
-> **Last evidence:** 2026-09-03 — dispatched via GHA: dispatch A run [`33703097166`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703097166), dispatch B run [`33703099051`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703099051) (queued behind A — both dispatches share the workflow's own `static-portfolio-confirmation` concurrency group, so they run sequentially, not in parallel); results pending at prespecification time
-> **Decision:** none yet; this is the prespecification, written before either dispatch runs.
-> **Remaining gate:** both dispatches completing and being read back into this report's Result section.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-03 — dispatch A run [`33703097166`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703097166), dispatch B run [`33703099051`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703099051), both complete.
+> **Decision:** cap-map v1 (uniformly-scaled raw production means) does not replace the flat 2,000,000-per-technique cap — it solves 5 fewer levels (49 vs. 54/150) at roughly double the median cost among solves, on the identical population/envelope/menu. `portfolio-18-flat-2m` remains the validated `static-portfolio` treatment.
+> **Remaining gate:** none for this specific cap-map version. A v2 tail-percentile-derived cap map (see Interpretation) is a possible future direction, not a current gate.
 > **Evidence role:** confirmation — a single-variable A/B (cap treatment only; menu, order, population, and total envelope all held fixed against the already-validated flat-cap baseline).
 
 ## Question
@@ -52,4 +52,56 @@ Dispatch B: same workflow, `cohort_id=portfolio-18-specialists-production-envelo
 
 ## Result
 
-_Pending — filled in once both dispatches complete._
+### Dispatch A (flat-cap baseline) — run [`33703097166`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703097166), complete
+
+Control arm `full-menu`. 150 cells per arm.
+
+| arm | cells | solved | work (aggregate) |
+|---|---:|---:|---:|
+| `full-menu` | 150 | 55 | 6,507,179,632 |
+| `portfolio-18-flat-2m` | 150 | 54 | 3,490,712,525 |
+
+`workSpent` among solved cells only:
+
+| arm | solved | min | median | mean | max |
+|---|---:|---:|---:|---:|---:|
+| `full-menu` | 55 | 2,021 | 3,700,923 | 9,564,053 | 60,234,425 |
+| `portfolio-18-flat-2m` | 54 | 2,021 | 3,648,269.5 | 8,066,175 | 32,268,586 |
+
+`portfolio-18-flat-2m` vs. `full-menu`: gained (0): none. Lost (1): `R01080`. Work delta: −3,016,467,107 (−46.36%).
+
+This reproduces the established pattern from `static-portfolio-confirmation-001/002/003` on a population neither has seen before: `portfolio-18-flat-2m` trades one solved level for a ~46% aggregate work reduction, with no gains. Confirms the flat-cap result is not an artifact of a particular population.
+
+### Dispatch B (tranche cap) — run [`33703099051`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33703099051), complete
+
+Single arm `portfolio-18-tranche-v1` (trivial control-arm-is-itself, 0 gained/0 lost within-dispatch by construction — see Protocol). 150 cells, same population as dispatch A.
+
+| arm | cells | solved | work (aggregate) |
+|---|---:|---:|---:|
+| `portfolio-18-tranche-v1` | 150 | 49 | 7,221,532,626 |
+
+`workSpent` among solved cells only:
+
+| arm | solved | min | median | mean | max |
+|---|---:|---:|---:|---:|---:|
+| `portfolio-18-tranche-v1` | 49 | 2,021 | 7,944,033 | 10,157,764 | 41,409,691 |
+
+### Cross-dispatch comparison (same population, same 67,000,000 envelope, same 18-technique menu/order)
+
+| arm | solved / 150 | aggregate work | solved-cell median work | solved-cell mean work |
+|---|---:|---:|---:|---:|
+| `full-menu` (34 techniques, dispatch A) | 55 | 6,507,179,632 | 3,700,923 | 9,564,053 |
+| `portfolio-18-flat-2m` (flat 2M cap, dispatch A) | 54 | 3,490,712,525 | 3,648,269.5 | 8,066,175 |
+| `portfolio-18-tranche-v1` (tranche cap map v1, dispatch B) | **49** | 7,221,532,626 | **7,944,033** | 10,157,764 |
+
+The tranche cap map is worse than the flat cap on every axis measured: 5 fewer levels solved (49 vs. 54, and 6 fewer than `full-menu`'s 55), roughly double the median/typical cost among the levels it does solve (7.94M vs. 3.65M), and higher aggregate work despite solving fewer cells. This is not a close call — the evidence-derived tranche sizing underperforms the deliberately-generous flat cap it was meant to improve on.
+
+Per this report's own stop condition, this closes cap-map v1 as tested. Exact per-level gain/loss identities against `portfolio-18-flat-2m` are not extracted here (raw per-cell artifacts remain blob-blocked per this session's environment, and the aggregate result is unambiguous enough that the stop condition applies without that attribution work); a future attempt at evidence-derived per-technique caps should not reuse this scaling approach — see Interpretation below for the likely mechanism.
+
+### Interpretation
+
+The tranche cap map (`portfolio-18-specialists-tranche-cap-map-v1.json`) was built by uniformly scaling each technique's real production `meanAttemptWork` so the sum across all 18 techniques exactly fit the 67,000,000 envelope in committed menu order. That derivation optimizes for "the mean case fits," not for "solves that need more than the mean get enough room." Two of the largest tranche caps (`admissible-order|tieBreak=default|lds=off`: 11,837,526; `admissible-order|tieBreak=none|lds=off`: 12,009,959) sit early in menu order and consume a large fraction of the envelope on their own, leaving less room for later techniques than the flat 2,000,000-per-technique cap did uniformly — the flat cap's very uniformity, which looked naive going in, turns out to spread risk more evenly across the menu than a mean-derived tranche map does. A future iteration should size caps from the *tail* of each technique's cost distribution (e.g. a high percentile of `meanAttemptWork`, not the raw mean) if it wants to preserve headroom for above-average solves without reverting to a fully flat cap.
+
+### Decision
+
+Cap-map v1 does not replace the flat 2,000,000-per-technique cap. `portfolio-18-flat-2m` (the already-validated flat-cap treatment) remains the better-characterized `static-portfolio` treatment for `portfolio-18-specialists`. Workstream 2 item (b) is answered for this specific tranche-map design: a naive mean-scaled cap map is closed negative. It does not close the broader "can a non-flat cap map ever beat flat" question — see Interpretation's tail-percentile suggestion for what a v2 attempt would need to try differently, if this thread is resumed.
