@@ -32,9 +32,10 @@ assert.equal(fullMenu.work, 100 + 500 + 900);
 assert.equal(portfolio11.work, 100 + 300 + 900);
 
 // solvedWorkStats: computed only from solved (ok:true) cells' workSpent, not the aggregate `work`
-// column above (which includes censored/unsolved cells' spend too).
-assert.deepEqual(fullMenu.solvedWorkStats, { count: 2, min: 100, median: 300, mean: 300, max: 500 });
-assert.deepEqual(portfolio11.solvedWorkStats, { count: 1, min: 100, median: 100, mean: 100, max: 100 });
+// column above (which includes censored/unsolved cells' spend too). p75/p90 use the nearest-rank
+// convention (index floor((n-1)*q)), matching analyze-technique-niches.mjs's `quantile`.
+assert.deepEqual(fullMenu.solvedWorkStats, { count: 2, min: 100, median: 300, mean: 300, p75: 100, p90: 100, max: 500 });
+assert.deepEqual(portfolio11.solvedWorkStats, { count: 1, min: 100, median: 100, mean: 100, p75: 100, p90: 100, max: 100 });
 
 // An arm with zero solved cells gets null, not a zero/NaN placeholder.
 const zeroSolvedShard = { results: [cell('SP-c2-4-never-solves', 'L4', 'never-solves', false, 700)] };
@@ -51,7 +52,7 @@ const evenMedianShard = {
     ],
 };
 const evenMedianResult = combine([evenMedianShard], 'arm');
-assert.deepEqual(evenMedianResult.armSummaries[0].solvedWorkStats, { count: 4, min: 100, median: (300 + 500) / 2, mean: (100 + 300 + 500 + 900) / 4, max: 900 });
+assert.deepEqual(evenMedianResult.armSummaries[0].solvedWorkStats, { count: 4, min: 100, median: (300 + 500) / 2, mean: (100 + 300 + 500 + 900) / 4, p75: 500, p90: 500, max: 900 });
 
 assert.equal(result.comparisons.length, 1);
 const cmp = result.comparisons[0];

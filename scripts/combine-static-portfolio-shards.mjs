@@ -73,8 +73,8 @@ export function combine(shardOutputs, controlArm, plan = null) {
         const work = rows.reduce((sum, r) => sum + (r.workSpent ?? 0), 0);
         const statusCounts = {};
         for (const r of rows) statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1;
-        // solvedWorkStats (2026-09-03, additive): min/median/mean/max workSpent among only the
-        // SOLVED cells, not the arm's aggregate `work` above (which is dominated by censored/
+        // solvedWorkStats (2026-09-03, additive): min/median/mean/max/p75/p90 workSpent among only
+        // the SOLVED cells, not the arm's aggregate `work` above (which is dominated by censored/
         // unsolved cells at whatever cap the run used and cannot answer "what does this technique
         // actually cost when it succeeds"). Motivated directly by admissible-order-profile-cost-
         // probe-001 (2026-09-03): the raw per-cell shard artifacts needed to compute this after the
@@ -83,8 +83,14 @@ export function combine(shardOutputs, controlArm, plan = null) {
         // documents), but the combine job's own console log/summary-out file IS always reachable —
         // so this statistic belongs in that summary, not only in the blocked raw JSON, or every
         // future cost-characterization probe has to re-derive it by hand from aggregate counts.
+        // p75/p90 (2026-09-03, additive) were added for tail-percentile cap sizing: the closed
+        // portfolio-18-specialists-tranche-cap-map-derivation report found mean-scaled caps starve
+        // above-average solves; a future cap map needs a same-shape tail statistic already computed
+        // by this combiner rather than a separate hand-derivation from the JSON. Uses the same
+        // nearest-rank quantile convention as scripts/analyze-technique-niches.mjs's `quantile`.
         // `null` when zero cells solved (nothing to summarize, not a zero/NaN placeholder).
         const solvedWork = rows.filter((r) => r.ok).map((r) => r.workSpent ?? 0).sort((x, y) => x - y);
+        const quantile = (xs, q) => xs[Math.floor((xs.length - 1) * q)];
         const solvedWorkStats = solvedWork.length === 0 ? null : {
             count: solvedWork.length,
             min: solvedWork[0],
@@ -92,6 +98,8 @@ export function combine(shardOutputs, controlArm, plan = null) {
                 ? solvedWork[(solvedWork.length - 1) / 2]
                 : (solvedWork[solvedWork.length / 2 - 1] + solvedWork[solvedWork.length / 2]) / 2,
             mean: solvedWork.reduce((sum, w) => sum + w, 0) / solvedWork.length,
+            p75: quantile(solvedWork, .75),
+            p90: quantile(solvedWork, .9),
             max: solvedWork[solvedWork.length - 1],
         };
         return { arm, cells: rows.length, solved: solvedLevels.length, solvedLevels, work, statusCounts, solvedWorkStats };
@@ -132,13 +140,13 @@ function toMarkdown(result) {
     if (result.armSummaries.some((a) => a.solvedWorkStats)) {
         lines.push('workSpent among solved cells only (not the aggregate `work` column above, which is dominated by censored/unsolved cells):');
         lines.push('');
-        lines.push('| arm | solved | min | median | mean | max |');
-        lines.push('|---|---:|---:|---:|---:|---:|');
+        lines.push('| arm | solved | min | median | mean | p75 | p90 | max |');
+        lines.push('|---|---:|---:|---:|---:|---:|---:|---:|');
         for (const a of result.armSummaries) {
             const s = a.solvedWorkStats;
             lines.push(s
-                ? `| \`${a.arm}\` | ${s.count} | ${s.min.toLocaleString('en-US')} | ${s.median.toLocaleString('en-US')} | ${Math.round(s.mean).toLocaleString('en-US')} | ${s.max.toLocaleString('en-US')} |`
-                : `| \`${a.arm}\` | 0 | n/a | n/a | n/a | n/a |`);
+                ? `| \`${a.arm}\` | ${s.count} | ${s.min.toLocaleString('en-US')} | ${s.median.toLocaleString('en-US')} | ${Math.round(s.mean).toLocaleString('en-US')} | ${s.p75.toLocaleString('en-US')} | ${s.p90.toLocaleString('en-US')} | ${s.max.toLocaleString('en-US')} |`
+                : `| \`${a.arm}\` | 0 | n/a | n/a | n/a | n/a | n/a | n/a |`);
         }
         lines.push('');
     }
