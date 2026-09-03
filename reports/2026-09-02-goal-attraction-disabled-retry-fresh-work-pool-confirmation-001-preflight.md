@@ -1,10 +1,10 @@
 # STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL: independent confirmation preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-02 — protocol fixed, fresh disjoint population drawn, dispatch pending
-> **Decision:** not yet made; this report fixes the population, envelope, and acceptance rule before either arm runs
-> **Remaining gate:** dispatch both arms via `solver-level-blind-targeted-sweep.yml` and record the result below
-> **Evidence role:** confirmation (population independently drawn, excluding every id this session has previously mined for this mechanism or any nearby one)
+> **Status:** inconclusive
+> **Last evidence:** 2026-09-02 — control run [`33692825450`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33692825450) and treatment run [`33692832891`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33692832891): **identical 84/150 solved sets in both arms** — zero gains, zero losses, every solved id the same. Work moved +0.76% (treatment slightly higher) and nodes −0.17% (treatment slightly lower); both differences are noise-level, not a directional signal.
+> **Decision:** per the frozen acceptance rule below (zero losses + zero gain), do **not** promote. `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` stays ACTIVE/opt-in. This does not contradict or reopen the development A/B's clean positive (`R00355`) — it means this independently-drawn population simply never gave the mechanism a level where it was the deciding factor, a legitimate and pre-anticipated outcome (see this report's own "Population" section below), not evidence the mechanism doesn't work.
+> **Remaining gate:** a second fresh cohort (or a reach-characterized one, mirroring the development population's own selection logic but on still-unmined ids) before promotion is revisited. Not scheduled as of this writing — no standing rule requires immediate pursuit of a third population, and the mechanism's zero live-play risk when off means there is no urgency.
+> **Evidence role:** confirmation (population independently drawn, excluding every id this session has previously mined for this mechanism or any nearby one) — concluded null
 > **Selection:** 150-level Corpus-2 sample, drawn by `select-random-sample.mjs` with a fresh seed, excluding the union of every id this session already touched for this line of work (EW1's 60-level sample, `static-portfolio-confirmation-001/002/003`'s 450 combined ids, and the development A/B's own positions-1-150 range — 617 ids total, 0 overlap with the new draw). This is a genuine independent test, not development evidence with a new label.
 
 ## Why now
@@ -63,4 +63,25 @@ Dispatched: control run [`33692825450`](https://github.com/gamesbyian/Pathfinder
 
 ## Result
 
-[Recorded once both runs complete.]
+Both arms ran to completion, all 38/38 shards succeeding in each, recovered from the "Combine shard results" job's own console log (raw artifact blob-storage download remains blocked by this session's egress policy):
+
+| arm | solved | work | nodes |
+|---|---:|---:|---:|
+| control (node reserve only) | 84/150 | 17,663,608,300 | 14,522,972,548 |
+| treatment (node reserve + fresh work pool) | 84/150 | 17,797,383,944 | 14,498,883,356 |
+| delta | **0** | +0.76% | −0.17% |
+
+**Gained:** none. **Lost:** none. The two 84-id solved lists are identical — verified programmatically by set difference on the full solved-level lists from each arm's job log (both directions empty, both sets exactly 84 members with no internal duplicates). Work moved slightly higher in treatment, nodes slightly lower; both are noise-level (well under 1%) and don't form a directional pattern the way the development A/B's own small movement did.
+
+### Interpretation
+
+This is a **clean null**, not a contradiction of the development A/B. The two results are answering different questions on different populations:
+
+- The development A/B's population (Corpus-2 positions 1-150) was deliberately chosen because this session's own `additive-tier-participation-audit.mjs` had already characterized that exact range as reaching most late-ladder additive tiers — i.e., a population selected for likely mechanism engagement.
+- This confirmation's population was an ordinary independent draw, with no such selection. It is entirely possible — and, per this report's own pre-declared "Population" section, explicitly anticipated — that a plain random 150-level sample simply doesn't reach `goal-attraction-disabled-retry`'s own gate often enough, or reach it in a state where the fresh work pool specifically (as opposed to the already-closed node reserve, which both arms share) is the deciding factor for any level in this particular draw.
+
+Per the frozen acceptance rule, a null here does **not** retroactively invalidate the development A/B's own mechanism-level attribution (the local `R00355` reproduction that showed the tier going from zero dispatches under the shared pool to a winning dispatch under the fresh pool) — that was a direct, code-level demonstration of the mechanism working when engaged, not a population-scale coverage claim. What this null establishes is only that the mechanism's *population-level* value is not broad enough to show up on every 150-level draw, which is exactly why the acceptance rule required confirmation before promotion rather than promoting off the development result alone.
+
+### Disposition
+
+**Do not promote.** `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` remains ACTIVE/opt-in, default OFF, zero live-play risk. Record both results (development: +1/-0 mechanism-confirmed positive; confirmation: clean null) in the ledger. A third population is the natural next step if this line is picked up again, but is not itself urgently required — the flag's real interactive callers already zero `diversityBudgetFraction`, so leaving it opt-in costs nothing today.
