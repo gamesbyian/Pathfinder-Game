@@ -268,6 +268,62 @@ test('a genuine wall-clock timeout well short of even a small perTechniqueWorkCa
     assert.equal(result.status, 'deadline-truncated');
 });
 
+test('cell.perTechniqueWorkCapByKey gives one technique its own cap while a sibling falls back to the flat perTechniqueWorkCap', async () => {
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._workMeter.units += 20;
+        prep._metrics.nodesExpanded += 1;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const result = await runCell({
+        ...baseCell, techniqueKeys: ['dfs|score=nearClosureRescue|bias=none', 'dfs|score=default|bias=none'],
+        workBudget: 100_000_000, perTechniqueWorkCap: 10_000_000,
+        perTechniqueWorkCapByKey: { 'dfs|score=nearClosureRescue|bias=none': 3_000_000 },
+    });
+
+    assert.equal(calls.length, 4);
+    // Config A (has a per-key entry) is capped at its own 3,000,000, not the flat 10,000,000.
+    assert.equal(calls[0].workCapBefore, 3_000_000);
+    // Config B (no per-key entry) falls back to the flat perTechniqueWorkCap, unaffected by
+    // config A's narrower per-key cap.
+    assert.equal(calls[1].workCapBefore, 10_000_020);
+    assert.equal(calls[0].strictWorkCapBefore, calls[0].workCapBefore);
+    assert.deepEqual(result.perTechniqueWorkCapByKey, { 'dfs|score=nearClosureRescue|bias=none': 3_000_000 });
+    assert.equal(result.perTechniqueWorkCap, 10_000_000);
+});
+
+test('cell.perTechniqueWorkCapByKey with no matching keys reproduces plain perTechniqueWorkCap behavior exactly', async () => {
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._workMeter.units += 20;
+        prep._metrics.nodesExpanded += 1;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    await runCell({
+        ...baseCell, techniqueKeys: ['dfs|score=nearClosureRescue|bias=none', 'dfs|score=default|bias=none'],
+        workBudget: 100_000_000, perTechniqueWorkCap: 10_000_000,
+        perTechniqueWorkCapByKey: { 'admissible-order|tieBreak=mustCrossFirst|lds=off': 1 },
+    });
+
+    // Byte-identical to the sibling "cell.perTechniqueWorkCap narrows each technique's own share"
+    // test above — a map with no keys present in this cell must not perturb anything.
+    assert.equal(calls[0].workCapBefore, 10_000_000);
+    assert.equal(calls[1].workCapBefore, 10_000_020);
+});
+
+test('node-budget cell ignores perTechniqueWorkCapByKey entirely (work-only field, same as perTechniqueWorkCap)', async () => {
+    const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
+        prep._metrics.nodesExpanded += 10;
+        return { path: null, outcome: 'exhausted' };
+    });
+    const { runCell } = await createCellRunner({ runAttemptForTesting });
+    const result = await runCell({ ...baseCell, nodeBudget: 5, perTechniqueWorkCapByKey: { 'dfs|score=nearClosureRescue|bias=none': 1 } });
+
+    assert.equal(result.status, 'node-budget-reached');
+    assert.equal(Object.hasOwn(result, 'perTechniqueWorkCapByKey'), false);
+    assert.ok(calls.every(c => c.workCapBefore === undefined));
+});
+
 test('node-budget cell ignores perTechniqueWorkCap entirely (work-only field)', async () => {
     const { calls, runAttemptForTesting } = stubRunner((call, prep) => {
         prep._metrics.nodesExpanded += 10;

@@ -31,6 +31,21 @@
  * exact pre-existing gate-ceiling-only math. See reports/2026-09-02-static-portfolio-construction-
  * pilot.md for the motivating finding and scripts/build-static-portfolio-plan.mjs for a consumer.
  *
+ * cell.perTechniqueWorkCapByKey (2026-09-03, opt-in, additive, work-mode only): a
+ * `{ [techniqueKey]: cap }` map giving individual techniques their OWN cap instead of one flat
+ * `perTechniqueWorkCap` shared by every technique in the cell. A technique whose canonical key is
+ * present here uses that entry's cap; every other technique falls back to `perTechniqueWorkCap`
+ * (which may itself be absent, reproducing the pre-existing gate-ceiling-only math for that
+ * technique). This exists because a flat per-technique cap cannot express a tranche-weighted
+ * allocation (e.g. a cheap self-exhausting beam needs far less protected room than a deep DFS/IDA/
+ * repair continuation — see docs/solver-scheduling-policy.md's tranche guidance and
+ * docs/solver-budget-determinism.md's "Cap and tranche discipline") without either starving the
+ * deep techniques or wastefully over-provisioning the cheap ones. Purely additive: a cell that never
+ * sets this field is completely unaffected (falls through to `perTechniqueWorkCap`/uncapped exactly
+ * as before this field existed), and the per-key cap composes with the existing gate-ceiling/
+ * work-budget math the same way `perTechniqueWorkCap` already does — it is still only ever the
+ * narrower of the resolved per-technique cap and the gate's own remaining share that binds.
+ *
  * Usage:
  *   import { createCellRunner } from './technique-census-cell.mjs';
  *   const { runCell } = await createCellRunner();
@@ -133,8 +148,15 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
                 // this field is completely unaffected; see this file's own equal-work-cell precedent
                 // in the header comment for why an unconditional new cap dimension needs the same
                 // explicit-opt-in treatment.
-                const attemptRemaining = (useWork && Number.isFinite(cell.perTechniqueWorkCap))
-                    ? Math.min(remaining, cell.perTechniqueWorkCap) : remaining;
+                //
+                // cell.perTechniqueWorkCapByKey (2026-09-03, opt-in, additive) — see this file's own
+                // header comment: a per-key override takes precedence over the flat perTechniqueWorkCap
+                // for that one technique; every technique absent from the map falls back to the flat
+                // cap (or uncapped, if that is also absent) exactly as before this field existed.
+                const effectivePerTechniqueWorkCap = (cell.perTechniqueWorkCapByKey && Object.hasOwn(cell.perTechniqueWorkCapByKey, key))
+                    ? cell.perTechniqueWorkCapByKey[key] : cell.perTechniqueWorkCap;
+                const attemptRemaining = (useWork && Number.isFinite(effectivePerTechniqueWorkCap))
+                    ? Math.min(remaining, effectivePerTechniqueWorkCap) : remaining;
                 // Work mode bounds the attempt via prep._workCap (read internally by runAttempt/
                 // search primitives) and passes nodeBudget=Infinity — nodesExpanded stays a
                 // diagnostic remainder, not the bounding currency. `attemptRemaining` is always finite
@@ -199,6 +221,7 @@ export async function createCellRunner({ runAttemptForTesting } = {}) {
             ablation: cell.ablation ?? null, nodeBudget: cell.nodeBudget,
             ...(useWork ? { workBudget: cell.workBudget, workSpent, deadlineTruncated } : {}),
             ...(useWork && Number.isFinite(cell.perTechniqueWorkCap) ? { perTechniqueWorkCap: cell.perTechniqueWorkCap } : {}),
+            ...(useWork && cell.perTechniqueWorkCapByKey ? { perTechniqueWorkCapByKey: cell.perTechniqueWorkCapByKey } : {}),
             ok, status, refereeValid, winningConfigKey: winningKey, winningGate,
             gateSummaries: level.gateKeys.length > 1 ? gateSummaries : undefined,
             nodesExpanded, totalMs,
