@@ -1,0 +1,20 @@
+{
+  "repair-standard": ["repair|score=repair|guidance=standard"],
+  "beam-perimeterCW-w2000-plain": ["beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain"],
+  "beam-intersectionHarvest-w5000-buckets": ["beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets"],
+  "beam-intersectionHarvest-w5000-plain": ["beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"],
+  "beam-objectiveFirst-w5000-plain": ["beam|score=objectiveFirst|bias=none|width=5000|retention=plain"],
+  "beam-perimeterCCW-w2000-plain": ["beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain"],
+  "admissible-order-default": ["admissible-order|tieBreak=default|lds=off"],
+  "beam-objectiveFirst-w5000-buckets": ["beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets"],
+  "repair-mustTurnBiased": ["repair|score=repair|guidance=must-turn-biased"],
+  "admissible-order-none": ["admissible-order|tieBreak=none|lds=off"],
+  "beam-intersectionHarvest-w2000-plain": ["beam|score=intersectionHarvest|bias=none|width=2000|retention=plain"],
+  "dfs-portalFirstTransfer": ["dfs|score=portalFirstTransfer|bias=none"],
+  "beam-objectiveFirst-w2000-plain": ["beam|score=objectiveFirst|bias=none|width=2000|retention=plain"],
+  "dfs-perimeterCCW": ["dfs|score=perimeterSweep|bias=perimeterCCW"],
+  "beam-mustCrossFirst-w2000-plain": ["beam|score=mustCrossFirst|bias=none|width=2000|retention=plain"],
+  "dfs-sideCommitment": ["dfs|score=perimeterSweep|bias=sideCommitment"],
+  "admissible-order-mustCrossFirst": ["admissible-order|tieBreak=mustCrossFirst|lds=off"],
+  "beam-harvestThenFinish-w2000-plain": ["beam|score=harvestThenFinish|bias=none|width=2000|retention=plain"]
+}
