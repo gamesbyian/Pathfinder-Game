@@ -1,11 +1,11 @@
 # Beam alternating-policy-schedule pilot (rung 3)
 
 > **Status:** concluded-negative
-> **Last evidence:** 2026-09-03 — the same two independent 30-level uniform corpus2 samples used for rung 2 (60 levels total), current HEAD
-> **Decision:** Repeatedly alternating `intersectionHarvest`/`objectiveFirst` every 20,000 work units on one continuously-shared beam frontier (rung 3 of `docs/solver-search-resumability.md`'s research ladder, in its simplest 2-policy form) solves exactly the same 4/60 levels as a single one-time switch (rung 2's own treatment) — 0 additional wins in either direction, despite the two arms' search trajectories genuinely diverging (45% of levels reach natural exhaustion at a different segment count between the two arms). A single handoff already captures all the value this profile pair/budget/width offers; finer-grained repeated alternation adds nothing measurable here.
-> **Remaining gate:** none for this exact form (2 policies, 20,000-work segments, this profile pair/width/budget). A materially different form — a different segment size, 3+ policies, or a non-uniform/adaptive schedule — would be a new premise, not a resumption of this one.
-> **Evidence role:** development — a direct generalization check of rung 2's own treatment, using the identical population/parameters for exact comparability, not a confirmation-grade sweep.
-> **Selection:** prespecified (same populations/seeds as rung 2, reused verbatim for direct comparability rather than redrawn; segment size/profiles/width/work fixed to rung 2's own calibrated values before dispatch).
+> **Last evidence:** 2026-09-03 — the same two independent 30-level uniform corpus2 samples used for rung 2 (60 levels), plus a segment-size sweep (5,000/10,000/40,000/60,000-work segments on both) and a third, fresh, disjoint 30-level confirmation sample at the sweep's most promising size — 90 additional level-runs total. See "Addendum" below. Current HEAD.
+> **Decision:** Repeatedly alternating `intersectionHarvest`/`objectiveFirst` on one continuously-shared beam frontier (rung 3 of `docs/solver-search-resumability.md`'s research ladder, in its simplest 2-policy cyclic form) solves no more levels than a single one-time switch (rung 2's own treatment) at segment sizes 20,000/40,000/60,000 (exact match, 0 net difference each time), despite the arms' search trajectories genuinely diverging (45% of levels reach natural exhaustion at a different segment count). A segment-size sweep found a small suggestive edge for alternating at finer sizes (5,000/10,000), but this did not replicate on an independent confirmation sample at the same size (0/0 net wins) — net across all three `segment=5,000` samples (90 levels) is 2 alternating-only wins to 0 switch-only wins, consistent with noise. A single handoff already captures all the value this profile pair/budget/width offers; repeated alternation adds nothing reliable at any tested segment size.
+> **Remaining gate:** none for cyclic alternation at this profile pair/width/budget, across a 12x segment-size range (5,000–60,000). A materially different schedule shape (staged/non-cyclic, 3+ policies, or adaptive) would be a new premise, not a resumption of this one.
+> **Evidence role:** development — a direct generalization check of rung 2's own treatment plus an exploratory segment-size sweep with its own confirmation attempt, not a confirmation-grade sweep of the whole design space.
+> **Selection:** the main result is prespecified (same populations/seeds as rung 2, reused verbatim for direct comparability; segment size/profiles/width/work fixed to rung 2's own calibrated values before dispatch). The segment-size sweep in the Addendum is explicitly disclosed as selected-after-inspection (4 sizes swept, the most promising highlighted) and was then tested with one prespecified, independently-drawn confirmation sample before being reported as non-replicating — see the Addendum for the full disclosure.
 
 ## Why this check
 
@@ -46,9 +46,27 @@ This does not mean rung 3 is closed as a whole. It means the *simplest* 2-policy
 ## Scope and what this does not show
 
 - Only the cyclic `[A, B, A, B, ...]` schedule shape was tested — not a staged (broad-then-specialist) schedule, not an adaptive/data-driven schedule, not 3+ policies.
-- Only one segment size (20,000, chosen for rung-2 comparability, not swept).
+- Segment size was swept across a 12x range (5,000–60,000, see Addendum) with no reliable effect found at any size, but not exhaustively (e.g., no size below 5,000 or above 60,000 was tried).
 - Same corpus2-only, `beamWidth=200`-only, single profile-pair scope as rung 2 — none of rung 2's own scope caveats are resolved by this pilot either.
+
+## Addendum (2026-09-03): segment-size sweep — a suggestive pattern that did not replicate
+
+The main result above used one segment size (20,000, rung 2's own `W1`). To check whether that specific size masked a real effect, the same two populations were re-run at four more segment sizes (5,000; 10,000; 40,000; 60,000), all other parameters unchanged:
+
+| segment | sample 1: switch / alternating (alt-only / switch-only) | sample 2: switch / alternating (alt-only / switch-only) |
+|---:|---|---|
+| 5,000 | 0 / 1 (+1 / 0) | 2 / 3 (+1 / 0) |
+| 10,000 | 1 / 1 (0 / 0) | 3 / 3 (+1 / +1) |
+| 20,000 (main result) | 2 / 2 (0 / 0) | 2 / 2 (0 / 0) |
+| 40,000 | 2 / 2 (0 / 0) | 2 / 2 (0 / 0) |
+| 60,000 | 0 / 0 (0 / 0) | 2 / 2 (0 / 0) |
+
+At the two finer segment sizes (5,000 and 10,000), alternating showed a small net edge over the single switch (combined across those 4 sub-runs: 3 alternating-only wins, 1 switch-only win) — a pattern absent at 20,000/40,000/60,000. This looked like it might be a real, segment-size-dependent effect worth reporting on its own.
+
+**It was selected after inspecting results (sweeping 4 sizes × 2 samples and then highlighting the sizes that showed something), so it was tested properly rather than reported as-is:** a fresh, independently-drawn, disjoint 30-level population (seed `beam-resumability-rung3-seg5000-confirm-2026-09-03`, excluding all 60 levels used elsewhere in rungs 2–3) was run at the single most promising size, `segment=5,000`, prespecified before looking at its outcome. Result: **0 alternating-only wins, 0 switch-only wins** — the apparent edge did not replicate.
+
+Combined across all three `segment=5,000` samples (90 levels): 2 net alternating-only wins, 0 switch-only wins — a difference this small, on a pattern that failed its own confirmation, is consistent with sampling noise rather than a real segment-size-dependent effect. This reinforces rather than overturns the main result: cyclic alternation does not show a reliable benefit over a single switch at any segment size tested.
 
 ## Follow-on
 
-Per the research ladder's "do not skip rungs" rule, this negative result for the simplest rung-3 form does not license skipping to rung 4 (bounded beam → DFS handoff) — that rung is a different mechanism (cross-method state handoff) with its own prerequisites, not gated on this result at all. If rung 3 itself is revisited, the two most informative next candidates are: (a) a staged schedule (broad-exploration policy first, specialist policy for the remainder, no further switching — closer to the doc's other suggested shape than cyclic alternation) or (b) a segment-size sweep to check whether 20,000 specifically was too coarse/fine, rather than assuming cyclic alternation is closed for every parameterization from this one segment size.
+Per the research ladder's "do not skip rungs" rule, this negative result for the simplest rung-3 form does not license skipping to rung 4 (bounded beam → DFS handoff) — that rung is a different mechanism (cross-method state handoff) with its own prerequisites, not gated on this result at all. If rung 3 itself is revisited, the most informative remaining candidate is a staged (non-cyclic) schedule — broad-exploration policy first, specialist policy for the remainder, no further switching, closer to the doc's other suggested shape than cyclic alternation — rather than another segment-size variant, which this addendum now covers reasonably well across a 12x range (5,000–60,000).
