@@ -1,9 +1,9 @@
 # Technique census refresh 001: preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-03 — 24-cell local calibration at current HEAD, informing shard sizing below; protocol written before dispatch per `docs/investigation-report-conventions.md`.
-> **Decision:** dispatch a full refresh of the T1/T3 technique census (`technique-census.yml`), full population parity preserved (every level in all 3 corpora, solved and unsolved — not sampled), because [`2026-09-03-frozen-technique-census-staleness-spotcheck.md`](2026-09-03-frozen-technique-census-staleness-spotcheck.md) already found real motivation (3/12 cheap spot-checked cells regressed from solved to unsolved against the 2026-08-20 census).
-> **Remaining gate:** run to completion; recombine/rejoin the technique-niches capability map from the fresh combined artifact once done.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-03 — run [`33717910218`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33717910218) completed, 120/120 shards, no gaps; rejoined into a fresh technique-niches snapshot and diffed against 2026-09-01 — see [`2026-09-03-technique-census-refresh-001-rejoin.md`](2026-09-03-technique-census-refresh-001-rejoin.md) for the full completion report and delta digest.
+> **Decision:** dispatch a full refresh of the T1/T3 technique census (`technique-census.yml`), full population parity preserved (every level in all 3 corpora, solved and unsolved — not sampled), because [`2026-09-03-frozen-technique-census-staleness-spotcheck.md`](2026-09-03-frozen-technique-census-staleness-spotcheck.md) already found real motivation (3/12 cheap spot-checked cells regressed from solved to unsolved against the 2026-08-20 census). Confirmed at full population scale: 25 levels newly regressed to zero frozen-T1-winner support, 81 gained new isolated-technique support, 229 total classification changes.
+> **Remaining gate:** none — completed. See the rejoin report for what changed and what depends on it going forward.
 > **Evidence role:** infrastructure/evidence-refresh — rebuilding the frozen capability-map input, not itself an experiment.
 
 ## Why a full refresh, not incremental

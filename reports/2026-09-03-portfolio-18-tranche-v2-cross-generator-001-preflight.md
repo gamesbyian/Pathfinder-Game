@@ -1,9 +1,9 @@
 # portfolio-18-tranche-v2 cross-generator transfer 001: preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-03 — protocol written before dispatch per `docs/investigation-report-conventions.md`; both dispatches queued, no result yet.
-> **Decision:** pending.
-> **Remaining gate:** run both dispatches; compare `portfolio-18-tranche-v2` against `full-menu` and `portfolio-18-flat-2m` on Corpus 1 — a genuinely different generator from every population this candidate has been tested on so far.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-03 — GHA runs [`33718270281`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718270281) (dispatch A) and [`33718272194`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718272194) (dispatch B), both complete.
+> **Decision:** on Corpus 1, `portfolio-18-tranche-v2` **ties** `full-menu` on coverage (93/102 each) while spending 7.12% less work, and still **beats** `portfolio-18-flat-2m` on coverage (93 vs. 91) at more work than the flat cap. No regression against either baseline transfers — but the *stronger* Corpus-2 result (tranche-v2 strictly beating full-menu's own coverage, +4 and +6 on the two Corpus-2 confirmations) does not replicate here; Corpus 1 shows a tie, not a win. Report this honestly as a weaker-magnitude, same-direction result on a genuinely different generator, not a repeat of the Corpus-2 finding's full strength.
+> **Remaining gate:** none for this transfer check itself. Per its own stop condition, no v3 cap map or repeat dispatch is warranted from a tie — this is not a regression to chase.
 > **Evidence role:** cross-generator transfer/challenge — `docs/solver-scheduling-policy.md`'s promotion-path step 8 ("sample-independent confirmation and cross-distribution transfer/challenge evidence appropriate to the policy's selection pressure and claim scope"), not yet exercised for this candidate.
 
 ## Why this dispatch
@@ -44,4 +44,37 @@ Dispatch B: same workflow, `cohort_id=portfolio-18-tranche-v2-cross-generator-00
 
 ## Result
 
-_Pending — filled in once both GHA runs complete._
+Both dispatches completed successfully — total wall time ~2 hours each (05:17 to ~07:20/07:38 UTC), most of it runner-queue wait behind the concurrently-running technique-census refresh's own 120 shards competing for the same account-level concurrent-job pool; actual shard/combine execution was a few minutes each, matching every prior confirmation's scale. Recovered from each combine job's own console log (raw artifact blob storage remains blocked by this environment's egress policy, same limitation as every prior confirmation in this line).
+
+### Dispatch A (flat-cap baseline) — run [`33718270281`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718270281)
+
+| arm | cells | solved | work (aggregate) |
+|---|---:|---:|---:|
+| `full-menu` | 102 | 93 | 1,028,900,578 |
+| `portfolio-18-flat-2m` | 102 | 91 | 760,747,395 |
+
+`workSpent` among solved cells: `full-menu` min 169, median 964,560, mean 4,964,984, p75 6,375,030, p90 18,068,048, max 37,488,536; `portfolio-18-flat-2m` min 169, median 883,663, mean 4,527,077, p75 4,255,122, p90 15,820,639, max 32,678,327.
+
+`portfolio-18-flat-2m` vs. `full-menu`: gained (0): none. Lost (2): `R00087`, `R01189`. Work delta: -268,153,183 (-26.06%) — reproduces the same flat-cap pattern (small coverage loss, large work saving) this session has now seen on Corpus 1, Corpus 2, and every population tested.
+
+### Dispatch B (tranche cap v2) — run [`33718272194`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718272194)
+
+| arm | cells | solved | work (aggregate) |
+|---|---:|---:|---:|
+| `portfolio-18-tranche-v2` | 102 | **93** | 955,670,541 |
+
+`workSpent` among solved cells: min 169, median 964,560, mean 4,338,973, p75 5,665,163, p90 8,821,038, max 38,700,112.
+
+### Cross-dispatch comparison (same population, same 67,000,000 envelope, same 18-technique menu/order except `full-menu`)
+
+| arm | solved / 102 | aggregate work |
+|---|---:|---:|
+| `full-menu` (34 techniques) | 93 | 1,028,900,578 |
+| `portfolio-18-flat-2m` (flat 2M cap) | 91 | 760,747,395 |
+| `portfolio-18-tranche-v2` (p75-scaled cap map) | 93 | 955,670,541 |
+
+`portfolio-18-tranche-v2` **ties** `full-menu` on coverage (93 = 93, not the +4/+6 win seen on both Corpus-2 confirmations) while spending 73,230,037 less work (-7.12%). It still **beats** `portfolio-18-flat-2m` on coverage (+2) at 194,923,146 more work (+25.63%) — consistent in direction with the flat-cap-vs-tranche-cap tradeoff this whole research line has found everywhere else. Without per-level attribution (the raw combined artifact is blob-blocked in this environment, same limitation as every prior confirmation) it isn't possible to confirm whether `full-menu` and `portfolio-18-tranche-v2` solved the *identical* 93 levels or two different 93-level sets — a real gap in this specific report, not something to guess past.
+
+### Decision
+
+The core, weaker claim — `portfolio-18-tranche-v2` is no worse than the uncapped 34-technique menu on coverage, still beats the flat cap, and does both at real work savings relative to `full-menu` — transfers cleanly to a genuinely different generator. The *stronger* claim from the two Corpus-2 confirmations — that the tranche cap map actively **beats** `full-menu`'s own coverage, not just matches it — does not clearly replicate here: a tie on a 102-level population (roughly two-thirds of a single Corpus-2 confirmation's own 150-level population) is real but low-powered evidence, and could easily reflect a couple of individual hard levels landing either way rather than a systematic Corpus-2-specific effect. Read together with the two same-generator confirmations, `portfolio-18-tranche-v2` remains the strongest characterized `static-portfolio` treatment in this research line — its no-regression/work-saving property is now transfer-tested, not just same-generator-tested — but its magnitude of advantage over `full-menu` specifically should be treated as Corpus-2-calibrated until a larger cross-generator population says otherwise. Per this report's own stop condition, this is not grounds for a v3 cap map or a repeat dispatch: a tie is not a regression to chase.
