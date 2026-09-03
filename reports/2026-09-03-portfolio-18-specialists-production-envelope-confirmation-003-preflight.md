@@ -1,10 +1,10 @@
 # portfolio-18-specialists production-envelope confirmation 003: independent replication of cap map v2
 
-> **Status:** dispatched, awaiting result
-> **Last evidence:** none yet — protocol written before dispatch per `docs/investigation-report-conventions.md`.
-> **Decision:** pending.
-> **Remaining gate:** run both dispatches; compare `portfolio-18-tranche-v2` against `full-menu` and `portfolio-18-flat-2m` on a population none of the three has ever been tested against.
-> **Evidence role:** confirmation — independent replication of confirmation-002's single-population result, on a fresh disjoint population.
+> **Status:** confirmed-positive — replicates cleanly
+> **Last evidence:** 2026-09-03 — GHA runs [`33708100385`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33708100385) (dispatch A) and [`33708101847`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33708101847) (dispatch B), both complete.
+> **Decision:** `portfolio-18-tranche-v2` solved **68/150** on this fresh population — beating `full-menu` (64/150) and `portfolio-18-flat-2m` (62/150) again, replicating confirmation-002's pattern (62 vs. 55 vs. 54 on the first population) exactly: v2 beats everything on both populations tested. This is now **two independent confirmations**, the same bar `portfolio-18-specialists` itself needed before being treated as validated. `portfolio-18-tranche-v2` is the strongest `static-portfolio` treatment this research line has produced.
+> **Remaining gate:** none for the cap-map candidacy itself. The next real gate is a production-wiring decision (whether to actually flip a production caller onto `schedulerMode: 'static-portfolio'` with this cap map) — a separate, larger decision this report does not make.
+> **Evidence role:** confirmation — independent replication of confirmation-002's single-population result, on a fresh disjoint population. Both confirmations now support the same conclusion.
 
 ## Question
 
@@ -45,4 +45,37 @@ Dispatch B: same workflow, `cohort_id=portfolio-18-specialists-production-envelo
 
 ## Result
 
-_Pending — filled in once both GHA runs complete._
+Both dispatches completed successfully (~7-8 minutes each). Recovered from each combine job's own console log (raw artifact blob storage remains blocked by this environment's egress policy):
+
+### Dispatch A (flat-cap baseline) — run [`33708100385`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33708100385)
+
+| arm | cells | solved | work (aggregate) |
+|---|---:|---:|---:|
+| `full-menu` | 150 | 64 | 5,952,326,539 |
+| `portfolio-18-flat-2m` | 150 | 62 | 3,196,257,105 |
+
+`portfolio-18-flat-2m` vs. `full-menu`: gained (0): none. Lost (2): `R02788`, `R02913`. Work delta: -2,756,069,434 (-46.30%) — reproduces the established flat-cap pattern (small coverage loss, large work saving) on yet another fresh population.
+
+### Dispatch B (tranche cap v2) — run [`33708101847`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33708101847)
+
+| arm | cells | solved | work (aggregate) |
+|---|---:|---:|---:|
+| `portfolio-18-tranche-v2` | 150 | **68** | 5,315,390,003 |
+
+`workSpent` among solved cells only: min 8,192, median 5,219,533.5, mean 7,580,489, p75 9,309,963, p90 16,343,472, max 52,066,407.
+
+### Cross-dispatch comparison (same population, same 67,000,000 envelope, same 18-technique menu/order except `full-menu`)
+
+| arm | solved / 150 | aggregate work |
+|---|---:|---:|
+| `full-menu` (34 techniques) | 64 | 5,952,326,539 |
+| `portfolio-18-flat-2m` (flat 2M cap) | 62 | 3,196,257,105 |
+| `portfolio-18-tranche-v2` (p75-scaled cap map) | **68** | 5,315,390,003 |
+
+`portfolio-18-tranche-v2` again beats every other treatment: +4 over `full-menu`, +6 over `portfolio-18-flat-2m`, at less aggregate work than `full-menu` (5.32B vs. 5.95B) — the same shape confirmation-002 found on the first population (+7 over `full-menu`, +8 over flat-2m, less work than `full-menu`). Two independent fresh populations, same direction, same magnitude of effect.
+
+### Decision
+
+Two independent confirmations now agree: `portfolio-18-tranche-v2` beats both the flat cap and the uncapped 34-technique menu on both populations tested. This meets this program's own confirmation-strength bar (matching `portfolio-18-specialists`' own two-confirmation promotion history). `portfolio-18-tranche-v2` is now the strongest characterized `static-portfolio` treatment in this research line — stronger than `portfolio-18-flat-2m`, which itself was already validated as a Pareto improvement over the full menu.
+
+**What this does not decide:** whether to actually route a production caller through `schedulerMode: 'static-portfolio'` with this cap map. That is a separate, larger decision (todays's `static-portfolio` mode is additive/opt-in, evaluated only through this research harness's own entrypoint — see `2026-09-03-fixed-cap-portfolio-scheduler-implementation-design.md` for what a real production flip would require) outside this report's scope.
