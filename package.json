@@ -180,6 +180,7 @@
     "test:analyze-technique-niches": "node scripts/analyze-technique-niches-node-test.mjs",
     "test:analyze-technique-relative-advantage": "node scripts/analyze-technique-relative-advantage-node-test.mjs",
     "test:technique-census-cell": "tsx scripts/technique-census-cell-node-test.mjs",
+    "solver:dynamic-tranche-value-pilot": "node scripts/run-bundled.mjs scripts/dynamic-tranche-value-pilot.mjs --",
     "test:operational-similarity-lib": "node scripts/operational-similarity-lib-node-test.mjs",
     "test:solver-research-resumption": "tsx scripts/solver-research-resumption-node-test.mjs",
     "facts:levels": "node scripts/current-level-facts.mjs",
