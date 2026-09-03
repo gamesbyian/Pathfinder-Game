@@ -48,6 +48,8 @@ This was a representation correctness bug, not evidence that any existing corpus
 
 Historical reverse-oracle/admissible-order evidence has cases where an isolated action does not reproduce a win that occurred after earlier ladder activity. Until a specific explicit handoff, mutable field, cache semantic, randomness path, or work-accounting effect explains such a difference, treat it as an **unresolved correctness/experimental-integrity issue**, not as a useful scheduler feature.
 
+**2026-09-03:** ran the required-handling reproduction below for real (15 cases, `main-search`-stage winners, predecessor depth up to 18 prior attempts on the same `prep`, current HEAD) — no discrepancy found; see [`../reports/2026-09-03-fresh-vs-preceded-main-search-reproduction-check.md`](../reports/2026-09-03-fresh-vs-preceded-main-search-reproduction-check.md) for method, scope limits, and results. Status remains "no known current instance," now backed by an actual empirical sweep rather than code-reading confidence alone.
+
 Required handling:
 
 1. reproduce the action from a freshly prepared state and from the predecessor-stage sequence with identical explicit action/config/seed/work limits;
