@@ -23,7 +23,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline semantics |
 | [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary |
 | [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational technique/configuration meaning |
-| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Profile-led execution-substrate gates |
+| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Current profile-led speed gates/dispositions |
 | [`solver-level-blindness.md`](solver-level-blindness.md) | Runtime information boundary |
 | [`solver-correctness-hardening.md`](solver-correctness-hardening.md) | Solver correctness/state/provenance invariants |
 | [`variant-level-research.md`](variant-level-research.md) | Variant/family evidence and dataset use |
@@ -76,6 +76,7 @@ These are reusable instruments, not priority authorities.
 | [`technique-census-analysis.md`](technique-census-analysis.md) | Census/portfolio diagnostics |
 | [`solver-offline-replay-harness.md`](solver-offline-replay-harness.md) | Read-only exact/reference-labelled probes |
 | [`solver-known-solution-prefix-survival.md`](solver-known-solution-prefix-survival.md) | Known-solution-prefix survival observation |
+| [`solver-search-resumability.md`](solver-search-resumability.md) | Opt-in beam continuation mechanism and current research dispositions |
 | [`solver-ablation.md`](solver-ablation.md) | Exploratory ablation lab |
 | [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Required-length sensitivity |
 
