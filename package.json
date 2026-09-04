@@ -110,7 +110,7 @@
     "test:hint-workbench": "tsx scripts/hint-workbench-node-test.mjs",
     "test:hint-diversification": "tsx scripts/hint-diversification-node-test.mjs",
     "test:hint-corpus-expand": "tsx scripts/hint-corpus-expand-node-test.mjs",
-    "test:hint-complete-sharded": "node scripts/hint-complete-enumeration-sharded-node-test.mjs",
+    "test:hint-complete-sharded": "tsx scripts/hint-complete-enumeration-sharded-node-test.mjs",
     "test:portfolio-solve-sweep-lib": "tsx scripts/portfolio-solve-sweep-lib-node-test.mjs",
     "test:portfolio-solve-sweep-worker": "node scripts/portfolio-solve-sweep-worker-node-test.mjs",
     "test:analyze-ew1-static-portfolio": "node scripts/analyze-ew1-static-portfolio-node-test.mjs",
