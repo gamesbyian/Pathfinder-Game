@@ -6,6 +6,10 @@ These preserve exact pre-consolidation text from historical, superseded, or note
 |---|---|
 | [`solver-optimization-workstreams-2026-09-04-pre-context-consolidation.md`](solver-optimization-workstreams-2026-09-04-pre-context-consolidation.md) | Full append-only workstream chronology before the live authority was reduced to current state/gates. |
 | [`solver-research-data-assets-2026-09-04-pre-consolidation.md`](solver-research-data-assets-2026-09-04-pre-consolidation.md) | Expanded asset-by-asset prose catalogue before structured detail was consolidated into the JSON registry/query layer. |
+| [`solver-budget-determinism-2026-09-04-pre-consolidation.md`](solver-budget-determinism-2026-09-04-pre-consolidation.md) | Per-tier budget-migration diary before the live file returned to a present-tense budget/determinism contract. |
+| [`tooling-catalog-2026-09-04-pre-consolidation.md`](tooling-catalog-2026-09-04-pre-consolidation.md) | Exhaustive question-to-command prose catalogue before named discovery was delegated to `tooling-census`. |
+| [`solver-search-resumability-2026-09-04-pre-consolidation.md`](solver-search-resumability-2026-09-04-pre-consolidation.md) | Rung-by-rung resumability research diary before the live specialist file was reduced to mechanism/dispositions. |
+| [`solver-architectural-speed-opportunities-2026-09-04-pre-consolidation.md`](solver-architectural-speed-opportunities-2026-09-04-pre-consolidation.md) | Dated speed-campaign narrative before the live specialist file was reduced to current gates/dispositions. |
 | [`future-work-2026-08-20.md`](future-work-2026-08-20.md) | Future-work chronology before separation into queue, ledger, method, and deferred ideas. |
 | [`solver-research-operating-model-2026-08-20.md`](solver-research-operating-model-2026-08-20.md) | Research notebook before conversion to a stable method contract. |
 | [`solver-opt-in-experiment-ledger-2026-08-20.md`](solver-opt-in-experiment-ledger-2026-08-20.md) | Experiment chronology before compaction into a flag ledger. |
