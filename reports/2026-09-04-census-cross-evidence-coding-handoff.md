@@ -1,6 +1,9 @@
 # Census cross-evidence coding handoff
 
-> **Status:** ready for local coding-agent execution
+> **Status:** active
+> **Last evidence:** 2026-09-04 — Gates 0A-0F executed by a local coding agent; see `reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md` for the current disposition.
+> **Decision:** ready for local coding-agent execution as specified below.
+> **Remaining gate:** whatever Gate 0's own conclusion-delta result leaves open (see the rejoin report); Gate 1 only if Gate 0 leaves a stable, interpretable question.
 > **Branch/PR:** `chatgpt/census-cross-evidence-research-plan-2026-09-04` / PR #1671
 > **Purpose:** finish the deterministic existing-data materialization that the GitHub-only pass cannot execute locally, then run the first bounded solution-profile join only if Gate 0 leaves stable technique-response questions.
 > **Solver behavior:** do not change solver policy, defaults, budgets, scoring, retention, pruning, or production scheduling in this handoff.

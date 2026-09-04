@@ -1,8 +1,9 @@
 # Portfolio-18 rare-capability temporal holdout on the refreshed census
 
-> **Status:** concluded-positive development evidence
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-04 — direct join of the fixed `portfolio-18-specialists` composition from `data/stress/static-portfolio-confirmation-003-arms.json` against the refreshed `reports/stress/technique-niches/2026-09-03/level-capability.json`
 > **Decision:** the old rare-capability conclusion survives the refreshed census. The fixed 18-technique portfolio retains **147/155 (94.8%)** of current singleton-exclusive wins carried by the 34-technique `full-menu`, versus **144/151 (95.4%)** on the earlier census. The eight current dropped-technique exclusives remain diffuse across seven techniques, with no dropped technique carrying more than two. This is a useful temporal holdout for the portfolio composition, not a production-wiring recommendation.
+> **Remaining gate:** none — this holdout is complete; do not re-run it merely because a future census refreshes again unless the portfolio composition itself changes.
 > **Evidence role:** observational-development / temporal holdout. The portfolio was selected before the refreshed census existed; no composition was retuned from the new outcomes.
 
 ## Why this is unusually useful

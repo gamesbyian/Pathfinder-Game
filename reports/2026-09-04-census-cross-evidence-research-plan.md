@@ -1,7 +1,9 @@
 # Census cross-evidence research plan
 
-> **Status:** active standing evidence program, not a new numbered workstream
-> **Last updated:** 2026-09-04
+> **Status:** active
+> **Last evidence:** 2026-09-04 — Gate 0 (all sub-gates) executed; see `reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md` for the current disposition
+> **Decision:** standing evidence program, not a new numbered workstream — see "Gate 0 success/stop rule" below for the current gate's own conclusion.
+> **Remaining gate:** Gate 1 (solution-space vs technique response) only if Gate 0 leaves a stable, interpretable question; Gates 2-4 are conditional on earlier gates as described below.
 > **Current expensive evidence:** technique census run `33717910218` and `reports/stress/technique-niches/2026-09-03/level-capability.json`
 > **Goal:** explain the solver's technique-response matrix using the other evidence already accumulated about level structure, solution-space structure, production search response, controlled variants, and exact/reference labels. Promote only compact generic explanations that survive appropriate holdout/parent controls.
 > **Priority authority:** `docs/solver-optimization-workstreams.md` remains the live queue. This plan supplies the standing technique-capability/niche evidence layer that queue already requires; it does not outrank an active workstream gate.
