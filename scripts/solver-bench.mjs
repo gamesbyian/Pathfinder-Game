@@ -23,11 +23,28 @@
  *     which levels solve. A non-empty "only-solved-by-default" set quantifies how far the current
  *     allocator is from that invariant.
  *
+ *  3. STATIC-PORTFOLIO CAPABILITY CHECK. `--scheduler=static-portfolio` re-runs the corpus (the real
+ *     published `data/levels.json`, not a research stress corpus) through `solveLevel({schedulerMode:
+ *     'static-portfolio'})` using the confirmed `portfolio-18-tranche-v2` configuration (ordered
+ *     18-technique menu, `data/stress/portfolio-18-specialists-tranche-cap-map-v2.json`'s per-technique
+ *     work caps, 67,000,000 shared work envelope) instead of the full production ladder — see
+ *     `docs/solver-optimization-workstreams.md` Workstream 2 for the confirmation evidence
+ *     (two independent Corpus-2 confirmations beating full-menu; a Corpus-1 cross-generator transfer
+ *     tying it) and `2026-09-03-fixed-cap-portfolio-scheduler-implementation-design.md` for why this is
+ *     scoped to offline/batch orchestration, never the interactive UI. This is a REPORT, not a gate:
+ *     unlike `--order`, a coverage difference here does not fail the build (tranche-v2 is a
+ *     deliberately different, already-characterized policy trade-off — a "regression" against the
+ *     full-ladder baseline is expected, not a bug). Opt-in only; omitting `--scheduler` reproduces the
+ *     exact prior default-production behavior with zero change. See `docs/solver-optimization-
+ *     workstreams.md`'s Workstream 2 handoff for the rollback note (delete the flag/branch; nothing
+ *     else depends on it).
+ *
  * Usage:
  *   node scripts/solver-bench.mjs --update-baseline      # write logs/solver-baseline.json (default order)
  *   node scripts/solver-bench.mjs --check                # compare default-order run to baseline (exit 1 on regression)
  *   node scripts/solver-bench.mjs --order=reverse        # order-independence probe vs baseline
  *   node scripts/solver-bench.mjs --order=random --seed=7
+ *   node scripts/solver-bench.mjs --scheduler=static-portfolio   # tranche-v2 coverage/work report vs baseline
  *   flags: --budget-ms=30000  --work-budget=<n>  --levels=all|pos:1,...|pos:1-10  --out=path.json
  *          --baseline=path.json (defaults to logs/solver-baseline.json; useful for isolated smoke fixtures)
  *
@@ -44,6 +61,7 @@ import { execSync } from 'node:child_process';
 import { defaultConfig } from '../modules/solver/ablation-config.js';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions } from './level-data-io.mjs';
+import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -51,21 +69,58 @@ const flags = new Set(args.filter(a => !a.includes('=')));
 
 const BASELINE_PATH = argMap.get('--baseline') || 'logs/solver-baseline.json';
 const budgetMs = Number(argMap.get('--budget-ms') || 30000);
+const scheduler = argMap.get('--scheduler') || 'production';
+if (scheduler !== 'production' && scheduler !== 'static-portfolio') {
+    console.error(`Unknown --scheduler=${scheduler} (use production|static-portfolio)`);
+    process.exit(2);
+}
 // Default derived from the historical 30s budget at the measured ~3.35M work/s, so the gate keeps
 // its long-standing cost; --budget-ms is then a deadline with generous headroom over it.
-const workBudget = Number(argMap.get('--work-budget') || 100_000_000);
+// static-portfolio's own default (67,000,000) reproduces the exact shared work envelope every
+// portfolio-18-tranche-v2 confirmation in docs/solver-optimization-workstreams.md's Workstream 2
+// used — --work-budget still overrides it, but changing it departs from the confirmed evidence.
+const workBudget = Number(argMap.get('--work-budget') || (scheduler === 'static-portfolio' ? 67_000_000 : 100_000_000));
 const deadlineMs = Math.max(budgetMs, Math.floor(budgetMs * 4));
 const order = argMap.get('--order') || 'default';
 // Zero is a valid deterministic seed; default only when the option is absent.
 const seed = Number(argMap.get('--seed') ?? 42);
 const updateBaseline = flags.has('--update-baseline');
 
+if (scheduler === 'static-portfolio') {
+    if (order !== 'default') { console.error('--scheduler=static-portfolio does not support --order (its technique order is the confirmed tranche-v2 menu, not the ATTEMPT_ORDER ablation knob).'); process.exit(2); }
+    if (updateBaseline) { console.error('--scheduler=static-portfolio cannot --update-baseline (the baseline is the full-production-ladder reference every scheduler is compared against).'); process.exit(2); }
+}
+
 const levelFilter = parseLevelPositions(argMap.get('--levels'));
 
 installBrowserStubs();
 
-const { createSolver } = await import('../modules/solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 const Solver = createSolver();
+
+// Static-portfolio technique menu/cap map: read from the same committed research artifacts every
+// portfolio-18-tranche-v2 confirmation/transfer-check dispatch used, rather than duplicating the
+// 18-technique list here — deleting or reverting those two files (or just omitting --scheduler)
+// fully disables this mode with no other code path affected.
+const STATIC_PORTFOLIO_ARMS_PATH = 'data/stress/portfolio-18-specialists-production-envelope-confirmation-003-arms-b.json';
+const STATIC_PORTFOLIO_CAP_MAP_PATH = 'data/stress/portfolio-18-specialists-tranche-cap-map-v2.json';
+const STATIC_PORTFOLIO_FLAT_CAP = 2_000_000;
+let staticPortfolioTechniqueConfigs = null;
+let staticPortfolioCapMap = null;
+if (scheduler === 'static-portfolio') {
+    const { STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES } = await import('../modules/solver/policy.js');
+    const { attemptConfigKey } = SOLVER_TESTING_API;
+    const parseAttemptConfigKey = makeAttemptConfigKeyParser({ STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES, attemptConfigKey });
+    const armsRoot = new URL('..', import.meta.url).pathname;
+    const arms = JSON.parse(readFileSync(path.join(armsRoot, STATIC_PORTFOLIO_ARMS_PATH), 'utf8'));
+    const techniqueKeys = arms['portfolio-18-tranche-v2'];
+    if (!Array.isArray(techniqueKeys) || !techniqueKeys.length) {
+        console.error(`${STATIC_PORTFOLIO_ARMS_PATH} has no "portfolio-18-tranche-v2" arm.`);
+        process.exit(2);
+    }
+    staticPortfolioCapMap = JSON.parse(readFileSync(path.join(armsRoot, STATIC_PORTFOLIO_CAP_MAP_PATH), 'utf8'));
+    staticPortfolioTechniqueConfigs = techniqueKeys.map(key => parseAttemptConfigKey(key));
+}
 
 const root = new URL('..', import.meta.url).pathname;
 const rawLevels = JSON.parse(readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
@@ -88,12 +143,13 @@ const targets = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
     : Array.from({ length: rawLevels.length }, (_, i) => i + 1);
 
-console.log(`solver-bench: order=${order}${order === 'random' ? ` seed=${seed}` : ''} workBudget=${workBudget.toLocaleString()} deadline=${deadlineMs}ms levels=${targets.length}`);
+console.log(`solver-bench: scheduler=${scheduler} order=${order}${order === 'random' ? ` seed=${seed}` : ''} workBudget=${workBudget.toLocaleString()} deadline=${deadlineMs}ms levels=${targets.length}`);
 
 const solved = [];
 const failed = [];
 const deadlineTruncatedLevels = [];
 let nodesExpanded = 0;
+let workSpent = 0;
 const runStart = Date.now();
 for (const [i, n] of targets.entries()) {
     const raw = rawLevels[n - 1];
@@ -101,7 +157,17 @@ for (const [i, n] of targets.entries()) {
     let ok = false;
     try {
         const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: n });
-        const res = await Solver.solveLevel(level, { timeBudgetMs: deadlineMs, workBudget, ablation });
+        const res = scheduler === 'static-portfolio'
+            ? await Solver.solveLevel(level, {
+                schedulerMode: 'static-portfolio',
+                staticPortfolio: {
+                    techniqueConfigs: staticPortfolioTechniqueConfigs,
+                    workBudget,
+                    perTechniqueWorkCap: STATIC_PORTFOLIO_FLAT_CAP,
+                    perTechniqueWorkCapByKey: staticPortfolioCapMap,
+                },
+            })
+            : await Solver.solveLevel(level, { timeBudgetMs: deadlineMs, workBudget, ablation });
         if (res?.deadlineTruncated) {
             // Indeterminate, not a negative — the deadline should never fire here (see the header).
             console.log(`  [!] L${n}: DEADLINE-TRUNCATED with work budget remaining; result is not reproducible`);
@@ -109,6 +175,7 @@ for (const [i, n] of targets.entries()) {
         }
         ok = !!res?.ok;
         nodesExpanded += res?.nodesExpanded || 0;
+        workSpent += res?.workSpent || 0;
     } catch (e) {
         console.log(`  [${i + 1}/${targets.length}] L${n}: ERROR ${e?.message}`);
     }
@@ -116,7 +183,7 @@ for (const [i, n] of targets.entries()) {
     console.log(`  [${i + 1}/${targets.length}] L${n} ${ok ? '✓' : '✗'} ${Date.now() - levelStart}ms`);
 }
 const totalMs = Date.now() - runStart;
-console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed.join(', ')}], ${(totalMs / 1000).toFixed(1)}s, ${nodesExpanded.toLocaleString()} nodes`);
+console.log(`Result: solved ${solved.length}/${targets.length}, failed [${failed.join(', ')}], ${(totalMs / 1000).toFixed(1)}s, ${nodesExpanded.toLocaleString()} nodes${scheduler === 'static-portfolio' ? `, ${workSpent.toLocaleString()} work` : ''}`);
 // Promoted to its own unmissable summary line (added 2026-08-15) rather than relying on the
 // per-level [!] lines above, which are easy to scroll past in a 100+-level run: this run's own
 // nodes/time totals — and any --check cost comparison built from them — are NOT wall-clock-free
@@ -129,7 +196,7 @@ if (deadlineTruncatedLevels.length) {
 const outFile = argMap.get('--out');
 if (outFile) {
     mkdirSync(path.dirname(outFile), { recursive: true });
-    writeFileSync(outFile, JSON.stringify({ order, seed, budgetMs, workBudget, commit, solved, failed, totalMs }, null, 2));
+    writeFileSync(outFile, JSON.stringify({ scheduler, order, seed, budgetMs, workBudget, commit, solved, failed, totalMs, nodesExpanded, ...(scheduler === 'static-portfolio' ? { workSpent } : {}) }, null, 2));
     console.log(`Wrote ${outFile}`);
 }
 
@@ -190,7 +257,20 @@ if (baseline.workBudget && baseline.workBudget !== workBudget) {
     console.log(`  [!] work budget differs from the baseline's (${workBudget.toLocaleString()} vs ${baseline.workBudget.toLocaleString()}) — solved-set differences are expected`);
 }
 if (improvements.length) console.log(`  + newly solved: [${improvements.join(', ')}]`);
-if (order === 'default') {
+if (scheduler === 'static-portfolio') {
+    // Report-only, per this mode's own header comment: portfolio-18-tranche-v2 is a confirmed but
+    // deliberately different policy (fewer techniques, per-technique work caps) from the full
+    // production ladder the baseline itself measures, so a coverage difference here is expected
+    // trade-off information, not a build-breaking regression. Rare-capability protection stays with
+    // the unmodified default `--check` gate (this mode never runs there); this report exists so a
+    // real batch/offline run can see exactly which real-corpus levels tranche-v2 would lose or gain
+    // before anyone decides to route real batch work through it.
+    if (regressions.length) console.log(`  tranche-v2 vs full-production baseline — lost: [${regressions.join(', ')}]`);
+    else console.log('  tranche-v2 vs full-production baseline — no coverage loss');
+    if (!levelFilter && typeof baseline.nodesExpanded === 'number') {
+        console.log(`  work spent: ${workSpent.toLocaleString()} (tranche-v2, work-priced) vs ${baseline.nodesExpanded.toLocaleString()} nodes (baseline, node-priced — currencies differ, not directly comparable; see docs/solver-budget-determinism.md)`);
+    }
+} else if (order === 'default') {
     if (regressions.length) { console.error(`  REGRESSION — baseline solved but this run did not: [${regressions.join(', ')}]`); process.exit(1); }
     console.log('  no regressions — solver-bench --check PASS');
     // Cost delta: --check only proves the solved/failed SET is unchanged — a change can pass that
