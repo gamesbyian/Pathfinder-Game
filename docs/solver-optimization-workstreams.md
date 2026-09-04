@@ -68,7 +68,7 @@ Rows are sorted by stable workstream ID, not execution priority.
 - Level-blindness is not generalization. Confirmation strength scales with selection/tuning pressure.
 - A clear negative closes the tested form unless materially new evidence changes its premise.
 - Hold out independent units, including whole variant parents/families where applicable.
-- After a meaningful capability change or census refresh, rebuild/rejoin the capability map before relying on old support classes.
+- After a meaningful capability change or census refresh, rebuild/rejoin the capability map before relying on old support classes. Weight that reliance by multiplicity: singleton-exclusive claims are provisional, not durable — measured at ~34% full-support loss and, even among those that stay solved, ~36% specific-technique-identity loss across a single two-day revision gap, both falling off sharply by doubleton and further by higher `solverCount` (`2026-09-04-capability-multiplicity-temporal-robustness-001.md`). Re-verify a singleton claim against the current census before a decision depends on it; a multi-technique-solved claim needs less re-verification urgency.
 - Scheduler/repricing work must audit rare/specialist retention, not only aggregate solves or work.
 - Prefer existing evidence and the smallest value-of-information test before broad compute.
 

@@ -44,7 +44,7 @@ The refreshed-census program is active as a **standing evidence layer**, not a n
 Keep these broader questions deferred until those cheaper gates nominate a recurring mechanism:
 
 - four-space triangulation across input geometry, solution-space structure, technique-response vectors, and live search/failure trajectories;
-- capability multiplicity as a predictor of temporal, budget-edge, or variant-family robustness;
+- capability multiplicity as a predictor of budget-edge or variant-family robustness (the temporal-robustness clause is **answered**: old-census `solverCount` strongly and monotonically predicts whether a level stays oracle-solvable across a refresh — 34.3% singleton→zero-solvers vs. 0.3% at solverCount 11+ — see [`2026-09-04-capability-multiplicity-temporal-robustness-001.md`](../reports/2026-09-04-capability-multiplicity-temporal-robustness-001.md); do not re-run this exact join, extend to the untested budget-edge/variant-family clauses instead);
 - stability-aware portfolios balancing work, current coverage, temporal retention, parent robustness, and solution-basin diversity;
 - latent response dimensions/biclusters only if simpler pair/cohort analysis leaves repeatable unexplained structure;
 - forced-decision/backdoor-depth analysis using existing hint-workbench provenance;
