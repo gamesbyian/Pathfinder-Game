@@ -8,7 +8,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 |---|---|
 | Product/code change | [`docs/architecture.md`](docs/architecture.md), then changed files |
 | Cross-cutting schema/state/telemetry | [`docs/change-recipes.md`](docs/change-recipes.md), then owning topic doc |
-| Naming / future rename | [`docs/naming-and-vocabulary.md`](docs/naming-and-vocabulary.md) + [`docs/change-recipes.md`](docs/change-recipes.md); Phase 0–15 is history, not a live phase queue |
+| Naming / future rename | The repository-wide naming cleanup is complete through Phase 15. Current authority: [`docs/naming-and-vocabulary.md`](docs/naming-and-vocabulary.md) + [`docs/change-recipes.md`](docs/change-recipes.md). Historical/status entry point: `npm run naming:status`. Do not reopen the completed sequence or invent Phase 16. |
 | UI/input/accessibility/rendering | [`docs/architecture.md`](docs/architecture.md), [`docs/ui-accessibility.md`](docs/ui-accessibility.md), [`docs/testing.md`](docs/testing.md) |
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
 | Solver correctness/cache/prune | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md), [`docs/solver-architecture.md`](docs/solver-architecture.md) |
@@ -89,4 +89,4 @@ Use the cheapest check that answers the iteration question, then the relevant fi
 
 `solver:regression --check` protects outcomes, not performance. GitHub Actions is execution infrastructure, not research evidence unless the exact run/protocol is reported.
 
-Current-reference inventory: [`docs/README.md`](docs/README.md). Runtime-flow glossary: [`docs/command-glossary.md`](docs/command-glossary.md).
+Current-reference inventory: [`docs/README.md`](docs/README.md). Research-report navigation: [`reports/README.md`](reports/README.md). Runtime-flow glossary: [`docs/command-glossary.md`](docs/command-glossary.md).
