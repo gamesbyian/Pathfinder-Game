@@ -1,10 +1,6 @@
 # Pathfinder documentation index
 
-Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories current references; it is not a second agent guide.
-
-## Naming
-
-Current docs use lowercase kebab-case, stable undated names, and canonical repository terms. Put dated/narrative investigations in `reports/`, `archive/`, `history/`, or `refactor-notes/`. When renaming a live authority, update current links/workflows/metadata and run `npm run check:documentation-links`; do not rewrite frozen reports merely to modernize paths. Canonical naming rules live in [`naming-and-vocabulary.md`](naming-and-vocabulary.md). The repository-wide naming cleanup is complete through Phase 15. `npm run naming:status` reports that terminal/history state; [`naming-cleanup-plan.md`](naming-cleanup-plan.md), the ledger, hardening/history docs, and phase records remain implementation evidence rather than an active queue. New cross-boundary renames use [`change-recipes.md`](change-recipes.md) and current implementation without reopening the completed phase sequence.
+Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories ownership; it is not a second agent guide.
 
 ## Current references
 
@@ -12,70 +8,96 @@ Current docs use lowercase kebab-case, stable undated names, and canonical repos
 |---|---|
 | [`architecture.md`](architecture.md) | Application structure and code ownership |
 | [`architecture-unification-debt.md`](architecture-unification-debt.md) | Remaining authority/mutable-lifetime architecture debt |
-| [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes and experiment preflight recipes |
-| [`naming-and-vocabulary.md`](naming-and-vocabulary.md) | Permanent canonical naming and vocabulary rules |
-| [`naming-cleanup-plan.md`](naming-cleanup-plan.md) | Completed/frozen repository naming-cleanup plan, mappings, compatibility decisions, serial sequence, and phase gates |
-| [`naming-cleanup-history-and-lessons.md`](naming-cleanup-history-and-lessons.md) | PR-by-PR implementation retrospective and the failure patterns that justify the remaining safeguards |
-| [`naming-cleanup-process-hardening.md`](naming-cleanup-process-hardening.md) | Phase-1-7 failure analysis, pre-Phase-8 technical gate, batch execution controls, and stronger contract-migration/closeout model |
-| [`naming-cleanup-phase-record-template.md`](naming-cleanup-phase-record-template.md) | Durable per-batch impact-map, validation, parity, audit, and pre-merge evidence template |
-| [`naming-cleanup-phase-records/phase-08.md`](naming-cleanup-phase-records/phase-08.md) | Completed Phase-8 implementation evidence: serial batch authority and merged-tree completion gate |
-| [`naming-cleanup-phase-records/pre-phase-15-audit-repairs.md`](naming-cleanup-phase-records/pre-phase-15-audit-repairs.md) | Completed pre-Phase-15 audit-repair evidence for mixed-era research/current-authority defects |
-| [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) | Completed/frozen Phase-15 execution evidence: contract partition, serial batches, implementation, hostile merged-tree closeout, and finalization |
-| [`naming-cleanup-phase-records/phase-15-post-completion-audit-repair.md`](naming-cleanup-phase-records/phase-15-post-completion-audit-repair.md) | Post-seal hostile-audit repair evidence: terminal compatibility retirement, permanent hostile ratchet, Firestore boundary proof, and workflow/report proof hardening |
-| [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md) | Frozen Phase-15 preparation snapshot and pre-entry compatibility analysis |
-| [`naming-cleanup-ledger.json`](naming-cleanup-ledger.json) | Completed machine-readable naming-cleanup history: immutable row IDs, compatibility ownership/retirement, batch merges, terminal state, and evidence pointers |
+| [`change-recipes.md`](change-recipes.md) | Cross-boundary schema/state/telemetry changes |
+| [`naming-and-vocabulary.md`](naming-and-vocabulary.md) | Canonical naming and vocabulary |
 | [`testing.md`](testing.md) | Validation and finish-line gates |
-| [`tooling-catalog.md`](tooling-catalog.md) | CLI, probe, batch, and workflow discovery |
+| [`tooling-catalog.md`](tooling-catalog.md) | Broad tool/workflow discovery; query named tools first |
+| [`agent-context-routes.json`](agent-context-routes.json) | Required/optional agent-context routes and byte budgets |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
-| [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver workstreams and current execution priority** |
-| [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) | Active post-cleanup solver-research bridge for translating frozen naming-era evidence and running the resumption checkpoint |
-| [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research/evidence method, stop rules, promotion and selection discipline |
-| [`solver-research-data-assets.md`](solver-research-data-assets.md) | Solver-research evidence inventory, join keys, inter-relevance, research affordances, and leakage/freshness boundaries; machine registry: [`solver-research-data-assets.json`](solver-research-data-assets.json) |
-| [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer roles, proportional holdout gates, confirmation blocks, cross-generator challenge |
-| [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection, fixed-work allocation, portfolio/configuration research |
-| [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary and proof-vs-predictor roles |
-| [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational meaning/similarity of techniques and configurations |
-| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Profile-led runtime work and execution-substrate gates |
-| [`solver-level-blindness.md`](solver-level-blindness.md) | Runtime information boundary vs statistical generalization |
-| [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline reproducibility and shared envelopes |
+| [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, workstream state, and next gates** |
+| [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
+| [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
+| [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
+| [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer and holdout discipline |
+| [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection and fixed-work allocation research |
+| [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline semantics |
+| [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary |
+| [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational technique/configuration meaning |
+| [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Current profile-led speed gates/dispositions |
+| [`solver-level-blindness.md`](solver-level-blindness.md) | Runtime information boundary |
 | [`solver-correctness-hardening.md`](solver-correctness-hardening.md) | Solver correctness/state/provenance invariants |
-| [`variant-level-research.md`](variant-level-research.md) | Variant/family evidence, variant-family dataset use, parent holdouts, generation gates |
+| [`variant-level-research.md`](variant-level-research.md) | Variant/family evidence and dataset use |
 | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Default-off mechanism dispositions |
-| [`solver-future-work.md`](solver-future-work.md) | Deferred/reopen ideas and gates |
-| [`investigation-report-conventions.md`](investigation-report-conventions.md) | Report status, evidence role, selection, precommitment |
+| [`solver-future-work.md`](solver-future-work.md) | Deferred/reopen ideas |
+| [`investigation-report-conventions.md`](investigation-report-conventions.md) | Investigation/report contract |
 | [`solver-mutable-storage-inventory.md`](solver-mutable-storage-inventory.md) | Scratch-storage contracts |
 | [`solver-aware-game-architecture.md`](solver-aware-game-architecture.md) | Solver/game semantic boundary |
-| [`solver-solution-profile.md`](solver-solution-profile.md) | Offline known-solution fingerprints; not production routing features |
-| [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Dynamic mechanic state, bounds, external-model support |
+| [`solver-solution-profile.md`](solver-solution-profile.md) | Offline known-solution profiles |
+| [`mechanic-state-contracts.md`](mechanic-state-contracts.md) | Dynamic mechanic state and external-model support |
 | [`typing.md`](typing.md) | TypeScript source/import conventions |
 | [`command-glossary.md`](command-glossary.md) | Runtime flow names and implementation locations |
-| [`ui-accessibility.md`](ui-accessibility.md) | Dialog/focus/keyboard/accessibility conventions |
-| [`security.md`](security.md) | Firestore authorization, config/secrets, debug exposure |
-| [`content-security-policy.md`](content-security-policy.md) | Browser CSP and external-origin/dependency policy |
+| [`ui-accessibility.md`](ui-accessibility.md) | UI accessibility conventions |
+| [`security.md`](security.md) | Firestore authorization/config/secrets/debug exposure |
+| [`content-security-policy.md`](content-security-policy.md) | Browser CSP policy |
 | [`hint-curation.md`](hint-curation.md) | Player hint selection/diversity |
 | [`hint-variety-search.md`](hint-variety-search.md) | Varied-hint search behavior |
 | [`hint-workbench.md`](hint-workbench.md) | Hint research CLI |
 
+## Cheap discovery first
+
+Before broad catalogs, reports, corpora, or histories:
+
+- solver priority/state: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md);
+- prior evidence: `node scripts/research-status-index.mjs --compact --query=<term>`;
+- existing tooling: `node scripts/tooling-census.mjs --compact --query=<term>`;
+- solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`;
+- corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`;
+- context size: `node scripts/agent-context-budget.mjs [--route=<id>]`.
+
+Open the owning reference only when the compact result is insufficient or its contract/boundary detail matters.
+
 ## Solver research route
 
-Read, in order: current [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) → [`solver-research-operating-model.md`](solver-research-operating-model.md) → [`solver-research-data-assets.md`](solver-research-data-assets.md) to inventory existing evidence and useful joins → [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters → relevant specialist doc → [`tooling-catalog.md`](tooling-catalog.md) → dated evidence. Do not promote a specialist report's local next step above the current execution priority. After Phase 15, use [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) before executing or aggregating recipes from frozen pre-cleanup evidence.
+Default orientation:
 
-For prior evidence, start at [`../reports/README.md`](../reports/README.md) or run `node scripts/research-status-index.mjs --compact --query=<term>`. For stress data use [`../data/stress/README.md`](../data/stress/README.md). Load [`../DEVELOPER_REFERENCE.md`](../DEVELOPER_REFERENCE.md) only for rare rules/gotchas/facts/provenance.
+1. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md)
+2. [`solver-research-operating-model.md`](solver-research-operating-model.md)
+3. the specialist doc for the current gate
+4. compact evidence/tool queries before broad artifacts
+
+Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence.
 
 ### Research instruments
 
-These docs describe reusable instruments, not current priority or promotion authority.
+These are reusable instruments, not priority authorities.
 
 | Doc | Instrument |
 |---|---|
-| [`technique-census-analysis.md`](technique-census-analysis.md) | Rebuildable census/portfolio diagnostics |
+| [`technique-census-analysis.md`](technique-census-analysis.md) | Census/portfolio diagnostics |
 | [`solver-offline-replay-harness.md`](solver-offline-replay-harness.md) | Read-only exact/reference-labelled probes |
-| [`solver-known-solution-prefix-survival.md`](solver-known-solution-prefix-survival.md) | Beam known-solution-prefix survival observation |
+| [`solver-known-solution-prefix-survival.md`](solver-known-solution-prefix-survival.md) | Known-solution-prefix survival observation |
+| [`solver-search-resumability.md`](solver-search-resumability.md) | Opt-in beam continuation mechanism and current research dispositions |
 | [`solver-ablation.md`](solver-ablation.md) | Exploratory ablation lab |
-| [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Within-level required-length sensitivity |
+| [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Required-length sensitivity |
+
+## Compatibility and conditional references
+
+- [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) is a compatibility pointer to the workstream authority. Do not put mutable queue state there.
+- [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) translates frozen pre-cleanup evidence when historical names/contracts matter.
+
+## Completed naming-cleanup evidence
+
+Phase 0–15 is complete. Current naming authority is [`naming-and-vocabulary.md`](naming-and-vocabulary.md); future cross-boundary renames use [`change-recipes.md`](change-recipes.md). `npm run naming:status` provides targeted terminal/history status.
+
+| Frozen record | Role |
+|---|---|
+| [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) | Completed/frozen Phase-15 execution evidence |
+| [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md) | Frozen Phase-15 preparation snapshot |
+
+`naming-cleanup-plan.md`, `naming-cleanup-ledger.json`, `naming-cleanup-history-and-lessons.md`, `naming-cleanup-process-hardening.md`, `naming-cleanup-future-phase-preparation.md`, `naming-cleanup-phase-record-template.md`, and `naming-cleanup-phase-records/` are implementation evidence, not ordinary current-task reading. Frozen reports keep historical names/paths where provenance requires it.
 
 ## History
 
-Superseded plans, concluded experiments, and old queue/ledger states live in [`archive/snapshots/`](archive/snapshots/README.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
+Superseded plans, concluded experiments, and old authority states live in [`archive/snapshots/`](archive/snapshots/README.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
 
-`../CLAUDE.md` and `.github/copilot-instructions.md` are adapters to `../AGENTS.md`, not separate knowledge bases.
+`../CLAUDE.md` and `.github/copilot-instructions.md` are adapters to `../AGENTS.md`, not knowledge bases.

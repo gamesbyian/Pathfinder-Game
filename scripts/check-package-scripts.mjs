@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Verifies that package.json scripts and tooling lifecycle overrides do not reference missing
- * local entrypoints.
+ * Verifies package-script/tooling lifecycle references and the mandatory agent-context budget.
  *
- * This intentionally checks the drift pattern that has hurt this repo: scripts such
- * as `node scripts/foo.mjs` or `node LegacySolver/foo.mjs` surviving after the
- * target file was removed. It is conservative about shell parsing, but handles the
- * simple command shapes used in this package.
+ * This intentionally checks drift patterns that have hurt this repo: scripts such
+ * as `node scripts/foo.mjs` surviving after the target file was removed, invalid
+ * lifecycle overrides, and mandatory agent orientation quietly growing past its
+ * recorded route ceiling.
  */
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -15,6 +15,7 @@ import process from 'node:process';
 const ROOT = process.cwd();
 const PACKAGE_PATH = path.join(ROOT, 'package.json');
 const TOOLING_LIFECYCLE_PATH = path.join(ROOT, 'scripts', 'tooling-lifecycle.json');
+const AGENT_CONTEXT_CHECK_PATH = path.join(ROOT, 'scripts', 'agent-context-budget.mjs');
 const VALID_TOOLING_LIFECYCLES = new Set(['completed-migration', 'specialist-forensic', 'cold-research']);
 const NODE_FLAGS_WITH_VALUES = new Set([
   '--conditions',
@@ -120,4 +121,19 @@ if (fs.existsSync(TOOLING_LIFECYCLE_PATH)) {
   }
 }
 
-console.log('Package script entrypoints and tooling lifecycle references exist.');
+if (!fs.existsSync(AGENT_CONTEXT_CHECK_PATH)) {
+  console.error('Missing scripts/agent-context-budget.mjs; mandatory context routes cannot be checked.');
+  process.exit(1);
+}
+const contextCheck = spawnSync(process.execPath, [AGENT_CONTEXT_CHECK_PATH, '--check'], {
+  cwd: ROOT,
+  encoding: 'utf8',
+});
+if (contextCheck.status !== 0) {
+  console.error('Agent-context budget check failed:');
+  if (contextCheck.stdout?.trim()) console.error(contextCheck.stdout.trim());
+  if (contextCheck.stderr?.trim()) console.error(contextCheck.stderr.trim());
+  process.exit(contextCheck.status || 1);
+}
+
+console.log('Package script entrypoints, tooling lifecycle references, and agent-context budgets are valid.');

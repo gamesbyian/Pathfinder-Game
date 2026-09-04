@@ -99,8 +99,8 @@ try {
     'terminal route invents Phase 16',
     'AGENTS.md',
     source => source.replace(
-      'do not reopen them as a new phase sequence or invent Phase 16',
-      'follow the next phase returned by that status and begin Phase 16',
+      /Do not reopen[^.\n]*invent Phase 16\./u,
+      'Follow the next phase returned by that status and begin Phase 16.',
     ),
     /must explicitly forbid reopening|must not advertise a next naming phase/iu,
   );
