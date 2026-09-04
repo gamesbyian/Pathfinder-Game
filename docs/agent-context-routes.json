@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
-  "purpose": "Budget the default documentation context an agent is instructed to load before task-specific implementation/evidence.",
-  "measurement": "UTF-8 bytes are the stable proxy. Optional drill-down files are reported separately and do not count against the required-route budget.",
+  "schemaVersion": 2,
+  "purpose": "Budget default agent orientation and keep compact live authorities from regrowing into narrative notebooks.",
+  "measurement": "UTF-8 bytes are the stable proxy. Optional drill-down does not count against route budgets. Authority budgets apply to individual live docs.",
   "routes": [
     {
       "id": "product-code-change",
@@ -37,7 +37,7 @@
     },
     {
       "id": "prior-experiment-archaeology",
-      "description": "Finding and interpreting old evidence. Compact indexes are the front door; the matched report is task-specific and excluded from the baseline budget.",
+      "description": "Finding/interpreting old evidence before a matched report is opened.",
       "required": ["AGENTS.md", "reports/README.md"],
       "optional": ["docs/investigation-report-conventions.md", "docs/solver-optimization-workstreams.md"],
       "warnBytes": 38000,
@@ -50,6 +50,56 @@
       "optional": ["docs/solver-research-data-assets.md", "DEVELOPER_REFERENCE.md"],
       "warnBytes": 60000,
       "maxBytes": 85000
+    }
+  ],
+  "authorityBudgets": [
+    {
+      "path": "AGENTS.md",
+      "purpose": "Canonical agent router and durable working rules.",
+      "warnBytes": 10500,
+      "maxBytes": 13000
+    },
+    {
+      "path": "docs/solver-optimization-workstreams.md",
+      "purpose": "Current solver priority/state/gates only; chronology belongs in reports/archive.",
+      "warnBytes": 10500,
+      "maxBytes": 14000
+    },
+    {
+      "path": "docs/solver-research-data-assets.md",
+      "purpose": "Cross-asset topology/boundaries; per-asset detail belongs in the JSON registry.",
+      "warnBytes": 9000,
+      "maxBytes": 12000
+    },
+    {
+      "path": "docs/solver-budget-determinism.md",
+      "purpose": "Current work/budget/determinism contract; migration chronology belongs in reports/archive.",
+      "warnBytes": 12000,
+      "maxBytes": 16000
+    },
+    {
+      "path": "docs/tooling-catalog.md",
+      "purpose": "Family-level tool map; named command discovery belongs to tooling-census.",
+      "warnBytes": 10500,
+      "maxBytes": 14000
+    },
+    {
+      "path": "docs/README.md",
+      "purpose": "Ownership inventory, not a second agent guide.",
+      "warnBytes": 10000,
+      "maxBytes": 13000
+    },
+    {
+      "path": "reports/README.md",
+      "purpose": "Report conventions/routing, not a hand-maintained experiment index.",
+      "warnBytes": 7000,
+      "maxBytes": 9500
+    },
+    {
+      "path": "scripts/README.md",
+      "purpose": "Local tooling map, not an exhaustive script catalogue.",
+      "warnBytes": 8500,
+      "maxBytes": 11000
     }
   ]
 }
