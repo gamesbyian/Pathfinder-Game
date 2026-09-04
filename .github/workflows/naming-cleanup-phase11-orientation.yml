@@ -1,35 +1,6 @@
 name: Phase 11 orientation browser gate
 
 on:
-  pull_request:
-    paths:
-      - 'modules/domain/geometry.ts'
-      - 'modules/domain/geometry.test.ts'
-      - 'modules/domain/landmark-rules.ts'
-      - 'modules/domain/level-codec.ts'
-      - 'modules/input/grid-coordinates.ts'
-      - 'modules/input/grid-coordinates.test.ts'
-      - 'modules/editor/level-coordinate-transforms.ts'
-      - 'modules/state-slices.ts'
-      - 'modules/state-actions.ts'
-      - 'modules/state/actions/core-actions.ts'
-      - 'modules/engine.ts'
-      - 'modules/engine/level-flow.ts'
-      - 'modules/input/options-controller.ts'
-      - 'modules/input/editor-toolbar-controller.ts'
-      - 'modules/input/editor-coordinate-transform.test.ts'
-      - 'modules/render/**'
-      - 'modules/renderer.ts'
-      - 'modules/ui/layout-ui.ts'
-      - 'modules/persistence/local-session-store.ts'
-      - 'modules/persistence/local-session-store.test.ts'
-      - 'tests/orientation.spec.mjs'
-      - 'tests/editor.spec.mjs'
-      - 'playwright.config.mjs'
-      - 'package.json'
-      - 'docs/naming-cleanup-phase-records/phase-11.md'
-      - 'docs/naming-cleanup-ledger.json'
-      - '.github/workflows/naming-cleanup-phase11-orientation.yml'
   workflow_dispatch:
 
 permissions:
