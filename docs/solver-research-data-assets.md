@@ -251,7 +251,7 @@ The disposable `.cache/family-index.json` reconciles mixed-era evidence by logic
 
 **Strong joins.** Reports and research-status index route to logs. Manifests/embedded run IDs reconnect raw artifacts to code/protocol. Baselines can be diffed against current production outputs.
 
-**Boundary.** `logs/Solver/` is a frozen legacy attic. Do not treat `latest` as independent evidence or silently regenerate irreplaceable historical snapshots.
+**Boundary.** The capitalized legacy `Solver` subdirectory under `logs/` is a frozen attic. Do not treat `latest` as independent evidence or silently regenerate irreplaceable historical snapshots.
 
 ### `research-status-index`
 
