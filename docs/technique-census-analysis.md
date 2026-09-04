@@ -3,15 +3,17 @@
 > **Status:** rebuildable existing-census instrument; not production policy or a priority list.
 > **Current scheduler use:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution priority; [`solver-scheduling-policy.md`](solver-scheduling-policy.md) owns allocation policy.
 > **Operational interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
-> **Current budget interpretation:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
+> **Current budget interpretation:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md), pending regeneration against the refreshed census.
 
-The committed census under `reports/stress/technique-census/32240161854/` is heavily mined **development evidence**. Use it to nominate actions, inversions, budget tranches, and causal follow-ups; do not turn exact winners/level IDs into production routing or treat row count as fresh confirmation.
+The current committed census is `reports/stress/technique-census/33717910218/` (2026-09-03 refresh, 78,505 unique cells). The older `32240161854` census remains historical development evidence, but current capability-dependent claims should use the refreshed run and `reports/stress/technique-niches/2026-09-03/level-capability.json`. See [`../reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md`](../reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md) for the direct rejoin and remaining derived-analysis parity work.
 
-Rebuild/check with:
+Regenerate the second-order outputs against the current census with:
 
 ```bash
-node scripts/analyze-technique-census.mjs reports/stress/technique-census/32240161854 --check
+node scripts/analyze-technique-census.mjs reports/stress/technique-census/33717910218
 ```
+
+After those generated outputs are committed, verify freshness with the same command plus `--check`.
 
 Start at [`tooling-catalog.md`](tooling-catalog.md) for current invocation options and related probes.
 
@@ -50,12 +52,12 @@ Cap costs are isolated `nodesExpanded` diagnostics. They compare depth **within*
 
 ## Current decision boundary
 
-Do not rerun the expensive census merely because a live scheduler question exists. The current gap is **materialization/join/valuation**, not another matrix:
+The expensive matrix is fresh; the current gap is **derived materialization/join/valuation**, not another census:
 
-1. materialize current per-attempt action identity, `workSpent`, ceilings, reach, and termination outcomes;
-2. join current reach to the frozen cap/tranche evidence where comparable;
+1. regenerate second-order cap/tranche/substitutability outputs from `33717910218`;
+2. join current production reach/work evidence where comparable;
 3. value incremental solves/work, rare exclusives, portfolio cardinality, and fixed-work oracle headroom;
-4. test a simple deterministic static policy before dynamic/survival/bandit machinery.
+4. keep production scheduler experiments tied to current rare-capability evidence rather than the superseded August snapshot.
 
 Sequence-dependent actions require controlled current-code execution before causal scheduler use; isolated census curves do not erase predecessor-state effects.
 
@@ -69,4 +71,4 @@ Sequence-dependent actions require controlled current-code execution before caus
 - Report gains, losses, coverage/missing cells, censoring, and cost; do not rank only by average solve rate.
 - Historical production joins must be reconciled to current code/protocol before live policy changes.
 
-Detailed findings and dated interpretation belong in the generated census report and [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md), not here.
+Detailed dated interpretation belongs in generated census reports and the direct refresh rejoin linked above, not in this instrument description.
