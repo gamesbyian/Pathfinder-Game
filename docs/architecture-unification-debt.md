@@ -1,121 +1,83 @@
 # Architecture unification debt
 
-> **Status:** live structural-debt queue, reconciled 2026-08-27 after budget-model rationalization.
-> **Read for:** remaining duplicate authority, compatibility migration, state-lifetime isolation, and boundary cleanup.
-> **Do not use for:** solver-policy priorities; use [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
+> **Status:** live structural-debt queue.
+> **Read for:** duplicate authority, compatibility migration, mutable-state lifetime, and semantic boundary cleanup.
+> **Do not use for:** solver-policy/research priority; use [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
-Preserve behavior/evidence. Do not merge representations merely because they look similar. Correctness and reproducible causal evidence outrank neatness. Keep structural refactors separate from solver-policy tuning unless the structural defect itself invalidates research.
+Preserve behavior and evidence. Similar-looking representations are not automatically duplicates. Structural refactors should remain separate from solver-policy tuning unless the structural defect prevents trustworthy research.
 
-The fuller 2026-08-21 audit before compaction is preserved in git history (blob `b7bdc559c64901004dc8032a533e05931b7e0efa`).
+Historical detail: [`archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md).
 
-## Classification rule
+## Classification
 
-1. **Intentional plurality:** different representations answer different questions; keep with explicit ownership.
-2. **Boundary compatibility:** accept old/new external forms, normalize once, keep the adapter.
-3. **Parallel internal authority:** multiple modules encode one policy/schema/meaning; unify.
-4. **Repeated mechanics:** generalize budget/telemetry/provenance/executor plumbing without forcing identical stage behavior.
-5. **Hidden lifetime coupling:** mutable state survives longer than the conceptual operation that owns it and can change later behavior. Make lifetime explicit, reset/isolate it, or formalize an intentional handoff.
-
-External forms may vary; internal authorities and mutable lifetimes should not be ambiguous.
-
-## Remaining debt
-
-| Area | Direction |
+| Kind | Rule |
 |---|---|
-| **Search-stage mutable-state isolation** | **P0 while unexplained sequence dependence exists.** A target action run from fresh preparation versus after unrelated predecessor stages should be search-equivalent at fixed explicit input/config/seed/work unless a documented typed handoff says otherwise. Inventory and isolate caches, memo tables, PRNG state, counters, proxy overrides, and reusable scratch by ownership/lifetime. **2026-09-03:** first empirical fresh-vs-preceded reproduction sweep (15 real cases, `main-search`-stage winners only, predecessor depth up to 18 prior attempts) found no discrepancy — see [`../reports/2026-09-03-fresh-vs-preceded-main-search-reproduction-check.md`](../reports/2026-09-03-fresh-vs-preceded-main-search-reproduction-check.md). Still "no known current instance," now with real evidence behind that status rather than code-reading confidence alone; scope gaps (other stages, `corpus2`) remain, per that report's own Interpretation section. |
-| **Budget semantics / mutable caps** | **High-priority scheduler prerequisite (queue #2).** Base-vs-total naming has begun; next make stage work ownership authoritative, replace shared mutable `prep._workCap` inheritance with explicit attempt/stage budget context, then retire the finite ms-derived additive-stage inventory one behavior-preserving site at a time. Any solve-policy change discovered during migration becomes a scheduler experiment rather than structural cleanup. |
-| Per-solve vs cumulative work meters | Keep both meanings only while ownership is explicit; replace/encapsulate mutable global cumulative ownership so it cannot influence solve budgets or nested/concurrent behavior. |
-| Solver stage/retry policy | Canonical stage policy/plan/budget/identity has landed; remove residual mirrored dispatch only where behavior stays explicit. New search actions should flow through scheduler/action identity rather than creating another policy authority. |
-| Attempt/result telemetry | `stageId` is primary; keep legacy fields only at compatibility boundaries; retain one solver-originated external projection. Telemetry must preserve enough config/seed/budget/protocol identity to reproduce research claims. |
-| Sequential vs raced orchestration | Share policy identity/budgets; keep execution distinct and test planned-attempt parity, not winner parity. Do not infer semantic equivalence from similar solve counts. |
-| `Hint[]` vs `.hints` + `.hintRecords` | Normalize inward to mutable `Hint[]`; keep historical shapes readable at I/O. |
-| Persistent ID vs fingerprint | Keep both: ID = entity, fingerprint = structural revision; migrate entity persistence toward ID + revision. |
-| Firestore fingerprint scans | Try current + known legacy keys first; reserve collection-wide structural scan for unknown/unversioned history. |
-| Raw game vs solver parsing | Define wire meaning once, then project to optimized solver representation. |
-| Runtime/domain/solver rules | One semantic specification with specialized implementations; referee complete paths and differential-test optimized logic. Preserve independent arbiters where independence is useful for catching drift. |
-| Candidate coordinates | Replace internal base guessing with explicit `packed` / `xy0` / `xy1`; autodetection is compatibility only. |
-| Level selectors | Canonical solver CLIs use shared explicit `pos:` / `id:` parsing. |
-| Local vs Firestore published storage | Preserve backend differences behind an application-level published-level abstraction. |
-| Corpus activation | Encapsulate coordinated levels/local hints/supplemental hints/theme selection if ownership spreads. |
-| Solver aliases | Pick one canonical internal solve name opportunistically; leave adapters until unused. Low priority. |
+| Intentional plurality | Keep distinct representations that answer different questions; document ownership. |
+| Boundary compatibility | Accept old/new external forms, normalize once, retain only the needed adapter. |
+| Parallel internal authority | Unify modules that independently own the same policy/schema/meaning. |
+| Repeated mechanics | Share budget/telemetry/provenance/executor plumbing without forcing identical behavior. |
+| Hidden lifetime coupling | Make mutable-state ownership/lifetime explicit; reset/isolate it or define a typed handoff. |
 
-## Stage-state isolation
+External forms may vary. Internal authority and mutable-resource lifetime should not be ambiguous.
 
-The former admissible-order sequence-dependence blocker has been retired by the workstream authority after the attribution error was identified. Keep the isolation contract below as a non-regression rule: if a new same-action, same-input fresh-vs-preceded discrepancy appears, it immediately becomes correctness/research-validity debt again.
+## Current debt
 
-A stage/action should have an explicit input contract. For a search action that is supposed to be independent, predecessor execution may change CPU/cache warmth but must not silently change:
-
-- legal/search state;
-- score/order inputs;
-- random stream/seed;
-- memoized mathematical values;
-- budget/work accounting;
-- proxy/ablation overrides;
-- eligibility/config identity.
-
-Diagnosis pattern:
-
-1. reproduce the same action fresh and after a minimal predecessor prefix;
-2. snapshot/diff every mutable field the action can read;
-3. clear candidate state classes one at a time, starting with supposedly pure lower-bound memo tables and stage overrides;
-4. locate the first search decision or budget check that diverges;
-5. if predecessor information is genuinely useful, replace accidental shared mutation with a typed producer -> consumer artifact and independent control path;
-6. add a regression fixture so later refactors cannot silently reintroduce history dependence.
-
-Do not “fix” this by making isolated experiments run the whole predecessor ladder. That hides the dependency instead of defining it.
-
-## Work accounting
-
-`prep._workMeter.units` is fresh per `solveLevel()` and authoritative for budgets/concurrent-solve independence. Module-global `workMeter.units` is cumulative realm scope used by multi-solve discovery tooling. Keep both meanings only while callers cannot confuse them; prefer caller-owned session accounting by accumulating `SolveResult.workSpent` and passing remaining `workBudget`.
-
-Keep hot-path accounting direct/monomorphic and characterize discovery stopping behavior before migration. `CONNECTIVITY_WORK_UNITS = 12` is allocation currency, not literal move cost. Use pinned work for deterministic policy comparisons and wall time for implementation speed. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
-
-## Solver authority boundary
-
-Current authorities are `modules/solver/stage-policy.ts`, `stage-budget.ts`, `stage-plan.ts`, `stage-executors.ts`, `Attempt.stageId`, and `attempt-identity.mjs`. New actions/stages must use canonical stage/budget/telemetry infrastructure.
-
-Budget resources remain distinct: `workBudget` (legacy-named base deterministic allocation), `timeBudgetMs` (deadline plus inventoried additive-tier compatibility sizing debt), `nodeBudget` (deterministic technique/cumulative diagnostic cap), and `strictTotalWorkBudget` (experiment-only whole-solve work envelope). A stage budget must define ownership/rollover, node scope, deadline relation, reserve/additive behavior, expected binding resource, cross-resource behavior, and strict-total participation. Do not partition WORK shares beneath one shared NODE ceiling that early configs can exhaust.
-
-Sequential/raced engines may schedule differently. `RACE_SUPPORTED_STAGE_IDS` makes race coverage explicit. Share stage/config identity and budget policy where practical; do not require deterministic race winners.
-
-## Identity and compatibility
-
-Persistent IDs (`P…`, `S…`, `R…`) identify entities; fingerprints identify exact structure/revision. Entity records should key by persistent ID, store revision fingerprint, define mismatch behavior per data type, and migrate legacy fingerprint records only after a successful new write. Keep frozen legacy calculators behind `getLegacyLevelFingerprints()`.
-
-`level-data-io.mjs` correctly upgrades historical hint shapes. Move touched tooling to `Hint[]`, derive geometry-only paths when needed, and simplify writers only after bare `.hints` mutation disappears.
-
-## Semantic boundaries
-
-`level-codec.ts::parseRawLevel()` and solver `normalizeRawLevel()` should not independently define wire meaning. Extract/reuse dependency-light semantics where layering permits.
-
-Specialized rule implementations may remain in runtime/domain/solver. Treat the domain referee as canonical for complete paths; share cheap predicates/constants when safe; add conformance fixtures for new mechanics. Keep the capability sweep's explicit `PUZZLE_FIELDS` allowlist: deliberate duplicate admission is a research boundary, not accidental authority.
-
-## Patterns to preserve
-
-| Pattern | Why |
+| Area | Current direction / exit condition |
 |---|---|
-| Frozen legacy fingerprint calculators | Versioned read/migration compatibility. |
-| Hint upgrade on read | Many external forms -> one internal form. |
-| `LEVEL_KEY_FIELDS` | One coordinate-field registry. |
-| Stage policy/plan/budget authorities | Executable policy shared by orchestration/tooling. |
-| Engine flat + grouped facade | Compatibility views derived from one identity-tested mapping. |
-| Explicit cold-capability `PUZZLE_FIELDS` | Conscious mechanic admission boundary. |
-| `workSpent` / `nodesExpanded` / elapsed | Allocation, technique progress, and latency are different metrics. |
-| Independent referee/reference paths | Shared semantics without one implementation hiding another's bug. |
+| **Stage work/budget ownership** | Replace accidental shared mutable budget inheritance with explicit attempt/stage ownership where it remains. Structural changes must preserve policy unless separately tested as scheduler experiments. Budget semantics are owned by [`solver-budget-determinism.md`](solver-budget-determinism.md) and scheduler policy by [`solver-scheduling-policy.md`](solver-scheduling-policy.md); do not duplicate their current gates here. |
+| **Per-solve vs realm-global work meters** | Keep meanings explicit and prevent cumulative realm state from influencing solve budgets or nested/concurrent behavior. Prefer caller-owned multi-solve accumulation from `SolveResult.workSpent`. Retire this row when ownership cannot be confused by callers. |
+| **Search-stage mutable-state isolation** | No known current same-action fresh-vs-preceded discrepancy after the 2026-09-03 reproduction sweep. Reopen as correctness/research-validity debt only if fixed input/config/seed/work produces a new history-dependent search discrepancy without an intentional typed handoff. |
+| **Residual stage/retry dispatch duplication** | Remove mirrored policy/dispatch only when canonical stage/action identity remains explicit and behavior is preserved. New actions use canonical scheduler/action identity. |
+| **Attempt/result telemetry compatibility** | `stageId` is primary. Keep legacy fields only at I/O compatibility boundaries and retain enough config/seed/budget/protocol identity for reproduction. Remove adapters after all live consumers migrate. |
+| **Sequential vs raced orchestration** | Share policy identity/budgets where applicable; keep execution distinct. Test planned-attempt parity rather than winner parity. |
+| **Historical hint shapes** | Normalize inward to mutable `Hint[]`; keep legacy `.hints` / `.hintRecords` readable only where historical I/O still requires them. Remove adapters when no supported historical consumer needs them. |
+| **Persistent identity vs structural revision** | Keep both semantics: persistent ID identifies the entity, fingerprint identifies structure/revision. Migrate persistence toward ID + revision while retaining versioned legacy reads only as required. |
+| **Firestore legacy fingerprint lookup** | Prefer current + known legacy keys; use collection-wide structural scans only for unknown/unversioned history. Retire broad fallback when supported history no longer requires it. |
+| **Raw-level wire semantics** | Define wire meaning once and project to optimized solver representation; eliminate independent semantic interpretation where layering permits. |
+| **Runtime/domain/solver rule duplication** | Maintain one semantic contract with specialized implementations. Use referee/differential conformance so independence can still catch drift. |
+| **Coordinate-base guessing** | Move internal consumers to explicit `packed` / `xy0` / `xy1`; keep autodetection only at true compatibility boundaries. |
+| **Level selector guessing** | Canonical solver CLIs use explicit shared `pos:` / `id:` parsing. Remove legacy guessing once consumers are gone. |
+| **Published storage backends** | Preserve backend differences behind one application-level published-level abstraction where duplicated ownership still exists. |
+| **Corpus activation ownership** | Introduce/extend a facade only if coordinated levels, hints, supplemental hints, and theme selection continue spreading across consumers. |
+| **Solver aliases** | Opportunistically converge on one internal solve name; retain only adapters with live consumers. Low priority. |
 
-## Implementation order
+## Durable contracts
 
-0. **Budget-model completion for queue #2:** finish stage work-envelope projection and explicit base/total semantics; replace `prep._workCap` inheritance with explicit budget context; isolate module-global multi-solve work ownership; then retire ms-derived additive allocation sites incrementally with parity evidence.
-1. Finish residual solver dispatch/telemetry compatibility cleanup only where it directly supports that budget/stage authority or removes demonstrated ambiguity.
-2. Reopen stage-history isolation only if a new fresh-vs-preceded discrepancy appears; the former admissible-order blocker is retired in the workstream authority.
-3. Migrate persistent entity identity and mutable hints inward.
-4. Unify wire interpretation, strengthen rule conformance, and remove coordinate/selector guessing.
-5. Address corpus/published-storage facades and solver aliases only when they remove demonstrated repeated work.
+### Stage/action isolation
 
-Do not allow low-value architecture tidiness to displace queue #0 evidence work or queue #2 budget-model completion. Budget ownership/determinism cleanup is specifically exempt from the usual 'architecture can wait' rule because it is required for trustworthy scheduler evidence.
+An action that is intended to be independent must not silently inherit predecessor-dependent legal/search state, scoring/order inputs, PRNG state, memoized mathematical values, budget accounting, proxy overrides, or eligibility/config identity.
 
-## Verification
+If a discrepancy appears: reproduce fresh versus minimal predecessor prefix, diff mutable inputs, locate the first decision/budget divergence, and either isolate the state or formalize a typed handoff with an independent control. Do not hide the dependency by forcing isolated experiments to execute the predecessor ladder.
 
-Behavior-preserving solver refactors need targeted characterization plus the relevant [`testing.md`](testing.md) finish-line gate. Use explicit `workBudget` with a non-binding deadline for decision-bearing comparisons; compare solved sets, `workSpent`, attempt order/config/stage, deadline truncation, and fresh-vs-preceded parity where lifetime is touched; referee-validate paths; test raced planned-policy parity separately from winner timing; measure policy optimization in a separate change.
+### Work accounting
 
-Target state: every plurality has an owner and a reason; every mutable resource has an owner and lifetime; compatibility normalizes at boundaries; current semantics/policy have one internal authority and multiple deliberate projections.
+Per-solve work and realm-global discovery accounting are distinct concepts. Deterministic allocation comparisons use `workSpent`; raw node counts remain technique diagnostics; wall time measures implementation cost. Current budget-resource meanings belong in [`solver-budget-determinism.md`](solver-budget-determinism.md).
+
+### Solver authority boundary
+
+Canonical stage policy/plan/budget/executor/action identity owns solver orchestration semantics. Sequential and raced engines may execute differently but should not create parallel policy authorities. New stages/actions must use the canonical identity/budget/telemetry path.
+
+### Identity and compatibility
+
+Persistent IDs identify entities; fingerprints identify exact structural revision. Normalize historical external forms inward and keep frozen legacy calculators/readers only where supported provenance/migration requires them.
+
+### Semantic boundaries
+
+Wire-level meaning should have one definition before projection into runtime/domain/solver representations. Specialized implementations may remain. Independent referee/reference paths are useful when they detect drift rather than duplicate mutable policy.
+
+## Priority rule
+
+This is **structural debt, not an execution roadmap**. Work on a row when it:
+
+1. blocks or invalidates current research/correctness;
+2. creates live duplicate authority or accidental state coupling;
+3. is touched by nearby work and can be removed safely;
+4. otherwise causes recurring maintenance cost that exceeds the change risk.
+
+Low-value architectural neatness must not displace current solver research merely because a row remains open.
+
+## Completion standard
+
+A row leaves this file when its ambiguity/compatibility obligation is gone or when a stable owning contract has absorbed the remaining rule. Evidence/chronology belongs in reports or snapshots, not appended here.
+
+Target state: every plurality has an owner and reason; every mutable resource has an owner and lifetime; compatibility normalizes at boundaries; current semantics/policy have one internal authority with deliberate projections.
