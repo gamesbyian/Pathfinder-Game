@@ -124,7 +124,49 @@ Edit current docs for decision density. Remove throat-clearing, narrative connec
 
 Run the context-budget tooling. Tighten ceilings when the live surface has materially shrunk and reasonable headroom remains. Do not loosen ceilings merely to accommodate unexplained prose growth.
 
-## 3. Staleness audit driven by recent changes
+## 3. Non-core plans, proposals, backlogs, and debt queues
+
+Audit planning surfaces that are **not** the canonical current execution authority. These include future-work files, proposals, design sketches, architectural-debt queues, deferred-idea lists, reopening inventories, research possibility documents, and similar “maybe later” surfaces.
+
+These documents deserve a separate pass because speculative material can accumulate indefinitely while remaining superficially relevant. Do not exempt a file from concision simply because it is a proposal or backlog.
+
+For each such document ask:
+
+- Does it still have a distinct purpose from the current queue/authority?
+- Is it carrying current execution state that belongs elsewhere?
+- Is it carrying dated experimental evidence or result narration that belongs in a report?
+- Has a single bullet or proposal turned into a miniature research report?
+- Does it repeat rationale, definitions, methodology, constraints, or contracts already owned by another document?
+- Are completed/promoted/rejected ideas still written as live possibilities?
+- Does it distinguish **open question**, **reopen condition**, **stop condition**, and **closed disposition** clearly enough to avoid redoing settled work?
+- Are old proposals retained because they are useful, or merely because nobody has decided where history belongs?
+- Have several proposal documents converged enough to become one compact backlog with links to evidence?
+- Does a debt queue describe actual remaining debt, or has it become an architecture manual plus chronology plus implementation plan?
+
+Prefer this content model for live non-core planning documents:
+
+- the question/opportunity/debt;
+- why it remains open, only when that is not obvious from a linked authority/report;
+- the cheapest meaningful next gate or reopen condition;
+- stop/exit criteria;
+- the current disposition and authoritative evidence link;
+- any durable boundary needed to prevent unsafe or wasteful implementation.
+
+Move detailed reasoning, chronology, measurements, failed attempts, experiment tables, and dated conclusions into reports or snapshots. Link to them instead of summarizing them repeatedly.
+
+If a proposal becomes active execution work, move its live gate/state into the canonical queue or owning specialist authority. If it becomes closed, reduce it to a compact disposition/reopen condition or move it to evidence/history. Do not let proposal docs become shadow queues.
+
+Where a non-core planning surface has a recurring tendency to become a junk drawer, add a proportionate size/context ceiling or other cheap anti-regression guard. Tighten that ceiling after compaction when reasonable headroom remains.
+
+Before aggressive trimming, preserve exact pre-consolidation text in a dated snapshot when it contains useful research/design history not already captured elsewhere.
+
+Target distinction:
+
+- **Current queue/authority:** what is being done now and the next gate.
+- **Live proposal/backlog/debt queue:** what remains plausibly open, why, and what would justify action.
+- **Report/archive:** how the idea evolved, what was tried, measurements, reasoning, and historical detail.
+
+## 4. Staleness audit driven by recent changes
 
 For every materially changed subsystem, inspect the nearby surfaces most likely to drift:
 
@@ -146,7 +188,7 @@ A passing link checker is not evidence that prose is semantically current. Verif
 
 Do not rewrite frozen evidence merely because current terminology changed. Repair the current interpretation/routing instead.
 
-## 4. Comprehensive tooling audit
+## 5. Comprehensive tooling audit
 
 Account for the entire developer/research tooling surface using `tooling-census`, package aliases, workflow references, and targeted search before broad browsing.
 
@@ -172,7 +214,7 @@ Prefer, in order:
 
 Use orphan detection as evidence, not truth. When retiring or consolidating tooling, chase package aliases, workflows, tests, docs, generated artifacts, readers/writers, and agent discovery surfaces.
 
-## 5. Comprehensive GitHub Actions workflow audit
+## 6. Comprehensive GitHub Actions workflow audit
 
 Account for every workflow and its current purpose. Use workflow inventories and recent run history to avoid rereading unchanged definitions unnecessarily, but do not leave a workflow unclassified.
 
@@ -198,7 +240,7 @@ Delete obsolete workflows. Archive a workflow definition only when its historica
 
 Do not weaken validation merely to reduce runtime.
 
-## 6. CI runtime and structural-bloat audit
+## 7. CI runtime and structural-bloat audit
 
 Inspect recent CI history over a meaningful window and compare with the last CI-optimization baseline when available. During heavy development, include enough runs to distinguish persistent regression from one slow hosted runner.
 
@@ -242,7 +284,7 @@ Specifically look for:
 
 Where evidence supports it, implement safe structural improvements. A green workflow can still be wasteful. A temporarily slow hosted runner is not by itself evidence that repository changes are required.
 
-## 7. Tests, validators, and completed-migration scaffolding
+## 8. Tests, validators, and completed-migration scaffolding
 
 Audit checks themselves, especially those created during large cleanup/migration campaigns.
 
@@ -265,7 +307,7 @@ Completed migration programs should leave a small permanent final-state/invarian
 
 Do not “fix CI” by weakening a meaningful invariant.
 
-## 8. Historical material, compatibility surfaces, and archives
+## 9. Historical material, compatibility surfaces, and archives
 
 Find completed plans, migration ledgers, phase records, superseded research narratives, abandoned queues, transitional bridges, one-off experiment docs, and old decision logs that pollute current discovery/search.
 
@@ -275,7 +317,7 @@ Do not rewrite frozen evidence into current terminology merely to make search cl
 
 Compatibility code/docs should have a reason to exist and, where practical, a retirement condition. Remove them once the supported boundary expires.
 
-## 9. Research-infrastructure hygiene
+## 10. Research-infrastructure hygiene
 
 Ensure current solver/research work can cheaply discover and combine relevant evidence before purchasing new compute.
 
@@ -299,7 +341,7 @@ Check whether current queues/plans point toward relevant existing evidence; stru
 
 Preserve level-blindness and evidence-selection rules. Historical outcome data must not silently become runtime policy.
 
-## 10. General repository entropy audit
+## 11. General repository entropy audit
 
 Account broadly for maintenance debt that belongs in a hygiene pass:
 
@@ -322,13 +364,14 @@ Account broadly for maintenance debt that belongs in a hygiene pass:
 
 Do not turn this into unrelated feature development. The boundary is entropy reduction, maintenance leverage, and correctness of current repository structure.
 
-## 11. Anti-regression improvements
+## 12. Anti-regression improvements
 
 For each recurring class of entropy found, ask whether a cheap deterministic guard can prevent recurrence.
 
 Candidates include:
 
 - context-route budgets and per-authority ceilings;
+- size ceilings for junk-drawer-prone proposal/backlog/debt documents;
 - document lifecycle metadata;
 - orphan tooling/workflow detection;
 - compatibility-path size/content checks;
@@ -343,7 +386,7 @@ Candidates include:
 
 Prefer simple checks piggybacking on existing CI over elaborate infrastructure. A hygiene mechanism should cost less to maintain and execute than the entropy it prevents.
 
-## 12. Execution strategy
+## 13. Execution strategy
 
 Use this sequence unless evidence supports a smaller equivalent path:
 
@@ -351,13 +394,14 @@ Use this sequence unless evidence supports a smaller equivalent path:
 2. cheap inventory/delta/context/CI signals across **all** hygiene domains;
 3. deep inspection where signals, churn, age, uncertainty, or unexplained growth justify it;
 4. obvious dead/stale surface cleanup;
-5. documentation/context consolidation;
-6. tooling/workflow retirement or consolidation;
-7. CI structural optimization;
-8. validator/test simplification;
-9. research-infrastructure/discovery repair;
-10. anti-regression guards;
-11. final hostile audit and validation.
+5. canonical documentation/context consolidation;
+6. non-core plan/proposal/backlog/debt-queue compaction and disposition cleanup;
+7. tooling/workflow retirement or consolidation;
+8. CI structural optimization;
+9. validator/test simplification;
+10. research-infrastructure/discovery repair;
+11. anti-regression guards;
+12. final hostile audit and validation.
 
 The important distinction is **bounded inspection, not bounded scope**. Every run should be able to say why each major hygiene domain is healthy, changed, or requires work.
 
@@ -370,13 +414,15 @@ Useful heuristics:
 - When history matters, archive it instead of leaving it live.
 - When two current files own the same mutable fact, choose one owner.
 - When a current file tells a story, move the story to a report/archive.
+- When a proposal explains how it got here instead of what remains open, move the explanation to evidence/history.
+- When an open idea becomes active, move its live state to the canonical queue rather than maintaining two queues.
 - When a tool cannot justify its existence, remove or archive it.
 - When CI repeats work, identify what independent evidence the repetition buys.
 - When a validator blocks simplification, determine whether it protects a real invariant or merely an old representation.
 - When recent changes make a document suspect, verify semantics against implementation rather than polishing stale prose.
 - When a domain looks unchanged, prove that cheaply with deltas/inventory before skipping deep inspection.
 
-## 13. Final hostile audit
+## 14. Final hostile audit
 
 Before declaring the pass complete, inspect the resulting tree skeptically.
 
@@ -386,6 +432,7 @@ Ask:
 - Did a compact front door become a second mutable authority?
 - Did consolidation create a new giant authority?
 - Is any current fact still owned twice?
+- Did any proposal/backlog/debt file remain a shadow current queue or mini research report?
 - Did compatibility removal break a real consumer?
 - Did CI speed work reduce meaningful coverage rather than remove waste?
 - Did a validator get weakened rather than modernized?
@@ -404,6 +451,7 @@ A completed hygiene pass leaves:
 - implemented cleanup/hardening changes, not just findings;
 - appropriate green validation on the final state;
 - current docs concise and non-narrative relative to their ownership;
+- live non-core plans/proposals/backlogs/debt queues limited to genuinely open questions, dispositions, boundaries, and gates rather than chronology;
 - historical evidence preserved but removed from ordinary current context where appropriate;
 - dead/stale tools and workflows removed or explicitly classified;
 - current tooling/workflows consistent with recent subsystem changes;
