@@ -1,10 +1,10 @@
 # Technique-niches synthesis, delta of conclusions: 2026-09-01 vs the 2026-09-03 census refresh
 
-> **Status:** active
-> **Last evidence:** 2026-09-04 — all six items `2026-09-04-technique-census-refresh-direct-analysis-rejoin.md` queued are now regenerated and compared against `reports/2026-09-01-technique-niches-and-unsupported-level-anatomy.md`
-> **Decision:** the September-1 synthesis's qualitative architecture survives: beam/repair/IDA/DFS remain genuinely complementary, combined constraint/load/portal burden remains the dominant risk signal, and rare capability remains concentrated in a few specialists (not evenly spread). Several specific magnitudes moved by real, non-trivial amounts (repair's singleton count fell 59→50; the gap population's thin-boundary share fell 63.6%→54.2%; the 2K/5K beam-width inversion's structural explanation reversed outright; the not-offered/offered-but-fails split in the production-boundary decomposition flipped which bucket is the majority). Two findings are substantially reframed rather than confirmed or refuted: the 14-level "production-solved, no isolated winner" anomaly grew to 35, but decomposing it shows only 10 are genuinely outside the isolated census's representable action space — the other 25 are census coverage gaps; and the production-boundary "missing exposure is the dominant seam" reading no longer holds at the same strength.
-> **Remaining gate:** none queued by this report. Individual items above may motivate their own follow-ups (see "Newly earned next steps"), but none is forced by this synthesis alone.
-> **Evidence role:** observational-development re-analysis of already-collected/regenerated evidence
+> **Status:** superseded
+> **Last evidence:** 2026-09-04 — superseded by `2026-09-04-technique-census-refresh-direct-analysis-rejoin.md`'s "Gate 0F — conclusion delta" section, which folded in this report's four rows not otherwise covered (thin-boundary shares, the perfect-router bound, CW/CCW orientation) to keep one canonical scored comparison instead of two independently-produced, substantially-overlapping ones (this report's 18 rows vs. the other's 11 covered the same September-1-vs-refresh ground; content itself was consistent between the two on every overlapping row).
+> **Decision:** superseded — see the canonical report. This file is retained for its reasoning/derivation detail and as the record of an independent pass that agreed with the parallel Gate 0F work, not as an active reference.
+> **Remaining gate:** none — use `2026-09-04-technique-census-refresh-direct-analysis-rejoin.md` going forward.
+> **Evidence role:** observational-development re-analysis of already-collected/regenerated evidence (superseded)
 
 ## Purpose
 

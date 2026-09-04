@@ -1,10 +1,10 @@
 # Production-boundary/exposure join, refreshed: not-offered vs. offered-but-fails
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-04 — join of `reports/stress/capability-runs/33588487486/per-level-{corpus1,corpus2}.json` (2026-09-02, lifecycle-telemetry-enabled production run, 1,802 levels) against `reports/stress/technique-niches/2026-09-03/level-capability.json`'s isolated-oracle winners
-> **Decision:** among current production misses with a comparable isolated winner, the missing-exposure share has fallen substantially since the 2026-08-25 post-976 rejoin: **not-offered 45/122 (36.9%)** vs. **offered-but-still-fails 77/122 (63.1%)**, compared to the earlier 73/139 (52.5%) not-offered / 66/139 (47.5%) offered split. Missing exposure is still real and non-trivial, but it is no longer the majority explanation for the comparable-capability residual — most of today's comparable misses are cases where production already tries the known-winning base configuration and still fails, which is a search-quality/context question, not a routing/menu question.
-> **Remaining gate:** none for this join. A depth-resolved starved-vs-adequate split (the original three-way classification) needs per-attempt `nodesExpanded` at population scale, which this data source does not carry; that would be a genuinely new dispatch, not a rejoin of existing evidence, and is not queued here.
-> **Evidence role:** development — a join of two already-collected evidence artifacts, no new dispatch
+> **Status:** superseded
+> **Last evidence:** 2026-09-04 — superseded by `2026-09-04-census-cross-evidence-production-boundary-join.md` (Gate 0D), an independent pass at the same question that reaches the same headline numbers (45/122=36.9% not-offered, 77/122=63.1% offered-but-fails) but on a more rigorously verified-comparable production run: Gate 0D explicitly checked this report's source run (`33588487486`) and found its recorded commit does not resolve in local git history, so its code-comparability to the census could not be verified, and used `33824275953` instead (verified via `git merge-base --is-ancestor` to be a strict descendant of the census commit, with only an opt-in/default-off feature touching `modules/solver/` in between). The two source runs' corpus-2 solved sets turned out to be byte-identical, which is why the numbers match, but Gate 0D's evidence-comparability check is the better-supported version going forward.
+> **Decision:** superseded — see the canonical report for the current authoritative version of this join.
+> **Remaining gate:** none — use `2026-09-04-census-cross-evidence-production-boundary-join.md` going forward.
+> **Evidence role:** development — a join of two already-collected evidence artifacts, no new dispatch (superseded)
 
 ## Why this refresh, and a real methodological change from the original
 

@@ -1,10 +1,10 @@
 # portfolio-18-specialists rare-capability retention audit, refreshed against the 2026-09-03 census
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-04 — join of `reports/stress/technique-niches/2026-09-03/level-capability.json` (the current capability-map snapshot, superseding 2026-09-01) against `data/stress/static-portfolio-confirmation-003-arms.json`'s `full-menu`/`portfolio-18-specialists` composition, using the exact method `2026-09-03-portfolio-18-specialists-rare-capability-retention-audit.md` established
-> **Decision:** retention survives at **147/155 (94.8%)**, materially the same conclusion as the original 144/151 (95.4%) audit against the now-superseded 2026-09-01 snapshot. The dropped-technique exclusive-capability distribution shifted individual identities but not its shape: still diffuse (worst dropped technique carries 2 exclusive wins, up from a 1-per-technique maximum before), not concentrated.
-> **Remaining gate:** none for this join. Same scope caveats as the original audit apply (census population/currency differs from the work-budget confirmations; does not itself confirm production-envelope retention).
-> **Evidence role:** development — a join/analysis of two already-published evidence artifacts, no new dispatch
+> **Status:** superseded
+> **Last evidence:** 2026-09-04 — superseded by `2026-09-04-portfolio-18-fresh-census-temporal-holdout.md`, an independent pass at the same join that reached the identical 147/155 (94.8%) figure; this report's per-identity newly-omitted-exclusive tracking and kept-technique-concentration detail have been folded into that canonical report, which now also cites this one as the cross-validating independent pass.
+> **Decision:** superseded — see the canonical report.
+> **Remaining gate:** none — use `2026-09-04-portfolio-18-fresh-census-temporal-holdout.md` going forward.
+> **Evidence role:** development — a join/analysis of two already-published evidence artifacts, no new dispatch (superseded)
 
 ## Why re-run this
 
