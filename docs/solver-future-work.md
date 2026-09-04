@@ -1,83 +1,46 @@
 # Solver future work
 
-Deferred/reopen ideas that are **not current execution priority**. Current execution priority lives in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); research rules in [`solver-research-operating-model.md`](solver-research-operating-model.md); retained default-OFF dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
+Deferred/reopen ideas that are **not current execution priority**. Current priority/state/gates live in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); research method in [`solver-research-operating-model.md`](solver-research-operating-model.md); retained default-OFF dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
 
-Historical ledger: [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md). Prior evidence: [`../reports/README.md`](../reports/README.md) or `node scripts/research-status-index.mjs --compact --query=<term>`.
+Prior evidence: `node scripts/research-status-index.mjs --compact --query=<term>`. Historical states: [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md) and [`archive/snapshots/solver-future-work-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/solver-future-work-2026-09-04-pre-proposal-consolidation.md).
 
-## Active elsewhere, not backlog
+## Backlog contract
 
-Do not recreate these programs here; the workstream authority owns their execution priority.
+This file is a **reservoir of deferred questions**, not a second queue or experiment diary.
 
-| Topic | Current authority |
+Before promoting an item, identify:
+
+1. the current limitation/evidence;
+2. the cheapest falsifying pilot;
+3. comparator and shared-work contract where search policy changes;
+4. success/stop gates;
+5. a legal level-blind production path for any positive offline result.
+
+If an item becomes active, its live gate moves to the owning workstream/specialist doc. Detailed evidence and chronology go in dated reports. Remove an item when it is answered, promoted, superseded, or no longer has a plausible reopen condition.
+
+## Deferred questions
+
+| Question | Reopen condition / boundary |
 |---|---|
-| Generalization / confirmation blocks / cross-generator challenge | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md); [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); historical [`cohort reservation`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
-| Automatic solver action selection | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
-| Technique census / niche cross-evidence analysis | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md)'s standing capability-map rule; [`technique-census-analysis.md`](technique-census-analysis.md); [`2026-09-04 cross-evidence plan`](../reports/2026-09-04-census-cross-evidence-research-plan.md) |
-| Beam retention at exact extinction boundaries | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`beam descriptor audit`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md) |
-| Exact/reference-model program | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`reference-model audit`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |
-| Restart allocation / learned failure | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`restart audit`](../reports/2026-08-24-restart-continuation-value-audit.md), [`learned-failure audit`](../reports/2026-08-24-learned-failure-certificate-audit.md) |
-| Repair reachability / reconstructability | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`repair audit`](../reports/2026-08-24-repair-reachability-reconstructability-audit.md) |
-| Architectural speed | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) |
+| **Variant-family capability robustness** | Current census evidence already supports temporal and budget-edge fragility by capability multiplicity/technique family. Reopen only with a joinable family/parent data source that can answer the still-untested variant-family clause. Do not rerun the answered temporal/budget-edge joins. |
+| **Four-space triangulation** across input geometry, solution structure, technique response, and live trajectories | Reopen when cheaper refreshed-census/profile/production-response joins expose a repeatable unexplained distinction. |
+| **Stability-aware portfolios** | Reopen when temporal retention, parent robustness, or basin diversity identifies a compact decision signal not captured by current work/coverage evidence. |
+| **Latent response dimensions / biclusters** | Reopen only if simpler pair/cohort analyses leave stable unexplained response structure. |
+| **Forced-decision / backdoor-depth analysis** | Reopen when existing hint-workbench provenance can answer a concrete action-selection or representation question without a new large data campaign. |
+| **Generator/editor-envelope technique niches** | Reopen before making broad capability claims when evidence suggests an envelope-specific niche. |
+| **Minimal technique-niche counterexamples** | Use reducer + exact/reference validation when a claimed niche needs causal isolation. |
+| **Typed producer → consumer search artifacts** | Require a demonstrated consumer limitation, novel timely information, bounded production/storage/replay cost, independent control, and matched-work benefit. Do not build a general blackboard. |
+| **Queryable analytical layer** | Reopen only if recurring joins among run identity, telemetry, static features, families, labels, and arms still require bespoke scripts after existing join helpers are extended. Generated views must be rebuildable from canonical evidence and cannot become production-policy truth. |
 
-## Entry contract
+For the active census cross-evidence program, use [`../reports/2026-09-04-census-cross-evidence-research-plan.md`](../reports/2026-09-04-census-cross-evidence-research-plan.md) and the current workstream authority. Residual/search-quality gates already promoted out of this backlog likewise belong in the workstream authority.
 
-An item here is a question, not authorization to build a framework. Before substantial implementation, name:
+## Demoted forms
 
-1. the limitation/evidence that motivates it;
-2. the cheapest pilot that could falsify it;
-3. the comparator and shared-work contract where search policy changes;
-4. success and stop gates;
-5. how any positive offline result could become legal level-blind production behavior.
+Do not reopen these unchanged without materially new evidence:
 
-Check current code, queue, ledger, [`tooling-catalog.md`](tooling-catalog.md), and prior evidence first. If an idea becomes active workstream work, move its live gate to the queue/current topic doc and leave chronology in reports.
-
-## Deferred representation / search-quality questions
-
-### Promoted residual/search-quality gates
-
-Residual opportunity beyond current prunes and state-conditioned MustCross diagnosis now have live gates in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). Residual interfaces/bounded future models remain conditional there on first finding a recurring compact interface; do not build framework machinery in advance.
-
-### Census cross-evidence reservoir
-
-The refreshed-census program is active as a **standing evidence layer**, not a numbered workstream. Its immediate analytical gates are owned by [`2026-09-04-census-cross-evidence-research-plan.md`](../reports/2026-09-04-census-cross-evidence-research-plan.md): restore refreshed analytical parity/temporal stability first, then test solution-space structure and current production-response joins before escalating to controlled variants or traces.
-
-Keep these broader questions deferred until those cheaper gates nominate a recurring mechanism:
-
-- four-space triangulation across input geometry, solution-space structure, technique-response vectors, and live search/failure trajectories;
-- capability multiplicity as a predictor of variant-family robustness (the **temporal and budget-edge clauses are answered**: old-census `solverCount` strongly and monotonically predicts both whether a level stays oracle-solvable across a refresh — 34.3% singleton→zero-solvers vs. 0.3% at solverCount 11+ — and how much margin its cheapest known solve has under the census node budget — 15.4% of singletons use over half the budget vs. 0.0% at solverCount 6+; further refined by technique family — DFS-singleton claims lose support at ~2x beam's rate, admissible-order-singleton claims essentially never lose it in this sample. See [`2026-09-04-capability-multiplicity-temporal-robustness-001.md`](../reports/2026-09-04-capability-multiplicity-temporal-robustness-001.md), [`2026-09-04-capability-multiplicity-budget-edge-robustness-001.md`](../reports/2026-09-04-capability-multiplicity-budget-edge-robustness-001.md), [`2026-09-04-singleton-fragility-by-technique-family-001.md`](../reports/2026-09-04-singleton-fragility-by-technique-family-001.md). The variant-family clause remains untested — the current census carries no `familyId`/`parentId` data to join against; do not re-run the temporal/budget-edge joins, a variant-family-specific data source would be needed instead);
-- stability-aware portfolios balancing work, current coverage, temporal retention, parent robustness, and solution-basin diversity;
-- latent response dimensions/biclusters only if simpler pair/cohort analysis leaves repeatable unexplained structure;
-- forced-decision/backdoor-depth analysis using existing hint-workbench provenance;
-- generator- and editor-envelope-specific technique niches before making broad capability claims;
-- minimal technique-niche counterexamples via reducer + exact/reference validation.
-
-**Stop:** if the refreshed parity, solution-profile, or production-response joins do not expose a compact recurring distinction, leave these as diagnostics. Do not launch bulk variant/profile generation or a large feature-model project to force a signal.
-
-## Deferred interoperability / infrastructure
-
-### Typed producer → consumer artifacts
-
-One stage may sometimes discover information another cannot cheaply reproduce, such as proven dead interfaces, exact-live descriptors, scarcity signals, or structural certificates. Do not build a general blackboard.
-
-A handoff must demonstrate consumer limitation, novel timely information, bounded production/storage/replay cost, independent control, positive shadow evidence, and matched-work benefit. Charge artifact production and consumption.
-
-**Stop:** if the consumer can cheaply rediscover the information, it arrives too late, or consumption displaces better search, keep stages independent.
-
-### Queryable analytical layer
-
-Build a new analytical store only if joins among run identity, attempt telemetry, static features, families, oracle labels, and experiment arms continue spawning bespoke scripts after existing census/lifecycle helpers are extended.
-
-Any generated views must be rebuildable from canonical evidence/manifests and must not become a second production-policy truth source.
-
-**Stop:** if a few reusable join helpers solve the repeated queries, use them instead of a database/schema project.
-
-## Explicitly demoted patterns
-
-Do not reopen unchanged without materially new evidence:
-
-- generic dead-last whole-ladder retries or global seed fan-out that merely buy more total work;
-- another hand-authored scoring profile whose novelty is only weights/name;
-- nearby-threshold widening of a coarse repair gate or broad extra repair budget after full-budget failure;
+- dead-last whole-ladder retries or global seed fan-out that mainly buy more total work;
+- hand-authored scoring profiles whose novelty is only weights/name;
+- nearby-threshold widening or broad extra repair budget after full-budget failure;
 - generic ALNS/adaptive-operator machinery before complementary operators earn it;
 - universal beam-width increases or large novelty/MAP-Elites/DPP machinery before a simple descriptor-aware treatment earns it;
 - production ZDD/DD/frontier, representative-set, `REGULAR`/resource-automaton, CEGAR/interpolation, or backdoor frameworks before a bounded residual question demonstrates value;
@@ -92,4 +55,4 @@ Do not reopen unchanged without materially new evidence:
 - optimizing a proxy after cold solve/work/correctness fails to improve;
 - framework-building before the smallest value-of-information pilot succeeds.
 
-This file should remain short. If chronology or detailed evidence starts accumulating here, move it to a dated report.
+Keep this file short. It should contain questions, boundaries, and reopen conditions, not experiment results.
