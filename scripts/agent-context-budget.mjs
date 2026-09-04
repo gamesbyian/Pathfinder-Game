@@ -16,7 +16,7 @@ function fileBytes(relativePath) {
     return { path: relativePath, exists: true, bytes: fs.statSync(absolute).size };
 }
 
-function summarize(route) {
+function summarizeRoute(route) {
     const required = route.required.map(fileBytes);
     const optional = (route.optional ?? []).map(fileBytes);
     const requiredBytes = required.reduce((sum, item) => sum + item.bytes, 0);
@@ -39,9 +39,23 @@ function summarize(route) {
     };
 }
 
+function summarizeAuthority(budget) {
+    const file = fileBytes(budget.path);
+    const status = !file.exists ? 'missing' : file.bytes > budget.maxBytes ? 'over-max' : file.bytes > budget.warnBytes ? 'warning' : 'ok';
+    return {
+        path: budget.path,
+        purpose: budget.purpose,
+        status,
+        bytes: file.bytes,
+        warnBytes: budget.warnBytes,
+        maxBytes: budget.maxBytes,
+    };
+}
+
 const routes = config.routes
     .filter(route => !selectedRoute || route.id === selectedRoute)
-    .map(summarize);
+    .map(summarizeRoute);
+const authorities = (config.authorityBudgets ?? []).map(summarizeAuthority);
 
 if (selectedRoute && routes.length === 0) {
     console.error(`Unknown route: ${selectedRoute}`);
@@ -51,6 +65,10 @@ if (selectedRoute && routes.length === 0) {
         schemaVersion: config.schemaVersion,
         measurement: config.measurement,
         routes,
+        authorities,
     }, null, 2));
-    if (check && routes.some(route => route.status === 'over-max' || route.missingRequired.length > 0)) process.exitCode = 1;
+    if (check && (
+        routes.some(route => route.status === 'over-max' || route.missingRequired.length > 0)
+        || authorities.some(authority => authority.status === 'over-max' || authority.status === 'missing')
+    )) process.exitCode = 1;
 }
