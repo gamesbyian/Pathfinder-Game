@@ -12,6 +12,7 @@ Do not recreate these programs here; the workstream authority owns their executi
 |---|---|
 | Generalization / confirmation blocks / cross-generator challenge | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md); [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); historical [`cohort reservation`](../reports/2026-08-24-solver-confirmation-transfer-cohort-reservation.md) |
 | Automatic solver action selection | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`solver-scheduling-policy.md`](solver-scheduling-policy.md) |
+| Technique census / niche cross-evidence analysis | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md)'s standing capability-map rule; [`technique-census-analysis.md`](technique-census-analysis.md); [`2026-09-04 cross-evidence plan`](../reports/2026-09-04-census-cross-evidence-research-plan.md) |
 | Beam retention at exact extinction boundaries | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`beam descriptor audit`](../reports/2026-08-24-beam-extinction-descriptor-sanity-check.md) |
 | Exact/reference-model program | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`reference-model audit`](../reports/2026-08-23-solver-reference-model-capability-audit.md) |
 | Restart allocation / learned failure | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); [`restart audit`](../reports/2026-08-24-restart-continuation-value-audit.md), [`learned-failure audit`](../reports/2026-08-24-learned-failure-certificate-audit.md) |
@@ -35,6 +36,23 @@ Check current code, queue, ledger, [`tooling-catalog.md`](tooling-catalog.md), a
 ### Promoted residual/search-quality gates
 
 Residual opportunity beyond current prunes and state-conditioned MustCross diagnosis now have live gates in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). Residual interfaces/bounded future models remain conditional there on first finding a recurring compact interface; do not build framework machinery in advance.
+
+### Census cross-evidence reservoir
+
+The refreshed-census program is active as a **standing evidence layer**, not a numbered workstream. Its immediate analytical gates are owned by [`2026-09-04-census-cross-evidence-research-plan.md`](../reports/2026-09-04-census-cross-evidence-research-plan.md): restore refreshed analytical parity/temporal stability first, then test solution-space structure and current production-response joins before escalating to controlled variants or traces.
+
+Keep these broader questions deferred until those cheaper gates nominate a recurring mechanism:
+
+- four-space triangulation across input geometry, solution-space structure, technique-response vectors, and live search/failure trajectories;
+- capability multiplicity as a predictor of temporal, budget-edge, or variant-family robustness;
+- stability-aware portfolios balancing work, current coverage, temporal retention, parent robustness, and solution-basin diversity;
+- latent response dimensions/biclusters only if simpler pair/cohort analysis leaves repeatable unexplained structure;
+- forced-decision/backdoor-depth analysis using existing hint-workbench provenance;
+- generator- and editor-envelope-specific technique niches before making broad capability claims;
+- minimal technique-niche counterexamples via reducer + exact/reference validation;
+- historical same-config cost volatility joined to census capability drift.
+
+**Stop:** if the refreshed parity, solution-profile, or production-response joins do not expose a compact recurring distinction, leave these as diagnostics. Do not launch bulk variant/profile generation or a large feature-model project to force a signal.
 
 ## Deferred interoperability / infrastructure
 
@@ -68,7 +86,7 @@ Do not reopen unchanged without materially new evidence:
 - broad CDCL/LCG learning without a recurring compact sound reason family;
 - generic RCSP/label-setting or exact-resource dominance without a sound completion-subsumption proof;
 - broad symmetry canonicalization/rotate-mirror retries instead of causal first-divergence diagnosis;
-- hazard/bandit/ML scheduler machinery before the queue's simpler dynamic tranche-value pilot shows held-out incremental value;
+- hazard/bandit/ML scheduler machinery before simpler fixed-work evidence demonstrates actionable headroom;
 - giant variant generation without an unanswered question and analysis plan;
 - full-corpus A/Bs for ideas already falsified causally;
 - retaining closed experiment code solely as archive;
