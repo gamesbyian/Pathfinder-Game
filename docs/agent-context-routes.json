@@ -66,6 +66,12 @@
       "maxBytes": 14000
     },
     {
+      "path": "docs/solver-optimization-current-queue.md",
+      "purpose": "Compatibility pointer only; mutable queue state belongs in workstreams.",
+      "warnBytes": 700,
+      "maxBytes": 1000
+    },
+    {
       "path": "docs/solver-research-data-assets.md",
       "purpose": "Cross-asset topology/boundaries; per-asset detail belongs in the JSON registry.",
       "warnBytes": 9000,
@@ -82,6 +88,18 @@
       "purpose": "Family-level tool map; named command discovery belongs to tooling-census.",
       "warnBytes": 10500,
       "maxBytes": 14000
+    },
+    {
+      "path": "docs/solver-search-resumability.md",
+      "purpose": "Current continuation mechanism/dispositions; rung chronology belongs in reports/archive.",
+      "warnBytes": 7500,
+      "maxBytes": 10000
+    },
+    {
+      "path": "docs/solver-architectural-speed-opportunities.md",
+      "purpose": "Current speed gates/dispositions; experiment chronology belongs in reports/archive.",
+      "warnBytes": 8000,
+      "maxBytes": 10500
     },
     {
       "path": "docs/README.md",
