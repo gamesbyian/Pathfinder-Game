@@ -12,6 +12,14 @@
       "maxBytes": 45000
     },
     {
+      "id": "periodic-repository-hygiene",
+      "description": "Recurring entropy-control pass invoked by the periodic hygiene check plan.",
+      "required": ["AGENTS.md", "docs/periodic-repository-hygiene.md"],
+      "optional": ["docs/README.md", "docs/tooling-catalog.md", "reports/README.md", "scripts/README.md"],
+      "warnBytes": 38000,
+      "maxBytes": 50000
+    },
+    {
       "id": "solver-implementation",
       "description": "Current solver implementation work before specialist implementation files.",
       "required": ["AGENTS.md", "docs/solver-architecture.md", "docs/solver-level-blindness.md"],
@@ -58,6 +66,12 @@
       "purpose": "Canonical agent router and durable working rules.",
       "warnBytes": 10500,
       "maxBytes": 13000
+    },
+    {
+      "path": "docs/periodic-repository-hygiene.md",
+      "purpose": "Executable recurring hygiene procedure; comprehensive but not an append-only hygiene diary.",
+      "warnBytes": 24000,
+      "maxBytes": 30000
     },
     {
       "path": "docs/solver-optimization-workstreams.md",
