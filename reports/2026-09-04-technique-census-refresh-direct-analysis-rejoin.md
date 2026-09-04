@@ -1,14 +1,16 @@
 # Technique census refresh: direct analytical rejoin and remaining parity work
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-04 — all six queued regeneration items complete; see `reports/2026-09-04-technique-niches-delta-of-conclusions.md` for the scored comparison against the 2026-09-01 synthesis
-> **Decision:** the refreshed census materially changes individual support identities and thin-boundary membership, but the broad structural unsupported-risk picture survives. Current capability-dependent work should use the 2026-09-03 artifact. Full analytical parity with the August census is now complete: second-order outputs (`reports/stress/technique-census/33717910218/second-order-analysis.md`), the fixed-pair relative-advantage artifact (`reports/stress/technique-niches/2026-09-03/relative-advantage-summary.json`), the portfolio-18 rare-capability rejoin (`2026-09-04-portfolio-18-specialists-rare-capability-retention-audit-002.md`), the production-boundary/exposure join (`2026-09-04-production-boundary-exposure-join-refresh.md`), the 35-case no-isolated-winner anatomy (`2026-09-04-production-solved-no-isolated-winner-35-cohort-anatomy.md`), and the delta-of-conclusions synthesis are all done.
-> **Remaining gate:** none. See the delta-of-conclusions report's own "Newly earned next steps" for what, if anything, a future session should pick up from this refresh.
+> **Last evidence:** 2026-09-04 — Gates 0A-0F of `reports/2026-09-04-census-cross-evidence-coding-handoff.md` complete; the bounded Gate-1 Corpus-1 pilot also ran and returned inconclusive (`2026-09-04-census-cross-evidence-gate1-corpus1-pilot.md`)
+> **Decision:** the refreshed census materially changes individual support identities and thin-boundary membership, but the broad structural unsupported-risk picture survives. More strongly, the old/new pair shows that aggregate capability can remain almost flat while **capability ownership churns substantially**; future niche/portfolio claims should therefore report temporal stability where possible. See "Gate 0F — conclusion delta" below for the full scored comparison against the September-1 synthesis.
+> **Remaining gate:** none from Gate 0/1. See "Newly earned next steps" below for what a future session should pick up, none of which is forced by this report alone.
 > **Evidence role:** observational-development re-analysis of already-collected census evidence
 
 ## Why this report exists
 
 Run `33717910218` refreshed the expensive technique × level matrix and `2026-09-03-technique-census-refresh-001-rejoin.md` rebuilt the basic capability map and old-vs-new class delta. That refresh did not automatically regenerate every analytical layer later built around the August census. This report records what can already be refreshed directly from the current capability artifact and identifies the remaining derived outputs that should be rebuilt from the fresh cells.
+
+The broader ranked research program that now joins census evidence to solution-space fingerprints, production response, variants and mechanism traces is in `2026-09-04-census-cross-evidence-research-plan.md`.
 
 ## Current top line
 
@@ -27,6 +29,38 @@ The current `level-capability.json` covers 1,962 levels:
 | doubleton | 94 |
 
 The refresh report already records the important historical delta: 229 levels changed support class, 25 newly entered the production-solved/no-isolated-winner class, 81 production misses gained isolated support, singleton count moved 181→175, and doubleton 96→94.
+
+## Temporal holdout: stable totals, unstable ownership
+
+The old and refreshed censuses use the same 1,962-level universe and the same broad isolated-T1 question at different solver revisions. That makes their disagreement useful evidence rather than merely staleness to erase.
+
+- isolated-oracle union moved only **1,313 → 1,316**, a +3-level / ~0.23% change;
+- nevertheless **229/1,962 = 11.7%** of levels changed support class;
+- 81 production misses gained isolated support while 25 production-solved rows newly lost all isolated support;
+- singleton membership churned 94 gains / 100 losses despite a net count change of only -6.
+
+The practical lesson is that an aggregate union or singleton count can look stable while the identities supplying that capability move considerably. Future technique-niche, rare-capability and portfolio analyses should therefore distinguish:
+
+1. aggregate capability stability;
+2. per-level support-class stability;
+3. per-technique capability ownership stability.
+
+Selected action rows show the same pattern:
+
+| action | old solved → new solved | old exclusive → new exclusive | old thin → new thin | reading |
+|---|---:|---:|---:|---|
+| IH beam 5K mechanic-buckets | 713 → 713 | 9 → 11 | 25 → 22 | total unchanged, ownership moved |
+| objective beam 5K mechanic-buckets | 712 → 705 | 11 → 14 | 25 → 21 | modest solve drift, stronger singleton role |
+| perimeter beam 2K CW | 504 → 499 | 11 → 15 | 23 → 30 | fewer solves, more rare-boundary ownership |
+| perimeter beam 2K CCW | 502 → 506 | 13 → 10 | 21 → 27 | opposite-direction ownership movement |
+| repair standard | 787 → 770 | 59 → 50 | 101 → 91 | broad specialist weakened but remains dominant |
+| repair must-turn-biased | 174 → 187 | 14 → 19 | 30 → 29 | sibling repair mode gained capability |
+| admissible-order no tie-break | 458 → 490 | 15 → 17 | 28 → 24 | meaningful broad gain |
+| DFS default | 398 → 385 | 1 → 0 | 1 → 2 | broad count drift without rare-role growth |
+
+These examples are descriptive, not a substitute for the full action-stability/Jaccard rebuild. They are enough to show why the new research plan treats temporal technique stability as a first-class output.
+
+A particularly clean candidate-level holdout is now complete: `2026-09-04-portfolio-18-fresh-census-temporal-holdout.md` finds the already-fixed `portfolio-18-specialists` composition retained **147/155 (94.8%)** of refreshed full-menu singleton exclusives, versus **144/151 (95.4%)** on the old census. The rare-capability curation principle survived the temporal shift almost unchanged even though the portfolio's real production replacement A/B remains closed for separate dose/context reasons.
 
 ## Structural unsupported-risk signal: refreshed
 
@@ -84,32 +118,48 @@ This is consistent with the production-vs-static-portfolio A/B attribution: the 
 
 ## What is already refreshed versus still stale
 
-Already current:
+All six Gate 0 items are now complete:
 
 - raw combined census cells and level-technique coverage from run `33717910218`;
 - first-order capability summary / pair-synergy / flag-sensitivity outputs emitted with that run;
 - `reports/stress/technique-niches/2026-09-03/level-capability.json`;
 - old-vs-new support-class/singleton/doubleton delta digest;
-- the direct structural-risk and selected current action summaries in this report.
+- direct structural-risk and selected current action summaries in this report;
+- refreshed `portfolio-18-specialists` singleton-retention temporal holdout (`2026-09-04-portfolio-18-fresh-census-temporal-holdout.md`);
+- **Gate 0A** — full second-order census analysis regenerated: `reports/stress/technique-census/33717910218/second-order-analysis.{json,md}`;
+- **Gate 0B** — fixed eight relative-advantage pairs regenerated (after fixing `DEFAULT_PAIRS`' stale pre-naming-cleanup key spellings, which silently matched zero rows against any current data): `reports/stress/technique-niches/2026-09-03/relative-advantage-summary.json`;
+- **Gate 0C** — reusable old->new action/level temporal-stability tool built and run: `scripts/analyze-technique-census-temporal-stability.mjs`, output at `reports/stress/technique-niches/2026-09-03/temporal-stability.{json,md}`;
+- **Gate 0D** — production-boundary/exposure join refreshed with an explicit evidence-comparability check: `2026-09-04-census-cross-evidence-production-boundary-join.md`;
+- **Gate 0E** — 35-cohort classified against the coding handoff's taxonomy: `2026-09-04-census-cross-evidence-35-cohort-anatomy.md`.
 
-Still requiring regeneration from the fresh matrix to match the analytical layers built around the August census:
+## Gate 0F — conclusion delta
 
-1. **Full second-order census analysis** via `scripts/analyze-technique-census.mjs` against `reports/stress/technique-census/33717910218/`: phenotype/multiplicity, cover/oracle frontiers, pairwise substitutability, conditional success/cost, parameter inversions, cap-retention curves, censored tranche economics, `techniqueBudgetCurves`, and any comparable production joins.
-2. **Fresh compact relative-advantage artifact** using the same prespecified pair set as `reports/stress/technique-niches/2026-09-01/relative-advantage-summary.json`, so old-vs-new disagreement counts and structural effects can be compared without pair reselection.
-3. **Fresh portfolio-18 rare-capability join** against the 2026-09-03 capability map, reproducing the old 144/151 singleton-retention audit with current singleton/doubleton memberships and per-dropped-technique losses.
-4. **Fresh production-boundary/exposure join** replacing the superseded 73-not-offered / 57-starved / 9-non-reproducing counts with current census + current comparable production reach/work evidence.
-5. **Fresh anatomy of the 35 production-solved/no-isolated-winner levels**, because this cohort grew from 14 to 35 and is now large enough to reassess how often live production capability comes from retry context, additive actions, sequence effects, or action identities absent from the isolated census.
-6. **Delta-of-conclusions synthesis:** compare the regenerated outputs to the September-1 synthesis and explicitly classify conclusions as survived, strengthened, weakened, reversed, or superseded.
+Four rows (thin-boundary share of the gap population, thin-boundary share of all oracle-solved, the perfect-router bound, and the CW/CCW orientation pair) were folded in from an independent parallel pass on this same September-1-vs-refresh comparison (`claude/scheduler-evidence-model-v1nnyv`'s `2026-09-04-technique-niches-delta-of-conclusions.md`, now superseded by this table) to keep one canonical scored comparison rather than two partially-overlapping ones.
 
-## Execution priority
+| September-1 / 976-era conclusion | Fresh (2026-09-03/04) equivalent | Verdict |
+|---|---|---|
+| Isolated oracle union 1,313/1,962 (66.9%); singleton 181, doubleton 96 | 1,316/1,962 (67.1%); singleton 175, doubleton 94 | **Survived** — aggregate shape essentially unchanged despite 229 underlying support-class changes (per-level) |
+| Production-miss isolated-solvable 253/888 (28.5%) | 277/888 (31.2%) | **Strengthened slightly** |
+| Thin-boundary share of the oracle-solved gap population: 161/253 (63.6%) | 150/277 (54.2%) | **Weakened** — still a majority, but a real ~9.4pp drop; the gap population is less dominated by singleton/doubleton "thin" solves than before |
+| Thin-boundary share of all oracle-solved levels: 277/1,313 (21.1%) | 269/1,316 (20.4%) | **Survived** — close, small movement |
+| Perfect-router bound on the production-unsolved population: 24 solves @100K work, 108 @500K, 171 @10M, 253 @50M | 31 @100K, 146 @500K, 212 @10M, 277 @50M | **Strengthened at every threshold** — the isolated technique menu demonstrates materially more oracle capability at every matched work budget than the August census showed |
+| Repair largest deep specialist: 59 canonical-repair singleton wins | 50 (`repair\|score=repair\|guidance=standard`); solve-set Jaccard only **0.713** (122 gained, 139 lost) despite solved count moving only 787->770 | **Weakened in magnitude, and Gate 0C adds a new finding this report's own old-vs-new table did not have**: aggregate solved-count stability conceals substantial capability-ownership churn — the must-turn-biased/turn-biased repair guidance variants show even sharper churn (Jaccard ~0.44-0.46) |
+| `admissible-order\|tieBreak=none` 15 singleton wins | 17 | **Strengthened** |
+| `portfolio-18-specialists` retains 144/151 (95.4%) of full-menu singleton exclusives | 147/155 (94.8%) | **Survived** (`2026-09-04-portfolio-18-fresh-census-temporal-holdout.md`) |
+| Close-substitute Jaccard: `ida:default`/`ida:mustCrossFirst` .936; `dfs:harvestThenFinish`/`dfs:portalFirstTransfer` .932 | `admissible-order` default/mustCrossFirst 0.924; `dfs` harvestThenFinish/portalFirstTransfer 0.941 (Gate 0B, outcome-similarity view) — Gate 0C's independent solve-set Jaccard for the same two pairs: 0.768 and 0.835 respectively | **Survived** on the outcome-similarity metric; the two Jaccard formulations (Gate 0B's disagreement-population view vs. Gate 0C's raw solve-set view) are not the same statistic and should not be conflated — both still support "highly substitutable, not identical" |
+| Structural no-T1-winner risk factors: constrained objects 1.23, turn-constraint load .92, portals .76 | 1.276, 0.971, 0.789 | **Survived** — combined obligation/load/topology burden remains the dominant structural signal |
+| Routing-regime enrichment: multi-portal "nearly neutral" ~1.03x | 1.100x | **Partially reversed** — real, if still weak, enrichment |
+| Objective/intersection-harvest beam plain-vs-mechanic-buckets: portals -1.06 / +0.655 requiredIntersections | portals -0.677 (weaker, same direction) / +0.903 requiredIntersections (stronger, same direction) | **Survived**, one weaker one stronger in magnitude |
+| Objective beam 2K-vs-5K: 2K-only wins explained by larger navigable area/scale (std diff ~0.66) | Top effects now turnConstraintLoad/coverage/density; scale features no longer in the top 3 | **Reversed** — the width-inversion phenomenon itself still holds; its September-1 explanation does not |
+| CW/CCW beam and DFS orientation pairs: large disagreement populations, weak coarse-feature separation (~0.22-0.34); "orientation sensitivity is real but largely invisible to counts/densities" | Beam CW/CCW 0.247 (was 0.215); DFS CW/CCW top effect now portals 0.620 (was mustCross 0.344) | **Survived for beam** (still weak, same conclusion); **strengthened for DFS** (materially larger top effect, though the leading feature identity changed from mustCross to portals) — orientation sensitivity remains poorly explained by coarse features either way |
+| 14 anomalous production-solved/no-T1-winner levels; 7/8 later-solved cases were diverse 5K beams "usually in retry stages" | Cohort grew to 35; Gate 0E finds 25/35 are census coverage gaps (not genuine anomalies) and, of the genuine 10, 7/10 attributable and **100%** are whole-ladder ablation-disabled retry / biased-repair contexts | **Strengthened and reframed** — the "usually in retry stages" nomination is confirmed at much larger scale and sharper mechanism, but the raw 35-count overstates the phenomenon by roughly 2.5x |
+| 976-era production-boundary decomposition: 139/724 comparable, 73 not-offered (52.5%), 66 offered (47.5%) | 122/729 comparable (16.7%, close), **45 rescuer-never-offered (36.9%)**, 77 offered-but-outcome-unresolved (63.1%) | **Reframed** — comparable-population share survived; the internal split flipped which bucket is the majority. `repair\|guidance=turn-biased` is now the single largest concrete never-offered config (13 levels), a genuinely different nomination from the 2026-08-25 report's own top candidate |
 
-The highest-value order is:
+## Newly earned next steps
 
-1. regenerate second-order outputs;
-2. regenerate the fixed-pair relative-advantage artifact;
-3. refresh portfolio rare-capability retention;
-4. rebuild the current production-boundary/exposure join;
-5. analyze the 35 production-solved/no-isolated-winner cases;
-6. write a concise conclusion-delta synthesis and update queue assumptions only where evidence actually moved.
+1. **The missing-exposure priority needs re-weighing, not automatic re-prioritization.** The 976-era "prioritize one cheap missing-exposure beam pilot" recommendation assumed missing exposure was the majority (52.5%) of the comparable residual; it is now the minority (36.9%). `repair|score=repair|guidance=turn-biased` (13 levels, never offered in production at all) is now the single most concrete candidate if this line is pursued, but weigh it against the now-larger offered-but-unresolved bucket.
+2. **Repair's capability-ownership churn (Jaccard 0.71, and ~0.44-0.46 for the biased guidance variants) is a genuinely new finding**, not present in either the September-1 synthesis or the 2026-09-04 direct-rejoin's earlier selected-row table. It does not by itself justify a repair-policy change, but any future repair repricing/routing claim should report temporal stability alongside aggregate solve counts, per this report's own standing lesson.
+3. **The 2K/5K objective-beam width-inversion mechanism needs a fresh explanation.** Its September-1 "larger navigable area" framing no longer holds; do not reuse it if this inversion becomes decision-relevant.
+4. **Gate 1's bounded Corpus-1 pilot ran and returned inconclusive** (`2026-09-04-census-cross-evidence-gate1-corpus1-pilot.md`). One signal is worth naming as a hypothesis for a future, properly powered pass: portal-use-**signature** diversity (distinct portal-use modes, not raw portal count) separated the diverse/mechanic-buckets-only disagreement population from the plain-only population in both prespecified beam pairs (2.9x and a 0-to-4.5 gap respectively) — directionally consistent with, and mechanistically sharper than, the September-1 portal-count finding. Corpus 1 alone (disagreement populations of n=2-16 per side) cannot confirm it, and generating a Corpus-2 profile library to chase it now is out of this handoff's scope. Per Gate 1's own stop rule, this pilot stopped rather than escalating.
 
-None of this requires another expensive census. It is extraction, joining, and interpretation of evidence already collected.
+None of Gate 0 required another expensive census. It was extraction, joining, and interpretation of evidence already collected.

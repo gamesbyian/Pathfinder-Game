@@ -30,6 +30,22 @@ It derives, from already-recorded technique × level cells:
 
 Outcome overlap is not operational similarity. Different names can share one engine, while a small ordering/retention change can produce different outcomes. Use bounded operational traces for that question.
 
+## Cross-evidence analysis
+
+Treat the census as a **technique-response matrix**, not only a winner table. Once the current second-order outputs are rebuilt, the highest-value use of the matrix is to explain stable disagreement/rare-capability cohorts with independent views of the same puzzles rather than adding more census axes.
+
+The ranked program is [`../reports/2026-09-04-census-cross-evidence-research-plan.md`](../reports/2026-09-04-census-cross-evidence-research-plan.md). Its order is intentional:
+
+1. **temporal stability:** compare the August and September censuses before discarding the older snapshot; aggregate coverage can stay flat while per-level and per-technique capability ownership moves;
+2. **solution-space structure:** join stable multiplicity/inversion cohorts to existing solution profiles and hint provenance to test basin width, rigidity, path-mode and semantic-profile hypotheses;
+3. **production response:** join current lifecycle reach/termination/work/progress to isolated rescuers and ask what the real solver learns by failing;
+4. **controlled variants:** use the existing family trove only for associations that survive the cheaper joins, with whole-parent independence;
+5. **mechanism localization:** use prefix survival, paired traces, exact/reference labels and reduction only after a recurring discrepancy is identified.
+
+The first temporal holdout is already complete: [`../reports/2026-09-04-portfolio-18-fresh-census-temporal-holdout.md`](../reports/2026-09-04-portfolio-18-fresh-census-temporal-holdout.md) finds the fixed `portfolio-18-specialists` composition retains 147/155 (94.8%) of refreshed full-menu singleton exclusives, essentially unchanged from the old 144/151 (95.4%) result despite broad support churn.
+
+Known solutions, fingerprints, historical winners, construction witnesses and family identities remain offline labels. A cross-evidence association must be translated into a compact legal current-level/current-state descriptor or mechanism and independently tested before it can affect production search.
+
 ## Scheduler-facing `techniqueBudgetCurves`
 
 `second-order-analysis.json.techniqueBudgetCurves` is the rebuildable cap/tranche interface. It has shared checkpoints through the census ceiling and separate production-solved / production-unsolved populations.
@@ -55,9 +71,10 @@ Cap costs are isolated `nodesExpanded` diagnostics. They compare depth **within*
 The expensive matrix is fresh; the current gap is **derived materialization/join/valuation**, not another census:
 
 1. regenerate second-order cap/tranche/substitutability outputs from `33717910218`;
-2. join current production reach/work evidence where comparable;
-3. value incremental solves/work, rare exclusives, portfolio cardinality, and fixed-work oracle headroom;
-4. keep production scheduler experiments tied to current rare-capability evidence rather than the superseded August snapshot.
+2. regenerate the prespecified relative-advantage comparisons and materialize old->new action stability;
+3. join current production reach/work evidence where comparable;
+4. value incremental solves/work, rare exclusives, portfolio cardinality, and fixed-work oracle headroom;
+5. use stable cross-evidence cohorts to nominate only compact, testable search/scheduler mechanisms.
 
 Sequence-dependent actions require controlled current-code execution before causal scheduler use; isolated census curves do not erase predecessor-state effects.
 
@@ -70,5 +87,6 @@ Sequence-dependent actions require controlled current-code execution before caus
 - Use parent/family units where family data enters the analysis.
 - Report gains, losses, coverage/missing cells, censoring, and cost; do not rank only by average solve rate.
 - Historical production joins must be reconciled to current code/protocol before live policy changes.
+- A stable association with solution/hint/family data is still an offline diagnosis until translated into a legal generic descriptor and confirmed away from the discovery units.
 
-Detailed dated interpretation belongs in generated census reports and the direct refresh rejoin linked above, not in this instrument description.
+Detailed dated interpretation belongs in generated census reports and the direct refresh/cross-evidence reports linked above, not in this instrument description.

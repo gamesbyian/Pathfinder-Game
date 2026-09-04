@@ -11,10 +11,11 @@ import { fileURLToPath } from 'node:url';
 // docs/naming-cleanup-ledger.json NC-P05-012/013/014 for the 'diverse'->'mechanic-buckets'
 // mapping and scripts/technique-census-result-lib.mjs's ida:*->admissible-order|tieBreak=*
 // mapping) of the exact same eight pairs first prespecified 2026-09-01
-// (reports/2026-09-01-technique-relative-advantage-followup.md). Updated 2026-09-04 when the
-// 2026-09-03 census refresh's solvingActions moved to this format and every DEFAULT_PAIRS entry
-// stopped matching anything (0/8 pairs found any left/right/both rows) -- this is a key-spelling
-// fix for the same eight comparisons, not a reselection of which pairs to test.
+// (reports/2026-09-01-technique-relative-advantage-followup.md). Updated 2026-09-04
+// (reports/2026-09-04-census-cross-evidence-coding-handoff.md Gate 0B) when the 2026-09-03
+// census refresh's solvingActions moved to this format and every DEFAULT_PAIRS entry stopped
+// matching anything (0/8 pairs found any left/right/both rows) -- this is a key-spelling fix
+// for the same eight comparisons, not a reselection of which pairs to test.
 const DEFAULT_PAIRS = [
     ['admissible-order|tieBreak=default|lds=off', 'admissible-order|tieBreak=mustCrossFirst|lds=off'],
     ['dfs|score=harvestThenFinish|bias=none', 'dfs|score=portalFirstTransfer|bias=none'],
