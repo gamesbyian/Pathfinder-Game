@@ -44,13 +44,12 @@ The refreshed-census program is active as a **standing evidence layer**, not a n
 Keep these broader questions deferred until those cheaper gates nominate a recurring mechanism:
 
 - four-space triangulation across input geometry, solution-space structure, technique-response vectors, and live search/failure trajectories;
-- capability multiplicity as a predictor of budget-edge or variant-family robustness (the temporal-robustness clause is **answered**: old-census `solverCount` strongly and monotonically predicts whether a level stays oracle-solvable across a refresh — 34.3% singleton→zero-solvers vs. 0.3% at solverCount 11+ — see [`2026-09-04-capability-multiplicity-temporal-robustness-001.md`](../reports/2026-09-04-capability-multiplicity-temporal-robustness-001.md); do not re-run this exact join, extend to the untested budget-edge/variant-family clauses instead);
+- capability multiplicity as a predictor of variant-family robustness (the **temporal and budget-edge clauses are answered**: old-census `solverCount` strongly and monotonically predicts both whether a level stays oracle-solvable across a refresh — 34.3% singleton→zero-solvers vs. 0.3% at solverCount 11+ — and how much margin its cheapest known solve has under the census node budget — 15.4% of singletons use over half the budget vs. 0.0% at solverCount 6+; further refined by technique family — DFS-singleton claims lose support at ~2x beam's rate, admissible-order-singleton claims essentially never lose it in this sample. See [`2026-09-04-capability-multiplicity-temporal-robustness-001.md`](../reports/2026-09-04-capability-multiplicity-temporal-robustness-001.md), [`2026-09-04-capability-multiplicity-budget-edge-robustness-001.md`](../reports/2026-09-04-capability-multiplicity-budget-edge-robustness-001.md), [`2026-09-04-singleton-fragility-by-technique-family-001.md`](../reports/2026-09-04-singleton-fragility-by-technique-family-001.md). The variant-family clause remains untested — the current census carries no `familyId`/`parentId` data to join against; do not re-run the temporal/budget-edge joins, a variant-family-specific data source would be needed instead);
 - stability-aware portfolios balancing work, current coverage, temporal retention, parent robustness, and solution-basin diversity;
 - latent response dimensions/biclusters only if simpler pair/cohort analysis leaves repeatable unexplained structure;
 - forced-decision/backdoor-depth analysis using existing hint-workbench provenance;
 - generator- and editor-envelope-specific technique niches before making broad capability claims;
-- minimal technique-niche counterexamples via reducer + exact/reference validation;
-- historical same-config cost volatility joined to census capability drift.
+- minimal technique-niche counterexamples via reducer + exact/reference validation.
 
 **Stop:** if the refreshed parity, solution-profile, or production-response joins do not expose a compact recurring distinction, leave these as diagnostics. Do not launch bulk variant/profile generation or a large feature-model project to force a signal.
 
