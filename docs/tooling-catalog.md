@@ -48,7 +48,7 @@ Use `package.json` only when the compact tool query does not expose the alias/op
 Keep these out of the tooling catalogue's command descriptions; the owning research docs are authoritative:
 
 - **Level-blindness:** exact identity, saved hints, historical per-level outcomes/cost, winner configs, and variant outcomes cannot steer cold production policy. See [`solver-level-blindness.md`](solver-level-blindness.md).
-- **Generalization:** fresh same-generator data is not automatically cross-generator transfer. See [`solver-evaluation-evidence.md`](solver-evaluation-evaluation-evidence.md).
+- **Generalization:** fresh same-generator data is not automatically cross-generator transfer. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 - **Allocation:** compare techniques/treatments with `workSpent`; wall deadlines must be non-binding for deterministic search evidence. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
 - **Selection:** a population/feature/config selected after outcomes is development evidence until independently confirmed at strength proportional to selection pressure.
 - **Known solutions/exact labels:** powerful offline diagnostics, forbidden as hidden runtime lookup.
