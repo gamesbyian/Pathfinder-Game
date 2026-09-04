@@ -10,7 +10,7 @@ For a named concept, use compact/queryable front doors before `package.json` or 
 - research status: `node scripts/research-status-index.mjs --compact [--query=...] [--status=...] [--kind=...]`;
 - solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`; add `--id=<asset-id>` or `--full` only when needed;
 - agent-context size: `node scripts/agent-context-budget.mjs [--route=<id>]`; `--check` fails missing/over-max required routes;
-- naming-cleanup history: `npm run naming:status`; use phase/batch/json options instead of reopening the frozen plan;
+- naming-cleanup history: `npm run naming:status -- --batch=<id>` (phase/json options are also available); do not reopen the frozen plan;
 - corpora: `node scripts/corpus-query.mjs --corpus=stress2`; filters/list/sample stay compact, `--full` emits exact levels;
 - hint/provenance: `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; use `--full` only for exact paths/provenance;
 - tracked raw artifacts: `node scripts/artifact-query.mjs [--query=...] [--role=...]`;
