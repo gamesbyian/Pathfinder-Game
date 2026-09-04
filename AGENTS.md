@@ -8,6 +8,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 |---|---|
 | Product/code change | [`docs/architecture.md`](docs/architecture.md), then changed files |
 | Cross-cutting schema/state/telemetry | [`docs/change-recipes.md`](docs/change-recipes.md), then owning topic doc |
+| Periodic repository hygiene / “periodic hygiene check plan” | Execute [`docs/periodic-repository-hygiene.md`](docs/periodic-repository-hygiene.md) end-to-end from current `main`; it owns the recurring hygiene procedure |
 | Naming / future rename | The repository-wide naming cleanup is complete through Phase 15. Current authority: [`docs/naming-and-vocabulary.md`](docs/naming-and-vocabulary.md) + [`docs/change-recipes.md`](docs/change-recipes.md). Historical/status entry point: `npm run naming:status`. Do not reopen the completed sequence or invent Phase 16. |
 | UI/input/accessibility/rendering | [`docs/architecture.md`](docs/architecture.md), [`docs/ui-accessibility.md`](docs/ui-accessibility.md), [`docs/testing.md`](docs/testing.md) |
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
