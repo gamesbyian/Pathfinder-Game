@@ -47,7 +47,7 @@ on:
         required: false
         default: '50000000'
       node_budget_advisory_only:
-        description: 'If true, node_budget still sizes the derived work_budget and the shard-planner''s wall-time estimate, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). Use this whenever the comparison under test is itself a work-budget-share change (e.g. admissible_order_non_default_retry_budget_fraction), so the fraction difference is not masked by an unrelated raw node-count ceiling reached identically in every arm.'
+        description: 'If true, node_budget still sizes the derived work_budget, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). The shard-planner''s wall-time/timeout estimate is sized off the larger derived work_budget in this mode instead of the raw node_budget, since node_budget no longer bounds a level''s real worst-case wall time here (see reports/2026-09-04-admissible-order-non-default-retry-repricing-confirmation-002.md -- an earlier version of this workflow still planned off the raw node_budget in advisory-only mode and most shards ran out their timeout before finishing their assigned levels). Use this whenever the comparison under test is itself a work-budget-share change (e.g. admissible_order_non_default_retry_budget_fraction), so the fraction difference is not masked by an unrelated raw node-count ceiling reached identically in every arm.'
         required: false
         default: 'false'
       strict_total_work_budget:
@@ -142,10 +142,19 @@ jobs:
         id: plan
         shell: bash
         run: |
+          # When node_budget_advisory_only=true, the raw node_budget no longer bounds a
+          # level's real wall time (nodeBudgetReached can't fire; only work_budget can stop
+          # it), so per-level worst-case time is governed by work_budget's larger ceiling, not
+          # node_budget. Plan shard sizing/timeouts off that effective ceiling in this case --
+          # otherwise the planner under-estimates worst-case per-level time, over-packs shards,
+          # and most shards hit their own timeout mid-slice before finishing their assigned
+          # levels (see reports/2026-09-04-admissible-order-non-default-retry-repricing-confirmation-002.md).
+          planning_node_budget="${{ inputs.node_budget }}"
+          [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && planning_node_budget=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           node scripts/plan-highbudget-shards.mjs \
             --ids-file=logs/solver-targeted-sweep/ids.txt \
             --corpus2="${{ inputs.corpus }}" \
-            --node-budget="${{ inputs.node_budget }}" \
+            --node-budget="${planning_node_budget}" \
             --workers="${{ inputs.workers }}" \
             --target-wall-minutes="${{ inputs.target_wall_minutes }}" \
             --solo-threshold-multiplier="${{ inputs.solo_threshold_multiplier }}" \
