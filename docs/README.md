@@ -89,6 +89,11 @@ These are reusable instruments, not priority authorities.
 
 Phase 0–15 is complete. Current naming authority is [`naming-and-vocabulary.md`](naming-and-vocabulary.md); future cross-boundary renames use [`change-recipes.md`](change-recipes.md). `npm run naming:status` provides targeted terminal/history status.
 
+| Frozen record | Role |
+|---|---|
+| [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) | Completed/frozen Phase-15 execution evidence |
+| [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md) | Frozen Phase-15 preparation snapshot |
+
 `naming-cleanup-plan.md`, `naming-cleanup-ledger.json`, `naming-cleanup-history-and-lessons.md`, `naming-cleanup-process-hardening.md`, `naming-cleanup-future-phase-preparation.md`, `naming-cleanup-phase-record-template.md`, and `naming-cleanup-phase-records/` are implementation evidence, not ordinary current-task reading. Frozen reports keep historical names/paths where provenance requires it.
 
 ## History
