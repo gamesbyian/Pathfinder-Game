@@ -1,10 +1,10 @@
 # Solver optimization: current queue
 
-> **Status:** compact live front door for solver capability and efficiency research.
+> **Status:** compact live projection/front door for solver capability and efficiency research.
 > **Reconciled:** 2026-09-04.
-> **Detailed chronology:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
+> **Source authority and detailed chronology:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
-Use this file to answer **what should happen next**. Open the detailed workstreams file only when the current gate needs its chronology, prior branches, or complete evidence chain. Specialist reports/docs refine the current gate but do not silently reprioritize it.
+Use this file to answer **what should happen next without preloading the full chronology**. It must stay synchronized with the current-priority/gate state in the detailed workstreams authority. Open that larger file when the current gate needs chronology, prior branches, complete dispositions, or the full evidence chain. Specialist reports/docs refine the current gate but do not silently reprioritize it.
 
 ## Current execution priority
 
