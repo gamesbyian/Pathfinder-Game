@@ -1,9 +1,9 @@
 # Technique census refresh: direct analytical rejoin and remaining parity work
 
-> **Status:** active
-> **Last evidence:** 2026-09-04 — direct re-analysis of `reports/stress/technique-niches/2026-09-03/level-capability.json`, generated from technique census run `33717910218`
-> **Decision:** the refreshed census materially changes individual support identities and thin-boundary membership, but the broad structural unsupported-risk picture survives. Current capability-dependent work should use the 2026-09-03 artifact. Full analytical parity with the August census still requires rebuilding the second-order census outputs and relative-advantage artifact against run `33717910218`; those are execution/tooling tasks, not reasons for another census.
-> **Remaining gate:** items 3-6 of "Still requiring regeneration" below (items 1-2, the second-order outputs and the fixed-pair relative-advantage artifact, are now regenerated against run `33717910218` — see `reports/stress/technique-census/33717910218/second-order-analysis.md` and `reports/stress/technique-niches/2026-09-03/relative-advantage-summary.json`; remaining: the portfolio-18 rare-capability rejoin, the production-boundary/exposure join, the 35-case no-isolated-winner anatomy, and the delta-of-conclusions synthesis).
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-04 — all six queued regeneration items complete; see `reports/2026-09-04-technique-niches-delta-of-conclusions.md` for the scored comparison against the 2026-09-01 synthesis
+> **Decision:** the refreshed census materially changes individual support identities and thin-boundary membership, but the broad structural unsupported-risk picture survives. Current capability-dependent work should use the 2026-09-03 artifact. Full analytical parity with the August census is now complete: second-order outputs (`reports/stress/technique-census/33717910218/second-order-analysis.md`), the fixed-pair relative-advantage artifact (`reports/stress/technique-niches/2026-09-03/relative-advantage-summary.json`), the portfolio-18 rare-capability rejoin (`2026-09-04-portfolio-18-specialists-rare-capability-retention-audit-002.md`), the production-boundary/exposure join (`2026-09-04-production-boundary-exposure-join-refresh.md`), the 35-case no-isolated-winner anatomy (`2026-09-04-production-solved-no-isolated-winner-35-cohort-anatomy.md`), and the delta-of-conclusions synthesis are all done.
+> **Remaining gate:** none. See the delta-of-conclusions report's own "Newly earned next steps" for what, if anything, a future session should pick up from this refresh.
 > **Evidence role:** observational-development re-analysis of already-collected census evidence
 
 ## Why this report exists
