@@ -1,10 +1,10 @@
 # Production-ladder marginal-value/tail audit: where the extra 4/40 coverage comes from, and where production spends work for nothing on this population
 
 > **Status:** active
-> **Last evidence:** 2026-09-04 — attribution complete; repricing pilot dispatched and running
-> **Decision:** the 4 production-only wins over `static-portfolio` in `2026-09-04-static-portfolio-entrypoint-production-ab-001.md` split 3 dose-truncation / 1 missing-action; on the same 40-level population, two `admissible-order` stages (`admissible-order-fallback` + `admissible-order-alternate-tiebreak-retry`) together consume ~62% of all production `workSpent` for a combined 3 realized solves, with `admissible-order-alternate-tiebreak-retry` alone at ~27.5% of total work and 0 conditional solves in-sample — but that tier has documented rare/exclusive census value elsewhere, so this report treats it as a repricing input, not a suppression case.
-> **Remaining gate:** see "Next earned gate" — the fixed-work suppression pilot on `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` is running; a properly-sized repricing design (shrink, don't remove) is the recommended follow-up regardless of this pilot's outcome, given the tier's documented rare-capability value.
-> **Evidence role:** analysis (parts 1-2 are joins over existing evidence); the fixed-work pilot (part 4) is confirmation-shaped but single-population
+> **Last evidence:** 2026-09-04 — attribution complete; repricing pilot complete, 40/40 levels both arms
+> **Decision:** the 4 production-only wins over `static-portfolio` in `2026-09-04-static-portfolio-entrypoint-production-ab-001.md` split 3 dose-truncation / 1 missing-action; on the same 40-level population, two `admissible-order` stages (`admissible-order-fallback` + `admissible-order-alternate-tiebreak-retry`) together consume ~62% of all production `workSpent` for a combined 3 realized solves. Disabling `admissible-order-alternate-tiebreak-retry` entirely loses **zero** solves and saves **58.35%** of total production `workSpent` on this population — but that tier's tie-break profiles have documented rare/exclusive census value, so this report recommends repricing (a smaller, percentile-derived work ceiling), not permanent removal.
+> **Remaining gate:** a percentile-derived smaller work ceiling for `admissible-order-alternate-tiebreak-retry`, confirmed on a ~150-level population — see "Next earned gate."
+> **Evidence role:** analysis (parts 1-2 are joins over existing evidence); the fixed-work pilot (part 4) is confirmation-shaped but single-population, so it nominates a repricing magnitude rather than closing the policy question
 > **Selection:** the population is the existing disjoint 40-level draw from `2026-09-04-static-portfolio-entrypoint-production-ab-001.md` (prespecified there, reused here — not selected for this report's outcome); the pilot's treatment (which stage to disable) was chosen from this report's own tail table, so it is nomination evidence, not independently confirmed
 
 ## Question
@@ -109,16 +109,29 @@ node scripts/run-bundled.mjs scripts/portfolio-solve-sweep.mjs -- \
 
 ### Result
 
-PENDING_RESULT_PLACEHOLDER
+Both arms ran the identical 40-level population to completion.
+
+| Arm | Solved | Aggregate workSpent |
+|---|---:|---:|
+| `production` (control, `admissible-order-alternate-tiebreak-retry` active) | 18/40 | 12,395,204,792 |
+| `production` with `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` disabled | 18/40 | 5,162,700,501 (**−58.35%**) |
+
+**Gained (pilot solves, control doesn't): 0. Lost (control solves, pilot doesn't): 0.** The solved-id set is byte-identical between arms: `R00153, R00296, R02014, R02126, R02259, R02370, R02653, R02675, R02784, R02873, R02924, R03167, R03187, R03210, R03219, R03249, R03347, R03363`.
+
+One solved level's winning stage/action differs between arms despite the identical outcome: `R02259` won via `main-search|dfs|score=perimeterSweep|bias=perimeterCW` in the control and via `admissible-order-fallback|admissible-order|tieBreak=none|lds=off` in the pilot. Both winning stages run *before* `admissible-order-alternate-tiebreak-retry` in the ladder, so a dead-last additive tier being disabled cannot mechanically change what an earlier stage finds — this is ordinary solver run-to-run nondeterminism (the underlying capability run this session also consulted was itself dispatched with `deterministic: "false"`; this pilot did not request a deterministic run either), not a scheduler effect. It does not change the headline result (both arms still solve `R02259`) and is noted only so a reader does not mistake it for a hidden interaction.
 
 ## Interpretation
 
-PENDING_INTERPRETATION_PLACEHOLDER
+This is a clean, single-population, zero-cost result: disabling the single largest work-sink stage found in Part 2 (27.5% of total production work, 0 conditional solves in-sample) cost nothing on this exact population while removing 58.35% of aggregate `workSpent` — more than Part 2's own per-stage estimate would suggest, because the two `admissible-order` stages compete for wall-clock-adjacent budget in ways that compound (a shorter ladder also changes how much the *other* stages get to run before the outer envelope closes).
+
+This result must be read through the census caveat already raised in Part 2, not as a standalone "this tier is worthless" finding. The four tie-break profiles this tier runs each carry documented rare/exclusive value in the frozen 1,962-level census (`tieBreak=none` alone: 17 exclusive levels, 38 production-miss-wins — roughly a 1.5-2% per-profile hit rate). At that base rate, a 40-level sample has a real chance of observing zero hits (roughly 40-50% probability under a naive Poisson approximation at a single profile's own ~1.9% rate, before accounting for the other three profiles) even if the tier's documented value is completely intact — so this pilot's zero-loss result is **consistent with, not evidence against**, the tier still carrying its documented rare value on the wider population. What this pilot does establish cleanly is that the tier's *current, always-on, full-fresh-work-pool* sizing is far more expensive than its typical (non-rare-case) marginal contribution, on this population and in this specific 40-level draw — exactly the gap the opt-in ledger's existing "retain as baseline but reprice residual value" annotation already anticipated, now with a concrete, large, single-population magnitude attached to it.
+
+The right reading is therefore **repricing headroom, not a suppression verdict**: a materially smaller work ceiling for this tier (rather than either its current full pool or an outright disable) is the shape of intervention this evidence actually supports — small enough to capture most of the ~58% saving on the common case, large enough to still reach the rare tie-break-specific wins the census documents. Sizing that ceiling from this one pilot alone would repeat the mean-scaled-cap mistake this same research line already found and closed negative for `static-portfolio`'s own tranche-cap-map-v1 (`2026-09-03-portfolio-18-specialists-production-envelope-confirmation-001-preflight.md`) — a percentile-based derivation from this tier's own isolated cost distribution, not its raw mean, is the better-supported next step.
 
 ## Decision
 
-PENDING_DECISION_PLACEHOLDER
+**Do not disable `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` in production from this evidence.** The pilot is a clean zero-cost/58%-work-saving result on one 40-level population, but the census cross-check shows this tier's real value is a rare (~1.5-2%-per-profile) event this sample size cannot rule out, and the ledger already anticipated this exact tier needing repricing rather than removal. This report closes the "is there large, obvious waste concentrated in the admissible-order stages" question as tested — yes, concentrated and large (61.7% of total work for 3/40 realized solves; one sub-tier saves 58% of total work at zero measured cost on this draw) — and opens a properly scoped repricing design as the next step, rather than recommending either "leave it exactly as-is" or "remove it."
 
 ## Next earned gate
 
-PENDING_NEXT_GATE_PLACEHOLDER
+A percentile-derived (not mean-derived) smaller work ceiling for `admissible-order-alternate-tiebreak-retry`, sized from that tier's own isolated cost-when-solving distribution (mirroring `2026-09-03-portfolio-18-tail-percentile-cost-probe-001-preflight.md`'s method for the static-portfolio line), confirmed on a larger population (GHA-scale, ~150 levels, matching this research line's own established confirmation size) so the tier's documented ~1.5-2%-per-profile rare-capability hit rate has a real chance to be exercised and checked for retention. Do not re-run this exact 40-level suppression pilot again; the next decision-bearing step is the resized-ceiling confirmation, not another all-or-nothing test.
