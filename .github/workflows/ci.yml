@@ -10,23 +10,25 @@ permissions:
   contents: read
 
 # Only the newest revision of a PR can become mergeable. Cancel superseded runs instead of letting
-# obsolete six-job copies consume runners and delay the head that actually matters.
+# obsolete copies consume runners and delay the head that actually matters.
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# Each job owns a distinct validation layer. GitHub Actions uses separate runners where that buys
-# real wall time, but does not rerun the same ordinary test population merely to produce an earlier
-# green badge. Local command composition remains authoritative in package.json / docs/testing.md.
+# Keep the PR gate deliberately coarse-grained. Hosted-runner startup and npm-install latency are
+# variable enough that splitting cheap checks into many jobs increases tail latency: the PR waits
+# for the unluckiest runner. Two lanes preserve useful parallelism while paying checkout/setup/npm-ci
+# only twice. Local command composition remains authoritative in package.json / docs/testing.md.
 jobs:
-  checks:
+  fast-gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          # Repository checks need source/docs plus runtime level/hint data. Start without the
-          # ~2,000 runtime hint files; an exact Git-object-keyed cache restores those below.
-          # Historical logs/research blobs remain visible through Git's index but unmaterialized.
+          # Static checks need source/docs plus runtime level/hint data. Start without the ~2,000
+          # runtime hint files; an exact Git-object-keyed cache restores those below. This checkout
+          # is also sufficient for lint, Node/CLI contracts, and the production build, so those
+          # validations can share one runner and one dependency installation.
           # fetch-depth 2 exposes the PR merge ref's base parent for incremental hygiene checks.
           fetch-depth: 2
           sparse-checkout: |
@@ -95,28 +97,6 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm ci
-      - run: npm run check:nonlint
-        env:
-          PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
-
-  # Lint races poorly with the validator fan-out on one small machine, but is independent on its
-  # own Actions runner.
-  checks-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: npm
       - name: Restore ESLint result cache
         uses: actions/cache@v5
         with:
@@ -126,121 +106,25 @@ jobs:
           key: eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-${{ github.sha }}
           restore-keys: |
             eslint-${{ runner.os }}-${{ hashFiles('eslint.config.mjs', 'package-lock.json') }}-
-      - run: npm ci
-      - run: npm run check:lint
+      - name: Install dependencies from the npm cache
+        # setup-node already restores npm's content cache. Prefer it over registry freshness checks;
+        # npm-audit output was informational here, not a CI gate, and security checks have their own
+        # explicit repository commands.
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Run non-lint repository checks
+        run: npm run check:nonlint
+        env:
+          PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+      - name: Run lint
+        run: npm run check:lint
+      - name: Run Node and CLI contract tests
+        run: npm run test:node
+      - name: Build production bundle
+        run: npm run build
 
-  node-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          # Node/CLI software-contract tests use synthetic fixtures or current runtime assets.
-          # Frozen research reports and standing stress corpora are not test fixtures.
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/*
-            /data/levels.json
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npm run test:node
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          # Build source is small; runtime level/hint data is restored separately below so Git does
-          # not rewrite ~2,000 unchanged hint files on every PR revision.
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/
-          sparse-checkout-cone-mode: false
-      - name: Derive runtime-data cache key
-        id: runtime-data-key
-        shell: bash
-        run: |
-          {
-            git rev-parse HEAD:data/levels.json
-            git rev-parse HEAD:data/level-heatmaps.json
-            git rev-parse HEAD:data/themes.json
-            git rev-parse HEAD:data/hints
-            git rev-parse HEAD:data/stress/stress-levels.json
-            git rev-parse HEAD:data/stress/stress-levels-random.json
-            git rev-parse HEAD:data/stress/hints
-            git rev-parse HEAD:data/stress/hints-random
-          } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
-      - name: Restore exact runtime-data tree
-        id: runtime-data-cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            data/levels.json
-            data/level-heatmaps.json
-            data/themes.json
-            data/hints
-            data/stress/stress-levels.json
-            data/stress/stress-levels-random.json
-            data/stress/hints
-            data/stress/hints-random
-          key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
-      - name: Materialize runtime data on cache miss
-        if: steps.runtime-data-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          git sparse-checkout set --no-cone --stdin <<'EOF'
-          /*
-          !/logs/
-          !/reports/
-          !/data/*
-          /data/levels.json
-          /data/level-heatmaps.json
-          /data/themes.json
-          /data/hints/
-          /data/stress/stress-levels.json
-          /data/stress/stress-levels-random.json
-          /data/stress/hints/
-          /data/stress/hints-random/
-          EOF
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-
-  # These four files are deliberately heavyweight implementation proofs. Local coverage lets
-  # Vitest schedule them as ordinary deep files; Actions moves them to one dedicated runner so
-  # coverage does not pay for them twice. One Vitest invocation lets its worker pool schedule the
-  # independent files without four duplicate checkout/setup/npm-ci jobs.
-  deep-proofs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          sparse-checkout: |
-            /*
-            !/logs/
-            !/reports/
-            !/data/stress/
-          sparse-checkout-cone-mode: false
-      - uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: npm
-      - run: npm ci
-      - name: Run heavyweight implementation proofs
-        run: npm run test:deep-proofs
-
-  # This is the one ordinary Vitest pass on PRs: full coverage plus ordinary deep tests. The four
-  # files above are skipped here only because deep-proofs owns those exact copies.
+  # Coverage and the heavyweight implementation proofs share one runner/install. Coverage skips
+  # only the four proof files delegated to the explicit test:deep-proofs command immediately after
+  # it, so every PR still executes the same proof population exactly once.
   deep-verification:
     runs-on: ubuntu-latest
     steps:
@@ -260,8 +144,12 @@ jobs:
         with:
           node-version: '20'
           cache: npm
-      - run: npm ci
-      - run: npm run test:coverage
+      - name: Install dependencies from the npm cache
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Run covered ordinary test population
+        run: npm run test:coverage
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
+      - name: Run heavyweight implementation proofs
+        run: npm run test:deep-proofs

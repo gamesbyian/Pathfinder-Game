@@ -3,9 +3,9 @@
  * Verifies package-script/tooling lifecycle references and the mandatory agent-context budget.
  *
  * This intentionally checks drift patterns that have hurt this repo: scripts such
- * as `node scripts/foo.mjs` surviving after the target file was removed, invalid
- * lifecycle overrides, and mandatory agent orientation quietly growing past its
- * recorded route ceiling.
+ * as `node scripts/foo.mjs` surviving after the target file was removed, explicit
+ * Vitest file arguments surviving a rename, invalid lifecycle overrides, and
+ * mandatory agent orientation quietly growing past its recorded route ceiling.
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -59,40 +59,60 @@ function isLocalScriptPath(token) {
   return /^(?:\.?\.?\/|[A-Za-z0-9_.-]+\/).+\.(?:mjs|cjs|js)$/.test(token);
 }
 
+function isExplicitVitestFilePath(token) {
+  if (!token || token.startsWith('-')) return false;
+  if (/[*?\[\]{}]/.test(token)) return false;
+  if (/^(?:https?:|data:)/i.test(token)) return false;
+  return /^(?:\.?\.?\/|[A-Za-z0-9_.-]+\/).+\.(?:[cm]?[jt]sx?)$/.test(token);
+}
+
 for (const [scriptName, command] of Object.entries(scripts)) {
   const tokens = tokenize(command);
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
-    if (token !== 'node') continue;
+    if (token === 'node') {
+      for (let probe = index + 1; probe < tokens.length; probe += 1) {
+        const candidate = tokens[probe];
+        if (isShellBoundary(candidate)) break;
+        if (candidate === '-e' || candidate === '--eval' || candidate === '-p' || candidate === '--print') break;
+        if (NODE_FLAGS_WITH_VALUES.has(candidate)) {
+          probe += 1;
+          continue;
+        }
+        if (candidate.startsWith('--') && candidate.includes('=')) continue;
+        if (candidate.startsWith('-')) continue;
+        if (!isLocalScriptPath(candidate)) break;
 
+        const target = path.resolve(ROOT, candidate);
+        if (!fs.existsSync(target)) {
+          missing.push({ scriptName, target: candidate, command });
+        }
+        break;
+      }
+      continue;
+    }
+
+    if (token !== 'vitest') continue;
     for (let probe = index + 1; probe < tokens.length; probe += 1) {
       const candidate = tokens[probe];
       if (isShellBoundary(candidate)) break;
-      if (candidate === '-e' || candidate === '--eval' || candidate === '-p' || candidate === '--print') break;
-      if (NODE_FLAGS_WITH_VALUES.has(candidate)) {
-        probe += 1;
-        continue;
-      }
-      if (candidate.startsWith('--') && candidate.includes('=')) continue;
-      if (candidate.startsWith('-')) continue;
-      if (!isLocalScriptPath(candidate)) break;
+      if (!isExplicitVitestFilePath(candidate)) continue;
 
       const target = path.resolve(ROOT, candidate);
       if (!fs.existsSync(target)) {
         missing.push({ scriptName, target: candidate, command });
       }
-      break;
     }
   }
 }
 
 if (missing.length > 0) {
-  console.error('package.json references missing local Node script files:');
+  console.error('package.json references missing local entrypoint files:');
   for (const { scriptName, target, command } of missing) {
     console.error(`  - ${scriptName}: ${target}`);
     console.error(`    ${command}`);
   }
-  console.error('\nRemove the stale script, restore the missing file, or update the path.');
+  console.error('\nRemove the stale reference, restore the missing file, or update the path.');
   process.exit(1);
 }
 
