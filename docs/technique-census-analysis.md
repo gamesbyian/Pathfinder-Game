@@ -39,7 +39,7 @@ The ranked program is [`../reports/2026-09-04-census-cross-evidence-research-pla
 1. **temporal stability:** compare the August and September censuses before discarding the older snapshot; aggregate coverage can stay flat while per-level and per-technique capability ownership moves;
 2. **solution-space structure:** join stable multiplicity/inversion cohorts to existing solution profiles and hint provenance to test basin width, rigidity, path-mode and semantic-profile hypotheses;
 3. **production response:** join current lifecycle reach/termination/work/progress to isolated rescuers and ask what the real solver learns by failing;
-4. **controlled variants:** use the existing family trove only for associations that survive the cheaper joins, with whole-parent independence;
+4. **controlled variants:** use the existing variant-family dataset only for associations that survive the cheaper joins, with whole-parent independence;
 5. **mechanism localization:** use prefix survival, paired traces, exact/reference labels and reduction only after a recurring discrepancy is identified.
 
 The first temporal holdout is already complete: [`../reports/2026-09-04-portfolio-18-fresh-census-temporal-holdout.md`](../reports/2026-09-04-portfolio-18-fresh-census-temporal-holdout.md) finds the fixed `portfolio-18-specialists` composition retains 147/155 (94.8%) of refreshed full-menu singleton exclusives, essentially unchanged from the old 144/151 (95.4%) result despite broad support churn.
