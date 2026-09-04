@@ -5,6 +5,7 @@ import { dirname, extname, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { readRepositoryText, repositoryPathKind } from './repository-file-view.mjs';
+import { validateSolverResearchDataAssets } from './solver-research-data-assets-lib.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: ROOT })
@@ -104,11 +105,12 @@ for (const prefix of ['docs/archive/']) {
 }
 
 const routerRequirements = [
-  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-workstreams.md', 'docs/variant-level-research.md', 'docs/solver-research-operating-model.md', 'docs/solver-opt-in-experiment-ledger.md', 'docs/testing.md', 'reports/README.md']],
+  ['AGENTS.md', ['docs/tooling-catalog.md', 'docs/solver-optimization-workstreams.md', 'docs/variant-level-research.md', 'docs/solver-research-operating-model.md', 'docs/solver-research-data-assets.md', 'docs/solver-opt-in-experiment-ledger.md', 'docs/testing.md', 'reports/README.md']],
   ['CLAUDE.md', ['AGENTS.md', 'DEVELOPER_REFERENCE.md']],
   ['.github/copilot-instructions.md', ['AGENTS.md']],
+  ['docs/README.md', ['solver-research-data-assets.md', 'solver-research-data-assets.json']],
   ['docs/tooling-catalog.md', ['package.json', 'scripts/README.md', '.github/workflows/README.md', 'variant-level-research.md']],
-  ['docs/solver-research-operating-model.md', ['solver-optimization-workstreams.md', 'solver-level-blindness.md', 'variant-level-research.md']],
+  ['docs/solver-research-operating-model.md', ['solver-optimization-workstreams.md', 'solver-level-blindness.md', 'variant-level-research.md', 'solver-research-data-assets.md']],
 ];
 for (const [file, requiredStrings] of routerRequirements) {
   const target = resolve(ROOT, file);
@@ -120,6 +122,10 @@ for (const [file, requiredStrings] of routerRequirements) {
   for (const required of requiredStrings) {
     if (!source.includes(required)) failures.push(`${file}: navigation surface does not reference ${required}`);
   }
+}
+
+for (const issue of validateSolverResearchDataAssets(ROOT)) {
+  failures.push(`docs/solver-research-data-assets.json: ${issue}`);
 }
 
 // Explicit current authorities are checked more strictly than retained evidence. The docs index is

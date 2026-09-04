@@ -2,6 +2,7 @@
 
 > **Status:** current research-method/evidence-routing contract.
 > **Execution priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution order and workstream state.
+> **Evidence discovery:** [`solver-research-data-assets.md`](solver-research-data-assets.md) inventories durable research-data/evidence families, join keys, inter-relevance, and leakage/freshness boundaries.
 > **Technique/config interpretation:** [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md).
 > **Capability/generalization boundary:** [`solver-level-blindness.md`](solver-level-blindness.md).
 > **Evaluation evidence:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) owns development/confirmation/transfer roles and proportional evidence gates.
@@ -25,7 +26,7 @@ These are gates, not aspirations.
 5. **Unexplained stage-history dependence blocks causal inference.** Identical explicit level/action/config/seed/work should not change capability because unrelated predecessor stages ran unless a typed handoff is part of the contract. Cache warmth may change wall cost, not semantics/search order/randomness/work accounting.
 6. **Use the right cost currency.** `workSpent` compares heterogeneous techniques; raw nodes diagnose one technique; wall time measures implementation cost/latency. Do not confuse algorithmic policy with kernel speed.
 7. **Use the smallest evidence that can decide the next gate.** Diagnose participation/budget/instrumentation once, stop directly falsified forms, and expand populations only after a narrower pilot earns it. Full-corpus compute does not rescue a weak premise.
-8. **Do not generate data by default.** Query existing corpus/family/census evidence first. A new large batch needs an unanswered question, intended analysis, independent unit, pilot, expansion rule, and stop condition. See [`variant-level-research.md`](variant-level-research.md).
+8. **Do not generate data by default.** Consult [`solver-research-data-assets.md`](solver-research-data-assets.md) and query existing corpus, provenance, profile, census, lifecycle, family, trace, exact-label, manifest, and historical evidence first. A new large batch needs an unanswered question, intended analysis, independent unit, pilot, expansion rule, and stop condition. See [`variant-level-research.md`](variant-level-research.md).
 9. **Extend existing plumbing before adding another tool/store.** Start at [`tooling-catalog.md`](tooling-catalog.md), current manifests/indexes/telemetry, and reusable helpers. Delete one-offs after use or document them only after repeated value.
 10. **Diagnose search-quality failure before prescribing more of the same search.** If a technique already fails with substantial/full isolated work, prefer first-divergence, retention, operator, restart, exact-feasibility, learned-reason, or representation evidence over another nearby reserve/score/budget.
 11. **Use exact/reference controls when they can answer the question.** Validate real witnesses in the model and model witnesses with the canonical referee; timeout/unsupported/relaxed models do not manufacture dead/UNSAT truth.
@@ -100,7 +101,7 @@ Row count does not remove dependence; a large selected cohort is still selected.
 
 ## Experimental substrate and shadow-first rule
 
-Prefer existing deterministic work accounting, manifests/run identity, stress/lifecycle telemetry, family/provenance tools, shadow probes, known-solution-prefix survival, explicit-prefix/reference labels, reducers/replay, census/method probes, and operational-similarity observers. Start at [`tooling-catalog.md`](tooling-catalog.md).
+Prefer existing deterministic work accounting, manifests/run identity, stress/lifecycle telemetry, family/provenance tools, shadow probes, known-solution-prefix survival, explicit-prefix/reference labels, reducers/replay, census/method probes, and operational-similarity observers. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) to inventory the evidence substrate and valid joins, then [`tooling-catalog.md`](tooling-catalog.md) to choose the smallest current tool that answers the question.
 
 For scoring, retention, routing, scheduling, or information-sharing hypotheses, observe before changing search where practical. Unless parity itself is the experiment, instrumentation must preserve solution, work, ordering, randomness, and cache/memo lifetime. A shadow-positive selected candidate still needs a live solve/work verdict and independent confirmation.
 
@@ -122,12 +123,13 @@ Selected/tuned treatments normally need sample-independent confirmation, with st
 
 ## Before expensive decision-bearing runs
 
-Use [`investigation-report-conventions.md`](investigation-report-conventions.md) and `solver:experiment-preflight` where applicable. Record before dispatch: treatment/control/ref; evidence role/population selection; primary outcome/cost envelope; material candidate search; success/stop/escalation gate; and any framework-expansion gate.
+Use [`investigation-report-conventions.md`](investigation-report-conventions.md) and `solver:experiment-preflight` where applicable. Before dispatch, first perform the existing-data preflight in [`solver-research-data-assets.md`](solver-research-data-assets.md): identify evidence that could falsify, stratify, contextualize, or independently challenge the premise, and record materially relevant rejected joins where future rediscovery would otherwise waste work. Then record treatment/control/ref; evidence role/population selection; primary outcome/cost envelope; material candidate search; success/stop/escalation gate; and any framework-expansion gate.
 
 ## Documentation handoff
 
 - chronology/measurements → dated report;
 - workstream state / current execution priority → [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md);
+- durable research-data/evidence inventory and join topology → [`solver-research-data-assets.md`](solver-research-data-assets.md) plus its machine registry;
 - deferred/reopen work → [`solver-future-work.md`](solver-future-work.md);
 - scheduler policy → [`solver-scheduling-policy.md`](solver-scheduling-policy.md);
 - retained/default-off disposition → [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md);
