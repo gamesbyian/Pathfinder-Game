@@ -86,6 +86,18 @@
       "maxBytes": 1000
     },
     {
+      "path": "docs/solver-future-work.md",
+      "purpose": "Deferred questions and reopen conditions only; active gates/results belong in workstreams, specialist docs, or reports.",
+      "warnBytes": 7500,
+      "maxBytes": 10000
+    },
+    {
+      "path": "docs/architecture-unification-debt.md",
+      "purpose": "Current structural-debt queue and durable boundary rules; dated evidence and solver-policy state belong elsewhere.",
+      "warnBytes": 10000,
+      "maxBytes": 13000
+    },
+    {
       "path": "docs/solver-research-data-assets.md",
       "purpose": "Cross-asset topology/boundaries; per-asset detail belongs in the JSON registry.",
       "warnBytes": 9000,
