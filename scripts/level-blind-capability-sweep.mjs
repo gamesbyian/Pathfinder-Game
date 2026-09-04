@@ -57,6 +57,13 @@ const mainSearchLateReserveConfigCount = argMap.has('--main-search-late-reserve-
     : argMap.has('--main-loop-late-reserve-config-count') ? Number(argMap.get('--main-loop-late-reserve-config-count')) : undefined;
 const admissibleOrderNodeReserveFraction = argMap.has('--admissible-order-node-reserve-fraction')
     ? Number(argMap.get('--admissible-order-node-reserve-fraction')) : undefined;
+// 2026-09-04 (reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md): lets a
+// matched sweep reprice admissible-order-alternate-tiebreak-retry's shared fresh work pool (default
+// ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION = 1.0x workBudget) down to a smaller,
+// percentile-derived fraction without editing modules/solver/orchestration.ts. Same optional/
+// omitted-means-production-default shape as the sibling override flags above.
+const admissibleOrderNonDefaultRetryBudgetFraction = argMap.has('--admissible-order-non-default-retry-budget-fraction')
+    ? Number(argMap.get('--admissible-order-non-default-retry-budget-fraction')) : undefined;
 // 2026-08-13 (docs/future-work.md item 4b): lets a matched sweep compare candidate
 // EARLY_REPAIR_SEARCH_ADAPTIVE_BIASED_BADNESS_GATE/_MIN_SCALE values against the production defaults
 // (10, 0.35) without editing modules/solver/orchestration.ts. Same optional/omitted-means-
@@ -78,6 +85,12 @@ const repairLateProbeNodeBudget = argMap.has('--repair-late-probe-node-budget')
 if (admissibleOrderNodeReserveFraction !== undefined &&
     (!Number.isFinite(admissibleOrderNodeReserveFraction) || admissibleOrderNodeReserveFraction < 0 || admissibleOrderNodeReserveFraction > 1)) {
     console.error('--admissible-order-node-reserve-fraction must be between 0 and 1.');
+    process.exit(2);
+}
+
+if (admissibleOrderNonDefaultRetryBudgetFraction !== undefined &&
+    (!Number.isFinite(admissibleOrderNonDefaultRetryBudgetFraction) || admissibleOrderNonDefaultRetryBudgetFraction < 0)) {
+    console.error('--admissible-order-non-default-retry-budget-fraction must be >= 0.');
     process.exit(2);
 }
 
@@ -165,6 +178,7 @@ if (lifecycleTelemetry) solveOpts.lifecycleTelemetry = true;
 if (Number.isFinite(mainSearchLateReserveFraction)) solveOpts.mainSearchLateReserveFractionOverride = mainSearchLateReserveFraction;
 if (Number.isFinite(mainSearchLateReserveConfigCount)) solveOpts.mainSearchLateReserveConfigCountOverride = mainSearchLateReserveConfigCount;
 if (Number.isFinite(admissibleOrderNodeReserveFraction)) solveOpts.admissibleOrderNodeReserveFractionOverride = admissibleOrderNodeReserveFraction;
+if (Number.isFinite(admissibleOrderNonDefaultRetryBudgetFraction)) solveOpts.admissibleOrderNonDefaultRetryBudgetFractionOverride = admissibleOrderNonDefaultRetryBudgetFraction;
 if (Number.isFinite(earlyRepairSearchAdaptiveBadnessGate)) solveOpts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride = earlyRepairSearchAdaptiveBadnessGate;
 if (Number.isFinite(earlyRepairSearchAdaptiveMinScale)) solveOpts.earlyRepairSearchAdaptiveBiasedMinScaleOverride = earlyRepairSearchAdaptiveMinScale;
 if (Number.isFinite(repairLateProbeNodeBudget)) solveOpts.repairLateProbeNodeBudgetOverride = repairLateProbeNodeBudget;
