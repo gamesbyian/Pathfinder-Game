@@ -22,7 +22,7 @@ Compact entry point for coding/research agents. Load task-specific material, not
 | Prior experiment | `node scripts/research-status-index.mjs --compact --query=<term>` first; then open the matched report/current topic doc |
 | Deferred/reopen idea | [`docs/solver-future-work.md`](docs/solver-future-work.md) |
 | Default-off disposition | [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md) |
-| Stress corpus | [`data/stress/README.md`](data/stress/README.md) |
+| Stress corpus | [`data/stress/README.md`](data/stress/README.md); apply the [`solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md) suitability/expansion gate before broad topology-composition challenge claims |
 | Validation choice | [`docs/testing.md`](docs/testing.md) |
 
 The completed [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post-naming-resumption.md) bridge is **conditional**: read it when executing, aggregating, or translating frozen pre-cleanup solver evidence whose names/contracts may be historical. It is not mandatory current-head research orientation.
@@ -41,7 +41,7 @@ The completed [`docs/solver-research-post-naming-resumption.md`](docs/solver-res
 
 ## Solver research invariants
 
-- **Current priority comes from the compact queue.** The large workstreams file supplies chronology and full evidence chains; specialist docs/reports cannot silently reprioritize the queue.
+- **The detailed workstreams authority owns priority; the compact queue is its mandatory cheap projection.** Start with the queue. Open the large authority only when chronology/full evidence is needed. Specialist docs/reports cannot silently reprioritize either view.
 - **Use the smallest evidence that can decide the next gate.** Close a falsified form instead of repeatedly rescuing it with nearby seeds, widths, thresholds, or budgets.
 - **Inventory before generating.** Query existing hints/provenance, census/capability maps, profiles, variants, lifecycle, traces, manifests, exact labels, and other evidence before buying broad compute. Materially searched joins add selection pressure.
 - **Level-blindness is not generalization.** Cold policy may use mechanics/current state, but not identity, saved hints, known winners, historical per-level outcomes/cost, per-level caches, or variant outcomes. Confirmation strength scales with selection/tuning pressure; hold out whole variant parents/families where relevant.
