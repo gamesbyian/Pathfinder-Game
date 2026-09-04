@@ -1,8 +1,9 @@
 # Technique census refresh: direct analytical rejoin and remaining parity work
 
-> **Status:** active evidence refresh
+> **Status:** active
 > **Last evidence:** 2026-09-04 — direct re-analysis of `reports/stress/technique-niches/2026-09-03/level-capability.json`, generated from technique census run `33717910218`
 > **Decision:** the refreshed census materially changes individual support identities and thin-boundary membership, but the broad structural unsupported-risk picture survives. Current capability-dependent work should use the 2026-09-03 artifact. Full analytical parity with the August census still requires rebuilding the second-order census outputs and relative-advantage artifact against run `33717910218`; those are execution/tooling tasks, not reasons for another census.
+> **Remaining gate:** items 3-6 of "Still requiring regeneration" below (items 1-2, the second-order outputs and the fixed-pair relative-advantage artifact, are now regenerated against run `33717910218` — see `reports/stress/technique-census/33717910218/second-order-analysis.md` and `reports/stress/technique-niches/2026-09-03/relative-advantage-summary.json`; remaining: the portfolio-18 rare-capability rejoin, the production-boundary/exposure join, the 35-case no-isolated-winner anatomy, and the delta-of-conclusions synthesis).
 > **Evidence role:** observational-development re-analysis of already-collected census evidence
 
 ## Why this report exists
