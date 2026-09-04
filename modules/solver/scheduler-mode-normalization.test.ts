@@ -5,6 +5,7 @@ import { normalizeSchedulerMode } from './scheduler-mode-normalization.mjs';
 test('normalizeSchedulerMode accepts canonical values unchanged', () => {
     assert.equal(normalizeSchedulerMode('production'), 'production');
     assert.equal(normalizeSchedulerMode('legacy-latency-portfolio-experiment'), 'legacy-latency-portfolio-experiment');
+    assert.equal(normalizeSchedulerMode('static-portfolio'), 'static-portfolio');
 });
 
 test('normalizeSchedulerMode maps every legacy alias to its canonical form', () => {

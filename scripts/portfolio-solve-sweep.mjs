@@ -5,6 +5,16 @@
  * Modes:
  * - `--scheduler-mode=production`: normal solver batch runs and feature/heuristic probes.
  * - `--scheduler-mode=legacy-latency-portfolio-experiment`: historical portfolio-tier experiment with fallback.
+ * - `--scheduler-mode=static-portfolio`: fixed ordered-menu/per-technique-work-cap scheduler
+ *   (`modules/solver/orchestration.ts`'s `runStaticPortfolio`, docs/solver-optimization-workstreams.md
+ *   Workstream 2 item (d)). Requires `--static-portfolio-arms` (a JSON file of `{armName:
+ *   [techniqueKey, ...]}`, e.g. one built by `scripts/build-static-portfolio-plan.mjs` or an existing
+ *   `data/stress/static-portfolio-confirmation-*-arms.json`), `--static-portfolio-arm` to select one
+ *   named arm, and `--work-budget`. `--per-technique-work-cap`/`--per-technique-work-cap-map` are the
+ *   same optional flat/per-key caps `build-static-portfolio-plan.mjs` supports (a cap map path, e.g.
+ *   `data/stress/portfolio-18-specialists-tranche-cap-map-v2.json`). No automatic fallback to the
+ *   production ladder — an unsolved static-portfolio result is reported as unsolved, matching
+ *   `runStaticPortfolio`'s own deliberate no-fallback design (see that function's header comment).
  *
  * Prefer `--work-budget` for cross-technique comparisons. Runtime validation below reports unsupported
  * option combinations (notably race-pool/node/admissible-order interactions), and deprecated
@@ -42,6 +52,7 @@ import {
     computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
 } from './solver-attempt-family-cache.mjs';
 import { normalizeSchedulerMode } from '../modules/solver/scheduler-mode-normalization.mjs';
+import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
@@ -60,6 +71,25 @@ const rawSchedulerMode = argMap.get('--scheduler-mode');
 const schedulerMode = normalizeSchedulerMode(rawSchedulerMode);
 const nodeBudget = argMap.has('--node-budget') ? Number(argMap.get('--node-budget')) : undefined;
 const workBudget = argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined;
+// --scheduler-mode=static-portfolio only (see this file's header comment): an ordered
+// technique-key menu selected from an arms.json, plus optional flat/per-key work caps. Kept as raw
+// paths/strings here; parsed into AttemptConfig[] below once modules/solver/policy.js is loaded
+// (this early parsing block only reads argv, deliberately before any solver module import).
+const staticPortfolioArmsPath = argMap.get('--static-portfolio-arms') || null;
+const staticPortfolioArmName = argMap.get('--static-portfolio-arm') || null;
+const staticPortfolioPerTechniqueWorkCap = argMap.has('--per-technique-work-cap') ? Number(argMap.get('--per-technique-work-cap')) : undefined;
+const staticPortfolioPerTechniqueWorkCapMapPath = argMap.get('--per-technique-work-cap-map') || null;
+const staticPortfolioAttemptBudgetMs = argMap.has('--static-portfolio-attempt-budget-ms') ? Number(argMap.get('--static-portfolio-attempt-budget-ms')) : undefined;
+if (schedulerMode === 'static-portfolio') {
+    if (!staticPortfolioArmsPath || !staticPortfolioArmName) {
+        console.error('--scheduler-mode=static-portfolio requires both --static-portfolio-arms=<path.json> and --static-portfolio-arm=<armName>.');
+        process.exit(2);
+    }
+    if (!Number.isFinite(workBudget)) {
+        console.error('--scheduler-mode=static-portfolio requires --work-budget (runStaticPortfolio has no node-budget/timeBudgetMs-derived variant — see orchestration.ts).');
+        process.exit(2);
+    }
+}
 const repairBudgetFraction = argMap.has('--repair-budget-fraction') ? Number(argMap.get('--repair-budget-fraction')) : undefined;
 // Canonical flag names below accept their pre-phase-6-derived-vocabulary legacy spelling as an
 // alias for one migration window (naming-cleanup-ledger.json), same shape as --scheduler-mode above.
@@ -267,12 +297,41 @@ function appendCheckpoint(checkpointFile, row, signature) {
 }
 
 installBrowserStubs();
-const { createSolver } = await import('../modules/solver.js');
+const { createSolver, SOLVER_TESTING_API } = await import('../modules/solver.js');
 // provenanceFromSolveResult / toHint / mergeHints / hintPaths / getLevelFingerprint are deliberately
 // NOT imported here any more — the whole hint-merge path lives in scripts/hint-capture-lib.mjs, so
 // there is exactly one implementation of it shared with run-solver-direct.mjs's CI audit pass.
 const { getConfiguredAttemptConfigs } = await import('../modules/solver/attempts.js');
 const Solver = createSolver();
+
+// Parsed here (not in the early argv-only block above) because it needs modules/solver/policy.js's
+// vocabulary and SOLVER_TESTING_API.attemptConfigKey, both only available after installBrowserStubs().
+// techniqueConfigs are already-parsed AttemptConfig objects, not string keys — orchestration.ts's
+// SolveOpts.staticPortfolio doc comment keeps that parsing a caller/tooling concern.
+let staticPortfolioConfig = null;
+if (schedulerMode === 'static-portfolio') {
+    const { STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES } = await import('../modules/solver/policy.js');
+    const parseAttemptConfigKey = makeAttemptConfigKeyParser({
+        STRUCTURAL_ORDERING_BIASES, SCORING_PROFILES, attemptConfigKey: SOLVER_TESTING_API.attemptConfigKey,
+    });
+    const arms = JSON.parse(readFileSync(staticPortfolioArmsPath, 'utf8'));
+    const techniqueKeys = arms[staticPortfolioArmName];
+    if (!Array.isArray(techniqueKeys) || techniqueKeys.length === 0) {
+        console.error(`--static-portfolio-arm "${staticPortfolioArmName}" not found (or empty) in ${staticPortfolioArmsPath}. Available arms: ${Object.keys(arms).join(', ')}`);
+        process.exit(2);
+    }
+    const techniqueConfigs = techniqueKeys.map(parseAttemptConfigKey);
+    const perTechniqueWorkCapByKey = staticPortfolioPerTechniqueWorkCapMapPath
+        ? JSON.parse(readFileSync(staticPortfolioPerTechniqueWorkCapMapPath, 'utf8'))
+        : undefined;
+    staticPortfolioConfig = {
+        techniqueConfigs,
+        workBudget,
+        ...(Number.isFinite(staticPortfolioPerTechniqueWorkCap) ? { perTechniqueWorkCap: staticPortfolioPerTechniqueWorkCap } : {}),
+        ...(perTechniqueWorkCapByKey ? { perTechniqueWorkCapByKey } : {}),
+        ...(Number.isFinite(staticPortfolioAttemptBudgetMs) ? { attemptBudgetMs: staticPortfolioAttemptBudgetMs } : {}),
+    };
+}
 // readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
 // (harmless when --save-hints is unset — we just don't write anything back).
 const rawLevels = readLevelsWithHints(corpusPath);
@@ -297,6 +356,7 @@ const legacyLatencyPortfolioExperiment = experimentFromArgs();
 
 const solveOpts = { timeBudgetMs: budgetMs, schedulerMode };
 if (schedulerMode === 'legacy-latency-portfolio-experiment') solveOpts.legacyLatencyPortfolioExperiment = legacyLatencyPortfolioExperiment;
+if (schedulerMode === 'static-portfolio') solveOpts.staticPortfolio = staticPortfolioConfig;
 if (Number.isFinite(nodeBudget)) solveOpts.nodeBudget = nodeBudget;
 if (Number.isFinite(workBudget)) solveOpts.workBudget = workBudget;
 if (Number.isFinite(repairBudgetFraction)) solveOpts.repairAdditiveBudgetMultiplierOverride = repairBudgetFraction;
@@ -522,7 +582,7 @@ let fallbackOnlyCount = 0;
 let unsolvedCount = 0;
 let primeHitCount = 0;
 let processedForConsole = 0;
-const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, production: 0, unsolved: 0 };
+const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, production: 0, staticPortfolio: 0, unsolved: 0 };
 
 function recordRow(row, { fromCheckpointOrCache = false } = {}) {
     levelRows.set(row.level, row);
@@ -669,6 +729,7 @@ function writeReport() {
         `- Conditional: ${passCounts.conditional}`,
         `- Fallback (portfolio mode's embedded legacy-equivalent phase): ${passCounts.fallback}`,
         `- Production (plain production solve): ${passCounts.production}`,
+        `- Static-portfolio (fixed ordered-menu scheduler solve): ${passCounts.staticPortfolio}`,
         `- Unsolved: ${passCounts.unsolved}`,
         '',
         '## Portfolio-tier finds (solvedBeforeFallback)',

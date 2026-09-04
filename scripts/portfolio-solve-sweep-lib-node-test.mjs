@@ -9,7 +9,7 @@
  * doc comment) — runs under plain node.
  */
 import assert from 'node:assert/strict';
-import { buildRow, attemptActionKey, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
+import { buildRow, tallyPass, attemptActionKey, attemptConfigKey, attemptRecord } from './portfolio-solve-sweep-lib.mjs';
 import { MAXIMALLY_POPULATED_SOLVER_ATTEMPT } from '../modules/solver/testing-fixtures.js';
 import { buildSolveWorkerResult } from '../modules/solver/worker-result-serialization.mjs';
 
@@ -266,6 +266,23 @@ test('worker result structured-clone preserves the complete raw Attempt contract
     for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
         assert.ok(!(field in transported), `${field} is intentionally transient in worker results`);
     }
+});
+
+test('buildRow labels a static-portfolio solve with its own phase, not the legacy-portfolio "fallback" phase', () => {
+    const result = {
+        ok: true, status: 'success', totalMs: 12, nodesExpanded: 3, workSpent: 4200,
+        schedulerMode: 'static-portfolio', staticPortfolioWinningConfigKey: 'repair|score=repair|guidance=standard',
+        attempts: [{ ok: true, gateKey: 'gate-1', scoringProfileId: 'repair', repair: true, elapsedMs: 5 }],
+    };
+    const row = buildRow(1, 'L001', result, 'static-portfolio');
+    assert.equal(row.phaseLabel, 'static-portfolio');
+    assert.equal(row.solvedByFallback, true);
+});
+
+test('tallyPass buckets a static-portfolio solve separately from production/legacy fallback', () => {
+    const passCounts = { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, production: 0, staticPortfolio: 0, unsolved: 0 };
+    tallyPass(passCounts, { pass: null, solvedByFallback: true }, 'static-portfolio');
+    assert.deepEqual(passCounts, { pass1: 0, pass2: 0, pass3: 0, conditional: 0, fallback: 0, production: 0, staticPortfolio: 1, unsolved: 0 });
 });
 
 console.log(`\nportfolio-solve-sweep-lib tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);
