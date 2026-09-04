@@ -39,7 +39,7 @@ Tool choice does not determine evidence quality. Decision-bearing solver work st
 | Raw artifact metadata | `node scripts/artifact-query.mjs [--query=...] [--role=...]` | Meaning/provenance of tracked raw artifacts |
 | Completed GHA result retrieval | `npm run gha:fetch-result -- --run=<run-id>` | Standard result/manifest retrieval without enumerating shards |
 | Tool inventory/health | `node scripts/tooling-census.mjs --compact`, `--health`, `--orphans` | Existing tool discovery, surfaced import health, unindexed specialists |
-| Naming history/status | `npm run naming:status -- --batch=<id>` | Completed Phase 0–15 state/history; not current naming authority |
+| Completed naming-cleanup status/history | `npm run naming:status -- --batch=<id>` | Completed Phase 0–15 state/history; not current naming authority |
 
 Use `package.json` only when the compact tool query does not expose the alias/options you need. Use directory listings as a fallback, not a discovery default.
 
@@ -48,7 +48,7 @@ Use `package.json` only when the compact tool query does not expose the alias/op
 Keep these out of the tooling catalogue's command descriptions; the owning research docs are authoritative:
 
 - **Level-blindness:** exact identity, saved hints, historical per-level outcomes/cost, winner configs, and variant outcomes cannot steer cold production policy. See [`solver-level-blindness.md`](solver-level-blindness.md).
-- **Generalization:** fresh same-generator data is not automatically cross-generator transfer. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
+- **Generalization:** fresh same-generator data is not automatically cross-generator transfer. See [`solver-evaluation-evidence.md`](solver-evaluation-evaluation-evidence.md).
 - **Allocation:** compare techniques/treatments with `workSpent`; wall deadlines must be non-binding for deterministic search evidence. See [`solver-budget-determinism.md`](solver-budget-determinism.md).
 - **Selection:** a population/feature/config selected after outcomes is development evidence until independently confirmed at strength proportional to selection pressure.
 - **Known solutions/exact labels:** powerful offline diagnostics, forbidden as hidden runtime lookup.
