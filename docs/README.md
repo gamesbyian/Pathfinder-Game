@@ -14,8 +14,8 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories refe
 | [`tooling-catalog.md`](tooling-catalog.md) | Broad CLI/probe/batch/workflow discovery; named tools should be queried compactly first |
 | [`agent-context-routes.json`](agent-context-routes.json) | Machine-readable required/optional agent-context routes and byte budgets |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
-| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | **Compact solver-research current priority and next gate** |
-| [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | Detailed workstream chronology, dispositions, and full evidence chains |
+| [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) | **Compact live projection/front door for solver-research priority and next gate** |
+| [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Source authority for workstream priority/state**, detailed chronology, dispositions, and full evidence chains |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research/evidence method, stop rules, promotion and selection discipline |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Full evidence inventory/inter-relevance/boundaries; query [`solver-research-data-assets.json`](solver-research-data-assets.json) through `node scripts/research-asset-query.mjs --query=<term>` first |
 | [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) | Conditional bridge for executing/aggregating/translating frozen pre-cleanup solver evidence |
@@ -61,12 +61,12 @@ Use the full owning reference when the compact result is insufficient or the tas
 
 Default current-head orientation is intentionally small:
 
-1. [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md)
+1. [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md), the synchronized cheap projection of the workstream authority
 2. [`solver-research-operating-model.md`](solver-research-operating-model.md)
 3. the specialist doc required by the current gate
 4. compact evidence/tool queries before opening broad catalogs
 
-Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Open [`solver-research-data-assets.md`](solver-research-data-assets.md) for non-obvious cross-evidence joins or boundary detail. Open [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) for chronology/full evidence chains. Use [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) only when frozen pre-cleanup evidence is materially involved.
+Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Open [`solver-research-data-assets.md`](solver-research-data-assets.md) for non-obvious cross-evidence joins or boundary detail. Open [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) for source-authority chronology/full evidence chains. Use [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) only when frozen pre-cleanup evidence is materially involved.
 
 ### Research instruments
 
