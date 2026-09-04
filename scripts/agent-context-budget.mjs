@@ -21,7 +21,8 @@ function summarize(route) {
     const optional = (route.optional ?? []).map(fileBytes);
     const requiredBytes = required.reduce((sum, item) => sum + item.bytes, 0);
     const optionalBytes = optional.reduce((sum, item) => sum + item.bytes, 0);
-    const missing = [...required, ...optional].filter(item => !item.exists).map(item => item.path);
+    const missingRequired = required.filter(item => !item.exists).map(item => item.path);
+    const missingOptional = optional.filter(item => !item.exists).map(item => item.path);
     const status = requiredBytes > route.maxBytes ? 'over-max' : requiredBytes > route.warnBytes ? 'warning' : 'ok';
     return {
         id: route.id,
@@ -31,7 +32,8 @@ function summarize(route) {
         optionalBytes,
         warnBytes: route.warnBytes,
         maxBytes: route.maxBytes,
-        missing,
+        missingRequired,
+        missingOptional,
         required,
         optional,
     };
@@ -50,5 +52,5 @@ if (selectedRoute && routes.length === 0) {
         measurement: config.measurement,
         routes,
     }, null, 2));
-    if (check && routes.some(route => route.status === 'over-max' || route.missing.length > 0)) process.exitCode = 1;
+    if (check && routes.some(route => route.status === 'over-max' || route.missingRequired.length > 0)) process.exitCode = 1;
 }
