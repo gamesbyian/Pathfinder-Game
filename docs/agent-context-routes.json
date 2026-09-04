@@ -8,48 +8,48 @@
       "description": "Ordinary product/code change before changed files are opened.",
       "required": ["AGENTS.md", "docs/architecture.md"],
       "optional": ["docs/testing.md", "DEVELOPER_REFERENCE.md"],
-      "warnBytes": 32000,
-      "maxBytes": 48000
+      "warnBytes": 30000,
+      "maxBytes": 45000
     },
     {
       "id": "solver-implementation",
       "description": "Current solver implementation work before specialist implementation files.",
       "required": ["AGENTS.md", "docs/solver-architecture.md", "docs/solver-level-blindness.md"],
       "optional": ["docs/solver-correctness-hardening.md", "DEVELOPER_REFERENCE.md"],
-      "warnBytes": 60000,
-      "maxBytes": 85000
+      "warnBytes": 55000,
+      "maxBytes": 80000
     },
     {
       "id": "solver-research",
       "description": "Default current-head solver research orientation before a specialist doc/report is opened.",
-      "required": ["AGENTS.md", "docs/solver-optimization-current-queue.md", "docs/solver-research-operating-model.md"],
-      "optional": ["docs/solver-research-data-assets.md", "docs/solver-research-post-naming-resumption.md", "docs/solver-optimization-workstreams.md"],
-      "warnBytes": 50000,
-      "maxBytes": 70000
+      "required": ["AGENTS.md", "docs/solver-optimization-workstreams.md", "docs/solver-research-operating-model.md"],
+      "optional": ["docs/solver-research-data-assets.md", "docs/solver-research-post-naming-resumption.md"],
+      "warnBytes": 40000,
+      "maxBytes": 55000
     },
     {
       "id": "solver-scheduler-research",
-      "description": "Allocation/scheduler work after the compact current queue identifies Workstream 2 as relevant.",
-      "required": ["AGENTS.md", "docs/solver-optimization-current-queue.md", "docs/solver-research-operating-model.md", "docs/solver-scheduling-policy.md"],
-      "optional": ["docs/solver-budget-determinism.md", "docs/solver-research-data-assets.md", "docs/solver-optimization-workstreams.md"],
-      "warnBytes": 70000,
-      "maxBytes": 95000
+      "description": "Allocation/scheduler work after the workstream authority identifies Workstream 2 as relevant.",
+      "required": ["AGENTS.md", "docs/solver-optimization-workstreams.md", "docs/solver-research-operating-model.md", "docs/solver-scheduling-policy.md"],
+      "optional": ["docs/solver-budget-determinism.md", "docs/solver-research-data-assets.md"],
+      "warnBytes": 58000,
+      "maxBytes": 75000
     },
     {
       "id": "prior-experiment-archaeology",
       "description": "Finding and interpreting old evidence. Compact indexes are the front door; the matched report is task-specific and excluded from the baseline budget.",
       "required": ["AGENTS.md", "reports/README.md"],
       "optional": ["docs/investigation-report-conventions.md", "docs/solver-optimization-workstreams.md"],
-      "warnBytes": 50000,
-      "maxBytes": 70000
+      "warnBytes": 38000,
+      "maxBytes": 55000
     },
     {
       "id": "variant-family-research",
       "description": "Variant/family analysis before a selected family artifact/report is opened.",
       "required": ["AGENTS.md", "docs/variant-level-research.md", "docs/solver-research-operating-model.md"],
       "optional": ["docs/solver-research-data-assets.md", "DEVELOPER_REFERENCE.md"],
-      "warnBytes": 65000,
-      "maxBytes": 90000
+      "warnBytes": 60000,
+      "maxBytes": 85000
     }
   ]
 }
