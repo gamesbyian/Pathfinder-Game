@@ -41,7 +41,7 @@ Listed only so old experiment names are not mistaken for dangling opt-in tasks. 
 |---|---|
 | `PRUNE_MC_NEIGHBOR_BUDGET` | Default-ON after level-blind population gain; retry-tier evidence shows it can still alter search order in both directions. |
 | `STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY` | Default-ON additive dead-last retry; safe placement does not make its work free. |
-| `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
+| `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. A 2026-09-04 confirmation of a p75-derived 0.18 fraction (vs. default 1.0) came back confounded by an unrelated dispatch-side `--node-budget` ceiling, not an actual result — see `reports/2026-09-04-admissible-order-non-default-retry-repricing-confirmation-001.md`. Disposition unchanged pending a re-dispatch with the now-fixed `node_budget_advisory_only` workflow input. |
 | `STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY` | Default-ON after population gain; retain as baseline but reprice residual value. |
 | `STRATEGY_MC_NEIGHBOR_BUDGET_RETRY` | Default-ON after +9 / 0-loss Corpus-2 evidence; material cost makes it a scheduler tail-audit candidate. |
 | `STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY` | Default-ON dead-last descendant of the negative global swap; population test added three solves without losses in reached controls. Reprice through scheduler work rather than increasing reserve in isolation. |

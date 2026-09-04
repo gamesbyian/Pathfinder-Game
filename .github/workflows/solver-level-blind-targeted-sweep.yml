@@ -43,9 +43,13 @@ on:
         required: false
         default: 'data/stress/stress-levels-random.json'
       node_budget:
-        description: 'Per-level cumulative node ceiling. This is a per-level STARTING allocation, not a hard per-level cost ceiling: additive fallback/retry tiers can spend several times this much real work beyond it once the main ladder is exhausted (measured 1.5x-467x on a sample; see reports/2026-08-28-additive-tier-participation-audit.md). Pass --strict-total-work-budget for a true whole-solve work cap; this workflow does not do so by default, so it is not a solve-set-preserving substitution here without separate parity evidence.'
+        description: 'Per-level cumulative node ceiling, and the base the derived work_budget (node_budget * 1.34) is computed from. This is a per-level STARTING allocation, not a hard per-level cost ceiling: additive fallback/retry tiers can spend several times this much real work beyond it once the main ladder is exhausted (measured 1.5x-467x on a sample; see reports/2026-08-28-additive-tier-participation-audit.md). Pass --strict-total-work-budget for a true whole-solve work cap; this workflow does not do so by default, so it is not a solve-set-preserving substitution here without separate parity evidence. IMPORTANT: unlike work_budget, the raw node count IS checked as a hard, independent stopping condition (nodeBudgetReached in modules/solver/orchestration.ts), and its status label takes priority over work-budget-reached -- so a comparison meant to isolate a work-budget-share change (e.g. admissible_order_non_default_retry_budget_fraction) can be confounded if node_budget binds before that change could matter. Set node_budget_advisory_only=true for that case.'
         required: false
         default: '50000000'
+      node_budget_advisory_only:
+        description: 'If true, node_budget still sizes the derived work_budget and the shard-planner''s wall-time estimate, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). Use this whenever the comparison under test is itself a work-budget-share change (e.g. admissible_order_non_default_retry_budget_fraction), so the fraction difference is not masked by an unrelated raw node-count ceiling reached identically in every arm.'
+        required: false
+        default: 'false'
       strict_total_work_budget:
         description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
         required: false
@@ -200,6 +204,8 @@ jobs:
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          nodebudget=()
+          [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
           # plan-highbudget-shards.mjs emits "pos:" per comma-token (its native consumer,
           # portfolio-solve-sweep.mjs's stripPositionPrefix, tolerates that) -- but level-blind-
           # capability-sweep.mjs's own parseLevelSpec only strips ONE leading "pos:" for the whole
@@ -210,7 +216,7 @@ jobs:
             --corpus="${{ inputs.corpus }}" \
             --levels="${levels}" \
             --budget-ms="${{ inputs.budget_ms }}" \
-            --node-budget="${{ inputs.node_budget }}" \
+            "${nodebudget[@]}" \
             --work-budget="${work}" \
             "${strict[@]}" \
             --workers="${{ inputs.workers }}" \
