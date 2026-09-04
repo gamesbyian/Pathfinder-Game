@@ -195,7 +195,7 @@
     "check:workflow-actions": "node scripts/check-workflow-actions.mjs",
     "check:browser-external-dependencies": "node scripts/check-browser-external-dependencies.mjs",
     "check:solver-budget-boundaries": "node scripts/check-solver-budget-boundaries.mjs",
-    "test:deep-proofs": "vitest run modules/solver/lower-bounds-deadlock-0.test.ts modules/solver/lower-bounds-deadlock-1.test.ts modules/solver/repair-search-close-length-gap-enabled.test.ts modules/solver/repair-search-close-length-gap-disabled.test.ts",
+    "test:deep-proofs": "vitest run modules/solver/lower-bounds-deadlock-0.test.ts modules/solver/lower-bounds-deadlock-1.test.ts modules/solver/repair-search-partial-path-completion-enabled.test.ts modules/solver/repair-search-partial-path-completion-disabled.test.ts",
     "check:solver-sweep-results": "node scripts/check-solver-sweep-result-contract.mjs",
     "gha:fetch-result": "node scripts/fetch-gha-result.mjs",
     "check:naming-cleanup-ledger": "node scripts/check-naming-cleanup-ledger.mjs",
