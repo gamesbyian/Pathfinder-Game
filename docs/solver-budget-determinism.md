@@ -1,12 +1,11 @@
 # Solver work budgets and determinism
 
-> **Status:** current contract; main-ladder allocation migration complete, additive-tier compatibility debt explicitly tracked.
-> **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md); [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns current execution priority and next gate.
-> **Priority:** remaining budget-model completion is active Workstream 2 and is a prerequisite to new scheduler repricing policy.
-> **Current budget-depth evidence:** [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md).
-> **History:** [`archive/snapshots/solver-budget-determinism-2026-08-20.md`](archive/snapshots/solver-budget-determinism-2026-08-20.md).
+> **Status:** current contract.
+> **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
+> **Allocation policy:** [`solver-scheduling-policy.md`](solver-scheduling-policy.md).
+> **Pre-consolidation migration narrative:** [`archive/snapshots/solver-budget-determinism-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-budget-determinism-2026-09-04-pre-consolidation.md).
 
-Solver allocation's canonical currency is machine-independent work. The main ladder is fully work-denominated. A bounded set of historical additive fallback/retry tiers still derives fresh work from ms-shaped stage fractions; those sites are compatibility debt, not the target model, and CI now prevents the set from growing.
+Solver allocation uses machine-independent **work**. Wall time is a latency/safety constraint, not a search-allocation currency.
 
 ## Work unit
 
@@ -16,189 +15,101 @@ Solver allocation's canonical currency is machine-independent work. The main lad
 work = applyMove calls + 12 * isConnected calls
 ```
 
-The fitted connectivity weight reduced DFS/beam/repair work-rate spread from ~11x under `nodesExpanded` to ~1.02x under `workSpent`. Raw nodes are comparable only within a technique.
-
-`workSpent` is an allocation currency, not literal CPU cost: the weight fairly divides finite search across techniques but does not claim every `isConnected()` costs exactly 12 `applyMove()` calls. A pure implementation optimization may reduce wall time with unchanged work; a policy change may reduce work without making primitives faster.
-
-Use pinned work for deterministic search-effort/policy comparisons. For hot-path speed, also report wall time and whether primitive cost changes. Matched work alone cannot prove an implementation speedup.
+Use `workSpent` for cross-technique search cost. Raw nodes are within-technique diagnostics. Wall time measures implementation/runtime cost. Work is an allocation currency, not a claim that the weighted primitives have identical literal CPU cost on every machine.
 
 ## Work scopes
 
-Both counters use the same work unit:
-
 | Counter | Scope / authority |
 |---|---|
-| `prep._workMeter.units` | Fresh per `solveLevel()`. Authority for internal caps, attempt allocation, and `SolveResult.workSpent`; concurrent solves cannot consume each other's budgets. |
-| module-global `workMeter.units` | Monotonic realm/process total for discovery tooling spanning sequential black-box solves. Not a solve-budget authority. |
+| `prep._workMeter.units` | Fresh per `solveLevel()`; authority for internal caps, allocation, and `SolveResult.workSpent` |
+| module-global `workMeter.units` | Monotonic realm/process discovery counter; **not** a solve-budget authority |
 
-`applyMove()` and `isConnected()` increment both. Keep internal checks on `prep._workMeter`; cumulative tooling must not assume the global counter is session-isolated when unrelated solves can coexist. Isolated multi-solve budgets should use caller-owned scope or sum `SolveResult.workSpent`. Migration direction: [`architecture-unification-debt.md`](architecture-unification-debt.md).
-
-`modules/solver/diversification.ts`'s `createDiversificationSession`, `modules/solver/hint-ablation-generator.ts`'s `createHintAblationGenerator`, and `scripts/hint-workbench.mjs`'s `runAblationUi`/`runCandidateGrid`/`runPortalGrid` follow the caller-owned pattern: each accumulates its own session-local counter from every `solverApi.solve()` call's `workSpent` (win or lose) instead of reading the realm-global counter, so an unrelated solve elsewhere in the same realm cannot pad or steal that session's own budget accounting. Only `hint-workbench.mjs`'s `runEnumeration` hang-safety callback (secondary/non-binding — fires from inside `variety-search.ts`'s own `run()`, which has no caller-visible per-step result to intercept) still reads the realm-global counter — remaining migration debt, see [`../reports/2026-08-28-discovery-work-meter-session-scope-fix.md`](../reports/2026-08-28-discovery-work-meter-session-scope-fix.md).
+Concurrent solves cannot consume one another's `prep._workMeter`. Multi-solve tooling that needs an isolated session budget should sum each call's `SolveResult.workSpent` or use a caller-owned session counter, not infer a session budget from the realm-global meter.
 
 ## Budget roles
 
 | Field | Role |
 |---|---|
-| `baseWorkBudget` | Preferred API name for the base cross-technique machine-independent allocation. The main ladder divides it; under legacy production semantics additive stages may spend fresh work beyond it. |
-| `workBudget` | Compatibility alias for `baseWorkBudget`, retained for existing workflows/artifacts. Supplying both with different values is an error. |
-| `timeBudgetMs` | Intended role: outer latency/safety deadline. A finite inventory of legacy additive stages still uses ms-shaped fractions as compatibility sizing debt; no new sites are permitted. |
-| `nodeBudget` | Cumulative/technique diagnostic cap; deterministic, but not portable cross-technique cost. Often still acts as the practical whole-level guard under legacy additive semantics. |
-| `strictTotalWorkBudget` | Experiment-only switch that turns the configured `workBudget` into an immutable whole-solve work ceiling. |
+| `baseWorkBudget` | Preferred name for the deterministic base allocation |
+| `workBudget` | Compatibility alias for `baseWorkBudget`; conflicting simultaneous values are an error |
+| `strictTotalWorkBudget` | Makes the configured work budget an immutable whole-solve ceiling |
+| `nodeBudget` | Deterministic within-technique/local diagnostic guard; not portable cross-technique cost |
+| `timeBudgetMs` | Outer latency/safety deadline; must not control deterministic allocation when an explicit work budget is supplied |
 
-If `workBudget` is omitted, ms-shaped callers convert at the run boundary using committed work-per-ms calibration; live host speed never controls allocation.
+If work is omitted by an ms-shaped compatibility caller, the boundary converts once through `modules/solver/budget-units.ts` using `LEGACY_MS_TO_WORK_RATE`. Do not copy that calibration elsewhere or derive allocation from live host throughput.
 
-The compatibility conversion is centralized in `modules/solver/budget-units.ts` as `LEGACY_MS_TO_WORK_RATE`. Do not copy that number into another caller. It is a frozen boundary calibration, not measured host throughput.
+## Base versus total work
 
-### Base work versus total work
+Under ordinary production/offline-ladder semantics, `workBudget` is historically a **base allocation**, not necessarily the whole-solve cost. Additive stages can receive fresh deterministic work beyond it. Therefore:
 
-The historical name `workBudget` predates the current additive tail. New code may use the clearer `baseWorkBudget` alias; existing workflows/artifacts remain compatible with `workBudget`. In ordinary production mode it means **base allocation**, not necessarily **total work purchased by the whole solve**. Several fallback/retry stages can receive fresh deterministic work after that base pool has been depleted. Consequently:
+- `workSpent > workBudget` can be legal;
+- equal base budgets do not prove equal treatment cost when additive-stage reach differs;
+- use `strictTotalWorkBudget: true` for matched experiments that require a true shared envelope;
+- changing default production to strict-total semantics is a policy change and requires solve-retention evidence.
 
-- `workSpent > workBudget` is legal under legacy production semantics;
-- an equal `workBudget` does not by itself prove equal total treatment cost when additive-stage reach differs;
-- `strictTotalWorkBudget: true` is the current experiment mechanism for a genuine whole-solve work envelope;
-- future scheduler APIs should prefer names such as `baseWorkBudget` and `totalWorkCap` rather than perpetuating this ambiguity.
+New APIs should prefer explicit `baseWorkBudget` / `totalWorkCap` language rather than extending the historical ambiguity.
 
-Changing production to strict-total semantics is decision-bearing and requires matched solve-retention evidence. Renaming/documenting the distinction is not.
+## Current migration state
 
-### Migration priority
+The old pattern in which additive tiers re-converted `timeBudgetMs` into fresh work is **closed**. Nine work-dose sites were migrated to work-derived sizing, and whole-ladder tests now check that changing a non-binding deadline does not resize their explicit-work trajectories.
 
-Treat this as active research-enabling infrastructure, not optional cleanup. The current execution priority is authoritative; within Workstream 2, prefer:
+Current exceptions are different in kind:
 
-1. explicit stage/attempt work ownership and parity;
-2. session-isolated multi-solve accounting;
-3. equal-work execution for scheduler-pricing evidence;
-4. one behavior-preserving ms-derived additive-tier migration at a time;
-5. whole-solve deadline-independence regression once the legacy inventory reaches zero;
-6. only then new fixed-work repricing policy.
+- **`admissible-order-fallback`:** installs no fresh soft `_workCap`, but the dispatched `admissibleOrderSearch` does not consult that soft cap outside the opt-in equal-work research harness. This was verified harmless; no migration/fix is pending.
+- **`goal-attraction-disabled-retry`:** deliberately shares the already-depleting outer work pool rather than owning a fresh pool. This is not ms-to-work debt. Existing evidence shows the shared work dimension can starve otherwise eligible attempts, so changing it would be a genuine allocation-policy experiment, not cleanup. It is not automatically the current Workstream-2 priority.
 
-**Steps 4 and 5 are done as of 2026-09-02** (nine sites migrated one at a time; the whole-ladder deadline-independence regression added and passing — see "Remaining ms-shaped allocation debt" below for the full account). The two structurally-different remaining names in the ratchet's allowlist (`admissible-order-fallback`, `goal-attraction-disabled-retry`) are explicitly **not** part of step 4/5's scope. The next gate is step 6: a production-shaped fixed-work repricing experiment, per `solver-optimization-workstreams.md`'s Workstream 2 row.
+`scripts/check-solver-budget-boundaries.mjs` is the ratchet. New time-derived allocation sites are forbidden. The only approved direct ms→work conversion is the centralized boundary resolution used when no explicit work budget exists.
 
-Do not combine several additive-tier migrations into one opaque solve-set change. A conversion that changes policy is an experiment and must be evaluated as one.
+Historical per-tier migration evidence remains in dated reports and the pre-consolidation snapshot; do not append that chronology back into this contract.
 
-### Remaining ms-shaped allocation debt
+## Determinism contract
 
-The original nine-site CI inventory mixes two roles that must now be distinguished. Migrated tiers may still compute a `timeBudgetMs * stageFraction` value for a genuine wall-deadline safety bound, while their actual fresh work pool is sized from canonical `workBudget`. The still-unmigrated work-dose sites are tracked explicitly below. They are deterministic for identical inputs, but they violate the stronger target invariant that a non-binding deadline can change **only latency**, never search allocation.
+With equal level/configuration/seed and equal deterministic allocation, a **non-binding** wall deadline must not change the search trajectory merely because host speed/load changes.
 
-`scripts/check-solver-budget-boundaries.mjs` records these sites as an allowlist/ratchet. Removing a site is automatically allowed; adding a new one fails CI. Migrate them only through a behavior-preserving representation change or a separately measured production-policy experiment.
+For decision-bearing offline comparisons:
 
-**2026-08-28: `coarse-state-near-tie-retention-disabled-retry` migrated (first site).** Its own additive work pool now derives from the solve's resolved `workBudget` (`scaledStageWorkBudget`, `budget-units.ts`) rather than a second, independent `timeBudgetMs`-derived conversion. Its own `totalBudgetMs` (wall-deadline) computation is unchanged and stays in the CI ratchet's allowlist — that line's role is now understood as legitimate deadline sizing, not work-dose debt, and must stay scaled by the same stage fraction so the deadline remains non-binding relative to the (now correctly bounded) work pool. This migration is proven byte-identical for live play and the plain-default no-override call shape, but is a genuine, deliberate dose correction (not a no-op) for the offline capability-sweep/confirmation-workflow call shape, where an explicit `workBudget` is deliberately disproportionate to a huge non-binding `timeBudgetMs` — see [`../reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md`](../reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md) for the full account, including why the naive "this is just a representation change" argument does not unconditionally hold.
+1. pin the work envelope;
+2. keep wall deadlines non-binding;
+3. record and reject/separately classify `deadlineTruncated`;
+4. compare `workSpent` for cross-technique/treatment cost;
+5. record commit, protocol, flags, corpus, and budget semantics.
 
-**2026-08-28, same day: `repair-fallback` migrated (second site).** Identical pattern and identical caveat profile: its fresh `withWorkCapScope` cap now derives from `scaledStageWorkBudget(workBudget, repairAdditiveBudgetMultiplier, MIN_ATTEMPT_WORK)` instead of `legacyMsToWork` on a `timeBudgetMs`-derived total. `REPAIR_ADDITIVE_BUDGET_MULTIPLIER` is the integer `6.0`, so this is byte-identical for live play and the plain-default no-override call shape (full 160-level `solver:regression --check` unchanged). One pre-existing regression test had pinned the old ms-derived magnitude on a call that happened to supply an explicit `workBudget` disagreeing with `timeBudgetMs` (exactly the stratum this migration changes) — updated to pin the new, workBudget-honoring value; see [`../reports/2026-08-28-repair-fallback-work-dose-migration.md`](../reports/2026-08-28-repair-fallback-work-dose-migration.md).
-
-**2026-08-28, same day: `admissible-order-alternate-tiebreak-retry` migrated (third site).** Identical pattern and caveat profile: `scaledStageWorkBudget(workBudget, nonDefaultRetryBudgetFraction, MIN_ATTEMPT_WORK)` in place of a `timeBudgetMs`-derived `legacyMsToWork` conversion; `ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_BUDGET_FRACTION` is the integer `1.0`, so byte-identical for live play and the plain-default call shape. See [`../reports/2026-08-28-admissible-order-non-default-retry-work-dose-migration.md`](../reports/2026-08-28-admissible-order-non-default-retry-work-dose-migration.md).
-
-**A distinct structural gap found in the sibling plain `admissible-order-fallback` tier** (not the retry tier above — the earlier tier in the ladder): it installs no fresh `prep._workCap` at all under legacy semantics, unlike every other tier examined so far. It has no `legacyMsToWork` call to swap, so it never fit this migration's "currency swap, prove behavior-preservation" shape. **Resolved 2026-09-02 as confirmed-harmless, not merely undemonstrated-so-far:** the search primitive this tier's `ADMISSIBLE_ORDER_PROFILES` configs actually dispatch to (`admissibleOrderSearch`) checks only `prep._strictWorkCap` in its hot loop, by explicit design (its own comment: consulting the soft cap there "would silently alter production scheduling" without an explicit opt-in) — `prep._strictWorkCap` is set only by `technique-census-cell.mjs`'s own opt-in equal-work research harness, never by any production or offline-batch call path. The soft `prep._workCap` this gap concerns is read only by a separate, already-closed opt-in LDS wrapper this tier never uses. No fix is needed or warranted; do not reopen without new evidence that something sets `prep._strictWorkCap` for this tier outside that one opt-in harness. See [`../reports/2026-08-28-admissible-order-work-cap-gap-discovery.md`](../reports/2026-08-28-admissible-order-work-cap-gap-discovery.md)'s 2026-09-02 resolution for the full code-level proof and empirical confirmation.
-
-**2026-09-01: `connectivity-axis-prune-disabled-retry` migrated (fourth site).** Its fresh whole-ladder retry pool now uses `scaledStageWorkBudget(workBudget, connectivityRetryBudgetFraction, MIN_ATTEMPT_WORK)` instead of a second `legacyMsToWork` conversion from `connectivityRetryTotalBudget`. The shipped fraction is exactly `1.0`, giving the same algebraic plain-default parity profile as the first and third migrations. The ms total remains as the tier's latency-safety deadline. Explicit-work research callers now receive a retry dose proportional to their declared work budget instead of the huge non-binding workflow deadline. See [`../reports/2026-09-01-connectivity-axis-prune-disabled-retry-work-dose-migration.md`](../reports/2026-09-01-connectivity-axis-prune-disabled-retry-work-dose-migration.md).
-
-**2026-09-01: `must-cross-neighbor-prune-disabled-retry` migrated (fifth site).** Its fresh whole-ladder retry pool now uses `scaledStageWorkBudget(workBudget, mcNeighborBudgetRetryBudgetFraction, MIN_ATTEMPT_WORK)` rather than reconstructing work from `mcNeighborBudgetRetryTotalBudget`. This site was unusually well-motivated by its own historical implementation notes: the old non-binding 24h capability deadline produced an enormous work pool, preventing work-based config subdivision from binding and forcing a later staircase workaround. The staircase/node behavior stays unchanged; only the work currency/ownership source changes. See [`../reports/2026-09-01-must-cross-neighbor-prune-disabled-retry-work-dose-migration.md`](../reports/2026-09-01-must-cross-neighbor-prune-disabled-retry-work-dose-migration.md).
-
-**2026-09-02: `guidance-goal-distance-retry` migrated (sixth site).** Same pattern as `connectivity-axis-prune-disabled-retry`: `scaledStageWorkBudget(workBudget, goalAttractionGuidanceDistanceRetryBudgetFraction, MIN_ATTEMPT_WORK)` in place of a `legacyMsToWork` conversion of `goalAttractionGuidanceDistanceRetryTotalBudget`; the fraction is exactly `1.0`, so byte-identical for live play and the plain-default call shape (full 160-level `solver:regression --check` unchanged at 68,562,085 nodes). This tier has no dedicated fraction-override option yet ("first-landing scope"), so its targeted tests isolate it by suppressing every sibling tier instead. See [`../reports/2026-09-02-guidance-goal-distance-retry-work-dose-migration.md`](../reports/2026-09-02-guidance-goal-distance-retry-work-dose-migration.md).
-
-**2026-09-02, same day: `repair-elite-prefix-dfs-retry` migrated (seventh site).** Same `withWorkCapScope` fresh-pool pattern as `repair-fallback` itself: `scaledStageWorkBudget(workBudget, repairElitePrefixDfsRetryBudgetFraction, MIN_ATTEMPT_WORK)` in place of `legacyMsToWork(repairElitePrefixDfsRetryTotalBudget, ...)`; fraction is `1.0`. This tier is opt-in/default-OFF, so it never runs under `cfg=null` — the plain-default published-corpus regression is unaffected by construction, and behavior-preservation for the changed dose itself rests on two targeted tests that explicitly enable the tier. See [`../reports/2026-09-02-repair-elite-prefix-dfs-retry-work-dose-migration.md`](../reports/2026-09-02-repair-elite-prefix-dfs-retry-work-dose-migration.md).
-
-**2026-09-02, same day: `late-repair-search` migrated (eighth site, and the first found outside the original nine-site CI inventory).** Its ms total (`repairLateProbeTotalBudget = timeBudgetMs`, no `* fraction` multiplication) never matched the ratchet's regex-based debt scan, so this exact `legacyMsToWork`-fresh-pool pattern went untracked from the tier's introduction through 2026-09-02, discovered only by direct source inspection while auditing the current inventory for the two migrations above. Now `scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK)` in place of `legacyMsToWork(repairLateProbeTotalBudget, ...)`; algebraically identical in the plain-default call shape (full regression unchanged at 68,562,085 nodes). `repairLateProbeTotalBudget` is now added to the ratchet's `migratedWorkDoseSites` regression guard even though it was never in `approvedLegacyTimeDerivedAllocations`. See [`../reports/2026-09-02-late-repair-search-work-dose-migration.md`](../reports/2026-09-02-late-repair-search-work-dose-migration.md).
-
-**2026-09-02, same day: `late-repair-multiseed-retry` migrated (ninth site, found by widening the deadline-independence regression to the whole ladder — see below).** Its own per-seed `roundWorkBudget = legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK)` was previously listed in the ratchet's `approvedDirectMsToWorkSites` as an intentional compatibility boundary, alongside `workBudget`'s own centralized resolution. It was not: a new whole-ladder test (below) empirically caught this exact tier's `allocatedWorkCeiling` resizing 10x between a 60s and a 600s non-binding `timeBudgetMs`. Now `scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK)`; `timeBudgetMs` remains used only for each round's per-gate time-slicing. Only one direct `timeBudgetMs` → work conversion remains approved (`workBudget`'s own resolution). This tier had no dedicated test at all before this change. See [`../reports/2026-09-02-whole-ladder-deadline-independence-widening.md`](../reports/2026-09-02-whole-ladder-deadline-independence-widening.md).
-
-**2026-09-02, same day: whole-ladder deadline-independence regression added (Migration priority step 5).** The existing isolated-main-ladder test (`'a non-binding deadline cannot resize an explicit-work main-ladder trajectory'`, which used `disableExtraBudgetPasses: true` to exclude every additive tier) is now joined by two whole-ladder companions that leave every default-on additive tier enabled simultaneously, split across two complementary fixtures along the `repairConfigsCount === 0`/`> 0` eligibility boundary that makes `late-repair-search` and `early-repair-search`/`repair-fallback` mutually exclusive on any one level. Together they prove all nine migrated work-dose sites' deadline-independence holds with every sibling tier active at once, not just in per-tier isolation. Full account and the ninth-site discovery: [`../reports/2026-09-02-whole-ladder-deadline-independence-widening.md`](../reports/2026-09-02-whole-ladder-deadline-independence-widening.md).
-
-All seven names from the original nine-site inventory that ever carried this `legacyMsToWork`-reconversion work-dose pattern are now migrated, plus the two independently-discovered sites above (`late-repair-search`, `late-repair-multiseed-retry` — nine migrated sites total). The remaining two names in `approvedLegacyTimeDerivedAllocations` are **not** further instances of this same pattern and need their own separate decisions, not a "finish the migration" mechanical pass:
-
-- `admissible-order-fallback` (the structural-gap tier documented above): installs **no** fresh `prep._workCap` at all under legacy semantics — it has no `legacyMsToWork` call to swap, so there is nothing to migrate. **Resolved 2026-09-02:** confirmed harmless by design (the search primitive it dispatches to never consults the soft cap outside an opt-in research harness), not merely an open question needing "its own evidence" — no fix is warranted. See the report link above.
-- `goal-attraction-disabled-retry` (`diversityBudgetFraction`'s own `totalBudgetMs` line): its own call site passes the OUTER, already-depleting `(workBudget, workStart)` pool directly — never a `legacyMsToWork` reconversion of its own ms total. Its own in-code comment flags this as deliberate but unmeasured: "this pass predates that fix and has never been re-measured with it" (referring to the fresh-pool fix every migrated tier above already has). Giving it a fresh pool would be a genuine allocation-shape change requiring its own before/after evidence, not a work-dose currency migration. **2026-09-02: the "unmeasured" premise is now measured and confirmed real** — with the tier's own closed `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE` opt-in enabled (fixing the already-closed node dimension so the tier reaches eligibility on 39/40 probed levels instead of 0/40), **25/39 (64%) still got zero real attempts** because the shared work pool was already 1.0x-2.4x over `workBudget` while the node dimension still had ~2% room to spare — a clean, per-level confirmation that the work dimension independently starves most otherwise-eligible attempts, additive to and not explained by the closed node question. Does not itself demonstrate a solve gain from fixing it (0/14 real-attempt levels won on this population either). See [`../reports/2026-09-02-goal-attraction-disabled-retry-work-pool-starvation.md`](../reports/2026-09-02-goal-attraction-disabled-retry-work-pool-starvation.md).
-
-Before treating either of those two as "the next site in the migration list," read this section again: they were never that kind of site. A `grep -n legacyMsToWork modules/solver/orchestration.ts` is the reliable way to confirm the full current set of conversion call sites rather than trusting either CI list's name coverage alone (see the ratchet script's own comment on this, added after the `late-repair-search` discovery above).
-
-**2026-09-02, full-inventory cross-check (no new finding, closes this section's own audit trail):** with both structural-gap sites above now resolved, every `runWholeLadderRetryTier(...)` call site (`goal-attraction-disabled-retry`, `coarse-state-near-tie-retention-disabled-retry`, `connectivity-axis-prune-disabled-retry`, `must-cross-neighbor-prune-disabled-retry`, `guidance-goal-distance-retry`) and every `withWorkCapScope(prep, prep._workMeter.units + ...)` call site (`repair-fallback`, `admissible-order-non-default-retry`, `repair-elite-prefix-dfs-retry`, `late-repair-search`, `late-repair-multiseed-retry`'s own per-round `roundWorkBudget`) was directly re-read to confirm each derives its own fresh pool from a `prep._workMeter.units` mark plus a `scaledStageWorkBudget`-derived amount, not an inherited or shared value. No further hidden shared-pool site exists in the current additive-tier inventory.
-
-### Clock-shaped compatibility names
-
-Some older APIs and CLIs still expose names such as `--wall-ms` or `wallClockDeadlineMs` even though the implementation now converts that value once into canonical work and never gates search extent on `Date.now()`. Treat these as compatibility shims, not evidence of a live wall-clock budget. New APIs should prefer explicit `workBudget` / `haltedByWorkBudget` names; persisted old names may remain as documented aliases until consumers migrate.
-
-Conversely, a genuine outer wall deadline must say when it actually bound. Decision-bearing research harnesses must expose/propagate the stop reason and reject or separately classify a wall-truncated arm rather than silently recording it as ordinary unsolved-at-work evidence.
-
-## Scheduler portfolio contract
-
-Evidence-driven scheduling changes the division of work, not the definition of work.
-
-- The default scheduler experiment uses a **fixed aggregate work envelope**. Adding a candidate action expands the menu; it does not automatically increase total permitted work.
-- Search actions may have budget quanta or protected minima when evidence shows useful deep hazard, but those reservations must be visible within the shared envelope.
-- A new retry/tail action must normally displace weaker work, be conditionally routed, or explicitly justify a larger total envelope. Do not hide a solve gain inside additive budget growth.
-- Compare conditional/marginal value on the population that reaches the action. An old retry's historical unique wins do not prove it still merits the same allocation after upstream policy changes.
-- Scheduler decisions must never depend on live host speed, elapsed-time throughput, or wall-derived calibration. Static level features and current solve telemetry may alter allocation; machine performance may not.
-- During scheduler A/Bs, prefer `strictTotalWorkBudget` when legacy additive tiers would otherwise make treatment/control envelopes incomparable. If strict containment is intentionally not used, report the total-work difference as part of the treatment.
-
-See [`solver-scheduling-policy.md`](solver-scheduling-policy.md) for action identity, residual-value analysis, shadow planning, and promotion rules.
-
-## Cap and tranche discipline
-
-Do not infer a technique's safe production cap from the median depth of its successful easy levels. The census shows materially different depth distributions on the hard residual population. The dated measurements are in [`../reports/2026-08-23-technique-budget-cap-efficiency.md`](../reports/2026-08-23-technique-budget-cap-efficiency.md); the scheduling consequences live in [`solver-scheduling-policy.md`](solver-scheduling-policy.md).
-
-Current rules:
-
-- **No universal low cap from “wins early” intuition.** The perfect isolated router retains only 171/253 frozen-gap oracle solves at 10M nodes and 202/253 at 20M; some useful action therefore needs access to deeper search.
-- **Self-exhausting techniques do not need artificial entitlement just because a high outer cap exists.** Beam searches generally exhaust their frontier in the sub-million range. Their budget problem is ordering/reach, not a 50M burn.
-- **Protect deep continuations only where measured late yield exists.** Plain repair earns this treatment: 37/121 frozen-gap wins occur in the 20M–50M interval and the measured conditional hazard rises in that band. A scheduler may split repair into successive quanta, but must not assume the late tranche is dead work.
-- **Deep budget is not hereditary.** Ordinary DFS/IDA profiles with high overlap/substitutability must compete for later quanta by current residual value. Historical existence in the ladder or historical wins do not confer a permanent full-depth allowance.
-- **Sequence-dependent stages require live-ladder validation.** Admissible-order reverse-oracle evidence shows that isolated cap curves can miss preceding-ladder effects. Budget reductions for such stages must be tested through the real sequential path.
-- **Node-band evidence is diagnostic, not cross-technique currency.** Use node curves to decide where a technique's own useful depth lies; use `workSpent` to compare whether that tranche deserves shared portfolio budget against another technique.
-
-For scheduler analysis, a budget tranche should be treated as an action extension: “continue technique X for the next q work” competes with starting/continuing other eligible actions. Reaching an earlier tranche does not automatically reserve all later tranches.
-
-## Reproducible comparison
-
-For decision-bearing offline work:
-
-1. pin `workBudget`;
-2. use non-binding `timeBudgetMs` or deterministic workflow mode;
-3. exclude/separately classify `deadlineTruncated`;
-4. compare `workSpent` for cost;
-5. record protocol, commit, flags, corpus, budget.
-
-For the fully work-denominated main ladder, equal level/config/seed/work allocation with a non-binding deadline is deterministic across host speed/load; a regression test pins that invariant. Whole production solves can still change additive-stage dose when `timeBudgetMs` itself changes because of the inventoried compatibility debt above. Therefore matched experiments must pin BOTH explicit work and the same deadline until those sites are migrated, and must reject `deadlineTruncated`. Remote A/Bs: `solver-typical-budget-baseline.yml` with `deterministic: true`. Binding historical baselines may preserve continuity but are not machine-independent causal evidence.
+A binding historical wall deadline may be useful for continuity, but it is not machine-independent causal evidence.
 
 ## Deadline truncation
 
-A wall deadline can end a solve before its work budget. `deadlineTruncated` means requested deterministic search did not complete within the latency envelope, not reproducible unsolved-at-budget evidence. Offline tools must exclude or label it.
+`deadlineTruncated` means the requested deterministic search did not complete before the latency envelope. It is not ordinary unsolved-at-work evidence. Offline tools must expose it and exclude or classify it separately in decision-bearing comparisons.
 
-## Hint discovery and provenance
+Clock-shaped compatibility names such as `--wall-ms` or `wallClockDeadlineMs` may survive in old APIs even where the implementation converts once to work and never gates search extent on `Date.now()`. Treat names according to the owning implementation, not by string inference.
 
-Phase/escalation decisions use work, not elapsed time; cooperative yielding/latency reporting may read the clock.
+## Scheduler-envelope rules
 
-- `workSpent`: comparable algorithmic cost.
-- `workBudget`: intended deterministic ceiling.
-- `deadlineTruncated`: wall interference.
-- `nodesExpanded`: within-technique diagnostics/legacy data.
+Detailed scheduling policy lives in [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Budget-specific invariants are:
+
+- adding an action/configuration does not grant free aggregate work;
+- protected minima/tranches must be visible inside the shared envelope;
+- retries/tails must displace weaker work, be conditionally routed, or explicitly justify a larger envelope;
+- scheduler decisions cannot depend on live host speed or wall-derived throughput;
+- during matched scheduler A/Bs, prefer `strictTotalWorkBudget` when legacy additive semantics would otherwise make total treatment cost differ;
+- if strict containment is intentionally not used, report the actual total-work difference as part of the treatment.
+
+Technique-specific depth/cap evidence belongs in the reports and scheduling policy, not here. Use node-depth curves to understand one technique; use `workSpent` to compare its tranche against other actions.
+
+## Provenance units
+
+Keep units explicit in solver/hint/research artifacts:
+
+- `workSpent`: comparable algorithmic allocation cost;
+- `workBudget` / `baseWorkBudget`: deterministic allocation input;
+- `strictTotalWorkBudget`: whole-solve-envelope mode;
+- `deadlineTruncated`: wall interference;
+- `nodesExpanded`: within-technique diagnostic/legacy measure;
 - `elapsedMs`: runtime latency.
 
-Label units in old/new provenance; never mix nodes and work silently.
+Never silently compare or merge node and work values.
 
 ## Offline workflow control
 
-The active level-blind GitHub Actions sweep/confirmation workflows expose an opt-in `strict_total_work_budget` input. It defaults to `false` so historical additive-tier semantics remain reproducible. Set it to `true` for decision-bearing matched-work experiments that require the derived work budget to be the true whole-solve envelope. In those workflows, `node_budget` is a base/local allocation guard, not a whole-solve ceiling under legacy additive semantics. See [the 2026-08-28 workflow exposure audit](../reports/2026-08-28-offline-sweep-strict-work-exposure-audit.md).
+Level-blind sweep/confirmation workflows expose `strict_total_work_budget` where matched whole-solve envelopes are needed. A workflow's `node_budget` or base `workBudget` must not be described as a whole-solve ceiling unless strict-total semantics actually make it one.
 
-## Equal-work isolated-action contract
-
-Equal-work census cells are fixed-work experiments, so a finite cell work budget must reach every search family through the cap that family actually checks. The 2026-08-28 EW1 pilot exposed that DFS/beam/repair honored `prep._workCap` while admissible-order/IDA deliberately checked `prep._strictWorkCap` in its hot loop; setting only the former allowed nominal 10M IDA cells to escape into hundreds of millions or billions of work. `technique-census-cell.mjs` now sets both to the same per-attempt ceiling in work-budget mode, with a real-IDA regression test. Corrected run `33156541827` stayed within a small discrete overshoot of 10M for all 2,015 cells. Any future equal-work executor must preserve this family-complete hard-cap contract.
-
-## Matched-work experiments
-
-Declare whether additive retries/passes are inside the envelope. If treatment can spend extra work, use `strictTotalWorkBudget` or report extra cost. Equal `nodeBudget` does not imply equal work when technique mixes differ.
-
-For scheduling experiments, also report which actions were selected/reached, their allocated work bands, paired gains/losses, and residual unique wins. This distinguishes a better policy from a larger search purchase.
-
-A cap/tranche experiment must additionally report solves retained/lost at each candidate band, the population reaching the band, simulated or measured capped spend, and any sequence dependency that makes isolated curves non-causal. Do not promote a lower cap merely because the median successful attempt lies far below it.
-
-## Non-regression rules
-
-- No wall-clock-derived attempt shares/escalation thresholds.
-- No live warm-up speed measurement in solver policy.
-- No raw nodes as portable cross-technique cost.
-- No deadline-truncated failure recorded as ordinary unsolved capability.
-- No hidden total-work increase behind retry/reserve mechanisms.
-- No scheduler candidate that obtains its apparent advantage solely by escaping the declared shared envelope.
-- No deep-cap reduction justified solely by easy-population medians when hard-residual hazard/retention evidence exists.
-- Work-meter weight changes are budget-unit migrations requiring cross-technique calibration plus reproducibility/regression validation.
-
-The archived snapshot preserves nondeterminism measurements, raw-node prototype failure, fitting, migration, hint-workbench diagnosis, and tool-conversion history.
+When a workflow or tool changes budget semantics, update its input description and evidence/report contract at the same time.

@@ -1,7 +1,5 @@
-# Solver optimization workstreams moved
+# Solver optimization current queue
 
-This historical path is retained only so older reports and links continue to resolve.
+The live queue is [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
-Current authority: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
-
-Workstream numbers are stable IDs, not execution ranks.
+This compatibility pointer exists for older links. Do not duplicate current priority, gates, or evidence summaries here; keeping one live authority prevents drift.
