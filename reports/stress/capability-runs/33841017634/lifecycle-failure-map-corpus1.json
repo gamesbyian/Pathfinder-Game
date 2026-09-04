@@ -1,0 +1,1949 @@
+{
+  "population": {
+    "levels": 102,
+    "solved": 98,
+    "unsolved": 4
+  },
+  "techniqueOrder": [
+    "early-repair-search",
+    "main-ladder",
+    "repair-fallback",
+    "goal-attraction-disabled-retry",
+    "admissible-order-fallback",
+    "coarse-state-near-tie-retention-disabled-retry",
+    "admissible-order-alternate-tiebreak-retry",
+    "connectivity-axis-prune-disabled-retry",
+    "repair-elite-prefix-dfs-retry",
+    "must-cross-neighbor-prune-disabled-retry",
+    "late-repair-search",
+    "guidance-goal-distance-retry",
+    "late-repair-multiseed-retry"
+  ],
+  "buckets": {
+    "solved": {
+      "levels": 98,
+      "nodes": 701933385,
+      "work": 1045963848,
+      "ids": [
+        "R00045",
+        "R00058",
+        "R00060",
+        "R00064",
+        "R00087",
+        "R00104",
+        "R00134",
+        "R00191",
+        "R00197",
+        "R00226",
+        "R00253",
+        "R00375",
+        "R00392",
+        "R00408",
+        "R00432",
+        "R00522",
+        "R00525",
+        "R00526",
+        "R00541",
+        "R00578",
+        "R00581",
+        "R00600",
+        "R00631",
+        "R00649",
+        "R00699",
+        "R00716",
+        "R00729",
+        "R00760",
+        "R00771",
+        "R00789",
+        "R00792",
+        "R00822",
+        "R00825",
+        "R00855",
+        "R00904",
+        "R00920",
+        "R00928",
+        "R01014",
+        "R01075",
+        "R01083",
+        "R01152",
+        "R01189",
+        "R01202",
+        "R01219",
+        "R01227",
+        "R01233",
+        "R01271",
+        "R01299",
+        "R01336",
+        "R01349",
+        "R01455",
+        "R01478",
+        "R01480",
+        "R01533",
+        "R01570",
+        "R01616",
+        "R01626",
+        "R01636",
+        "R01670",
+        "R01674",
+        "R01675",
+        "R01685",
+        "R01689",
+        "R01696",
+        "R01737",
+        "R01743",
+        "R01756",
+        "R01830",
+        "R01844",
+        "R01889",
+        "R01943",
+        "R01944",
+        "R01986",
+        "R01993",
+        "S00001",
+        "S00028",
+        "S00030",
+        "S00035",
+        "S00048",
+        "S00055",
+        "S00057",
+        "S00064",
+        "S00065",
+        "S00069",
+        "S00087",
+        "S00095",
+        "S00099",
+        "S00103",
+        "S00107",
+        "S00108",
+        "S00109",
+        "S00111",
+        "S00114",
+        "S00115",
+        "S00120",
+        "S00133",
+        "S00140",
+        "S00141"
+      ],
+      "bestBadnessQuantiles": {
+        "p10": 2,
+        "p25": 5,
+        "p50": 11,
+        "p75": 18,
+        "p90": 26,
+        "p95": 29
+      }
+    },
+    "starved": {
+      "levels": 4,
+      "nodes": 737279465,
+      "work": 827287525,
+      "ids": [
+        "R01195",
+        "R01407",
+        "R01620",
+        "R01875"
+      ],
+      "bestBadnessQuantiles": {
+        "p10": 5,
+        "p25": 5,
+        "p50": 7,
+        "p75": 21,
+        "p90": 21,
+        "p95": 21
+      }
+    }
+  },
+  "techniques": {
+    "early-repair-search": {
+      "instantiated": 4,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 10,
+      "nodes": 24100142,
+      "work": 86135891,
+      "nodeShare": 0.03268793333339346,
+      "workShare": 0.10411844539780774
+    },
+    "main-ladder": {
+      "instantiated": 4,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 35,
+      "nodes": 116694508,
+      "work": 122486029,
+      "nodeShare": 0.15827717105887384,
+      "workShare": 0.14805738669877802
+    },
+    "repair-fallback": {
+      "instantiated": 4,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 4,
+      "nodes": 9205454,
+      "work": 33112901,
+      "nodeShare": 0.012485705132178067,
+      "workShare": 0.04002586766916375
+    },
+    "goal-attraction-disabled-retry": {
+      "instantiated": 4,
+      "reached": 0,
+      "starvedByNodeBudget": 4,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 0,
+      "nodes": 0,
+      "work": 0,
+      "nodeShare": 0,
+      "workShare": 0
+    },
+    "admissible-order-fallback": {
+      "instantiated": 4,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 4,
+      "nodes": 50000640,
+      "work": 58066879,
+      "nodeShare": 0.06781775754462387,
+      "workShare": 0.07018947735250812
+    },
+    "coarse-state-near-tie-retention-disabled-retry": {
+      "instantiated": 4,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 35,
+      "nodes": 49999689,
+      "work": 62818853,
+      "nodeShare": 0.0678164676673858,
+      "workShare": 0.07593351900235652
+    },
+    "admissible-order-alternate-tiebreak-retry": {
+      "instantiated": 4,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 4,
+      "nodes": 49999872,
+      "work": 59738338,
+      "nodeShare": 0.06781671587720133,
+      "workShare": 0.0722098861577781
+    },
+    "connectivity-axis-prune-disabled-retry": {
+      "instantiated": 4,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 35,
+      "nodes": 100000311,
+      "work": 95666822,
+      "nodeShare": 0.13563420079792946,
+      "workShare": 0.11563914492727302
+    },
+    "repair-elite-prefix-dfs-retry": {
+      "instantiated": 4,
+      "reached": 0,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 4,
+      "exhaustedSearchSpace": 0,
+      "attempts": 0,
+      "nodes": 0,
+      "work": 0,
+      "nodeShare": 0,
+      "workShare": 0
+    },
+    "must-cross-neighbor-prune-disabled-retry": {
+      "instantiated": 4,
+      "reached": 3,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 1,
+      "exhaustedSearchSpace": 0,
+      "attempts": 30,
+      "nodes": 114633633,
+      "work": 114301137,
+      "nodeShare": 0.15548192841638414,
+      "workShare": 0.13816373817555147
+    },
+    "late-repair-search": {
+      "instantiated": 0,
+      "reached": 0,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 4,
+      "exhaustedSearchSpace": 0,
+      "attempts": 0,
+      "nodes": 0,
+      "work": 0,
+      "nodeShare": 0,
+      "workShare": 0
+    },
+    "guidance-goal-distance-retry": {
+      "instantiated": 0,
+      "reached": 4,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 0,
+      "exhaustedSearchSpace": 0,
+      "attempts": 35,
+      "nodes": 222645216,
+      "work": 194960675,
+      "nodeShare": 0.30198212017203,
+      "workShare": 0.23566253461878323
+    },
+    "late-repair-multiseed-retry": {
+      "instantiated": 0,
+      "reached": 0,
+      "starvedByNodeBudget": 0,
+      "starvedByWorkBudget": 0,
+      "skippedByRoutingOrConfiguration": 4,
+      "exhaustedSearchSpace": 0,
+      "attempts": 0,
+      "nodes": 0,
+      "work": 0,
+      "nodeShare": 0,
+      "workShare": 0
+    }
+  },
+  "starvationPatterns": {
+    "goal-attraction-disabled-retry": 4
+  },
+  "solveCost": {
+    "nodeBudget": 50000000,
+    "quantiles": {
+      "p10": 41384,
+      "p25": 171182,
+      "p50": 1101393,
+      "p75": 4713563,
+      "p90": 32002893,
+      "p95": 35440939
+    },
+    "max": 63045064,
+    "marginalSolves": {
+      "above50pctOfBudget": 13,
+      "above75pctOfBudget": 3,
+      "above90pctOfBudget": 2
+    }
+  },
+  "winningTechnique": {
+    "main-ladder": 61,
+    "early-repair-search": 34,
+    "admissible-order-alternate-tiebreak-retry": 1,
+    "coarse-state-near-tie-retention-disabled-retry": 1,
+    "admissible-order-fallback": 1
+  },
+  "levels": [
+    {
+      "id": "S00001",
+      "level": 1,
+      "nodes": 74412,
+      "work": 1242844,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00028",
+      "level": 2,
+      "nodes": 1710163,
+      "work": 12458169,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00030",
+      "level": 3,
+      "nodes": 4133862,
+      "work": 18978614,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 2,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00035",
+      "level": 4,
+      "nodes": 5690847,
+      "work": 20936955,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 2,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00048",
+      "level": 5,
+      "nodes": 31048,
+      "work": 62364,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00055",
+      "level": 6,
+      "nodes": 6673941,
+      "work": 4503515,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 10,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00057",
+      "level": 7,
+      "nodes": 8214051,
+      "work": 4879144,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 12,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00064",
+      "level": 8,
+      "nodes": 350616,
+      "work": 238736,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00065",
+      "level": 9,
+      "nodes": 8172666,
+      "work": 4824486,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 5,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00069",
+      "level": 10,
+      "nodes": 16541393,
+      "work": 10401460,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 8,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00087",
+      "level": 11,
+      "nodes": 1604414,
+      "work": 1469958,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00095",
+      "level": 12,
+      "nodes": 205114,
+      "work": 964560,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00099",
+      "level": 13,
+      "nodes": 185251,
+      "work": 718595,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00103",
+      "level": 14,
+      "nodes": 355024,
+      "work": 176038,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00107",
+      "level": 15,
+      "nodes": 233585,
+      "work": 1721790,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00108",
+      "level": 16,
+      "nodes": 579966,
+      "work": 268036,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00109",
+      "level": 17,
+      "nodes": 143,
+      "work": 465,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00111",
+      "level": 18,
+      "nodes": 1348645,
+      "work": 3564184,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 11,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00114",
+      "level": 19,
+      "nodes": 106,
+      "work": 386,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00115",
+      "level": 20,
+      "nodes": 856792,
+      "work": 2136878,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00120",
+      "level": 21,
+      "nodes": 333063,
+      "work": 883663,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "S00133",
+      "level": 22,
+      "nodes": 20,
+      "work": 183,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00140",
+      "level": 23,
+      "nodes": 1796570,
+      "work": 904522,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00045",
+      "level": 24,
+      "nodes": 4441859,
+      "work": 18307252,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 31,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00058",
+      "level": 25,
+      "nodes": 33437295,
+      "work": 23616497,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 20,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00060",
+      "level": 26,
+      "nodes": 49385,
+      "work": 694936,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00064",
+      "level": 27,
+      "nodes": 171182,
+      "work": 2046914,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00087",
+      "level": 28,
+      "nodes": 4474161,
+      "work": 13587833,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 6,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00104",
+      "level": 29,
+      "nodes": 45372,
+      "work": 162140,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00134",
+      "level": 30,
+      "nodes": 127096,
+      "work": 351449,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00191",
+      "level": 31,
+      "nodes": 58266,
+      "work": 692711,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00197",
+      "level": 32,
+      "nodes": 10551272,
+      "work": 47498829,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 2,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00226",
+      "level": 33,
+      "nodes": 183432,
+      "work": 2545668,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00253",
+      "level": 34,
+      "nodes": 1456222,
+      "work": 773654,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00375",
+      "level": 35,
+      "nodes": 291435,
+      "work": 3840475,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00392",
+      "level": 36,
+      "nodes": 4314950,
+      "work": 9976771,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 11,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00408",
+      "level": 37,
+      "nodes": 35440939,
+      "work": 55308454,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 2,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00432",
+      "level": 38,
+      "nodes": 32884,
+      "work": 102695,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00522",
+      "level": 39,
+      "nodes": 42207,
+      "work": 113146,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00525",
+      "level": 40,
+      "nodes": 33486105,
+      "work": 24726064,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 12,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00526",
+      "level": 41,
+      "nodes": 10172537,
+      "work": 38223262,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 5,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00541",
+      "level": 42,
+      "nodes": 41384,
+      "work": 311767,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00578",
+      "level": 43,
+      "nodes": 16100801,
+      "work": 14127229,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 26,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00581",
+      "level": 44,
+      "nodes": 2004679,
+      "work": 7664242,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 3,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00600",
+      "level": 45,
+      "nodes": 1106240,
+      "work": 2916443,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00631",
+      "level": 46,
+      "nodes": 3986087,
+      "work": 12232666,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 5,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00649",
+      "level": 47,
+      "nodes": 492322,
+      "work": 271772,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00699",
+      "level": 48,
+      "nodes": 33265070,
+      "work": 28563231,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 7,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00716",
+      "level": 49,
+      "nodes": 1882024,
+      "work": 6112015,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00729",
+      "level": 50,
+      "nodes": 2467283,
+      "work": 1252619,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00760",
+      "level": 51,
+      "nodes": 21460,
+      "work": 39366,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00771",
+      "level": 52,
+      "nodes": 6475558,
+      "work": 22384270,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 14,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00789",
+      "level": 53,
+      "nodes": 62552,
+      "work": 206085,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00792",
+      "level": 54,
+      "nodes": 2563012,
+      "work": 7506937,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 12,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00822",
+      "level": 55,
+      "nodes": 4006893,
+      "work": 2048315,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00825",
+      "level": 56,
+      "nodes": 60102,
+      "work": 206961,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00855",
+      "level": 57,
+      "nodes": 216897,
+      "work": 653225,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00904",
+      "level": 58,
+      "nodes": 32430,
+      "work": 77081,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R00920",
+      "level": 59,
+      "nodes": 4229481,
+      "work": 9106598,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 20,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R00928",
+      "level": 60,
+      "nodes": 33229543,
+      "work": 21322928,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 23,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01014",
+      "level": 61,
+      "nodes": 31980900,
+      "work": 21456010,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 26,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01075",
+      "level": 62,
+      "nodes": 268753,
+      "work": 1536826,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01083",
+      "level": 63,
+      "nodes": 35504540,
+      "work": 33822580,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 13,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01152",
+      "level": 64,
+      "nodes": 66627,
+      "work": 983789,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01189",
+      "level": 65,
+      "nodes": 1101393,
+      "work": 2886280,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01195",
+      "level": 66,
+      "nodes": 150000178,
+      "work": 160907515,
+      "status": "node-budget-reached",
+      "starvedTechniques": [
+        "goal-attraction-disabled-retry"
+      ],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder",
+        "repair-fallback",
+        "admissible-order-fallback",
+        "coarse-state-near-tie-retention-disabled-retry",
+        "admissible-order-alternate-tiebreak-retry",
+        "connectivity-axis-prune-disabled-retry",
+        "guidance-goal-distance-retry"
+      ],
+      "bestBadness": 21,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "starved"
+    },
+    {
+      "id": "R01202",
+      "level": 67,
+      "nodes": 128047,
+      "work": 1680968,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01219",
+      "level": 68,
+      "nodes": 875515,
+      "work": 423961,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01227",
+      "level": 69,
+      "nodes": 503684,
+      "work": 266852,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01233",
+      "level": 70,
+      "nodes": 32001603,
+      "work": 21796081,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 22,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01271",
+      "level": 71,
+      "nodes": 172752,
+      "work": 598757,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01299",
+      "level": 72,
+      "nodes": 309000,
+      "work": 3576775,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01336",
+      "level": 73,
+      "nodes": 63045064,
+      "work": 86134988,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder",
+        "repair-fallback",
+        "admissible-order-fallback",
+        "coarse-state-near-tie-retention-disabled-retry",
+        "admissible-order-alternate-tiebreak-retry"
+      ],
+      "bestBadness": 11,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "admissible-order-alternate-tiebreak-retry"
+    },
+    {
+      "id": "R01349",
+      "level": 74,
+      "nodes": 35532012,
+      "work": 31413480,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 27,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01407",
+      "level": 75,
+      "nodes": 203046281,
+      "work": 246155783,
+      "status": "node-budget-reached",
+      "starvedTechniques": [
+        "goal-attraction-disabled-retry"
+      ],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder",
+        "repair-fallback",
+        "admissible-order-fallback",
+        "coarse-state-near-tie-retention-disabled-retry",
+        "admissible-order-alternate-tiebreak-retry",
+        "connectivity-axis-prune-disabled-retry",
+        "must-cross-neighbor-prune-disabled-retry",
+        "guidance-goal-distance-retry"
+      ],
+      "bestBadness": 7,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "starved"
+    },
+    {
+      "id": "R01455",
+      "level": 76,
+      "nodes": 67640,
+      "work": 847067,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01478",
+      "level": 77,
+      "nodes": 50276942,
+      "work": 174653833,
+      "status": "success",
+      "starvedTechniques": [
+        "admissible-order-fallback"
+      ],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder",
+        "repair-fallback",
+        "admissible-order-fallback",
+        "coarse-state-near-tie-retention-disabled-retry"
+      ],
+      "bestBadness": 2,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "coarse-state-near-tie-retention-disabled-retry"
+    },
+    {
+      "id": "R01480",
+      "level": 78,
+      "nodes": 13166,
+      "work": 38331,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01533",
+      "level": 79,
+      "nodes": 4373375,
+      "work": 11981660,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 18,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01570",
+      "level": 80,
+      "nodes": 109220,
+      "work": 1484805,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01616",
+      "level": 81,
+      "nodes": 330077,
+      "work": 216083,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01620",
+      "level": 82,
+      "nodes": 219667451,
+      "work": 232179923,
+      "status": "node-budget-reached",
+      "starvedTechniques": [
+        "goal-attraction-disabled-retry"
+      ],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder",
+        "repair-fallback",
+        "admissible-order-fallback",
+        "coarse-state-near-tie-retention-disabled-retry",
+        "admissible-order-alternate-tiebreak-retry",
+        "connectivity-axis-prune-disabled-retry",
+        "must-cross-neighbor-prune-disabled-retry",
+        "guidance-goal-distance-retry"
+      ],
+      "bestBadness": 5,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "starved"
+    },
+    {
+      "id": "R01626",
+      "level": 83,
+      "nodes": 15939778,
+      "work": 12321867,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 11,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01636",
+      "level": 84,
+      "nodes": 11305,
+      "work": 38062,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01670",
+      "level": 85,
+      "nodes": 32002893,
+      "work": 21003051,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 29,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01674",
+      "level": 86,
+      "nodes": 4003326,
+      "work": 2084665,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01675",
+      "level": 87,
+      "nodes": 44967627,
+      "work": 59951433,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder",
+        "repair-fallback",
+        "admissible-order-fallback"
+      ],
+      "bestBadness": 14,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "admissible-order-fallback"
+    },
+    {
+      "id": "R01685",
+      "level": 88,
+      "nodes": 210054,
+      "work": 2894021,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01689",
+      "level": 89,
+      "nodes": 2017130,
+      "work": 7530482,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 4,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01696",
+      "level": 90,
+      "nodes": 4713563,
+      "work": 16191762,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 7,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01737",
+      "level": 91,
+      "nodes": 95748,
+      "work": 1264786,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01743",
+      "level": 92,
+      "nodes": 252144,
+      "work": 3031041,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01756",
+      "level": 93,
+      "nodes": 2327479,
+      "work": 7750759,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": 2,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01830",
+      "level": 94,
+      "nodes": 634584,
+      "work": 2216415,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "early-repair-search"
+    },
+    {
+      "id": "R01844",
+      "level": 95,
+      "nodes": 4064026,
+      "work": 7904656,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 12,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01875",
+      "level": 96,
+      "nodes": 164565555,
+      "work": 188044304,
+      "status": "node-budget-reached",
+      "starvedTechniques": [
+        "goal-attraction-disabled-retry"
+      ],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder",
+        "repair-fallback",
+        "admissible-order-fallback",
+        "coarse-state-near-tie-retention-disabled-retry",
+        "admissible-order-alternate-tiebreak-retry",
+        "connectivity-axis-prune-disabled-retry",
+        "must-cross-neighbor-prune-disabled-retry",
+        "guidance-goal-distance-retry"
+      ],
+      "bestBadness": 23,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "starved"
+    },
+    {
+      "id": "R01889",
+      "level": 97,
+      "nodes": 318394,
+      "work": 3674470,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01943",
+      "level": 98,
+      "nodes": 4730766,
+      "work": 7691009,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "early-repair-search",
+        "main-ladder"
+      ],
+      "bestBadness": 5,
+      "bestBadnessTechnique": "early-repair-search",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01944",
+      "level": 99,
+      "nodes": 16749652,
+      "work": 16860612,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": 32,
+      "bestBadnessTechnique": "main-ladder",
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01986",
+      "level": 100,
+      "nodes": 1325336,
+      "work": 821860,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "R01993",
+      "level": 101,
+      "nodes": 113739,
+      "work": 1249391,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    },
+    {
+      "id": "S00141",
+      "level": 102,
+      "nodes": 683422,
+      "work": 4776335,
+      "status": "success",
+      "starvedTechniques": [],
+      "reachedTechniques": [
+        "main-ladder"
+      ],
+      "bestBadness": null,
+      "bestBadnessTechnique": null,
+      "bucket": "solved",
+      "winningTechnique": "main-ladder"
+    }
+  ],
+  "sources": [
+    "reports/stress/solver-corpus1-latest.json"
+  ]
+}

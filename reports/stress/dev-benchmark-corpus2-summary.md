@@ -1,6 +1,6 @@
 # Curated development benchmark — Corpus 2
 
-Generated 2026-09-04T03:33:34.381Z by `npm run stress:curate-dev-benchmark`. See [`scripts/stress/curate-dev-benchmark.mjs`](../../scripts/stress/curate-dev-benchmark.mjs) for the selection algorithm — NOT a difficulty-sorted top-N.
+Generated 2026-09-04T08:47:33.376Z by `npm run stress:curate-dev-benchmark`. See [`scripts/stress/curate-dev-benchmark.mjs`](../../scripts/stress/curate-dev-benchmark.mjs) for the selection algorithm — NOT a difficulty-sorted top-N.
 
 - **112** levels selected from a pool of **725** unsolved Corpus-2 levels.
 - Mean badness — full pool: **13.66**, selected: **7.54** (lower = closer to solved).
