@@ -393,7 +393,8 @@
       ],
       "caveats": [
         "logs/Solver is a frozen legacy attic and not a current output destination.",
-        "latest pointers are not independent evidence and historical artifacts are not current capability by existence alone."
+        "latest pointers are not independent evidence and historical artifacts are not current capability by existence alone.",
+        "main's git history for many pre-2026-09-03 tracked files (e.g. scripts/stress/feature-solvability-analysis.mjs, data/levels.json) was squashed into a single 2026-09-03 merge commit -- git log/blame cannot recover when these files actually changed prior to that date. Only a file's own embedded generatedAt/timestamp fields are trustworthy for pre-merge chronology (see reports/2026-09-05-routing-regime-archetype-risk-three-point-refinement-001.md)."
       ]
     },
     {
