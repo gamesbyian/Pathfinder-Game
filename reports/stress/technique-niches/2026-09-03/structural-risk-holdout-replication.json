@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "holdout-replication-check",
+  "groupField": "productionSolved",
+  "splitField": "corpus",
+  "splitA": {
+    "value": "corpus1",
+    "n": 102,
+    "ranking": [
+      {
+        "feature": "constrainedObjects",
+        "leftMean": 13.105263157894736,
+        "rightMean": 29.428571428571427,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -2.0957086383136105
+      },
+      {
+        "feature": "portals",
+        "leftMean": 1.6526315789473685,
+        "rightMean": 5.142857142857143,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -1.461973064145202
+      },
+      {
+        "feature": "turnConstraintLoad",
+        "leftMean": 7.705263157894737,
+        "rightMean": 14.857142857142858,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -1.4546477110728218
+      },
+      {
+        "feature": "constrainedObjectDensity",
+        "leftMean": 0.12308547732609632,
+        "rightMean": 0.2397888604019433,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -1.3687968894644897
+      },
+      {
+        "feature": "requiredPathLength",
+        "leftMean": 76.81052631578947,
+        "rightMean": 90.28571428571429,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.8302681300145025
+      },
+      {
+        "feature": "flippingFilters",
+        "leftMean": 2.094736842105263,
+        "rightMean": 4.285714285714286,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.7589284902889172
+      },
+      {
+        "feature": "mustTurn",
+        "leftMean": 1.5157894736842106,
+        "rightMean": 3.857142857142857,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.7587197670930379
+      },
+      {
+        "feature": "surround",
+        "leftMean": 0.3684210526315789,
+        "rightMean": 1.1428571428571428,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.6882069150431128
+      },
+      {
+        "feature": "mustCross",
+        "leftMean": 1.3473684210526315,
+        "rightMean": 2.5714285714285716,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.6136693871716253
+      },
+      {
+        "feature": "requiredPathCoverageRatio",
+        "leftMean": 0.6582494963960888,
+        "rightMean": 0.7223277742170409,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.5556181933559154
+      },
+      {
+        "feature": "blocks",
+        "leftMean": 14.926315789473684,
+        "rightMean": 21.285714285714285,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.5320695067425968
+      },
+      {
+        "feature": "mustPass",
+        "leftMean": 3.1473684210526316,
+        "rightMean": 4.571428571428571,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.4834828527155473
+      },
+      {
+        "feature": "adjacentTurn",
+        "leftMean": 1.3263157894736841,
+        "rightMean": 2.7142857142857144,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.4757562572527358
+      },
+      {
+        "feature": "width",
+        "leftMean": 11.936842105263159,
+        "rightMean": 12.428571428571429,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.33288016757579036
+      },
+      {
+        "feature": "height",
+        "leftMean": 11.936842105263159,
+        "rightMean": 12.428571428571429,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.33288016757579036
+      },
+      {
+        "feature": "area",
+        "leftMean": 145.17894736842106,
+        "rightMean": 156.14285714285714,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.3096467591427537
+      },
+      {
+        "feature": "nonNavigableDensity",
+        "leftMean": 0.16559910235481368,
+        "rightMean": 0.1859228087374941,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.24835200227632034
+      },
+      {
+        "feature": "gates",
+        "leftMean": 1.063157894736842,
+        "rightMean": 1,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": 0.2073903389460847
+      },
+      {
+        "feature": "geese",
+        "leftMean": 3.336842105263158,
+        "rightMean": 3.857142857142857,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.12680998773059793
+      },
+      {
+        "feature": "navigableArea",
+        "leftMean": 122.71578947368421,
+        "rightMean": 127,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.12496642338743906
+      },
+      {
+        "feature": "falseGoals",
+        "leftMean": 3.136842105263158,
+        "rightMean": 3,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": 0.040303096087610596
+      },
+      {
+        "feature": "requiredIntersections",
+        "leftMean": 4.494736842105263,
+        "rightMean": 4.571428571428571,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": -0.032872474837021076
+      },
+      {
+        "feature": "filters",
+        "leftMean": 0,
+        "rightMean": 0,
+        "leftN": 95,
+        "rightN": 7,
+        "standardizedDifference": 0
+      }
+    ]
+  },
+  "splitB": {
+    "value": "corpus2",
+    "n": 1700,
+    "ranking": [
+      {
+        "feature": "constrainedObjects",
+        "leftMean": 20.208791208791208,
+        "rightMean": 28.367763904653803,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.9936534047559971
+      },
+      {
+        "feature": "portals",
+        "leftMean": 2.0146520146520146,
+        "rightMean": 4.076049943246311,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.7738230872639763
+      },
+      {
+        "feature": "constrainedObjectDensity",
+        "leftMean": 0.1671650481967662,
+        "rightMean": 0.22363346779545965,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.6564157937615995
+      },
+      {
+        "feature": "turnConstraintLoad",
+        "leftMean": 12.678876678876678,
+        "rightMean": 16.364358683314414,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.5782235164036194
+      },
+      {
+        "feature": "mustTurn",
+        "leftMean": 2.6788766788766787,
+        "rightMean": 4.406356413166856,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.5367466617178994
+      },
+      {
+        "feature": "requiredPathCoverageRatio",
+        "leftMean": 0.7327298181011406,
+        "rightMean": 0.780510080021052,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.45201371428775833
+      },
+      {
+        "feature": "surround",
+        "leftMean": 0.8571428571428571,
+        "rightMean": 1.449489216799092,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.40214762031223794
+      },
+      {
+        "feature": "requiredPathLength",
+        "leftMean": 94.26739926739927,
+        "rightMean": 102.34960272417707,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.3850832671609459
+      },
+      {
+        "feature": "blocks",
+        "leftMean": 21.515262515262517,
+        "rightMean": 25.406356413166854,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.3437442183743494
+      },
+      {
+        "feature": "adjacentTurn",
+        "leftMean": 3.051282051282051,
+        "rightMean": 4.010215664018161,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.28894484642411666
+      },
+      {
+        "feature": "nonNavigableDensity",
+        "leftMean": 0.18577811891641874,
+        "rightMean": 0.2030618556080607,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.24837144429263178
+      },
+      {
+        "feature": "width",
+        "leftMean": 12.57020757020757,
+        "rightMean": 12.860385925085131,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.20709357843004605
+      },
+      {
+        "feature": "height",
+        "leftMean": 12.57020757020757,
+        "rightMean": 12.860385925085131,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.20709357843004605
+      },
+      {
+        "feature": "area",
+        "leftMean": 159.95970695970695,
+        "rightMean": 167.36662883087402,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.20452378687941652
+      },
+      {
+        "feature": "geese",
+        "leftMean": 3.2185592185592187,
+        "rightMean": 3.6492622020431327,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.13061479737977588
+      },
+      {
+        "feature": "flippingFilters",
+        "leftMean": 3.5006105006105006,
+        "rightMean": 3.851305334846765,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.10475909345467277
+      },
+      {
+        "feature": "navigableArea",
+        "leftMean": 130.82905982905982,
+        "rightMean": 133.7911464245176,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.08868397433855547
+      },
+      {
+        "feature": "mustCross",
+        "leftMean": 2.5921855921855923,
+        "rightMean": 2.7809307604994324,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.06913278242621088
+      },
+      {
+        "feature": "mustPass",
+        "leftMean": 3.4993894993894994,
+        "rightMean": 3.717366628830874,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.06557086584919844
+      },
+      {
+        "feature": "falseGoals",
+        "leftMean": 3.3968253968253967,
+        "rightMean": 3.5198637911464243,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.037108193887940656
+      },
+      {
+        "feature": "requiredIntersections",
+        "leftMean": 5.621489621489621,
+        "rightMean": 5.703745743473326,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": -0.02899921182356179
+      },
+      {
+        "feature": "gates",
+        "leftMean": 1,
+        "rightMean": 1,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": 0
+      },
+      {
+        "feature": "filters",
+        "leftMean": 0,
+        "rightMean": 0,
+        "leftN": 819,
+        "rightN": 881,
+        "standardizedDifference": 0
+      }
+    ]
+  },
+  "spearmanRankCorrelation": 0.8191699604743083,
+  "topNCompared": 8,
+  "topOverlapCount": 7,
+  "topOverlapFeatures": [
+    "constrainedObjects",
+    "portals",
+    "turnConstraintLoad",
+    "constrainedObjectDensity",
+    "requiredPathLength",
+    "mustTurn",
+    "surround"
+  ]
+}
