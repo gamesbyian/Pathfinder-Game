@@ -96,6 +96,8 @@ Estimate the best measured coverage-vs-work frontier at several envelopes, with 
 
 This is a value-of-information gate. If a tiny static policy captures nearly all credible headroom, sophisticated scheduling has not earned implementation. The mined matrix gives an optimistic ceiling, not a forecast.
 
+**2026-09-04 sizing (production nodes vs. isolated-census cheapest-known-technique nodes, 936 levels solved by both):** median ratio 38.65x, p90 482.33x; only 0.9% of production solves are cheaper than the isolated-census's own best-known path for that level — a real, large ceiling by this measure, though closing it requires solving level-blindness, not merely knowing the ceiling exists. See [`../reports/2026-09-04-production-cost-efficiency-vs-isolated-cheapest-001.md`](../reports/2026-09-04-production-cost-efficiency-vs-isolated-cheapest-001.md).
+
 ### Tail audit
 
 For every current additive/retry stage record reach, unique residual solves, conditional `workSpent`, actual winning sub-actions, upstream redundancy, equal-cost alternatives, robustness of rare wins, and whether later tranches still earn continuation value.
