@@ -320,6 +320,19 @@ jobs:
           console.log('Unsolved: ' + d.levels.filter(l => !l.ok).map(l => l.id + ' (' + l.status + ')').join(', '));
           "
 
+      # Prints aggregate/per-level workSpent and a per-stage reach/participation/solve table
+      # straight to the job log, since this environment's egress policy blocks the Azure blob-
+      # storage host the uploaded artifact's download URL redirects to (see
+      # scripts/summarize-targeted-sweep-work.mjs's own header comment). --stage highlights any
+      # ablation-under-test stage's own per-level reach/participation, in addition to the
+      # population-wide per-stage table this always prints.
+      - name: Print an aggregate/per-level workSpent and per-stage breakdown to the job log
+        shell: bash
+        run: |
+          node scripts/summarize-targeted-sweep-work.mjs \
+            --in=logs/solver-targeted-sweep/combined.json \
+            --stage=admissible-order-alternate-tiebreak-retry,admissible-order-fallback,connectivity-axis-prune-disabled-retry
+
       - name: Upload the combined result as an artifact
         uses: actions/upload-artifact@v7
         with:
