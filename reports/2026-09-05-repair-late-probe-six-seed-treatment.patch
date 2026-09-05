@@ -1,0 +1,6 @@
+diff --git a/modules/solver/stage-budget.ts b/modules/solver/stage-budget.ts
+--- a/modules/solver/stage-budget.ts
++++ b/modules/solver/stage-budget.ts
+@@
+-export const REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS = [1, 2, 3, 4, 5, 6, 7];
++export const REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS = [1, 2, 3, 4, 5, 6];
