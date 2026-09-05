@@ -63,7 +63,7 @@ Rows are sorted by stable workstream ID, not execution priority.
 
 ## Standing research rules
 
-- Use `workSpent` for cross-technique allocation; raw nodes are within-technique diagnostics.
+- Use `workSpent` for cross-technique allocation; raw nodes are within-technique diagnostics — quantified: beam/repair run 7-13x fewer nodes/wall-ms than dfs/admissible-order (`2026-09-05-technique-family-wall-clock-throughput-001.md`), so wall-time budgets are equally non-neutral.
 - New actions/configurations expand the menu, not the default total budget.
 - Level-blindness is not generalization. Confirmation strength scales with selection/tuning pressure.
 - A clear negative closes the tested form unless materially new evidence changes its premise.
