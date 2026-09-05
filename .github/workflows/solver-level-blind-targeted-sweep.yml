@@ -86,9 +86,13 @@ on:
         description: 'Optional override for admissible-order-alternate-tiebreak-retrys shared fresh work pool, as a fraction of the derived work_budget (default production dose is 1.0x; see reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md for why a smaller value is being tested). Blank = production default (no override passed).'
         required: false
         default: ''
+      concurrency_suffix:
+        description: 'Optional suffix appended to this workflow''s concurrency group. Blank (default) keeps every dispatch serialized against every other one, as before. Set a distinct value on each side of an A/B pair (e.g. "confirmation-004-control" / "confirmation-004-treatment") so that pair runs in parallel with each other instead of waiting in line -- while still serializing normally against any unrelated dispatch of this workflow that leaves it blank or uses a different suffix.'
+        required: false
+        default: ''
 
 concurrency:
-  group: solver-level-blind-targeted-sweep
+  group: solver-level-blind-targeted-sweep${{ inputs.concurrency_suffix && format('-{0}', inputs.concurrency_suffix) || '' }}
   cancel-in-progress: false
 
 jobs:
