@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, workstream state, and next gates.
-> **Reconciled:** 2026-09-05.
+> **Reconciled:** 2026-09-06.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization.
 
 Keep this file **current-state only**. When evidence changes a state or gate, replace the old statement instead of appending chronology. Detailed experimental history belongs in dated reports; historical snapshots live under `docs/archive/snapshots/`.
@@ -42,11 +42,11 @@ Primary evidence: [`../reports/2026-09-04-production-ladder-marginal-value-tail-
 
 Do not interpret “downstream” as “idle.” Existing capability, lifecycle, provenance, profile, variant, census, and trace evidence can be mined and independently replicated while WS2 experiments run or are blocked. Promote only signals that survive appropriate holdout/replication; exploratory slicing is not a routing policy.
 
-Recent evidence: starvation/capping failure modes, within-corpus multiplicity→production-success, replicated structural-risk signals, and exposure-confounded near-miss identity. The old 35-row production-solved/no-isolated-T1 cohort is now only three unresolved IDs: `R03195`, `R02452`, `R02887`.
+Recent evidence: starvation/capping failures, within-corpus multiplicity→production-success, replicated structural-risk signals, and exposure-confounded near-miss identity. The old 35-row production-solved/no-isolated-T1 cohort now has one unresolved ID, `R03195`; `R02452` and `R02887` already have current-revision unguided/unforced standard-repair attempt-0 solves that predate `context.isolatedTechnique`. See [`../reports/2026-09-05-production-solved-no-isolated-winner-three-residue-followup-001.md`](../reports/2026-09-05-production-solved-no-isolated-winner-three-residue-followup-001.md).
 
-**WS1 lead:** DFS and beam `perimeterSweep` both favor clockwise bias (21:11 and 170:76), with the direction holding in both corpora. Treat this as discovery evidence; seek a simple legal explanatory selector and independent replication rather than recounting the ratio. See [`../reports/2026-09-05-perimeter-bias-clockwise-preference-cross-family-001.md`](../reports/2026-09-05-perimeter-bias-clockwise-preference-cross-family-001.md).
+The clockwise `perimeterSweep` lead is closed as an attribution confound: production favored CW (DFS 21:11; beam 170:76), but matched isolated results do not (beam 104:111; DFS 42:50). Keep both directions capability-bearing; any decision-bearing order/allocation test belongs under WS2 with matched exposure/work. See [`../reports/2026-09-05-perimeter-bias-production-attribution-confound-audit-001.md`](../reports/2026-09-05-perimeter-bias-production-attribution-confound-audit-001.md).
 
-**Next gate:** continue local cross-evidence analysis and nominate only simple legal level-blind selectors with replicated signal. Production routing/action-order changes should wait for the relevant WS2 allocation contract unless the proposed change is demonstrably allocation-neutral. Isolated rescuer identity alone is not enough.
+**Next gate:** continue local cross-evidence analysis and nominate only simple legal level-blind selectors with replicated signal. A useful bounded residual is the single `R03195` production/census attribution anomaly, but do not generalize from one ID into a routing rule. Production routing/action-order changes should wait for the relevant WS2 allocation contract unless the proposed change is demonstrably allocation-neutral. Isolated rescuer identity alone is not enough.
 
 Details: [`../reports/2026-09-05-solver-open-question-evidence-reconciliation.md`](../reports/2026-09-05-solver-open-question-evidence-reconciliation.md) and `node scripts/research-status-index.mjs --compact --query=<term>`.
 
@@ -79,7 +79,7 @@ Rows are sorted by stable workstream ID, not execution priority.
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 5 | Exact/reference-model program | **ON DEMAND / CONCRETE LOCAL GATE AVAILABLE** | Before any new CP-SAT compute, locally characterize the existing referee-valid CP-SAT rescue cohort (45 current production-unsolved rescues; 13 isolated-no-winner rescues) against native-unsolved controls using replicated structural/lifecycle/census features and a predeclared holdout. No stable narrow selector → keep WS5 strictly on demand. Stable selector → use it first as a bounded exact-label acquisition gate, not production CP-SAT. See [`../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md`](../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md). |
+| 5 | Exact/reference-model program | **ON DEMAND / INTEGRITY GATE** | The CP-SAT rescue source is internally inconsistent (13 distinct claimed vs 15 entries / 14 unique). Before selector work or new CP-SAT compute, deterministically regenerate both rescue cohorts from current capability data + referee-valid provenance, assert unique membership/count predicates, then run the predeclared characterization/holdout. No stable narrow selector → stay on demand; stable selector → bounded exact-label acquisition only, not production CP-SAT. See [`../reports/2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md`](../reports/2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md) and [`../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md`](../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md). |
 
 ## Standing research rules
 
