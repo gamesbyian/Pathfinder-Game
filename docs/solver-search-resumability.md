@@ -1,6 +1,6 @@
 # Resumable solver search
 
-> **Status:** opt-in beam continuation primitive exists; no production scheduling policy currently consumes it.
+> **Status:** opt-in beam continuation primitive exists; a concrete WS2B same-policy tranche candidate is active, but no production scheduling policy currently consumes continuation.
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) decides whether resumability work is active.
 > **History:** [`archive/snapshots/solver-search-resumability-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-search-resumability-2026-09-04-pre-consolidation.md) plus dated reports below.
 
@@ -39,6 +39,24 @@ Rules:
 - continuation cannot contain identity-derived policy or historical per-level outcomes;
 - default production behavior remains unchanged unless a separately validated scheduler policy promotes continuation use;
 - fresh-vs-resumed equivalence tests must guard hidden predecessor-state dependence.
+
+## Current concrete scheduler use case: portfolio-18 same-policy residual tranche
+
+The failed `portfolio-18-tranche-v2` production-replacement test supplied a materially new reason to use same-policy continuation. Static lost 14/40 vs production 18/40, but postmortem attribution found that **three of the four production-only wins were beam configurations already present in the static portfolio and capped only ~2–12% short in node count**. The fourth loss was a genuinely missing production retry action.
+
+A prior lifecycle-only tranche pilot independently found added work rescued capped searches (3/30) and no naturally exhausted searches (0/39), but its matched-envelope scheduler could dispatch no second tranches because every continuation required a cold restart. Same-policy resumability removes that specific restart-tax premise for beam searches.
+
+The resulting WS2B candidate is deliberately narrow:
+
+1. keep the validated `portfolio-18-tranche-v2` first pass frozen;
+2. retire naturally exhausted beam attempts;
+3. retain capped beam attempts;
+4. resume the same beam config for at most one additional tranche using only work left inside the same 67M per-level envelope;
+5. do not switch profile/retention/width or add missing residual actions in the first A/B.
+
+This does **not** reopen the closed one-shot static scheduler or the cold `static -> production` fallback. It tests whether already-paid first-pass work can be reused to recover dose-truncation losses cheaply.
+
+Current blocker: exact work-boundary capture is not yet reliable at production beam widths 2000/5000 because the mid-phase budget check can exit before `captureContinuationOnBudgetExit` produces a continuation. The concrete engineering gate is therefore production-width same-policy equivalence, followed by the fixed-work A/B in [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md).
 
 ## Tested policy-switch forms
 
@@ -87,7 +105,7 @@ That can matter for racing/dynamic allocation, but a useful continuation primiti
 
 Do not generalize resumability merely because the primitive exists. Additional work needs a current workstream premise and should isolate one of these distinct questions:
 
-- same search, later tranche value;
+- same search, later tranche value — **currently instantiated by the portfolio-18 resumable-tranche candidate above**;
 - same frontier, materially different future beam policy;
 - selected-state cross-method handoff;
 - memory/runtime overhead of retained continuations;
