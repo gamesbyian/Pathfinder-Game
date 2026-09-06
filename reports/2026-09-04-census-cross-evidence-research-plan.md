@@ -1,9 +1,9 @@
 # Census cross-evidence research plan
 
-> **Status:** reconciled standing evidence map; not an active sequential campaign
-> **Reconciled:** 2026-09-05
-> **Completed:** Gate 0 analytical parity/temporal holdout; bounded existing-data Gate 1 pilot
-> **Current rule:** later gates reopen only when a current workstream poses a concrete decision-bearing question that needs this evidence surface.
+> **Status:** superseded
+> **Last evidence:** 2026-09-05 — Gate 0 analytical parity/temporal holdout is complete and the bounded existing-data Gate 1 pilot was inconclusive.
+> **Decision:** preserve this file as a reconciled standing evidence map, not an active sequential campaign.
+> **Remaining gate:** none by sequence; reopen a later evidence route only when a current workstream poses a concrete decision-bearing question that needs it.
 > **Priority authority:** `docs/solver-optimization-workstreams.md`
 > **Full Gate 0/1 disposition:** `reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md`
 > **Question/evidence reconciliation:** `reports/2026-09-05-solver-open-question-evidence-reconciliation.md`
