@@ -1,6 +1,9 @@
 # STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL: reach-conditioned confirmation 002 preflight
 
-> **Status:** ready for population materialization / dispatch
+> **Status:** active
+> **Last evidence:** 2026-09-05 — Prior development was +1/-0 with direct mechanism reproduction, confirmation 001 was a clean null, and fresh lifecycle evidence shows goal-attraction-disabled retry starvation on all 605/605 starvation cases among 725 current production-unsolved levels.
+> **Decision:** run confirmation 002 on a cohort selected only from independent historical control-side starvation so the candidate mechanism is genuinely exercised.
+> **Remaining gate:** materialize and freeze the starvation-conditioned cohort, then dispatch matched control/treatment arms and require real tier participation before interpreting efficacy.
 > **Evidence role:** second independent confirmation, conditioned only on historical control-side starvation/reach
 > **Candidate:** `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL`
 > **Control:** `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE`

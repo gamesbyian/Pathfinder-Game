@@ -1,6 +1,6 @@
 # Solver future work
 
-Deferred/reopen ideas that are **not current execution priority**. Current priority/state/gates live in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); research method in [`solver-research-operating-model.md`](solver-research-operating-model.md); retained default-OFF dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
+Deferred/reopen ideas that are **not current execution priority**. Current priority/state/gates live in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); research method in [`solver-research-operating-model.md`](solver-research-operating-model.md); retained default-OFF dispositions in [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). The current question/evidence reconciliation is [`../reports/2026-09-05-solver-open-question-evidence-reconciliation.md`](../reports/2026-09-05-solver-open-question-evidence-reconciliation.md).
 
 Prior evidence: `node scripts/research-status-index.mjs --compact --query=<term>`. Historical states: [`archive/snapshots/future-work-2026-08-20.md`](archive/snapshots/future-work-2026-08-20.md) and [`archive/snapshots/solver-future-work-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/solver-future-work-2026-09-04-pre-proposal-consolidation.md).
 
@@ -18,6 +18,8 @@ Before promoting an item, identify:
 
 If an item becomes active, its live gate moves to the owning workstream/specialist doc. Detailed evidence and chronology go in dated reports. Remove an item when it is answered, promoted, superseded, or no longer has a plausible reopen condition.
 
+Before treating any older-plan question as backlog, first reconcile it against later evidence. An old question is not research debt if a newer report already answers it; carry forward only the smallest unexplained residue.
+
 ## Deferred questions
 
 | Question | Reopen condition / boundary |
@@ -32,7 +34,7 @@ If an item becomes active, its live gate moves to the owning workstream/speciali
 | **Typed producer → consumer search artifacts** | Require a demonstrated consumer limitation, novel timely information, bounded production/storage/replay cost, independent control, and matched-work benefit. Do not build a general blackboard. |
 | **Queryable analytical layer** | Reopen only if recurring joins among run identity, telemetry, static features, families, labels, and arms still require bespoke scripts after existing join helpers are extended. Generated views must be rebuildable from canonical evidence and cannot become production-policy truth. |
 
-For the active census cross-evidence program, use [`../reports/2026-09-04-census-cross-evidence-research-plan.md`](../reports/2026-09-04-census-cross-evidence-research-plan.md) and the current workstream authority. Residual/search-quality gates already promoted out of this backlog likewise belong in the workstream authority.
+The census cross-evidence plan at [`../reports/2026-09-04-census-cross-evidence-research-plan.md`](../reports/2026-09-04-census-cross-evidence-research-plan.md) is now a **reconciled standing evidence map**, not an active sequential campaign: Gate 0 is complete, the bounded existing-data Gate-1 pilot was inconclusive, and later gates should reopen only when a current workstream poses a concrete question. Residual/search-quality gates already promoted out of this backlog likewise belong in the workstream authority.
 
 ## Demoted forms
 

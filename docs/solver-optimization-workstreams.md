@@ -42,11 +42,13 @@ Primary evidence: [`../reports/2026-09-04-production-ladder-marginal-value-tail-
 
 Do not interpret “downstream” as “idle.” Existing capability, lifecycle, provenance, profile, variant, census, and trace evidence can be mined and independently replicated while WS2 experiments run or are blocked. Promote only signals that survive appropriate holdout/replication; exploratory slicing is not a routing policy.
 
-Recent evidence provides a stronger substrate than this workstream previously had: production-unsolved levels separate into starvation/capping failure modes; capability multiplicity predicts real production success within each corpus; the broad structural-risk block (`constrainedObjects`, portals, constrained-object density, turn-constraint load) replicated across natural holdouts and a second outcome; and near-miss technique identity is known to be exposure-confounded. Use these to formulate broader mechanics/state-conditioned premises rather than nearby placement tweaks.
+Recent evidence: starvation/capping failure modes, within-corpus multiplicity→production-success, replicated structural-risk signals, and exposure-confounded near-miss identity. The old 35-row production-solved/no-isolated-T1 cohort is now only three unresolved IDs: `R03195`, `R02452`, `R02887`.
+
+**WS1 lead:** DFS and beam `perimeterSweep` both favor clockwise bias (21:11 and 170:76), with the direction holding in both corpora. Treat this as discovery evidence; seek a simple legal explanatory selector and independent replication rather than recounting the ratio. See [`../reports/2026-09-05-perimeter-bias-clockwise-preference-cross-family-001.md`](../reports/2026-09-05-perimeter-bias-clockwise-preference-cross-family-001.md).
 
 **Next gate:** continue local cross-evidence analysis and nominate only simple legal level-blind selectors with replicated signal. Production routing/action-order changes should wait for the relevant WS2 allocation contract unless the proposed change is demonstrably allocation-neutral. Isolated rescuer identity alone is not enough.
 
-Relevant evidence: [`../reports/2026-09-04-starved-vs-capped-structural-signature-001.md`](../reports/2026-09-04-starved-vs-capped-structural-signature-001.md), [`../reports/2026-09-04-near-miss-technique-exposure-bias-001.md`](../reports/2026-09-04-near-miss-technique-exposure-bias-001.md), [`../reports/2026-09-05-structural-risk-factor-corpus-holdout-replication-001.md`](../reports/2026-09-05-structural-risk-factor-corpus-holdout-replication-001.md), [`../reports/2026-09-05-multiplicity-production-success-robustness-by-corpus-001.md`](../reports/2026-09-05-multiplicity-production-success-robustness-by-corpus-001.md).
+Details: [`../reports/2026-09-05-solver-open-question-evidence-reconciliation.md`](../reports/2026-09-05-solver-open-question-evidence-reconciliation.md) and `node scripts/research-status-index.mjs --compact --query=<term>`.
 
 ## Active workstreams
 
@@ -90,6 +92,7 @@ Rows are sorted by stable workstream ID, not execution priority.
 - Scheduler/repricing work must audit rare/specialist retention, not only aggregate solves or work.
 - For late-stage repricing, nominal reach/attempt records are not participation: require nonzero target-stage work before interpreting an A/B.
 - When one GHA-dependent candidate is blocked, traverse other independent 2A candidates, WS1 local analysis, WS5 bounded local analysis, specialist docs, and deferred questions before declaring the solver queue idle.
+- Reconcile old “open” questions against later evidence before new compute; carry forward only the smallest unexplained residue.
 - Prefer existing evidence and the smallest value-of-information test before broad compute.
 
 ## Cheap evidence routing

@@ -1,180 +1,168 @@
 # Census cross-evidence research plan
 
-> **Status:** active
-> **Last evidence:** 2026-09-04 — Gate 0 (all sub-gates) executed; see `reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md` for the current disposition
-> **Decision:** standing evidence program, not a new numbered workstream — see "Gate 0 success/stop rule" below for the current gate's own conclusion.
-> **Remaining gate:** Gate 1 (solution-space vs technique response) only if Gate 0 leaves a stable, interpretable question; Gates 2-4 are conditional on earlier gates as described below.
-> **Current expensive evidence:** technique census run `33717910218` and `reports/stress/technique-niches/2026-09-03/level-capability.json`
-> **Goal:** explain the solver's technique-response matrix using the other evidence already accumulated about level structure, solution-space structure, production search response, controlled variants, and exact/reference labels. Promote only compact generic explanations that survive appropriate holdout/parent controls.
-> **Priority authority:** `docs/solver-optimization-workstreams.md` remains the live queue. This plan supplies the standing technique-capability/niche evidence layer that queue already requires; it does not outrank an active workstream gate.
+> **Status:** superseded
+> **Last evidence:** 2026-09-05 — Gate 0 analytical parity/temporal holdout is complete and the bounded existing-data Gate 1 pilot was inconclusive.
+> **Decision:** preserve this file as a reconciled standing evidence map, not an active sequential campaign.
+> **Remaining gate:** none by sequence; reopen a later evidence route only when a current workstream poses a concrete decision-bearing question that needs it.
+> **Priority authority:** `docs/solver-optimization-workstreams.md`
+> **Full Gate 0/1 disposition:** `reports/2026-09-04-technique-census-refresh-direct-analysis-rejoin.md`
+> **Question/evidence reconciliation:** `reports/2026-09-05-solver-open-question-evidence-reconciliation.md`
 
-## Research model
+## Purpose
 
-Treat the census as a **response matrix**, not primarily a winner list. For each level, the matrix records which search actions solve, fail, exhaust or censor and how deeply they search. Other repository resources provide different views of the same puzzle:
+Treat the technique census as a **response matrix**, not merely a winner list. Other repository resources can explain different aspects of that matrix:
 
-| Evidence | What it can explain |
+| Evidence | Useful for |
 |---|---|
-| old + refreshed technique censuses | temporal stability, capability ownership, multiplicity, cost/depth and technique affinity |
+| old + refreshed technique censuses | temporal stability, capability ownership, multiplicity, cost/depth, technique affinity |
 | niche/capability maps | singleton/doubleton boundaries, production-miss rescuers, static descriptors |
-| production lifecycle/work telemetry | what the real ladder tried, reached, exhausted, censored, starved and paid for |
-| stored hints + provenance | independently discovered solutions, technique/config origins, forced-axis finds, historical rediscovery cost |
-| solution-space fingerprints | solution diversity, edge/cell concentration, portal signatures, MustCross order rigidity, objective-satisfaction depth, turn behavior, prefix diversity |
-| construction witnesses / corpus provenance | guaranteed solvability, generator/batch source, solver-aware vs solver-blind construction |
-| variant-family trove | controlled rotations/reflections/re-embeddings/shuffles/local mutations and parent-clustered behavior changes |
-| required-length sweeps | within-level resource-pressure cliffs and technique transitions |
-| known-solution-prefix survival / paired traces | first load-bearing ranking, prune, dedup or retention divergence |
-| CP-SAT/reference probes | exact/reference live/dead labels for bounded mechanism questions |
-| reducer | minimal mechanism fixtures once a stable technique inversion is identified |
+| production lifecycle/work telemetry | reach, exhaustion/censoring, starvation, work, stage participation |
+| stored hints + provenance | historical independent solves, config origins, exact/reference rescues, rediscovery history |
+| solution-space fingerprints/profiles | basin diversity, path rigidity, portal/crossing/order signatures |
+| construction/corpus provenance | source/envelope differences and guaranteed solvability |
+| variant families | controlled sibling/parent robustness and mutation response, when joinable |
+| required-length sweeps | within-level resource-pressure cliffs |
+| known-solution-prefix survival / paired traces | first load-bearing rank/prune/dedup/retention divergence |
+| CP-SAT/reference probes | exact/reference labels for bounded mechanism questions |
+| reducer | minimal fixtures after a stable inversion is found |
 
-The target is not a universal predictor trained on every available feature. The target is to discover **small recurring mechanisms or legal descriptors** that explain why search methods differ, then test those mechanisms separately.
+The target remains **small recurring mechanisms or legal descriptors**, not one giant feature model.
 
-## Gate 0 — restore analytical parity and exploit the temporal holdout
+## Gate 0 — refreshed analytical parity and temporal holdout
 
-**Priority: now. No new solving.**
+**State: COMPLETE. Do not rerun merely because the original plan said “Priority: now.”**
 
-The August-derived analytical ecosystem should be rebuilt against run `33717910218`, but the old census must remain available as a historical comparison rather than simply being discarded.
+Completed outputs include:
 
-Required outputs:
+- regenerated second-order census analysis;
+- fixed eight prespecified relative-advantage pairs after repairing stale pre-naming-cleanup action keys;
+- refreshed portfolio rare-capability retention;
+- reusable old→new action/level temporal-stability analysis;
+- refreshed production-boundary/exposure join;
+- explicit anatomy of the 35 production-solved/no-isolated-winner rows;
+- conclusion delta against the September-1 synthesis.
 
-1. regenerate `second-order-analysis.{json,md}` against the refreshed run: multiplicity/phenotypes, outcome similarity, conditional value, covers, inversions, cap curves, censored tranche economics and `techniqueBudgetCurves`;
-2. regenerate the fixed-pair relative-advantage artifact using the **same prespecified comparison pairs** as September 1;
-3. recompute portfolio rare-capability retention against the refreshed map;
-4. build an explicit old->new **technique stability table**: per-action solve-set overlap/Jaccard, gains/losses, singleton ownership retained/gained/lost, thin-boundary changes, and successful/failed depth movement where comparable;
-5. rebuild the current production-boundary/exposure join and the 35-level production-solved/no-isolated-winner cohort;
-6. write a concise conclusion delta: survived / strengthened / weakened / reversed / superseded.
+Key answers already earned:
 
-### First result already completed
+- aggregate census capability can look stable while ownership churns substantially;
+- capability multiplicity predicts temporal robustness, budget-edge robustness, and later real production success;
+- same-family doubletons are common and are not automatic cross-family redundancy;
+- broad structural unsupported-risk signal survives refresh and later holdout replication;
+- historical cost volatility does **not** usefully proxy capability drift;
+- the old 35-row production-solved/no-isolated-winner anomaly is mostly bookkeeping/context, not 35 mysterious production-only capabilities: 25 census coverage gaps + 7 retry/context/flag cases + **3 unresolved** (`R03195`, `R02452`, `R02887`).
 
-`2026-09-04-portfolio-18-fresh-census-temporal-holdout.md` uses the refreshed census as a genuine temporal holdout for the already-fixed `portfolio-18-specialists` composition. Rare-capability retention moved only **95.4% -> 94.8%** (144/151 -> 147/155 full-menu singleton exclusives), with the omitted exclusives still spread across seven techniques. The composition's rare-capability rationale therefore survived substantial solver drift even though its production-replacement A/B remains closed negative for separate dose/context reasons.
-
-### Gate-0 success/stop rule
-
-The purpose is calibration, not treatment selection. Stop once every major August/September-1 census-derived conclusion has a current counterpart and old->new stability is explicit. Do not generate another census to smooth noisy rows.
+Primary evidence: `2026-09-04-technique-census-refresh-direct-analysis-rejoin.md`, `2026-09-04-census-cross-evidence-35-cohort-anatomy.md`, and the dated multiplicity/holdout reports linked from current queue/future-work authorities.
 
 ## Gate 1 — solution-space structure versus technique response
 
-**Priority: next cross-evidence analysis if Gate 0 leaves stable niches. Existing data first.**
+**State: BOUNDED EXISTING-DATA PILOT COMPLETE / INCONCLUSIVE. Not the automatic next task.**
 
-The repository has spent much more effort relating solver outcomes to input-level counts than to the **shape of the valid solution space**. Test whether known solution-space descriptors explain technique multiplicity, cost and pairwise advantage beyond coarse static features.
+The original Gate-1 questions remain scientifically sensible:
 
-Start on the already-profiled published + Corpus-1 population rather than building a new Corpus-2 profile library immediately. Use existing solution profiles and provenance buckets; report coverage/missingness.
+1. whether high technique multiplicity corresponds to broader/less rigid solution basins;
+2. whether mechanic-bucket beam-only wins correspond to greater path/portal/crossing diversity;
+3. whether named scoring profiles actually find semantically different solution basins;
+4. whether high outcome overlap hides distinct solution basins;
+5. whether specialist capability concentrates on rigid MustCross/objective/footprint orderings.
 
-Prespecified questions:
+But the repository has already learned that the readily available profile populations are poor broad contrast sets:
 
-1. **Multiplicity / basin-width hypothesis:** do levels solved by many techniques have higher solution distinctiveness, prefix diversity, lower solution rigidity or broader provenance-source diversity than singleton/thin-boundary levels?
-2. **Diverse-beam hypothesis:** on the existing objective and intersection-harvest plain-vs-mechanic-bucket disagreement pairs, do mechanic-bucket-only wins have higher solution diversity, portal-use diversity, crossing-location diversity or multiple distinct solution modes?
-3. **Profile-semantic alignment:** do solutions found by `objectiveFirst`, `intersectionHarvest`, `portalFirstTransfer`, MustCross-oriented and repair actions actually differ in the corresponding solution-path behavior, or are the names mostly search perturbations leading to the same basins?
-4. **Outcome overlap vs basin overlap:** for highly substitutable technique pairs, compare solution-path/profile overlap. Near-identical solve sets with different basins are not mechanically redundant; distinct techniques repeatedly finding the same basin are stronger redundancy candidates.
-5. **Rigidity and specialist capability:** test whether repair/admissible-order/singleton specialists disproportionately occur where MustCross order, objective-satisfaction order or normalized solution footprint is rigid.
+- the bounded Corpus-1 diverse-beam pilot was inconclusive because cells were small;
+- the regenerated published solution profile is 160/160 production-solved and broadly frozen-T1-supported, so it cannot answer solved-vs-unsolved structural questions;
+- Corpus-1 itself has too few unsolved rows for a strong broad difficulty contrast.
 
-Use the fixed pair set already developed for relative-advantage work where possible. If several new solution-profile axes are scanned, label the result discovery/tuning and reserve independent parents/levels before promoting a descriptor.
+**Reopen condition:** a sufficiently large existing contrast-rich profile population (preferably Corpus 2 or equivalent) becomes available, or a current WS1 mechanism question needs one specific profile axis. Do not build a large profile campaign simply to satisfy the old plan order.
 
-### Gate-1 success rule
+## Gate 2 — production response versus isolated capability
 
-Proceed only if one compact, interpretable solution-space descriptor or small descriptor family repeatedly separates a prespecified disagreement/multiplicity cohort beyond the existing coarse static descriptors.
+**State: MANY ORIGINAL QUESTIONS ANSWERED; remaining scheduler use is owned by WS1/WS2.**
 
-### Stop rule
+Already answered or substantially narrowed:
 
-If effects are weak, provenance-dependent, or collapse after parent/corpus stratification, record the negative and do not create a larger feature model or Corpus-2 fingerprint campaign.
+- natural exhaustion versus censoring matters and differs structurally by technique family;
+- production-unsolved rows separate into starvation/capping signatures;
+- near-miss rescuer identity is exposure-confounded;
+- goal-attraction-disabled retry starvation is real at large scale;
+- routing regime does not meaningfully predict late-ladder-stage reliance;
+- the 35 production-solved/no-isolated-winner rows are narrowed to three unresolved IDs;
+- full-scale production shows that early 40-level zero-win stages do have real nonzero production wins.
 
-## Gate 2 — production response vector versus isolated rescuer
+The remaining useful Gate-2 form is not “build a classifier.” It is:
 
-**Priority: scheduler-facing, after current production reach/work is comparable.**
+> When a current WS1/WS2 candidate proposes a legal response-state signal, does that signal change held-out next-action/tranche value under a fixed/shared work contract?
 
-Static descriptors repeatedly run out of explanatory power on close levels. Production itself emits richer legal information during the solve: which actions were reached, whether they naturally exhausted or censored, work spent, best badness/progress, retry-stage participation and surviving budget.
+Only then nominate a shadow or matched-work scheduler treatment.
 
-Build a simple current production-response join against the refreshed isolated capability matrix.
+## Gate 3 — controlled variants as causal tests
 
-Questions:
+**State: DEFERRED / DATA-JOIN BLOCKED.**
 
-1. after a specific production action/stage fails, which isolated actions retain conditional rescue value?
-2. does **natural exhaustion versus censoring** materially change the rescuer distribution?
-3. do best-badness/progress bands distinguish "same action needs more dose" from "different action/family is needed"?
-4. which production-miss rows have an isolated rescuer that production never offers, offers but starves, or gives comparable depth/work yet still fails?
-5. what explains the **35 production-solved/no-isolated-winner** rows: retry context, additive flags, sequence effects, action identities absent from T1, or ordinary census drift?
-6. can a tiny response-state table predict useful next work better than level-only routing regimes?
+Temporal, budget-edge, and production robustness of capability multiplicity are already answered. The genuinely untested clause is **variant-family/parent robustness**.
 
-Begin with contingency tables / grouped conditional rates and work economics. No classifier is earned merely because many telemetry fields exist.
+Existing hint provenance contains abundant cross-variant replay records, but the locally mined evidence does not currently provide the merged family/parent outcome join needed to treat siblings as the independent unit.
 
-### Gate-2 success rule
+**Reopen condition:** a joinable family/parent source exists and a current association deserves a controlled sibling test. Then test whole parent families, not variant rows as independent observations.
 
-A candidate signal must identify a materially different next-action/tranche value on held-out rows and leave plausible fixed-work headroom. Only then nominate one shadow or matched-work scheduler treatment.
+High-value questions if reopened:
 
-### Stop rule
+- does capability multiplicity predict sibling/variant robustness?
+- do temporally unstable census rows also show family fragility?
+- which controlled transformations flip a stable technique inversion?
+- does solution-basin diversity predict family-level robustness?
 
-If production response adds little beyond technique identity + termination mode, keep it diagnostic and do not build dynamic scheduler machinery.
+Do not generate more variants to manufacture prevalence.
 
-## Gate 3 — controlled variants as causal tests of technique affinity
+## Gate 4 — mechanism localization
 
-**Priority: conditional on Gates 0-2 nominating a stable association. Use the existing family trove before generating anything.**
+**State: ON DEMAND ONLY.**
 
-The variant-family resource can turn observational niche associations into controlled questions. Parent family is the independent unit.
+Use traces/reference/reduction only after an earlier analysis nominates a recurring concrete pair/cohort:
 
-High-value tests:
+1. select a stable A-solves/B-fails inversion or capability-discordant near twin;
+2. locate the first load-bearing successor/prune/rank/dedup/retention/randomness/dose/context difference;
+3. use exact/reference labels only when they distinguish live/dead competing material;
+4. reduce when useful;
+5. replicate the mechanism on unrelated levels/parents before changing production policy.
 
-- does technique multiplicity predict robustness to rotation/reflection/re-embedding/local mutation?
-- do temporally unstable census levels also show high sibling/variant fragility?
-- which controlled structural changes flip plain vs diverse beam, 2K vs 5K, beam vs repair, or admissible-order value?
-- does a technique niche persist across siblings, or vanish under tiny perturbations?
-- does solution-basin diversity predict family-level solve robustness?
-- do controlled density/resource changes move useful budget depth even when the useful technique stays the same?
+## Answered deferred questions that should not silently reappear
 
-Historical variant solver outcomes are nomination evidence. Re-run only selected decision-bearing cliffs on current code. Weight/split by whole parent family and report parent counts as well as variant rows.
+- **Capability multiplicity as temporal robustness:** answered positive.
+- **Capability multiplicity as budget-edge robustness:** answered positive.
+- **Capability multiplicity as real production success predictor:** answered positive within both corpora.
+- **Historical same-config cost volatility as capability-drift predictor:** answered negative (`r=0.126`); technique family is more informative.
+- **Coarse corpus1-vs-corpus2 generator/envelope difference:** substantially characterized; finer true generator/editor fields remain absent.
+- **Routing regime as late-stage-reliance selector:** answered negative.
 
-### Gate-3 success rule
+The remaining broader reservoir lives in `docs/solver-future-work.md`; do not recreate those answered clauses here.
 
-A recurring controlled transformation changes technique value in the same direction across unrelated held-out parents and yields a simple generic current-level/current-state descriptor or mechanism hypothesis.
+## Current cross-evidence opportunities
 
-### Stop rule
+These are **conditional evidence routes**, not a queue:
 
-If the pattern is one-family-specific, leave it as family forensics. Do not generate more variants to manufacture prevalence.
-
-## Gate 4 — mechanism localization only after a recurring cross-evidence discrepancy
-
-Use the expensive diagnostic machinery only when earlier gates nominate a concrete pair/cohort.
-
-Possible sequence:
-
-1. select a stable A-solves/B-fails inversion or a capability-discordant near twin;
-2. use known-solution-prefix survival / paired trace to locate the first load-bearing difference;
-3. classify it as successor generation, hard prune/bound, score/rank, dedup/retention, randomness, dose/censoring, or execution context;
-4. use exact/reference labels only where they can distinguish live/dead competing material;
-5. reduce the level while preserving the inversion when feasible;
-6. replicate the same mechanism on unrelated levels/parents before touching production policy.
-
-This is where "technique niche" becomes a search mechanism rather than a correlation.
-
-## Deferred high-value questions
-
-These remain in the reservoir until earlier gates create a concrete need:
-
-- **four-space triangulation:** compare distances in input geometry, solution space, technique-response vector and live search/failure trajectory; mine cases close in three spaces but far in the fourth;
-- **capability multiplicity as robustness:** temporal drift, variant robustness and budget-edge stability as independent tests of whether multiplicity is meaningful;
-- **stability-aware portfolios:** optimize future portfolios for work + current coverage + temporal retention + parent robustness + basin diversity rather than one frozen matrix;
-- **latent response dimensions:** low-rank/bicluster analysis of the technique-response matrix, followed by interpretation against geometry/solution-space features;
-- **forcing/backdoor depth:** join hint-workbench forced gate/first-step/portal-exit successes to technique phenotype to find levels made easy by one hard decision;
-- **generator-specific niches:** separate published, Corpus-1 A-F, Corpus 2, envelope and suitable topology-composition behavior before calling a niche universal;
-- **editor-envelope relevance:** distinguish rare capability on generated combinatorial monsters from capability inside ordinary constructible complexity;
-- **minimal niche counterexamples:** reducer + exact/reference validation for stable inversions;
-- **historical cost volatility:** join hint rediscovery `workSpent` drift with census technique drift where comparable.
-
-These are questions, not a backlog of implementations.
+- WS1's clockwise-vs-counter-clockwise perimeter-bias discovery can use census/static structure to seek a simple legal explanatory descriptor; the observed ratio itself is already known and does not need another pooled recount.
+- WS5's CP-SAT rescue cohort can use census/lifecycle/static structure to test whether a stable narrow on-demand exact-label gate exists before any new CP-SAT compute.
+- the three unresolved production-solved/no-isolated-winner IDs can receive a tiny lifecycle attribution re-check if they matter to an active inference.
+- variant-family robustness can reopen only after a proper parent/family join exists.
+- solution-space profiling can reopen only with a useful contrast population or a narrow current mechanism question.
 
 ## Promotion and leakage rules
 
 - Census outcomes, historical winners, saved hints, construction witnesses, variant identity and solution profiles are **offline research labels**, never direct production-routing inputs.
-- A profile/fingerprint association must be translated into a simpler legal level/state descriptor before any live treatment.
-- Variant siblings stay together for tuning/holdout; do not count sibling rows as independent levels.
-- Cross-technique allocation claims use canonical `workSpent`; census nodes remain within-technique depth diagnostics.
-- An outcome-selected descriptor/pair is discovery evidence on those rows. Confirm on untouched levels/parents before policy use.
-- A stable correlation does not justify a prune. Hard pruning requires a proved one-sided condition or validated exact/safe relaxation.
-- Prefer extending current reusable analyzers/join helpers. A new analytical database/framework is earned only if repeated decision-bearing joins remain impossible with the existing substrate.
+- Translate profile/fingerprint associations into simpler legal level/state descriptors before live treatment.
+- Keep variant siblings together for tuning/holdout.
+- Cross-technique allocation claims use canonical `workSpent`; census nodes remain within-technique diagnostics.
+- Outcome-selected descriptors are discovery evidence until confirmed on untouched units.
+- A stable correlation does not justify a hard prune.
+- Prefer extending current reusable analyzers/join helpers over new analytical infrastructure.
 
-## Execution order
+## Anti-duplication rule
 
-1. **Gate 0:** refreshed analytical parity + temporal stability. Already started; portfolio temporal holdout complete.
-2. **Gate 1:** solution-space/fingerprint pilot on existing profile coverage.
-3. **Gate 2:** production-response/rescuer join using current comparable lifecycle/work evidence.
-4. **Gate 3:** existing variant trove only for associations that survive 1/2.
-5. **Gate 4:** trace/reference/reduction on the few recurring mechanisms that survive.
-6. Update the live queue only when one of these analyses earns a concrete solver-action/scheduler/search-quality treatment. Keep the broader questions here / in `solver-future-work.md` rather than manufacturing workstream tasks.
+Before starting any question preserved in this plan:
+
+1. `node scripts/research-status-index.mjs --compact --query=<term>`;
+2. `node scripts/research-asset-query.mjs --query=<term>` when the answer may already be in a joinable artifact;
+3. inspect later-dated reports and the current workstream disposition;
+4. rewrite the question to the smallest unexplained residue;
+5. only then decide whether new compute has positive value of information.
+
+This plan is now a map of evidence surfaces and reopen conditions. It no longer imposes Gate 0→1→2→3→4 as a standing execution sequence.
