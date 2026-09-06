@@ -1,11 +1,11 @@
 # Admissible-order alternate-tiebreak retry repricing: production A/B 001
 
-> **Status:** concluded-non-informative
-> **Date:** 2026-09-05
+> **Status:** inconclusive
+> **Last evidence:** 2026-09-05 — Both fresh 150-level production arms finished 81/150 with identical aggregate work/nodes, but the treatment's target retry expanded zero nodes on all 69 nominal reaches because the strict whole-solve cap was exhausted upstream.
+> **Decision:** do not promote `admissibleOrderNonDefaultRetryBudgetFraction=0.18` from this run; production remains `1.0` because A/B 001 did not exercise the priced stage.
+> **Remaining gate:** redesign the matched-work promotion test with a frozen nonzero target-stage participation requirement and an envelope/control-side selection that leaves executable work for the late retry.
 > **Candidate:** `admissibleOrderNonDefaultRetryBudgetFraction=0.18`
 > **Control:** `admissibleOrderNonDefaultRetryBudgetFraction=1.0`
-> **Decision:** **do not promote.** Both arms completed cleanly and returned byte-for-byte-identical aggregate solve/work/node results, but the treatment's target retry stage expanded **zero nodes** on every level where it was recorded as reached. The strict whole-solve cap was exhausted upstream, so this run did not exercise the budget fraction being compared.
-> **Next gate:** redesign the matched-work promotion A/B so target-stage participation is demonstrated before the result is interpretable. A late-stage repricing run with zero target-stage work is non-informative even if the stage records nominal attempts.
 
 ## Why this run existed
 
