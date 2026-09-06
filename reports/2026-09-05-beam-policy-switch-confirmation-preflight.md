@@ -1,6 +1,9 @@
 # Beam policy-switch inherited-frontier confirmation preflight
 
-> **Status:** ready for confirmation design/dispatch, not production promotion
+> **Status:** active
+> **Last evidence:** 2026-09-05 — The one-handoff development signal remains 2/60 inherited-only solves with no fresh-only losses, while cyclic/staged switching and naive beam→DFS handoff are closed negative.
+> **Decision:** keep the single `intersectionHarvest -> objectiveFirst` inherited-frontier handoff alive as a narrow confirmation candidate, not a production recommendation.
+> **Remaining gate:** run the frozen larger width-200 confirmation; only a positive replication earns production-width continuation-capture plumbing and a real-width fixed-work test.
 > **Candidate:** one `intersectionHarvest -> objectiveFirst` inherited-frontier beam handoff
 > **Evidence role:** confirmation of the 2026-09-03 rung-2 development signal
 > **Current blocker to production relevance:** `captureContinuationOnBudgetExit` cannot currently capture at production beam widths above 256 because the mid-phase budget check fires first
