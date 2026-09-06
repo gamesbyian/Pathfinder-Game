@@ -20,10 +20,10 @@
 # logs/stress-corpusN-baseline.json or data/level-heatmaps.json, never saves hints (no --save-hints
 # passed) -- this is diagnostic evidence for a specific question, not a baseline-shaping run.
 #
-# Usage: dispatch with `ids` (comma/whitespace/newline-separated corpus ids, e.g. "R00118,R02075")
-# and the corpus file they live in. Optionally pass enable_flags/disable_flags for an ablation
-# arm. Combined results land in the `combine` job's uploaded `targeted-sweep-combined` artifact and
-# its job-log summary; per-shard raw output is in each `targeted-shard-NNN` artifact.
+# RESULT INTEGRITY INVARIANT: the combine job must observe exactly the dispatched id set, once each.
+# A shard artifact existing is not enough: a timed-out shard may contain only a prefix of its planned
+# slice. Late-stage experiments can additionally require nonzero work/node participation on a named
+# stage before the run is allowed to count as decision-bearing evidence.
 name: Solver level-blind targeted sweep
 run-name: "Targeted sweep · ${{ inputs.ids_file || 'inline IDs' }} · enable=${{ inputs.enable_flags || 'none' }} · disable=${{ inputs.disable_flags || 'none' }}"
 
@@ -47,7 +47,7 @@ on:
         required: false
         default: '50000000'
       node_budget_advisory_only:
-        description: 'If true, node_budget still sizes the derived work_budget, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). The shard-planner''s wall-time/timeout estimate is sized off the larger derived work_budget in this mode instead of the raw node_budget, since node_budget no longer bounds a level''s real worst-case wall time here (see reports/2026-09-04-admissible-order-non-default-retry-repricing-confirmation-002.md -- an earlier version of this workflow still planned off the raw node_budget in advisory-only mode and most shards ran out their timeout before finishing their assigned levels). Use this whenever the comparison under test is itself a work-budget-share change (e.g. admissible_order_non_default_retry_budget_fraction), so the fraction difference is not masked by an unrelated raw node-count ceiling reached identically in every arm.'
+        description: 'If true, node_budget still sizes the derived work_budget, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). The shard-planner''s wall-time/timeout estimate is sized off the larger derived work_budget in this mode instead of the raw node_budget, since node_budget no longer bounds a level''s real worst-case wall time here. Use this whenever the comparison under test is itself a work-budget-share change.'
         required: false
         default: 'false'
       strict_total_work_budget:
@@ -83,11 +83,19 @@ on:
         required: false
         default: ''
       admissible_order_non_default_retry_budget_fraction:
-        description: 'Optional override for admissible-order-alternate-tiebreak-retrys shared fresh work pool, as a fraction of the derived work_budget (default production dose is 1.0x; see reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md for why a smaller value is being tested). Blank = production default (no override passed).'
+        description: 'Optional override for admissible-order-alternate-tiebreak-retrys shared fresh work pool, as a fraction of the derived work_budget. Blank = production default (no override passed).'
         required: false
         default: ''
+      required_participation_stage:
+        description: 'Optional stageId that must do real work before this run is decision-bearing. Blank disables the participation gate.'
+        required: false
+        default: ''
+      min_participating_levels:
+        description: 'Minimum number of levels on which required_participation_stage must expand nodes or spend work. Used only when required_participation_stage is set.'
+        required: false
+        default: '1'
       concurrency_suffix:
-        description: 'Optional suffix appended to this workflow''s concurrency group. Blank (default) keeps every dispatch serialized against every other one, as before. Set a distinct value on each side of an A/B pair (e.g. "confirmation-004-control" / "confirmation-004-treatment") so that pair runs in parallel with each other instead of waiting in line -- while still serializing normally against any unrelated dispatch of this workflow that leaves it blank or uses a different suffix.'
+        description: 'Optional suffix appended to this workflow''s concurrency group. Set distinct values on paired A/B dispatches when they should run concurrently.'
         required: false
         default: ''
 
@@ -96,11 +104,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Writes the dispatch-time id list to a file (ids_file input, if given, is used as-is; ids is
-  # split on comma/whitespace/newline into one), then runs the same dynamic bin-packing planner
-  # solver-highbudget-unsolved-sweep.yml uses -- no --telemetry, since a targeted ad-hoc list has no
-  # standing EMA history to draw on; every id falls back to the planner's own median/target-wall
-  # estimate, which is enough for a reasonable shard split on a one-off list.
   plan:
     name: Plan weighted shards
     runs-on: ubuntu-latest
@@ -125,12 +128,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Resolve the id list to a plain ids-file
+      - name: Resolve and validate the exact id population
         id: ids
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p logs/solver-targeted-sweep
-          if [ -n "${{ inputs.ids_file }}" ]; then
+          if [ -n "${{ inputs.ids_file }}" ] && [ -n "${{ inputs.ids }}" ]; then
+            echo "ids and ids_file are mutually exclusive." >&2
+            exit 2
+          elif [ -n "${{ inputs.ids_file }}" ]; then
             cp "${{ inputs.ids_file }}" logs/solver-targeted-sweep/ids.txt
           elif [ -n "${{ inputs.ids }}" ]; then
             printf '%s' "${{ inputs.ids }}" | tr ',' '\n' | tr -s ' \t' '\n' | sed '/^\s*$/d' > logs/solver-targeted-sweep/ids.txt
@@ -138,21 +145,23 @@ jobs:
             echo "One of ids / ids_file is required." >&2
             exit 2
           fi
+          sed -i 's/\r$//' logs/solver-targeted-sweep/ids.txt
+          sed -i '/^[[:space:]]*$/d' logs/solver-targeted-sweep/ids.txt
+          duplicates=$(sort logs/solver-targeted-sweep/ids.txt | uniq -d)
+          if [ -n "$duplicates" ]; then
+            echo "Duplicate ids are not allowed:" >&2
+            echo "$duplicates" >&2
+            exit 2
+          fi
           count=$(wc -l < logs/solver-targeted-sweep/ids.txt | tr -d ' ')
-          echo "Resolved ${count} id(s):"
+          [ "$count" -gt 0 ] || { echo "Resolved id list is empty." >&2; exit 2; }
+          echo "Resolved ${count} unique id(s):"
           cat logs/solver-targeted-sweep/ids.txt
 
       - name: Run the shard planner
         id: plan
         shell: bash
         run: |
-          # When node_budget_advisory_only=true, the raw node_budget no longer bounds a
-          # level's real wall time (nodeBudgetReached can't fire; only work_budget can stop
-          # it), so per-level worst-case time is governed by work_budget's larger ceiling, not
-          # node_budget. Plan shard sizing/timeouts off that effective ceiling in this case --
-          # otherwise the planner under-estimates worst-case per-level time, over-packs shards,
-          # and most shards hit their own timeout mid-slice before finishing their assigned
-          # levels (see reports/2026-09-04-admissible-order-non-default-retry-repricing-confirmation-002.md).
           planning_node_budget="${{ inputs.node_budget }}"
           [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && planning_node_budget=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           node scripts/plan-highbudget-shards.mjs \
@@ -169,14 +178,15 @@ jobs:
           echo "shards=${shards_json}" >> "$GITHUB_OUTPUT"
           echo "shard_count=$(jq '.shard | length' logs/solver-targeted-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload the shard plan for traceability
+      - name: Upload the exact population and shard plan
         uses: actions/upload-artifact@v7
         with:
           name: targeted-shard-plan
-          path: logs/solver-targeted-sweep/shard-plan.json
+          path: |
+            logs/solver-targeted-sweep/ids.txt
+            logs/solver-targeted-sweep/shard-plan.json
           retention-days: 90
 
-  # One job instance per planned shard, up to 20 running concurrently.
   solve-shards:
     name: Targeted shard ${{ matrix.shard.idx }}/${{ needs.plan.outputs.shard_count }}
     needs: [plan]
@@ -219,10 +229,6 @@ jobs:
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           nodebudget=()
           [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
-          # plan-highbudget-shards.mjs emits "pos:" per comma-token (its native consumer,
-          # portfolio-solve-sweep.mjs's stripPositionPrefix, tolerates that) -- but level-blind-
-          # capability-sweep.mjs's own parseLevelSpec only strips ONE leading "pos:" for the whole
-          # spec. Collapse to that shape here rather than touching either shared script.
           levels="${{ matrix.shard.levels }}"
           levels="pos:$(echo "$levels" | sed 's/pos://g')"
           timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
@@ -263,10 +269,6 @@ jobs:
           echo "sweep exit_code=${{ steps.sweep.outputs.exit_code }}"
           exit 1
 
-  # Combines every shard's report into one {summary, levels} file (portfolio-sweep-reports-to-
-  # benchmark.mjs -- level-blind-capability-sweep.mjs shares portfolio-solve-sweep-lib.mjs's
-  # buildRow()/wrapper shape, so the same combiner applies unmodified) and prints a solved-count
-  # summary. Artifact-only: no commit, no baseline/telemetry file touched.
   combine:
     name: Combine shard results
     needs: [plan, solve-shards]
@@ -285,6 +287,12 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '20'
+
+      - name: Download exact population and shard plan
+        uses: actions/download-artifact@v8
+        with:
+          name: targeted-shard-plan
+          path: artifact-staging/plan
 
       - name: Download every shard's artifact
         uses: actions/download-artifact@v8
@@ -309,6 +317,19 @@ jobs:
           FILES=$(ls logs/solver-targeted-sweep/batch-*.json | paste -sd, -)
           node scripts/combine-solver-sweep-reports.mjs --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
 
+      - name: Validate exact population completeness and required participation
+        shell: bash
+        run: |
+          extra=()
+          if [ -n "${{ inputs.required_participation_stage }}" ]; then
+            extra+=("--required-stage=${{ inputs.required_participation_stage }}")
+            extra+=("--min-participating-levels=${{ inputs.min_participating_levels }}")
+          fi
+          node scripts/validate-solver-sweep-integrity.mjs \
+            --expected-ids=artifact-staging/plan/ids.txt \
+            --result=logs/solver-targeted-sweep/combined.json \
+            "${extra[@]}"
+
       - name: Print a solved-count summary to the job log
         shell: bash
         run: |
@@ -320,12 +341,6 @@ jobs:
           console.log('Unsolved: ' + d.levels.filter(l => !l.ok).map(l => l.id + ' (' + l.status + ')').join(', '));
           "
 
-      # Prints aggregate/per-level workSpent and a per-stage reach/participation/solve table
-      # straight to the job log, since this environment's egress policy blocks the Azure blob-
-      # storage host the uploaded artifact's download URL redirects to (see
-      # scripts/summarize-targeted-sweep-work.mjs's own header comment). --stage highlights any
-      # ablation-under-test stage's own per-level reach/participation, in addition to the
-      # population-wide per-stage table this always prints.
       - name: Print an aggregate/per-level workSpent and per-stage breakdown to the job log
         shell: bash
         run: |
@@ -346,8 +361,11 @@ jobs:
         run: |
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/solver-targeted-sweep/combined.json" \
+            --include="artifact-staging/plan/ids.txt" \
+            --include="artifact-staging/plan/shard-plan.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
             --shards-observed="$(find logs/solver-targeted-sweep -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --shards-basis="exact expected population validated separately" \
             --source-artifact="targeted-sweep-combined"
 
       - name: Upload standard solver sweep result

@@ -3,7 +3,7 @@
 // runtime from EMA ms/giganode telemetry scaled to this node budget; unknown ids use the median.
 // Seeded first-fit-decreasing packing targets a wall-time budget at `workers` concurrency, while
 // severe outliers get solo shards. Corpus-1 stragglers are folded into early shards separately.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -21,7 +21,8 @@ const idsFile = req('--ids-file');
 const corpus1IdsFile = args.get('--corpus1-ids-file') || null;
 const corpus2Path = req('--corpus2');
 const corpus1Path = args.get('--corpus1') || null;
-const telemetryPath = args.get('--telemetry') || null;
+const DEFAULT_TELEMETRY_PATH = 'logs/solver-stress-refresh/corpus2-runtime-telemetry.json';
+const telemetryPath = args.get('--telemetry') || (existsSync(path.resolve(root, DEFAULT_TELEMETRY_PATH)) ? DEFAULT_TELEMETRY_PATH : null);
 const nodeBudget = Number(req('--node-budget'));
 const workers = args.has('--workers') ? Number(args.get('--workers')) : 4;
 const targetWallMinutes = args.has('--target-wall-minutes') ? Number(args.get('--target-wall-minutes')) : 18;
@@ -146,11 +147,20 @@ const shard = shardDefs.map((d, i) => {
     };
 });
 
-writeFileSync(path.resolve(root, outPath), JSON.stringify({ shard }, null, 2) + '\n');
+writeFileSync(path.resolve(root, outPath), JSON.stringify({
+    planning: {
+        telemetryPath,
+        telemetryKnownIds: knownPredictions.length,
+        telemetryRequestedIds: ids.length,
+        fallbackMs,
+    },
+    shard,
+}, null, 2) + '\n');
 
 const wallMinutesList = shard.map(s => s.predictedWallMinutes).sort((a, b) => a - b);
 const pctl = (p) => wallMinutesList[Math.min(wallMinutesList.length - 1, Math.floor(wallMinutesList.length * p))];
 const waves = Math.ceil(shard.length / 20);
+console.log(`Planning telemetry: ${telemetryPath ?? '(none)'}; ${knownPredictions.length}/${ids.length} requested id(s) have historical runtime estimates; fallback=${Math.round(fallbackMs / 1000)}s.`);
 console.log(`Planned ${shard.length} shard(s) (${soloIds.length} solo, ${bins.length} packed) from ${ids.length} ids + ${corpus1Ids.length} corpus-1 straggler(s).`);
 console.log(`Predicted wall minutes/shard: min=${wallMinutesList[0]} p50=${pctl(0.5)} p90=${pctl(0.9)} max=${wallMinutesList[wallMinutesList.length - 1]}`);
 console.log(`At max-parallel=20: ${waves} wave(s); rough total wall estimate (sum of the slowest shard per wave, optimistic) needs the actual matrix run to confirm.`);

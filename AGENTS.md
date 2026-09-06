@@ -14,6 +14,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
 | Solver correctness/cache/prune | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md), [`docs/solver-architecture.md`](docs/solver-architecture.md) |
 | Solver optimization/research | [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md), then [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md) and the specialist doc for the current gate |
+| Solver experiment population / sample sizing | [`docs/solver-experiment-opportunity-sizing.md`](docs/solver-experiment-opportunity-sizing.md); use `node scripts/experiment-opportunity-audit.mjs` before broad/sharded compute |
 | Solver research data / cross-evidence | `node scripts/research-asset-query.mjs --query=<term>`; open [`docs/solver-research-data-assets.md`](docs/solver-research-data-assets.md) only for topology/boundary guidance |
 | Solver budgets/allocation | Workstreams, then [`docs/solver-scheduling-policy.md`](docs/solver-scheduling-policy.md); add [`docs/solver-budget-determinism.md`](docs/solver-budget-determinism.md) when work/budget semantics matter |
 | Solver evaluation/generalization | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), then [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
@@ -44,6 +45,13 @@ Compact router for coding/research agents. Load task-specific material, not accu
 - [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md) owns priority/state/gates. Specialist docs/reports refine a gate but do not reprioritize it.
 - Use the smallest evidence that can decide the next gate. A clear negative closes the tested form unless materially new evidence changes the premise.
 - Inventory existing provenance, census/capability, profiles, variants, lifecycle, traces, manifests, exact labels, and other evidence before generating more. Materially searched joins add selection pressure.
+- Before a broad or sharded decision-bearing run, define the **opportunity population** that can actually express the treatment, estimate its rate from control-side/existing evidence, and size total N from the informative-row requirement. A benefit-enriched population and a representative no-harm population are separate design jobs.
+- When opportunity/exposure is uncertain, run the smallest control-only or shadow pilot first. High control solve ceilings, low real target-stage participation, or zero opportunity block scale-up until the design changes.
+- Before a large matrix, run one representative **execution-family canary** under the exact cap/flags/selector semantics and verify the expected stop/accounting behavior. A static input value is not proof that the runtime honors it.
+- Resolve the experiment population once. Planning should emit literal IDs/positions and execution should consume that exact plan; do not let count-only/planning and execution independently reconstruct sampling semantics.
+- Persist resolved arm/config provenance at the point that actually invokes the solver. For A/B work, control and treatment must prove their semantic difference and all unintended dimensions must match; a treatment label or matrix key alone is not evidence.
+- Existing runtime telemetry may steer GHA shard packing/timeouts but never cold solver policy. Prefer it over uniform shard estimates when available, and persist which telemetry/fallback informed the plan.
+- Derived level/research features must come from their canonical helper/schema owner. Do not silently read guessed fields from normalized levels or report rows; assert required row shape before filtering/stratifying.
 - Level-blindness is not generalization. Cold policy cannot use exact identity, saved hints, known winners, historical per-level outcomes/cost, per-level caches, or variant outcomes.
 - Use `workSpent` for cross-technique allocation. Raw nodes are within-technique diagnostics; wall time is implementation cost. New actions/configurations do not get free additive budget.
 - Treat weights/profiles/widths/directions/seeds/thresholds/budgets as configurations until evidence shows a distinct mechanism.
@@ -82,7 +90,7 @@ Use the cheapest check that answers the iteration question, then the relevant fi
 |---|---|
 | Normal code | targeted tests, then `npm run ci:fast` |
 | Solver search/orchestration/repair/diversification | targeted correctness + full `npm run ci`; research claims also follow population/work/confirmation rules |
-| Solver routing/scheduling/configuration | experiment preflight; fixed/shared work envelope; current reach/marginal value; proportional independent confirmation/transfer |
+| Solver routing/scheduling/configuration | experiment preflight + opportunity audit; execution-family canary; fixed/shared work envelope; current reach/marginal value; proportional independent confirmation/transfer |
 | Browser/UI | focused Playwright; `npm run ci:full` for broad browser confidence |
 | Solver hot path | targeted probes + [`docs/testing.md`](docs/testing.md) solved-set/cost gates + full `npm run ci` |
 | Hard prune/cache/correctness | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md) + soundness/referee/differential gates |
