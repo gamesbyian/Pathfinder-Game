@@ -131,12 +131,18 @@ async function main() {
         assert.equal(planned.shard.flatMap(shard => shard.ids).length, 2);
         console.log('  ✓ shard planner automatically consumes standing runtime telemetry when callers omit --telemetry');
 
+        const sweepSource = await readFile(path.join(ROOT, 'scripts/level-blind-capability-sweep.mjs'), 'utf8');
+        assert.match(sweepSource, /solveOpts\.admissibleOrderNonDefaultRetryBudgetFractionOverride = admissibleOrderNonDefaultRetryBudgetFraction/u);
+        assert.match(sweepSource, /admissibleOrderNonDefaultRetryBudgetFraction: Number\.isFinite\(admissibleOrderNonDefaultRetryBudgetFraction\)/u);
+        console.log('  ✓ capability sweep persists the admissible-order retry treatment it applies');
+
         const config1 = path.join(tempDir, 'config-01.json');
         const config2 = path.join(tempDir, 'config-02.json');
         const configOut = path.join(tempDir, 'combined-config.json');
         const executionSummary = {
             levelBlind: true,
             historicalInputs: [],
+            workers: 4,
             enableFlags: ['FLAG_B', 'FLAG_A'],
             disableFlags: [],
             strictTotalWorkBudget: true,
@@ -154,6 +160,7 @@ async function main() {
         await run([`--in=${config1},${config2}`, `--out=${configOut}`]);
         const configCombined = JSON.parse(await readFile(configOut, 'utf8'));
         assert.deepEqual(configCombined.executionConfig.enableFlags, ['FLAG_A', 'FLAG_B']);
+        assert.equal(configCombined.executionConfig.workers, 4);
         assert.equal(configCombined.executionConfig.admissibleOrderNonDefaultRetryBudgetFraction, 0.18);
         assert.equal(configCombined.executionConfig.strictTotalWorkBudget, true);
         console.log('  ✓ combined artifact preserves canonical resolved treatment configuration');
