@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import process from 'node:process';
+import { pathToFileURL } from 'node:url';
 
 function parseArgs(argv) {
   return new Map(argv.filter(arg => arg.startsWith('--')).map(arg => {
@@ -87,6 +88,6 @@ function main() {
   }
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try { main(); } catch (error) { console.error(`validate-solver-sweep-integrity: ${error.message}`); process.exit(2); }
 }
