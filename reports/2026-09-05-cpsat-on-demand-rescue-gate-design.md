@@ -1,6 +1,9 @@
 # CP-SAT on-demand rescue gate: candidate design
 
-> **Status:** promotable Workstream-5 question, not a production-scheduler proposal
+> **Status:** active
+> **Last evidence:** 2026-09-05 — Existing referee-valid hint provenance contains `cpsat-full-probe` rescues for 45 current production-unsolved levels and 13 isolated-no-winner levels.
+> **Decision:** promote a bounded local exact-reference selector question, not production CP-SAT integration.
+> **Remaining gate:** run the predeclared local holdout characterization; no stable narrow selector keeps Workstream 5 strictly on demand, while a replicated selector may become a bounded exact-label acquisition gate.
 > **Evidence source:** existing referee-valid `cpsat-full-probe` hint provenance plus current isolated census and production results
 > **Observed target:** 13 levels with no isolated census winner and 45 levels unsolved by the fresh production run have referee-valid CP-SAT solutions in stored provenance
 > **Workstream boundary:** Workstream 5 remains ON DEMAND; use exact/reference work only for a concrete prioritized label, counterexample, or certificate
