@@ -1,32 +1,46 @@
-# The exact CP-SAT reference solver rescues a small, concrete, nameable set of levels no heuristic technique or production can touch
+# The exact CP-SAT reference solver rescues a small, concrete set of native-residual levels
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-05 — `provenance[].solver.technique === 'cpsat-full-probe'` hints across all 1,700 files in `data/stress/hints-random/`, joined against `isolatedOracleSolved` and `productionSolved` in `reports/stress/technique-niches/2026-09-03/level-capability.json`, no new dispatch
-> **Decision:** 280/1,700 (16.5%) of corpus2 levels have at least one hint sourced from the exact `cpsat-full-probe` solver. Of the 646 levels with no isolated-heuristic-census winner (`isolatedOracleSolved===false`), 13 have a `cpsat-full-probe` hint — a small, concrete, nameable set of levels the entire T1 heuristic census cannot solve but exact search can. Of the 888 production-unsolved levels, 45 have one — a larger, more directly actionable set, since it is measured against production's real behavior rather than the isolated census.
-> **Remaining gate:** none — descriptive characterization using already-collected data. Directly usable as the "concrete prioritized label, counterexample, or certificate" Workstream 5's own gate requires before further CP-SAT/reference work (`solver-optimization-workstreams.md`'s deferred-workstream table: "Use CP-SAT/reference work only for a concrete prioritized label, counterexample, or certificate").
-> **Evidence role:** discovery — the `hints-random` directory's `provenance` field had not been mined this session; this is the first characterization of its exact-solver coverage
+> **Status:** concluded-positive observation / **isolated-no-winner cohort quarantined for integrity repair**
+> **Last evidence:** 2026-09-06 — audit found the reported isolated-no-winner count and printed ID list are internally inconsistent; see `2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md`.
+> **Decision:** retain the descriptive conclusion that stored `cpsat-full-probe` provenance contains useful native-residual rescues, but do not use the reported 13-level isolated-no-winner cohort for selector/modeling work until it is deterministically regenerated. The separately reported production-unsolved cohort must also be count/list verified before modeling.
+> **Remaining gate:** regenerate the rescue cohorts from current capability data plus referee-valid hint provenance with explicit uniqueness/count/predicate assertions; then resume any structural characterization.
+> **Evidence role:** discovery with a later result-integrity defect in the small-cohort enumeration
 > **Selection:** whole corpus2 population (1,700 levels), not a sample
 
-## Method
+## Integrity warning
 
-For each of the 1,700 hint files, checked whether any stored hint's `provenance[0].solver.technique` equals `cpsat-full-probe` (an exact/reference solver distinct from the heuristic T1 census menu). Joined the resulting level-id set against `isolatedOracleSolved` and `productionSolved`.
+The original analysis reported `isolated_no_winner_cpsat_count = 13` and described 13 distinct IDs, but the printed list contains 15 entries and 14 unique IDs:
 
-## Result
+`R00044, R00537, R00860, R00860, R02059, R02194, R02452, R02464, R02474, R02718, R02862, R03092, R03115, R03201, R00720`
 
-| | count |
-|---|---:|
-| levels with any `cpsat-full-probe` hint | 280 / 1,700 (16.5%) |
-| of those, also `isolatedOracleSolved===false` | 13 / 646 (2.0% of the no-winner cohort) |
-| of those, also `productionSolved===false` | 45 / 888 (5.1% of production-unsolved) |
+`R00860` is duplicated, but deduplicating that entry still leaves 14 unique IDs. A targeted recheck shows `R00720` is not an obvious stray: current capability data marks it `productionSolved:false` and `isolatedOracleSolved:false`, and its retained hint provenance contains referee-accepted `cpsat-full-probe` solutions. The correct isolated-no-winner membership/count therefore cannot be recovered by casually deleting the suspicious-looking tail entry.
 
-The 13 isolated-no-winner rescues: `R00044, R00537, R00860, R00860, R02059, R02194, R02452, R02464, R02474, R02718, R02862, R03092, R03115, R03201, R00720` (13 distinct ids after dedup).
+Do **not** silently reinterpret the old count as 14. The exact membership is unresolved until the join is regenerated with assertions. See `2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md` for the repair contract.
 
-## Interpretation
+## Original method and descriptive result
 
-This is a genuinely actionable, bounded result for Workstream 5, which has been correctly gated "on demand" pending exactly this kind of concrete label — a named, small set of levels where exact search demonstrably succeeds where every tested heuristic technique (and production itself, for the larger 45-level set) fails. This does not by itself justify building CP-SAT infrastructure into production (that would need bounded production/storage/replay cost and a legal level-blind path per the entry contract), but it gives a real, non-hypothetical starting point if that question is ever prioritized: these are not counterfactual "maybe some level like this exists" cases, they are named ids with an already-computed exact solution sitting in the repo's own hint stash.
+For each of the 1,700 hint files, the original pass checked whether any stored hint's `provenance[0].solver.technique` equals `cpsat-full-probe` (an exact/reference solver distinct from the heuristic T1 census menu), then joined the resulting level-id set against current-at-the-time `isolatedOracleSolved` and `productionSolved` values.
+
+The original aggregate output was:
+
+| | originally reported count | current status |
+|---|---:|---|
+| levels with any `cpsat-full-probe` hint | 280 / 1,700 (16.5%) | descriptive result retained; regenerate before downstream modeling |
+| also `isolatedOracleSolved===false` | 13 / 646 (2.0%) | **quarantined: count conflicts with printed membership** |
+| also `productionSolved===false` | 45 / 888 (5.1%) | not contradicted by this audit, but count/list integrity must be independently verified before modeling |
+
+## Interpretation that survives the audit
+
+There is still a useful Workstream 5 premise here: exact/reference provenance contains already-computed solutions for some levels that remain residual under current native evidence. That makes the hint stash a potentially cheap source of labels/counterexamples without immediately commissioning new CP-SAT runs.
+
+What no longer survives is treating the hand-reported 13-row isolated-no-winner cohort as a trustworthy analysis population. Because the proposed follow-up uses a very small positive class, a one-row membership error is decision-bearing. The cohort must be mechanically regenerated first.
+
+This still does not justify building CP-SAT infrastructure into production. Any production-facing question would require its own bounded cost, legality, and confirmation contract.
 
 ## What this does not establish
 
-- Does not check whether the `cpsat-full-probe` hints themselves are still valid under the current solver/level schema (schema/version drift is possible; see `2026-09-05-solver-version-diversity-in-hint-provenance-001.md` for related context).
-- Does not attempt to characterize what makes these 13/45 levels resistant to heuristics structurally — a natural follow-up if this line is pursued further.
-- Single hint-stash snapshot; cpsat coverage could grow if the pipeline that produces these hints runs again.
+- It does not establish whether the correct isolated-no-winner rescue cardinality is 13, 14, or another value after a clean current join.
+- It does not independently validate the reported 45 production-unsolved membership/count.
+- It does not characterize what makes CP-SAT-rescued residual levels structurally different from controls.
+- It does not turn an exact-solver rescue into evidence that the native solver can rediscover the path.
+- It does not authorize new exact-search compute; the immediate repair uses existing repository data only.
