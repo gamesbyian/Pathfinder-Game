@@ -88,7 +88,7 @@ async function main() {
             stageId: 'late-retry',
             mode: 'rescue',
             targetOpportunities: 10,
-            proposedTotal: 500,
+            proposedTotal: 1000,
             conditionalEventRate: 0.1,
             detectionProbability: 0.8,
         });
