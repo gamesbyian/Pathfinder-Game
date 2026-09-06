@@ -60,21 +60,19 @@ Report coverage versus portfolio cardinality under the same aggregate work envel
 
 **Rung 2 tooling (built 2026-09-02, see [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) Workstream 2 and [`2026-09-02-static-portfolio-construction-pilot.md`](../reports/2026-09-02-static-portfolio-construction-pilot.md) for the full evidence trail):** a real fixed-work static-portfolio execution mode exists and needs no `attempts.ts`/production orchestration change. `technique-census-cell.mjs`'s `runCell` already runs an arbitrary ORDERED technique-key list against one level under one cumulative shared work budget with early-exit-on-success; its opt-in `cell.perTechniqueWorkCap` additionally bounds each individual technique's own share, which is required whenever a non-naturally-terminating technique (e.g. `repair`, which right-censors at whatever cap it is given rather than exhausting) could otherwise consume an entire shared budget and starve every later list position regardless of budget size. `scripts/build-static-portfolio-plan.mjs` constructs a plan (population + named ordered-technique-key arms + one shared budget, optionally `--per-technique-work-cap`); a 2026-09-03 addition, `--per-technique-work-cap-map`/`cell.perTechniqueWorkCapByKey`, lets individual techniques have their own cap instead of one flat cap for the whole menu — needed for a tranche-weighted allocation (cheap self-exhausting beams protected less, deep DFS/IDA/repair continuations protected more) rather than every technique getting the same share regardless of its own real cost; a technique absent from the map falls back to the flat cap. `scripts/combine-static-portfolio-shards.mjs` aggregates shard results into per-arm coverage/work and a pairwise comparison against a named control arm, failing loudly on incomplete/inconsistent plan coverage. `.github/workflows/static-portfolio-confirmation.yml` dispatches this at population scale (artifact-only, no commit). `scripts/stress/select-random-sample.mjs` draws a deterministic seeded UNIFORM population sample (with `--exclude-ids-from` to keep it disjoint from an already-mined discovery sample) — use this, not a routing-regime/mechanic-eligibility-gated selector, for a portfolio-cardinality question that is not scoped to a particular mechanic/regime.
 
-## Budget-model completion prerequisite
+## Budget-model foundation — complete; preserve these invariants
 
-The scheduler cannot be coherently repriced while a non-binding wall deadline can still resize deterministic search. The workstream authority therefore treats budget-model completion as scheduler foundation, not optional architecture cleanup.
+The budget-model migration that originally blocked coherent repricing is complete according to the canonical workstream authority. The rules below are therefore **established scheduler invariants**, not prerequisites still waiting to be implemented. New allocation work must preserve them:
 
-Before new production allocation policy is promoted:
+1. **Own work explicitly.** `stage-budget.ts` / `BudgetEnvelope` describes the work granted to a stage; wall time is deadline metadata, nodes are local/diagnostic guards.
+2. **No hidden cap lifetime.** Attempt/stage budget context is explicit; a prior stage must not accidentally donate or starve work through hidden shared mutable cap state.
+3. **Isolate multi-solve accounting.** Discovery/research sessions own their work scope rather than consuming an unrelated realm-global counter.
+4. **Price heterogeneous techniques in work.** Keep node census data for within-technique depth/censoring analysis, but cross-technique scheduler comparisons use canonical `workSpent` / equal-work evidence.
+5. **No ms-derived allocation resurrection.** The migrated additive-tier policy is explicit work. Any deliberate repricing is a separate experiment; do not reintroduce `timeBudgetMs * fraction` as allocation logic.
+6. **Preserve deadline independence.** A generously non-binding wall deadline must not resize deterministic search for migrated stages; regressions should continue to enforce this invariant.
+7. **Keep the boundary ratchet closed.** `check:solver-budget-boundaries` must not gain new wall-derived allocation sites.
 
-1. **Own work explicitly.** `stage-budget.ts` / `BudgetEnvelope` should describe the work actually granted to a stage; wall time is deadline metadata, nodes are local/diagnostic guards.
-2. **Remove hidden cap lifetime.** Replace shared mutable `prep._workCap` inheritance with explicit attempt/stage budget context. Compatibility scopes may bridge the migration, but a prior stage must not be able to donate or starve work accidentally.
-3. **Isolate multi-solve accounting.** Discovery/research sessions must own their work scope rather than consuming a realm-global counter that unrelated solves can advance.
-4. **Price heterogeneous techniques in work.** Keep the existing node census for within-technique depth/censoring analysis, but scheduler cost comparisons require equal-work execution or trustworthy `workSpent` observations.
-5. **Retire ms-derived allocation incrementally.** For each inventoried `timeBudgetMs * fraction` additive tier, first measure/derive its current effective work dose and reproduce that policy with explicit work. Preserve eligibility/order/seed behavior during this migration. Any deliberate repricing is a separate experiment.
-6. **Expand the invariant.** Every migrated stage should join the regression that changing a generously non-binding deadline leaves deterministic search unchanged. The end state is whole-solve deadline independence.
-7. **Keep the ratchet shrinking.** `check:solver-budget-boundaries` may lose legacy allowlist entries as migration proceeds; it must not gain new wall-derived allocation sites.
-
-This prerequisite does **not** require converting production to `strictTotalWorkBudget` wholesale. That switch remains the current experiment mechanism for matched whole-solve envelopes. Production total-work policy is itself a scheduler decision and must earn it through matched evidence.
+Completion does **not** imply that production should globally switch to `strictTotalWorkBudget`. That remains an experiment mechanism for matched whole-solve envelopes; production total-work policy is itself a scheduler decision and must earn promotion through matched evidence.
 
 ## Offline scheduler analysis
 
@@ -128,7 +126,7 @@ Only after static scheduling shows confirmed value and residual headroom, add cu
 
 Empirical tranche tables precede survival/hazard models; bandit/value-of-computation control is later still.
 
-The 2026-09-03 dynamic tranche pilot also exposed an execution prerequisite: a predictive continuation signal is not economically actionable when the search must restart and repay prior work. Before richer dynamic allocation, the live queue carried a bounded in-memory beam-resumability feasibility gate; its rung 1 (pause/resume equivalence for one deterministic beam action), rung 2 (same frontier, changed policy — fixed-work complementarity), and rung 3's simplest form (cyclic multi-policy alternation on one shared frontier) are now all done — rung 1 a working primitive with no scheduling value shown on its own, rung 2 a small/narrow-scope real complementarity signal (2/60 sampled levels solved only via frontier inheritance), rung 3's cyclic form concluded-negative (repeated alternation solved the identical 4/60 levels a single switch already solved, 0 net wins either direction). None of this is yet a production-wiring recommendation. See [`solver-search-resumability.md`](solver-search-resumability.md) for the mechanisms and the research ladder's next open step.
+The 2026-09-03 dynamic tranche pilot exposed an execution constraint: a predictive continuation signal is not economically actionable when search must restart and repay prior work. The bounded beam-resumability research then established same-policy pause/resume equivalence and a small one-handoff complementarity signal, while cyclic/staged switching and naive beam→DFS handoff closed negative. None of this is a production-wiring recommendation. Resumability work resumes only when a concrete current WS2 allocation question needs a continuation primitive. See [`solver-search-resumability.md`](solver-search-resumability.md) for current dispositions.
 
 ### Typed producer signals
 
@@ -147,7 +145,7 @@ For unsupported/out-of-distribution cases, prefer conservative behavior: baselin
 - `orchestration.ts`: execution/telemetry feedback, not policy sprawl;
 - `stage-executors.ts`: execute an action without owning global order.
 
-The migration should reduce first-match bundle logic, not add a parallel policy layer. Budget-model completion is part of this seam: once a stage's work policy is represented here, orchestration should execute it rather than reconstructing work from milliseconds.
+The completed budget migration established this seam. New scheduler work should reduce first-match bundle logic, not add a parallel policy layer or reconstruct work from milliseconds inside orchestration.
 
 ## Promotion path
 
