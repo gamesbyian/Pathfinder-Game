@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, workstream state, and next gates.
-> **Reconciled:** 2026-09-05.
+> **Reconciled:** 2026-09-06.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization.
 
 Keep this file **current-state only**. When evidence changes a state or gate, replace the old statement instead of appending chronology. Detailed experimental history belongs in dated reports; historical snapshots live under `docs/archive/snapshots/`.
@@ -79,7 +79,7 @@ Rows are sorted by stable workstream ID, not execution priority.
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 5 | Exact/reference-model program | **ON DEMAND / CONCRETE LOCAL GATE AVAILABLE** | Before any new CP-SAT compute, locally characterize the existing referee-valid CP-SAT rescue cohort (45 current production-unsolved rescues; 13 isolated-no-winner rescues) against native-unsolved controls using replicated structural/lifecycle/census features and a predeclared holdout. No stable narrow selector → keep WS5 strictly on demand. Stable selector → use it first as a bounded exact-label acquisition gate, not production CP-SAT. See [`../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md`](../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md). |
+| 5 | Exact/reference-model program | **ON DEMAND / LOCAL INTEGRITY GATE BEFORE CHARACTERIZATION** | Existing CP-SAT provenance contains native-residual rescues, but the source report's isolated-no-winner summary is internally inconsistent: it reports 13 distinct IDs while printing 15 entries / 14 unique IDs. Before any selector analysis or new CP-SAT compute, deterministically regenerate both the isolated-no-winner and production-unsolved rescue cohorts from current capability data + referee-valid provenance, materialize unique memberships, and assert count==array length plus membership predicates. Only then run the predeclared structural/lifecycle characterization and holdout. No stable narrow selector → keep WS5 strictly on demand; stable selector → bounded exact-label acquisition gate only, not production CP-SAT. See [`../reports/2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md`](../reports/2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md) and [`../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md`](../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md). |
 
 ## Standing research rules
 
