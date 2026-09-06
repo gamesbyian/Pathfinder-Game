@@ -8,7 +8,9 @@ const args = new Map(process.argv.slice(2).filter(v => v.startsWith('--') && v.i
     .map(v => { const [k, ...rest] = v.split('='); return [k, rest.join('=')]; }));
 const populationFile = args.get('--population') ?? 'data/stress/portfolio-18-specialists-production-envelope-confirmation-001-population.json';
 const capMapFile = args.get('--cap-map') ?? 'data/stress/portfolio-18-specialists-tranche-cap-map-v2.json';
-const limit = Number(args.get('--limit') ?? 12);
+// The accepted decision-bearing artifact used 24 levels. Keep the default aligned with the
+// canonical reproduction command so an unqualified rerun cannot recreate the obsolete 12-level draft.
+const limit = Number(args.get('--limit') ?? 24);
 const outFile = args.get('--out');
 if (!Number.isSafeInteger(limit) || limit < 2) throw new Error('--limit must be an integer >= 2');
 
@@ -33,9 +35,6 @@ for (const [levelIndex, levelId] of ids.entries()) {
     const levelPos = positionById.get(levelId);
     if (!levelPos) throw new Error(`Population id ${levelId} is absent from Corpus 2`);
     for (const techniqueKey of techniques) {
-        // The confirmed static map is the baseline tranche. The treatment asks whether spending
-        // one MORE equally-sized tranche helps after that baseline fails; comparing half-v2 with
-        // v2 would only re-measure how v2 earned its existing static allocation.
         const firstCap = capMap[techniqueKey];
         const fullCap = firstCap * 2;
         const common = { tier: 'dynamic-tranche-pilot', corpus: 'corpus2', levelPos, techniqueKeys: [techniqueKey],
@@ -64,10 +63,6 @@ const brier = (featureKeys) => test.length ? test.reduce((sum, row) => {
     const predicted = smoothedRate(bucket);
     return sum + (predicted - Number(row.continuationBenefit)) ** 2;
 }, 0) / test.length : null;
-// A capped search cannot currently resume from its frontier. Test the smallest executable policy
-// honestly: after all first tranches, a larger restart costs its full 2x cap and may run only from
-// work the same level's naturally exhausted first tranches left unused. This is a shadow A/B over
-// already-measured cells, with no oracle use in eligibility/order.
 const levelGroups = Map.groupBy(rows, row => row.levelId);
 const matchedRows = [...levelGroups].map(([levelId, levelRows]) => {
     const envelope = levelRows.reduce((sum, row) => sum + row.firstCap, 0);
