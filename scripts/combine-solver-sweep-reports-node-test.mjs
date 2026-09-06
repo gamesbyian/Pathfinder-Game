@@ -131,6 +131,44 @@ async function main() {
         assert.equal(planned.shard.flatMap(shard => shard.ids).length, 2);
         console.log('  ✓ shard planner automatically consumes standing runtime telemetry when callers omit --telemetry');
 
+        const config1 = path.join(tempDir, 'config-01.json');
+        const config2 = path.join(tempDir, 'config-02.json');
+        const configOut = path.join(tempDir, 'combined-config.json');
+        const executionSummary = {
+            levelBlind: true,
+            historicalInputs: [],
+            enableFlags: ['FLAG_B', 'FLAG_A'],
+            disableFlags: [],
+            strictTotalWorkBudget: true,
+            admissibleOrderNonDefaultRetryBudgetFraction: 0.18,
+            repairLateProbeNodeBudget: null,
+        };
+        await writeFile(config1, JSON.stringify(batchReport({
+            summary: executionSummary,
+            levels: [{ level: 11, id: 'R00111', ok: false }],
+        })));
+        await writeFile(config2, JSON.stringify(batchReport({
+            summary: { ...executionSummary, enableFlags: ['FLAG_A', 'FLAG_B'] },
+            levels: [{ level: 12, id: 'R00112', ok: false }],
+        })));
+        await run([`--in=${config1},${config2}`, `--out=${configOut}`]);
+        const configCombined = JSON.parse(await readFile(configOut, 'utf8'));
+        assert.deepEqual(configCombined.executionConfig.enableFlags, ['FLAG_A', 'FLAG_B']);
+        assert.equal(configCombined.executionConfig.admissibleOrderNonDefaultRetryBudgetFraction, 0.18);
+        assert.equal(configCombined.executionConfig.strictTotalWorkBudget, true);
+        console.log('  ✓ combined artifact preserves canonical resolved treatment configuration');
+
+        const configMismatch = path.join(tempDir, 'config-mismatch.json');
+        await writeFile(configMismatch, JSON.stringify(batchReport({
+            summary: { ...executionSummary, admissibleOrderNonDefaultRetryBudgetFraction: 0.25 },
+            levels: [{ level: 13, id: 'R00113', ok: false }],
+        })));
+        await assert.rejects(
+            () => run([`--in=${config1},${configMismatch}`, `--out=${path.join(tempDir, 'combined-config-mismatch.json')}`]),
+            /Mismatched execution config admissibleOrderNonDefaultRetryBudgetFraction/,
+        );
+        console.log('  ✓ combiner rejects shards that disagree on decision-bearing execution configuration');
+
         const batch3 = path.join(tempDir, 'batch-03-mismatch.json');
         await writeFile(batch3, JSON.stringify(batchReport({ summary: { budgetMs: 20000 }, levels: [{ level: 3, id: 'R00003', ok: true }] })));
         await assert.rejects(() => run([`--in=${batch1},${batch3}`, `--out=${outFile}`]), /Mismatched budgetMs/);
