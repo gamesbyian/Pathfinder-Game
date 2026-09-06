@@ -12,8 +12,10 @@
  * scripts/stress/benchmark.mjs's solveEntry() row-for-row since both call the identical
  * Solver.solve()). The only real mismatch is the top-level WRAPPER: portfolio-solve-sweep writes
  * `{summary: {budgetMs, ...}, levels: [...]}`, while the three consumer tools read `budgetMs` and
- * `levels` at the top level directly (stress:measure-solver's own shape). This tool only flattens that
- * wrapper and concatenates `levels` across input files — no per-row remapping.
+ * `levels` at the top level directly (stress:measure-solver's own shape). This tool flattens that
+ * wrapper and concatenates `levels` across input files. It also preserves decision-bearing execution
+ * configuration when the producer records it, and refuses to combine shards that disagree on that
+ * configuration. A combined artifact must not erase which treatment actually ran.
  *
  * Usage:
  *   node scripts/combine-solver-sweep-reports.mjs \
@@ -25,6 +27,52 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+
+const EXECUTION_CONFIG_FIELDS = [
+    'levelBlind',
+    'historicalInputs',
+    'solverInputFields',
+    'workers',
+    'enableFlags',
+    'disableFlags',
+    'strictTotalWorkBudget',
+    'attemptBudgetTelemetry',
+    'lifecycleTelemetry',
+    'mainSearchLateReserveFraction',
+    'mainSearchLateReserveConfigCount',
+    'admissibleOrderNodeReserveFraction',
+    'admissibleOrderNonDefaultRetryBudgetFraction',
+    'earlyRepairSearchAdaptiveBadnessGate',
+    'earlyRepairSearchAdaptiveMinScale',
+    'repairLateProbeNodeBudget',
+];
+
+function canonicalConfigValue(field, value) {
+    if ((field === 'enableFlags' || field === 'disableFlags') && Array.isArray(value)) return [...value].sort();
+    return value;
+}
+
+function collectExecutionConfig(reports) {
+    const config = {};
+    for (const field of EXECUTION_CONFIG_FIELDS) {
+        const observations = reports.map(report => ({
+            path: report.path,
+            present: Object.prototype.hasOwnProperty.call(report.summary, field),
+            value: canonicalConfigValue(field, report.summary[field]),
+        }));
+        if (!observations.some(x => x.present)) continue;
+        if (observations.some(x => !x.present)) {
+            throw new Error(`Mismatched execution config ${field}: some shards record it and others omit it.`);
+        }
+        const first = JSON.stringify(observations[0].value);
+        const mismatch = observations.find(x => JSON.stringify(x.value) !== first);
+        if (mismatch) {
+            throw new Error(`Mismatched execution config ${field}: ${observations[0].path} used ${first}, ${mismatch.path} used ${JSON.stringify(mismatch.value)}.`);
+        }
+        config[field] = observations[0].value;
+    }
+    return config;
+}
 
 function main() {
     const ROOT = process.cwd();
@@ -74,6 +122,7 @@ function main() {
             throw new Error(`Mismatched schedulerMode: ${reports[0].path} used ${first.schedulerMode}, ${r.path} used ${r.summary.schedulerMode}.`);
         }
     }
+    const executionConfig = collectExecutionConfig(reports);
 
     const seenIds = new Map();
     const seenPositions = new Map();
@@ -125,6 +174,7 @@ function main() {
         workBudget: workBudgets.length === 1 ? workBudgets[0] : (workBudgets.length === 0 ? null : workBudgets),
         ...(repairFractions.length ? { repairBudgetFraction: repairFractions.length === 1 ? repairFractions[0] : repairFractions } : {}),
         ...(adaptive.length ? { adaptiveBudget: adaptive[0], adaptiveBudgetShards: adaptive.length } : {}),
+        ...(Object.keys(executionConfig).length ? { executionConfig } : {}),
         witnessAccess: 'none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as scripts/stress/benchmark.mjs)',
         engine: `legacy-scheduler (portfolio-solve-sweep, combined from ${reports.length} batch report(s))`,
         sourceReports: inputPaths,

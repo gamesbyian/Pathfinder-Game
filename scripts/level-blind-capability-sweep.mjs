@@ -206,6 +206,8 @@ function writeReport() {
         mainSearchLateReserveFraction: Number.isFinite(mainSearchLateReserveFraction) ? mainSearchLateReserveFraction : null,
         mainSearchLateReserveConfigCount: Number.isFinite(mainSearchLateReserveConfigCount) ? mainSearchLateReserveConfigCount : null,
         admissibleOrderNodeReserveFraction: Number.isFinite(admissibleOrderNodeReserveFraction) ? admissibleOrderNodeReserveFraction : null,
+        admissibleOrderNonDefaultRetryBudgetFraction: Number.isFinite(admissibleOrderNonDefaultRetryBudgetFraction)
+            ? admissibleOrderNonDefaultRetryBudgetFraction : null,
         earlyRepairSearchAdaptiveBadnessGate: Number.isFinite(earlyRepairSearchAdaptiveBadnessGate) ? earlyRepairSearchAdaptiveBadnessGate : null,
         earlyRepairSearchAdaptiveMinScale: Number.isFinite(earlyRepairSearchAdaptiveMinScale) ? earlyRepairSearchAdaptiveMinScale : null,
         repairLateProbeNodeBudget: Number.isFinite(repairLateProbeNodeBudget) ? repairLateProbeNodeBudget : null,
@@ -228,6 +230,7 @@ function writeReport() {
         `Workers: ${workers}`,
         `Flags: enable=${enableFlags.join(',') || '(none)'} disable=${disableFlags.join(',') || '(none)'}`,
         `Admissible-order node reserve fraction: ${summary.admissibleOrderNodeReserveFraction ?? '(production default)'}`,
+        `Admissible-order non-default retry budget fraction: ${summary.admissibleOrderNonDefaultRetryBudgetFraction ?? '(production default)'}`,
         `Completed: ${levels.length}/${targets.length}`,
         `Solved: ${solved}/${levels.length}`,
         `Hints saved: ${saveHints ? `yes (${hintChanges} write event(s))` : 'no'}`,

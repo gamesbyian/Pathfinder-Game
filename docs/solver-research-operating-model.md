@@ -123,7 +123,18 @@ Selected/tuned treatments normally need sample-independent confirmation, with st
 
 ## Before expensive decision-bearing runs
 
-Use [`investigation-report-conventions.md`](investigation-report-conventions.md) and `solver:experiment-preflight` where applicable. Before dispatch, first perform the existing-data preflight in [`solver-research-data-assets.md`](solver-research-data-assets.md): identify evidence that could falsify, stratify, contextualize, or independently challenge the premise, and record materially relevant rejected joins where future rediscovery would otherwise waste work. Then record treatment/control/ref; evidence role/population selection; primary outcome/cost envelope; material candidate search; success/stop/escalation gate; and any framework-expansion gate.
+Use [`investigation-report-conventions.md`](investigation-report-conventions.md), `solver:experiment-preflight`, and [`solver-experiment-opportunity-sizing.md`](solver-experiment-opportunity-sizing.md) where applicable. Before dispatch:
+
+1. **Existing evidence:** query the research-data registry/status index and identify evidence that could falsify, stratify, contextualize, or independently challenge the premise. Record materially relevant rejected joins when rediscovery would otherwise waste work.
+2. **Opportunity/headroom:** state the exact event that can differ, estimate the control-side opportunity rate, and derive N from the number of informative rows needed. Separate benefit-enriched and representative no-harm populations.
+3. **Single population source:** resolve the literal ID/position vector once and make plan, execution, combine, and manifest consume or validate that same selection. A count-only/planning path must not implement different sampling semantics from execution.
+4. **Execution-family canary:** before large matrices or many shards, run the smallest representative cell/level for each materially different execution family under the exact cap/flags/selector mode. Verify work/node/deadline stop semantics and expected output fields before scaling.
+5. **Resolved treatment provenance:** persist the actual arm/config/flags/workflow inputs at the solver invocation boundary, not only a matrix label. Confirm that control and treatment differ only on declared dimensions.
+6. **Budget and wall scale:** size enforced solver-side caps from representative production/control evidence. Use existing per-level runtime telemetry for shard packing/timeouts when available; scheduling telemetry is infrastructure metadata and must not steer cold solver policy.
+7. **Schema/feature assertions:** use canonical helpers for derived level features and assert required report-row fields before filtering or stratifying. Missing/undefined derived inputs are configuration errors, not false predicates.
+8. **Decision contract:** record treatment/control/ref; evidence role; primary outcome and cost envelope; material candidate search; success, stop, and escalation gates; and any framework-expansion gate.
+
+If a cheap preflight invalidates any of these, fix the design before scaling. A successful large workflow does not repair a non-informative population, a semantically identical A/B, a non-binding treatment, or a mismatched budget contract.
 
 ## Documentation handoff
 
