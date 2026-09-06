@@ -22,6 +22,10 @@ function run(args) {
     return execFile('node', ['scripts/combine-solver-sweep-reports.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
 }
 
+function runPlanner(args) {
+    return execFile('node', ['scripts/plan-highbudget-shards.mjs', ...args], { cwd: ROOT, maxBuffer: 10 * 1024 * 1024 });
+}
+
 function batchReport(overrides = {}) {
     return {
         summary: { commit: 'abc123', corpus: 'data/stress/stress-levels-random.json', schedulerMode: 'legacy', budgetMs: 8000, ...overrides.summary },
@@ -105,6 +109,27 @@ async function main() {
         assert.equal(noOpportunity.opportunities, 0);
         assert.ok(noOpportunity.warnings.some(w => w.startsWith('ZERO_OPPORTUNITY:')));
         console.log('  ✓ opportunity audit identifies populations structurally unable to demonstrate the treatment');
+
+        const corpus2 = JSON.parse(await readFile(path.join(ROOT, 'data/stress/stress-levels-random.json'), 'utf8'));
+        const plannerIds = corpus2.levels.slice(0, 2).map(level => level.id);
+        assert.equal(plannerIds.length, 2, 'planner fixture needs two corpus2 ids');
+        const plannerIdsFile = path.join(tempDir, 'planner-ids.txt');
+        const plannerOut = path.join(tempDir, 'planner.json');
+        await writeFile(plannerIdsFile, plannerIds.join('\n') + '\n');
+        await runPlanner([
+            `--ids-file=${plannerIdsFile}`,
+            '--corpus2=data/stress/stress-levels-random.json',
+            '--node-budget=50000000',
+            '--workers=4',
+            '--target-wall-minutes=20',
+            '--seed=node-test',
+            `--out=${plannerOut}`,
+        ]);
+        const planned = JSON.parse(await readFile(plannerOut, 'utf8'));
+        assert.equal(planned.planning.telemetryPath, 'logs/solver-stress-refresh/corpus2-runtime-telemetry.json');
+        assert.equal(planned.planning.telemetryRequestedIds, 2);
+        assert.equal(planned.shard.flatMap(shard => shard.ids).length, 2);
+        console.log('  ✓ shard planner automatically consumes standing runtime telemetry when callers omit --telemetry');
 
         const batch3 = path.join(tempDir, 'batch-03-mismatch.json');
         await writeFile(batch3, JSON.stringify(batchReport({ summary: { budgetMs: 20000 }, levels: [{ level: 3, id: 'R00003', ok: true }] })));
