@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 import { validateSweepIntegrity } from './validate-solver-sweep-integrity.mjs';
+import { analyzeOpportunity, opportunitySampleSizeForAtLeastOne } from './experiment-opportunity-audit.mjs';
 
 const execFile = promisify(execFileCb);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -59,8 +60,8 @@ async function main() {
         console.log('  ✓ exact-population validator rejects missing and unexpected result ids');
 
         const participatingLevels = [
-            { id: 'R00001', attempts: [{ stageId: 'late-retry', workSpent: 12, nodesExpanded: 4 }] },
-            { id: 'R00002', attempts: [{ stageId: 'late-retry', workSpent: 0, nodesExpanded: 0 }] },
+            { id: 'R00001', ok: false, attempts: [{ stageId: 'late-retry', workSpent: 12, nodesExpanded: 4 }] },
+            { id: 'R00002', ok: false, attempts: [{ stageId: 'late-retry', workSpent: 0, nodesExpanded: 0 }] },
         ];
         const participation = validateSweepIntegrity({
             expectedIds: ['R00001', 'R00002'], levels: participatingLevels,
@@ -72,6 +73,38 @@ async function main() {
             requiredStage: 'late-retry', minParticipatingLevels: 2,
         }), /below required minimum 2/);
         console.log('  ✓ target-stage gate distinguishes nominal zero-work reach from real participation');
+
+        const opportunityRows = Array.from({ length: 100 }, (_, i) => ({
+            id: `R${String(i + 1).padStart(5, '0')}`,
+            ok: i < 90,
+            attempts: i >= 90 && i < 95 ? [{ stageId: 'late-retry', workSpent: 10, nodesExpanded: 2 }] : [],
+        }));
+        const opportunity = analyzeOpportunity({
+            levels: opportunityRows,
+            stageId: 'late-retry',
+            mode: 'rescue',
+            targetOpportunities: 10,
+            proposedTotal: 500,
+            conditionalEventRate: 0.1,
+            detectionProbability: 0.8,
+        });
+        assert.equal(opportunity.controlFailed, 10);
+        assert.equal(opportunity.stageParticipated, 5);
+        assert.equal(opportunity.opportunities, 5);
+        assert.equal(opportunity.opportunityRate, 0.05);
+        assert.equal(opportunity.sizing.pointTotal, 200);
+        assert.ok(opportunity.warnings.some(w => w.startsWith('OVERPROVISIONED:')));
+        assert.equal(opportunitySampleSizeForAtLeastOne(0.1, 0.8), 16);
+        console.log('  ✓ opportunity audit prices sample size from control-failure + real-stage exposure rather than raw N');
+
+        const noOpportunity = analyzeOpportunity({
+            levels: opportunityRows.map(row => ({ ...row, attempts: [] })),
+            stageId: 'late-retry',
+            mode: 'rescue',
+        });
+        assert.equal(noOpportunity.opportunities, 0);
+        assert.ok(noOpportunity.warnings.some(w => w.startsWith('ZERO_OPPORTUNITY:')));
+        console.log('  ✓ opportunity audit identifies populations structurally unable to demonstrate the treatment');
 
         const batch3 = path.join(tempDir, 'batch-03-mismatch.json');
         await writeFile(batch3, JSON.stringify(batchReport({ summary: { budgetMs: 20000 }, levels: [{ level: 3, id: 'R00003', ok: true }] })));
