@@ -13,9 +13,10 @@ Before adding or launching machinery:
 1. Query the concept: `node scripts/tooling-census.mjs --compact --query=<term>`.
 2. For solver research, read the current gate in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) and query prior evidence with `research-status-index --compact`.
 3. Query existing research assets/joins with `node scripts/research-asset-query.mjs --query=<term>` before generating data.
-4. Choose the smallest population/tool that can falsify or decide the gate.
-5. Escalate only surviving questions to broader/sharded workflows.
-6. Before inventing a script, run `node scripts/tooling-census.mjs --orphans` and inspect related current code/reports.
+4. Before a broad decision-bearing run, estimate the treatment's opportunity population and derive total N from the informative rows actually needed; use [`solver-experiment-opportunity-sizing.md`](solver-experiment-opportunity-sizing.md) and `experiment-opportunity-audit` when control-side evidence exists.
+5. Choose the smallest population/tool that can falsify or decide the gate.
+6. Escalate only surviving questions to broader/sharded workflows.
+7. Before inventing a script, run `node scripts/tooling-census.mjs --orphans` and inspect related current code/reports.
 
 Tool choice does not determine evidence quality. Decision-bearing solver work still follows [`solver-research-operating-model.md`](solver-research-operating-model.md), [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), and [`investigation-report-conventions.md`](investigation-report-conventions.md).
 
@@ -25,7 +26,7 @@ Tool choice does not determine evidence quality. Decision-bearing solver work st
 |---|---|---|
 | Validation | [`testing.md`](testing.md); `npm run ci:fast`, `npm run ci`, targeted `check:*` / `test:*` | Implementation correctness and finish-line gates |
 | Solver direct/regression | query `solver:direct`, `solver:regression`, `solver:measure-speed` | Named-level debugging, published regression, pinned-work speed measurement |
-| Solver research preflight | `npm run solver:experiment-preflight` | Treatment/control, corpus, selection, flags, work-envelope comparability |
+| Solver research preflight | `npm run solver:experiment-preflight`; [`solver-experiment-opportunity-sizing.md`](solver-experiment-opportunity-sizing.md); query `opportunity audit` | Treatment/control comparability plus control-side opportunity/headroom and sample-size sanity before broad compute |
 | Stress/corpus | [`../data/stress/README.md`](../data/stress/README.md); query `stress` | Generation, benchmarks, reducers, lifecycle/failure diagnostics, profiles |
 | Compact corpus discovery | `node scripts/corpus-query.mjs` | Corpus summaries, filters, deterministic samples; `--full` only for exact payloads |
 | Technique capability/census | query `technique census`, `niches`, `relative advantage`, `temporal stability` | Isolated technique response, capability maps, niche/ownership analyses |
