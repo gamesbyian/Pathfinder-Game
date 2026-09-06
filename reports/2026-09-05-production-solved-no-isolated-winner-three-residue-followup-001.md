@@ -3,6 +3,7 @@
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-05 — direct reinspection of persisted per-level hint provenance for `R03195`, `R02452`, and `R02887`, the three rows left unresolved by the 35-row cohort anatomy.
 > **Decision:** two of the three rows are no longer unexplained native capability. `R02452` and `R02887` both have current-revision, unguided, unforced standard-repair successes, including attempt-0 solves inside the relevant 48.24M-work repair envelope. Their exclusion from the earlier 25-row census-coverage bucket is a provenance-schema/flag boundary: the valid records predate the later `context.isolatedTechnique` marker. `R03195` remains genuinely unresolved at the current production/census envelope.
+> **Remaining gate:** inspect only `R03195` if production/census attribution is revisited; do not rerun the other 34 rows without materially new evidence.
 > **Evidence role:** local provenance reconciliation; no new dispatch.
 
 ## Starting point

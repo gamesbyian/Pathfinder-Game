@@ -1,8 +1,9 @@
 # Perimeter-bias production attribution confound audit
 
-> **Status:** concluded-correction
+> **Status:** concluded-negative
 > **Last evidence:** 2026-09-05 — production first-success attribution was reconciled against the existing matched isolated relative-advantage census for the same clockwise/counter-clockwise `perimeterSweep` pairs.
 > **Decision:** the apparent ~2x clockwise advantage in production `winningConfig` attribution does **not** reproduce as a matched capability advantage. Retire the generic clockwise structural-selector premise from WS1. Preserve both directions as capability-bearing actions; any future question about directional ordering/allocation belongs under a matched-exposure WS2 contract.
+> **Remaining gate:** none for the generic clockwise structural-selector premise; reopen only if directional order/allocation becomes decision-bearing under a matched-exposure WS2 contract.
 > **Evidence role:** correction / anti-confounding audit, no new solver dispatch.
 
 ## Why this audit was necessary

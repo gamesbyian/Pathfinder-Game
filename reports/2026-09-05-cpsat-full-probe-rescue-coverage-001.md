@@ -1,6 +1,6 @@
 # The exact CP-SAT reference solver rescues a small, concrete set of native-residual levels
 
-> **Status:** concluded-positive observation / **isolated-no-winner cohort quarantined for integrity repair**
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-06 — audit found the reported isolated-no-winner count and printed ID list are internally inconsistent; see `2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md`.
 > **Decision:** retain the descriptive conclusion that stored `cpsat-full-probe` provenance contains useful native-residual rescues, but do not use the reported 13-level isolated-no-winner cohort for selector/modeling work until it is deterministically regenerated. The separately reported production-unsolved cohort must also be count/list verified before modeling.
 > **Remaining gate:** regenerate the rescue cohorts from current capability data plus referee-valid hint provenance with explicit uniqueness/count/predicate assertions; then resume any structural characterization.

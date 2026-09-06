@@ -1,9 +1,10 @@
 # CP-SAT rescue cohort integrity audit 001
 
-> **Status:** concluded-integrity-failure
-> **Date:** 2026-09-06
-> **Scope:** the isolated-no-winner cohort reported by `2026-09-05-cpsat-full-probe-rescue-coverage-001.md`
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-06 — the source report's claimed 13 distinct IDs conflicts with its 15 printed entries / 14 unique IDs; `R00720` independently satisfies the intended rescue predicate, so casual tail deletion is not a valid repair.
 > **Decision:** quarantine the reported 13-level isolated-no-winner cohort until it is deterministically regenerated from authoritative inputs. Do not run selector/holdout analysis on the printed list.
+> **Remaining gate:** deterministically regenerate both rescue cohorts from current capability data plus referee-valid hint provenance, with explicit uniqueness/count/predicate assertions, before any characterization or holdout work.
+> **Scope:** the isolated-no-winner cohort reported by `2026-09-05-cpsat-full-probe-rescue-coverage-001.md`
 > **Production impact:** none. This audit does not authorize production CP-SAT or new exact-search compute.
 
 ## Finding

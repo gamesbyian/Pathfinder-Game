@@ -1,6 +1,6 @@
 # CP-SAT on-demand rescue gate: candidate design
 
-> **Status:** active, blocked on local evidence-integrity repair
+> **Status:** active
 > **Last evidence:** 2026-09-06 — the source report's isolated-no-winner rescue summary is internally inconsistent: it reports 13 distinct IDs but prints 15 entries / 14 unique IDs. `R00720`, an apparently suspicious tail entry, independently satisfies the intended current native-residual + referee-valid CP-SAT shape, so the mismatch cannot be repaired by casually dropping it.
 > **Decision:** retain the bounded local exact-reference selector question, but regenerate and assert the rescue cohorts before any characterization or holdout work. Do not treat the old 13-row set as a valid label population.
 > **Remaining gate:** deterministic no-dispatch regeneration of both rescue cohorts from authoritative current capability data plus referee-valid hint provenance, with count/uniqueness/predicate assertions; only then run the predeclared local holdout characterization.
