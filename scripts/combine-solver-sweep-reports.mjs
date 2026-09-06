@@ -32,6 +32,7 @@ const EXECUTION_CONFIG_FIELDS = [
     'levelBlind',
     'historicalInputs',
     'solverInputFields',
+    'workers',
     'enableFlags',
     'disableFlags',
     'strictTotalWorkBudget',
