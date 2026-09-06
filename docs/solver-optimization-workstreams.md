@@ -30,9 +30,9 @@ All three remain separate causal questions. Do not bundle them into one schedule
 
 After the cheap production repricing decisions above are settled, resume broader fixed-work allocation: residual/tranche pricing, simple static routing/order, protected complementary capability, and only then richer dynamic policies if simple policies leave measured held-out headroom.
 
-Standing evidence still supports this direction: isolated portfolios recover most measured capability at much lower work, production-vs-isolated cheapest-known cost has very large headroom, and production failure spends materially more attempts/work than successful levels. Use `workSpent`, not raw nodes, for cross-technique pricing.
+Standing evidence shows large allocation headroom; use `workSpent`, not raw nodes, for cross-technique pricing.
 
-**Resumability is enabling infrastructure, not a separate priority.** One `intersectionHarvest → objectiveFirst` inherited-frontier handoff produced 2/60 inherited-only solves in development, while repeated/staged switching and naive beam→DFS handoff were negative. Continue resumability only when a concrete WS2 allocation question needs a continuation primitive; do not promote the primitive itself. See [`solver-search-resumability.md`](solver-search-resumability.md).
+**WS2B candidate: resumable portfolio tranche.** The failed one-shot static scheduler stays closed, but its production postmortem found 3/4 coverage losses were already-present beams capped only ~2–12% short. Test the frozen portfolio-18 first pass plus same-policy continuation of capped beam attempts inside the same 67M envelope; first make exact continuation correct at widths 2000/5000, then run the fresh fixed-work A/B. Policy-switch resumability remains separate. See [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md) and [`solver-search-resumability.md`](solver-search-resumability.md).
 
 Primary evidence: [`../reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md`](../reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md), [`solver-scheduling-policy.md`](solver-scheduling-policy.md), current capability map `reports/stress/technique-niches/2026-09-03/level-capability.json`.
 
