@@ -1,9 +1,10 @@
 # Solver open-question → existing-evidence reconciliation
 
 > **Status:** concluded-positive
-> **Date:** 2026-09-05
+> **Last evidence:** 2026-09-05 — Current queue, deferred/future work, scheduling/resumability policy, census cross-evidence plan, opt-in dispositions, and recent reports were reconciled against later evidence.
+> **Decision:** the apparent research frontier is materially larger than the real frontier because several older plans still phrase already-answered questions prospectively; carry forward only the compact residual set below.
+> **Remaining gate:** none for this audit; rerun reconciliation when enough new evidence accumulates to make current question-owning docs drift again.
 > **Scope:** solver queue, deferred/future work, scheduling/resumability policy, census cross-evidence plan, opt-in dispositions, and recent dated research reports.
-> **Decision:** the apparent research frontier is materially larger than the real frontier because several older plans still phrase already-answered questions prospectively. Treat the compact residual list below as the unresolved set; do not re-run answered joins merely because an older plan still asks them.
 > **Priority authority:** `docs/solver-optimization-workstreams.md` remains canonical for execution order and live gates.
 
 ## Why this reconciliation exists
