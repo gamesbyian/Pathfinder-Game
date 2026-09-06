@@ -114,11 +114,19 @@ async function main() {
         const plannerIds = corpus2.levels.slice(0, 2).map(level => level.id);
         assert.equal(plannerIds.length, 2, 'planner fixture needs two corpus2 ids');
         const plannerIdsFile = path.join(tempDir, 'planner-ids.txt');
+        const plannerTelemetry = path.join(tempDir, 'runtime-telemetry.json');
         const plannerOut = path.join(tempDir, 'planner.json');
         await writeFile(plannerIdsFile, plannerIds.join('\n') + '\n');
+        await writeFile(plannerTelemetry, JSON.stringify({
+            levels: {
+                [plannerIds[0]]: { emaMsPerGiganode: 100000, samples: 2 },
+                [plannerIds[1]]: { emaMsPerGiganode: 300000, samples: 2 },
+            },
+        }));
         await runPlanner([
             `--ids-file=${plannerIdsFile}`,
             '--corpus2=data/stress/stress-levels-random.json',
+            `--telemetry=${plannerTelemetry}`,
             '--node-budget=50000000',
             '--workers=4',
             '--target-wall-minutes=20',
@@ -126,10 +134,14 @@ async function main() {
             `--out=${plannerOut}`,
         ]);
         const planned = JSON.parse(await readFile(plannerOut, 'utf8'));
-        assert.equal(planned.planning.telemetryPath, 'logs/solver-stress-refresh/corpus2-runtime-telemetry.json');
+        assert.equal(planned.planning.telemetryPath, plannerTelemetry);
+        assert.equal(planned.planning.telemetryKnownIds, 2);
         assert.equal(planned.planning.telemetryRequestedIds, 2);
         assert.equal(planned.shard.flatMap(shard => shard.ids).length, 2);
-        console.log('  ✓ shard planner automatically consumes standing runtime telemetry when callers omit --telemetry');
+        const plannerSource = await readFile(path.join(ROOT, 'scripts/plan-highbudget-shards.mjs'), 'utf8');
+        assert.match(plannerSource, /DEFAULT_TELEMETRY_PATH = 'logs\/solver-stress-refresh\/corpus2-runtime-telemetry\.json'/u);
+        assert.match(plannerSource, /existsSync\(path\.resolve\(root, DEFAULT_TELEMETRY_PATH\)\)/u);
+        console.log('  ✓ shard planner uses supplied runtime telemetry and retains standing-telemetry autodiscovery');
 
         const sweepSource = await readFile(path.join(ROOT, 'scripts/level-blind-capability-sweep.mjs'), 'utf8');
         assert.match(sweepSource, /solveOpts\.admissibleOrderNonDefaultRetryBudgetFractionOverride = admissibleOrderNonDefaultRetryBudgetFraction/u);
