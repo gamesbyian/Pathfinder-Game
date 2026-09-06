@@ -59,19 +59,60 @@ function collectJsonFiles(root, limit = 24) {
   return found;
 }
 
+function buildStageStats(levels) {
+  const byStage = new Map();
+  for (const level of levels) {
+    const seen = new Set();
+    for (const attempt of level?.attempts || []) {
+      const stageId = attempt?.stageId;
+      if (!stageId) continue;
+      if (!byStage.has(stageId)) {
+        byStage.set(stageId, {
+          stageId,
+          reach: 0,
+          attempts: 0,
+          solves: 0,
+          nodes: 0,
+          work: 0,
+          workReported: 0,
+        });
+      }
+      const stage = byStage.get(stageId);
+      if (!seen.has(stageId)) {
+        stage.reach += 1;
+        seen.add(stageId);
+      }
+      stage.attempts += 1;
+      stage.solves += attempt?.ok ? 1 : 0;
+      stage.nodes += Number(attempt?.nodesExpanded) || 0;
+      if (Number.isFinite(attempt?.workSpent)) {
+        stage.work += attempt.workSpent;
+        stage.workReported += 1;
+      }
+    }
+  }
+  return [...byStage.values()].sort((a, b) => b.attempts - a.attempts || a.stageId.localeCompare(b.stageId));
+}
+
 function levelStats(file) {
   try {
-    if (fs.statSync(file).size > 25 * 1024 * 1024) return null;
+    // Full production reports can exceed the old 25 MiB guard once attempt/stage telemetry is
+    // included. Parsing one bounded result in the final GHA job is cheap and is exactly where the
+    // work/stage observability is needed when artifact downloads are unavailable to an agent.
+    if (fs.statSync(file).size > 128 * 1024 * 1024) return null;
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     const levels = Array.isArray(parsed?.levels) ? parsed.levels : null;
     if (!levels) return null;
+    const workRows = levels.filter(row => Number.isFinite(row?.workSpent));
     return {
       file,
       levels,
       solved: levels.filter(row => row?.ok).length,
       total: levels.length,
-      work: levels.reduce((n, row) => n + (Number(row?.workSpent) || 0), 0),
+      work: workRows.reduce((n, row) => n + row.workSpent, 0),
+      workReported: workRows.length,
       nodes: levels.reduce((n, row) => n + (Number(row?.nodesExpanded) || 0), 0),
+      stages: buildStageStats(levels),
     };
   } catch {
     return null;
@@ -164,7 +205,7 @@ if (manifest.runId) lines.push(`- Run: ${runUrl ? `[${manifest.runId}](${runUrl}
 if (manifest.sha) lines.push(`- Commit: \`${manifest.sha}\``);
 if (manifest.refName) lines.push(`- Ref: \`${manifest.refName}\``);
 if (sourceArtifact) lines.push(`- Legacy/specialized artifact: \`${sourceArtifact}\``);
-if (Object.keys(dispatchInputs).length) lines.push(`- Dispatch inputs: recorded in \`manifest.json\``);
+if (Object.keys(dispatchInputs).length) lines.push('- Dispatch inputs: recorded in `manifest.json`');
 if (shardCompleteness) lines.push(`- Shards: ${shardCompleteness.observed}/${shardCompleteness.expected} ${shardCompleteness.complete ? 'complete' : '**INCOMPLETE**'}${shardCompleteness.basis ? ` (${shardCompleteness.basis})` : ''}`);
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
@@ -178,7 +219,23 @@ if (stats.length) {
   lines.push('', '## Result summary', '');
   for (const s of stats.slice(0, 12)) {
     const rel = path.relative(outDir, s.file).replaceAll('\\', '/');
-    lines.push(`- \`${rel}\`: ${s.solved}/${s.total} solved, work=${s.work}, nodes=${s.nodes}`);
+    lines.push(`- \`${rel}\`: ${s.solved}/${s.total} solved, work=${s.work} (${s.workReported}/${s.total} levels reported), nodes=${s.nodes}`);
+  }
+}
+
+const stagedStats = stats.filter(s => s.stages.length).slice(0, 12);
+if (stagedStats.length) {
+  lines.push('', '## Stage participation', '');
+  lines.push('Production-style results expose `attempts[].stageId`; isolated/reference-model outputs without stage IDs are omitted here.');
+  for (const s of stagedStats) {
+    const rel = path.relative(outDir, s.file).replaceAll('\\', '/');
+    lines.push('', `### \`${rel}\``, '');
+    lines.push('| stage | reach | attempts | solves | nodesExpanded | attempt workSpent |');
+    lines.push('|---|---:|---:|---:|---:|---:|');
+    for (const stage of s.stages) {
+      const work = stage.workReported ? `${stage.work} (${stage.workReported}/${stage.attempts})` : 'n/a';
+      lines.push(`| \`${stage.stageId}\` | ${stage.reach}/${s.total} | ${stage.attempts} | ${stage.solves} | ${stage.nodes} | ${work} |`);
+    }
   }
 }
 if (comparison) {
