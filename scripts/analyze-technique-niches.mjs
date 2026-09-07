@@ -16,10 +16,10 @@ const quantile = (xs, q) => {
     const s = [...xs].sort((a, b) => a - b);
     return s[Math.floor((s.length - 1) * q)];
 };
-const familyOf = (key) => key.startsWith('beam:') ? 'beam'
-    : key.startsWith('ida:') ? 'ida'
-        : key.startsWith('dfs:repair:') ? 'repair'
-            : key.startsWith('dfs:') ? 'dfs' : 'other';
+export const familyOf = (key) => key.startsWith('beam|') || key.startsWith('beam:') ? 'beam'
+    : key.startsWith('repair|') || key.startsWith('dfs:repair:') ? 'repair'
+        : key.startsWith('admissible-order|') || key.startsWith('admissible-order-fallback|') || key.startsWith('ida:') ? 'admissible-order'
+            : key.startsWith('dfs|') || key.startsWith('dfs:') ? 'dfs' : 'other';
 
 function serializableFeatures(raw) {
     const f = levelFeatures(raw);
