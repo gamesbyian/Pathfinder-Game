@@ -1,5 +1,12 @@
 import assert from 'node:assert/strict';
-import { analyze } from './analyze-technique-niches.mjs';
+import { analyze, familyOf } from './analyze-technique-niches.mjs';
+
+assert.equal(familyOf('beam|score=objectiveFirst|width=5000'), 'beam');
+assert.equal(familyOf('repair|score=repair|guidance=standard'), 'repair');
+assert.equal(familyOf('admissible-order|tieBreak=default|lds=off'), 'admissible-order');
+assert.equal(familyOf('dfs|score=objectiveFirst|bias=none'), 'dfs');
+assert.equal(familyOf('dfs:repair:repair'), 'repair');
+assert.equal(familyOf('ida:default'), 'admissible-order');
 
 const level = (id, reqLen) => ({ id, grid: { w: 3, h: 3 }, gates: [{ x: 1, y: 1 }], goal: { x: 3, y: 3 },
     falseGoals: [], reqLen, reqInt: 1, blocks: [], mustPass: [], mustCross: [], filters: [], flippingFilters: [], portals: [], geese: [], landmarks: [] });
@@ -15,6 +22,7 @@ assert.equal(result.summary.productionMissNoFrozenT1Winner, 1);
 assert.equal(result.levels[0].singleton, true);
 assert.equal(result.levels[1].failureCensoring.budgetOrOtherCensored, 1);
 assert.equal(result.actions.find((a) => a.action === 'dfs:default').exclusiveLevels, 1);
+assert.deepEqual(result.levels[0].solvingFamilies, ['dfs']);
 assert.equal(result.levels[1].frozenT1SupportClass, 'production-miss-without-frozen-t1-winner');
 assert.ok(result.frozenT1SupportedVsNoWinnerEffects.some((e) => e.feature === 'requiredPathCoverageRatio' && e.unsupportedMean > e.supportedMean));
 assert.ok(result.frozenT1SupportedVsNoWinnerEffects.some((e) => e.feature === 'nonNavigableDensity'));
