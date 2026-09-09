@@ -453,15 +453,17 @@ test('mustCrossForcedNeighborDeadlocked: false once mustCrossMask is fully clear
 });
 
 // Regression for reports/2026-09-09-portal-restoration-evidence-hardening-001.md: the blanket
-// `level.portalMap.size > 0` early return was removed from mustCrossNeighborBudgetDeadlocked, but
-// portal-level EVALUATION stays gated behind the opt-in PRUNE_MC_NEIGHBOR_BUDGET_PORTAL flag
-// (default OFF) until the population-scale A/B lands. Same geometry as
-// repair-search.test.ts's "stochastic takePly retains a candidate that deterministic
-// neighbor-budget rejects" (5x5, mustCross at (3,3), reqInt=0): the prefix visits N-neighbor
-// (3,2), so moving to (2,2) leaves (3,2) visited-but-not-current, and MC's N-axis is still
-// unused — a real reject on a portal-free level. Add an unrelated portal pair (well away from
-// every cell this path touches) purely to make `level.portalMap.size > 0` true.
-test('mustCrossNeighborBudgetDeadlocked: portal levels stay gated behind the opt-in PRUNE_MC_NEIGHBOR_BUDGET_PORTAL flag', () => {
+// `level.portalMap.size > 0` early return was removed from mustCrossNeighborBudgetDeadlocked.
+// Portal-level EVALUATION was gated behind the opt-in PRUNE_MC_NEIGHBOR_BUDGET_PORTAL flag
+// (default OFF) until reports/2026-09-09-mc-neighbor-budget-portal-ab-001-preflight.md's
+// frozen matched-work A/B landed (52 gains / 0 losses, all referee-valid); promoted to
+// production default-on 2026-09-09. Same geometry as repair-search.test.ts's "stochastic
+// takePly retains a candidate that deterministic neighbor-budget rejects" (5x5, mustCross at
+// (3,3), reqInt=0): the prefix visits N-neighbor (3,2), so moving to (2,2) leaves (3,2)
+// visited-but-not-current, and MC's N-axis is still unused — a real reject on a portal-free
+// level. Add an unrelated portal pair (well away from every cell this path touches) purely to
+// make `level.portalMap.size > 0` true.
+test('mustCrossNeighborBudgetDeadlocked: portal levels evaluate by default, with an explicit-false escape hatch', () => {
   const portalLevel = wireLevel({
     grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },
     mustCross: [{ x: 3, y: 3 }], reqLen: 20, reqInt: 0,
@@ -480,22 +482,22 @@ test('mustCrossNeighborBudgetDeadlocked: portal levels stay gated behind the opt
 
   const defaultPrep = prepLevel(portalLevel);
   const defaultState = walkToCandidate(defaultPrep);
-  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, defaultState, portalLevel, defaultPrep), false,
-    'with no ablation config, portal levels must stay unevaluated (production default-OFF)');
+  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, defaultState, portalLevel, defaultPrep), true,
+    'with no ablation config, portal levels evaluate by default (production default-ON)');
+
+  const explicitOnPrep = prepLevel(portalLevel);
+  explicitOnPrep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: true };
+  const explicitOnState = walkToCandidate(explicitOnPrep);
+  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, explicitOnState, portalLevel, explicitOnPrep), true,
+    'an explicit true must be equivalent to the default');
 
   const explicitOffPrep = prepLevel(portalLevel);
   explicitOffPrep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: false };
   const explicitOffState = walkToCandidate(explicitOffPrep);
   assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, explicitOffState, portalLevel, explicitOffPrep), false,
-    'an explicit false must also suppress evaluation on a portal level');
+    'an explicit false must still suppress evaluation on a portal level (research escape hatch)');
 
-  const optInPrep = prepLevel(portalLevel);
-  optInPrep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: true };
-  const optInState = walkToCandidate(optInPrep);
-  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, optInState, portalLevel, optInPrep), true,
-    'the opt-in flag must let the SAME reject-worthy state be evaluated on a portal level');
-
-  // Same geometry, no portals: the opt-in flag must be irrelevant off portal levels (the early
+  // Same geometry, no portals: the flag must be irrelevant off portal levels (the early
   // return only ever triggers when portalMap.size > 0).
   const portalFreeLevel = wireLevel({
     grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },

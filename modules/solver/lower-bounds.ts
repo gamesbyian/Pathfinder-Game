@@ -132,22 +132,23 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
 // full-population A/B on corpus-2 (611→665, +54 net, 59 gained / 5 lost) plus zero regressions on
 // the published corpus and corpus-1 — see docs/solver-opt-in-experiment-ledger.md.
 //
-// Portal gating: the derivation above is now unconditional, but portal-level EVALUATION stays
-// behind the opt-in `PRUNE_MC_NEIGHBOR_BUDGET_PORTAL` flag (default OFF; see ablation-config.ts,
-// docs/solver-opt-in-experiment-ledger.md) until the frozen matched-work A/B on the 530-level
-// portal+must-cross Corpus-2 population lands — a sound prune can still perturb a budget-limited
-// search and lose solves through survivor/order effects, so production stays unchanged until that
-// population-scale evidence is in. Correctness gates are clean with the flag forced on: 0 false
-// rejects on the full 5,518-branch atlas (now including 922 portal+must-cross branches across 97
-// levels, 235/235 alive-labelled correctly passed when isolated to that subset) and 0 violations
-// on every known stored solution across all 3 corpora (scripts/stress/mc-neighbor-budget-soundness-check.mjs)
-// — see reports/2026-09-09-portal-restoration-evidence-hardening-001.md.
+// Portal gating: promoted to production default-on 2026-09-09 (PRUNE_MC_NEIGHBOR_BUDGET_PORTAL)
+// after the frozen matched-work A/B on the 530-level portal+must-cross Corpus-2 population found
+// 52 gains / 0 losses (net +52), all 52 referee-valid, and zero regressions on the published
+// corpus — see reports/2026-09-09-mc-neighbor-budget-portal-ab-001-preflight.md. Correctness
+// gates were clean going in: 0 false rejects on the full 5,518-branch atlas (including 922
+// portal+must-cross branches across 97 levels, 235/235 alive-labelled correctly passed when
+// isolated to that subset) and 0 violations on every known stored solution across all 3 corpora
+// (scripts/stress/mc-neighbor-budget-soundness-check.mjs) — see
+// reports/2026-09-09-portal-restoration-evidence-hardening-001.md. `PRUNE_MC_NEIGHBOR_BUDGET_PORTAL`
+// stays a named flag (now default-on) rather than being deleted, so a future regression can still
+// disable just the portal-level evaluation without touching the portal-free derivation.
 // Permitted error: false negatives only; see property: deadlock helpers only report independently unsatisfiable reachable states.
 export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
     if (state.mustCrossMask === 0) return false;
     if (level.portalMap.size > 0) {
         const _cfg = prep._cfg;
-        if (!_cfg || _cfg.PRUNE_MC_NEIGHBOR_BUDGET_PORTAL !== true) return false;
+        if (_cfg && _cfg.PRUNE_MC_NEIGHBOR_BUDGET_PORTAL === false) return false;
     }
     const mcKeys = level.mustCrossKeys;
     const eu = state.edgeUsage;
