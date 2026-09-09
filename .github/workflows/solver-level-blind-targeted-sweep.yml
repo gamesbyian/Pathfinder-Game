@@ -47,11 +47,11 @@ on:
         required: false
         default: '50000000'
       node_budget_advisory_only:
-        description: 'If true, node_budget still sizes the derived work_budget, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). The shard-planner''s wall-time/timeout estimate is sized off the larger derived work_budget in this mode instead of the raw node_budget, since node_budget no longer bounds a level''s real worst-case wall time here. Use this whenever the comparison under test is itself a work-budget-share change.'
+        description: 'If true, node_budget still sizes the derived work_budget, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). The shard-planner''s wall-time/timeout estimate is sized off the larger derived work_budget in this mode instead of the raw node_budget, since node_budget no longer bounds a level''s real worst-case wall time here. Use this whenever the comparison under test is itself a work-budget-share change. REQUIRES strict_total_work_budget=true (enforced by an early workflow step) -- without a node-budget ceiling AND without a strict work-budget ceiling, a level''s real cost is unbounded (additive tiers measured 1.5x-467x beyond the nominal work_budget), and the planner''s timeout estimate cannot safely bound it either.'
         required: false
         default: 'false'
       strict_total_work_budget:
-        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
+        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics. Mandatory (and enforced) when node_budget_advisory_only=true -- see that input''s own description.'
         required: false
         default: 'false'
       budget_ms:
@@ -127,6 +127,37 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Reject the advisory-node-budget / non-strict-work-budget combination
+        shell: bash
+        run: |
+          set -euo pipefail
+          # 2026-09-09 historical regression-risk audit item #3: with node_budget_advisory_only=true,
+          # --node-budget is never passed to the solve at all (nodeBudgetReached can't bind), so the
+          # ONLY thing bounding a level's real worst-case cost is work_budget -- but strict_total_work_
+          # budget defaults false, and work_budget is then only a STARTING allocation additive fallback/
+          # retry tiers can spend 1.5x-467x beyond (measured, see reports/2026-08-28-additive-tier-
+          # participation-audit.md). plan-highbudget-shards.mjs sizes each shard's job timeout from the
+          # SAME nominal work_budget-derived estimate with only a flat 1.5x safety margin -- nowhere
+          # near enough headroom for that measured multiplier -- so this combination recreates exactly
+          # the timeout/selective-censoring mechanism found during the admissible-order confirmation
+          # work: some levels get killed by the job timeout well before they would have finished or
+          # genuinely exhausted, non-uniformly biasing which levels count as "unsolved" in a way that
+          # looks like real solver evidence. Reject it outright rather than let it plan and run: a
+          # caller needing node_budget_advisory_only for a work-budget-share comparison (its own
+          # documented purpose) must also pass strict_total_work_budget=true, which makes work_budget
+          # an actual whole-solve ceiling and makes the planner's timeout estimate bounding again.
+          if [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && [ "${{ inputs.strict_total_work_budget }}" != "true" ]; then
+            echo "node_budget_advisory_only=true requires strict_total_work_budget=true." >&2
+            echo "Without a node-budget ceiling AND without a strict work-budget ceiling, a level's real" >&2
+            echo "worst-case cost is unbounded (additive fallback/retry tiers measured 1.5x-467x beyond" >&2
+            echo "the nominal work_budget -- see reports/2026-08-28-additive-tier-participation-audit.md)," >&2
+            echo "so the shard planner's timeout estimate cannot safely bound it either. This recreates" >&2
+            echo "the timeout/selective-censoring issue found during the admissible-order confirmation" >&2
+            echo "work: some levels get killed by the job timeout non-uniformly, biasing the result set." >&2
+            echo "Pass strict_total_work_budget=true alongside node_budget_advisory_only=true." >&2
+            exit 2
+          fi
 
       - name: Resolve and validate the exact id population
         id: ids
