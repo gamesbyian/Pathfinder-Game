@@ -2,8 +2,8 @@
 
 > **Status:** active
 > **Last evidence:** 2026-09-09 — current solver semantics at `08bb5c6c` plus the committed 975/1,700 Corpus-2 production boundary and portal-carveout census
-> **Decision:** the blanket portal exclusions on must-cross neighbour-budget propagation and the ordinary connectivity volume check are not required by their current soundness arguments. Keep production behaviour unchanged until the remaining differential/atlas and matched-work gates run. Same-parity-only portal levels also preserve the ordinary parity invariant and are a bounded cleanup candidate.
-> **Remaining gate:** refresh the corrected portal branch atlas, run the frozen matched-work MC and connectivity treatments, complete the false-goal triggerability differential, and perform the bounded same-parity implementation/regression cleanup.
+> **Decision:** the blanket portal exclusions on must-cross neighbour-budget propagation and the ordinary connectivity volume check are not required by their current soundness arguments. Keep production behaviour unchanged until the remaining differential/reference-set and matched-work gates run. Same-parity-only portal levels also preserve the ordinary parity invariant and are a bounded cleanup candidate.
+> **Remaining gate:** refresh the corrected reference-labelled portal branch set, run the frozen matched-work MC and connectivity treatments, complete the false-goal triggerability differential, and perform the bounded same-parity implementation/regression cleanup.
 > **Evidence role:** derivation / experiment preflight
 > **Selection:** no outcome-selected sample; proposed populations are deterministic structural predicates over the frozen Corpus-2 source identified below
 
@@ -13,7 +13,7 @@ This report closes the analysis work that can be completed without changing prod
 
 No production prune, beam, gate-selection, or scheduler behaviour is changed here.
 
-Primary population evidence remains [`2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md`](2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md). The frozen production/capability artifact is [`stress/portal-carveout-exposure-2026-09-09.json`](stress/portal-carveout-exposure-2026-09-09.json).
+Primary population evidence remains [`2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md`](2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md). That catalog is the discovery snapshot: its A3 “still to validate” list and A1 two-field coarse-key proposal record the state before the source-level derivations below and the separate [`portal beam state-identity preflight`](2026-09-09-portal-beam-state-identity-preflight-001.md). For current gates, this report and the beam preflight supersede those earlier provisional assumptions without rewriting the discovery evidence. The frozen production/capability artifact is [`stress/portal-carveout-exposure-2026-09-09.json`](stress/portal-carveout-exposure-2026-09-09.json).
 
 ## 1. Must-cross neighbour-budget propagation: portal derivation closes
 
@@ -63,11 +63,11 @@ None of those exclusions becomes less safe on portal levels.
 
 The blanket `level.portalMap.size > 0` escape hatch is not required by the current lower-bound proof. The remaining promotion work is empirical/correctness-hardening, not an unresolved mathematical portal exception.
 
-Production should nevertheless remain unchanged until the branch-atlas refresh and matched-work A/B below complete because a sound prune can still perturb a budget-limited search and lose solves through survivor/order effects.
+Production should nevertheless remain unchanged until the reference-labelled branch-set refresh and matched-work A/B below complete because a sound prune can still perturb a budget-limited search and lose solves through survivor/order effects.
 
 ## 2. Shadow helper representation drift found and repaired
 
-The shadow/oracle helper in `scripts/stress/lib/mc-neighbor-budget.mjs` still addressed `prep.staticNeighborKeys` as `mcKey * 4`. Production migrated that table away from packed-key indexing on 2026-08-23 and then to direct row-major dense indexing on 2026-08-25. Current production correctly uses:
+The shadow/reference helper in `scripts/stress/lib/mc-neighbor-budget.mjs` still addressed `prep.staticNeighborKeys` as `mcKey * 4`. Production migrated that table away from packed-key indexing on 2026-08-23 and then to direct row-major dense indexing on 2026-08-25. Current production correctly uses:
 
 ```text
 denseIndex(mcKey, prep.gridW) * 4
@@ -81,7 +81,7 @@ The helper is repaired in this branch and receives targeted tests covering:
 - portal-bearing evaluation, removing the old blanket abstention;
 - the current-position exemption on a portal-terminal neighbour.
 
-The historical 5,518-branch atlas result in [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md) predates the dense migration and is therefore not invalidated. The defect matters for **new reruns after the representation change**, exactly the refresh now required by the portal gate.
+The historical 5,518-branch labelled-set result in [`2026-08-08-mc-neighbor-budget-propagation.md`](2026-08-08-mc-neighbor-budget-propagation.md) predates the dense migration and is therefore not invalidated. The defect matters for **new reruns after the representation change**, exactly the refresh now required by the portal gate.
 
 ## 3. Ordinary connectivity volume: portal derivation closes
 
@@ -154,7 +154,7 @@ Treatment: identical solver except `PRUNE_MC_NEIGHBOR_BUDGET` may evaluate on po
 
 Before the population run:
 
-1. rerun the corrected shadow/oracle branch atlas with portal cases included;
+1. rerun the corrected shadow/reference branch set with portal cases included;
 2. require zero alive-labelled false rejections;
 3. run the stored-solution/differential suite with the portal treatment.
 
@@ -205,13 +205,14 @@ Use this population for differential/regression checking, not for a stand-alone 
 
 If either must-cross portal propagation or portal-aware coarse-state merge lands, the current ladder attribution becomes stale because two named retry tiers cease to be flag-inert on portal levels. Before WS2B repricing or interpreting the triple-overlap residue:
 
-1. rerun the production Corpus-2 boundary with lifecycle telemetry;
-2. rebuild the portal-carveout exposure artifact;
-3. regenerate the level-capability/isolated-technique map if search-policy changes alter the relevant technique configurations;
-4. recompute portal vs portal-free solve/miss counts and isolated multiplicity;
-5. recompute the intersection + must-cross + multi-portal cohort and classify its remaining misses;
-6. recompute stage `workSpent`, stage participation, and winning-action attribution before pricing any additive tier;
-7. recompute the 122-miss isolated-winner residue rather than carrying forward its old 45/77 exposure split.
+1. repair the lifecycle instantiation projection documented in [`2026-09-09-stage-lifecycle-instantiation-projection-gap-001.md`](2026-09-09-stage-lifecycle-instantiation-projection-gap-001.md), so the refreshed boundary does not repeat the current false-ineligibility rows;
+2. rerun the production Corpus-2 boundary with lifecycle telemetry;
+3. rebuild the portal-carveout exposure artifact;
+4. regenerate the level-capability/isolated-technique map if search-policy changes alter the relevant technique configurations;
+5. recompute portal vs portal-free solve/miss counts and isolated multiplicity;
+6. recompute the intersection + must-cross + multi-portal cohort and classify its remaining misses;
+7. recompute stage `workSpent`, stage participation, and winning-action attribution before pricing any additive tier;
+8. recompute the 122-miss isolated-winner residue rather than carrying forward its old 45/77 exposure split.
 
 Only after that refresh should new joint-obligation propagation or broad scheduler repricing be interpreted against the new production boundary.
 
@@ -219,7 +220,7 @@ Only after that refresh should new joint-obligation propagation or broad schedul
 
 Direct analysis has reduced the first restoration tranche to narrower implementation/measurement jobs:
 
-- **MC neighbour budget:** derivation closed; shadow helper repaired; corrected portal atlas + differential + matched-work A/B remain.
+- **MC neighbour budget:** derivation closed; shadow helper repaired; corrected portal reference-labelled branch set + differential + matched-work A/B remain.
 - **Ordinary connectivity volume:** derivation and large stored-path first screen closed; matched-work portal A/B remains.
 - **False-goal connectivity mirror:** derivation supports restoration, but a separate triggerability differential remains because completed enumeration certifies absence.
 - **Same-parity parity:** derivation closed and independently mirrored by shipped false-goal parity logic; small implementation/regression task remains.
