@@ -190,6 +190,27 @@ const hintLevels = saveHints ? readLevelsWithHints(corpusPath) : null;
 const hintCapture = await createHintCapture({ solverVersion: commit, budgetMs, enabled: saveHints });
 if (saveHints) await hintCapture.prepare(targets.map(n => hintLevels[n - 1]));
 
+// Effective-configuration contract (2026-09-09 historical regression-risk audit item #2): a
+// workflow-dispatch input or CLI flag represents INTENT, not proof of what reached the solver.
+// effectiveConfig/effectiveConfigDigest are computed from `solveOpts` itself -- the literal object
+// this run hands to the solver, at the actual execution boundary -- not re-derived from argv, so a
+// bug that causes solveOpts to diverge from the CLI's apparent intent (a dropped override, a
+// resolved default that silently changed) still shows up here. `corpusSha256` is folded in because
+// the puzzle population is as much a part of "what ran" as the solver flags. Deliberately excludes
+// `workers` (parallelism only, not solve semantics) and `attemptBudgetTelemetry`/`lifecycleTelemetry`
+// (diagnostic-only, add fields to results without changing the solve). scripts/check-effective-
+// config-agreement.mjs consumes this to verify shard agreement within one arm and prespecified-
+// dimension-only differences between a control/treatment pair.
+function stableStringify(value) {
+    if (value === undefined) return undefined;
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
+    const keys = Object.keys(value).filter(k => value[k] !== undefined).sort();
+    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
+}
+const effectiveConfig = { corpusSha256, levelBlind: true, ...solveOpts };
+const effectiveConfigDigest = createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
+
 const rows = new Map();
 let hintChanges = 0;
 function writeReport() {
@@ -214,6 +235,7 @@ function writeReport() {
         levelsRequested: targets.length, levelsRun: levels.length, solvedCount: solved,
         unsolvedCount: levels.length - solved, saveHints, hintChanges,
         artifactCompletedAt: new Date().toISOString(),
+        effectiveConfig, effectiveConfigDigest,
     };
     mkdirSync(path.dirname(outFile), { recursive: true });
     const artifact = JSON.stringify({ summary, levels }, null, 2) + '\n';
