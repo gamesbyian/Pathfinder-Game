@@ -17,9 +17,25 @@
       "lifecycle": "specialist-forensic",
       "note": "Diagnoses ambiguous or unmatched family-result identity before migration or namespacing."
     },
+    "scripts/analyze-zero-t1-production-calibration.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Cross-revision calibration over a frozen zero-T1 population; retained to reproduce the dated observational analysis, not as a current-head capability oracle."
+    },
+    "scripts/analyze-repair-reconstruction-static-features.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Offline analysis over hardcoded classifications from the closed repair-reconstruction recurrence population; Workstream 6 reopens only on materially new evidence."
+    },
     "scripts/stress/axis-reach-probe.mjs": {
       "lifecycle": "cold-research",
       "note": "Axis-aware connectivity candidate was implemented and reverted twice after matched-budget regressions; retain as reproducible negative evidence/template, not a live optimization direction."
+    },
+    "scripts/stress/elite-prefix-dfs-ab.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Scratch A/B retained for the dated elite-prefix investigation; default constants were net-negative and the later uncontested retry follow-up produced zero recoveries."
+    },
+    "scripts/stress/elite-prefix-dfs-retry-validate.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Reproduces the answered 20-level elite-prefix retry validation; both tested retry budgets produced zero recoveries and the one-off GHA wrapper has been retired."
     },
     "scripts/stress/main-loop-starvation-census.mjs": {
       "lifecycle": "cold-research",
