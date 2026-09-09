@@ -16,6 +16,10 @@ function fileBytes(relativePath) {
     return { path: relativePath, exists: true, bytes: fs.statSync(absolute).size };
 }
 
+function headroom(bytes, threshold) {
+    return threshold - bytes;
+}
+
 function summarizeRoute(route) {
     const required = route.required.map(fileBytes);
     const optional = (route.optional ?? []).map(fileBytes);
@@ -32,6 +36,8 @@ function summarizeRoute(route) {
         optionalBytes,
         warnBytes: route.warnBytes,
         maxBytes: route.maxBytes,
+        warningHeadroomBytes: headroom(requiredBytes, route.warnBytes),
+        maxHeadroomBytes: headroom(requiredBytes, route.maxBytes),
         missingRequired,
         missingOptional,
         required,
@@ -49,6 +55,8 @@ function summarizeAuthority(budget) {
         bytes: file.bytes,
         warnBytes: budget.warnBytes,
         maxBytes: budget.maxBytes,
+        warningHeadroomBytes: headroom(file.bytes, budget.warnBytes),
+        maxHeadroomBytes: headroom(file.bytes, budget.maxBytes),
     };
 }
 
