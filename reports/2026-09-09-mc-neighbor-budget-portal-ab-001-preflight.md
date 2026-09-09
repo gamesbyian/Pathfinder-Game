@@ -54,9 +54,25 @@ Per the evidence-hardening report's own section 5.1 gate:
 
 ## Reproduction
 
-Workflow: `solver-level-blind-targeted-sweep.yml`, `ids_file=data/stress/mc-neighbor-budget-portal-ab-001-ids.txt`, `corpus=data/stress/stress-levels-random.json`, `node_budget=50000000`, `strict_total_work_budget=false`, `target_wall_minutes=5` (reduced from the workflow's default 20 after an initial dispatch's shards hit their 40-minute job-timeout ceiling — the shard planner's per-id runtime fallback, used for the 158/530 ids without historical telemetry, undercounted actual solve time for this population by roughly 2x).
+Workflow: `solver-level-blind-targeted-sweep.yml`, `ids_file=data/stress/mc-neighbor-budget-portal-ab-001-ids.txt`, `corpus=data/stress/stress-levels-random.json`, `node_budget=50000000`, `strict_total_work_budget=false`, `target_wall_minutes=5` (reduced from the workflow's default 20; see the dispatch-mechanics note below).
 
-- Control dispatch: no `enable_flags`/`disable_flags`. Run [`34320087947`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320087947), concurrency group `mcneighbor2`.
-- Treatment dispatch: `enable_flags=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL`. Run [`34320103478`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320103478), same group (queues behind control).
+### Dispatch mechanics note (read before reproducing)
 
-**Status as of 2026-09-09 ~06:50 UTC:** both dispatched and queued; the control run has not yet been picked up by a runner after over an hour, and zero workflow runs are `in_progress` repository-wide over that same window — a GitHub-hosted-runner capacity/availability constraint on this account, not a workflow or solver defect (confirmed: `GET /repos/.../actions/runs?status=in_progress` returns empty repo-wide; `GET /repos/.../actions/permissions` is blocked by this session's proxy policy, so the exact cause — spending cap vs. runner outage — cannot be confirmed from here). The two connectivity-volume and coarse-state-merge A/B pairs were cancelled back to a clean, undispatched state to avoid competing for whatever capacity does exist; redispatch them (same `target_wall_minutes=5` pattern) once this pair completes and capacity is confirmed available. Do not dispatch multiple pairs concurrently again without first confirming free runner capacity — the earlier 3-pairs-in-parallel attempt appears to have contributed to exhausting it.
+Three distinct GHA issues surfaced getting this population through cleanly, in order:
+
+1. **Shard-matrix regression** (pre-existing, unrelated to this A/B): fixed separately, see the `d0d5e91` commit ("Fix shard-matrix expansion regression in two GHA sweep workflows").
+2. **Per-shard job-timeout miscalibration at the default `target_wall_minutes=20`**: shards hit their 40-minute job-timeout ceiling before finishing. Fixed by dropping to `target_wall_minutes=5`.
+3. **A small, consistent set of ids (~16-18 out of 530) are genuinely slow at `workBudget=67,000,000` under this ladder** — slow enough that even a handful of them packed into one shard together exceeds that shard's own job timeout, regardless of which wave they land in. This is NOT flakiness: two independent full-population control dispatches ([`34320087947`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320087947): 513/530; [`34328472452`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34328472452): 514/530) came back missing nearly the identical id set. Fixed by dispatching just the missing ids as their own small population at `target_wall_minutes=1`, which packs one id per shard and gives each individually slow level its own full timeout headroom — see [`data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt`](../data/stress/mc-neighbor-budget-portal-gapfill-001-ids.txt) (the union of both attempts' missing ids, 18 total).
+
+### Control arm — COMPLETE (530/530)
+
+- Main body: run [`34328472452`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34328472452) (`target_wall_minutes=5`), 514/530 levels resolved, 189 solved. Missing 16: R02565, R02656, R02794, R02802, R02858, R02884, R02899, R02902, R02915, R02927, R02932, R03032, R03128, R03303, R03304, R03334.
+- Gap-fill: run [`34337880617`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337880617) (`target_wall_minutes=1`, 18 ids including the 16 above plus R03097/R03368 which the main body already had), 4/18 solved: R02858, R02884, R02927, R03304. The other 14 (including all 16 the main body was missing minus those 4) are `node-budget-reached`.
+- **Combined control: 189 + 4 = 193/530 solved.**
+
+### Treatment arm
+
+- Gap-fill only so far: run [`34337871124`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337871124) (`target_wall_minutes=1`, same 18 ids), 5/18 solved: R02858, R02884, R02927, R02915, R03304 — **R02915 is a gain over control on this 18-id subset** (control: `node-budget-reached`; treatment: solved). All other levels match control on this subset.
+- Main body (the other ~512 ids): dispatched as run [`34341771720`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34341771720) (`enable_flags=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL`, `target_wall_minutes=5`), in progress as of this writing. Expect a small residual gap requiring the same gap-fill treatment; if the missing set differs from control's, gap-fill treatment on the union.
+
+Once the treatment main body + any needed gap-fill lands, combine per-level (not just aggregate counts) against the control's full 530-row set above to enumerate gains/losses per the frozen acceptance rule.
