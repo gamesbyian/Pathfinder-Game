@@ -8,9 +8,6 @@ on:
       - 'modules/persistence/level-submission-repository.ts'
       - 'modules/persistence/local-level-hints-repository.ts'
       - 'scripts/firestore-level-fingerprint-boundary-test.mjs'
-      - 'scripts/naming-cleanup-final-state.mjs'
-      - 'scripts/check-naming-cleanup-ledger.mjs'
-      - 'docs/naming-cleanup-ledger.json'
       - 'firestore.rules'
       - '.github/workflows/firestore-level-fingerprint-boundary.yml'
   workflow_dispatch:
@@ -41,5 +38,5 @@ jobs:
           npx --yes firebase-tools@15.28.2
           emulators:exec
           --only firestore
-          --project demo-pathfinder-phase15-boundary
+          --project demo-pathfinder-fingerprint-boundary
           "npm run test:firestore-level-fingerprint-boundary"
