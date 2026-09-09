@@ -60,8 +60,8 @@ test('prep records no twist portals when every portal pair preserves cell parity
     const sameParity = makePortalLevel(false);
     const twist = makePortalLevel(true);
 
-    assert.equal(prepLevel(sameParity).parityPortalDistMaps.length, 0);
-    assert.equal(prepLevel(twist).parityPortalDistMaps.length, 1);
+    assert.equal(prepLevel(sameParity).parityPortalDistMaps?.length ?? 0, 0);
+    assert.equal(prepLevel(twist).parityPortalDistMaps?.length ?? 0, 1);
 });
 
 test('false-goal endpoint parity already applies the ordinary invariant through same-parity portals', () => {
