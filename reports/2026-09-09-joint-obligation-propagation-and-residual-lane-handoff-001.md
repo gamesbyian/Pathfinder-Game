@@ -1,15 +1,15 @@
 # Joint-obligation propagation and residual-lane handoff 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-09 — implementation handoff written; coding and causal validation remain unstarted
-> **Decision:** use existing evidence to discriminate allocation failure from missing constraint reasoning inside the intersection + must-cross + multi-portal cohort. If trace evidence supports the latter, begin with observer-only joint-obligation propagation. Keep any residual allocation lane small, explicitly priced, and downstream of the current Workstream-2 repricing decisions.
-> **Remaining gate:** complete the required evidence join below and classify each informative miss as allocation/exposure, search-policy, or reasoning/representation.
+> **Status:** active / downstream of portal-restoration tranche
+> **Last evidence:** 2026-09-09 — portal-carveout audit supplied a cheaper mechanism-level explanation for much of the target cohort
+> **Decision:** keep using existing evidence to discriminate allocation failure from missing constraint reasoning inside the intersection + must-cross + multi-portal cohort, but do not implement new joint-obligation propagation until the portal capability restorations are tested and the production boundary is refreshed. If a recurring reasoning/representation residue survives that refresh, begin with observer-only joint-obligation propagation. Keep any residual allocation lane small, explicitly priced, and downstream of portal restoration plus the bounded Workstream-2 repricing decisions.
+> **Remaining gate:** complete cheap existing-data joins where useful; after portal restoration, refresh the target cohort and classify each remaining informative miss as allocation/exposure, search-policy, or reasoning/representation.
 
 ## Why this cohort is worth mechanism analysis
 
 The 396 levels simultaneously matching the intersection-heavy, must-cross-heavy, and multi-portal predicates contain 278/725 current production misses and 242/604 current misses without an isolated T1 winner. Their production solve rate is 29.8%, versus 73.1% for intersection + must-cross without multi-portal. The effect is stable across even/odd ID halves.
 
-That concentration establishes a high-yield investigation population. It does not identify whether the cause is missing exposure, insufficient work, beam retention, repair policy, or a missing logical bound.
+That concentration establishes a high-yield investigation population. It does not identify whether the cause is missing exposure, insufficient work, beam retention, repair policy, or a missing logical bound. The later portal-carveout audit adds a concrete prior cause: four production mechanisms are disabled on all portal-bearing levels, including coarse-state merge, connectivity volume pruning, and must-cross neighbour-budget propagation. Portal-bearing levels contain 551/725 current misses and 464/604 misses without an isolated winner. Resolve those existing capability exclusions before calling the residual cohort a new reasoning problem.
 
 ## Required evidence join before implementation
 
@@ -19,7 +19,8 @@ For the triple-overlap cohort and matched controls, join:
 2. isolated T1 capability and winning technique/configuration;
 3. retained hint paths, solver provenance, and solution fingerprints;
 4. available branch/live-prefix labels and prune traces;
-5. variant-parent relationships where they provide within-family controls.
+5. variant-parent relationships where they provide within-family controls;
+6. portal-carveout exposure/restoration status so misses attributable to disabled existing mechanisms are separated from genuinely unexplained failures.
 
 Classify each informative miss into one of three evidence roles:
 
@@ -27,7 +28,7 @@ Classify each informative miss into one of three evidence roles:
 - **search-policy:** the action ran with material work but lost a viable lineage through ordering, retention, or restart behavior;
 - **reasoning/representation:** no known native action succeeds, while valid exact/hint paths or dead-branch labels expose recurring joint constraints.
 
-Do not begin the propagation implementation merely because a level belongs to the high-risk cohort. It earns implementation when the reasoning/representation class contains a recurring, expressible failure family.
+Cheap joins may proceed in parallel with restoration experiments, but do not begin propagation implementation merely because a level belongs to the high-risk cohort. Recompute the classifications after material portal restorations land. The observer earns implementation only when the refreshed reasoning/representation class contains a recurring, expressible failure family.
 
 ## Observer-only joint-obligation candidate
 
@@ -46,9 +47,9 @@ Portals must be explicit paired transitions. Flippers, filters, surround, adjace
 
 ### Evidence population
 
-- Primary: existing labelled live/dead branches and traces from the triple-overlap cohort.
+- Primary: refreshed labelled live/dead branches and traces from the triple-overlap cohort after portal restoration.
 - Soundness adversaries: live prefixes from referee-valid production and retained hint solutions.
-- Exact counterexamples: the 12 current production-unsolved/no-isolated-T1 levels with retained CP-SAT solutions.
+- Exact counterexamples: the current production-unsolved/no-isolated-T1 levels with retained CP-SAT solutions, refreshed against the new production boundary.
 - Controls: non-triple levels matched on required path length, constrained-object count, and portal count.
 
 ### Promotion gates
@@ -59,15 +60,14 @@ The pruning pilot then requires a frozen equal-work comparison, zero referee/cor
 
 ## Residual allocation lane
 
-The current production-boundary join contains 122 misses with an isolated winner: 45 were never offered that winner and 77 were offered it but remained unresolved. Treat these as separate causal populations.
+The current pre-restoration production-boundary join contains 122 misses with an isolated winner: 45 were never offered that winner and 77 were offered it but remained unresolved. These counts are diagnostic, not a durable lane definition; recompute them after portal restoration.
 
-- **Goal-attraction-disabled retry:** ten current production wins exist, including three without another isolated T1 winner (`R02126`, `R02298`, `R02474`), while the retry is starved on 605/725 current misses showing any starvation pattern. Its predeclared fresh-pool confirmation remains the cleanest missing-participation test.
+- **Goal-attraction-disabled retry:** ten current production wins exist, including three without another isolated T1 winner (`R02126`, `R02298`, `R02474`), while the retry is starved on 605/725 current misses showing any starvation pattern. Its predeclared fresh-pool confirmation remains the highest solve-rate-oriented WS2A closeout once portal restoration is through its immediate gates.
 - **Non-default admissible ordering:** it contributes 28 current production wins, but all have T1 support and the attempted repricing A/B gave the target stage zero work. Any follow-up must guarantee real target-stage participation.
-- **Turn-biased repair:** it is the largest named never-offered isolated-winner group (13 levels), but ownership is temporally fragile and broad routing evidence has not shown production benefit. Test it only as a frozen, matched-work residual-lane candidate.
+- **Turn-biased repair:** it is the largest named never-offered isolated-winner group in the current boundary (13 levels), but ownership is temporally fragile and broad routing evidence has not shown production benefit. Re-evaluate its membership after restoration; test only as a frozen, matched-work residual-lane candidate.
 
 Any lane must have an explicit total-work price, protected specialist coverage, and production-exclusive gain accounting. Isolated winner identity alone does not justify permanent tail work.
 
 ## Production boundary
 
-No production search, routing, or pruning behavior is authorized by this report. Workstream 2 repricing remains first in execution order; this handoff defines the cheapest evidence and observer gates for the next capability-development question.
-
+No production search, routing, or pruning behavior is authorized by this report. The current execution order is: portal capability restoration first; bounded Workstream-2 repricing closeouts second; refreshed ladder/scheduler construction next; then new joint-obligation or residual capability development only from the remaining evidence. This handoff defines the cheapest observer/evidence gate for that downstream capability question.
