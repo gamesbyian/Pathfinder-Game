@@ -132,5 +132,6 @@ test('summary reports origin, facet, admissibility, retry-tier, and overlap tele
     assert.equal(summary.originOverlapPairs['external-constraint-solver x pathfinder-solver'], 1);
     assert.equal(summary.facetEvents['production-retry-tier'], 1);
     assert.equal(summary.retryTierEvents['repair-retry'], 1);
-    assert.equal(summary.strictAdmissibilityEvents['cold-capability'], 2);
+    assert.equal(summary.strictAdmissibilityEvents['cold-capability'], 1);
+    assert.equal(summary.strictAdmissibilityEvents.unknown, 1);
 });
