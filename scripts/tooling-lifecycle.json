@@ -37,6 +37,10 @@
       "lifecycle": "cold-research",
       "note": "Reproduces the answered 20-level elite-prefix retry validation; both tested retry budgets produced zero recoveries and the one-off GHA wrapper has been retired."
     },
+    "scripts/stress/select-repair-fallback-reserve-sample.mjs": {
+      "lifecycle": "cold-research",
+      "note": "Purpose-built selector for the closed STRATEGY_REPAIR_FALLBACK_NODE_RESERVE experiment; retained only to reproduce the dated stratified sample after its GHA wrapper was retired."
+    },
     "scripts/stress/main-loop-starvation-census.mjs": {
       "lifecycle": "cold-research",
       "note": "Reproduces the August 8 main-loop zero-allocation census from historical baseline/hint provenance. Its report later weakened 'provably recoverable' to 'historically matched', and newer techniqueLifecycle telemetry is the default allocation diagnostic."
