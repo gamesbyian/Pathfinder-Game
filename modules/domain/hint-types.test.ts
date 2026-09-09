@@ -1,16 +1,17 @@
-/** Unit tests for hint provenance merge/dedup — a byte-identical entry (the same discovery event
- *  recorded twice) must not accumulate, while genuinely distinct rediscoveries are kept. */
+/** Unit tests for hint provenance merge/dedup — duplicate recording of the same discovery event
+ *  must not accumulate, while genuinely distinct rediscoveries are kept. */
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { makeProvenanceEntry, upgradeProvenanceEntry, dedupeProvenanceEntries, mergeHints, reconcileHints, toHint } from './hint-types.js';
 
-test('dedupeProvenanceEntries collapses byte-identical entries, keeps distinct ones', () => {
+test('dedupeProvenanceEntries collapses recording-only differences and keeps evidence-bearing ones', () => {
   const e = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.609Z', hintGuided: true, usedExistingHints: true });
-  const other = makeProvenanceEntry('prefix-anchored', { foundAt: '2026-07-16T05:53:45.610Z', hintGuided: true, usedExistingHints: true });
-  const out = dedupeProvenanceEntries([e, { ...e }, other]);
-  assert.equal(out.length, 2, 'two identical entries collapse to one; the distinct-foundAt one stays');
-  assert.equal(out[0].foundAt, e.foundAt);
-  assert.equal(out[1].foundAt, other.foundAt);
+  const timestampOnly = { ...e, foundAt: '2026-07-16T05:53:45.610Z' };
+  const evidenceBearing = { ...e, search: { ...e.search, nodesExpanded: (e.search.nodesExpanded ?? 0) + 1 } };
+  const out = dedupeProvenanceEntries([e, { ...e }, timestampOnly, evidenceBearing]);
+  assert.equal(out.length, 2, 'timestamp-only re-recordings collapse; a different deterministic search result stays');
+  assert.equal(out[0].foundAt, e.foundAt, 'the first recording is retained');
+  assert.equal(out[1].search.nodesExpanded, evidenceBearing.search.nodesExpanded);
 });
 
 test('mergeHints does not accumulate a byte-identical provenance entry on the same path', () => {
