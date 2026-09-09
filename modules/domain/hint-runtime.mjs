@@ -90,12 +90,14 @@ export function makeProvenanceEntry(technique, opts = {}) {
 // dependency entirely while keeping array element ORDER significant, which matters because arrays
 // in this shape represent meaningful sequences (`forcingDisabledFeatures`, `forcingFlippedFilters`)
 // where reordering elements changes what actually happened.
+/** @param {unknown} value @returns {string | undefined} */
 function stableStringify(value) {
     if (value === undefined) return undefined;
     if (value === null || typeof value !== 'object') return JSON.stringify(value);
     if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
-    const keys = Object.keys(value).filter(k => value[k] !== undefined).sort();
-    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
+    const obj = /** @type {Record<string, unknown>} */ (value);
+    const keys = Object.keys(obj).filter(k => obj[k] !== undefined).sort();
+    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`;
 }
 
 /**
