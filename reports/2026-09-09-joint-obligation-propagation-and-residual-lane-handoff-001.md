@@ -11,6 +11,8 @@ The 396 levels simultaneously matching the intersection-heavy, must-cross-heavy,
 
 That concentration establishes a high-yield investigation population. It does not identify whether the cause is missing exposure, insufficient work, beam retention, repair policy, or a missing logical bound. The later portal-carveout audit adds a concrete prior cause: four production mechanisms are disabled on all portal-bearing levels, including coarse-state merge, connectivity volume pruning, and must-cross neighbour-budget propagation. Portal-bearing levels contain 551/725 current misses and 464/604 misses without an isolated winner. Resolve those existing capability exclusions before calling the residual cohort a new reasoning problem.
 
+The immediate must-cross portal-restoration population provides a particularly clean intervention on this question. All 396 triple-overlap levels are inside the 530-level portal+must-cross population, so the risk cohort is 74.7% of that treatment population. It contains 278/337 (82.5%) of the portal+must-cross misses and 242/288 (84.0%) of its misses without an isolated T1 winner. The 134 portal+must-cross levels outside the triple cohort contain only 59 misses and 46 no-isolated-winner misses. Therefore the first matched-work neighbour-budget restoration A/B is not merely adjacent solver work: its per-level gains/losses are direct causal evidence about how much of the triple-overlap risk remains after restoring an existing mechanism.
+
 ## Required evidence join before implementation
 
 For the triple-overlap cohort and matched controls, join:
@@ -47,9 +49,9 @@ Portals must be explicit paired transitions. Flippers, filters, surround, adjace
 
 ### Evidence population
 
-- Primary: refreshed labelled live/dead branches and traces from the triple-overlap cohort after portal restoration.
+- Primary: existing labelled live/dead branches and traces from the triple-overlap cohort.
 - Soundness adversaries: live prefixes from referee-valid production and retained hint solutions.
-- Exact counterexamples: the current production-unsolved/no-isolated-T1 levels with retained CP-SAT solutions, refreshed against the new production boundary.
+- Exact counterexamples: the 12 current production-unsolved/no-isolated-T1 levels with retained CP-SAT solutions.
 - Controls: non-triple levels matched on required path length, constrained-object count, and portal count.
 
 ### Promotion gates
@@ -60,14 +62,14 @@ The pruning pilot then requires a frozen equal-work comparison, zero referee/cor
 
 ## Residual allocation lane
 
-The current pre-restoration production-boundary join contains 122 misses with an isolated winner: 45 were never offered that winner and 77 were offered it but remained unresolved. These counts are diagnostic, not a durable lane definition; recompute them after portal restoration.
+The current production-boundary join contains 122 misses with an isolated winner: 45 were never offered that winner and 77 were offered it but remained unresolved. Treat these as separate causal populations, but recompute the counts after portal restoration rather than carrying them forward as a post-restoration fact.
 
-- **Goal-attraction-disabled retry:** ten current production wins exist, including three without another isolated T1 winner (`R02126`, `R02298`, `R02474`), while the retry is starved on 605/725 current misses showing any starvation pattern. Its predeclared fresh-pool confirmation remains the highest solve-rate-oriented WS2A closeout once portal restoration is through its immediate gates.
+- **Goal-attraction-disabled retry:** ten current production wins exist, including three without another isolated T1 winner (`R02126`, `R02298`, `R02474`), while the retry is starved on 605/725 current misses showing any starvation pattern. Its predeclared fresh-pool confirmation remains the cleanest missing-participation test.
 - **Non-default admissible ordering:** it contributes 28 current production wins, but all have T1 support and the attempted repricing A/B gave the target stage zero work. Any follow-up must guarantee real target-stage participation.
-- **Turn-biased repair:** it is the largest named never-offered isolated-winner group in the current boundary (13 levels), but ownership is temporally fragile and broad routing evidence has not shown production benefit. Re-evaluate its membership after restoration; test only as a frozen, matched-work residual-lane candidate.
+- **Turn-biased repair:** it is the largest named never-offered isolated-winner group (13 levels), but ownership is temporally fragile and broad routing evidence has not shown production benefit. Test it only as a frozen, matched-work residual-lane candidate.
 
 Any lane must have an explicit total-work price, protected specialist coverage, and production-exclusive gain accounting. Isolated winner identity alone does not justify permanent tail work.
 
 ## Production boundary
 
-No production search, routing, or pruning behavior is authorized by this report. The current execution order is: portal capability restoration first; bounded Workstream-2 repricing closeouts second; refreshed ladder/scheduler construction next; then new joint-obligation or residual capability development only from the remaining evidence. This handoff defines the cheapest observer/evidence gate for that downstream capability question.
+No production search, routing, or pruning behavior is authorized by this report. Portal capability restoration is first in execution order, followed by the bounded Workstream-2 closeouts and a refreshed production/capability boundary. This handoff defines the cheapest existing-data and observer gates for the capability-development question that remains afterward.
