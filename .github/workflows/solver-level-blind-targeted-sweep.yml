@@ -360,8 +360,17 @@ jobs:
           "
 
       - name: Print an aggregate/per-level workSpent and per-stage breakdown to the job log
+        # See the note on "Print a solved-count summary" above -- same reasoning: a partial
+        # run's per-level detail (this step's per-stage tables include every id's ok/status,
+        # not just the ones that reached that stage) is exactly what's needed to recover
+        # results when validation failed and artifact downloads aren't available.
+        if: always()
         shell: bash
         run: |
+          if [ ! -f logs/solver-targeted-sweep/combined.json ]; then
+            echo "No combined.json present -- every shard likely failed before writing output."
+            exit 0
+          fi
           node scripts/summarize-targeted-sweep-work.mjs \
             --in=logs/solver-targeted-sweep/combined.json \
             --stage=admissible-order-alternate-tiebreak-retry,admissible-order-fallback,connectivity-axis-prune-disabled-retry
