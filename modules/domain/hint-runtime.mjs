@@ -89,6 +89,8 @@ export function makeProvenanceEntry(technique, opts = {}) {
  * rediscoveries and changed search trajectories are distinct evidence.
  *
  * This lives at the persistence boundary so every merge/reconcile path gets the same semantics.
+ *
+ * @param {HintProvenanceEntry} entry
  */
 export function provenanceEventIdentity(entry) {
     if (!entry || typeof entry !== 'object') return JSON.stringify(entry ?? null);
