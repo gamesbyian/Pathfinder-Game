@@ -54,7 +54,12 @@ function flattenHints(levels) {
 
 const report = {
     generatedAt: new Date().toISOString(),
-    schemaVersion: 1,
+    schemaVersion: 2,
+    evidenceAxes: {
+        origin: 'mutually-exclusive producer identity',
+        facets: 'overlapping search/run properties',
+        admissibility: 'strict and narrow production cold-capability classification',
+    },
     corpora: {},
 };
 
@@ -77,7 +82,7 @@ report.total = {
     hints: totals.reduce((n, c) => n + c.hints, 0),
     provenanceEntries: totals.reduce((n, c) => n + c.provenanceEntries, 0),
     unattributedHints: totals.reduce((n, c) => n + c.unattributedHints, 0),
-    multiSourceHints: totals.reduce((n, c) => n + c.multiSourceHints, 0),
+    multiOriginHints: totals.reduce((n, c) => n + c.multiOriginHints, 0),
     duplicateEvents: totals.reduce((n, c) => n + c.semanticDedupAudit.duplicateEvents, 0),
     hintsWithDuplicates: totals.reduce((n, c) => n + c.semanticDedupAudit.hintsWithDuplicates, 0),
 };
