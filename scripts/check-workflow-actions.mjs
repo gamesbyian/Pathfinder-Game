@@ -29,8 +29,8 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
     if (actual !== required) failures.push(`${name}: ${action}@${actual}; expected ${action}@${required}`);
   }
 
-  // Literal workflow path filters are also live consumers of repository paths. On the Linux
-  // runner, stale case or a renamed file can silently stop a workflow from triggering.
+  // Literal workflow path filters are live consumers of repository paths. On the Linux runner,
+  // stale case or a renamed file can silently stop a workflow from triggering.
   for (const block of source.matchAll(/^\s*paths:\s*\n((?:\s+-\s+[^\n]+\n?)+)/gmu)) {
     for (const item of block[1].matchAll(/^\s*-\s+['"]?([^'"#\n]+?)['"]?\s*$/gmu)) {
       const filterPath = item[1].trim();
@@ -49,19 +49,11 @@ for (const name of readdirSync(workflowDir).filter(name => /\.ya?ml$/i.test(name
       failures.push(`${name}: references missing local script ${scriptPath}`);
     }
   }
-
-  if (source.includes('repair-probe-badness-report.mjs')) {
-    failures.push(`${name}: references deleted repair-probe-badness-report.mjs`);
-  }
-  if (source.includes('Solver archetype-gated routing sample A/B')) {
-    failures.push(`${name}: watches stale pre-rename workflow display name`);
-  }
 }
 
-
 if (failures.length) {
-  console.error('Workflow/action and naming-consumer validation failed:');
+  console.error('Workflow/action validation failed:');
   for (const failure of failures) console.error(`  - ${failure}`);
   process.exit(1);
 }
-console.log('Workflow actions, literal path filters, local workflow entrypoints, and Phase 1-7 live consumers are valid.');
+console.log('Workflow actions, literal path filters, and local workflow entrypoints are valid.');

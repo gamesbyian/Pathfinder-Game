@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
  * Verifies package-script/tooling lifecycle references, mandatory agent-context budgets,
- * and local/GitHub Actions gate parity.
+ * local/GitHub Actions gate parity, and the permanent-CI lifecycle boundary.
  *
  * This intentionally checks drift patterns that have hurt this repo: scripts such
  * as `node scripts/foo.mjs` surviving after the target file was removed, explicit
  * Vitest file arguments surviving a rename, invalid lifecycle overrides, mandatory
- * agent orientation quietly growing past its recorded route ceiling, and deterministic
- * PR checks drifting out of the local finish-line contract.
+ * agent orientation quietly growing past its recorded route ceiling, deterministic
+ * PR checks drifting out of the local finish-line contract, and completed campaign
+ * scaffolding creeping back into the permanent gate.
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -119,6 +120,33 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+// Completed migrations/research bridges may remain in Git history or as explicitly retained
+// forensic tools, but they do not get lifetime tenure in the universal PR gate. Durable behavior
+// must be represented by a current, domain-named owner test instead.
+const permanentGateErrors = [];
+const forbiddenPermanentGateTasks = [
+  [/^(?:check|test):naming/u, 'completed repository-wide naming migration'],
+  [/^test:solver-research-resumption$/u, 'completed post-naming solver-resumption bridge'],
+  [/^test:legacy-latency-portfolio-report-cli$/u, 'legacy research-report utility'],
+];
+for (const gate of ['check:validators', 'test:node']) {
+  const command = scripts[gate];
+  if (typeof command !== 'string') continue;
+  for (const task of tokenize(command)) {
+    if (!/^(?:check|test):/u.test(task)) continue;
+    for (const [pattern, reason] of forbiddenPermanentGateTasks) {
+      if (pattern.test(task)) {
+        permanentGateErrors.push(`${gate}: ${task} belongs to ${reason}; retain the live invariant under a current owner test or run it on demand.`);
+      }
+    }
+  }
+}
+if (permanentGateErrors.length) {
+  console.error('Completed/legacy campaign tasks re-entered permanent CI:');
+  for (const error of permanentGateErrors) console.error(`  - ${error}`);
+  process.exit(1);
+}
+
 if (fs.existsSync(TOOLING_LIFECYCLE_PATH)) {
   const lifecycleDoc = JSON.parse(fs.readFileSync(TOOLING_LIFECYCLE_PATH, 'utf8'));
   const lifecycleErrors = [];
@@ -164,4 +192,4 @@ function runRequiredCheck(scriptPath, label) {
 runRequiredCheck(AGENT_CONTEXT_CHECK_PATH, 'Agent-context budget check');
 runRequiredCheck(CI_GATE_PARITY_CHECK_PATH, 'Local/GitHub Actions gate parity check');
 
-console.log('Package script entrypoints, tooling lifecycle references, agent-context budgets, and CI gate parity are valid.');
+console.log('Package script entrypoints, tooling lifecycle references, permanent-CI lifecycle, agent-context budgets, and CI gate parity are valid.');

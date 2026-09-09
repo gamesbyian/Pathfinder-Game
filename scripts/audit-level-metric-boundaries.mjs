@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-/** Phase-13 reqLen/reqInt ownership ratchet. Permanent raw-wire allowlist after the 13B runtime migration. */
+/** Current reqLen/reqInt raw-wire ownership ratchet. */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 const requestedNormalizedClean = process.argv.includes('--require-normalized-clean');
-const BASELINE_PATH = 'docs/naming-cleanup-level-metric-boundaries.json';
+const BASELINE_PATH = 'docs/level-metric-boundaries.json';
 const SELF = 'scripts/audit-level-metric-boundaries.mjs';
 const baseline = JSON.parse(readFileSync(BASELINE_PATH, 'utf8'));
 if (baseline.schemaVersion !== 2) throw new Error(`Unsupported ${BASELINE_PATH} schemaVersion`);
@@ -55,8 +55,14 @@ function collectMetricHits(root) {
   return hits;
 }
 
+function isFrozenHistory(file) {
+  return /^(?:docs\/(?:archive|history)|reports|logs|data)\//u.test(file)
+    || /^docs\/naming-cleanup(?:-|\/)/u.test(file)
+    || /^scripts\/naming-cleanup-/u.test(file);
+}
+
 const hits = ROOTS.flatMap(collectMetricHits);
-const current = new Set(hits.filter(file => file !== SELF && !/^(?:docs\/(?:archive|history)|reports|logs|data)\//.test(file)));
+const current = new Set(hits.filter(file => file !== SELF && !isFrozenHistory(file)));
 
 for (const file of current) if (!owners.has(file)) failures.push(`${file} is a new unclassified metric access`);
 for (const file of owners.keys()) if (!current.has(file)) failures.push(`${file} is a stale baseline entry (remove or reclassify it)`);
@@ -71,14 +77,14 @@ if (requireNormalizedClean && baseline.normalizedRuntimeConsumer.length) {
   failures.push(`${baseline.normalizedRuntimeConsumer.length} normalized runtime consumer(s) still use raw metric spellings`);
 }
 if (requireNormalizedClean && baseline.mixedRawAndNormalized.length) {
-  failures.push(`${baseline.mixedRawAndNormalized.length} mixed raw+normalized file(s) still require explicit post-migration reclassification`);
+  failures.push(`${baseline.mixedRawAndNormalized.length} mixed raw+normalized file(s) still require explicit reclassification`);
 }
 if (baseline.ambiguousUnclassified.length) {
   failures.push(`${baseline.ambiguousUnclassified.length} metric-access file(s) remain ambiguous/unclassified`);
 }
 if (failures.length) {
-  console.error('Phase-13 level-metric boundary audit failed:');
+  console.error('Level-metric boundary audit failed:');
   for (const failure of failures) console.error(`  - ${failure}`);
   process.exit(1);
 }
-console.log(`Phase-13 level-metric boundary inventory valid${requireNormalizedClean ? '; normalized runtime is clean and mixed legacy ownership is resolved' : '; current accesses match the reviewed ownership inventory'}.`);
+console.log(`Level-metric boundary inventory valid${requireNormalizedClean ? '; normalized runtime is clean and compatibility ownership is resolved' : '; current accesses match the reviewed ownership inventory'}.`);

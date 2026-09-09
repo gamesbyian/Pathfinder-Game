@@ -37,7 +37,7 @@ const attempts = path.join(temp, 'reports/families/variant-family-dataset-attemp
 assert.ok(existsSync(summary), 'new runs must write the stable canonical summary path');
 assert.ok(existsSync(attempts), 'new runs must write stable canonical attempt chunks');
 assert.equal(existsSync(staleCanonical), false, 'rerun must remove stale prior canonical chunks before writing');
-assert.equal(existsSync(frozenHistorical), true, 'writer must never delete frozen wide-trove historical evidence');
+assert.equal(existsSync(frozenHistorical), true, 'writer must never delete frozen historical evidence');
 assert.equal(existsSync(path.join(temp, 'reports/families/2026-08-07-wide-trove-summary.md')), false,
     'new runs must not regenerate the dated historical summary name');
 const report = readFileSync(summary, 'utf8');
@@ -46,9 +46,6 @@ const attemptDoc = JSON.parse(readFileSync(attempts, 'utf8'));
 assert.equal(attemptDoc.levels.length, 1);
 assert.equal(attemptDoc.levels[0].id, 'V1');
 
-// Faithful workflow publication harness: execute the same standard-result publisher arguments used
-// after the merger in collect-variant-family-dataset.yml. This proves the canonical summary path
-// reaches the standard artifact and the canonical source-run provenance path is actually writable.
 const publish = spawnSync(process.execPath, [
     path.join(ROOT, 'scripts/publish-solver-sweep-result.mjs'),
     '--primary=reports/families/variant-family-dataset-summary.md',
@@ -86,4 +83,4 @@ assert.equal(standardManifest.status, 'published');
 assert.equal(standardManifest.entries[0].source, 'reports/families/variant-family-dataset-summary.md');
 assert.equal(standardManifest.sourceArtifact, 'variant-family-dataset-combined');
 
-console.log('variant-family dataset workflow harness passed: real merger -> canonical provenance -> standard publisher.');
+console.log('Variant-family dataset merge/publication contract passed.');
