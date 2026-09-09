@@ -57,6 +57,8 @@ Account for at least:
 - script/tool inventories and orphan-detection output;
 - current archives/snapshots and completed-program evidence.
 
+Do not inspect lifecycle only from the inventory outward. Also start from each **recently completed migration, research line, experiment, temporary bridge, and one-off validation campaign** and reverse-sweep what executable/current surfaces it left behind: package aliases, universal CI membership, workflows, path triggers, fixtures, inventories, contract checkers, docs, and discovery entries. A finished program can leave individually plausible-looking consumers that ordinary dead-code scans will not identify.
+
 Use compact discovery first where available:
 
 ```bash
@@ -212,7 +214,7 @@ Prefer, in order:
 4. remove obsolete aliases/wrappers after chasing every consumer;
 5. keep compact machine discovery authoritative rather than rebuilding prose command catalogues.
 
-Use orphan detection as evidence, not truth. When retiring or consolidating tooling, chase package aliases, workflows, tests, docs, generated artifacts, readers/writers, and agent discovery surfaces.
+Use orphan detection as evidence, not truth. When retiring or consolidating tooling, chase package aliases, workflows, tests, docs, generated artifacts, readers/writers, and agent discovery surfaces. Treat deletion/demotion as a consumer-chase operation: after removing an executable surface, also inspect inventories, contract checkers, workflow trigger lists, package aggregators, fixtures, and discovery docs that may have hardcoded its existence.
 
 ## 6. Comprehensive GitHub Actions workflow audit
 
@@ -235,6 +237,10 @@ For each workflow ask:
 - Are caches effective and correctly keyed?
 - Are heavyweight proofs running at a frequency proportional to their value?
 - Can changed-file/scope-aware execution safely avoid irrelevant work?
+
+Treat lifecycle-signalling names as audit leads. Workflows/tests/scripts still named after a migration phase, date, closed feature, `one-off`, `legacy`, `closeout`, or temporary bridge are not automatically obsolete, but they must justify why that historical identity still describes a current maintained contract. When the invariant remains live but the campaign identity does not, rename/re-home the invariant under its current domain owner.
+
+For solver research, compare candidate-specific maintained workflows against current dispositions in `docs/solver-opt-in-experiment-ledger.md` and the canonical queue. Retaining default-OFF code for reproducibility or counterfactual use does not by itself justify retaining a dedicated workflow for a closed experiment.
 
 Delete obsolete workflows. Archive a workflow definition only when its historical value is not already adequately preserved by Git history. Consolidate overlapping active workflows where that reduces maintenance/CI cost without obscuring their contracts.
 
@@ -260,6 +266,8 @@ Examine:
 - validations added since the last pass;
 - cancelled/superseded runs and concurrency behavior.
 
+For broad parallel check populations such as `check:validators` or `test:node`, inspect **per-task durations and the tail task(s)** rather than relying only on aggregate job time. A single obsolete 30–40 second task can define the wall-clock cost of an otherwise healthy parallel gate. For each persistent tail task, ask what current failure it uniquely protects and whether universal execution is proportional to that risk.
+
 Distinguish:
 
 - external runner/network/npm slowness;
@@ -284,11 +292,11 @@ Specifically look for:
 
 Where evidence supports it, implement safe structural improvements. A green workflow can still be wasteful. A temporarily slow hosted runner is not by itself evidence that repository changes are required.
 
-## 8. Tests, validators, and completed-migration scaffolding
+## 8. Tests, validators, and completed-program scaffolding
 
-Audit checks themselves, especially those created during large cleanup/migration campaigns.
+Audit checks themselves, especially those created during large cleanup/migration or research campaigns.
 
-Look for validators that:
+Look for validators/tests that:
 
 - enforce exact prose wording rather than semantics;
 - require redundant prose/data in multiple formats;
@@ -296,14 +304,26 @@ Look for validators that:
 - scan far more than their invariant requires;
 - confuse “not materialized” with “not tracked” in sparse checkouts;
 - duplicate another invariant;
-- protect a completed migration phase rather than the final current invariant;
+- protect a completed migration phase or concluded experiment rather than a current invariant;
 - discourage legitimate consolidation;
 - contain stale fixtures or retired terminology;
 - cost disproportionately more than the risk they control.
 
 Preserve useful invariants while simplifying enforcement. Prefer semantic/structural checks over brittle sentence regexes.
 
-Completed migration programs should leave a small permanent final-state/invariant suite, not replay every phase-specific closeout forever. Collapse or retire historical validators only after preserving the durable invariants they still protect.
+### Campaign closeout and permanent-invariant extraction
+
+When a migration, research line, temporary compatibility bridge, or one-off validation campaign becomes completed/closed, do not merely mark its plan/report complete. Perform a lifecycle closeout across executable surfaces:
+
+1. enumerate campaign-created tests, validators, package aliases, workflows, trigger paths, fixtures, inventories, and compatibility owners;
+2. for each one ask **what current failure would this catch that another current test would not?**;
+3. if the protected behavior is still live, extract it into a compact test/check owned and named for the current domain contract rather than the historical campaign;
+4. demote on-demand forensic/reproduction tools out of universal CI and classify them explicitly when retention has provenance value;
+5. delete obsolete workflow/test surfaces whose question is closed and whose behavior is already preserved by current owners or Git history;
+6. chase reverse consumers after deletion/demotion, including maintained-workflow lists, result-contract validators, path triggers, package aggregators, docs, and discovery surfaces;
+7. validate the actual final head after the full cleanup, not an earlier green campaign-closeout commit.
+
+Completed migration programs should leave a small permanent current-invariant suite, not replay every phase-specific closeout forever. The same principle applies to concluded research campaigns: a useful research utility may remain on demand, but its test does not automatically deserve lifetime membership in every unrelated PR gate.
 
 Do not “fix CI” by weakening a meaningful invariant.
 
@@ -378,6 +398,7 @@ Candidates include:
 - duplicate-current-authority detection;
 - archive/current classification checks;
 - semantic final-state validators;
+- permanent-CI membership guards for completed/legacy campaign tasks;
 - CI job/setup-cost summaries or trend snapshots;
 - checks for transitional docs with no retirement condition;
 - tooling discovery coverage;
@@ -391,17 +412,19 @@ Prefer simple checks piggybacking on existing CI over elaborate infrastructure. 
 Use this sequence unless evidence supports a smaller equivalent path:
 
 1. baseline and recent-history accounting;
-2. cheap inventory/delta/context/CI signals across **all** hygiene domains;
-3. deep inspection where signals, churn, age, uncertainty, or unexplained growth justify it;
-4. obvious dead/stale surface cleanup;
-5. canonical documentation/context consolidation;
-6. non-core plan/proposal/backlog/debt-queue compaction and disposition cleanup;
-7. tooling/workflow retirement or consolidation;
-8. CI structural optimization;
-9. validator/test simplification;
-10. research-infrastructure/discovery repair;
-11. anti-regression guards;
-12. final hostile audit and validation.
+2. reverse-sweep recently completed programs for residual live/executable surfaces;
+3. cheap inventory/delta/context/CI signals across **all** hygiene domains;
+4. deep inspection where signals, churn, age, uncertainty, or unexplained growth justify it;
+5. obvious dead/stale surface cleanup;
+6. canonical documentation/context consolidation;
+7. non-core plan/proposal/backlog/debt-queue compaction and disposition cleanup;
+8. tooling/workflow retirement or consolidation;
+9. campaign closeout/permanent-invariant extraction;
+10. CI structural optimization;
+11. validator/test simplification;
+12. research-infrastructure/discovery repair;
+13. anti-regression guards;
+14. final hostile audit and validation.
 
 The important distinction is **bounded inspection, not bounded scope**. Every run should be able to say why each major hygiene domain is healthy, changed, or requires work.
 
@@ -416,8 +439,11 @@ Useful heuristics:
 - When a current file tells a story, move the story to a report/archive.
 - When a proposal explains how it got here instead of what remains open, move the explanation to evidence/history.
 - When an open idea becomes active, move its live state to the canonical queue rather than maintaining two queues.
+- When a program becomes closed, search from that program outward for every executable/current surface it created; do not rely only on orphan scans to discover residue.
+- When a campaign-named test still protects current behavior, extract that behavior under the current domain owner before retiring the campaign shell.
 - When a tool cannot justify its existence, remove or archive it.
 - When CI repeats work, identify what independent evidence the repetition buys.
+- When a parallel CI population is slow, inspect the tail tasks individually rather than treating aggregate runtime as a single blob.
 - When a validator blocks simplification, determine whether it protects a real invariant or merely an old representation.
 - When recent changes make a document suspect, verify semantics against implementation rather than polishing stale prose.
 - When a domain looks unchanged, prove that cheaply with deltas/inventory before skipping deep inspection.
@@ -434,8 +460,10 @@ Ask:
 - Is any current fact still owned twice?
 - Did any proposal/backlog/debt file remain a shadow current queue or mini research report?
 - Did compatibility removal break a real consumer?
+- Did workflow/test retirement leave hardcoded consumers in inventories, contract checkers, trigger paths, package aggregators, docs, or discovery surfaces?
 - Did CI speed work reduce meaningful coverage rather than remove waste?
 - Did a validator get weakened rather than modernized?
+- Did a live invariant remain trapped inside a historical campaign-named shell instead of being re-homed under its current owner?
 - Did `main` move enough during the pass to make updated current-state docs stale?
 - Did new hygiene machinery itself create notable maintenance/context/CI cost?
 - Is archived material still routed as ordinary current reading?
@@ -454,9 +482,10 @@ A completed hygiene pass leaves:
 - live non-core plans/proposals/backlogs/debt queues limited to genuinely open questions, dispositions, boundaries, and gates rather than chronology;
 - historical evidence preserved but removed from ordinary current context where appropriate;
 - dead/stale tools and workflows removed or explicitly classified;
+- recently completed programs reverse-swept for residual executable/current surfaces;
 - current tooling/workflows consistent with recent subsystem changes;
 - CI structural waste reduced where evidence supports it;
-- useful final invariants retained while obsolete migration scaffolding is retired;
+- useful final invariants retained under current domain owners while obsolete migration/research scaffolding is retired;
 - compact discovery surfaces working for current tools/evidence;
 - recurring entropy protected by proportionate guards;
 - a concise final report stating what changed, measurable context/CI effects where available, remaining genuine hygiene debt, and any non-obvious surfaces intentionally left alone.
