@@ -1,7 +1,11 @@
 # Prune-gap witness identity provenance gap
 
-**Date:** 2026-09-09  
-**Status:** confirmed evidence-replay integrity gap; fix before generalizing prune-gap replay across representative solution basins.
+> **Status:** active
+> **Last evidence:** 2026-09-09 — producer and replay-consumer code paths were traced and confirmed to select the first stored hint independently without persisting historical witness identity.
+> **Decision:** Treat existing prune-gap atlases as potentially path-identity-ambiguous until their witness trajectory is verified; do not generalize replay by changing only the consumer.
+> **Remaining gate:** Persist witness identity in new atlases, add explicit compatibility validation for legacy atlases, audit checked-in artifacts, and update the offline replay documentation before decision-bearing all-basin replay.
+
+**Date:** 2026-09-09
 
 ## Finding
 
