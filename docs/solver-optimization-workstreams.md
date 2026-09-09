@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, workstream state, and next gates.
-> **Reconciled:** 2026-09-07.
+> **Reconciled:** 2026-09-08.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization.
 
 Keep this file **current-state only**. When evidence changes a state or gate, replace the old statement instead of appending chronology. Detailed experimental history belongs in dated reports; historical snapshots live under `docs/archive/snapshots/`.
@@ -48,7 +48,11 @@ The apparent multi-portal repair-over-beam selector is **closed** after reconcil
 
 The clockwise `perimeterSweep` lead is closed as an attribution confound: production favored CW (DFS 21:11; beam 170:76), but matched isolated results do not (beam 104:111; DFS 42:50). Keep both directions capability-bearing; any decision-bearing order/allocation test belongs under WS2 with matched exposure/work. See [`../reports/2026-09-05-perimeter-bias-production-attribution-confound-audit-001.md`](../reports/2026-09-05-perimeter-bias-production-attribution-confound-audit-001.md).
 
-**Next gate:** continue local analysis only for materially stronger independently replicated selectors; leave the closed multi-portal and 35-row cohorts closed. Production routing/action-order changes remain downstream; isolated rescuer identity is insufficient.
+Compositional routing predicates expose a materially stronger **risk cohort**: 396 levels simultaneously meet the existing intersection-heavy, must-cross-heavy, and multi-portal predicates, but only 118/396 (29.8%) are current production-solved. The cohort contains 278/725 current misses and 242/604 current misses without an isolated T1 winner; the direction is stable across even/odd ID halves. First-match `routingRegime` labels all of them intersection-heavy and hides this interaction. This is cohort-selection evidence, not an action selector. See [`../reports/2026-09-08-routing-predicate-composition-and-capability-risk-001.md`](../reports/2026-09-08-routing-predicate-composition-and-capability-risk-001.md).
+
+A tested 18-feature static topology/placement bundle adds no material held-out value beyond the existing coarse structural fields (production-failure AUC 0.845 baseline vs 0.842 combined; no-T1 residual AUC 0.701 vs 0.710). Close that bundle as a general selector extension. See [`../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`](../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md).
+
+**Next gate:** use the triple-overlap cohort to mine action, trace, variant, and exact-solution evidence for a repeatable intervention, beginning with the bounded joint-obligation propagation question. Leave the closed multi-portal action selector and 35-row cohorts closed. Production routing/action-order changes remain downstream; risk membership and isolated rescuer identity are insufficient.
 
 Details: [`../reports/2026-09-05-solver-open-question-evidence-reconciliation.md`](../reports/2026-09-05-solver-open-question-evidence-reconciliation.md) and `node scripts/research-status-index.mjs --compact --query=<term>`.
 
@@ -81,7 +85,7 @@ Rows are sorted by stable workstream ID, not execution priority.
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 5 | Exact/reference-model program | **ON DEMAND / INTEGRITY GATE** | The CP-SAT rescue source is internally inconsistent (13 distinct claimed vs 15 entries / 14 unique). Before selector work or new CP-SAT compute, deterministically regenerate both rescue cohorts from current capability data + referee-valid provenance, assert unique membership/count predicates, then run the predeclared characterization/holdout. No stable narrow selector → stay on demand; stable selector → bounded exact-label acquisition only, not production CP-SAT. See [`../reports/2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md`](../reports/2026-09-06-cpsat-rescue-cohort-integrity-audit-001.md) and [`../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md`](../reports/2026-09-05-cpsat-on-demand-rescue-gate-design.md). |
+| 5 | Exact/reference-model program | **ON DEMAND / INTEGRITY GATE SATISFIED** | Deterministic regeneration now yields 280 retained CP-SAT levels, 26 current production misses, 13 without an isolated T1 winner, and 12 satisfying both residual predicates. A simple shorter/lower-load rule is internally parity-stable but remains exploratory; use it only to prespecify a future temporal/new-label holdout. Reuse the 12 exact solutions as counterexamples now; do not run broad new CP-SAT compute or production CP-SAT. See [`../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`](../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md). |
 
 ## Standing research rules
 

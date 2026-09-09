@@ -1,11 +1,11 @@
 # CP-SAT on-demand rescue gate: candidate design
 
-> **Status:** active
-> **Last evidence:** 2026-09-06 — the source report's isolated-no-winner rescue summary is internally inconsistent: it reports 13 distinct IDs but prints 15 entries / 14 unique IDs. `R00720`, an apparently suspicious tail entry, independently satisfies the intended current native-residual + referee-valid CP-SAT shape, so the mismatch cannot be repaired by casually dropping it.
-> **Decision:** retain the bounded local exact-reference selector question, but regenerate and assert the rescue cohorts before any characterization or holdout work. Do not treat the old 13-row set as a valid label population.
-> **Remaining gate:** deterministic no-dispatch regeneration of both rescue cohorts from authoritative current capability data plus referee-valid hint provenance, with count/uniqueness/predicate assertions; only then run the predeclared local holdout characterization.
+> **Status:** concluded; integrity and initial characterization completed 2026-09-08
+> **Last evidence:** 2026-09-08 — regenerated cohorts contain 26 current production-unsolved CP-SAT rescues, 13 without an isolated T1 winner, and 12 satisfying both predicates; see `2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`.
+> **Decision:** keep exact solving on demand. A short/lower-load selector is internally parity-stable but exploratory; validate only on a prespecified future temporal/new-label holdout and do not use CP-SAT in production.
+> **Remaining gate:** acquire new exact labels only when a current workstream supplies a concrete prespecified question.
 > **Evidence source:** existing referee-valid `cpsat-full-probe` hint provenance plus current isolated census and production results
-> **Observed target:** exact/reference provenance demonstrably contains native-residual rescues, but the exact small-cohort membership/count requires repair before modeling; the previously reported 45 production-unsolved count also requires independent count/list verification before modeling.
+> **Observed target:** exact/reference provenance contains 12 current production-unsolved/no-isolated-winner counterexamples and a tentative acquisition rule, but no independently confirmed production selector.
 > **Workstream boundary:** Workstream 5 remains ON DEMAND; use exact/reference work only for a concrete prioritized label, counterexample, or certificate
 
 ## What the evidence changes
