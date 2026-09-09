@@ -10,8 +10,8 @@ const workflows = [
   '.github/workflows/solver-residual-confirmation.yml',
   '.github/workflows/solver-routing-regime-sample-ab.yml',
   '.github/workflows/solver-early-repair-search-adaptive-sample-ab.yml',
-  '.github/workflows/solver-repair-fallback-reserve-sample-ab.yml',
   '.github/workflows/technique-census.yml',
+  '.github/workflows/static-portfolio-confirmation.yml',
   '.github/workflows/method-probe-sweep.yml',
   '.github/workflows/cpsat-explicit-prefix-reference.yml',
   '.github/workflows/cpsat-hint-harvest-sweep-published.yml',
@@ -19,7 +19,6 @@ const workflows = [
   '.github/workflows/collect-prune-gap-labels.yml',
   '.github/workflows/collect-variant-family-dataset.yml',
   '.github/workflows/mitm-frontier-sweep.yml',
-  '.github/workflows/solver-elite-prefix-dfs-retry-validate.yml',
 ];
 
 const failures = [];
