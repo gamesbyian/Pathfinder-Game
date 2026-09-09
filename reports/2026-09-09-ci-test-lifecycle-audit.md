@@ -1,9 +1,9 @@
 # CI test lifecycle hostile audit — 2026-09-09
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-09 — PR #1693 branch CI exposed and localized the remaining deterministic cleanup fallout while deep verification stayed green.
+> **Last evidence:** 2026-09-09 — PR #1693 head CI run 34403154137 passed both lanes; universal `test:node` fell from a 38.7 s migration-dominated tail to 15.9 s.
 > **Decision:** retire completed naming/resumption scaffolding from permanent CI while preserving live compatibility contracts under current owner-oriented tests.
-> **Remaining gate:** final PR-head CI must pass after the deterministic documentation/current-inventory fixes recorded below.
+> **Remaining gate:** none for this cleanup beyond normal PR review/merge.
 
 This audit reviewed the permanent pull-request CI graph with a hostile lifecycle question: what current failure does each check protect, and does that failure still belong on every unrelated PR?
 
@@ -59,12 +59,14 @@ Other current historical-reader behavior remains covered by owner tests such as 
 
 The intended rule is: historical tooling may remain available on demand, but a permanent PR-gate test must protect a current invariant under a current owner-oriented name. A new campaign test does not become immortal merely by once being added to `test:node`.
 
-## Expected runtime effect
+## Measured runtime effect
 
-This change removes the 38.7-second naming ratchet and 33.2-second post-naming bridge that defined the observed `test:node` tail. On the baseline run, the next non-obsolete long-running Node tests were roughly 28 seconds (`experiment-manifest`) and 27.5 seconds (`hint-workbench`). That suggests a meaningful wall-time reduction before any further research-tool test scoping, but branch CI is the authority for actual post-change timing.
+PR #1693 head run **34403154137** passed both CI lanes. The universal Node/CLI step ran from 20:49:23 to 20:49:39, with `hint-workbench` becoming the tail at 15.9 seconds. Against the baseline 38.7-second naming-ratchet tail, that is about a **59% reduction in `test:node` wall time**.
 
-The audit deliberately does **not** yet remove the remaining current research-analysis tests merely because they are research tooling. Several are active infrastructure or encode still-used evidence/normalization contracts. A second pass can change-scope or demote those only where current ownership and dependency boundaries make the reduction safe.
+The generic non-lint validator population also completed in about 13.2 seconds after the migration-specific fan-out was removed. Deep verification remained unchanged and green.
+
+The audit deliberately does **not** remove the remaining current research-analysis tests merely because they are research tooling. Several are active infrastructure or encode still-used evidence/normalization contracts. Further demotion should be owner/dependency-specific rather than another blanket purge.
 
 ## Separate performance finding
 
-The representative run also suffered a runtime-data cache miss; materializing the runtime data tree took about 47 seconds. The first PR #1693 run repeated the same cache miss with the same content key and again spent about 46 seconds materializing the tree. That is independent of obsolete test retirement and now deserves a separate cache-path audit.
+The total fast gate is now dominated elsewhere. Run 34403154137 again missed the exact runtime-data cache and spent about 37 seconds materializing the data tree before Node setup. Earlier PR runs with the same content key also missed and spent roughly 46–47 seconds there. This is independent of obsolete test retirement and is now the clearest next CI-runtime optimization target.
