@@ -193,6 +193,60 @@ jobs:
           echo "Resolved ${count} unique id(s):"
           cat logs/solver-targeted-sweep/ids.txt
 
+      - name: 'Execution-family canary: verify the resolved config on one representative level'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # docs/solver-research-operating-model.md's "before expensive decision-bearing runs"
+          # checklist requires an execution-family canary -- run the smallest representative cell
+          # under the EXACT resolved cap/flags/selector mode, verifying work/node/deadline stop
+          # semantics and expected output fields BEFORE scaling. Nothing previously enforced this
+          # mechanically anywhere (2026-09-09 solver-development-operating-loop audit). One level
+          # (the first resolved id -- deterministic, no extra selection logic needed) is enough to
+          # catch the structural failure modes this guards against: a resolved ablation/flag
+          # combination that eliminates every attempt config (zero attempts dispatched), a crash/
+          # exception path, a malformed output row, or a wall-clock deadline that fires when it
+          # should be non-binding -- before committing to the full (potentially 250-shard) matrix.
+          # See scripts/verify-canary-cell.mjs's own header comment for why this deliberately does
+          # NOT check target-stage participation rate (that stays validate-solver-sweep-
+          # integrity.mjs's job on the full population).
+          export CANARY_ID=$(head -n1 logs/solver-targeted-sweep/ids.txt)
+          canary_pos=$(node -e "
+            const fs = require('node:fs');
+            const corpus = JSON.parse(fs.readFileSync(process.env.CORPUS_PATH, 'utf8'));
+            const levels = Array.isArray(corpus) ? corpus : corpus.levels;
+            const idx = levels.findIndex(lv => lv.id === process.env.CANARY_ID);
+            if (idx === -1) { console.error(\`canary id \${process.env.CANARY_ID} not found in \${process.env.CORPUS_PATH}\`); process.exit(1); }
+            console.log(idx + 1);
+          ")
+          # Flag construction here is DELIBERATELY duplicated from "Run level-blind-capability-
+          # sweep on this shard's slice" below, not factored into a shared script: the whole point
+          # of a canary is that it runs under the SAME resolved config the real shards will use --
+          # if you change one, change the other identically.
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          nodebudget=()
+          [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="${{ inputs.corpus }}" \
+            --levels="pos:${canary_pos}" \
+            --budget-ms="${{ inputs.budget_ms }}" \
+            "${nodebudget[@]}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            "${extra[@]}" \
+            --out=logs/solver-targeted-sweep/canary.json \
+            --summary-out=logs/solver-targeted-sweep/canary-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-targeted-sweep/canary.json --expect-no-deadline-truncation=true
+        env:
+          CORPUS_PATH: ${{ inputs.corpus }}
+
       - name: Run the shard planner
         id: plan
         shell: bash
