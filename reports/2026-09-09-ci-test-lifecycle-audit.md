@@ -1,8 +1,11 @@
 # CI test lifecycle hostile audit — 2026-09-09
 
-## Status
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-09 — PR #1693 branch CI exposed and localized the remaining deterministic cleanup fallout while deep verification stayed green.
+> **Decision:** retire completed naming/resumption scaffolding from permanent CI while preserving live compatibility contracts under current owner-oriented tests.
+> **Remaining gate:** final PR-head CI must pass after the deterministic documentation/current-inventory fixes recorded below.
 
-**Implemented cleanup.** This audit reviewed the permanent pull-request CI graph with a hostile lifecycle question: what current failure does each check protect, and does that failure still belong on every unrelated PR?
+This audit reviewed the permanent pull-request CI graph with a hostile lifecycle question: what current failure does each check protect, and does that failure still belong on every unrelated PR?
 
 The main finding was completed-program scaffolding embedded in the universal gate. The repository-wide naming cleanup had finished through Phase 15, but its phase entry, closeout, ledger, inventory, hostile-ratchet, and post-naming resumption checks still ran perpetually. Several current compatibility/domain invariants were tangled into those migration-named tests; those invariants were retained under ordinary owner-oriented tests while the completed-program machinery was removed from the gate.
 
@@ -64,4 +67,4 @@ The audit deliberately does **not** yet remove the remaining current research-an
 
 ## Separate performance finding
 
-The representative run also suffered a runtime-data cache miss; materializing the runtime data tree took about 47 seconds. That is independent of obsolete test retirement and should be assessed from a broader run sample before changing the cache design.
+The representative run also suffered a runtime-data cache miss; materializing the runtime data tree took about 47 seconds. The first PR #1693 run repeated the same cache miss with the same content key and again spent about 46 seconds materializing the tree. That is independent of obsolete test retirement and now deserves a separate cache-path audit.
