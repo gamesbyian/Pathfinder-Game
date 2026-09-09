@@ -18,7 +18,7 @@ export function readExpectedIds(file) {
   return ids;
 }
 
-export function validateSweepIntegrity({ expectedIds, levels, requiredStage = null, minParticipatingLevels = 0 }) {
+export function validateSweepIntegrity({ expectedIds, levels, requiredStage = null, minParticipatingLevels = 0, minParticipationRate = 0 }) {
   if (!Array.isArray(levels)) throw new Error('result must contain a levels array');
   const idOf = row => row?.id ?? row?.level ?? row?.levelId ?? null;
   const actualIds = levels.map(idOf);
@@ -57,9 +57,21 @@ export function validateSweepIntegrity({ expectedIds, levels, requiredStage = nu
       }
       if (levelParticipated) participating.push(idOf(row));
     }
-    participation = { stageId: requiredStage, participatingLevels: participating.length, attempts, workSpent: work, nodesExpanded: nodes };
+    const participationRate = levels.length > 0 ? participating.length / levels.length : 0;
+    participation = { stageId: requiredStage, participatingLevels: participating.length, participationRate, attempts, workSpent: work, nodesExpanded: nodes };
     if (participating.length < minParticipatingLevels) {
       throw new Error(`target stage ${requiredStage} participated on ${participating.length} level(s), below required minimum ${minParticipatingLevels}`);
+    }
+    // --min-participation-rate: minParticipatingLevels alone is an ABSOLUTE floor -- on a large
+    // population its default (0, or a small fixed value like 1) is trivially satisfied even when a
+    // stage barely participated at all, which is exactly the "nominal reach is not participation"
+    // failure mode docs/solver-optimization-workstreams.md's standing research rules warn about.
+    // A rate-based floor scales with population size instead of requiring a caller to compute an
+    // absolute count by hand. Additive with minParticipatingLevels, not a replacement for it: both
+    // default to 0 (no-op), so every existing caller's behavior is unchanged unless it opts in.
+    if (participationRate < minParticipationRate) {
+      throw new Error(`target stage ${requiredStage} participated on ${participating.length}/${levels.length} level(s) `
+        + `(${(100 * participationRate).toFixed(2)}%), below required minimum rate ${(100 * minParticipationRate).toFixed(2)}%`);
     }
   }
 
@@ -75,16 +87,19 @@ function main() {
   const result = JSON.parse(fs.readFileSync(resultFile, 'utf8'));
   const minParticipatingLevels = Number(args.get('min-participating-levels') ?? 0);
   if (!Number.isInteger(minParticipatingLevels) || minParticipatingLevels < 0) throw new Error('--min-participating-levels must be a non-negative integer');
+  const minParticipationRate = Number(args.get('min-participation-rate') ?? 0);
+  if (!Number.isFinite(minParticipationRate) || minParticipationRate < 0 || minParticipationRate > 1) throw new Error('--min-participation-rate must be a number in [0, 1]');
   const summary = validateSweepIntegrity({
     expectedIds,
     levels: result.levels,
     requiredStage: args.get('required-stage') || null,
     minParticipatingLevels,
+    minParticipationRate,
   });
   console.log(`Sweep integrity OK: ${summary.observedLevels}/${summary.expectedLevels} exact level ids present.`);
   if (summary.participation) {
     const p = summary.participation;
-    console.log(`Target participation: ${p.stageId}: ${p.participatingLevels} level(s), ${p.attempts} attempt(s), work=${p.workSpent}, nodes=${p.nodesExpanded}.`);
+    console.log(`Target participation: ${p.stageId}: ${p.participatingLevels}/${summary.observedLevels} level(s) (${(100 * p.participationRate).toFixed(2)}%), ${p.attempts} attempt(s), work=${p.workSpent}, nodes=${p.nodesExpanded}.`);
   }
 }
 

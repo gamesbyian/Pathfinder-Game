@@ -222,11 +222,16 @@ test('beam pause/resume: captureContinuationOnBudgetExit cannot capture past the
   const oversizedFrontier = Array.from({ length: 300 }, () => seed.frontier[0]);
   const syntheticContinuation: BeamContinuation = { ...seed, frontier: oversizedFrontier };
 
-  const prep = prepLevel(SOLVED_LEVEL);
-  prep._cfg = null;
-  prep._workCap = seed.nodesExpandedTotal + 200; // well inside the 300-node synthetic phase's own walk
+  // Resume with the SAME startKey/level/prep the continuation was captured against (seedPrep) --
+  // search.ts's runtime ownership assertion (2026-09-09, historical regression-risk audit item #5)
+  // now rejects a resumeFrom call against a different prep instance, which an earlier version of
+  // this test did (a fresh prepLevel(SOLVED_LEVEL) call), relying on prep._workCap being compared
+  // against a workMeter that approximated nodesExpandedTotal only because it started at zero. Using
+  // seedPrep's own CURRENT prep._workMeter.units directly is both the fix for that ownership
+  // violation and a strictly more accurate cap than the old node-count approximation.
+  seedPrep._workCap = seedPrep._workMeter.units + 200; // well inside the 300-node synthetic phase's own walk
   const out: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
-  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 300, null, false, out, Infinity, syntheticContinuation, undefined, true);
+  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 300, null, false, out, Infinity, syntheticContinuation, undefined, true);
   assert.equal(path, null);
   assert.equal(out.timedOut, true, 'beamWidth > 256 with a >256-node phase means the mid-phase check (never capture-aware) wins the race, so this degrades to a plain timeout');
   assert.equal(out.pausedContinuation, undefined, 'no continuation is ever attached once the mid-phase check has already returned');
@@ -241,9 +246,9 @@ test('beam pause/resume: the mid-phase check is governed by actual phase size, n
   const oversizedFrontier = Array.from({ length: 300 }, () => seed.frontier[0]);
   const syntheticContinuation: BeamContinuation = { ...seed, frontier: oversizedFrontier };
 
-  const prep = prepLevel(SOLVED_LEVEL);
-  prep._cfg = null;
-  prep._workCap = seed.nodesExpandedTotal + 200;
+  // Same ownership-assertion fix as the test above: resume with seedPrep itself, and size the cap
+  // off its own current prep._workMeter.units rather than a fresh prep's approximated zero-start.
+  seedPrep._workCap = seedPrep._workMeter.units + 200;
   const out: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
   // beamWidth itself stays irrelevant to how many nodes THIS phase walks (that's resumeFrom's
   // frontier length, already fixed at 300) -- what beamWidth controls here is only the mid-phase
@@ -252,7 +257,7 @@ test('beam pause/resume: the mid-phase check is governed by actual phase size, n
   // `(frontierIndex & 255) === 0` check itself, not beamWidth -- pass an arbitrary small beamWidth
   // here to isolate that: even a tiny nominal beamWidth cannot stop this pre-supplied 300-node
   // frontier from tripping the same mid-phase counter once frontierIndex reaches 256.
-  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, out, Infinity, syntheticContinuation, undefined, true);
+  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, out, Infinity, syntheticContinuation, undefined, true);
   assert.equal(path, null);
   assert.equal(out.timedOut, true, 'the mid-phase check counts walked nodes, not beamWidth -- a 300-node phase still trips it regardless of the nominal beamWidth');
 });
@@ -271,4 +276,48 @@ test('beam pause/resume: captureContinuationOnBudgetExit left false (default) le
   assert.equal(path, null);
   assert.equal(out.timedOut, true, 'without opting in, a work-cap exit must still report a plain timeout, exactly as before this change');
   assert.equal(out.pausedContinuation, undefined, 'without opting in, no continuation should ever be attached');
+});
+
+// 2026-09-09 historical regression-risk audit item #5: BeamContinuation carries live mutable
+// execution state (ws/liveUndo) and is documented as requiring the SAME startKey/level/prep on
+// resume -- previously an unenforced convention. These three tests prove the new runtime identity
+// assertion (search.ts's assertBeamContinuationOwnership) actually fires on each of the three
+// possible mismatches, rather than silently reusing state built against the wrong instance.
+test('beam pause/resume: resuming with a different prep throws immediately instead of corrupting the run', async () => {
+  const seedPrep = prepLevel(SOLVED_LEVEL);
+  seedPrep._cfg = null;
+  const seedOut: { pausedContinuation?: BeamContinuation } = {};
+  await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, seedOut, Infinity, undefined, 1);
+
+  const otherPrep = prepLevel(SOLVED_LEVEL);
+  otherPrep._cfg = null;
+  await assert.rejects(
+    beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, otherPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, {}, Infinity, seedOut.pausedContinuation, undefined),
+    /prep \(different instance\)/,
+  );
+});
+
+test('beam pause/resume: resuming with a different level throws immediately instead of corrupting the run', async () => {
+  const seedPrep = prepLevel(SOLVED_LEVEL);
+  seedPrep._cfg = null;
+  const seedOut: { pausedContinuation?: BeamContinuation } = {};
+  await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, seedOut, Infinity, undefined, 1);
+
+  const otherLevel = makeLevel({ grid: { w: 3, h: 1 } });
+  await assert.rejects(
+    beamSearchFromGate(PACK(0, 0), otherLevel, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, {}, Infinity, seedOut.pausedContinuation, undefined),
+    /level \(different instance\)/,
+  );
+});
+
+test('beam pause/resume: resuming with a different startKey throws immediately instead of corrupting the run', async () => {
+  const seedPrep = prepLevel(SOLVED_LEVEL);
+  seedPrep._cfg = null;
+  const seedOut: { pausedContinuation?: BeamContinuation } = {};
+  await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, seedOut, Infinity, undefined, 1);
+
+  await assert.rejects(
+    beamSearchFromGate(PACK(1, 1), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, {}, Infinity, seedOut.pausedContinuation, undefined),
+    /startKey \(captured/,
+  );
 });

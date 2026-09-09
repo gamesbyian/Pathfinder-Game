@@ -75,8 +75,15 @@ export function evaluatePrunedMove(
         if (!Number.isFinite(goalDist) || goalDist > rSteps) return reject(diagnostics, 'PRUNE_DISTANCE_BOUND');
     }
 
-    // Portal-free parity is always checked on the first step; deep checks are limited to corridor-rich levels.
-    if ((!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
+    // Portal-free parity is always checked on the first step; deep checks are limited to corridor-rich
+    // levels. Also applies unweakened on a portal level with zero TWIST pairs (prep.parityPortalDistMaps
+    // only ever records opposite-parity pairs — prepLevel always initializes the list, see its own
+    // comment): every portal jump then contributes zero parity flips, so the ordinary invariant holds at
+    // every cell including a portal terminal itself, with nothing left for PRUNE_PORTAL_PARITY_ENVELOPE's
+    // "defer at a portal cell, a twist pair might still repair parity" reasoning to apply to (reports/
+    // 2026-09-09-portal-restoration-evidence-hardening-001.md section 4 — mirrors the same argument
+    // false-goal-trigger-search.ts's isParityCompatibleEndpoint already ships for endpoint parity).
+    if ((!cfg || cfg.PRUNE_PARITY) && (level.portalMap.size === 0 || (prep.parityPortalDistMaps?.length ?? 0) === 0)) {
         reached(diagnostics, 'PRUNE_PARITY');
         const posP  = keyParity(next);
         const goalP = keyParity(level.goalKey);

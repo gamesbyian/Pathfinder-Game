@@ -54,17 +54,20 @@ export const FEATURES: Record<string, string> = {
     PRUNE_INTERSECTION_DEFICIT: 'Remaining steps < intersections still needed',
     PRUNE_CONNECTIVITY:         'Flood-fill connectivity + volume check',
     PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: 'Treat both-axes-spent cells as walls in the connectivity flood fill',
+    PRUNE_CONNECTIVITY_VOLUME_PORTAL: 'Production default-OFF; opt-in: lets isConnected\'s volume check (freshVolume + intNeeded < rSteps) evaluate on portal-bearing levels instead of unconditionally passing them. Derivation closed (a portal jump only makes the bound MORE generous, never unsound); pending the frozen matched-work A/B on the 954-level portal Corpus-2 population. Does not affect isConnectedForFalseGoalTriggerSearch, which is a separate correctness treatment. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     PRUNE_SURROUND_LB:          'Lower bound on steps needed to visit all surround-landmark neighbors',
     PRUNE_ADJ_TURN_LB:          'Lower bound on steps needed to satisfy all adjacent-turn landmark objects',
     PRUNE_MUST_TURN_DEADLOCK:   'Prune once a pending must-turn cell has both axis bits used (provably unsatisfiable)',
     PRUNE_MC_FORCED_NEIGHBOR:   'Prune once a pending must-cross cell\'s still-needed straight pass has a neighbor that is now a hard wall (both axis bits used, or an already-used flipper)',
     PRUNE_MC_FORCED_FIRST_MOVE: 'Force the first move out of a gate that is orthogonally adjacent to exactly one must-cross cell onto that cell (the gate can never be re-entered, so this is its only chance to serve that cell\'s pass)',
     PRUNE_MC_NEIGHBOR_BUDGET:   'Production default-ON: dynamic must-cross/intersection propagation. Excluded from repair randomized survivor selection; retained for DFS/beam and deterministic repair sub-searches. Disposition: docs/solver-opt-in-experiment-ledger.md.',
+    PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: 'Production default-ON (promoted 2026-09-09): lets PRUNE_MC_NEIGHBOR_BUDGET evaluate on portal-bearing levels instead of unconditionally passing them. Correctness gates clean; frozen matched-work A/B on the 530-level portal+must-cross Corpus-2 population found 52 gains / 0 losses (net +52), all 52 referee-valid. See docs/solver-opt-in-experiment-ledger.md.',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',
     STRATEGY_MECHANIC_BUCKET_RETENTION:      'Mechanic-bucket beam retention keyed by (flipperUsedMask, mustCrossMask)',
     STRATEGY_COARSE_STATE_MERGE:       'Coarse state merge by (position + selected constraint-state); not exact equivalence deduplication',
+    STRATEGY_PORTAL_COARSE_STATE_MERGE: 'Production default-OFF; opt-in: enables beam coarse-state merge on portal-bearing levels (search.ts), which is unconditionally disabled there otherwise. Unlike the portal-free STRATEGY_COARSE_STATE_MERGE, the merge key folds in each candidate\'s used-portal-pair identity (BeamNode.usedPortalPairs) so it cannot alias candidates that consumed different portal pairs — reports/2026-09-09-portal-beam-used-pair-aliasing-measurement-001.md measured that aliasing as material under a plain count/transient key. Pending the fixed-work A/B against the current no-portal-merge control. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: 'Production default-ON: coarse state merge retains a near-tied runner-up as well as the collision winner (COARSE_STATE_NEAR_TIE_RETENTION_MARGIN in search.ts). Its paired last-resort recovery is STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY.',
     STRATEGY_REPAIR_ELITE_PREFIX_DFS: 'Production default-OFF; closed retained opt-in: bounded deterministic completion DFS from repair elite prefixes. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_REPAIR_BEAM_SEED: "Production default-OFF; closed retained opt-in: seed repair's initial elite pool from a bounded beam frontier. Current disposition: docs/solver-opt-in-experiment-ledger.md.",
@@ -143,6 +146,8 @@ export const FEATURES: Record<string, string> = {
  * docs/solver-opt-in-experiment-ledger.md before deciding that an opt-in needs more testing. */
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
+    'PRUNE_CONNECTIVITY_VOLUME_PORTAL',
+    'STRATEGY_PORTAL_COARSE_STATE_MERGE',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
     'STRATEGY_REPAIR_FALLBACK_GATE_WIDEN',

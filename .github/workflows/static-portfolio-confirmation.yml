@@ -118,6 +118,30 @@ jobs:
             "${map_arg[@]}" \
             --out=logs/static-portfolio-confirmation/plan.json
 
+      - name: 'Execution-family canary: verify the resolved plan on one representative cell'
+        # See scripts/verify-canary-cell.mjs's own header comment and solver-level-blind-targeted-
+        # sweep.yml's identical step for the full rationale (docs/solver-research-operating-
+        # model.md's "before expensive decision-bearing runs" checklist, gate #4). This workflow's
+        # execution model (technique-census.mjs running plan.cells, not a ladder-based single
+        # solve) has a materially different row shape, so this uses --mode=technique-census (see
+        # verifyTechniqueCensusCells's own comment for why). --shard=1 --shards=<total cell count>
+        # reuses technique-census.mjs's OWN existing slice math to select exactly plan.cells[0] --
+        # no new selection logic. Only checks the FIRST cell (whichever arm the plan builder put
+        # first), not one per arm: build-static-portfolio-plan.mjs applies the same technique-
+        # parsing/budget-computation logic to every arm, so a systemic wiring bug (a bad technique
+        # key, a corpus/level lookup failure, a work-budget miscomputation) would surface on any
+        # cell regardless of arm -- this is a structural sanity check, not an exhaustive per-arm one.
+        shell: bash
+        run: |
+          set -euo pipefail
+          total_cells=$(node -e "console.log(JSON.parse(require('fs').readFileSync('logs/static-portfolio-confirmation/plan.json', 'utf8')).cells.length)")
+          node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=logs/static-portfolio-confirmation/plan.json \
+            --shard=1 --shards="${total_cells}" \
+            --workers=1 \
+            --out=logs/static-portfolio-confirmation/canary.json
+          node scripts/verify-canary-cell.mjs --result=logs/static-portfolio-confirmation/canary.json --mode=technique-census
+
       - name: Compute the shard index list
         id: shard_list
         shell: bash

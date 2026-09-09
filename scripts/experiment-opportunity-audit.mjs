@@ -178,7 +178,22 @@ function main() {
   }
   for (const warning of result.warnings) console.log(`WARNING: ${warning}`);
   if (args.get('json') === 'true') console.log(JSON.stringify(result, null, 2));
-  if (args.get('check') === 'true' && result.opportunities === 0) process.exitCode = 2;
+  if (args.get('check') === 'true') {
+    // --fail-on selects which warning code(s) turn this into a hard gate (exit 2), instead of the
+    // fixed "ZERO_OPPORTUNITY only" behavior this flag used to hardcode. Default is unchanged
+    // (ZERO_OPPORTUNITY), so every existing --check=true caller keeps its exact prior behavior --
+    // this tool was otherwise a fully-built value-of-information calculator (CEILING/
+    // OVERPROVISIONED/UNDERPOWERED_OPPORTUNITY warnings) whose own warnings could never block a
+    // dispatch even when a caller explicitly opted into --check, undermining the "cheap preflight"
+    // this file's own header promises. A caller that wants those to actually gate a run (e.g. a
+    // workflow's own preflight step) now can, without this tool inventing a second CLI surface.
+    const failOn = new Set((args.get('fail-on') || 'ZERO_OPPORTUNITY').split(',').map(s => s.trim()).filter(Boolean));
+    const triggered = result.warnings.map(w => w.slice(0, w.indexOf(':'))).filter(code => failOn.has(code));
+    if (triggered.length > 0) {
+      console.error(`experiment-opportunity-audit: --check failed on: ${[...new Set(triggered)].join(', ')}`);
+      process.exitCode = 2;
+    }
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

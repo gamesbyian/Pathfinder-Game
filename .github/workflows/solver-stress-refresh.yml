@@ -399,6 +399,21 @@ jobs:
           DISABLE_FLAGS: ${{ inputs.disable_flags }}
           DETERMINISTIC: ${{ inputs.deterministic }}
 
+      - name: Append compact longitudinal solver-health record
+        # Piggybacks entirely on the summary.json this same job just wrote (above) plus the
+        # corpus1/corpus2 combined reports it already read -- no extra solver compute (2026-09-09
+        # solver-development-operating-loop audit item #5). Appends one line to a persistent,
+        # cross-run JSONL file so commit/protocol identity, solves, workSpent, stage participation,
+        # and truncation/error counts become a queryable timeline instead of only living in each
+        # run's own isolated capability-runs/<run_id>/ snapshot.
+        if: steps.coverage.outputs.complete == 'true'
+        shell: bash
+        run: |
+          node scripts/append-solver-health-record.mjs \
+            --summary="reports/stress/capability-runs/${{ github.run_id }}/summary.json" \
+            --combined="reports/stress/solver-corpus1-latest.json,reports/stress/solver-corpus2-latest.json" \
+            --out="reports/stress/solver-health-timeline.jsonl"
+
       - name: Mass-weighted lifecycle failure map
         if: steps.coverage.outputs.complete == 'true' && inputs.lifecycle_telemetry == 'true'
         shell: bash
@@ -487,6 +502,10 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add "reports/stress/capability-runs/${{ github.run_id }}/"
+          # Health-timeline tracking is orthogonal to whether hints/baselines are persisted this
+          # run (that's the deterministic-mode guard below) -- append unconditionally so the
+          # longitudinal series covers every completed run, not just non-deterministic ones.
+          git add reports/stress/solver-health-timeline.jsonl
           if [ "${{ inputs.deterministic }}" != "true" ]; then
             git add data/stress/hints/ data/stress/hints-random/ data/stress/stress-levels.json data/stress/stress-levels-random.json
             git add logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json reports/stress/

@@ -1,9 +1,9 @@
 # Stage-lifecycle instantiation projection gap 001
 
-> **Status:** active
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-09 — current `modules/solver/orchestration.ts`, `stage-plan.ts`, and `stage-policy.ts` on the portal-restoration evidence-hardening branch
-> **Decision:** repair the lifecycle `instantiated` projection before the next production/capability refresh. Two live canonical stages are present in the stage plan and can execute, but are absent from the hand-maintained instantiation map, so their `mechanicallyEligible` / `instantiated` telemetry is falsely reported as `false`.
-> **Remaining gate:** add the two missing projections plus a regression test, keep solver behaviour unchanged, then regenerate any eligibility-filtered telemetry used for post-restoration opportunity sizing.
+> **Decision:** repaired the lifecycle `instantiated` projection. The hand-maintained map in `finish()` now lists both `guidance-goal-distance-retry` (`hasMainConfig`) and `late-repair-multiseed-retry` (`!hasRepairConfig`, matching the late-repair family's inverted precondition), so both report correct `mechanicallyEligible`/`instantiated` telemetry. No search/scheduling/attribution behaviour changed.
+> **Remaining gate:** none for this defect. A regression test (`modules/solver/orchestration.test.ts`, "lifecycle telemetry reports guidance-goal-distance-retry and late-repair-multiseed-retry as mechanically instantiated") pins both fields `true` on a main-config/no-repair-config fixture and fails against the pre-fix map. Full `npm run ci` is green.
 > **Evidence role:** telemetry correctness / research-integrity prerequisite
 
 ## Finding

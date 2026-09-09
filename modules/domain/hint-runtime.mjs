@@ -79,6 +79,27 @@ export function makeProvenanceEntry(technique, opts = {}) {
     };
 }
 
+// Deterministic, property-insertion-order-independent serialization: JSON.stringify preserves
+// each object's own key insertion order, so two entries that are semantically identical but built
+// by different producers (a freshly constructed makeProvenanceEntry() vs. a legacy persisted
+// record round-tripped through upgradeProvenanceEntry()'s `{ ...raw, solver, search }` spread, or
+// simply re-serialized after a JSON round-trip through a different engine/library) can carry the
+// SAME fields in a DIFFERENT order and hash to two different identity strings here -- silently
+// defeating the duplicate guard both call sites rely on. Sorting every object's own keys
+// (recursively, at every nesting level -- `solver.forcing` is itself a nested object) removes that
+// dependency entirely while keeping array element ORDER significant, which matters because arrays
+// in this shape represent meaningful sequences (`forcingDisabledFeatures`, `forcingFlippedFilters`)
+// where reordering elements changes what actually happened.
+/** @param {unknown} value @returns {string | undefined} */
+function stableStringify(value) {
+    if (value === undefined) return undefined;
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
+    const obj = /** @type {Record<string, unknown>} */ (value);
+    const keys = Object.keys(obj).filter(k => obj[k] !== undefined).sort();
+    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(obj[k])}`).join(',')}}`;
+}
+
 /**
  * Canonical identity of one persisted discovery event.
  *
@@ -90,10 +111,14 @@ export function makeProvenanceEntry(technique, opts = {}) {
  *
  * This lives at the persistence boundary so every merge/reconcile path gets the same semantics.
  *
+ * Serialized via stableStringify(), not raw JSON.stringify(), so two semantically identical
+ * entries built by different producers (see that function's own comment) cannot hash to different
+ * identities purely because of object key insertion order.
+ *
  * @param {HintProvenanceEntry} entry
  */
 export function provenanceEventIdentity(entry) {
-    if (!entry || typeof entry !== 'object') return JSON.stringify(entry ?? null);
+    if (!entry || typeof entry !== 'object') return stableStringify(entry ?? null);
     const { foundAt: _foundAt, ...rest } = entry;
     const {
         elapsedMs: _elapsedMs,
@@ -103,7 +128,7 @@ export function provenanceEventIdentity(entry) {
         budgetMs: _budgetMs,
         ...search
     } = rest.search || {};
-    return JSON.stringify({ ...rest, search });
+    return stableStringify({ ...rest, search });
 }
 
 /** @param {number[]} path */

@@ -47,11 +47,11 @@ on:
         required: false
         default: '50000000'
       node_budget_advisory_only:
-        description: 'If true, node_budget still sizes the derived work_budget, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). The shard-planner''s wall-time/timeout estimate is sized off the larger derived work_budget in this mode instead of the raw node_budget, since node_budget no longer bounds a level''s real worst-case wall time here. Use this whenever the comparison under test is itself a work-budget-share change.'
+        description: 'If true, node_budget still sizes the derived work_budget, but is NOT passed to the actual per-level solve as a --node-budget ceiling (so nodeBudgetReached can never fire; work_budget becomes the sole binding constraint). The shard-planner''s wall-time/timeout estimate is sized off the larger derived work_budget in this mode instead of the raw node_budget, since node_budget no longer bounds a level''s real worst-case wall time here. Use this whenever the comparison under test is itself a work-budget-share change. REQUIRES strict_total_work_budget=true (enforced by an early workflow step) -- without a node-budget ceiling AND without a strict work-budget ceiling, a level''s real cost is unbounded (additive tiers measured 1.5x-467x beyond the nominal work_budget), and the planner''s timeout estimate cannot safely bound it either.'
         required: false
         default: 'false'
       strict_total_work_budget:
-        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics.'
+        description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics. Mandatory (and enforced) when node_budget_advisory_only=true -- see that input''s own description.'
         required: false
         default: 'false'
       budget_ms:
@@ -94,6 +94,10 @@ on:
         description: 'Minimum number of levels on which required_participation_stage must expand nodes or spend work. Used only when required_participation_stage is set.'
         required: false
         default: '1'
+      min_participation_rate:
+        description: 'Minimum FRACTION (0-1) of dispatched levels on which required_participation_stage must expand nodes or spend work. Used only when required_participation_stage is set. An absolute floor like min_participating_levels=1 is trivially satisfied on a large population; this scales with population size instead. Blank/0 disables the rate check (min_participating_levels alone still applies).'
+        required: false
+        default: ''
       concurrency_suffix:
         description: 'Optional suffix appended to this workflow''s concurrency group. Set distinct values on paired A/B dispatches when they should run concurrently.'
         required: false
@@ -128,6 +132,37 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Reject the advisory-node-budget / non-strict-work-budget combination
+        shell: bash
+        run: |
+          set -euo pipefail
+          # 2026-09-09 historical regression-risk audit item #3: with node_budget_advisory_only=true,
+          # --node-budget is never passed to the solve at all (nodeBudgetReached can't bind), so the
+          # ONLY thing bounding a level's real worst-case cost is work_budget -- but strict_total_work_
+          # budget defaults false, and work_budget is then only a STARTING allocation additive fallback/
+          # retry tiers can spend 1.5x-467x beyond (measured, see reports/2026-08-28-additive-tier-
+          # participation-audit.md). plan-highbudget-shards.mjs sizes each shard's job timeout from the
+          # SAME nominal work_budget-derived estimate with only a flat 1.5x safety margin -- nowhere
+          # near enough headroom for that measured multiplier -- so this combination recreates exactly
+          # the timeout/selective-censoring mechanism found during the admissible-order confirmation
+          # work: some levels get killed by the job timeout well before they would have finished or
+          # genuinely exhausted, non-uniformly biasing which levels count as "unsolved" in a way that
+          # looks like real solver evidence. Reject it outright rather than let it plan and run: a
+          # caller needing node_budget_advisory_only for a work-budget-share comparison (its own
+          # documented purpose) must also pass strict_total_work_budget=true, which makes work_budget
+          # an actual whole-solve ceiling and makes the planner's timeout estimate bounding again.
+          if [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && [ "${{ inputs.strict_total_work_budget }}" != "true" ]; then
+            echo "node_budget_advisory_only=true requires strict_total_work_budget=true." >&2
+            echo "Without a node-budget ceiling AND without a strict work-budget ceiling, a level's real" >&2
+            echo "worst-case cost is unbounded (additive fallback/retry tiers measured 1.5x-467x beyond" >&2
+            echo "the nominal work_budget -- see reports/2026-08-28-additive-tier-participation-audit.md)," >&2
+            echo "so the shard planner's timeout estimate cannot safely bound it either. This recreates" >&2
+            echo "the timeout/selective-censoring issue found during the admissible-order confirmation" >&2
+            echo "work: some levels get killed by the job timeout non-uniformly, biasing the result set." >&2
+            echo "Pass strict_total_work_budget=true alongside node_budget_advisory_only=true." >&2
+            exit 2
+          fi
+
       - name: Resolve and validate the exact id population
         id: ids
         shell: bash
@@ -158,6 +193,60 @@ jobs:
           echo "Resolved ${count} unique id(s):"
           cat logs/solver-targeted-sweep/ids.txt
 
+      - name: 'Execution-family canary: verify the resolved config on one representative level'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # docs/solver-research-operating-model.md's "before expensive decision-bearing runs"
+          # checklist requires an execution-family canary -- run the smallest representative cell
+          # under the EXACT resolved cap/flags/selector mode, verifying work/node/deadline stop
+          # semantics and expected output fields BEFORE scaling. Nothing previously enforced this
+          # mechanically anywhere (2026-09-09 solver-development-operating-loop audit). One level
+          # (the first resolved id -- deterministic, no extra selection logic needed) is enough to
+          # catch the structural failure modes this guards against: a resolved ablation/flag
+          # combination that eliminates every attempt config (zero attempts dispatched), a crash/
+          # exception path, a malformed output row, or a wall-clock deadline that fires when it
+          # should be non-binding -- before committing to the full (potentially 250-shard) matrix.
+          # See scripts/verify-canary-cell.mjs's own header comment for why this deliberately does
+          # NOT check target-stage participation rate (that stays validate-solver-sweep-
+          # integrity.mjs's job on the full population).
+          export CANARY_ID=$(head -n1 logs/solver-targeted-sweep/ids.txt)
+          canary_pos=$(node -e "
+            const fs = require('node:fs');
+            const corpus = JSON.parse(fs.readFileSync(process.env.CORPUS_PATH, 'utf8'));
+            const levels = Array.isArray(corpus) ? corpus : corpus.levels;
+            const idx = levels.findIndex(lv => lv.id === process.env.CANARY_ID);
+            if (idx === -1) { console.error(\`canary id \${process.env.CANARY_ID} not found in \${process.env.CORPUS_PATH}\`); process.exit(1); }
+            console.log(idx + 1);
+          ")
+          # Flag construction here is DELIBERATELY duplicated from "Run level-blind-capability-
+          # sweep on this shard's slice" below, not factored into a shared script: the whole point
+          # of a canary is that it runs under the SAME resolved config the real shards will use --
+          # if you change one, change the other identically.
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          nodebudget=()
+          [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="${{ inputs.corpus }}" \
+            --levels="pos:${canary_pos}" \
+            --budget-ms="${{ inputs.budget_ms }}" \
+            "${nodebudget[@]}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            "${extra[@]}" \
+            --out=logs/solver-targeted-sweep/canary.json \
+            --summary-out=logs/solver-targeted-sweep/canary-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-targeted-sweep/canary.json --expect-no-deadline-truncation=true
+        env:
+          CORPUS_PATH: ${{ inputs.corpus }}
+
       - name: Run the shard planner
         id: plan
         shell: bash
@@ -174,7 +263,14 @@ jobs:
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-targeted-sweep/shard-plan.json
-          shards_json=$(jq -c . logs/solver-targeted-sweep/shard-plan.json)
+          # {shard: [...]} ONLY -- the file also carries a top-level `planning` provenance object
+          # (plan-highbudget-shards.mjs) that is not itself an array; spreading the WHOLE file into
+          # `strategy.matrix` (as `jq -c .` did) makes GitHub Actions treat `planning` as a second,
+          # invalid matrix axis, silently producing zero solve-shards job instances (regression from
+          # the 2026-09-05 commit that added `planning` -- see plan-highbudget-shards.mjs's own
+          # history; caught when this workflow's very first post-regression dispatch expanded to 0
+          # shard jobs despite the plan step itself reporting a nonzero shard count).
+          shards_json=$(jq -c '{shard: .shard}' logs/solver-targeted-sweep/shard-plan.json)
           echo "shards=${shards_json}" >> "$GITHUB_OUTPUT"
           echo "shard_count=$(jq '.shard | length' logs/solver-targeted-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
 
@@ -324,6 +420,7 @@ jobs:
           if [ -n "${{ inputs.required_participation_stage }}" ]; then
             extra+=("--required-stage=${{ inputs.required_participation_stage }}")
             extra+=("--min-participating-levels=${{ inputs.min_participating_levels }}")
+            [ -n "${{ inputs.min_participation_rate }}" ] && extra+=("--min-participation-rate=${{ inputs.min_participation_rate }}")
           fi
           node scripts/validate-solver-sweep-integrity.mjs \
             --expected-ids=artifact-staging/plan/ids.txt \
@@ -331,10 +428,21 @@ jobs:
             "${extra[@]}"
 
       - name: Print a solved-count summary to the job log
+        # Runs even when the population-completeness check above fails: that's exactly the
+        # case (a partial/short run) where this per-level breakdown is most needed, since
+        # artifact downloads are blocked in some sandboxed environments and this printed log
+        # is otherwise the only way to recover which ids actually finished and how.
+        if: always()
         shell: bash
         run: |
           node -e "
-          const d = JSON.parse(require('fs').readFileSync('logs/solver-targeted-sweep/combined.json', 'utf8'));
+          let d;
+          try {
+            d = JSON.parse(require('fs').readFileSync('logs/solver-targeted-sweep/combined.json', 'utf8'));
+          } catch (e) {
+            console.log('No combined.json present (' + e.message + ') -- every shard likely failed before writing output.');
+            process.exit(0);
+          }
           const solved = d.levels.filter(l => l.ok).length;
           console.log('Targeted sweep: ' + solved + '/' + d.levels.length + ' solved.');
           console.log('Solved: ' + d.levels.filter(l => l.ok).map(l => l.id).join(', '));
@@ -342,8 +450,17 @@ jobs:
           "
 
       - name: Print an aggregate/per-level workSpent and per-stage breakdown to the job log
+        # See the note on "Print a solved-count summary" above -- same reasoning: a partial
+        # run's per-level detail (this step's per-stage tables include every id's ok/status,
+        # not just the ones that reached that stage) is exactly what's needed to recover
+        # results when validation failed and artifact downloads aren't available.
+        if: always()
         shell: bash
         run: |
+          if [ ! -f logs/solver-targeted-sweep/combined.json ]; then
+            echo "No combined.json present -- every shard likely failed before writing output."
+            exit 0
+          fi
           node scripts/summarize-targeted-sweep-work.mjs \
             --in=logs/solver-targeted-sweep/combined.json \
             --stage=admissible-order-alternate-tiebreak-retry,admissible-order-fallback,connectivity-axis-prune-disabled-retry

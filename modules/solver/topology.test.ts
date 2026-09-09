@@ -105,6 +105,37 @@ test('volume prune: fires when too few fresh cells remain for the required lengt
     assert.equal(isConnected(K(1, 1), stateAt(fits, fPrep, [K(1, 1)]), fits, fPrep), true);
 });
 
+// Regression for reports/2026-09-09-portal-restoration-evidence-hardening-001.md: the blanket
+// `level.portalMap.size === 0` guard was removed from isConnected's volume tail, but portal-level
+// EVALUATION stays gated behind the opt-in PRUNE_CONNECTIVITY_VOLUME_PORTAL flag (default OFF)
+// until the population-scale A/B lands. Same corridor-too-short/long-enough shape as the
+// portal-free volume test above, with an unrelated portal pair (neither terminal is the gate or
+// goal) added purely to make `level.portalMap.size > 0` true.
+test('volume prune on a portal level stays gated behind the opt-in PRUNE_CONNECTIVITY_VOLUME_PORTAL flag', () => {
+    const portals = [{ x1: 2, y1: 1, x2: 3, y2: 1 }];
+    const tinyPortal = makeLevel({ grid: { w: 4, h: 1 }, goal: { x: 4, y: 1 }, reqLen: 8, portals });
+    const tPrep = prepLevel(tinyPortal);
+    assert.ok(tinyPortal.portalMap.size > 0, 'fixture must actually be a portal level');
+    const tinyState = stateAt(tinyPortal, tPrep, [K(1, 1)]);
+
+    assert.equal(isConnected(K(1, 1), tinyState, tinyPortal, tPrep), true,
+        'with no ablation config, portal levels must stay unevaluated (production default-OFF), even though this state is genuinely too short-volumed');
+
+    tPrep._cfg = { PRUNE_CONNECTIVITY_VOLUME_PORTAL: false };
+    assert.equal(isConnected(K(1, 1), tinyState, tinyPortal, tPrep), true,
+        'an explicit false must also suppress evaluation on a portal level');
+
+    tPrep._cfg = { PRUNE_CONNECTIVITY_VOLUME_PORTAL: true };
+    assert.equal(isConnected(K(1, 1), tinyState, tinyPortal, tPrep), false,
+        'the opt-in flag must let the SAME infeasible state be evaluated on a portal level');
+
+    const fitsPortal = makeLevel({ grid: { w: 4, h: 1 }, goal: { x: 4, y: 1 }, reqLen: 3, portals });
+    const fPortalPrep = prepLevel(fitsPortal);
+    fPortalPrep._cfg = { PRUNE_CONNECTIVITY_VOLUME_PORTAL: true };
+    assert.equal(isConnected(K(1, 1), stateAt(fitsPortal, fPortalPrep, [K(1, 1)]), fitsPortal, fPortalPrep), true,
+        'a feasible portal-level state must still pass once the opt-in flag is on');
+});
+
 // Research-only _connectivityRejectionObserver (2026-08-28, queue item #0's learned-failure Stage
 // A — see reports/2026-08-24-learned-failure-certificate-audit.md). Reuses each subtype's own
 // fixture above; the point of this test is the observer's own contract, not re-proving those prunes.

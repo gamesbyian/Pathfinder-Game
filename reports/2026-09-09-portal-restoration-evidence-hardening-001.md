@@ -126,13 +126,13 @@ This is not a new theory in the repository. `isParityCompatibleEndpoint` already
 
 The current whole-population census finds 21 of 954 portal-bearing Corpus-2 levels with zero twist pairs, 9 currently production-solved. This remains a bounded correctness/coverage cleanup, not a standalone solve-rate experiment.
 
-Recommended implementation gate:
+**Implemented (2026-09-09):**
 
-- reuse `prep.parityPortalDistMaps.length === 0` as the O(1) search-time proof that no twist pair exists; `prepLevel` always initializes this list and records only opposite-parity pairs;
-- allow ordinary `PRUNE_PARITY` on those levels;
-- allow `getActiveGates` to parity-filter gates when all portal pairs are same-parity;
-- add unit cases for same-parity portals (filter/reject exactly as portal-free) and a twist portal (retain current conservative behaviour);
-- run published regression plus stored valid-path differential. A separate 21-level solve-rate A/B is not justified.
+- reuses `prep.parityPortalDistMaps.length === 0` as the O(1) search-time proof that no twist pair exists (`prepLevel` always initializes this list and records only opposite-parity pairs);
+- ordinary `PRUNE_PARITY` now applies unweakened on those levels (`hard-prune-pipeline.ts`);
+- `getActiveGates` now parity-filters gates when all portal pairs are same-parity and a `prep` is supplied (`orchestration.ts`; the parameter is optional so callers without a prepared level, e.g. `scripts/solver-parallel/race.mjs`, keep their prior unfiltered-on-portals behavior);
+- unit cases cover same-parity portals (filter/reject exactly as portal-free) and a twist portal (retains the prior conservative behaviour) for both call sites (`modules/solver/portal-restoration-invariants.test.ts`);
+- published regression (`npm run solver:regression -- --check`, 160/160, no regressions) and a dedicated stored valid-path differential (`scripts/stress/same-parity-portal-soundness-check.mjs`, 0 violations across all 3 corpora) are both clean. No separate 21-level solve-rate A/B was run, as planned.
 
 ## 5. Frozen experiment contracts
 
@@ -221,7 +221,7 @@ Only after that refresh should new joint-obligation propagation or broad schedul
 Direct analysis has reduced the first restoration tranche to narrower implementation/measurement jobs:
 
 - **MC neighbour budget:** derivation closed; shadow helper repaired; corrected portal reference-labelled branch set + differential + matched-work A/B remain.
-- **Ordinary connectivity volume:** derivation and large stored-path first screen closed; matched-work portal A/B remains.
+- **Ordinary connectivity volume:** derivation and large stored-path first screen closed; blanket carve-out removed behind opt-in `PRUNE_CONNECTIVITY_VOLUME_PORTAL` (default OFF), re-verified sound on shipped code (0 violations, all 3 corpora); matched-work portal A/B on the frozen 954-level population remains (see [`preflight`](2026-09-09-connectivity-volume-portal-ab-001-preflight.md)).
 - **False-goal connectivity mirror:** derivation supports restoration, but a separate triggerability differential remains because completed enumeration certifies absence.
-- **Same-parity parity:** derivation closed and independently mirrored by shipped false-goal parity logic; small implementation/regression task remains.
+- **Same-parity parity:** done. Ordinary `PRUNE_PARITY` (hard-prune-pipeline.ts) and `getActiveGates`'s gate-feasibility filter (orchestration.ts) both now apply unweakened whenever `prep.parityPortalDistMaps.length === 0`, mirroring the same invariant `isParityCompatibleEndpoint` already ships for false-goal endpoints. Unit coverage for same-parity vs. twist on both call sites, `scripts/stress/same-parity-portal-soundness-check.mjs` (0 violations replaying every known stored solution across all 3 corpora), and `npm run solver:regression -- --check` (160/160, no regressions) are all clean.
 - **Portal-aware beam coarse-state merge:** still requires source implementation and fixed-work measurement; no further paper analysis is blocking it.

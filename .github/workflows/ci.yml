@@ -35,6 +35,7 @@ jobs:
             /*
             !/logs/*
             /logs/artifact-metadata.json
+            /logs/solver-canary-baseline.json
             /logs/*.md
             /logs/**/*.md
             !/reports/*
@@ -78,6 +79,7 @@ jobs:
           /*
           !/logs/*
           /logs/artifact-metadata.json
+          /logs/solver-canary-baseline.json
           /logs/*.md
           /logs/**/*.md
           !/reports/*
@@ -119,6 +121,24 @@ jobs:
         run: npm run check:lint
       - name: Run Node and CLI contract tests
         run: npm run test:node
+      - name: Solver capability canary
+        # Tiny semantic canary, not a batch tier: 9 fixed representative levels (data/levels.json),
+        # a few seconds total. This is the ONLY solver-capability check anywhere in this repo that
+        # runs automatically on every PR -- every corpus-scale sweep is a manually-dispatched GHA
+        # workflow, never wired into CI, so nothing previously caught a wholesale solver regression
+        # (a broken attempt ladder, a mis-wired ablation default, a hard-prune correctness bug)
+        # before merge. Reuses scripts/solver-bench.mjs's existing --check/--baseline/--levels
+        # machinery unchanged (see that file's --update-baseline guard, relaxed to allow an
+        # explicit --baseline path to pair with --levels for exactly this "isolated smoke fixture"
+        # use, per its own pre-existing header-comment intent) rather than writing new solve/assert
+        # logic. Regenerate logs/solver-canary-baseline.json with the same --levels/--budget-ms/
+        # --work-budget flags plus --update-baseline whenever this canary set's expected outcome
+        # should change (e.g. a deliberate solvability change to one of these 9 levels).
+        run: |
+          node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
+            --baseline=logs/solver-canary-baseline.json \
+            --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
+            --budget-ms=15000 --work-budget=5000000
       - name: Build production bundle
         run: npm run build
 

@@ -134,7 +134,18 @@ if (outFile) {
 }
 
 if (updateBaseline) {
-    if (order !== 'default' || levelFilter) { console.error('--update-baseline requires the full default-order run (no --order / --levels).'); process.exit(2); }
+    // The default baseline path is the authoritative full-corpus regression gate: writing a
+    // partial/reordered run there would silently narrow what --check actually protects, so that
+    // combination stays rejected. An EXPLICIT --baseline=<path> is a deliberately separate target
+    // (the header comment already documents this as "useful for isolated smoke fixtures") --
+    // relaxed here so a small, fixed --levels subset can seed its own tiny baseline file, which is
+    // exactly what a cheap post-merge solver canary needs (see ci.yml's "Solver capability canary"
+    // step and logs/solver-canary-baseline.json).
+    const usingDefaultBaselinePath = !argMap.has('--baseline');
+    if (usingDefaultBaselinePath && (order !== 'default' || levelFilter)) {
+        console.error('--update-baseline against the default baseline path requires the full default-order run (no --order / --levels). Pass --baseline=<path> to write an isolated smoke-fixture baseline with --levels/--order instead.');
+        process.exit(2);
+    }
     writeFileSync(BASELINE_PATH, JSON.stringify({ budgetMs, workBudget, commit, generatedAt: new Date().toISOString(), solved, failed, totalMs, nodesExpanded }, null, 2) + '\n');
     console.log(`Baseline written to ${BASELINE_PATH} (${solved.length} solved).`);
     process.exit(0);

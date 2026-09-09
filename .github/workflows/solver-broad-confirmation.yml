@@ -179,6 +179,51 @@ jobs:
           echo "total_levels=${COUNT}" >> "$GITHUB_OUTPUT"
           echo "Sealed logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, generator=${{ inputs.generator }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
 
+      - name: 'Execution-family canary: verify the resolved control and treatment configs on one representative level'
+        # Two execution families share this cohort (control: no flags; treatment: enable_flags/
+        # disable_flags), so both get their own canary cell against level 1 of the just-generated,
+        # just-sealed cohort, under the exact resolved config each arm's real shards will use. See
+        # scripts/verify-canary-cell.mjs's own header comment and solver-level-blind-targeted-
+        # sweep.yml's identical step for the full rationale.
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set -euo pipefail
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          deadlineFlag=()
+          [ "${{ inputs.deterministic }}" = "true" ] && deadlineFlag+=("--expect-no-deadline-truncation=true")
+
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json" \
+            --levels="pos:1" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            --out=logs/solver-broad-confirmation/canary-control.json \
+            --summary-out=logs/solver-broad-confirmation/canary-control-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-broad-confirmation/canary-control.json "${deadlineFlag[@]}"
+
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="logs/solver-broad-confirmation/${{ inputs.cohort_id }}.json" \
+            --levels="pos:1" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            "${extra[@]}" \
+            --out=logs/solver-broad-confirmation/canary-treatment.json \
+            --summary-out=logs/solver-broad-confirmation/canary-treatment-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-broad-confirmation/canary-treatment.json "${deadlineFlag[@]}"
+
       - name: Upload the sealed cohort
         uses: actions/upload-artifact@v7
         with:

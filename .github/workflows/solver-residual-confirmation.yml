@@ -158,6 +158,36 @@ jobs:
           echo "total_levels=${COUNT}" >> "$GITHUB_OUTPUT"
           echo "Sealed phase-1 pool logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json: sha256=${SHA}, ${COUNT} levels, commit=${{ github.sha }}, master_seed=${{ inputs.master_seed }}, id_prefix=${{ inputs.id_prefix }}, envelope_caps=${{ inputs.envelope_caps }}"
 
+      - name: 'Execution-family canary: verify the resolved control config on one representative level'
+        # See scripts/verify-canary-cell.mjs's own header comment and solver-level-blind-targeted-
+        # sweep.yml's identical step for the full rationale (docs/solver-research-operating-
+        # model.md's "before expensive decision-bearing runs" checklist, gate #4). Phase 1 is
+        # CONTROL-only (no enable/disable flags at all -- those only ever apply to phase 2's
+        # treatment arm), so this canary needs no flag construction: just the exact resolved
+        # node/work/strict/deadline config phase 1's own shards will use, against level 1 of the
+        # just-generated, just-sealed pool.
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set -euo pipefail
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          deadlineFlag=()
+          [ "${{ inputs.deterministic }}" = "true" ] && deadlineFlag+=("--expect-no-deadline-truncation=true")
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="logs/solver-residual-confirmation/${{ inputs.cohort_id }}-pool.json" \
+            --levels="pos:1" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            --out=logs/solver-residual-confirmation/canary.json \
+            --summary-out=logs/solver-residual-confirmation/canary-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-residual-confirmation/canary.json "${deadlineFlag[@]}"
+
       - name: Upload the sealed pool
         uses: actions/upload-artifact@v7
         with:
@@ -335,6 +365,26 @@ jobs:
           console.log(\`phase-1 control-only sweep complete: \${expectedTotal}/\${expectedTotal}\`);
           "
 
+      - name: Audit residual opportunity before committing to phase 2
+        # scripts/experiment-opportunity-audit.mjs already exists as a Wilson-CI-based "is there
+        # enough headroom to justify this population" preflight (docs/solver-experiment-
+        # opportunity-sizing.md), but was never wired into any workflow -- this is the one place in
+        # the repo where the exact input it needs (a control-only combined report) already exists
+        # BEFORE an expensive fan-out (phase 2) is committed to, making it the natural, minimal
+        # integration point rather than inventing a new mechanism. mode=control-fail matches this
+        # workflow's own residual definition exactly (every phase-1 control failure). The existing
+        # "Freeze the control-failure residual" step below still hard-stops on the degenerate
+        # residual.length===0 case; this step additionally catches the non-degenerate-but-still-
+        # too-small case via CEILING (control already solves >=95% -- see docs/solver-experiment-
+        # opportunity-sizing.md's own warning threshold) before phase 2's shard fan-out runs.
+        shell: bash
+        run: |
+          node scripts/experiment-opportunity-audit.mjs \
+            --control="reports/stress/residual-confirmation-phase1-control.json" \
+            --mode=control-fail \
+            --check=true \
+            --fail-on=ZERO_OPPORTUNITY,CEILING
+
       - name: Freeze the control-failure residual as a new sealed corpus
         id: freeze
         shell: bash
@@ -364,6 +414,38 @@ jobs:
           fs.appendFileSync(fsGithub, \`residual_total=\${residual.length}\n\`);
           fs.appendFileSync(fsGithub, \`phase2_shard_count=\${shardCount}\n\`);
           "
+
+      - name: 'Execution-family canary: verify the resolved treatment config on one representative residual level'
+        # Phase 1's own canary (in generate-pool) already verified the CONTROL execution family;
+        # this verifies the TREATMENT family (enable_flags/disable_flags applied) that phase 2's
+        # treatment shards will use, against level 1 of the just-frozen residual, before phase 2's
+        # fan-out runs. See scripts/verify-canary-cell.mjs's own header comment and solver-level-
+        # blind-targeted-sweep.yml's identical step for the full rationale.
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set -euo pipefail
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          deadlineFlag=()
+          [ "${{ inputs.deterministic }}" = "true" ] && deadlineFlag+=("--expect-no-deadline-truncation=true")
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="logs/solver-residual-confirmation-phase1/${{ inputs.cohort_id }}-residual.json" \
+            --levels="pos:1" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            "${extra[@]}" \
+            --out=logs/solver-residual-confirmation-phase1/canary-treatment.json \
+            --summary-out=logs/solver-residual-confirmation-phase1/canary-treatment-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-residual-confirmation-phase1/canary-treatment.json "${deadlineFlag[@]}"
 
       - name: Upload the sealed residual corpus
         uses: actions/upload-artifact@v7

@@ -586,8 +586,15 @@ export function getFalseGoalTriggerSearchBudgetMs(level: NormalizedLevel): numbe
     return Math.min(120000, Math.max(10000, 5000 + perGateCost * gates));
 }
 
-export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null): number[] {
-    if (level.portalMap.size !== 0 || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
+// `prep` is optional so callers without a prepared level (e.g. scripts/solver-parallel/race.mjs's
+// job-count bookkeeping, which never calls prepLevel) keep their current unfiltered-on-portals
+// behavior; passing it lets a portal level with zero TWIST pairs use the same ordinary parity
+// filter as a portal-free level (reports/2026-09-09-portal-restoration-evidence-hardening-001.md
+// section 4 — every portal jump then contributes zero parity flips, so the ordinary
+// gate-feasibility invariant is unweakened).
+export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: AblationConfig | null, prep?: PrepLevel | null): number[] {
+    const noTwistPortals = level.portalMap.size === 0 || (prep != null && (prep.parityPortalDistMaps?.length ?? 0) === 0);
+    if (!noTwistPortals || (cfg && !cfg.STRATEGY_PARITY_GATE_FILTER)) return gateKeys;
 
     const goalP = keyParity(level.goalKey);
     const feasible = gateKeys.filter(gk => (keyParity(gk) ^ goalP ^ (level.requiredLength & 1)) === 0);
@@ -1550,7 +1557,7 @@ async function runLegacyLatencyPortfolioExperiment(
     prep._forcedPortalExitKey = (opts.forcedPortalExitKey != null) ? opts.forcedPortalExitKey : null;
 
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
-    const activeGates = getActiveGates(level, Array.isArray(level.gateKeys) ? level.gateKeys : [], cfg);
+    const activeGates = getActiveGates(level, Array.isArray(level.gateKeys) ? level.gateKeys : [], cfg, prep);
     const attempts: Attempt[] = [];
     const seen = new Map<string, Attempt>();
     let repeatedAttemptElapsedMs = 0;
@@ -1678,7 +1685,7 @@ async function runStaticPortfolio(level: NormalizedLevel, opts: SolveOpts): Prom
     prep._forcedFirstStepKey = (opts.forcedFirstStepKey != null) ? opts.forcedFirstStepKey : null;
     prep._forcedPortalExitKey = (opts.forcedPortalExitKey != null) ? opts.forcedPortalExitKey : null;
 
-    const activeGates = getActiveGates(level, Array.isArray(level.gateKeys) ? level.gateKeys : [], cfg);
+    const activeGates = getActiveGates(level, Array.isArray(level.gateKeys) ? level.gateKeys : [], cfg, prep);
     const configs = staticPortfolio.techniqueConfigs.map(config => ({ key: attemptConfigKey(config), config }));
     const attemptBudgetMs = staticPortfolio.attemptBudgetMs ?? STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS;
     const workBudget = staticPortfolio.workBudget;
@@ -1808,7 +1815,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
 
     // Build attempt configs, then apply ablation profile/orderingBias filters and ordering overrides.
     const baseConfigs = getConfiguredAttemptConfigs(level, cfg);
-    const activeGates = getActiveGates(level, gateKeys, cfg);
+    const activeGates = getActiveGates(level, gateKeys, cfg, prep);
 
     // The repair fallback(s) (attempts.ts's needsRepairFallback / repairMustTurnBiasedAttempt) and
     // the admissible-order-fallback-search tier (attempts.ts's ADMISSIBLE_ORDER_PROFILES) are both pulled out
@@ -1942,6 +1949,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // repair-fallback's (see repairLateProbeTierWillRun's own comment) — it exists FOR
             // levels with no repair config in the ladder, not levels that have one.
             ['late-repair-search', !hasRepairConfig],
+            ['guidance-goal-distance-retry', hasMainConfig],
+            // Inverted for the same reason as late-repair-search above: this tier synthesizes its
+            // own repair attempt as a multi-seed extension of late-repair-search, so it shares that
+            // tier's structural precondition (no configured repair fallback), not repair-fallback's.
+            ['late-repair-multiseed-retry', !hasRepairConfig],
         ]);
         const order = [...runnable.keys()];
         const lastTechnique = solveResult.attempts.length ? classify(solveResult.attempts.at(-1)!) : null;

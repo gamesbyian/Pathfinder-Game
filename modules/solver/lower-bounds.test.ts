@@ -102,7 +102,7 @@ test('prepLevel output can feed extracted lower-bound helpers', () => {
 import { createState, applyMove, getNeighbors, undoMove } from './search-state.js';
 import { getRealLengthFromState } from './solution.js';
 import { isConnected } from './topology.js';
-import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked } from './lower-bounds.js';
+import { surroundLowerBound, adjTurnLowerBound, mcMSTLowerBound, mpMSTLowerBound, mustTurnDeadlocked, mustCrossForcedNeighborDeadlocked, mustCrossNeighborBudgetDeadlocked } from './lower-bounds.js';
 import {
   W,
   wireLevel,
@@ -450,6 +450,65 @@ test('mustCrossForcedNeighborDeadlocked: false once mustCrossMask is fully clear
   applyMove(W(4, 3), st, l, prep, false); // ...complete via E: both crossings done
   assert.equal(st.mustCrossMask, 0, 'fully satisfied');
   assert.equal(mustCrossForcedNeighborDeadlocked(W(4, 3), st, l, prep), false, 'guarded by mustCrossMask === 0');
+});
+
+// Regression for reports/2026-09-09-portal-restoration-evidence-hardening-001.md: the blanket
+// `level.portalMap.size > 0` early return was removed from mustCrossNeighborBudgetDeadlocked.
+// Portal-level EVALUATION was gated behind the opt-in PRUNE_MC_NEIGHBOR_BUDGET_PORTAL flag
+// (default OFF) until reports/2026-09-09-mc-neighbor-budget-portal-ab-001-preflight.md's
+// frozen matched-work A/B landed (52 gains / 0 losses, all referee-valid); promoted to
+// production default-on 2026-09-09. Same geometry as repair-search.test.ts's "stochastic
+// takePly retains a candidate that deterministic neighbor-budget rejects" (5x5, mustCross at
+// (3,3), reqInt=0): the prefix visits N-neighbor (3,2), so moving to (2,2) leaves (3,2)
+// visited-but-not-current, and MC's N-axis is still unused — a real reject on a portal-free
+// level. Add an unrelated portal pair (well away from every cell this path touches) purely to
+// make `level.portalMap.size > 0` true.
+test('mustCrossNeighborBudgetDeadlocked: portal levels evaluate by default, with an explicit-false escape hatch', () => {
+  const portalLevel = wireLevel({
+    grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },
+    mustCross: [{ x: 3, y: 3 }], reqLen: 20, reqInt: 0,
+    portals: [{ a: { x: 1, y: 4 }, b: { x: 1, y: 5 } }],
+  });
+  const prefix = [W(1, 1), W(2, 1), W(3, 1), W(4, 1), W(5, 1), W(5, 2), W(4, 2), W(3, 2)];
+  const candidate = W(2, 2);
+  const walkToCandidate = (prep: ReturnType<typeof prepLevel>) => {
+    const state = createState(prefix[0], portalLevel, prep);
+    for (const next of prefix.slice(1)) applyMove(next, state, portalLevel, prep, false);
+    applyMove(candidate, state, portalLevel, prep, false);
+    return state;
+  };
+
+  assert.ok(portalLevel.portalMap.size > 0, 'fixture must actually be a portal level');
+
+  const defaultPrep = prepLevel(portalLevel);
+  const defaultState = walkToCandidate(defaultPrep);
+  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, defaultState, portalLevel, defaultPrep), true,
+    'with no ablation config, portal levels evaluate by default (production default-ON)');
+
+  const explicitOnPrep = prepLevel(portalLevel);
+  explicitOnPrep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: true };
+  const explicitOnState = walkToCandidate(explicitOnPrep);
+  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, explicitOnState, portalLevel, explicitOnPrep), true,
+    'an explicit true must be equivalent to the default');
+
+  const explicitOffPrep = prepLevel(portalLevel);
+  explicitOffPrep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: false };
+  const explicitOffState = walkToCandidate(explicitOffPrep);
+  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, explicitOffState, portalLevel, explicitOffPrep), false,
+    'an explicit false must still suppress evaluation on a portal level (research escape hatch)');
+
+  // Same geometry, no portals: the flag must be irrelevant off portal levels (the early
+  // return only ever triggers when portalMap.size > 0).
+  const portalFreeLevel = wireLevel({
+    grid: { w: 5, h: 5 }, gates: [{ x: 1, y: 1 }], goal: { x: 5, y: 5 },
+    mustCross: [{ x: 3, y: 3 }], reqLen: 20, reqInt: 0,
+  });
+  const portalFreePrep = prepLevel(portalFreeLevel);
+  const portalFreeState = createState(prefix[0], portalFreeLevel, portalFreePrep);
+  for (const next of prefix.slice(1)) applyMove(next, portalFreeState, portalFreeLevel, portalFreePrep, false);
+  applyMove(candidate, portalFreeState, portalFreeLevel, portalFreePrep, false);
+  assert.equal(mustCrossNeighborBudgetDeadlocked(candidate, portalFreeState, portalFreeLevel, portalFreePrep), true,
+    'portal-free levels reject with or without prep._cfg (sanity anchor for the scenario above)');
 });
 
 test('STRATEGY_LOWER_BOUND_MEMO=false bypasses the caches with identical values', () => {

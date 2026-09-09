@@ -2051,6 +2051,23 @@ test('lifecycle telemetry separates mechanical eligibility from disabled routing
     }
 });
 
+test('lifecycle telemetry reports guidance-goal-distance-retry and late-repair-multiseed-retry as mechanically instantiated (regression, stage-lifecycle instantiation projection gap)', async () => {
+    // Before the fix, the hand-maintained `instantiated` map in orchestration.ts's `finish()`
+    // stopped at 'late-repair-search' and never listed either of these two canonical stage-plan
+    // entries, so the missing lookup silently fell back to `undefined` and both fields were
+    // falsely reported as `false` even though the stages are mechanically available here (a main
+    // config with no configured repair fallback satisfies both stages' structural preconditions).
+    const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        lifecycleTelemetry: true,
+    });
+    const lifecycle = result.stageLifecycle as Record<string, any>;
+    for (const name of ['guidance-goal-distance-retry', 'late-repair-multiseed-retry']) {
+        assert.equal(lifecycle[name].mechanicallyEligible, true, `${name} has a mechanics-selected config`);
+        assert.equal(lifecycle[name].instantiated, true, `${name} has a mechanics-selected config`);
+    }
+});
+
 test('attempt work telemetry sums exactly to whole-level canonical work', async () => {
     const result = await solveLevel(makeLineLevel() as unknown as NormalizedLevel, {
         timeBudgetMs: 10_000,

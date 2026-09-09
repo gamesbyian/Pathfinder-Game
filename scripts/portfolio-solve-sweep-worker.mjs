@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { runWorkerMain } from './solver-worker-pool.mjs';
 import { deserializePortfolioExperiment } from './portfolio-solve-sweep-lib.mjs';
+import { toRaceLevelOpts } from './solver-parallel/race-opts.mjs';
 
 installBrowserStubs();
 const { createSolver } = await import('../modules/solver.js');
@@ -37,13 +38,12 @@ runWorkerMain(async (task) => {
     try {
         if (racePoolSize > 0) {
             const pool = getRacePool(racePoolSize);
-            result = await pool.solveLevel(raw, {
-                timeBudgetMs: solveOpts.timeBudgetMs,
-                repairAdditiveBudgetMultiplierOverride: solveOpts.repairAdditiveBudgetMultiplierOverride,
-                attractionDiversityBudgetFractionOverride: solveOpts.attractionDiversityBudgetFractionOverride,
-                goalAttractionDisabledRetryBudgetFractionOverride: solveOpts.goalAttractionDisabledRetryBudgetFractionOverride,
-                ablation: solveOpts.ablation, // race.mjs consumes levelOpts.ablation; thread it explicitly.
-            });
+            // toRaceLevelOpts (scripts/solver-parallel/race-opts.mjs) is the single canonical
+            // transport boundary onto race.mjs's supported option surface, shared with
+            // portfolio-solve-sweep.mjs's own single-worker raced path — throws loudly instead of
+            // silently dropping a field race.mjs cannot honor (e.g. a caller-set nodeBudget/
+            // workBudget), rather than reconstructing a hand-picked subset here that can drift.
+            result = await pool.solveLevel(raw, toRaceLevelOpts(solveOpts));
         } else {
             const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
             const serializedPortfolio = solveOpts.legacyLatencyPortfolioExperiment ?? solveOpts.portfolioExperiment;
