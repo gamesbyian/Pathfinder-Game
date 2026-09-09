@@ -33,6 +33,13 @@ interface BeamNode extends BeamPathNode {
     prev: BeamNode | null; score: number; insOrd: number; treeOrd: number;
     ints: number; mpVisitedMask: number; mustCrossMask: number; flipperUsedMask: number;
     surroundMask: number; mustTurnMask: number; adjTurnMask: number;
+    /** Bitset of portal PAIR indices consumed so far (bit i = pair i jumped at least once),
+     *  keyed by a per-call `pairIndexByCell` table built from `level.portalMap` — NOT a fixed-width
+     *  schema assumption (see STRATEGY_PORTAL_COARSE_STATE_MERGE's own comment). Always 0 on a
+     *  portal-free level or when pair tracking is unsafe for this level's pair count; harmless to
+     *  carry unconditionally (one extra integer field, same allocation-shape reasoning as the other
+     *  7 constraint scalars above). See reports/2026-09-09-portal-beam-state-identity-preflight-001.md. */
+    usedPortalPairs: number;
 }
 
 /** Research-only (docs/solver-search-resumability.md): a captured beam continuation at a phase
@@ -58,7 +65,7 @@ export interface BeamContinuation {
 // reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. Collision-free regardless of any
 // mechanic's cardinality since every field is delimited, not shifted.
 function beamStateKey(c: BeamNode): string {
-    return `${c.ints}|${c.mpVisitedMask}|${c.mustCrossMask}|${c.flipperUsedMask}|${c.surroundMask}|${c.mustTurnMask}|${c.adjTurnMask}`;
+    return `${c.ints}|${c.mpVisitedMask}|${c.mustCrossMask}|${c.flipperUsedMask}|${c.surroundMask}|${c.mustTurnMask}|${c.adjTurnMask}|${c.usedPortalPairs}`;
 }
 
 /** Single implementation of the pre-move forced-first-step prune shared by DFS and beam. */
@@ -611,9 +618,15 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted, work: nodesExpandedTotal + frontierIndex,
             paths: nodes.map(node => [..._reconstructBeamPath(node, [])]), ...(details ? { details } : {}) });
     };
-    // Coarse state merge: safe when there are no portals (portals aren't captured in sc).
-    // Ablation: STRATEGY_COARSE_STATE_MERGE can disable this optimisation independently.
-    const useCoarseStateMerge = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_COARSE_STATE_MERGE);
+    // Coarse state merge. Portal-free: default-ON, STRATEGY_COARSE_STATE_MERGE can disable it.
+    // Portal-bearing: default-OFF opt-in via STRATEGY_PORTAL_COARSE_STATE_MERGE — the merge key
+    // below folds in `usedPortalPairs` (see BeamNode's own doc) so it no longer collapses
+    // candidates that consumed different portal pairs, but reports/2026-09-09-portal-beam-used-
+    // pair-aliasing-measurement-001.md's own aliasing measurement is a representation gap finding,
+    // not a solve-rate result — production stays unchanged until the fixed-work A/B lands.
+    const useCoarseStateMerge = level.portalMap.size === 0
+        ? (!cfg || cfg.STRATEGY_COARSE_STATE_MERGE)
+        : cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE === true;
     // Ablation: STRATEGY_MECHANIC_BUCKET_RETENTION can disable mechanic-bucket retention even when the config requests it.
     const effectiveMechanicBucketRetention = mechanicBucketRetention && (!cfg || cfg.STRATEGY_MECHANIC_BUCKET_RETENTION);
     // Fast numeric coarse-state-merge/mechanic-bucket-retention keys, computed once per call (not per candidate/phase) from
@@ -643,7 +656,34 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const _adjBase = (prep.initialAdjTurnMask ?? 0) + 1;
     const _intsBase = level.requiredIntersections + 1;
     const _coarseStateKeyProduct = KEY_SPACE * _intsBase * _mpBase * _mcBase * _flipperBase * _surroundBase * _turnBase * _adjBase;
-    const _numericCoarseStateKeySafe = Number.isSafeInteger(_coarseStateKeyProduct) && !prep._forceBeamCoarseStateStringKeyForTests;
+    // Portal levels always take the string-key path below: usedPortalPairs is not folded into the
+    // numeric mixed-radix product (see STRATEGY_PORTAL_COARSE_STATE_MERGE's own comment on why a
+    // fixed-width numeric base is the wrong tool for an unbounded-cardinality field), and portal
+    // levels never reached this code before restoration (useCoarseStateMerge was always false for
+    // them), so routing them through the already-proven-correct string key is not a regression.
+    const _numericCoarseStateKeySafe = level.portalMap.size === 0
+        && Number.isSafeInteger(_coarseStateKeyProduct) && !prep._forceBeamCoarseStateStringKeyForTests;
+    // Per-call portal pair index table (built once, not per candidate) — see BeamNode's own doc.
+    // Bit i of a node's usedPortalPairs = "pair i has been jumped at least once by this path".
+    // Safety cap mirrors this file's established "fast common path + provably-safe abstention"
+    // pattern (contrast the unsafe fixed-width mask class of bug flipperUsedMask's own 2**n fix
+    // above addresses): validateRawLevel does not cap portal-pair cardinality, so a schema-valid
+    // level could theoretically exceed the 30 bits a plain int32 bitmask can safely hold. Rather
+    // than reach for a bigint (extra per-candidate cost for a case never observed on any known
+    // corpus — max seen is 7 pairs), abstain: usedPortalPairs stays 0 for every candidate on such a
+    // level, which is exactly the pre-restoration (merge-disabled-for-portals) safe default, not a
+    // silent miscount.
+    const _portalPairIndexByCell: Map<number, number> | null = level.portalMap.size > 0 ? new Map() : null;
+    if (_portalPairIndexByCell) {
+        let _nextPairIdx = 0;
+        for (const [cell, portal] of level.portalMap) {
+            if (_portalPairIndexByCell.has(cell)) continue;
+            _portalPairIndexByCell.set(cell, _nextPairIdx);
+            _portalPairIndexByCell.set(portal.dest, _nextPairIdx);
+            _nextPairIdx++;
+        }
+    }
+    const _portalPairTrackingSafe = !_portalPairIndexByCell || _portalPairIndexByCell.size / 2 <= 30;
     // Numeric coarse-state key: strict positional (mixed-radix) encoding — every field is strictly
     // smaller than its own base by construction (masks are `< 2^bitCount`; `ints` is bounded by
     // `evaluatePrunedMove`'s own `state.ints > level.requiredIntersections` reject, so always `<= requiredIntersections`;
@@ -660,7 +700,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     // Root node: prev=null, key=startKey, depth=0. resumeFrom (see header comment) substitutes a
     // prior call's paused frontier/counters here instead of starting a fresh search from the gate.
     let frontier: BeamNode[] = resumeFrom ? resumeFrom.frontier
-        : [{ key: startKey, prev: null, depth: 0, score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 }];
+        : [{ key: startKey, prev: null, depth: 0, score: 0, ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0, usedPortalPairs: 0 }];
     let lastYield = startTime;
     // Work-based budget: beam search terminates in at most requiredLength + portal-pair phases.
     const maxPhases = level.requiredLength + Math.floor(level.portalMap.size / 2);
@@ -841,7 +881,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 if (beforeForced && beforeForced.length !== neighbors.length) for (const removed of beforeForced) {
                     if (neighbors.includes(removed)) continue;
                     const diagnosticNode: BeamNode = { key: removed, prev: node, depth: node.depth + 1, score: node.score,
-                        ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 };
+                        ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0, usedPortalPairs: 0 };
                     hardPrunedForResearch!.push(diagnosticNode);
                     hardPruneContexts!.push({ path: [..._reconstructBeamPath(diagnosticNode, [])],
                         cause: '_forced-first-step', diagnostics });
@@ -879,7 +919,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 const ok = verdict === 'pass';
                 if (research) {
                     const diagnosticNode: BeamNode = { key: next, prev: node, depth: node.depth + 1, score: node.score,
-                        ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0 };
+                        ints: 0, mpVisitedMask: 0, mustCrossMask: 0, flipperUsedMask: 0, surroundMask: 0, mustTurnMask: 0, adjTurnMask: 0, insOrd: 0, treeOrd: 0, usedPortalPairs: 0 };
                     generatedForResearch!.push(diagnosticNode);
                     if (!ok) {
                         hardPrunedForResearch!.push(diagnosticNode);
@@ -923,11 +963,19 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                     // candidate would have had under a score-order walk".
                     const _ci = _childIdx++;
                     const _tb = _BEAM_DEBUG ? _hrtNow() : 0n;
+                    // usedPortalPairs: inherited from the parent unchanged on an ordinary move; on a
+                    // jump, OR in the departed pair's bit (abstains — stays inherited, never guesses —
+                    // when pair tracking is unsafe for this level's cardinality; see its own doc above).
+                    let _usedPortalPairs = node.usedPortalPairs;
+                    if (isJump && _portalPairTrackingSafe && _portalPairIndexByCell) {
+                        const _pairIdx = _portalPairIndexByCell.get(pos);
+                        if (_pairIdx !== undefined) _usedPortalPairs |= (1 << _pairIdx);
+                    }
                     cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
                                  ints: ws.ints, mpVisitedMask: ws.mpVisitedMask, mustCrossMask: ws.mustCrossMask,
                                  flipperUsedMask: ws.flipperUsedMask, surroundMask: ws.surroundMask,
                                  mustTurnMask: ws.mustTurnMask, adjTurnMask: ws.adjTurnMask,
-                                 insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci });
+                                 insOrd: _scoreBase + _ci, treeOrd: _treeBase + _ci, usedPortalPairs: _usedPortalPairs });
                     if (_BEAM_DEBUG) { _dbgCandBuildNs += _hrtNow() - _tb; _dbgCandBuildCalls++; }
                 }
                 undoMove(undo, ws);

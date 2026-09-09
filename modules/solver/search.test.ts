@@ -452,6 +452,87 @@ test('_composeBeamNumericCoarseStateKey: a real 32nd-flipper state (bit 31 set) 
   assert.equal(keyWithout, 5);
 });
 
+// Regression for reports/2026-09-09-portal-beam-used-pair-aliasing-measurement-001.md: two
+// candidates reaching the SAME cell with IDENTICAL constraint-state masks but through DIFFERENT
+// portal pairs must NOT be merged into one — the aliasing measurement found that a plain
+// count/transient key (no pair identity) collapses such candidates at a material rate. Geometry:
+// gate (2,0) has exactly two neighbors, both portal terminals (pair 0 at x=1, pair 1 at x=3),
+// each jumping straight down two rows; each destination then has exactly two open neighbors, one
+// of which — (2,2) — is shared by BOTH branches. Symmetric blocking keeps every earlier phase's
+// candidate count at or below beamWidth (nothing gets width-culled before the collision), so the
+// collision phase (4 candidates: two at (2,2) via different pairs, one each at (1,3) and (3,3))
+// is the first point cands.length exceeds beamWidth and coarse merge actually runs.
+function makePortalConvergenceLevel() {
+  return makeLevel({
+    grid: { w: 5, h: 4 },
+    requiredLength: 9, // odd: keeps PRUNE_PARITY's first-move check satisfied for both branches
+    goalKey: PACK(4, 3),
+    gateKeys: [PACK(2, 0)],
+    blockSet: new Set([
+      PACK(2, 1),                 // removes the gate's third (straight-down) neighbor
+      PACK(0, 2), PACK(1, 1),     // isolates (1,2)'s neighbors down to (2,2) and (1,3)
+      PACK(4, 2), PACK(3, 1),     // isolates (3,2)'s neighbors down to (2,2) and (3,3)
+    ]),
+    portalMap: new Map([
+      [PACK(1, 0), { dest: PACK(1, 2), color: '#fff' }],
+      [PACK(1, 2), { dest: PACK(1, 0), color: '#fff' }],
+      [PACK(3, 0), { dest: PACK(3, 2), color: '#fff' }],
+      [PACK(3, 2), { dest: PACK(3, 0), color: '#fff' }],
+    ]),
+  });
+}
+
+/** Which portal pair (by A-terminal x-coordinate, 1 or 3) a reconstructed candidate path used,
+ *  derived purely from the path's own cell sequence — independent of BeamNode.usedPortalPairs,
+ *  so this is an outside check on the merge's observable effect, not a tautological readback. */
+function pairUsedByPath(path: number[]): number | null {
+  for (let i = 1; i < path.length; i++) {
+    const from = path[i - 1], to = path[i];
+    if (from === PACK(1, 0) && to === PACK(1, 2)) return 1;
+    if (from === PACK(3, 0) && to === PACK(3, 2)) return 3;
+  }
+  return null;
+}
+
+test('beam coarse-state merge on a portal level does not collapse candidates that used different portal pairs (opt-in flag on)', async () => {
+  const level = makePortalConvergenceLevel();
+  const prep = prepLevel(level);
+  prep._cfg = { STRATEGY_PORTAL_COARSE_STATE_MERGE: true } as any;
+  prep._metrics = { nodesExpanded: 0 };
+  const records: Array<{ stage: string; paths: number[][] }> = [];
+  prep._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
+
+  await beamSearchFromGate(PACK(2, 0), level, prep, SCORING_PROFILES.default, 5000, Date.now(), null, 2, null, false);
+
+  const mergeRecords = records.filter(r => r.stage === 'post-production-coarse-state-merge');
+  const collisionRecord = mergeRecords.find(r => r.paths.some(p => p.at(-1) === PACK(2, 2)));
+  assert.ok(collisionRecord, 'expected a post-merge record reaching the shared convergence cell (2,2)');
+  const atConvergence = collisionRecord!.paths.filter(p => p.at(-1) === PACK(2, 2));
+  assert.equal(atConvergence.length, 2,
+    'both routes to (2,2) must survive coarse merge — they used different portal pairs, so they are not the same coarse state');
+  const pairsUsed = new Set(atConvergence.map(pairUsedByPath));
+  assert.deepEqual(pairsUsed, new Set([1, 3]), 'the two surviving (2,2) candidates must be the two DIFFERENT-pair routes, not two copies of one');
+});
+
+test('beam coarse-state merge on a portal level is disabled by default (no opt-in flag)', async () => {
+  const level = makePortalConvergenceLevel();
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  const records: Array<{ stage: string; paths: number[][] }> = [];
+  prep._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
+
+  await beamSearchFromGate(PACK(2, 0), level, prep, SCORING_PROFILES.default, 5000, Date.now(), null, 2, null, false);
+
+  const removalRecords = records.filter(r => r.stage === 'coarse-state-merge-removed');
+  assert.equal(removalRecords.length, 0, 'coarse merge must not run at all on a portal level absent the opt-in flag');
+  const mergeRecords = records.filter(r => r.stage === 'post-production-coarse-state-merge');
+  const collisionRecord = mergeRecords.find(r => r.paths.some(p => p.at(-1) === PACK(2, 2)));
+  assert.ok(collisionRecord, 'expected a post-merge record reaching the shared convergence cell (2,2)');
+  const atConvergence = collisionRecord!.paths.filter(p => p.at(-1) === PACK(2, 2));
+  assert.equal(atConvergence.length, 2, 'both routes still present (merge never ran, nothing to collapse)');
+});
+
 test('dfsFromGateLDS honors a finite nodeBudget (it bounds the otherwise-unbounded final DFS wave)', async () => {
   const level = makeLevel({ grid: { w: 9, h: 9 }, requiredLength: 40, goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)] });
 
