@@ -23,6 +23,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { writeResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 
 function findShardFiles(dir) {
     const out = [];
@@ -121,7 +122,19 @@ export function combine(shardOutputs, controlArm, plan = null) {
         };
     });
 
-    return { schemaVersion: 1, controlArm, totalCells: results.length, armSummaries, comparisons };
+    // This workflow tests whether a smaller fixed portfolio preserves capability while either
+    // gaining coverage or spending less work. Equal coverage at lower work is therefore a positive
+    // result (the motivating pilot's exact success shape), not a scientific null.
+    const positive = comparisons.some((comparison) => comparison.lost.length === 0
+        && (comparison.gained.length > 0 || comparison.workDelta < 0));
+    const researchOutcome = {
+        schemaVersion: 1,
+        outcome: positive ? 'completed-positive' : 'completed-negative',
+        reason: positive
+            ? 'At least one candidate preserved control coverage while gaining solves or reducing work.'
+            : 'No candidate preserved control coverage while gaining solves or reducing work.',
+    };
+    return { schemaVersion: 1, controlArm, totalCells: results.length, armSummaries, comparisons, researchOutcome };
 }
 
 function toMarkdown(result) {
@@ -174,6 +187,7 @@ if (isMain) {
     const planPath = argMap.get('--plan');
     const outFile = argMap.get('--out');
     const summaryOutFile = argMap.get('--summary-out') || (outFile ? outFile.replace(/\.json$/u, '-summary.md') : null);
+    const outcomeOutFile = argMap.get('--outcome-out');
     if (!stagingDir || !controlArm || !outFile) {
         console.error('Usage: --staging-dir=<dir> --control-arm=<name> --out=<path> [--plan=<path>] [--summary-out=<path>]');
         process.exit(1);
@@ -186,6 +200,7 @@ if (isMain) {
 
     mkdirSync(path.dirname(path.resolve(root, outFile)), { recursive: true });
     writeFileSync(path.resolve(root, outFile), JSON.stringify(result, null, 2) + '\n');
+    if (outcomeOutFile) writeResearchWorkflowOutcome(path.resolve(root, outcomeOutFile), result.researchOutcome);
     if (summaryOutFile) writeFileSync(path.resolve(root, summaryOutFile), toMarkdown(result));
     console.log(`Combined ${shardFiles.length} shard file(s), ${result.totalCells} cells, ${result.armSummaries.length} arms. Wrote ${outFile}${summaryOutFile ? ` and ${summaryOutFile}` : ''}.`);
 }

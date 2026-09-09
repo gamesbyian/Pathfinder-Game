@@ -60,6 +60,26 @@ assert.equal(cmp.arm, 'portfolio-11');
 assert.deepEqual(cmp.gained, []);
 assert.deepEqual(cmp.lost, ['L2']); // full-menu solved L2, portfolio-11 did not
 assert.equal(cmp.workDelta, portfolio11.work - fullMenu.work);
+assert.equal(result.researchOutcome.outcome, 'completed-negative');
+
+const gainShard = { results: [
+    cell('control-l1', 'L1', 'control', false, 100),
+    cell('candidate-l1', 'L1', 'candidate', true, 100, 'success'),
+] };
+assert.equal(combine([gainShard], 'control').researchOutcome.outcome, 'completed-positive');
+
+// Static-portfolio's stated hypothesis includes cheaper equal coverage, not only solve gains.
+const cheaperEqualCoverage = { results: [
+    cell('control-l1', 'L1', 'control', true, 200, 'success'),
+    cell('candidate-l1', 'L1', 'candidate', true, 100, 'success'),
+] };
+assert.equal(combine([cheaperEqualCoverage], 'control').researchOutcome.outcome, 'completed-positive');
+
+const equalButCostlier = { results: [
+    cell('control-l1', 'L1', 'control', true, 100, 'success'),
+    cell('candidate-l1', 'L1', 'candidate', true, 200, 'success'),
+] };
+assert.equal(combine([equalButCostlier], 'control').researchOutcome.outcome, 'completed-negative');
 
 // Missing control arm.
 assert.throws(() => combine([shard1], 'nonexistent-arm'), /control arm "nonexistent-arm" not present/);
