@@ -500,10 +500,20 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
         }
     }
     // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
-    // Disabled for portal levels only (portal jumps visit a destination cell for 0 path
-    // steps, inflating freshVolume). MC levels use the same formula since intNeeded
-    // accounts for the extra revisit steps — the double-count concern was unfounded.
-    if (level.portalMap.size === 0) {
+    // reports/2026-09-09-portal-restoration-evidence-hardening-001.md section 3 closes the portal
+    // derivation: a portal jump spends zero counted length but may occupy an additional fresh
+    // cell, which makes `freshVolume` MORE generous relative to the counted steps still required
+    // (the flood fill also traverses portal edges as reachability edges and already
+    // over-approximates legal continuation) — both effects weaken the prune, never make it unsound.
+    // MC levels use the same formula since intNeeded accounts for the extra revisit steps — the
+    // double-count concern was unfounded. Evaluation on portal levels stays behind the opt-in
+    // PRUNE_CONNECTIVITY_VOLUME_PORTAL flag (default OFF; see ablation-config.ts,
+    // docs/solver-opt-in-experiment-ledger.md) pending the frozen matched-work A/B on the 954-level
+    // portal Corpus-2 population — a sound prune can still perturb a budget-limited search and
+    // lose solves through survivor/order effects. The false-goal trigger-search mirror
+    // (isConnectedForFalseGoalTriggerSearch below) is a SEPARATE correctness treatment with its
+    // own triggerable-endpoint differential gate; it is not affected by this flag.
+    if (level.portalMap.size === 0 || _cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === true) {
         const rSteps = level.requiredLength - getRealLengthFromState(state);
         if (freshVolume + intNeeded < rSteps) {
             if (research) _reportConnectivityRejection(research, 'volume', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted, rSteps);
