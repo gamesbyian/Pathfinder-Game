@@ -1,8 +1,9 @@
 # Portal beam state-identity preflight 001
 
-> **Status:** active implementation preflight
+> **Status:** active
 > **Last evidence:** 2026-09-09 — current beam parent-pointer/coarse-merge implementation and portal move semantics at `08bb5c6c`
 > **Decision:** `portalJumps + lastWasPortalJump` is sufficient to recover counted-length/transient portal state, but it does **not** distinguish which portal pairs were consumed. Do not describe that two-field tuple as capturing portal usage. Measure pair-identity aliasing before choosing the first portal coarse-merge treatment; prefer an explicit used-pair signature if aliasing is material.
+> **Remaining gate:** run the prespecified aliasing observer, then choose count/transient or pair-aware coarse identity before a fixed-work portal merge A/B.
 > **Evidence role:** mechanism design / representation audit
 
 ## Why this matters
