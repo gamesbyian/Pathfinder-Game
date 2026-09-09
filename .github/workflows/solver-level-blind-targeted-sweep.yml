@@ -338,10 +338,21 @@ jobs:
             "${extra[@]}"
 
       - name: Print a solved-count summary to the job log
+        # Runs even when the population-completeness check above fails: that's exactly the
+        # case (a partial/short run) where this per-level breakdown is most needed, since
+        # artifact downloads are blocked in some sandboxed environments and this printed log
+        # is otherwise the only way to recover which ids actually finished and how.
+        if: always()
         shell: bash
         run: |
           node -e "
-          const d = JSON.parse(require('fs').readFileSync('logs/solver-targeted-sweep/combined.json', 'utf8'));
+          let d;
+          try {
+            d = JSON.parse(require('fs').readFileSync('logs/solver-targeted-sweep/combined.json', 'utf8'));
+          } catch (e) {
+            console.log('No combined.json present (' + e.message + ') -- every shard likely failed before writing output.');
+            process.exit(0);
+          }
           const solved = d.levels.filter(l => l.ok).length;
           console.log('Targeted sweep: ' + solved + '/' + d.levels.length + ' solved.');
           console.log('Solved: ' + d.levels.filter(l => l.ok).map(l => l.id).join(', '));
