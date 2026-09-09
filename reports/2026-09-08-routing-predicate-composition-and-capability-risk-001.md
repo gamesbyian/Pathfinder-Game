@@ -1,8 +1,9 @@
 # Routing predicate composition and capability risk 001
 
-> **Status:** concluded-positive as descriptive risk stratification
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-08 — current 975/1,700 production boundary joined to the 2026-09-03 isolated capability map
-> **Decision:** retain compositional predicate overlap for cohort selection and telemetry. Do not change production action order from this result alone; first identify a repeatable action, propagation, or allocation benefit inside the high-risk cohort.
+> **Decision:** this stands as descriptive risk stratification. Retain compositional predicate overlap for cohort selection and telemetry. Do not change production action order from this result alone; first identify a repeatable action, propagation, or allocation benefit inside the high-risk cohort.
+> **Remaining gate:** identify a repeatable action, propagation, or allocation benefit inside the high-risk cohort before any production routing change.
 > **Evidence role:** whole-population observational discovery with deterministic parity replication; Corpus-1 transfer is underpowered
 
 ## Finding

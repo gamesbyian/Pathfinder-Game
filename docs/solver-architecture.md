@@ -88,6 +88,19 @@ The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level 
 - Must-cross+flipper fallback uses mechanic-bucket retention at width 5000.
 - **Resumability research:** production beam attempts still discard their live frontier when a work cap ends (this is unchanged). An opt-in `resumeFrom`/`pauseAfterPhases` mechanism on `beamSearchFromGate` (default off, no effect on any production call site) now exists and is confirmed, in-memory only, to reproduce an uninterrupted `W+Δ` run's solve/solution/cumulative-work exactly when pausing at `W` and resuming for `Δ` — see [`solver-search-resumability.md`](solver-search-resumability.md) and its linked 2026-09-03 pilot report. This is a working primitive research artifact, not current production scheduling behavior.
 
+## Portal carve-outs
+
+Four production mechanisms are disabled outright when `level.portalMap.size > 0`, so a portal level searches with a materially smaller rule set than a portal-free one:
+
+| Mechanism | Site |
+|---|---|
+| Beam coarse-state merge (and its near-tie runner-up retention) | `search.ts` `useCoarseStateMerge` |
+| Connectivity volume check | `topology.ts`, `isConnected` tail |
+| Must-cross neighbour-budget propagation (`PRUNE_MC_NEIGHBOR_BUDGET`) | `lower-bounds.ts` |
+| Parity prune and parity gate filter | `hard-prune-pipeline.ts`, `orchestration.ts` |
+
+A fifth exclusion (the reserved-intersection wall) was removed in 2026-07-31 after its rationale proved inherited rather than derived. Current exposure measurement and the open restoration gates: [`../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md).
+
 ## Key state
 
 ```js

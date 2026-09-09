@@ -1,8 +1,9 @@
 # Joint-obligation propagation and residual-lane handoff 001
 
-> **Status:** implementation handoff; coding and causal validation remain unstarted
-> **Last evidence:** 2026-09-09
+> **Status:** active
+> **Last evidence:** 2026-09-09 — implementation handoff written; coding and causal validation remain unstarted
 > **Decision:** use existing evidence to discriminate allocation failure from missing constraint reasoning inside the intersection + must-cross + multi-portal cohort. If trace evidence supports the latter, begin with observer-only joint-obligation propagation. Keep any residual allocation lane small, explicitly priced, and downstream of the current Workstream-2 repricing decisions.
+> **Remaining gate:** complete the required evidence join below and classify each informative miss as allocation/exposure, search-policy, or reasoning/representation.
 
 ## Why this cohort is worth mechanism analysis
 

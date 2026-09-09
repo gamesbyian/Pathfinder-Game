@@ -14,27 +14,27 @@ Workstream IDs are stable identifiers, not ranks. Method: [`solver-research-oper
 
 **State:** active and first in execution order.
 
-Budget semantics and the ms-derived additive-tier migration are complete. Equal-work pricing and static-portfolio work show substantial work-efficiency headroom, while real production still retains additional coverage. The immediate job is therefore no longer “design a scheduler from scratch”; it is first to close a small set of mature production repricing decisions, then use the cleaner ladder as the substrate for broader scheduler construction.
+Budget semantics and the ms-derived additive-tier migration are complete, and equal-work/static-portfolio pricing shows substantial work-efficiency headroom while production retains additional coverage. Close the mature production repricing decisions first, then use the cleaner ladder as the substrate for broader scheduler construction.
 
 #### 2A. Production repricing / promotion closeout
 
-These are independent bounded decisions. A blocked run for one is **not** a reason to idle the entire workstream; move to the next safe candidate or to WS1 analysis while preserving each candidate's frozen evidence contract.
+Independent bounded decisions. A blocked run for one is **not** a reason to idle the workstream; move to the next safe candidate or to WS1 analysis, preserving each candidate's frozen evidence contract.
 
 1. **Admissible-order non-default retry fraction `1.0 → 0.18`.** Development retained all 12/76 solves; the fresh production A/B was non-informative because the target retry expanded zero nodes. **Next gate:** a matched-work test with nonzero target-stage work as a frozen participation requirement. Production remains `1.0`. See [`confirmation 006`](../reports/2026-09-05-admissible-order-non-default-retry-repricing-confirmation-006.md) and [`production A/B 001`](../reports/2026-09-05-admissible-order-non-default-retry-production-ab-001.md).
 2. **Repair late-probe retry `7 → 6` seeds.** Seed 7 adds no reached-level best result; seed 6 remains load-bearing. **Next gate:** frozen population-scale fixed-work confirmation; require zero solve loss, material saving, and no seed-7-exclusive rescue. See [`preflight`](../reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md).
 3. **Goal-attraction-disabled retry fresh work pool.** Development was +1/-0, random confirmation was null, and the stage is starved on 605/725 misses. **Next gate:** confirmation 002 on an independently selected starvation cohort; close/demote if real participation still yields no gains. See [`preflight`](../reports/2026-09-05-goal-attraction-disabled-retry-fresh-work-pool-confirmation-002-preflight.md).
 
-All three remain separate causal questions. Do not bundle them into one scheduler treatment.
+All three are separate causal questions; do not bundle them into one scheduler treatment.
 
 #### 2B. Broader scheduler / allocation construction
 
-After the cheap production repricing decisions above are settled, resume broader fixed-work allocation: residual/tranche pricing, simple static routing/order, protected complementary capability, and only then richer dynamic policies if simple policies leave measured held-out headroom.
+Once 2A settles, resume broader fixed-work allocation: residual/tranche pricing, simple static routing/order, protected complementary capability, then richer dynamic policies only if simple ones leave measured held-out headroom.
 
-Standing evidence shows large allocation headroom; use `workSpent`, not raw nodes, for cross-technique pricing.
+**WS2B candidate: resumable portfolio tranche.** The one-shot static scheduler stays closed, but its postmortem found 3/4 coverage losses were already-present beams capped only ~2–12% short. Test the frozen portfolio-18 first pass plus same-policy continuation of capped beams inside the same 67M envelope; make exact continuation correct at widths 2000/5000 first, then run the fixed-work A/B. Policy-switch resumability stays separate. See [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md) and [`solver-search-resumability.md`](solver-search-resumability.md).
 
-**WS2B candidate: resumable portfolio tranche.** The failed one-shot static scheduler stays closed, but its production postmortem found 3/4 coverage losses were already-present beams capped only ~2–12% short. Test the frozen portfolio-18 first pass plus same-policy continuation of capped beam attempts inside the same 67M envelope; first make exact continuation correct at widths 2000/5000, then run the fresh fixed-work A/B. Policy-switch resumability remains separate. See [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md) and [`solver-search-resumability.md`](solver-search-resumability.md).
+**WS2B candidate: flag-inert dispatch and full-population repricing.** Two retry tiers spend 11.8% of corpus `workSpent` toggling flags already inert on portal levels; the full-population ladder prices every tier (top three: 35.8% of work for 21 solves). Equal-envelope reallocation, not deletion. See [`the catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md).
 
-**WS2B candidate: priced residual lane.** Among 122 current misses with an isolated winner, 45 lacked winning-action exposure and 77 remained unresolved after exposure. After 2A, treat them as separate populations; require explicit total work, specialist retention, and production-exclusive gains. See [`the handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
+**WS2B candidate: priced residual lane.** Of 122 misses with an isolated winner, 45 lacked winning-action exposure and 77 stayed unresolved after exposure. After 2A, treat them as separate populations; require explicit total work, specialist retention, and production-exclusive gains. See [`the handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
 
 Primary evidence: [`../reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md`](../reports/2026-09-04-production-ladder-marginal-value-tail-audit-001.md), [`solver-scheduling-policy.md`](solver-scheduling-policy.md), current capability map `reports/stress/technique-niches/2026-09-03/level-capability.json`.
 
@@ -42,21 +42,23 @@ Primary evidence: [`../reports/2026-09-04-production-ladder-marginal-value-tail-
 
 **State:** **active for parallel analysis; production routing changes remain downstream of WS2 where allocation semantics matter.**
 
-Do not interpret “downstream” as “idle.” Existing capability, lifecycle, provenance, profile, variant, census, and trace evidence can be mined and independently replicated while WS2 experiments run or are blocked. Promote only signals that survive appropriate holdout/replication; exploratory slicing is not a routing policy.
+Do not read “downstream” as “idle”: existing capability, lifecycle, provenance, profile, variant, census, and trace evidence can be mined and replicated while WS2 runs or is blocked. Promote only signals surviving holdout/replication; exploratory slicing is not a routing policy.
 
-Closed selector residues stay closed: the old 35-row cohort is fully reconciled; multi-portal repair-over-beam reduced to two missing-exposure rows after a broad 0-gain/2-loss A/B; and clockwise `perimeterSweep` disappears under matched isolated attribution. See the [`35-row`](../reports/2026-09-07-r03195-production-census-attribution-reconciliation-001.md), [`multi-portal`](../reports/2026-09-07-multi-portal-repair-over-beam-selector-reconciliation-001.md), and [`perimeter`](../reports/2026-09-05-perimeter-bias-production-attribution-confound-audit-001.md) reconciliations.
+Closed selector residues stay closed: the 35-row cohort is reconciled; multi-portal repair-over-beam reduced to two missing-exposure rows after a 0-gain/2-loss A/B; clockwise `perimeterSweep` disappears under matched isolated attribution. See the [`35-row`](../reports/2026-09-07-r03195-production-census-attribution-reconciliation-001.md), [`multi-portal`](../reports/2026-09-07-multi-portal-repair-over-beam-selector-reconciliation-001.md), and [`perimeter`](../reports/2026-09-05-perimeter-bias-production-attribution-confound-audit-001.md) reconciliations.
 
-Compositional routing predicates expose a materially stronger **risk cohort**: 396 levels simultaneously meet the existing intersection-heavy, must-cross-heavy, and multi-portal predicates, but only 118/396 (29.8%) are current production-solved. The cohort contains 278/725 current misses and 242/604 current misses without an isolated T1 winner; the direction is stable across even/odd ID halves. First-match `routingRegime` labels all of them intersection-heavy and hides this interaction. This is cohort-selection evidence, not an action selector. See [`../reports/2026-09-08-routing-predicate-composition-and-capability-risk-001.md`](../reports/2026-09-08-routing-predicate-composition-and-capability-risk-001.md).
+Compositional routing predicates expose a materially stronger **risk cohort**: 396 levels simultaneously meet the existing intersection-heavy, must-cross-heavy, and multi-portal predicates, but only 118/396 (29.8%) are current production-solved. It contains 278/725 misses and 242/604 misses without an isolated T1 winner, stably across even/odd ID halves. First-match `routingRegime` calls them all intersection-heavy and hides the interaction. Cohort-selection evidence, not an action selector. See [`../reports/2026-09-08-routing-predicate-composition-and-capability-risk-001.md`](../reports/2026-09-08-routing-predicate-composition-and-capability-risk-001.md).
 
-A tested 18-feature static topology/placement bundle adds no material held-out value beyond the existing coarse structural fields (production-failure AUC 0.845 baseline vs 0.842 combined; no-T1 residual AUC 0.701 vs 0.710). Close that bundle as a general selector extension. See [`../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`](../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md).
+A tested 18-feature static topology/placement bundle adds no material held-out value beyond the coarse structural fields (production-failure AUC 0.845 vs 0.842; no-T1 residual 0.701 vs 0.710). Closed as a general selector extension. See [`../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`](../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md).
 
-**Next gate:** join lifecycle, isolated-winner, provenance/fingerprint, trace, and variant evidence inside the triple-overlap cohort; classify allocation, search-policy, and reasoning failures. Build observer-only joint propagation only for a recurring reasoning family. Production changes remain downstream. See [`the handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
+A cheaper prior hypothesis: four production mechanisms (beam coarse-state merge, connectivity volume check, must-cross neighbour-budget propagation, parity prune/gate filter) are disabled outright on portal levels, which hold 551/725 misses and 464/604 misses without an isolated winner. Classify that before treating the cohort as unexplained reasoning failure. See [`the catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md).
+
+**Next gate:** join lifecycle, isolated-winner, provenance/fingerprint, trace, and variant evidence inside the triple-overlap cohort; classify allocation, search-policy, and reasoning failures, separating misses where a disabled portal mechanism is the candidate cause. Build observer-only joint propagation only for a recurring reasoning family that survives that separation. Production changes remain downstream. See [`the handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
 
 Details: [`../reports/2026-09-05-solver-open-question-evidence-reconciliation.md`](../reports/2026-09-05-solver-open-question-evidence-reconciliation.md) and `node scripts/research-status-index.mjs --compact --query=<term>`.
 
 ## Active workstreams
 
-Rows are sorted by stable workstream ID, not execution priority.
+Rows sort by stable workstream ID, not execution priority.
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|

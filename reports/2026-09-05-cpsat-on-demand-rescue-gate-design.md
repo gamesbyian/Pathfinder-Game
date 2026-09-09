@@ -1,8 +1,8 @@
 # CP-SAT on-demand rescue gate: candidate design
 
-> **Status:** concluded; integrity and initial characterization completed 2026-09-08
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-08 — regenerated cohorts contain 26 current production-unsolved CP-SAT rescues, 13 without an isolated T1 winner, and 12 satisfying both predicates; see `2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`.
-> **Decision:** keep exact solving on demand. A short/lower-load selector is internally parity-stable but exploratory; validate only on a prespecified future temporal/new-label holdout and do not use CP-SAT in production.
+> **Decision:** integrity and initial characterization completed 2026-09-08. Keep exact solving on demand. A short/lower-load selector is internally parity-stable but exploratory; validate only on a prespecified future temporal/new-label holdout and do not use CP-SAT in production.
 > **Remaining gate:** acquire new exact labels only when a current workstream supplies a concrete prespecified question.
 > **Evidence source:** existing referee-valid `cpsat-full-probe` hint provenance plus current isolated census and production results
 > **Observed target:** exact/reference provenance contains 12 current production-unsolved/no-isolated-winner counterexamples and a tentative acquisition rule, but no independently confirmed production selector.
