@@ -24,22 +24,43 @@
  * scripts/stress/hint-cost-drift.mjs's cross-commit cost comparison. Collapsing them would delete
  * the only retroactive cost signal the repo has.
  */
+// Deterministic, property-insertion-order-independent serialization: JSON.stringify preserves
+// each object's own key insertion order, so two entries that are semantically identical but built
+// by different producers (a freshly constructed makeProvenanceEntry() vs. a legacy persisted
+// record round-tripped through upgradeProvenanceEntry()'s `{ ...raw, solver, search }` spread, or
+// simply re-serialized after a JSON round-trip through a different engine/library) can carry the
+// SAME fields in a DIFFERENT order and hash to two different identity strings here -- silently
+// defeating the duplicate guard both call sites rely on. Sorting every object's own keys
+// (recursively, at every nesting level -- `solver.forcing` is itself a nested object) removes that
+// dependency entirely while keeping array element ORDER significant, which matters because arrays
+// in this shape represent meaningful sequences (`forcingDisabledFeatures`, `forcingFlippedFilters`)
+// where reordering elements changes what actually happened.
+function stableStringify(value) {
+    if (value === undefined) return undefined;
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
+    const keys = Object.keys(value).filter(k => value[k] !== undefined).sort();
+    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
+}
+
 export function provenanceEventIdentity(entry) {
-    if (!entry || typeof entry !== 'object') return JSON.stringify(entry ?? null);
+    if (!entry || typeof entry !== 'object') return stableStringify(entry ?? null);
     const { foundAt: _foundAt, ...rest } = entry;
-    const search = { ...rest.search };
-    delete search.elapsedMs;
-    delete search.cumulativeElapsedMs;
-    delete search.cumulativeNodesExpanded;
-    delete search.cumulativeBudgetMs;
-    // `budgetMs` is the ATTEMPT's allocated slice, not the caller's fixed timeBudgetMs: the ladder
-    // divides remaining wall-clock across gates and configs, so it jitters run to run (measured on
-    // P00110: 5862 vs 5872 for two runs of the same level at the same commit). It is therefore the
-    // same class of host-dependent measurement as elapsedMs and must be excluded here too --
-    // otherwise this guard silently fails to recognise a re-run's entry as a duplicate. Safe: an
-    // entry is only a duplicate if it ALSO matches on commit, config, nodesExpanded, attemptIndex,
-    // gate, termination and seed, and a materially different budget essentially never produces an
-    // identical node count.
-    delete search.budgetMs;
-    return JSON.stringify({ ...rest, search });
+    const {
+        elapsedMs: _elapsedMs,
+        cumulativeElapsedMs: _cumulativeElapsedMs,
+        cumulativeNodesExpanded: _cumulativeNodesExpanded,
+        cumulativeBudgetMs: _cumulativeBudgetMs,
+        // `budgetMs` is the ATTEMPT's allocated slice, not the caller's fixed timeBudgetMs: the
+        // ladder divides remaining wall-clock across gates and configs, so it jitters run to run
+        // (measured on P00110: 5862 vs 5872 for two runs of the same level at the same commit). It
+        // is therefore the same class of host-dependent measurement as elapsedMs and must be
+        // excluded here too -- otherwise this guard silently fails to recognise a re-run's entry as
+        // a duplicate. Safe: an entry is only a duplicate if it ALSO matches on commit, config,
+        // nodesExpanded, attemptIndex, gate, termination and seed, and a materially different
+        // budget essentially never produces an identical node count.
+        budgetMs: _budgetMs,
+        ...search
+    } = rest.search || {};
+    return stableStringify({ ...rest, search });
 }
