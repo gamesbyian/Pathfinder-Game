@@ -109,7 +109,10 @@ This rule directly blocks several recently observed waste modes:
 - `--proposed-total=<N>`;
 - `--conditional-event-rate=<p>`;
 - `--detection-probability=<d>`;
-- `--check` to fail on zero observed opportunity;
+- `--check` to fail on the code(s) named by `--fail-on` (default `ZERO_OPPORTUNITY`, preserving the original behavior exactly for every existing caller);
+- `--fail-on=<CODE>[,<CODE>...]` (2026-09-09): selects which warning code(s) `--check` treats as a hard failure — `ZERO_OPPORTUNITY`, `CEILING`, `OVERPROVISIONED`, or `UNDERPOWERED_OPPORTUNITY`. Before this, every warning besides the zero-opportunity case was permanently advisory-only, even for a caller that opted into `--check` — this tool's own sizing/ceiling logic could never actually gate a run on anything but the single most degenerate case;
 - `--json` for machine-readable output.
 
 Use independent/control-side evidence only. Once treatment outcomes influence population selection or sizing, that population is development evidence for the resulting design.
+
+**Wiring status (2026-09-09 audit):** this tool was fully built but never invoked by any workflow — every prior use was manual/ad-hoc. `.github/workflows/solver-residual-confirmation.yml`'s "Audit residual opportunity before committing to phase 2" step is its first production integration: `mode=control-fail --check --fail-on=ZERO_OPPORTUNITY,CEILING` runs against the phase-1 (control-only) combined report before phase 2's fan-out, since that is the one workflow shape where a control-only combined report already exists before an expensive fan-out is committed to. It supplements, not replaces, that workflow's own pre-existing hard stop on an exactly-empty residual (`residual.length === 0`) — the audit step additionally catches the non-degenerate-but-still-too-small case (control already solves ≥95%, i.e. `CEILING`). No other workflow currently produces a control-only combined report before its own fan-out, so this is presently the only wired instance; a workflow that gains that shape should wire this in the same way rather than inventing a bespoke check.

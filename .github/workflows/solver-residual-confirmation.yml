@@ -323,6 +323,26 @@ jobs:
           console.log(\`phase-1 control-only sweep complete: \${expectedTotal}/\${expectedTotal}\`);
           "
 
+      - name: Audit residual opportunity before committing to phase 2
+        # scripts/experiment-opportunity-audit.mjs already exists as a Wilson-CI-based "is there
+        # enough headroom to justify this population" preflight (docs/solver-experiment-
+        # opportunity-sizing.md), but was never wired into any workflow -- this is the one place in
+        # the repo where the exact input it needs (a control-only combined report) already exists
+        # BEFORE an expensive fan-out (phase 2) is committed to, making it the natural, minimal
+        # integration point rather than inventing a new mechanism. mode=control-fail matches this
+        # workflow's own residual definition exactly (every phase-1 control failure). The existing
+        # "Freeze the control-failure residual" step below still hard-stops on the degenerate
+        # residual.length===0 case; this step additionally catches the non-degenerate-but-still-
+        # too-small case via CEILING (control already solves >=95% -- see docs/solver-experiment-
+        # opportunity-sizing.md's own warning threshold) before phase 2's shard fan-out runs.
+        shell: bash
+        run: |
+          node scripts/experiment-opportunity-audit.mjs \
+            --control="reports/stress/residual-confirmation-phase1-control.json" \
+            --mode=control-fail \
+            --check=true \
+            --fail-on=ZERO_OPPORTUNITY,CEILING
+
       - name: Freeze the control-failure residual as a new sealed corpus
         id: freeze
         shell: bash

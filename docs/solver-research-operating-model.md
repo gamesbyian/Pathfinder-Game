@@ -103,6 +103,8 @@ Row count does not remove dependence; a large selected cohort is still selected.
 
 Prefer existing deterministic work accounting, manifests/run identity, stress/lifecycle telemetry, family/provenance tools, shadow probes, known-solution-prefix survival, explicit-prefix/reference labels, reducers/replay, census/method probes, and operational-similarity observers. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) to inventory the evidence substrate and valid joins, then [`tooling-catalog.md`](tooling-catalog.md) to choose the smallest current tool that answers the question.
 
+`reports/stress/solver-health-timeline.jsonl` (added 2026-09-09, appended by `scripts/append-solver-health-record.mjs` from every `solver-stress-refresh.yml` run that completes) is a compact cross-run longitudinal record — commit/protocol identity, solved/total, aggregate `workSpent`/`nodesExpanded`, per-stage reach/attempts/solves, and truncation/error counts per corpus. It piggybacks entirely on that workflow's own already-computed per-run summary and combined reports (no extra solver compute), so prefer querying it over re-deriving the same numbers from individual `capability-runs/<run_id>/` snapshots when a question is about trend/drift across runs rather than one run's own detail.
+
 For scoring, retention, routing, scheduling, or information-sharing hypotheses, observe before changing search where practical. Unless parity itself is the experiment, instrumentation must preserve solution, work, ordering, randomness, and cache/memo lifetime. A shadow-positive selected candidate still needs a live solve/work verdict and independent confirmation.
 
 ## Producer → consumer cooperation

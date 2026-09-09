@@ -72,11 +72,25 @@ async function main() {
             requiredStage: 'late-retry', minParticipatingLevels: 1,
         });
         assert.equal(participation.participation.participatingLevels, 1);
+        assert.equal(participation.participation.participationRate, 0.5);
         assert.throws(() => validateSweepIntegrity({
             expectedIds: ['R00001', 'R00002'], levels: participatingLevels,
             requiredStage: 'late-retry', minParticipatingLevels: 2,
         }), /below required minimum 2/);
         console.log('  ✓ target-stage gate distinguishes nominal zero-work reach from real participation');
+
+        // minParticipatingLevels alone is an ABSOLUTE floor -- trivially satisfied on a large
+        // population even at a near-zero rate. minParticipationRate closes that gap.
+        assert.throws(() => validateSweepIntegrity({
+            expectedIds: ['R00001', 'R00002'], levels: participatingLevels,
+            requiredStage: 'late-retry', minParticipatingLevels: 1, minParticipationRate: 0.75,
+        }), /below required minimum rate 75\.00%/);
+        const rateOk = validateSweepIntegrity({
+            expectedIds: ['R00001', 'R00002'], levels: participatingLevels,
+            requiredStage: 'late-retry', minParticipatingLevels: 1, minParticipationRate: 0.5,
+        });
+        assert.equal(rateOk.participation.participatingLevels, 1);
+        console.log('  ✓ rate-based participation floor catches a population too large for the absolute floor to matter');
 
         const opportunityRows = Array.from({ length: 100 }, (_, i) => ({
             id: `R${String(i + 1).padStart(5, '0')}`,

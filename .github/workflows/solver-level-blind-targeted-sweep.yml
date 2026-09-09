@@ -94,6 +94,10 @@ on:
         description: 'Minimum number of levels on which required_participation_stage must expand nodes or spend work. Used only when required_participation_stage is set.'
         required: false
         default: '1'
+      min_participation_rate:
+        description: 'Minimum FRACTION (0-1) of dispatched levels on which required_participation_stage must expand nodes or spend work. Used only when required_participation_stage is set. An absolute floor like min_participating_levels=1 is trivially satisfied on a large population; this scales with population size instead. Blank/0 disables the rate check (min_participating_levels alone still applies).'
+        required: false
+        default: ''
       concurrency_suffix:
         description: 'Optional suffix appended to this workflow''s concurrency group. Set distinct values on paired A/B dispatches when they should run concurrently.'
         required: false
@@ -362,6 +366,7 @@ jobs:
           if [ -n "${{ inputs.required_participation_stage }}" ]; then
             extra+=("--required-stage=${{ inputs.required_participation_stage }}")
             extra+=("--min-participating-levels=${{ inputs.min_participating_levels }}")
+            [ -n "${{ inputs.min_participation_rate }}" ] && extra+=("--min-participation-rate=${{ inputs.min_participation_rate }}")
           fi
           node scripts/validate-solver-sweep-integrity.mjs \
             --expected-ids=artifact-staging/plan/ids.txt \
