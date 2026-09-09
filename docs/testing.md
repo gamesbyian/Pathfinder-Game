@@ -178,6 +178,8 @@ Did the *idea* improve the intended population fairly, and does the claim extend
 - selected/tuned positives need untouched/grouped confirmation for robust promotion claims;
 - level-blind execution does not make repeatedly mined Corpus-2 data an independent holdout.
 
+For GitHub-hosted research, distinguish the scientific verdict from execution health using the outcome contract in [`.github/workflows/README.md`](../.github/workflows/README.md#research-outcome-contract). A completed negative hypothesis test is successful execution and should stay green; invariant, harness, and infrastructure failures stay red. Timeouts are reported separately and are only green where the workflow already defines bounded timeout as valid evidence.
+
 Use the narrowest population that decides the iteration question, then the relevant confirmation/transfer gate for the claim. Do not spend full-corpus compute merely to reconfirm a locally falsified premise, and do not use full CI as a substitute for an experiment.
 
 ## Solver research finish-line examples

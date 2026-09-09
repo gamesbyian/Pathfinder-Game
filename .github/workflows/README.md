@@ -39,11 +39,19 @@ Every maintained solver/research sweep publishes a predictable front-door artifa
 The artifact contains:
 
 - `summary.md` — human-readable run provenance plus automatically derived solved/work counts when the result shape exposes them; paired control/treatment outputs also get gained/lost and work-delta summaries.
-- `manifest.json` — stable machine-readable provenance: workflow, run id/attempt, SHA, ref, event, run URL, legacy artifact name, publication status, and source-to-published file mapping.
+- `manifest.json` — stable machine-readable provenance: workflow, run id/attempt, SHA, ref, event, run URL, legacy artifact name, publication status, declared research outcome, and source-to-published file mapping.
 - `result.*` or `result/` — the primary decision-bearing output.
 - `files/` — any secondary decision-bearing outputs needed to interpret the primary result.
 
 The publisher also appends `summary.md` to `$GITHUB_STEP_SUMMARY`, so the final job has a useful web-UI summary instead of requiring console-log archaeology.
+
+### Research outcome contract
+
+Experiment-specific code, not the generic publisher, declares one of `completed-positive`, `completed-negative`, `invariant-violation`, `harness-error`, `infrastructure-error`, or `timeout`. The standard manifest records it as `researchOutcome`; the job summary prints the same class and reason. Broad/residual confirmation takes frozen `min_gains`, `max_losses`, and optional `max_work_delta_pct` dispatch gates (defaults: at least one gain, no losses, no work ceiling), then records the observed values and whether that declared gate was met. Static-portfolio confirmation instead follows its own fixed efficiency hypothesis: positive means a candidate preserves control coverage while gaining solves or reducing work. A completed null or adverse result is `completed-negative` and remains green.
+
+Pass the declaration with `--outcome-file=<json>`; use `scripts/research-workflow-outcome.mjs` to validate/write that file. An invalid declared outcome makes publication fail rather than silently relabeling evidence. The adopted combine jobs also write an explicit `infrastructure-error`, `invariant-violation`, or `harness-error` fallback when an earlier step prevents the scientific verdict. An upstream matrix failure overrides any apparently complete combined result, so partial successes cannot hide a red shard; the original failed step still keeps the job red while the always-run publisher preserves a readable outcome artifact. Workflows not yet adopted show “not declared”; the publisher never derives a hypothesis verdict from solved counts or arbitrary output.
+
+`timeout` is distinct from `completed-negative`. Method-probe persists each worker's exit status so its combiner can distinguish a process killed by the accepted timeout codes (124/143) from a missing result caused by a harness error. In legacy wall-bounded mode, worker/row deadline truncation is the expected bounded stopping condition, so the combiner publishes `timeout` and remains green. Under a declared work budget, the same truncation invalidates equal-work evidence and remains red. A missing result without an explicit timeout exit remains `harness-error`, never a negative result.
 
 **Retrieval order for agents:**
 
