@@ -247,12 +247,14 @@ jobs:
           node-version: '20'
 
       - name: Download the plan
+        id: download_plan
         uses: actions/download-artifact@v8
         with:
           name: static-portfolio-plan
           path: logs/static-portfolio-confirmation
 
       - name: Download every shard's artifact
+        id: download_shards
         uses: actions/download-artifact@v8
         with:
           pattern: 'static-portfolio-shard-*'
@@ -260,6 +262,7 @@ jobs:
           merge-multiple: true
 
       - name: Combine every shard into one report
+        id: combine
         shell: bash
         run: |
           node scripts/combine-static-portfolio-shards.mjs \
@@ -267,7 +270,8 @@ jobs:
             --control-arm="${{ inputs.control_arm }}" \
             --plan=logs/static-portfolio-confirmation/plan.json \
             --out=logs/static-portfolio-confirmation/combined.json \
-            --summary-out=logs/static-portfolio-confirmation/combined-summary.md
+            --summary-out=logs/static-portfolio-confirmation/combined-summary.md \
+            --outcome-out=logs/static-portfolio-confirmation/outcome.json
 
       - name: Print the combined summary to the job log
         shell: bash
@@ -288,9 +292,29 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${{ needs.run-shards.result }}" != success ]; then
+            if [ "${{ needs.run-shards.result }}" = cancelled ]; then
+              outcome=infrastructure-error
+              reason='The static-portfolio shard matrix was cancelled before normal completion.'
+            else
+              outcome=harness-error
+              reason='At least one static-portfolio shard reported an unexpected execution failure.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=logs/static-portfolio-confirmation/outcome.json --outcome="$outcome" --reason="$reason"
+          elif [ ! -s logs/static-portfolio-confirmation/outcome.json ]; then
+            if [ "${{ steps.download_plan.outcome }}" != success ] || [ "${{ steps.download_shards.outcome }}" != success ]; then
+              outcome=infrastructure-error
+              reason='The plan or a required shard artifact could not be downloaded.'
+            else
+              outcome=harness-error
+              reason='The static-portfolio combiner failed before it could declare a scientific verdict.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=logs/static-portfolio-confirmation/outcome.json --outcome="$outcome" --reason="$reason"
+          fi
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/static-portfolio-confirmation/combined.json" \
             --include="logs/static-portfolio-confirmation/combined-summary.md" \
+            --outcome-file="logs/static-portfolio-confirmation/outcome.json" \
             --shards-expected="${{ inputs.shards }}" \
             --shards-observed="$(find logs/static-portfolio-confirmation -maxdepth 1 -name 'shard-*.json' | wc -l | tr -d ' ')" \
             --source-artifact="static-portfolio-combined"

@@ -7,13 +7,13 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
-const dir = mkdtempSync(path.join(tmpdir(), 'phase15g-explicit-prefix-'));
+const dir = mkdtempSync(path.join(tmpdir(), 'cpsat-explicit-prefix-reference-'));
 try {
   const corpusFile = path.join(dir, 'levels.json');
   const casesFile = path.join(dir, 'cases.json');
   const outFile = path.join(dir, 'result.json');
   writeFileSync(corpusFile, JSON.stringify([{
-    id: 'PHASE15G',
+    id: 'REFERENCE_PIPELINE',
     grid: { w: 3, h: 3 },
     reqLen: 2,
     reqInt: 0,
@@ -31,7 +31,7 @@ try {
   }]));
   writeFileSync(casesFile, JSON.stringify({
     corpus: corpusFile,
-    cases: [{ id: 'phase15g-native-illegal', levelId: 'PHASE15G', prefix: [[999, 999]] }],
+    cases: [{ id: 'native-illegal', levelId: 'REFERENCE_PIPELINE', prefix: [[999, 999]] }],
   }));
 
   let exitCode = 0;
@@ -63,8 +63,6 @@ try {
   assert.equal(result.summary.abstain, 1);
   assert.equal(result.summary.inputAlarms, 1);
 
-  // Faithful workflow harness: feed the real writer output through the same combiner script now
-  // called by cpsat-explicit-prefix-reference.yml, then publish the standard solver-sweep result.
   const staging = path.join(dir, 'artifact-staging');
   mkdirSync(staging, { recursive: true });
   const shardFile = path.join(staging, 'cpsat-explicit-prefix-reference-shard-001.json');
@@ -118,7 +116,7 @@ try {
   assert.equal(published.shardCompleteness?.complete, true);
   assert.equal(published.sourceArtifact, 'cpsat-explicit-prefix-reference-fixture');
 
-  console.log('Phase-15G explicit-prefix workflow harness passed: real writer -> shard combiner -> standard publisher is schema-v2/reference-only.');
+  console.log('CP-SAT explicit-prefix reference pipeline contract passed.');
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }

@@ -238,6 +238,8 @@ For each workflow ask:
 
 Delete obsolete workflows. Archive a workflow definition only when its historical value is not already adequately preserved by Git history. Consolidate overlapping active workflows where that reduces maintenance/CI cost without obscuring their contracts.
 
+When a migration, experiment, or research line closes, reverse-sweep its dedicated workflows, package aliases, tests, triggers, inventories, and docs. Compare closed solver experiment dispositions against candidate-specific workflows/tests so reproducibility machinery does not become permanent infrastructure by accident.
+
 Do not weaken validation merely to reduce runtime.
 
 ## 7. CI runtime and structural-bloat audit
@@ -282,6 +284,8 @@ Specifically look for:
 - heavyweight proof suites with safely narrowable triggers;
 - stale artifacts/setup steps from retired workflows/tools.
 
+Inspect the slowest individual tasks inside parallel check/test populations, not only job totals. A tail task that protects a completed campaign can dominate wall time even when the rest of the population is cheap.
+
 Where evidence supports it, implement safe structural improvements. A green workflow can still be wasteful. A temporarily slow hosted runner is not by itself evidence that repository changes are required.
 
 ## 8. Tests, validators, and completed-migration scaffolding
@@ -303,7 +307,7 @@ Look for validators that:
 
 Preserve useful invariants while simplifying enforcement. Prefer semantic/structural checks over brittle sentence regexes.
 
-Completed migration programs should leave a small permanent final-state/invariant suite, not replay every phase-specific closeout forever. Collapse or retire historical validators only after preserving the durable invariants they still protect.
+Completed programs should leave current, owner-oriented invariants rather than campaign shells. Before retiring a campaign test, extract any behavior that still matters into the owning domain test; then chase reverse consumers such as aggregators, workflow inventories, path triggers, docs, fixtures, and contract checkers. Phase/date/`legacy`/`one-off` naming is a scrutiny signal, not proof of obsolescence.
 
 Do not “fix CI” by weakening a meaningful invariant.
 

@@ -4,112 +4,102 @@
 > **Reconciled:** 2026-09-09.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization.
 
-Keep this file **current-state only**. Replace stale state rather than appending chronology. Detailed evidence belongs in reports; historical snapshots live under `docs/archive/snapshots/`.
+Keep this file **current-state only**. Detailed evidence belongs in reports; historical snapshots live under `docs/archive/snapshots/`.
 
-Workstream IDs are stable identifiers, not ranks. Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Deferred material: [`solver-future-work.md`](solver-future-work.md).
+Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Deferred material: [`solver-future-work.md`](solver-future-work.md).
 
 ## Current execution priority
 
 ### 1. Workstream 2: fixed-work scheduler allocation and repricing
 
-**State:** active; portal capability restoration is the immediate first tranche, then bounded 2A closeouts and broader construction use the refreshed ladder.
+**State:** active; portal capability restoration first, then bounded 2A closeouts, then broader allocation work on refreshed telemetry.
 
-#### Immediate tranche: portal capability restoration
+#### Portal restoration
 
-Portal-bearing levels are 954/1,700 of Corpus 2 and hold 551/725 production misses plus 464/604 misses without an isolated T1 winner; median isolated `solverCount` is 0 versus 8 portal-free. Resolve the four portal carve-outs before small repricing or new propagation for the same population. Test restorations independently under matched work.
+Portal levels are 954/1,700 of Corpus 2 and contain 551/725 production misses. Resolve these independently under matched work:
 
 1. **Must-cross neighbour-budget propagation.** **Done (2026-09-09) — PROMOTED.** Portal-level evaluation of `mustCrossNeighborBudgetDeadlocked` is now production default-ON (`PRUNE_MC_NEIGHBOR_BUDGET_PORTAL` removed from `OPT_IN_FEATURES`). The frozen matched-work A/B on the deterministic 530-level portal+must-cross Corpus-2 population found 52 gains / 0 losses (net +52), every gain confirmed referee-valid on independent replay, zero published-corpus regressions. See [`preflight`](../reports/2026-09-09-mc-neighbor-budget-portal-ab-001-preflight.md), [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
 2. **Portal-aware beam coarse-state merge.** **Closed negative on promotion (2026-09-09) — stays opt-in.** `BeamNode.usedPortalPairs` preserves exact used-pair identity in the merge key behind `STRATEGY_PORTAL_COARSE_STATE_MERGE`; the frozen 954-level population A/B found 158 gains / 12 losses (net +146, all gains referee-valid) but the rare/specialist-retention check confirmed a genuine capability regression on `R01273`. **Root cause confirmed (2026-09-09, local repro):** not aliasing (already fixed) — R01273's real winning mechanism is the `must-cross-neighbor-prune-disabled-retry` stage; the same attempt sequence (same node counts/seeds) that succeeds under control fails entirely under treatment. This is the same discard-a-needed-lower-scorer risk every coarse-state merge already carries (accepted on portal-free levels), newly exposed on portal levels. **Priority: low, not urgent** — opt-in, zero production risk, not on the critical path for anything else queued; revisit only as dedicated future work if the 158 foregone gains become worth pursuing. See [`preflight`](../reports/2026-09-09-portal-coarse-state-merge-ab-001-preflight.md) (full root-cause writeup), [`beam preflight`](../reports/2026-09-09-portal-beam-state-identity-preflight-001.md).
 3. **Connectivity volume check.** Ordinary portal derivation and first screen are closed: 266,320 valid paths / 21.8M prefixes, zero rejects, with live activation. Removed the blanket carve-out behind a new opt-in `PRUNE_CONNECTIVITY_VOLUME_PORTAL` flag; correctness gate re-confirmed on shipped code (0 violations, all 3 corpora, `scripts/stress/connectivity-volume-portal-soundness-check.mjs`). **Next:** dispatch the frozen matched-work A/B on the deterministic 954 portal levels (population/envelope/acceptance rule frozen in [`preflight`](../reports/2026-09-09-connectivity-volume-portal-ab-001-preflight.md)). Keep the false-goal mirror separate (untouched) until a triggerable-endpoint differential loses zero valid endpoints. See [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
 4. **Same-parity portal parity prune/gate.** **Done (2026-09-09).** Ordinary `PRUNE_PARITY` and `getActiveGates`'s gate-feasibility filter now apply unweakened on the 21/954 portal levels with zero twist pairs (`prep.parityPortalDistMaps.length === 0`), reusing the same invariant `isParityCompatibleEndpoint` already shipped for false-goal endpoints. Unit coverage (same-parity vs. twist, both PRUNE_PARITY and getActiveGates) plus a dedicated stored-path differential (`scripts/stress/same-parity-portal-soundness-check.mjs`, 0 violations across all 3 corpora) and published-corpus regression (160/160, no regressions) are all clean. No standalone solve-rate campaign was run (not warranted for 21 levels, per plan).
 
-Primary evidence: [`portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md), [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md), [`beam preflight`](../reports/2026-09-09-portal-beam-state-identity-preflight-001.md).
+Primary catalog: [`portal carve-outs`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md).
 
 The two-stage lifecycle instantiation projection gap is repaired: `guidance-goal-distance-retry` and `late-repair-multiseed-retry` now report correct `mechanicallyEligible`/`instantiated` telemetry (see [`telemetry gap`](../reports/2026-09-09-stage-lifecycle-instantiation-projection-gap-001.md), closed). After material restorations settle, follow the evidence-hardening refresh contract before interpreting the triple-overlap cohort or repricing the ladder. Do not carry forward the old 975/1,700 attribution.
 
-#### 2A. Production repricing / promotion closeout
+#### 2A. Production repricing closeout
 
-Independent decisions; a blocked candidate does not idle the workstream.
+Treat independently:
 
-1. **Goal-attraction-disabled retry fresh work pool.** Development +1/-0, random confirmation null, stage starved on 605/725 misses. **Next:** confirmation 002 on an independent starvation cohort; close/demote if real participation still yields no gains. See [`preflight`](../reports/2026-09-05-goal-attraction-disabled-retry-fresh-work-pool-confirmation-002-preflight.md).
-2. **Repair late-probe retry `7 → 6` seeds.** Seed 7 adds no reached-level best result; seed 6 is load-bearing. **Next:** frozen population-scale fixed-work confirmation requiring zero solve loss, material saving, and no seed-7-exclusive rescue. See [`preflight`](../reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md).
-3. **Admissible-order retry fraction `1.0 → 0.18`.** Development retained 12/76; production A/B was non-informative because target-stage work was zero. **Next:** matched-work test with nonzero target-stage work frozen as a participation requirement. Production stays `1.0`. See [`confirmation 006`](../reports/2026-09-05-admissible-order-non-default-retry-repricing-confirmation-006.md).
+1. **Goal-attraction-disabled retry fresh pool.** Run confirmation 002 on an independent starvation cohort; close/demote if real participation still yields no gains. [`Preflight`](../reports/2026-09-05-goal-attraction-disabled-retry-fresh-work-pool-confirmation-002-preflight.md)
+2. **Repair late-probe `7 → 6` seeds.** Frozen population-scale fixed-work confirmation requiring zero solve loss, material saving, and no seed-7-exclusive rescue. [`Preflight`](../reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md)
+3. **Admissible-order retry `1.0 → 0.18`.** Matched-work test with nonzero target-stage work required. Production stays `1.0`. [`Confirmation 006`](../reports/2026-09-05-admissible-order-non-default-retry-repricing-confirmation-006.md)
 
-Do not bundle these causal questions.
+#### 2B. Broader allocation construction
 
-#### 2B. Broader scheduler / allocation construction
+After portal restoration and 2A, refresh the production ladder/capability map, then:
 
-After portal restoration and 2A, refresh the production ladder/capability map. Then pursue residual/tranche pricing, simple static routing/order, protected complementary capability, and richer dynamic policies only if simple ones leave held-out headroom.
-
-- **Flag-inert dispatch/full-population repricing.** Two retry tiers currently spend 11.8% of corpus `workSpent` toggling flags inert on portals; top three tiers consume 35.8% of work for 21 wins. Portal restoration changes that meaning, so reprice only after refresh, under equal total work. See [`portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md).
-- **Resumable portfolio tranche.** Static portfolio one-shot stays closed; 3/4 losses were already-present beams capped ~2–12% short. Test portfolio-18 first pass plus same-policy continuation inside 67M; make exact continuation correct at widths 2000/5000 first. See [`salvage preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md).
-- **Priced residual lane.** Recompute the old 122-miss isolated-winner residue after restoration/2A; separate missing exposure from failed exposure and require explicit total work, specialist retention, and production-exclusive gains. See [`handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
+- **Flag-inert dispatch/full-population repricing:** equal-total-work repricing only after refresh. [`Portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md)
+- **Resumable portfolio:** portfolio-18 first pass + same-policy continuation inside 67M; exact continuation must be correct at widths 2000/5000 first. [`Preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md)
+- **Priced residual lane:** recompute the isolated-winner residue after restoration/2A, separating missing from failed exposure and protecting specialists. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** active for parallel analysis; production routing changes remain downstream of portal restoration and WS2 allocation semantics.
+**State:** active for parallel analysis; production routing changes remain downstream of portal restoration and refreshed WS2 allocation semantics.
 
-Existing capability, lifecycle, provenance, profile, variant, census, and trace evidence may be mined while experiments run. Promote only held-out/replicated signals.
+Existing capability, lifecycle, provenance, profile, variant, census, trace and accepted-path evidence may be mined now. Promote only held-out/replicated signals.
 
-Closed selector residues stay closed: the 35-row cohort is reconciled; multi-portal repair-over-beam reduced to two missing-exposure rows after a 0-gain/2-loss A/B; clockwise `perimeterSweep` disappears under matched attribution.
+#### Hint/provenance evidence tranche
 
-The current high-risk cohort is 396 intersection-heavy + must-cross-heavy + multi-portal levels, 118/396 solved. Portal carve-outs are the first causal explanation to resolve. This cohort is 74.7% of the 530 portal+must-cross population and contains 278/337 (82.5%) of its misses plus 242/288 (84.0%) of its misses without an isolated T1 winner.
+Treat the hint store as a solution-space atlas, a sound positive oracle of validated prefixes, and a longitudinal discovery log. Read provenance on separate **origin**, **search/run facet**, and **capability-admissibility** axes. [`Evidence-layer upgrade`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
 
-**Next:** cheap existing-data joins may proceed, but freeze new propagation implementation. After portal restoration, refresh lifecycle/capability evidence inside the triple-overlap cohort and classify remaining informative misses as allocation/exposure, search-policy, or reasoning/representation. Build observer-only joint propagation only for a recurring reasoning family surviving that separation. See [`handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
+Before new solver compute on a hinted failure:
 
-## Active workstreams
+1. run the corpus-wide provenance/dedup audit;
+2. select structurally diverse solution basins rather than the first hint;
+3. locate the first point where **all known-live basins** disappear in real search/replay and classify the loss as allocation/exposure, search policy, prune/state merge/representation, or other reasoning failure;
+4. cross representative basins with relevant policies and join lifecycle/census exposure so `exposed-and-failed` differs from `not exposed`;
+5. use diverse validated prefixes as a one-sided soundness screen for portal state merging, parity/connectivity and other pruning/representation changes;
+6. mine Corpus-2 basin complementarity, decision entropy, temporal basin stability, producer/config novelty, variant transfer, and independence-aware agreement.
 
-| ID | Workstream | State | Next gate |
-|---:|---|---|---|
-| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Mine existing evidence; after portal refresh classify residual failure roles before any new routing/propagation. |
-| 2 | Fixed-work scheduler repricing | **ACTIVE / FIRST PRIORITY** | Complete the portal restoration tranche, close 2A, refresh ladder/capability boundary, then resume 2B. |
-| 6 | Repair reachability/reconstructability | **SUPPORTING / NO CURRENT QUESTION** | Reopen only with cheaper labelled cases or materially new reconstruction evidence. |
-| 7 | Architectural speed/execution substrate | **SUPPORTING / NO CURRENT CANDIDATE** | Reopen only for a materially different mechanism or newly measured hotspot. |
+Reuse existing prefix-survival, divergence, rank and replay tools before creating new frameworks. Stored paths/provenance/profile/family/winner labels remain offline diagnostics and may not be direct same-level production routing inputs.
 
-## Promoted/completed workstreams
+Current high-risk cohort: 396 intersection-heavy + must-cross-heavy + multi-portal levels, 118 solved. Portal carve-outs are the first causal explanation to resolve. After restoration, refresh lifecycle/capability evidence and classify residual informative misses before any new joint propagation. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
 
-| ID | Workstream | State | Reopen condition |
-|---:|---|---|---|
-| 3 | Generalization/holdout discipline | **METHOD COMPLETE / SUPPORTING** | Concrete methodological failure. |
-| 8 | Cheap isolated capability missed by production | **SUBSUMED BY WS1** | Treat isolated winners as action-selection evidence, not entitlement to permanent tail work. |
-
-## Closed negative workstreams
-
-| ID | Workstream | State | Reopen condition |
-|---:|---|---|---|
-| 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Materially new restart-by-work/population evidence or new cheap sound failure certificate. |
-| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED QUOTA/BUCKETING FORM** | Independent evidence for a materially different bounded retention mechanism. |
-
-## Deferred / on-demand
+## Workstream state
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 5 | Exact/reference-model program | **ON DEMAND / INTEGRITY GATE SATISFIED** | Reuse the 12 retained exact solutions as counterexamples; no broad new CP-SAT compute or production CP-SAT without a new prespecified holdout question. See [`CP-SAT regeneration`](../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md). |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Existing-data + known-live-basin replay; after portal refresh classify residual failure roles. |
+| 2 | Fixed-work scheduler repricing | **ACTIVE / FIRST PRIORITY** | Portal restoration → 2A → ladder/capability refresh → 2B. |
+| 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only with cheaper labelled cases or materially new reconstruction evidence. |
+| 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen only for a materially different mechanism or newly measured hotspot. |
+| 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Concrete methodological failure. |
+| 8 | Cheap isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are action-selection evidence, not permanent tail entitlement. |
+| 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Materially new restart-by-work/population evidence or sound failure certificate. |
+| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | Independent evidence for materially different bounded retention. |
+| 5 | Exact/reference-model program | **ON DEMAND** | Reuse retained exact counterexamples; broad new CP-SAT only for a new prespecified question. |
 
 ## Standing research rules
 
 - Use `workSpent` for cross-technique allocation; raw nodes are within-technique diagnostics.
 - New actions/configurations expand the menu, not the default total budget.
-- Level-blindness is not generalization; confirmation strength scales with selection/tuning pressure.
+- Level-blindness is not generalization; confirmation strength scales with tuning pressure.
 - Clear negatives close tested forms absent materially new evidence.
 - Hold out independent units, including whole variant parents/families where applicable.
-- Reverify fragile capability support after census refresh; same-family redundancy is not cross-family redundancy.
-- Scheduler/repricing work must audit rare/specialist retention, not only aggregate solves/work.
-- Nominal stage reach is not participation; require nonzero target-stage work for late-stage repricing.
-- Portal restoration is WS2's immediate tranche and precedes ladder repricing and new joint-propagation implementation; remeasure production afterward.
-- If a GHA candidate is blocked, traverse independent portal gates, 2A candidates, WS1 local analysis, WS5 bounded local analysis, specialist docs, and deferred questions.
-- Reconcile old open questions against newer evidence before new compute.
-- Prefer existing evidence and the smallest value-of-information test.
+- Audit specialist retention, not only aggregate solves/work; nominal stage reach is not participation.
+- Portal restoration precedes ladder repricing and new joint-propagation implementation; remeasure production afterward.
+- A validated hint prefix proves that prefix live, not that alternatives are dead.
+- Capability claims must separate provenance origin/facets/admissibility; only actual Pathfinder solver evidence establishes production cold capability.
+- Repeated provenance is evidence unless it is the same discovery event recorded twice. Raw event count is not independence count.
+- Reconcile old questions against newer evidence before new compute; prefer the smallest value-of-information test.
 
 ## Cheap evidence routing
 
-- prior research: `node scripts/research-status-index.mjs --compact --query=<term>`;
-- existing tools: `node scripts/tooling-census.mjs --compact --query=<term>`;
-- research assets/joins: `node scripts/research-asset-query.mjs --query=<term>`;
-- corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`.
+- prior research: `node scripts/research-status-index.mjs --compact --query=<term>`
+- existing tools: `node scripts/tooling-census.mjs --compact --query=<term>`
+- research assets/joins: `node scripts/research-asset-query.mjs --query=<term>`
+- corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
+- hint/provenance audit: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all`
 
-Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for evidence-topology guidance and [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) only to translate frozen pre-cleanup evidence.
-
-## Closed-form lookup
-
-Search named mechanisms through `research-status-index --compact`; open matched reports or frozen snapshots for chronology.
+Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for evidence-topology guidance. Search named mechanisms through `research-status-index --compact`; detailed chronology belongs in matched reports or frozen snapshots.

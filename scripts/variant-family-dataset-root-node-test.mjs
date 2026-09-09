@@ -13,7 +13,7 @@ assert.equal(
   'no dataset-root argument must preserve current-working-directory behavior',
 );
 
-const relativeRoot = 'tmp/phase15c-family-root';
+const relativeRoot = 'tmp/variant-family-root';
 const resolvedRoot = path.resolve(relativeRoot);
 assert.equal(
   variantFamilyDatasetRootArg([`--variant-family-dataset-root=${relativeRoot}`]),
@@ -30,16 +30,16 @@ assert.equal(
 );
 assert.throws(
   () => variantFamilyDatasetRootArg([
-    '--variant-family-dataset-root=tmp/phase15j-a',
-    '--variant-family-dataset-root=tmp/phase15j-b',
+    '--variant-family-dataset-root=tmp/family-root-a',
+    '--variant-family-dataset-root=tmp/family-root-b',
   ]),
   /conflicting variant-family dataset roots/u,
-  'conflicting canonical roots must still fail explicitly',
+  'conflicting canonical roots must fail explicitly',
 );
 assert.throws(
-  () => variantFamilyDatasetRootArg(['--trove-root=tmp/phase15j-retired']),
+  () => variantFamilyDatasetRootArg(['--trove-root=tmp/retired-family-root']),
   /retired variant-family dataset-root option/u,
-  'Phase 15J must reject the retired external dataset-root spelling instead of silently falling back',
+  'the retired external dataset-root spelling must remain rejected',
 );
 
 assert.deepEqual(
@@ -53,7 +53,7 @@ assert.deepEqual(
   'canonical dataset-root vocabulary must not change family artifact path semantics',
 );
 
-const temp = mkdtempSync(path.join(tmpdir(), 'phase15j-family-root-'));
+const temp = mkdtempSync(path.join(tmpdir(), 'variant-family-root-'));
 try {
   const canonicalOut = path.join(temp, 'canonical-index.json');
   execFileSync(process.execPath, [
@@ -80,4 +80,4 @@ try {
   rmSync(temp, { recursive: true, force: true });
 }
 
-console.log('Phase-15C/15J variant-family dataset-root canonical-only behavior passed.');
+console.log('Variant-family dataset-root contract passed.');

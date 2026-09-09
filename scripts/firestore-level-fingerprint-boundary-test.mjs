@@ -35,8 +35,8 @@ const host = emulator.slice(0, separator);
 const port = Number(emulator.slice(separator + 1));
 assert.ok(Number.isInteger(port) && port > 0, `invalid Firestore emulator port: ${emulator}`);
 
-const PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || 'demo-pathfinder-phase15-boundary';
-const APP_ID = 'pathfinder-phase15-boundary';
+const PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || 'demo-pathfinder-fingerprint-boundary';
+const APP_ID = 'pathfinder-fingerprint-boundary';
 
 const apps = [];
 const dbs = [];
@@ -46,7 +46,7 @@ function client(name, mockUserToken = null) {
     apiKey: 'demo-api-key',
     projectId: PROJECT_ID,
     appId: `demo-${name}`,
-  }, `phase15-${name}-${process.pid}`);
+  }, `fingerprint-boundary-${name}-${process.pid}`);
   const db = initializeFirestore(app, {});
   connectFirestoreEmulator(
     db,
@@ -117,7 +117,7 @@ try {
   const adminRatings = createLevelRatingRepository(admin);
   const publicRatings = createLevelRatingRepository(publicClient);
   await adminRatings.saveLevelRating(levelFingerprint, 1, {
-    tags: ['phase15-current'],
+    tags: ['current'],
     customTags: [],
     difficulty: 3,
     fun: 4,
@@ -131,18 +131,18 @@ try {
   ));
   assert.equal(currentRatingDoc.exists(), true);
   assert.equal(currentRatingDoc.id, levelFingerprint);
-  assert.deepEqual((await publicRatings.loadLevelRating(levelFingerprint))?.tags, ['phase15-current']);
+  assert.deepEqual((await publicRatings.loadLevelRating(levelFingerprint))?.tags, ['current']);
 
   const legacyFingerprint = legacyFingerprints[0];
   await setDoc(doc(admin.db, 'artifacts', APP_ID, 'level_ratings', legacyFingerprint), {
-    tags: ['phase15-legacy'],
+    tags: ['legacy'],
     customTags: [],
     difficulty: 2,
     fun: 1,
     levelNumber: 1,
     updatedAt: serverTimestamp(),
   });
-  assert.deepEqual((await publicRatings.loadLevelRating(legacyFingerprint))?.tags, ['phase15-legacy']);
+  assert.deepEqual((await publicRatings.loadLevelRating(legacyFingerprint))?.tags, ['legacy']);
 
   // Submission identity: production repository code must persist the exact current
   // levelFingerprint field, and duplicate lookup must still recognize an old-fingerprint
@@ -192,7 +192,7 @@ try {
   const localHints = createLocalLevelHintsRepository(user);
   const hintPath = [0x00000000, 0x00000001, 0x00010001];
   const signature = hintPathSignature(hintPath);
-  const provenance = makeProvenanceEntry('phase15-emulator-proof', {
+  const provenance = makeProvenanceEntry('firestore-emulator-boundary', {
     foundAt: '2026-08-31T00:00:00.000Z',
   });
   const saved = await localHints.saveLocalLevelHintIfNovel(

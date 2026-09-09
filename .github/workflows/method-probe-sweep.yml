@@ -170,6 +170,7 @@ jobs:
             wait "${pids[$i]}"
             status=$?
             echo "worker ${labels[$i]} exit=${status}"
+            printf '%s\n' "$status" > "logs/method-probe-shards/shard-${labels[$i]}.exit-status"
             cat "logs/method-probe-shards/shard-${labels[$i]}.console.log"
             if [ "$status" -ne 0 ] && [ "$aggregate" -eq 0 ]; then aggregate=$status; fi
           done
@@ -206,6 +207,7 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Download all shard artifacts
+        id: download
         uses: actions/download-artifact@v8
         with:
           pattern: method-probe-shard-*
@@ -218,7 +220,8 @@ jobs:
           node-version: '20'
 
       - name: Combine every worker result + write job summary
-        run: node scripts/combine-method-probe-shards.mjs --staging-dir=artifact-staging --out-dir=logs/method-probe-shards
+        id: combine
+        run: node scripts/combine-method-probe-shards.mjs --staging-dir=artifact-staging --out-dir=logs/method-probe-shards --outcome-out=logs/method-probe-shards/outcome.json --deterministic-work-mode=${{ inputs.work_budget != '' }}
 
       - name: Upload combined result
         uses: actions/upload-artifact@v7
@@ -233,9 +236,29 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${{ needs.probe-shards.result }}" != success ]; then
+            if [ "${{ needs.probe-shards.result }}" = cancelled ]; then
+              outcome=infrastructure-error
+              reason='The probe shard matrix was cancelled before normal completion.'
+            else
+              outcome=harness-error
+              reason='At least one probe shard reported an unexpected execution failure.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=logs/method-probe-shards/outcome.json --outcome="$outcome" --reason="$reason"
+          elif [ ! -s logs/method-probe-shards/outcome.json ]; then
+            if [ "${{ steps.download.outcome }}" != success ]; then
+              outcome=infrastructure-error
+              reason='Required method-probe shard artifacts could not be downloaded.'
+            else
+              outcome=harness-error
+              reason='The method-probe combiner failed before it could classify the result.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=logs/method-probe-shards/outcome.json --outcome="$outcome" --reason="$reason"
+          fi
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/method-probe-shards/combined.json" \
             --include="logs/method-probe-shards/solved-ids.txt" \
+            --outcome-file="logs/method-probe-shards/outcome.json" \
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
             --source-artifact="method-probe-combined"

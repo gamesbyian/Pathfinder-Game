@@ -63,6 +63,18 @@ on:
         description: 'Comma-separated ablation flags to turn OFF for the phase-2 treatment arm only.'
         required: false
         default: ''
+      min_gains:
+        description: 'Frozen positive-verdict gate: minimum treatment-only residual solves required.'
+        required: false
+        default: '1'
+      max_losses:
+        description: 'Frozen positive-verdict gate: maximum control-only residual solves allowed.'
+        required: false
+        default: '0'
+      max_work_delta_pct:
+        description: 'Optional frozen positive-verdict gate: maximum treatment work increase vs control, in percent. Blank disables this gate.'
+        required: false
+        default: ''
       node_budget:
         description: 'Cumulative node ceiling per level, both phases and both arms. This is a per-level STARTING allocation, not a hard per-level cost ceiling: additive fallback/retry tiers can spend several times this much real work beyond it once the main ladder is exhausted (measured 1.5x-467x on a sample; see reports/2026-08-28-additive-tier-participation-audit.md). Pass --strict-total-work-budget for a true whole-solve work cap; this workflow does not do so by default, so it is not a solve-set-preserving substitution here without separate parity evidence.'
         required: false
@@ -610,6 +622,7 @@ jobs:
           node-version: '20'
 
       - name: Download control shard artifacts
+        id: download_control
         uses: actions/download-artifact@v8
         with:
           pattern: 'residual-phase2-shard-control-*'
@@ -617,6 +630,7 @@ jobs:
           merge-multiple: true
 
       - name: Download treatment shard artifacts
+        id: download_treatment
         uses: actions/download-artifact@v8
         with:
           pattern: 'residual-phase2-shard-treatment-*'
@@ -624,6 +638,7 @@ jobs:
           merge-multiple: true
 
       - name: Combine each arm (subset-shaped -- NOT the full-corpus baseline)
+        id: combine
         shell: bash
         run: |
           mkdir -p reports/stress
@@ -639,6 +654,7 @@ jobs:
           done
 
       - name: Verify complete coverage, both arms
+        id: coverage
         shell: bash
         run: |
           node -e "
@@ -653,25 +669,20 @@ jobs:
           "
 
       - name: Print the frozen confirmation verdict inputs
+        id: verdict
         shell: bash
+        env:
+          MIN_GAINS: ${{ inputs.min_gains }}
+          MAX_LOSSES: ${{ inputs.max_losses }}
+          MAX_WORK_DELTA_PCT: ${{ inputs.max_work_delta_pct }}
         run: |
-          node -e "
-          const fs = require('node:fs');
-          const control = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-control.json', 'utf8')).levels ?? [];
-          const treatment = JSON.parse(fs.readFileSync('reports/stress/residual-confirmation-phase2-treatment.json', 'utf8')).levels ?? [];
-          const idOf = x => x.id ?? String(x.level);
-          const controlSolved = new Set(control.filter(x => x.ok).map(idOf));
-          const treatmentSolved = new Set(treatment.filter(x => x.ok).map(idOf));
-          const gained = [...treatmentSolved].filter(id => !controlSolved.has(id)).sort();
-          const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
-          const workOf = rows => rows.reduce((n, x) => n + (x.workSpent || 0), 0);
-          const controlWork = workOf(control), treatmentWork = workOf(treatment);
-          console.log('cohort=${{ inputs.cohort_id }} phase1_pool_total=${{ needs.generate-pool.outputs.pool_total }} residual_total=${{ needs.freeze-residual.outputs.residual_total }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }} pool_sha256=${{ needs.generate-pool.outputs.pool_sha256 }} residual_sha256=${{ needs.freeze-residual.outputs.residual_sha256 }}');
-          console.log(\`control solved: \${controlSolved.size}/\${control.length}, work=\${controlWork}\`);
-          console.log(\`treatment solved: \${treatmentSolved.size}/\${treatment.length}, work=\${treatmentWork} (\${(100*(treatmentWork-controlWork)/controlWork).toFixed(2)}% vs control)\`);
-          console.log(\`gained (\${gained.length}): \` + gained.join(','));
-          console.log(\`lost (\${lost.length}): \` + lost.join(','));
-          "
+          node scripts/classify-paired-solver-outcome.mjs \
+            --control="reports/stress/residual-confirmation-phase2-control.json" \
+            --treatment="reports/stress/residual-confirmation-phase2-treatment.json" \
+            --outcome-out="reports/stress/residual-confirmation-outcome.json" \
+            --min-gains="$MIN_GAINS" \
+            --max-losses="$MAX_LOSSES" \
+            --max-work-delta-pct="$MAX_WORK_DELTA_PCT"
 
       - name: Upload combined results
         if: always()
@@ -688,9 +699,32 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${{ needs.solve-phase2.result }}" != success ]; then
+            if [ "${{ needs.solve-phase2.result }}" = cancelled ]; then
+              outcome=infrastructure-error
+              reason='The phase-2 solve matrix was cancelled before normal completion.'
+            else
+              outcome=harness-error
+              reason='At least one phase-2 solve shard reported an unexpected execution failure.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=reports/stress/residual-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
+          elif [ ! -s reports/stress/residual-confirmation-outcome.json ]; then
+            if [ "${{ steps.download_control.outcome }}" != success ] || [ "${{ steps.download_treatment.outcome }}" != success ]; then
+              outcome=infrastructure-error
+              reason='A required phase-2 shard artifact could not be downloaded.'
+            elif [ "${{ steps.coverage.outcome }}" = failure ]; then
+              outcome=invariant-violation
+              reason='Combined phase-2 control/treatment coverage was incomplete.'
+            else
+              outcome=harness-error
+              reason='The residual-confirmation harness failed before it could declare a scientific verdict.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=reports/stress/residual-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
+          fi
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/residual-confirmation-phase2-control.json" \
             --include="reports/stress/residual-confirmation-phase2-treatment.json" \
+            --outcome-file="reports/stress/residual-confirmation-outcome.json" \
             --shards-expected="$(( ${{ needs.freeze-residual.outputs.phase2_shard_count }} * 2 ))" \
             --shards-observed="$(find logs/solver-residual-confirmation-control logs/solver-residual-confirmation-treatment -maxdepth 1 -name 'phase2-batch-*.json' ! -name '*-flags.json' | wc -l | tr -d ' ')" \
             --source-artifact="residual-confirmation-combined"

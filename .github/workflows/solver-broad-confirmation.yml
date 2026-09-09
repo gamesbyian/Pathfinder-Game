@@ -80,6 +80,18 @@ on:
         description: 'Comma-separated ablation flags to turn OFF for the treatment arm only.'
         required: false
         default: ''
+      min_gains:
+        description: 'Frozen positive-verdict gate: minimum treatment-only solves required.'
+        required: false
+        default: '1'
+      max_losses:
+        description: 'Frozen positive-verdict gate: maximum control-only solves allowed.'
+        required: false
+        default: '0'
+      max_work_delta_pct:
+        description: 'Optional frozen positive-verdict gate: maximum treatment work increase vs control, in percent. Blank disables this gate.'
+        required: false
+        default: ''
       node_budget:
         description: 'Cumulative node ceiling per level, both arms. This is a per-level STARTING allocation, not a hard per-level cost ceiling: additive fallback/retry tiers can spend several times this much real work beyond it once the main ladder is exhausted (measured 1.5x-467x on a sample; see reports/2026-08-28-additive-tier-participation-audit.md). Pass --strict-total-work-budget for a true whole-solve work cap; this workflow does not do so by default, so it is not a solve-set-preserving substitution here without separate parity evidence.'
         required: false
@@ -379,6 +391,7 @@ jobs:
           node-version: '20'
 
       - name: Download control shard artifacts
+        id: download_control
         uses: actions/download-artifact@v8
         with:
           pattern: 'broad-confirmation-shard-control-*'
@@ -386,6 +399,7 @@ jobs:
           merge-multiple: true
 
       - name: Download treatment shard artifacts
+        id: download_treatment
         uses: actions/download-artifact@v8
         with:
           pattern: 'broad-confirmation-shard-treatment-*'
@@ -393,6 +407,7 @@ jobs:
           merge-multiple: true
 
       - name: Combine each arm (subset-shaped -- NOT the full-corpus baseline)
+        id: combine
         shell: bash
         run: |
           mkdir -p reports/stress
@@ -409,6 +424,7 @@ jobs:
           done
 
       - name: Verify complete coverage, both arms
+        id: coverage
         shell: bash
         run: |
           node -e "
@@ -423,25 +439,20 @@ jobs:
           "
 
       - name: Print the frozen confirmation verdict inputs
+        id: verdict
         shell: bash
+        env:
+          MIN_GAINS: ${{ inputs.min_gains }}
+          MAX_LOSSES: ${{ inputs.max_losses }}
+          MAX_WORK_DELTA_PCT: ${{ inputs.max_work_delta_pct }}
         run: |
-          node -e "
-          const fs = require('node:fs');
-          const control = JSON.parse(fs.readFileSync('reports/stress/broad-confirmation-control.json', 'utf8')).levels ?? [];
-          const treatment = JSON.parse(fs.readFileSync('reports/stress/broad-confirmation-treatment.json', 'utf8')).levels ?? [];
-          const idOf = x => x.id ?? String(x.level);
-          const controlSolved = new Set(control.filter(x => x.ok).map(idOf));
-          const treatmentSolved = new Set(treatment.filter(x => x.ok).map(idOf));
-          const gained = [...treatmentSolved].filter(id => !controlSolved.has(id)).sort();
-          const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
-          const workOf = rows => rows.reduce((n, x) => n + (x.workSpent || 0), 0);
-          const controlWork = workOf(control), treatmentWork = workOf(treatment);
-          console.log('cohort=${{ inputs.cohort_id }} generator=${{ inputs.generator }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }} sha256=${{ needs.generate.outputs.levels_sha256 }}');
-          console.log(\`control solved: \${controlSolved.size}/\${control.length}, work=\${controlWork}\`);
-          console.log(\`treatment solved: \${treatmentSolved.size}/\${treatment.length}, work=\${treatmentWork} (\${(100*(treatmentWork-controlWork)/controlWork).toFixed(2)}% vs control)\`);
-          console.log(\`gained (\${gained.length}): \` + gained.join(','));
-          console.log(\`lost (\${lost.length}): \` + lost.join(','));
-          "
+          node scripts/classify-paired-solver-outcome.mjs \
+            --control="reports/stress/broad-confirmation-control.json" \
+            --treatment="reports/stress/broad-confirmation-treatment.json" \
+            --outcome-out="reports/stress/broad-confirmation-outcome.json" \
+            --min-gains="$MIN_GAINS" \
+            --max-losses="$MAX_LOSSES" \
+            --max-work-delta-pct="$MAX_WORK_DELTA_PCT"
 
       - name: Upload combined results
         if: always()
@@ -458,9 +469,32 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${{ needs.solve.result }}" != success ]; then
+            if [ "${{ needs.solve.result }}" = cancelled ]; then
+              outcome=infrastructure-error
+              reason='The confirmation solve matrix was cancelled before normal completion.'
+            else
+              outcome=harness-error
+              reason='At least one confirmation solve shard reported an unexpected execution failure.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=reports/stress/broad-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
+          elif [ ! -s reports/stress/broad-confirmation-outcome.json ]; then
+            if [ "${{ steps.download_control.outcome }}" != success ] || [ "${{ steps.download_treatment.outcome }}" != success ]; then
+              outcome=infrastructure-error
+              reason='A required shard artifact could not be downloaded.'
+            elif [ "${{ steps.coverage.outcome }}" = failure ]; then
+              outcome=invariant-violation
+              reason='Combined control/treatment coverage was incomplete.'
+            else
+              outcome=harness-error
+              reason='The confirmation harness failed before it could declare a scientific verdict.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=reports/stress/broad-confirmation-outcome.json --outcome="$outcome" --reason="$reason"
+          fi
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/broad-confirmation-control.json" \
             --include="reports/stress/broad-confirmation-treatment.json" \
+            --outcome-file="reports/stress/broad-confirmation-outcome.json" \
             --shards-expected="$(( ( ${{ inputs.shard_count }} < ${{ needs.generate.outputs.total_levels }} ? ${{ inputs.shard_count }} : ${{ needs.generate.outputs.total_levels }} ) * 2 ))" \
             --shards-observed="$(find logs/solver-broad-confirmation-control logs/solver-broad-confirmation-treatment -maxdepth 1 -name 'batch-*.json' ! -name '*-flags.json' | wc -l | tr -d ' ')" \
             --source-artifact="broad-confirmation-combined"

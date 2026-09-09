@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { readResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -26,6 +27,16 @@ const shardsExpected = numberArg('shards-expected');
 const shardsObserved = numberArg('shards-observed');
 const shardsBasis = values.get('shards-basis') || null;
 const provenanceOut = values.get('provenance-out') || null;
+const outcomeFile = values.get('outcome-file') || null;
+let researchOutcome = null;
+if (outcomeFile) {
+  try {
+    researchOutcome = readResearchWorkflowOutcome(outcomeFile);
+  } catch (error) {
+    console.error(`publish-solver-sweep-result: invalid --outcome-file=${outcomeFile}: ${error.message}`);
+    process.exit(2);
+  }
+}
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -163,7 +174,7 @@ const shardCompleteness = Number.isFinite(shardsExpected) && Number.isFinite(sha
   : null;
 
 const manifest = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   kind: 'pathfinder-solver-sweep-result',
   status: entries[0].missing ? 'missing-primary' : 'published',
   workflow: process.env.GITHUB_WORKFLOW || null,
@@ -178,6 +189,7 @@ const manifest = {
   sourceArtifact,
   dispatchInputs,
   shardCompleteness,
+  researchOutcome,
   entries,
 };
 fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
@@ -196,6 +208,7 @@ if (provenanceOut) {
     event: manifest.event,
     dispatchInputs,
     shardCompleteness,
+    researchOutcome,
   }, null, 2) + '\n');
 }
 
@@ -205,6 +218,11 @@ if (manifest.runId) lines.push(`- Run: ${runUrl ? `[${manifest.runId}](${runUrl}
 if (manifest.sha) lines.push(`- Commit: \`${manifest.sha}\``);
 if (manifest.refName) lines.push(`- Ref: \`${manifest.refName}\``);
 if (sourceArtifact) lines.push(`- Legacy/specialized artifact: \`${sourceArtifact}\``);
+if (researchOutcome) {
+  lines.push(`- Research outcome: **${researchOutcome.outcome}** — ${researchOutcome.reason}`);
+} else {
+  lines.push('- Research outcome: not declared (this publisher never infers a scientific verdict)');
+}
 if (Object.keys(dispatchInputs).length) lines.push('- Dispatch inputs: recorded in `manifest.json`');
 if (shardCompleteness) lines.push(`- Shards: ${shardCompleteness.observed}/${shardCompleteness.expected} ${shardCompleteness.complete ? 'complete' : '**INCOMPLETE**'}${shardCompleteness.basis ? ` (${shardCompleteness.basis})` : ''}`);
 lines.push('- Standard artifact: `solver-sweep-result`');

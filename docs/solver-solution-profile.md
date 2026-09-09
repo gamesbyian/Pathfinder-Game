@@ -14,11 +14,31 @@ Offline analysis tooling that summarizes how accepted solutions behave so an uns
 | Landmark roles/turn requirements | `modules/domain/landmark-rules.ts` |
 | Provenance fields | `modules/domain/hint-types.ts` |
 
-`scripts/stress/solution-profile-lib.mjs` adds aggregate turn distributions, objective-satisfaction depth, prefix diversity, pairwise-distinctiveness summaries, provenance-source buckets, and discovery-saturation curves. It stores only a top-20 cell table plus a normalized footprint, not another full heatmap.
+`scripts/stress/solution-profile-lib.mjs` adds aggregate turn distributions, objective-satisfaction depth, prefix diversity, pairwise-distinctiveness summaries, provenance buckets, and discovery-saturation curves. It stores only a top-20 cell table plus a normalized footprint, not another full heatmap.
+
+## Provenance resolution
+
+Do not force every provenance fact into one mutually-exclusive "source" label. New research uses three orthogonal axes:
+
+- **origin**, from `scripts/stress/provenance-source-taxonomy.mjs`: witness, inherited witness, transformed witness, human, external constraint solver, variant-parent replay, Pathfinder solver, other;
+- **facets**, which may overlap on one event: complete enumeration, hint-guided, used-existing-hints, randomized, isolated-technique, production-retry-tier, with concrete retry-tier identity retained separately;
+- **capability admissibility**, from `scripts/stress/provenance-classes.mjs`: the canonical strict/narrow production cold-capability classification.
+
+This matters because producer identity and search modality are not alternatives. A Pathfinder-produced solution can be isolated and randomized; a variant replay can carry hint context. Neither fact should erase the other.
+
+`source-stratified-solution-profile.mjs` applies origin and facet stratification while reusing this library's profile primitives:
+
+```sh
+node scripts/run-bundled.mjs scripts/stress/source-stratified-solution-profile.mjs -- \
+  --corpus=stress2 \
+  --out=reports/stress/solution-profile-corpus2-granular.json
+```
+
+The older classifier embedded in `solution-profile-lib.mjs` remains for compatibility with checked-in profile artifacts until the next full regeneration/unification pass. Do not compare legacy bucket names with the new origin/facet schema as if they meant the same thing.
 
 ## Fingerprint contents
 
-Each level has a `combined` bucket plus provenance-source buckets (`PROVENANCE_SOURCES`): witness, human-solved, complete-enumeration, prefix-anchored-completion, randomized-enumeration, production-solver, and other. A hint rediscovered by multiple sources contributes to each relevant bucket.
+Each level has a `combined` bucket plus origin and/or facet buckets in the new stratified output. A hint rediscovered by multiple origins can contribute to each relevant origin bucket, and one hint may contribute to several facet buckets.
 
 Each bucket includes:
 
@@ -39,7 +59,7 @@ Large-bucket distribution statistics use deterministic seeded sampling to bound 
 
 Only `provablyExhaustive` is a completeness signal, derived from stored provenance with `search.termination === 'exhaustive'`.
 
-Do not infer “the solution space is rigid” merely because the stored hint set is homogeneous. Search/generation provenance may have sampled one narrow mode repeatedly.
+Do not infer "the solution space is rigid" merely because the stored hint set is homogeneous. Search/generation provenance may have sampled one narrow mode repeatedly.
 
 ## Cross-level comparison
 
@@ -51,12 +71,18 @@ Similarity is descriptive. A close profile match can reflect shared generator/fa
 
 ## Provenance and leakage caveats
 
-Source buckets are only as reliable as hint provenance. Coverage differs by corpus and source; do not assume `combined` represents cold solver capability. Use the shared provenance classifier and current coverage data rather than treating `other` or `hintGuided` alone as capability labels. See `DEVELOPER_REFERENCE.md`'s Provenance section and `npm run stress:provenance-coverage`.
+Coverage differs by corpus, origin, facet and capability class; do not assume `combined` represents cold solver capability. Run the compact evidence audit before a decision-bearing profile analysis:
+
+```sh
+node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all
+```
 
 Additional rules:
 
 - a profile derived from saved solutions/hints cannot be read by production policy for that level;
 - historical winner/technique labels joined to profiles are offline research labels only;
+- external, variant-replay, witness/human evidence cannot establish production cold capability merely because its hint flags are clean;
+- isolated, retry-tier, randomized and hint-guided are modalities/facets, not alternative producer origins;
 - if a profile-derived descriptor was chosen after inspecting outcome correlations, the same levels are discovery/tuning data, not confirmation;
 - split variant-derived comparisons by parent family;
 - guard against normalized footprints or high-dimensional descriptors becoming accidental level/family identifiers;
@@ -66,7 +92,7 @@ See [`solver-level-blindness.md`](solver-level-blindness.md) and [`solver-resear
 
 ## Freshness
 
-Default libraries:
+Default legacy libraries:
 
 - `reports/stress/solution-profile-published.json`
 - `reports/stress/solution-profile-corpus1.json`
@@ -75,7 +101,7 @@ Default libraries:
 
 Partial libraries (`levelSpec !== 'all'`) are not auto-regenerated because a count mismatch cannot distinguish staleness from intentional selection.
 
-Use `npm run stress:solution-profile` only to force a rebuild or create a non-default/partial library.
+Use `npm run stress:solution-profile` only to force a rebuild or create a non-default/partial legacy library. Use `source-stratified-solution-profile.mjs` for new origin/facet work, especially Corpus 2.
 
 Fresh profile data does not make historical solver-outcome joins current. Revalidate decision-bearing technique/capability associations against current solver evidence.
 
@@ -91,9 +117,13 @@ npm run stress:solution-profile -- \
   --out=reports/stress/solution-profile-corpus1.json
 
 npm run stress:solution-profile-compare -- --target-level=42
+
+node scripts/run-bundled.mjs scripts/stress/source-stratified-solution-profile.mjs -- \
+  --corpus=stress2 \
+  --out=reports/stress/solution-profile-corpus2-granular.json
 ```
 
-`solution-profile-compare.mjs` also accepts `--library=a.json,b.json`, `--bucket=<source>` (default `combined`), and `--top=<n>`.
+`solution-profile-compare.mjs` also accepts `--library=a.json,b.json`, `--bucket=<source>` (default `combined`), and `--top=<n>` for the legacy libraries.
 
 ## Proper research use
 
@@ -107,8 +137,10 @@ A production-facing idea derived from solution profiles should follow this chain
 
 If step 2 cannot produce a legal descriptor, the finding remains diagnostic knowledge rather than a routing feature.
 
-Current summaries:
+For path-level search diagnosis, profiles are only one view of the hint store. The broader evidence-layer plan in [`../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md) also treats validated hint prefixes as a sound positive oracle and provenance as a longitudinal experimental log.
+
+Current legacy summaries:
 - [`reports/stress/solution-profile-published-summary.md`](../reports/stress/solution-profile-published-summary.md)
 - [`reports/stress/solution-profile-corpus1-summary.md`](../reports/stress/solution-profile-corpus1-summary.md)
 
-Unit coverage: `scripts/stress/solution-profile-lib-unit-tests.mjs`.
+Unit coverage: `scripts/stress/solution-profile-lib-unit-tests.mjs` plus `scripts/stress/provenance-source-taxonomy-unit-tests.mjs`.

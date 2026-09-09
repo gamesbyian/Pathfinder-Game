@@ -11,14 +11,14 @@ const crossingSource = readFileSync('scripts/stress/mc-crossing-slack-analysis.m
 
 for (const source of [replaySource, crossingSource]) {
   assert.ok(source.includes("arg('prune-gap-dir', 'reports/stress')"),
-    '15H must preserve reports/stress as the default prune-gap directory');
+    'prune-gap tools must preserve reports/stress as the default directory');
   assert.ok(source.includes("/^prune-gap-.*\\.json$/.test(f)"),
-    '15H must preserve prune-gap file selection');
+    'prune-gap tools must preserve prune-gap file selection');
   assert.ok(!source.includes("arg('atlas-dir'"),
-    '15H must not retain the retired CLI as an executable alias');
+    'retired atlas-dir must not return as an executable alias');
 }
 
-const temp = mkdtempSync(path.join(tmpdir(), 'phase15h-prune-gap-'));
+const temp = mkdtempSync(path.join(tmpdir(), 'prune-gap-replay-'));
 try {
   const result = spawnSync(
     process.execPath,
@@ -34,11 +34,7 @@ try {
   rmSync(temp, { recursive: true, force: true });
 }
 
-// Execute the second real 15H producer too. An empty prune-gap directory is sufficient for this
-// naming-boundary smoke: it exercises the canonical CLI, report writer, and metadata fields while
-// avoiding an expensive research replay. The producer deliberately skips Corpus-2 loading when
-// there are no branch artifacts, so this remains valid in the ordinary sparse Node-test checkout.
-const crossingTemp = mkdtempSync(path.join(tmpdir(), 'phase15h-crossing-producer-'));
+const crossingTemp = mkdtempSync(path.join(tmpdir(), 'prune-gap-crossing-'));
 try {
   const out = path.join(crossingTemp, 'crossing.json');
   const result = spawnSync(
@@ -69,4 +65,4 @@ assert.ok(replaySource.includes('pruneGapDir: PRUNE_GAP_DIR'));
 assert.ok(crossingSource.includes('pruneGapDir: PRUNE_GAP_DIR'));
 assert.ok(crossingSource.includes('pruneGapFiles: pruneGapFiles.length'));
 
-console.log('Phase-15H prune-gap CLI/report vocabulary smoke passed.');
+console.log('Prune-gap CLI/report contract passed.');

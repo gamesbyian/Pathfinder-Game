@@ -47,11 +47,13 @@ function markdownAnchors(target) {
 }
 
 const historicalDocumentation = file => file.startsWith('reports/') || file.startsWith('docs/history/') ||
+  file.startsWith('docs/naming-cleanup-') ||
   (file.startsWith('docs/archive/snapshots/') && file !== 'docs/archive/snapshots/README.md');
 
 for (const file of markdownFiles) {
   // Frozen history preserves text from its original context; current navigation lives in indexed
-  // authorities. Do not force archival prose to chase later path renames.
+  // authorities. Completed naming-program records are also frozen evidence, so historical command
+  // spellings there do not force retired package aliases to remain executable forever.
   if (historicalDocumentation(file)) continue;
 
   const source = readRepositoryText(ROOT, file);
