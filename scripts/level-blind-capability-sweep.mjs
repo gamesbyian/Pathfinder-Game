@@ -259,7 +259,12 @@ try {
             }
             rows.set(levelNumber, row);
             completed += 1;
-            console.log(`[${completed}/${targets.length}] ${row.id ?? `L${levelNumber}`} ${row.ok ? 'SOLVED' : row.status}`);
+            // refereeValid is a separate post-hoc replay check (Solver.validateCandidatePath), not
+            // a gate on row.ok -- print it alongside SOLVED so a claimed solve's referee validity is
+            // visible in the console log too, not only in the JSON artifact (which some sandboxed
+            // environments cannot download).
+            const solvedSuffix = row.ok ? ` refereeValid=${row.refereeValid}` : '';
+            console.log(`[${completed}/${targets.length}] ${row.id ?? `L${levelNumber}`} ${row.ok ? 'SOLVED' : row.status}${solvedSuffix}`);
             writeReport();
         },
     });
