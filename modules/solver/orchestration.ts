@@ -1942,6 +1942,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // repair-fallback's (see repairLateProbeTierWillRun's own comment) — it exists FOR
             // levels with no repair config in the ladder, not levels that have one.
             ['late-repair-search', !hasRepairConfig],
+            ['guidance-goal-distance-retry', hasMainConfig],
+            // Inverted for the same reason as late-repair-search above: this tier synthesizes its
+            // own repair attempt as a multi-seed extension of late-repair-search, so it shares that
+            // tier's structural precondition (no configured repair fallback), not repair-fallback's.
+            ['late-repair-multiseed-retry', !hasRepairConfig],
         ]);
         const order = [...runnable.keys()];
         const lastTechnique = solveResult.attempts.length ? classify(solveResult.attempts.at(-1)!) : null;

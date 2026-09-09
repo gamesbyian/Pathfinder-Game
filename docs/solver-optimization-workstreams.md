@@ -25,7 +25,7 @@ Portal-bearing levels are 954/1,700 of Corpus 2 and hold 551/725 production miss
 
 Primary evidence: [`portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md), [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md), [`beam preflight`](../reports/2026-09-09-portal-beam-state-identity-preflight-001.md).
 
-After material restorations settle, repair the two-stage lifecycle instantiation projection before refreshing production/capability telemetry; then follow the evidence-hardening refresh contract before interpreting the triple-overlap cohort or repricing the ladder. The current projection can falsely mark `guidance-goal-distance-retry` and `late-repair-multiseed-retry` as mechanically ineligible; see [`telemetry gap`](../reports/2026-09-09-stage-lifecycle-instantiation-projection-gap-001.md). Do not carry forward the old 975/1,700 attribution.
+The two-stage lifecycle instantiation projection gap is repaired: `guidance-goal-distance-retry` and `late-repair-multiseed-retry` now report correct `mechanicallyEligible`/`instantiated` telemetry (see [`telemetry gap`](../reports/2026-09-09-stage-lifecycle-instantiation-projection-gap-001.md), closed). After material restorations settle, follow the evidence-hardening refresh contract before interpreting the triple-overlap cohort or repricing the ladder. Do not carry forward the old 975/1,700 attribution.
 
 #### 2A. Production repricing / promotion closeout
 
