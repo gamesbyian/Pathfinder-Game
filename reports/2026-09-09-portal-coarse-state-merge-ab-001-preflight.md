@@ -51,4 +51,14 @@ Workflow: `solver-level-blind-targeted-sweep.yml`, `ids_file=data/stress/portal-
 
 Both dispatches share the workflow's own default concurrency group, so they queue behind the already-dispatched must-cross-neighbour-budget and connectivity-volume A/Bs.
 
-**Status as of 2026-09-09 ~14:00 UTC:** the must-cross-neighbour-budget A/B (see [`its preflight`](2026-09-09-mc-neighbor-budget-portal-ab-001-preflight.md)) reached a promotion decision (concluded-positive, 52 gains / 0 losses, promoted) and released the concurrency this pair was waiting on. Control dispatched: run [`34360379709`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34360379709) (`target_wall_minutes=5`), one pair at a time per the capacity lesson above.
+**Status as of 2026-09-09 ~15:40 UTC:** the must-cross-neighbour-budget A/B reached a promotion decision (concluded-positive, 52 gains / 0 losses, promoted) and released the concurrency this pair was waiting on.
+
+### Control arm — COMPLETE (954/954, 455 solved)
+
+- Main body: run [`34360379709`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34360379709) (`target_wall_minutes=5`), 8/78 shards cancelled, 889/954 reported, 444 solved. The workflow's `if:always()` print-step fix (see the mc-neighbor-budget-portal A/B's dispatch history) meant the full 889-row per-level table was directly recoverable from this run's own "Combine shard results" job log — no per-shard scraping needed this time.
+- Gap-fill (65 missing ids): run [`34369713040`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34369713040) (`target_wall_minutes=1`), clean (0 cancellations), 65/65 resolved, 11 solved.
+- **Combined control: 444 + 11 = 455/954 solved.**
+
+### Treatment arm
+
+- Dispatched: run [`34371613615`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34371613615) (`enable_flags=STRATEGY_PORTAL_COARSE_STATE_MERGE`, `target_wall_minutes=5`), in progress as of this writing.
