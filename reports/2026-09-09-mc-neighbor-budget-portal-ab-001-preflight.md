@@ -1,9 +1,9 @@
 # PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: frozen matched-work population A/B preflight
 
 > **Status:** active
-> **Last evidence:** 2026-09-09 — correctness gates clean (0 false rejects on the full 5,518-branch oracle-labelled atlas restricted to the 922 portal+must-cross branches; 0 soundness violations replaying every known stored solution across all 3 corpora with the flag forced on). See [`lower-bounds.ts`](../modules/solver/lower-bounds.ts) and [`portal restoration evidence hardening`](2026-09-09-portal-restoration-evidence-hardening-001.md).
-> **Decision:** pending — this report freezes the population, envelope, and acceptance rule before either arm runs.
-> **Remaining gate:** dispatch control then treatment, combine, and apply the frozen acceptance rule below.
+> **Last evidence:** 2026-09-09 — both arms complete over the full frozen 530-id population (control 193/530, treatment 245/530), per-level enumeration done: **52 gains, 0 losses, net +52**. See [`Results`](#results) below.
+> **Decision:** pending — referee-validity check on the 52 claimed gains, attempt-error/censoring check, and `npm run solver:regression` are the only remaining acceptance-rule gates before a promotion decision.
+> **Remaining gate:** referee-check dispatch [`34358138984`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34358138984) (in progress), then `npm run solver:regression`.
 > **Evidence role:** population-scale promotion gate for `PRUNE_MC_NEIGHBOR_BUDGET_PORTAL` (see [`opt-in ledger`](../docs/solver-opt-in-experiment-ledger.md))
 > **Selection:** deterministic structural predicate over the frozen Corpus-2 source, not outcome-selected
 
@@ -70,11 +70,26 @@ Three distinct GHA issues surfaced getting this population through cleanly, in o
 - Gap-fill: run [`34337880617`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337880617) (`target_wall_minutes=1`, 18 ids including the 16 above plus R03097/R03368 which the main body already had), 4/18 solved: R02858, R02884, R02927, R03304. The other 14 (including all 16 the main body was missing minus those 4) are `node-budget-reached`.
 - **Combined control: 189 + 4 = 193/530 solved.**
 
-### Treatment arm
+### Treatment arm — COMPLETE (530/530)
 
-- Gap-fill-001 (18 ids, the ones control also needed gap-fill for): run [`34337871124`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337871124) (`target_wall_minutes=1`), 5/18 solved: R02858, R02884, R02927, R02915, R03304 — **R02915 is a gain over control on this 18-id subset** (control: `node-budget-reached`; treatment: solved). All other 13 levels are `node-budget-reached`, matching control on this subset.
-- Main body (the other 512 ids): run [`34341771720`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34341771720) (`enable_flags=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL`, `target_wall_minutes=5`). This dispatch hit **much worse GHA runner-capacity/timeout attrition than the control arm did** — 33/53 shards were cancelled (control had only 3/53) — leaving 398/530 levels reported, 220 solved, and 132 missing. All 18 of the gap-fill-001 ids are a subset of this missing-132 set (consistent with them being genuinely slow under this ladder, not randomly flaky), so only the **114 net-new** missing ids needed a further dispatch.
-- Gap-fill-002 (114 ids, the 132 missing minus the 18 already covered by gap-fill-001): id list committed at [`data/stress/mc-neighbor-budget-portal-treatment-gapfill-002-ids.txt`](../data/stress/mc-neighbor-budget-portal-treatment-gapfill-002-ids.txt); dispatched as run [`34349539268`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34349539268) (`target_wall_minutes=1`). Much lower attrition this time (1/62 shards cancelled): 113/114 levels resolved, 20/113 solved. One id, **R03346**, still needs a gap-fill-003 (its shard was the one cancellation).
-- Main body's own full per-level table (398 rows behind the 220-solved aggregate) is not directly recoverable from this run's own logs — it predates the workflow fix that prints that breakdown even on a validation failure (see the `e4ff8d7`/`50054cc` commits). Reconstructing it via per-shard job-log scraping (same method used for the control arm) is in progress.
+- Gap-fill-001 (18 ids, the ones control also needed gap-fill for): run [`34337871124`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34337871124) (`target_wall_minutes=1`), 5/18 solved: R02858, R02884, R02927, R02915, R03304. The other 13 are `node-budget-reached`.
+- Main body: run [`34341771720`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34341771720) (`enable_flags=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL`, `target_wall_minutes=5`). Hit much worse GHA runner-capacity/timeout attrition than control (33/53 shards cancelled vs. control's 3/53): 398/530 levels reported, 220 solved, 132 missing (a strict superset of the 18 gap-fill-001 ids). Its full per-level table isn't directly recoverable from this run's own logs (predates the `if:always()` print-step fix in `e4ff8d7`/`50054cc`); reconstructed instead via per-shard job-log scraping (398/398 rows recovered — 397 by direct scrape, 1 row, **R03356**, forced SOLVED by exact +1/+1 reconciliation against the official 398-row/220-solved aggregate, since it wasn't visible in any of the 53 shards' console text despite exhaustive verified scraping — most likely lost to console buffering at a cancellation boundary, not a parsing miss).
+- Gap-fill-002 (114 net-new missing ids): id list at [`data/stress/mc-neighbor-budget-portal-treatment-gapfill-002-ids.txt`](../data/stress/mc-neighbor-budget-portal-treatment-gapfill-002-ids.txt); run [`34349539268`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34349539268) (`target_wall_minutes=1`). Much lower attrition (1/62 shards cancelled): 113/114 resolved, 20/113 solved.
+- Gap-fill-003 (the 1 remaining id, R03346): run [`34356409220`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34356409220), clean, `node-budget-reached` (0 solves across every stage).
+- **Combined treatment: 245/530 solved.**
 
-Once the main body's 398 rows are reconstructed and R03346 is gap-filled, combine per-level (not just aggregate counts) against the control's full 530-row set above to enumerate gains/losses per the frozen acceptance rule.
+## Results
+
+Per-level enumeration, treatment vs. control, over the full frozen 530-id population (both arms independently reconstructed to 530/530 via the dispatch history above):
+
+| | control unsolved | control solved |
+|---|---:|---:|
+| **treatment unsolved** | 285 (both unsolved) | 0 (losses) |
+| **treatment solved** | 52 (gains) | 193 (both solved) |
+
+- **Gains: 52.** Every one of them: control=`node-budget-reached` → treatment=`SOLVED`/`success`. Full id list: R00340, R00342, R00702, R00867, R00893, R01229, R01477, R01590, R01769, R02077, R02078, R02081, R02151, R02168, R02176, R02179, R02205, R02227, R02251, R02261, R02427, R02428, R02535, R02593, R02610, R02647, R02695, R02765, R02770, R02814, R02815, R02848, R02866, R02900, R02915, R02924, R02975, R03014, R03061, R03063, R03071, R03084, R03094, R03120, R03137, R03143, R03153, R03186, R03205, R03242, R03324, R03356 — committed at [`data/stress/mc-neighbor-budget-portal-gain-referee-check-001-ids.txt`](../data/stress/mc-neighbor-budget-portal-gain-referee-check-001-ids.txt).
+- **Losses: 0.** No level solved under control regressed to unsolved under treatment — no churn to diagnose.
+- **Net: +52.**
+- **Referee validity (remaining acceptance-rule gate):** none of the 52 gains' `refereeValid` status was directly observable from console logs at the time they were solved (the console line only printed `SOLVED`, not the underlying `Solver.validateCandidatePath` replay result). Added a small, additive print-line fix (`f8d30f2`) to surface `refereeValid` inline, then redispatched exactly these 52 ids under the treatment flag (run [`34358138984`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34358138984)) to confirm every claimed gain replays clean. In progress as of this writing.
+- **Attempt errors / deadline-censoring imbalance:** not yet separately checked (needs `hadAttemptError` per row, also not visible in console logs pre-fix) — pending alongside the referee check.
+- **Published-corpus regression:** not yet run — `npm run solver:regression` is required before any promotion, per the frozen acceptance rule.
