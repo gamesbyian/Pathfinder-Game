@@ -54,5 +54,4 @@ The safe immediate uses are:
 
 ## Next mechanism question
 
-The cohort supports a narrower propagation question: are native dead branches repeatedly violating a joint interface among intersection demand, must-cross approach direction, and portal transitions before the existing independent bounds detect failure? The implementation handoff is in [`2026-09-08-solver-opportunity-synthesis-and-handoff-001.md`](2026-09-08-solver-opportunity-synthesis-and-handoff-001.md).
-
+The cohort supports a narrower propagation question: are native dead branches repeatedly violating a joint interface among intersection demand, must-cross approach direction, and portal transitions before the existing independent bounds detect failure? The evidence and implementation gates are in [`2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md`](2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
