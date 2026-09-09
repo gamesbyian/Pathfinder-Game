@@ -19,11 +19,11 @@ Portal-bearing levels are 954/1,700 of Corpus 2 but hold 551/725 current product
 Treat these as independent causal restorations under matched work. Do not bundle them into one treatment.
 
 1. **Must-cross neighbour-budget propagation on portal levels.** Highest-confidence immediate gate: the excluded 530-level portal+must-cross population is larger than the 409-level portal-free population on which the prune was promoted at +54 net. Portal-specific derivation is now closed: current move/intersection semantics make the existing lower bound conservative on portal terminals, and portal jumps cannot create an uncharged revisit. The shadow/oracle helper also had a post-August dense-index representation drift; that is repaired with regression coverage. **Next gate:** rerun the corrected oracle-labelled branch atlas with portal cases, require zero alive-labelled false rejections, then run the frozen matched-work Corpus-2 A/B on the deterministic 530-level portal+must-cross population with gains/losses enumerated and published-corpus regression unchanged. See [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
-2. **Portal-aware beam coarse-state merge.** Highest expected solve-rate upside in the audit: all 954 portal levels currently lose coarse-state survivor compression and near-tie retention. **Next gate:** extend the coarse-state tuple with portal state already carried by search (`portalJumps`, `lastWasPortalJump`; use a stricter portal-used mask only if required), add counterexamples varying the new fields, then run a fixed-work A/B on the prespecified portal-bearing population. Require referee/regression safety and enumerate both gains and losses.
+2. **Portal-aware beam coarse-state merge.** Highest expected solve-rate upside in the audit: all 954 portal levels currently lose coarse-state survivor compression and near-tie retention. `portalJumps` plus `lastWasPortalJump` capture counted-length and transient forced-jump state, but do not distinguish which portal pairs have already been consumed. **Next gate:** first measure used-pair identity aliasing under that proposed coarse key on a prespecified portal-bearing observer population. If aliasing is negligible, test the count/transient tuple; if material, preserve exact used-pair identity with a schema-safe signature. Then run the fixed-work A/B against the current no-portal-merge control. Require referee/regression safety and enumerate gains, losses, and specialist retention. See [`beam state-identity preflight`](../reports/2026-09-09-portal-beam-state-identity-preflight-001.md).
 3. **Connectivity volume check on portal levels.** The derivation and first screen are closed for ordinary solver connectivity: zero rejections over 266,320 known-valid paths / 21.8M prefix states, real activation on sampled portal misses, and the remaining-step/fresh-volume inequality stays conservative under zero-cost portal jumps. **Next gate:** matched-work A/B on the deterministic 954-level portal-bearing population. The false-goal-trigger-search mirror now has a supporting derivation too, but keep it separate until a triggerable-endpoint/control-treatment differential shows zero lost triggerable cells on completed enumerations. See [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
 4. **Parity prune/gate on same-parity-only portal levels.** The parity derivation is closed and independently mirrored by the already-shipped false-goal endpoint parity logic. Only 21/954 portal levels have zero twist pairs. **Next gate:** bounded implementation plus unit/differential/published-regression coverage; use this as correctness/coverage cleanup, not a standalone solve-rate campaign. See [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
 
-Primary evidence: [`../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md) and [`../reports/2026-09-09-portal-restoration-evidence-hardening-001.md`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
+Primary evidence: [`../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md), [`../reports/2026-09-09-portal-restoration-evidence-hardening-001.md`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md), and [`../reports/2026-09-09-portal-beam-state-identity-preflight-001.md`](../reports/2026-09-09-portal-beam-state-identity-preflight-001.md).
 
 After the material portal restorations settle, refresh production/capability telemetry before interpreting the triple-overlap cohort or repricing the full ladder. Landing coarse-state merge or must-cross propagation changes both portal search capability and the meaning of two currently flag-inert retry tiers. Follow the refresh contract in the evidence-hardening report rather than carrying forward the old 975/1,700 ladder attribution.
 
@@ -67,7 +67,7 @@ Compositional routing predicates expose a materially stronger **risk cohort**: 3
 
 A tested 18-feature static topology/placement bundle adds no material held-out value beyond the coarse structural fields (production-failure AUC 0.845 vs 0.842; no-T1 residual 0.701 vs 0.710). Closed as a general selector extension. See [`../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`](../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md).
 
-The portal carve-outs are now the first causal explanation to resolve: four production mechanisms are disabled outright on portal levels, which hold 551/725 misses and 464/604 misses without an isolated winner. Do not classify the triple-overlap residue as unexplained reasoning failure until the restoration tranche has been tested and the production boundary refreshed.
+The portal carve-outs are now the first causal explanation to resolve: four production mechanisms are disabled outright on portal levels, which hold 551/725 misses and 464/604 misses without an isolated winner. The immediate MC-restoration population also covers most of the current triple-overlap risk population: the 396 triple-overlap levels are 74.7% of the 530 portal+must-cross levels, and they contain 278/337 (82.5%) of portal+must-cross misses and 242/288 (84.0%) of that population's misses without an isolated T1 winner. Do not classify that residue as unexplained reasoning failure until the restoration tranche has been tested and the production boundary refreshed.
 
 **Next gate:** parallelize the existing-data join where cheap, but freeze any new propagation implementation. After portal restoration, refresh lifecycle/capability evidence inside the triple-overlap cohort; classify the remaining informative misses as allocation/exposure, search-policy, or reasoning/representation. Build observer-only joint propagation only for a recurring reasoning family that survives that separation. Production routing changes remain downstream. See [`the handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
 
@@ -87,21 +87,21 @@ Rows sort by stable workstream ID, not execution priority.
 ## Promoted/completed workstreams
 
 | ID | Workstream | State | Reopen condition |
-|---:|---|---|
+|---:|---|---|---|
 | 3 | Generalization and holdout discipline | **METHOD COMPLETE / SUPPORTING** | Change only if repeated use exposes a concrete methodological failure. Evidence intensity scales with selection pressure; same-generator confirmation and cross-generator transfer remain distinct. |
 | 8 | Cheap isolated capability missed by production | **SUBSUMED BY WORKSTREAM 1** | Treat isolated winners as action-selection evidence, not entitlement to a permanent tail. |
 
 ## Closed negative workstreams
 
 | ID | Workstream | State | Reopen condition |
-|---:|---|---|
+|---:|---|---|---|
 | 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Requires materially new evidence about restart value by work/population band or a new cheap sound failure-certificate family. |
 | 4 | Beam retention at proven extinction boundaries | **CLOSED IN TESTED QUOTA/BUCKETING FORM** | Requires independent evidence for a bounded retention mechanism materially different from the tested form. |
 
 ## Deferred / on-demand workstreams
 
 | ID | Workstream | State | Next gate |
-|---:|---|---|
+|---:|---|---|---|
 | 5 | Exact/reference-model program | **ON DEMAND / INTEGRITY GATE SATISFIED** | Deterministic regeneration now yields 280 retained CP-SAT levels, 26 current production misses, 13 without an isolated T1 winner, and 12 satisfying both residual predicates. A simple shorter/lower-load rule is internally parity-stable but remains exploratory; use it only to prespecify a future temporal/new-label holdout. Reuse the 12 exact solutions as counterexamples now; do not run broad new CP-SAT compute or production CP-SAT. See [`../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`](../reports/2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md). |
 
 ## Standing research rules
