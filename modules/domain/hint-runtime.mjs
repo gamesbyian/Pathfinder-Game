@@ -95,12 +95,14 @@ export function makeProvenanceEntry(technique, opts = {}) {
 export function provenanceEventIdentity(entry) {
     if (!entry || typeof entry !== 'object') return JSON.stringify(entry ?? null);
     const { foundAt: _foundAt, ...rest } = entry;
-    const search = { ...(rest.search || {}) };
-    delete search.elapsedMs;
-    delete search.cumulativeElapsedMs;
-    delete search.cumulativeNodesExpanded;
-    delete search.cumulativeBudgetMs;
-    delete search.budgetMs;
+    const {
+        elapsedMs: _elapsedMs,
+        cumulativeElapsedMs: _cumulativeElapsedMs,
+        cumulativeNodesExpanded: _cumulativeNodesExpanded,
+        cumulativeBudgetMs: _cumulativeBudgetMs,
+        budgetMs: _budgetMs,
+        ...search
+    } = rest.search || {};
     return JSON.stringify({ ...rest, search });
 }
 
