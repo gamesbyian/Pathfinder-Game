@@ -51,17 +51,33 @@ After portal restoration and 2A, refresh the production ladder/capability map. T
 
 Existing capability, lifecycle, provenance, profile, variant, census, and trace evidence may be mined while experiments run. Promote only held-out/replicated signals.
 
+#### Existing hint/provenance evidence tranche
+
+The accumulated hint store is now an active WS1 evidence source, not merely a solution cache. Semantic event identity is enforced at the persistence boundary and a granular source taxonomy distinguishes ordinary production, retry-tier, isolated-technique, external exact, variant-parent replay, enumeration, hint-guided, witness/human and related evidence classes. See [`hint/provenance evidence-layer upgrade`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md).
+
+Before spending new solver compute on an action-selection question, exhaust the relevant local joins in this order:
+
+1. run the corpus-wide provenance evidence/dedup audit and inspect any true duplicate-event residue;
+2. build a source-stratified Corpus-2 solution-profile view rather than mixing the large variant-replay population into `combined`/`other`;
+3. measure technique/config **solution-basin complementarity** on multiply-discovered levels, comparing within-technique versus between-technique path distance;
+4. use known-valid path prefixes to strengthen the active portal beam-state identity audit, including collisions hidden by consumed portal-pair state;
+5. test forced-decision/backdoor depth only as a concrete discriminator for the active portal/triple-overlap cohort;
+6. join variant-parent replay paths to production/census outcomes to distinguish search-fragile parents from robust-hard neighborhoods;
+7. prefer features reproduced across independent provenance sources when nominating a legal structural/state descriptor.
+
+These are offline labels only. Saved solution paths, source classes, profiles, family identity, and historical winner labels may not be read directly by production policy for the same level.
+
 Closed selector residues stay closed: the 35-row cohort is reconciled; multi-portal repair-over-beam reduced to two missing-exposure rows after a 0-gain/2-loss A/B; clockwise `perimeterSweep` disappears under matched attribution.
 
 The current high-risk cohort is 396 intersection-heavy + must-cross-heavy + multi-portal levels, 118/396 solved. Portal carve-outs are the first causal explanation to resolve. This cohort is 74.7% of the 530 portal+must-cross population and contains 278/337 (82.5%) of its misses plus 242/288 (84.0%) of its misses without an isolated T1 winner.
 
-**Next:** cheap existing-data joins may proceed, but freeze new propagation implementation. After portal restoration, refresh lifecycle/capability evidence inside the triple-overlap cohort and classify remaining informative misses as allocation/exposure, search-policy, or reasoning/representation. Build observer-only joint propagation only for a recurring reasoning family surviving that separation. See [`handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
+**Next:** cheap existing-data joins may proceed, including the hint/provenance tranche above, but freeze new propagation implementation. After portal restoration, refresh lifecycle/capability evidence inside the triple-overlap cohort and classify remaining informative misses as allocation/exposure, search-policy, or reasoning/representation. Build observer-only joint propagation only for a recurring reasoning family surviving that separation. See [`handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
 
 ## Active workstreams
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Mine existing evidence; after portal refresh classify residual failure roles before any new routing/propagation. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Mine existing evidence, including source-stratified hint/path joins; after portal refresh classify residual failure roles before any new routing/propagation. |
 | 2 | Fixed-work scheduler repricing | **ACTIVE / FIRST PRIORITY** | Complete the portal restoration tranche, close 2A, refresh ladder/capability boundary, then resume 2B. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING / NO CURRENT QUESTION** | Reopen only with cheaper labelled cases or materially new reconstruction evidence. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING / NO CURRENT CANDIDATE** | Reopen only for a materially different mechanism or newly measured hotspot. |
@@ -97,6 +113,8 @@ The current high-risk cohort is 396 intersection-heavy + must-cross-heavy + mult
 - Scheduler/repricing work must audit rare/specialist retention, not only aggregate solves/work.
 - Nominal stage reach is not participation; require nonzero target-stage work for late-stage repricing.
 - Portal restoration is WS2's immediate tranche and precedes ladder repricing and new joint-propagation implementation; remeasure production afterward.
+- Provenance-derived capability/profile claims must use explicit source classes; do not collapse retry-tier, isolated, external, variant-replay or hint-guided evidence into ordinary cold production.
+- Repeated provenance is evidence unless it is the same discovery event recorded twice; never dedup merely because two finds share a path/config.
 - If a GHA candidate is blocked, traverse independent portal gates, 2A candidates, WS1 local analysis, WS5 bounded local analysis, specialist docs, and deferred questions.
 - Reconcile old open questions against newer evidence before new compute.
 - Prefer existing evidence and the smallest value-of-information test.
@@ -106,7 +124,8 @@ The current high-risk cohort is 396 intersection-heavy + must-cross-heavy + mult
 - prior research: `node scripts/research-status-index.mjs --compact --query=<term>`;
 - existing tools: `node scripts/tooling-census.mjs --compact --query=<term>`;
 - research assets/joins: `node scripts/research-asset-query.mjs --query=<term>`;
-- corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`.
+- corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`;
+- hint/provenance source + dedup audit: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all`.
 
 Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for evidence-topology guidance and [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) only to translate frozen pre-cleanup evidence.
 
