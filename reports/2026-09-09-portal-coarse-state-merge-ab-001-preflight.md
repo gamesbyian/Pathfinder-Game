@@ -1,9 +1,9 @@
 # STRATEGY_PORTAL_COARSE_STATE_MERGE: frozen matched-work population A/B preflight
 
 > **Status:** active
-> **Last evidence:** 2026-09-09 — implementation complete and unit-verified (`modules/solver/search.ts`); see [`aliasing measurement`](2026-09-09-portal-beam-used-pair-aliasing-measurement-001.md) and [`beam preflight`](2026-09-09-portal-beam-state-identity-preflight-001.md).
-> **Decision:** pending — this report freezes the population, envelope, and acceptance rule before either arm runs.
-> **Remaining gate:** dispatch control then treatment, combine, and apply the frozen acceptance rule below.
+> **Last evidence:** 2026-09-09 — both arms complete over the full frozen 954-id population (control 455/954, treatment 601/954). Per-level enumeration: **158 gains, 12 losses, net +146** (churn, as anticipated by this report's own acceptance rule). See [`Results`](#results) below.
+> **Decision:** pending — referee-validity on the 158 gains, rare/specialist-retention check on the 12 losses, and `npm run solver:regression` are the remaining acceptance-rule gates.
+> **Remaining gate:** referee-check + specialist-retention check, then `npm run solver:regression`.
 > **Evidence role:** population-scale promotion gate for `STRATEGY_PORTAL_COARSE_STATE_MERGE` (see [`opt-in ledger`](../docs/solver-opt-in-experiment-ledger.md))
 > **Selection:** deterministic structural predicate over the frozen Corpus-2 source, not outcome-selected
 
@@ -62,4 +62,19 @@ Both dispatches share the workflow's own default concurrency group, so they queu
 ### Treatment arm
 
 - Main body: run [`34371613615`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34371613615) (`enable_flags=STRATEGY_PORTAL_COARSE_STATE_MERGE`, `target_wall_minutes=5`). Heavier attrition than control (33/78 shards cancelled): 780/954 reported, 554 solved.
-- Gap-fill (174 missing ids): id list at [`data/stress/portal-coarse-state-merge-treatment-gapfill-001-ids.txt`](../data/stress/portal-coarse-state-merge-treatment-gapfill-001-ids.txt); dispatched as run [`34382565734`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34382565734) (`target_wall_minutes=1`), in progress as of this writing.
+- Gap-fill (174 missing ids): id list at [`data/stress/portal-coarse-state-merge-treatment-gapfill-001-ids.txt`](../data/stress/portal-coarse-state-merge-treatment-gapfill-001-ids.txt); run [`34382565734`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34382565734) (`target_wall_minutes=1`), clean, 174/174 resolved, 47 solved.
+- **Combined treatment: 554 + 47 = 601/954 solved.**
+
+## Results
+
+Per-level enumeration, treatment vs. control, over the full frozen 954-id population (both arms independently reconstructed to 954/954):
+
+| | control unsolved | control solved |
+|---|---:|---:|
+| **treatment unsolved** | 341 (both unsolved) | 12 (losses) |
+| **treatment solved** | 158 (gains) | 443 (both solved) |
+
+- **Gains: 158.** Full id list: R00082, R00312, R00329, R00355, R00370, R00466, R00506, R00573, R00672, R00690, R00726, R00728, R00756, R00786, R00860, R00869, R00912, R00975, R01016, R01052, R01058, R01105, R01179, R01190, R01208, R01269, R01274, R01380, R01382, R01428, R01485, R01500, R01504, R01642, R01738, R01849, R01872, R02012, R02042, R02060, R02074, R02080, R02086, R02100, R02103, R02142, R02150, R02162, R02173, R02178, R02182, R02216, R02233, R02245, R02254, R02276, R02297, R02303, R02309, R02313, R02333, R02339, R02346, R02353, R02365, R02373, R02398, R02424, R02434, R02437, R02438, R02446, R02452, R02454, R02456, R02464, R02468, R02479, R02483, R02490, R02526, R02533, R02534, R02546, R02555, R02581, R02586, R02590, R02597, R02614, R02654, R02655, R02662, R02692, R02694, R02707, R02718, R02730, R02737, R02741, R02746, R02757, R02758, R02767, R02798, R02802, R02807, R02823, R02830, R02832, R02833, R02843, R02864, R02868, R02882, R02902, R02903, R02977, R02991, R03024, R03029, R03030, R03031, R03038, R03049, R03050, R03059, R03082, R03083, R03101, R03102, R03133, R03161, R03169, R03194, R03201, R03202, R03223, R03228, R03234, R03237, R03241, R03247, R03254, R03260, R03268, R03276, R03289, R03294, R03298, R03303, R03321, R03325, R03327, R03336, R03343, R03351, R03365 — committed at [`data/stress/portal-coarse-state-merge-gain-referee-check-001-ids.txt`](../data/stress/portal-coarse-state-merge-gain-referee-check-001-ids.txt).
+- **Losses: 12.** R00817, R00893, R01273, R01584, R02196, R02206, R02251, R02298, R02428, R02576, R02668, R03274. Per this report's own acceptance rule, churn (gains AND losses with a positive net) is an expected possible outcome of a merge-key change (it deliberately changes which candidate survives per collision), not itself evidence of a defect — but each loss needs a rare/specialist-retention check (below) before promotion, since a merge that discards the isolated-technique winner on any of these levels would be a real regression this net-solves count alone would hide.
+- **Net: +146.**
+- **Referee validity, rare/specialist retention, and published-corpus regression:** pending — see remaining-gate note above.
