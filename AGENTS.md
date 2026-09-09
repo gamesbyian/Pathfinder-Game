@@ -38,7 +38,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 4. Use cheap discovery before broad context: `tooling-census --compact`, `research-status-index --compact`, `research-asset-query.mjs`.
 5. Audit cross-boundary propagation with [`docs/change-recipes.md`](docs/change-recipes.md).
 6. Prefer branch/PR validation; do not use `main` as experiment scratch space unless the required execution path cannot exercise a branch and the reason is recorded.
-7. Before treating work as push-ready, run the applicable local finish-line gate from [`docs/testing.md`](docs/testing.md); for ordinary work this is `npm run ci:fast`. GitHub Actions should not be the first discovery point for deterministic repository failures.
+7. Before treating work as push-ready, run the applicable local finish line from [`docs/ci-preflight.md`](docs/ci-preflight.md); ordinary work is `npm run ci:fast && npm run build`, and deep solver work is `npm run ci && npm run build`. GitHub Actions should not be the first discovery point for deterministic repository failures.
 8. Do not weaken validation to pass. Root-cause unexpected invariant, CSP, architecture, referee, or type failures.
 9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
 
@@ -90,13 +90,13 @@ Use the cheapest check that answers the iteration question, then the relevant fi
 
 | Change | Default finish line |
 |---|---|
-| Normal code | targeted tests, then `npm run ci:fast` |
-| Solver search/orchestration/repair/diversification | targeted correctness + full `npm run ci`; research claims also follow population/work/confirmation rules |
+| Normal code | targeted tests, then `npm run ci:fast && npm run build` |
+| Solver search/orchestration/repair/diversification | targeted correctness + `npm run ci && npm run build`; research claims also follow population/work/confirmation rules |
 | Solver routing/scheduling/configuration | experiment preflight + opportunity audit; execution-family canary; fixed/shared work envelope; current reach/marginal value; proportional independent confirmation/transfer |
-| Browser/UI | focused Playwright; `npm run ci:full` for broad browser confidence |
-| Solver hot path | targeted probes + [`docs/testing.md`](docs/testing.md) solved-set/cost gates + full `npm run ci` |
+| Browser/UI | focused Playwright; `npm run ci:full` for broad browser confidence, plus `npm run build` if not already exercised |
+| Solver hot path | targeted probes + [`docs/testing.md`](docs/testing.md) solved-set/cost gates + `npm run ci && npm run build` |
 | Hard prune/cache/correctness | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md) + soundness/referee/differential gates |
-| Documentation | `npm run check:documentation-links` when possible |
+| Documentation | `npm run check:documentation-links` when possible, then the ordinary finish line before push |
 
 `solver:regression --check` protects outcomes, not performance. GitHub Actions is execution infrastructure, not research evidence unless the exact run/protocol is reported.
 
