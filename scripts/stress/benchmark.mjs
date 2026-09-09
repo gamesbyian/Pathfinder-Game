@@ -92,6 +92,7 @@ import { Worker, isMainThread, parentPort, workerData } from 'node:worker_thread
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createRacePool } from '../solver-parallel/race.mjs';
+import { toRaceLevelOpts } from '../solver-parallel/race-opts.mjs';
 import { selectLevelsBySpec } from '../level-data-io.mjs';
 import { attemptRecord } from '../portfolio-solve-sweep-lib.mjs';
 import { defaultStressMeasurementOutput } from './measurement-output-path.mjs';
@@ -334,14 +335,31 @@ async function main() {
     const engine = parallel > 1 ? 'sequential' : requestedEngine;
     const poolSizeArg = argMap.get('--pool-size') ? Number(argMap.get('--pool-size')) : undefined;
     const racePool = engine === 'raced' ? createRacePool({ poolSize: poolSizeArg }) : null;
+    // --work-budget used to be threaded straight into the raced dispatch below (with an accidental
+    // duplicate-line copy-paste on top of that) even though race.mjs's createRacePool has no
+    // workBudget concept at all -- it was silently ignored under the DEFAULT --engine=raced while
+    // this file's own header comment promises --work-budget makes a run's solved set reproducible,
+    // and writeReport() below recorded the REQUESTED cfg.workBudget regardless of whether it took
+    // effect. toRaceLevelOpts (scripts/solver-parallel/race-opts.mjs) now fails loudly instead: a
+    // caller combining --work-budget with the (default) raced engine gets a clear error up front,
+    // rather than a report that misdescribes what actually ran.
+    const raceLevelOpts = racePool
+        ? (() => {
+            try {
+                return toRaceLevelOpts({
+                    timeBudgetMs: cfg.budgetMs,
+                    workBudget: cfg.workBudget,
+                    repairAdditiveBudgetMultiplierOverride: cfg.repairBudgetFraction,
+                    goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction,
+                });
+            } catch (err) {
+                console.error(err.message);
+                process.exit(2);
+            }
+        })()
+        : null;
     const solve = racePool
-        ? (raw) => racePool.solveLevel(raw, {
-            timeBudgetMs: cfg.budgetMs,
-            ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
-    ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
-            ...(Number.isFinite(cfg.repairBudgetFraction) ? { repairAdditiveBudgetMultiplierOverride: cfg.repairBudgetFraction } : {}),
-            ...(Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction) ? { goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction } : {}),
-        })
+        ? (raw) => racePool.solveLevel(raw, raceLevelOpts)
         : solveSequential;
 
     console.log(`Stress benchmark: ${levels.length} level(s) to solve, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion}), engine ${engine}` +

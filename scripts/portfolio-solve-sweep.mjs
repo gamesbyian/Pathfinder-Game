@@ -47,6 +47,7 @@ import { buildRow, tallyPass, serializePortfolioExperiment } from './portfolio-s
 import { createHintCapture } from './hint-capture-lib.mjs';
 import { runWorkerPool, defaultConcurrency } from './solver-worker-pool.mjs';
 import { createRacePool } from './solver-parallel/race.mjs';
+import { toRaceLevelOpts } from './solver-parallel/race-opts.mjs';
 import { FEATURES } from '../modules/solver/ablation-config.js';
 import {
     computeCurrentFamilyHashes, loadFamilyCache, saveFamilyCache, relevantFamiliesFor, familiesUnchanged,
@@ -176,12 +177,13 @@ if (racePoolSize > 0 && schedulerMode !== 'production') {
     console.error('--race-pool-size requires --scheduler-mode=production (scripts/solver-parallel/race.mjs has no legacy-latency-portfolio-experiment equivalent — its pool races the plain attempt ladder). Ignoring --race-pool-size.');
     racePoolSize = 0;
 }
-if (racePoolSize > 0 && Number.isFinite(nodeBudget)) {
-    console.error('--node-budget is not enforced by the race pool (scripts/solver-parallel/race.mjs has no node-budget concept — concurrent jobs on separate cores, not a single sequential node counter). It will be ignored for raced solves.');
-}
-if (racePoolSize > 0 && (Number.isFinite(admissibleOrderBudgetFraction) || Number.isFinite(admissibleOrderNodeReserveFraction) || disableExtraBudgetPasses)) {
-    console.error('--admissible-order-budget-fraction / --admissible-order-node-reserve-fraction / the admissible-order half of --disable-extra-budget-passes are not honored by the race pool (scripts/solver-parallel/race.mjs reimplements the ladder and has no admissible-order tier at all, unlike the repair and attraction-diversity fractions it does read). They will be ignored for raced solves.');
-}
+// NOTE: --node-budget / --work-budget / --admissible-order-* / --main-search-late-reserve-* /
+// --disable-extra-budget-passes combined with --race-pool-size used to only print a soft
+// console.error warning here and then proceed anyway, silently NOT enforcing the option under
+// racing while any downstream report still recorded the requested value as though it had taken
+// effect. Replaced by a single hard, fail-loud validation once the full solveOpts object is
+// assembled below (see the toRaceLevelOpts(solveOpts) call) — an unsupported option combined with
+// racing now aborts the run instead of quietly producing self-misdescribing evidence.
 if (Number.isFinite(admissibleOrderNodeReserveFraction) && !Number.isFinite(nodeBudget)) {
     console.error('--admissible-order-node-reserve-fraction has no effect without --node-budget: the reserve is a share of an EXTERNAL cumulative node ceiling, and with no ceiling there is nothing to withhold (orchestration.ts leaves the reserve at 0 when nodeBudget is Infinity).');
 }
@@ -370,6 +372,20 @@ if (Number.isFinite(mainSearchLateReserveConfigCount)) solveOpts.mainSearchLateR
 // wins over this flag — the additive semantics its own SolveOpts comment promises.
 if (disableExtraBudgetPasses) solveOpts.disableExtraBudgetPasses = true;
 if (ablation) solveOpts.ablation = ablation;
+
+// Fail loudly, up front, rather than mid-run: any SolveOpts field the raced engine cannot honor
+// (see scripts/solver-parallel/race-opts.mjs) must not be silently dropped while a report claims
+// it took effect. solveOptsFor()'s per-level adaptive-budget/primeAttempt additions are inert
+// under racing (both gated on `racePoolSize === 0`, below), so validating the shared base
+// solveOpts once here covers every level this run will actually dispatch.
+if (racePoolSize > 0) {
+    try {
+        toRaceLevelOpts(solveOpts);
+    } catch (err) {
+        console.error(err.message);
+        process.exit(2);
+    }
+}
 
 const featureFilterTokens = parseFeatureFilter(featureFilterSpec);
 const baselineMap = loadBaselineMap(baselinePath);
@@ -653,6 +669,13 @@ function writeReport() {
         corpus: path.relative(root, corpusPath),
         schedulerMode,
         budgetMs,
+        // Effective execution engine, not just requested CLI intent: a report reader must be able
+        // to tell whether nodeBudget/workBudget below were actually enforced (sequential) or are
+        // inert (raced — race.mjs has no such concept; the up-front toRaceLevelOpts(solveOpts)
+        // validation at startup already refuses to combine racing with either option, so
+        // reaching this point with racePoolSize>0 guarantees both are null below).
+        engine: racePoolSize > 0 ? 'raced' : 'sequential',
+        racePoolSize: racePoolSize > 0 ? racePoolSize : null,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         // The machine-independent budget this sweep ran under. Recorded so a combined report is
         // self-describing: without it there is no way to tell whether two sweeps are comparable,
@@ -705,8 +728,9 @@ function writeReport() {
         `Commit: ${summary.commit}`,
         `Corpus: ${summary.corpus}`,
         `Scheduler mode: ${summary.schedulerMode}`,
+        `Engine: ${summary.engine}${summary.racePoolSize ? ` (race-pool-size=${summary.racePoolSize})` : ''}`,
         `Budget: ${summary.budgetMs}ms`,
-        `Node budget: ${summary.nodeBudget ?? '(none)'}`,
+        `Node budget: ${summary.nodeBudget ?? '(none)'}${summary.engine === 'raced' ? ' (n/a under racing)' : ''}`,
         `Repair budget fraction override: ${summary.repairBudgetFraction ?? '(default, 6x)'}`,
         `Workers: ${summary.workers}`,
         `Resume: ${summary.resume ? `yes (${summary.resumedLevels} level(s) loaded from ${summary.checkpointPath})` : 'no'}`,
@@ -752,18 +776,11 @@ if (workerCount <= 1) {
         let result;
         try {
             result = racePool
-                ? await racePool.solveLevel(raw, {
-                    timeBudgetMs: budgetMs,
-                    repairAdditiveBudgetMultiplierOverride: solveOpts.repairAdditiveBudgetMultiplierOverride,
-                    goalAttractionDisabledRetryBudgetFractionOverride: solveOpts.goalAttractionDisabledRetryBudgetFractionOverride,
-                    // NOT threaded here, deliberately: race.mjs reimplements the attempt ladder and
-                    // has no admissible-order tier and no nodeBudget handling at all (grep it — the
-                    // fields simply have no reader). Passing them would look like support and change
-                    // nothing, so the admissible-order overrides and the node reserve are documented
-                    // as not applying under --race-pool-size instead. The banner below warns when a
-                    // run combines the two.
-                    ablation: solveOpts.ablation, // race.mjs reads levelOpts.ablation; must be threaded explicitly here
-                })
+                // toRaceLevelOpts (scripts/solver-parallel/race-opts.mjs) is the single canonical
+                // transport boundary onto race.mjs's supported option surface — see the up-front
+                // toRaceLevelOpts(solveOpts) validation above, which already proved solveOpts
+                // carries nothing this projection would need to drop.
+                ? await racePool.solveLevel(raw, toRaceLevelOpts({ timeBudgetMs: budgetMs, ...solveOpts }))
                 : await Solver.solveLevel(getPrepared(levelNumber), solveOptsFor(solveOpts, raw?.id));
             attachRefereeValid(levelNumber, result);
         } catch (err) {

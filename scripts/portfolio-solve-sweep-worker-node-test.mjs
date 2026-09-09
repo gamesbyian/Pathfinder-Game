@@ -81,20 +81,38 @@ await test('without an override the raced diversity phase still runs (control fo
     assert.ok(diversityAttempts.length > 0, 'expected the raced diversity phase to run without a suppressing override');
 });
 
-await test('the repair budget override is preserved at both raced portfolio reconstruction boundaries', async () => {
+await test('both raced call sites use the shared toRaceLevelOpts transport boundary, not a hand-reconstructed subset', async () => {
+    // scripts/solver-parallel/race-opts.mjs's toRaceLevelOpts() replaced the two independent,
+    // hand-picked-field-subset object literals this test used to grep for (one in
+    // portfolio-solve-sweep.mjs's single-worker path, one in this worker's own nested race-pool
+    // dispatch above) -- see that module's header comment for the regression class this closes
+    // (a field silently dropped from one reconstruction but not the other, or from both).
     const parentSource = readFileSync('scripts/portfolio-solve-sweep.mjs', 'utf8');
     const workerSource = readFileSync('scripts/portfolio-solve-sweep-worker.mjs', 'utf8');
     const raceSource = readFileSync('scripts/solver-parallel/race.mjs', 'utf8');
+    const raceOptsSource = readFileSync('scripts/solver-parallel/race-opts.mjs', 'utf8');
 
-    assert.match(parentSource,
-        /repairAdditiveBudgetMultiplierOverride:\s*solveOpts\.repairAdditiveBudgetMultiplierOverride/,
-        'the portfolio parent must include the override in its manually reconstructed raced solve options');
-    assert.match(workerSource,
-        /repairAdditiveBudgetMultiplierOverride:\s*solveOpts\.repairAdditiveBudgetMultiplierOverride/,
-        'the forked worker must include the override in its nested race-pool solve options');
+    assert.match(parentSource, /toRaceLevelOpts\(/, 'the portfolio parent must dispatch raced solves through toRaceLevelOpts');
+    assert.match(workerSource, /toRaceLevelOpts\(/, 'the forked worker must dispatch raced solves through toRaceLevelOpts');
+    assert.match(raceOptsSource, /repairAdditiveBudgetMultiplierOverride/,
+        'toRaceLevelOpts\'s allowlist must include the repair budget override');
     assert.match(raceSource,
         /Number\(levelOpts\.repairAdditiveBudgetMultiplierOverride\)/,
-        'the race pool must consume the same override field forwarded by the parent and worker');
+        'the race pool must consume the same override field forwarded by both call sites');
+});
+
+await test('toRaceLevelOpts rejects a SolveOpts field the raced engine cannot honor instead of silently dropping it', async () => {
+    const { toRaceLevelOpts } = await import('./solver-parallel/race-opts.mjs');
+    assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, workBudget: 1_000_000 }),
+        /workBudget/, 'workBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
+    assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, nodeBudget: 1_000_000 }),
+        /nodeBudget/, 'nodeBudget is not in race.mjs\'s supported field set and must fail loudly, not be dropped');
+    assert.throws(() => toRaceLevelOpts({ timeBudgetMs: 500, schedulerMode: 'legacy-latency-portfolio-experiment' }),
+        /schedulerMode/, 'a non-production schedulerMode must fail loudly rather than silently racing the production ladder anyway');
+    assert.deepEqual(
+        toRaceLevelOpts({ timeBudgetMs: 500, schedulerMode: 'production', repairAdditiveBudgetMultiplierOverride: 2, ablation: { STRATEGY_X: true } }),
+        { timeBudgetMs: 500, repairAdditiveBudgetMultiplierOverride: 2, ablation: { STRATEGY_X: true } },
+        'supported fields pass through unchanged and schedulerMode:"production" is silently dropped (implied, not silently ignored)');
 });
 
 await test('an explicit repair override controls the real worker-race repair allocation without sibling substitution', async () => {
