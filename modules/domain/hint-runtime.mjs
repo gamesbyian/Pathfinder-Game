@@ -79,6 +79,33 @@ export function makeProvenanceEntry(technique, opts = {}) {
     };
 }
 
+/**
+ * Canonical identity of one persisted discovery event.
+ *
+ * Host/time measurements are deliberately excluded. A retried workflow at the same solver commit,
+ * config, seed, forcing, termination and deterministic search result is one discovery event even if
+ * it was recorded at a different wall-clock instant or with slightly different timing/allocation
+ * counters. solver.version and deterministic work/search fields remain included because cross-commit
+ * rediscoveries and changed search trajectories are distinct evidence.
+ *
+ * This lives at the persistence boundary so every merge/reconcile path gets the same semantics.
+ *
+ * @param {HintProvenanceEntry} entry
+ */
+export function provenanceEventIdentity(entry) {
+    if (!entry || typeof entry !== 'object') return JSON.stringify(entry ?? null);
+    const { foundAt: _foundAt, ...rest } = entry;
+    const {
+        elapsedMs: _elapsedMs,
+        cumulativeElapsedMs: _cumulativeElapsedMs,
+        cumulativeNodesExpanded: _cumulativeNodesExpanded,
+        cumulativeBudgetMs: _cumulativeBudgetMs,
+        budgetMs: _budgetMs,
+        ...search
+    } = rest.search || {};
+    return JSON.stringify({ ...rest, search });
+}
+
 /** @param {number[]} path */
 export function hintPathSignature(path) {
     return path.join(',');
@@ -94,12 +121,13 @@ export function hintPaths(hints) {
     return hints.map(h => h.path);
 }
 
+/** Remove duplicate recordings of the same discovery event while preserving evidence from genuinely distinct finds. */
 /** @param {HintProvenanceEntry[]} entries @returns {HintProvenanceEntry[]} */
 export function dedupeProvenanceEntries(entries) {
     const seen = new Set();
     const out = [];
     for (const entry of entries) {
-        const key = JSON.stringify(entry);
+        const key = provenanceEventIdentity(entry);
         if (seen.has(key)) continue;
         seen.add(key);
         out.push(entry);

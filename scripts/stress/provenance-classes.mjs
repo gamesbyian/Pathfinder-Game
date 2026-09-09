@@ -1,33 +1,39 @@
 // Canonical provenance-class predicates for hint capability analysis.
 //
 // WHY THIS EXISTS: "is this hint evidence that the solver can find the level cold?" has been
-// re-derived by hand at least twice, and got a different (wrong) answer each time — most recently
+// re-derived by hand at least twice, and got a different (wrong) answer each time - most recently
 // by counting `hintGuided === false` alone as cold, which overstated corpus 1's cold share by 13
 // points because a further 36,381 entries set `usedExistingHints` without `hintGuided`. The
 // predicate is subtle enough, and load-bearing enough (CLAUDE.md's Provenance section forbids
 // using the corpus as a capability measure without it), that it belongs in one tested place.
 //
-// This module is deliberately NOT a second classifier. `classifyProvenanceSource`
-// (solution-profile-lib.mjs) answers "which discovery technique produced this entry" over seven
-// buckets; this answers the narrower admissibility question from
-// reports/2026-08-13-existing-solve-data-tuning-opportunities.md's Finding 5, which is a
-// three-way split. Both read the same stored fields and neither adds schema.
+// This module answers one narrow admissibility question: "is this discovery evidence that the
+// production Pathfinder solver can find the level cold?" Discovery origin and search/run facets
+// are separate axes in provenance-source-taxonomy.mjs. Keeping those axes separate matters because
+// external solvers, variant-parent replay, witness inheritance, randomized search and isolation can
+// overlap without any of them becoming production cold-capability evidence.
 //
 // The two flags mean different things (see HintContextProvenance in modules/domain/hint-types.ts):
-//   usedExistingHints — other hints were known to the RUN, available for seeding/comparison,
+//   usedExistingHints - other hints were known to the RUN, available for seeding/comparison,
 //                       regardless of whether this candidate used one;
-//   hintGuided        — THIS candidate's search was seeded/steered from an existing hint.
+//   hintGuided        - THIS candidate's search was seeded/steered from an existing hint.
 // So there are two defensible readings of "cold", and picking one silently is what caused the
 // earlier error. Both are exported by name; STRICT is the default because it is the standard
 // Finding 5 sets for decision-bearing capability claims.
-import { WITNESS_GENERATOR_ID, HUMAN_PLAYER_ID } from '../../modules/domain/hint-types.ts';
+import {
+    SOLVER_ID,
+    WITNESS_GENERATOR_ID,
+    HUMAN_PLAYER_ID,
+    INHERITED_WITNESS_ID,
+    TRANSFORMED_WITNESS_ID,
+} from '../../modules/domain/hint-types.ts';
 
 /** Finding 5's three admissibility classes, plus `isolated-technique` and `unknown`. */
 export const PROVENANCE_CLASSES = ['cold-capability', 'hint-guided', 'inherited-witness', 'isolated-technique', 'unknown'];
 
 /**
- * STRICT (default): the run had no hint contamination available at all. Required for
- * decision-bearing capability claims — solver-capability benchmarking, "is this level
+ * STRICT (default): the production solver run had no hint contamination available at all. Required
+ * for decision-bearing capability claims - solver-capability benchmarking, "is this level
  * solver-solvable", regression baselines.
  *
  * NARROW: this candidate was not itself seeded from a hint, but the run may have had hints
@@ -36,24 +42,27 @@ export const PROVENANCE_CLASSES = ['cold-capability', 'hint-guided', 'inherited-
  */
 export const COLD_EVIDENCE_STANDARDS = ['strict', 'narrow'];
 
-const isInheritedWitness = entry =>
-    entry?.solver?.id === WITNESS_GENERATOR_ID || entry?.solver?.id === HUMAN_PLAYER_ID;
+const isInheritedWitness = entry => [
+    WITNESS_GENERATOR_ID,
+    HUMAN_PLAYER_ID,
+    INHERITED_WITNESS_ID,
+    TRANSFORMED_WITNESS_ID,
+].includes(entry?.solver?.id);
 
 /**
- * One provenance entry → one admissibility class. Precedence matters and mirrors
- * classifyProvenanceSource's: an inherited witness/human solve is not a solver technique at all,
- * so its technique-specific flags are meaningless and must not be consulted first. An isolated
- * single-technique run (context.isolatedTechnique — e.g. technique-census tooling) is checked
- * next, ahead of hint-guided/cold: it ran outside the real competitively-budgeted solveLevel()
- * ladder entirely, so it is not admissible as "the solver can find this cold" evidence regardless
- * of whether it also happened to be hint-guided — see
- * docs/solver-optimization-workstreams.md's Priority 0 (the same contamination
- * classifyProvenanceSource's `isolated-technique` bucket exists to catch).
+ * One provenance entry -> one capability-admissibility class.
+ *
+ * Non-Pathfinder producers are never silently promoted to `cold-capability`. Known witness/human
+ * origins get the historical `inherited-witness` class; external constraint solvers, variant replay
+ * and any future unrecognized producer remain `unknown` for this capability question. This is
+ * intentionally conservative: origin-specific analysis can still use those events through the
+ * orthogonal provenance taxonomy, while production capability claims require SOLVER_ID evidence.
  */
 export function classifyProvenanceClass(entry, { standard = 'strict' } = {}) {
     if (!entry) return 'unknown';
     if (!COLD_EVIDENCE_STANDARDS.includes(standard)) throw new Error(`unknown cold-evidence standard: ${standard}`);
     if (isInheritedWitness(entry)) return 'inherited-witness';
+    if (entry.solver?.id !== SOLVER_ID) return 'unknown';
     const context = entry.context ?? {};
     if (context.isolatedTechnique === true) return 'isolated-technique';
     if (context.hintGuided === true) return 'hint-guided';
@@ -61,14 +70,14 @@ export function classifyProvenanceClass(entry, { standard = 'strict' } = {}) {
     return 'cold-capability';
 }
 
-/** True iff this single entry is admissible as cold capability evidence. */
+/** True iff this single entry is admissible as cold production-solver capability evidence. */
 export function isColdCapabilityEvidence(entry, options) {
     return classifyProvenanceClass(entry, options) === 'cold-capability';
 }
 
 /**
  * A hint's classes across all of its entries. A hint independently rediscovered cold AND by a
- * guided technique belongs to both — the entries are per discovery event, so collapsing them to a
+ * guided technique belongs to both - the entries are per discovery event, so collapsing them to a
  * single label would discard exactly the cross-validation the append-only schema exists to keep.
  */
 export function hintProvenanceClasses(hint, options) {
@@ -85,7 +94,8 @@ export function hasColdCapabilityEvidence(hint, options) {
 /**
  * Population summary for one corpus. `coldHints` is the figure to quote for capability claims;
  * `noProvenanceHints` is its blind spot and must be reported alongside it rather than folded into
- * the denominator silently.
+ * the denominator silently. Origin-specific evidence that is `unknown` here is intentionally not
+ * folded into any production-capability count.
  */
 export function summarizeProvenanceClasses(hints, options) {
     const summary = {
