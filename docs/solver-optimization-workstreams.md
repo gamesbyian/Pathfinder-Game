@@ -10,13 +10,15 @@ Workstream IDs are stable identifiers, not ranks. Method: [`solver-research-oper
 
 ## Current execution priority
 
-### 1. Portal capability restoration
+### 1. Workstream 2: fixed-work scheduler allocation and repricing
 
-**State:** active and first.
+**State:** active; portal capability restoration is the immediate first tranche, then bounded 2A closeouts and broader construction use the refreshed ladder.
+
+#### Immediate tranche: portal capability restoration
 
 Portal-bearing levels are 954/1,700 of Corpus 2 and hold 551/725 production misses plus 464/604 misses without an isolated T1 winner; median isolated `solverCount` is 0 versus 8 portal-free. Resolve the four portal carve-outs before small repricing or new propagation for the same population. Test restorations independently under matched work.
 
-1. **Must-cross neighbour-budget propagation.** Portal derivation is closed and the shadow helper's post-August dense-index drift is repaired. **Next:** corrected oracle-labelled portal branch atlas with zero alive false rejects, then frozen matched-work A/B on the deterministic 530-level portal+must-cross population; enumerate gains/losses and keep published regression green. See [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
+1. **Must-cross neighbour-budget propagation.** Portal derivation is closed and the shadow helper's post-August dense-index drift is repaired. **Next:** corrected reference-labelled portal branch set with zero alive false rejects, then frozen matched-work A/B on the deterministic 530-level portal+must-cross population; enumerate gains/losses and keep published regression green. See [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
 2. **Portal-aware beam coarse-state merge.** `portalJumps` + `lastWasPortalJump` capture counted length/transient state but not which portal pairs were consumed. **Next:** measure used-pair identity aliasing under that proposed key on a prespecified portal observer population. If negligible, test the count/transient tuple; if material, preserve exact used-pair identity with a schema-safe signature. Then fixed-work A/B against current no-portal-merge control, reporting gains/losses and specialist retention. See [`beam preflight`](../reports/2026-09-09-portal-beam-state-identity-preflight-001.md).
 3. **Connectivity volume check.** Ordinary portal derivation and first screen are closed: 266,320 valid paths / 21.8M prefixes, zero rejects, with live activation. **Next:** matched-work A/B on the deterministic 954 portal levels. Keep the false-goal mirror separate until a triggerable-endpoint differential loses zero valid endpoints. See [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
 4. **Same-parity portal parity prune/gate.** Derivation is closed; only 21/954 portal levels have zero twist pairs. **Next:** bounded implementation plus unit/differential/published-regression coverage, not a standalone solve-rate campaign.
@@ -24,10 +26,6 @@ Portal-bearing levels are 954/1,700 of Corpus 2 and hold 551/725 production miss
 Primary evidence: [`portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md), [`evidence hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md), [`beam preflight`](../reports/2026-09-09-portal-beam-state-identity-preflight-001.md).
 
 After material restorations settle, refresh production/capability telemetry before interpreting the triple-overlap cohort or repricing the ladder. Follow the refresh contract in the evidence-hardening report; do not carry forward the old 975/1,700 attribution.
-
-### 2. Workstream 2: fixed-work scheduler allocation and repricing
-
-**State:** active; bounded closeouts follow portal restoration, then broader construction uses the refreshed ladder.
 
 #### 2A. Production repricing / promotion closeout
 
@@ -47,7 +45,7 @@ After portal restoration and 2A, refresh the production ladder/capability map. T
 - **Resumable portfolio tranche.** Static portfolio one-shot stays closed; 3/4 losses were already-present beams capped ~2–12% short. Test portfolio-18 first pass plus same-policy continuation inside 67M; make exact continuation correct at widths 2000/5000 first. See [`salvage preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md).
 - **Priced residual lane.** Recompute the old 122-miss isolated-winner residue after restoration/2A; separate missing exposure from failed exposure and require explicit total work, specialist retention, and production-exclusive gains. See [`handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md).
 
-### 3. Workstream 1: automatic solver action selection
+### 2. Workstream 1: automatic solver action selection
 
 **State:** active for parallel analysis; production routing changes remain downstream of portal restoration and WS2 allocation semantics.
 
@@ -64,7 +62,7 @@ The current high-risk cohort is 396 intersection-heavy + must-cross-heavy + mult
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Mine existing evidence; after portal refresh classify residual failure roles before any new routing/propagation. |
-| 2 | Fixed-work scheduler repricing | **ACTIVE / SECOND PRIORITY** | After portal restoration close 2A, refresh ladder/capability boundary, then resume 2B. |
+| 2 | Fixed-work scheduler repricing | **ACTIVE / FIRST PRIORITY** | Complete the portal restoration tranche, close 2A, refresh ladder/capability boundary, then resume 2B. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING / NO CURRENT QUESTION** | Reopen only with cheaper labelled cases or materially new reconstruction evidence. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING / NO CURRENT CANDIDATE** | Reopen only for a materially different mechanism or newly measured hotspot. |
 
@@ -98,7 +96,7 @@ The current high-risk cohort is 396 intersection-heavy + must-cross-heavy + mult
 - Reverify fragile capability support after census refresh; same-family redundancy is not cross-family redundancy.
 - Scheduler/repricing work must audit rare/specialist retention, not only aggregate solves/work.
 - Nominal stage reach is not participation; require nonzero target-stage work for late-stage repricing.
-- Portal restoration precedes ladder repricing and new joint-propagation implementation; remeasure production afterward.
+- Portal restoration is WS2's immediate tranche and precedes ladder repricing and new joint-propagation implementation; remeasure production afterward.
 - If a GHA candidate is blocked, traverse independent portal gates, 2A candidates, WS1 local analysis, WS5 bounded local analysis, specialist docs, and deferred questions.
 - Reconcile old open questions against newer evidence before new compute.
 - Prefer existing evidence and the smallest value-of-information test.
