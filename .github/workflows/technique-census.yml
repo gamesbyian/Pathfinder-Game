@@ -129,6 +129,29 @@ jobs:
             --t4-node-budget="${{ inputs.t1_node_budget }}" \
             --out=plan/technique-census-plan.json
 
+      - name: 'Execution-family canary: verify the resolved plan on one representative cell'
+        # See scripts/verify-canary-cell.mjs's own header comment and solver-level-blind-targeted-
+        # sweep.yml's identical step for the full rationale (docs/solver-research-operating-
+        # model.md's "before expensive decision-bearing runs" checklist, gate #4) -- this is the
+        # single most expensive workflow in the repo (120 shards, up to 6h each), so a broken plan
+        # (a bad technique key, a corpus/level lookup failure) is exactly the failure mode most
+        # worth catching before the full fan-out. --mode=technique-census matches this workflow's
+        # technique-census.mjs execution model (see verifyTechniqueCensusCells's own comment).
+        # --shard=1 --shards=<total cell count> reuses technique-census.mjs's OWN existing slice
+        # math to select exactly plan.cells[0] -- no new selection logic, and only the first cell
+        # (not one per tier): build-technique-census-plan.mjs applies the same technique-key
+        # parsing/budget logic to every tier, so a systemic wiring bug surfaces on any cell.
+        shell: bash
+        run: |
+          set -euo pipefail
+          total_cells=$(node -e "console.log(JSON.parse(require('fs').readFileSync('plan/technique-census-plan.json', 'utf8')).cells.length)")
+          node scripts/run-bundled.mjs scripts/technique-census.mjs -- \
+            --plan=plan/technique-census-plan.json \
+            --shard=1 --shards="${total_cells}" \
+            --workers=1 \
+            --out=logs/technique-census-canary.json
+          node scripts/verify-canary-cell.mjs --result=logs/technique-census-canary.json --mode=technique-census
+
       - name: Upload the plan
         uses: actions/upload-artifact@v7
         with:

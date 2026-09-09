@@ -4,7 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { verifyCanaryCells, verifyNoDeadlineTruncation } from './verify-canary-cell.mjs';
+import { verifyCanaryCells, verifyNoDeadlineTruncation, verifyTechniqueCensusCells } from './verify-canary-cell.mjs';
 
 let passed = 0;
 function test(name, fn) {
@@ -101,6 +101,45 @@ test('CLI only checks deadline truncation when --expect-no-deadline-truncation=t
     const file = writeResult('truncated.json', [healthyRow({ deadlineTruncated: true })]);
     assert.equal(run([`--result=${file}`]), 0, 'without the flag, a truncated deadline alone must not fail the canary');
     assert.equal(run([`--result=${file}`, '--expect-no-deadline-truncation=true']), 2);
+});
+
+function healthyCell(overrides = {}) {
+    return { cellId: 'c1', ok: false, status: 'exhausted', nodesExpanded: 1234, workSpent: 500, ...overrides };
+}
+
+test('verifyTechniqueCensusCells passes on a healthy UNSOLVED cell with no attempts array at all', () => {
+    // The defining difference from verifyCanaryCells: technique-census-cell.mjs only ever
+    // populates `attempts` on a solve, so an unsolved (the common case) canary cell legitimately
+    // has none -- this must NOT be treated as a failure the way verifyCanaryCells treats it.
+    const result = verifyTechniqueCensusCells([healthyCell()]);
+    assert.equal(result.ok, true);
+});
+
+test('verifyTechniqueCensusCells fails on an empty results array', () => {
+    assert.equal(verifyTechniqueCensusCells([]).ok, false);
+    assert.equal(verifyTechniqueCensusCells(null).ok, false);
+});
+
+test('verifyTechniqueCensusCells fails when the cell errored', () => {
+    const result = verifyTechniqueCensusCells([healthyCell({ status: 'error', error: 'boom' })]);
+    assert.equal(result.ok, false);
+    assert.match(result.failures[0], /cell raised an error/);
+});
+
+test('verifyTechniqueCensusCells fails when nodesExpanded is zero or missing -- the "resolved technique list is empty" failure mode', () => {
+    assert.equal(verifyTechniqueCensusCells([healthyCell({ nodesExpanded: 0 })]).ok, false);
+    assert.equal(verifyTechniqueCensusCells([healthyCell({ nodesExpanded: undefined })]).ok, false);
+});
+
+test('CLI supports --mode=technique-census reading {results:[...]} instead of {levels:[...]}', () => {
+    const dir2 = mkdtempSync(path.join(tmpdir(), 'verify-canary-cell-tc-test-'));
+    const okFile = path.join(dir2, 'ok.json');
+    writeFileSync(okFile, JSON.stringify({ results: [healthyCell()] }));
+    assert.equal(run([`--result=${okFile}`, '--mode=technique-census']), 0);
+
+    const brokenFile = path.join(dir2, 'broken.json');
+    writeFileSync(brokenFile, JSON.stringify({ results: [healthyCell({ nodesExpanded: 0 })] }));
+    assert.equal(run([`--result=${brokenFile}`, '--mode=technique-census']), 2);
 });
 
 console.log(`\nverify-canary-cell tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);

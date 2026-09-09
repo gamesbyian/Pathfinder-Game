@@ -144,6 +144,49 @@ jobs:
             --seed="${{ inputs.seed }}" \
             --out=logs/solver-early-repair-search-adaptive-sample/sample.txt
 
+      - name: 'Execution-family canary: verify the resolved config on one representative level'
+        # See scripts/verify-canary-cell.mjs's own header comment and solver-level-blind-targeted-
+        # sweep.yml's identical step for the full rationale (docs/solver-research-operating-
+        # model.md's "before expensive decision-bearing runs" checklist, gate #4). Uses the first
+        # id in the just-selected eligible/control sample (already corpus-2, the population this
+        # flag can affect), under the exact resolved flags/gate/budget the real shards will use.
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set -euo pipefail
+          export CANARY_ID=$(head -n1 logs/solver-early-repair-search-adaptive-sample/sample.txt)
+          canary_pos=$(node -e "
+            const fs = require('node:fs');
+            const corpus = JSON.parse(fs.readFileSync('data/stress/stress-levels-random.json', 'utf8'));
+            const levels = Array.isArray(corpus) ? corpus : corpus.levels;
+            const idx = levels.findIndex(lv => lv.id === process.env.CANARY_ID);
+            if (idx === -1) { console.error(\`canary id \${process.env.CANARY_ID} not found in data/stress/stress-levels-random.json\`); process.exit(1); }
+            console.log(idx + 1);
+          ")
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.repair_probe_adaptive_badness_gate }}" ] && extra+=("--early-repair-search-adaptive-badness-gate=${{ inputs.repair_probe_adaptive_badness_gate }}")
+          [ -n "${{ inputs.repair_probe_adaptive_min_scale }}" ] && extra+=("--early-repair-search-adaptive-min-scale=${{ inputs.repair_probe_adaptive_min_scale }}")
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          deadlineFlag=()
+          [ "${{ inputs.deterministic }}" = "true" ] && deadlineFlag+=("--expect-no-deadline-truncation=true")
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="pos:${canary_pos}" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            "${extra[@]}" \
+            --out=logs/solver-early-repair-search-adaptive-sample/canary.json \
+            --summary-out=logs/solver-early-repair-search-adaptive-sample/canary-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-early-repair-search-adaptive-sample/canary.json "${deadlineFlag[@]}"
+
       - name: Split into even shards
         id: plan
         shell: bash
