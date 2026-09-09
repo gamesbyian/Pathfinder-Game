@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 /**
- * Verifies package-script/tooling lifecycle references and the mandatory agent-context budget.
+ * Verifies package-script/tooling lifecycle references, mandatory agent-context budgets,
+ * and local/GitHub Actions gate parity.
  *
  * This intentionally checks drift patterns that have hurt this repo: scripts such
  * as `node scripts/foo.mjs` surviving after the target file was removed, explicit
- * Vitest file arguments surviving a rename, invalid lifecycle overrides, and
- * mandatory agent orientation quietly growing past its recorded route ceiling.
+ * Vitest file arguments surviving a rename, invalid lifecycle overrides, mandatory
+ * agent orientation quietly growing past its recorded route ceiling, and deterministic
+ * PR checks drifting out of the local finish-line contract.
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -16,6 +18,7 @@ const ROOT = process.cwd();
 const PACKAGE_PATH = path.join(ROOT, 'package.json');
 const TOOLING_LIFECYCLE_PATH = path.join(ROOT, 'scripts', 'tooling-lifecycle.json');
 const AGENT_CONTEXT_CHECK_PATH = path.join(ROOT, 'scripts', 'agent-context-budget.mjs');
+const CI_GATE_PARITY_CHECK_PATH = path.join(ROOT, 'scripts', 'check-ci-gate-parity.mjs');
 const VALID_TOOLING_LIFECYCLES = new Set(['completed-migration', 'specialist-forensic', 'cold-research']);
 const NODE_FLAGS_WITH_VALUES = new Set([
   '--conditions',
@@ -141,19 +144,24 @@ if (fs.existsSync(TOOLING_LIFECYCLE_PATH)) {
   }
 }
 
-if (!fs.existsSync(AGENT_CONTEXT_CHECK_PATH)) {
-  console.error('Missing scripts/agent-context-budget.mjs; mandatory context routes cannot be checked.');
-  process.exit(1);
-}
-const contextCheck = spawnSync(process.execPath, [AGENT_CONTEXT_CHECK_PATH, '--check'], {
-  cwd: ROOT,
-  encoding: 'utf8',
-});
-if (contextCheck.status !== 0) {
-  console.error('Agent-context budget check failed:');
-  if (contextCheck.stdout?.trim()) console.error(contextCheck.stdout.trim());
-  if (contextCheck.stderr?.trim()) console.error(contextCheck.stderr.trim());
-  process.exit(contextCheck.status || 1);
+function runRequiredCheck(scriptPath, label) {
+  if (!fs.existsSync(scriptPath)) {
+    console.error(`Missing ${path.relative(ROOT, scriptPath)}; ${label} cannot be checked.`);
+    process.exit(1);
+  }
+  const result = spawnSync(process.execPath, [scriptPath, '--check'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  if (result.status !== 0) {
+    console.error(`${label} failed:`);
+    if (result.stdout?.trim()) console.error(result.stdout.trim());
+    if (result.stderr?.trim()) console.error(result.stderr.trim());
+    process.exit(result.status || 1);
+  }
 }
 
-console.log('Package script entrypoints, tooling lifecycle references, and agent-context budgets are valid.');
+runRequiredCheck(AGENT_CONTEXT_CHECK_PATH, 'Agent-context budget check');
+runRequiredCheck(CI_GATE_PARITY_CHECK_PATH, 'Local/GitHub Actions gate parity check');
+
+console.log('Package script entrypoints, tooling lifecycle references, agent-context budgets, and CI gate parity are valid.');
