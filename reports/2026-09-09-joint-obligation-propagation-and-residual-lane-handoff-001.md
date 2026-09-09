@@ -1,6 +1,6 @@
 # Joint-obligation propagation and residual-lane handoff 001
 
-> **Status:** active / downstream of portal-restoration tranche
+> **Status:** active
 > **Last evidence:** 2026-09-09 — portal-carveout audit supplied a cheaper mechanism-level explanation for much of the target cohort
 > **Decision:** keep using existing evidence to discriminate allocation failure from missing constraint reasoning inside the intersection + must-cross + multi-portal cohort, but do not implement new joint-obligation propagation until the portal capability restorations are tested and the production boundary is refreshed. If a recurring reasoning/representation residue survives that refresh, begin with observer-only joint-obligation propagation. Keep any residual allocation lane small, explicitly priced, and downstream of portal restoration plus the bounded Workstream-2 repricing decisions.
 > **Remaining gate:** complete cheap existing-data joins where useful; after portal restoration, refresh the target cohort and classify each remaining informative miss as allocation/exposure, search-policy, or reasoning/representation.
