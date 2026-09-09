@@ -1,39 +1,41 @@
 # Hint/provenance evidence-layer upgrade
 
 **Date:** 2026-09-09  
-**Scope:** persistence semantics, provenance-source resolution, and exploitation of the accumulated hint/provenance store for solver research.
+**Scope:** persistence semantics and fuller exploitation of the accumulated hint/provenance store for solver research.
+
+## Executive finding
+
+The store should be treated as three research assets at once:
+
+1. **solution-space atlas** - accepted paths, structural basins, shared/alternative decisions and geometry;
+2. **sound positive oracle** - every referee-validated hint prefix is a known-live solver state, and its next path step is a known-viable continuation;
+3. **longitudinal natural-experiment log** - provenance records which producer, technique/config, version, budget/work context and search modality found each path/basin and when.
+
+Current solver research has used all three ideas in pieces, but not yet as one integrated evidence system. The highest-value next step is therefore not merely to invent more path metrics. It is to connect the existing path-aware replay/observer tools to the now-large provenance history and current failure cohorts.
 
 ## What changed directly
 
 ### Semantic dedup is now a persistence invariant
 
-`provenanceEventIdentity` now lives in `modules/domain/hint-runtime.mjs`, the canonical persistence runtime. `dedupeProvenanceEntries`, `mergeHints`, and `reconcileHints` therefore all use the same semantic event identity. `scripts/hint-provenance-identity.mjs` is only a compatibility re-export for existing callers.
+`provenanceEventIdentity` lives in `modules/domain/hint-runtime.mjs`, the canonical persistence runtime. `dedupeProvenanceEntries`, `mergeHints`, and `reconcileHints` therefore use the same semantic event identity. `scripts/hint-provenance-identity.mjs` is only a compatibility re-export for existing callers.
 
 The identity deliberately ignores recording time and host/allocation measurements (`foundAt`, elapsed/cumulative wall-clock fields, cumulative nodes, and attempt `budgetMs`) while preserving solver version, configuration, forcing, seed, deterministic work/search result, termination, and other evidence-bearing fields. Repeated discoveries remain retained; only duplicate recording of the same discovery event collapses.
 
 `modules/domain/hint-runtime-semantic-dedupe.test.ts` guards the distinction.
 
-### Provenance source taxonomy is more granular
+### Provenance is now modeled on orthogonal evidence axes
 
-`scripts/stress/provenance-source-taxonomy.mjs` defines a reusable source taxonomy:
+A single mutually-exclusive "source" bucket is insufficient because producer identity, run/search modality and capability admissibility can overlap. For example, a Pathfinder event can be isolated, randomized and hint-guided at once; a variant-parent replay can also carry hint-context fields. Making those properties compete for one label throws evidence away.
 
-- witness
-- inherited witness
-- transformed witness
-- human solved
-- external constraint solver
-- variant-parent replay
-- complete enumeration
-- prefix-anchored completion
-- randomized enumeration
-- isolated technique
-- production retry tier
-- ordinary production solver
-- other
+`scripts/stress/provenance-source-taxonomy.mjs` therefore separates:
 
-This prevents several now-large evidence populations from disappearing into `other` or generic production. In particular, variant-parent replay, external exact solves, and force-enabled production retry wins are explicitly distinguishable.
+- **origin**: witness, inherited witness, transformed witness, human, external constraint solver, variant-parent replay, Pathfinder solver, other;
+- **facets**: complete enumeration, hint-guided, used-existing-hints, randomized, isolated-technique, production-retry-tier, with concrete retry-tier identity retained separately;
+- **capability admissibility**: delegated to the existing canonical strict/narrow classifier in `scripts/stress/provenance-classes.mjs` rather than re-derived.
 
-The taxonomy also exposes compact telemetry for event counts, hint counts, source overlap on the same path, and technique/config event counts. Unit coverage is in `scripts/stress/provenance-source-taxonomy-unit-tests.mjs`.
+The telemetry reports origin overlap, facet overlap, strict/narrow admissibility, technique/config identity and retry-tier identity independently.
+
+A related admissibility hole was also closed: external constraint-solver, variant-replay and other non-Pathfinder producers can no longer fall through as production `cold-capability` merely because their hint flags are clean. Inherited/transformed witness origins are likewise explicitly excluded. Only actual Pathfinder solver evidence can establish production cold capability.
 
 ### Corpus evidence audit CLI
 
@@ -41,10 +43,11 @@ The taxonomy also exposes compact telemetry for event counts, hint counts, sourc
 
 - hint and provenance-entry totals;
 - unattributed hint count;
-- hints independently discovered by multiple source classes;
-- per-source event and path counts;
-- cross-source overlap pairs;
-- technique/config event counts;
+- multi-origin rediscovery of the same path;
+- origin event/path counts and overlap;
+- overlapping search/run facet counts;
+- strict and narrow capability-admissibility counts;
+- technique/config and concrete retry-tier event counts;
 - semantic duplicate event count and affected-hint count.
 
 Run through the repository bundler because it imports TypeScript-backed domain modules:
@@ -55,31 +58,150 @@ node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs 
 
 Add `--out=<json>` to persist the report and `--fail-on-duplicates` when using it as an integrity gate.
 
-## Why this matters now
+### Origin- and facet-stratified solution profiles
 
-The hint store is no longer merely a solution cache. It contains longitudinal evidence from ordinary production runs, isolated-technique census work, retries, exact/external solving, enumeration, hint-guided search, humans/witnesses, and variant-family transfer. The path itself plus its independent discovery histories can answer research questions without new solver compute.
+`scripts/stress/source-stratified-solution-profile.mjs` can build per-level solution profiles separately by producer origin and by overlapping provenance facets. This avoids two opposite errors: hiding variant/external/human evidence in `other`, and pretending an isolated/randomized/retry event stops being a Pathfinder-produced path.
 
-The September 5 local-data mining pass already demonstrated the value of this approach, including 22 findings from previously underused hint-provenance/census data. The next exploitation layer should treat actual solution geometry and source overlap as first-class evidence rather than using provenance only as a historical technique label.
+The older classifier embedded in `solution-profile-lib.mjs` remains to be unified in a full checkout; it should consume the shared axes rather than preserving a second definition.
 
-## Highest-value analyses now enabled
+## The underused research surface
 
-1. **Corpus-2 solution-space profiles by evidence source.** Extend the existing solution-profile library to consume the granular taxonomy, then generate a stress2 profile library. Compare source-clean production/isolated/external/variant-replay solution populations rather than a mixed `combined` pool.
-2. **Technique/config solution-basin complementarity.** On levels with multiple independent source/technique wins, compare within-technique and between-technique path distances. This asks whether overlapping techniques actually reach different solution basins, which is more scheduler-relevant than solved-set overlap alone.
-3. **Portal-prefix representation audit.** Every valid solution supplies known-live prefixes. Index those prefixes under proposed beam coarse-state keys and measure real collisions where consumed portal-pair identity or other future-relevant state differs. Use this to strengthen the active portal beam-state preflight.
-4. **Forced-decision/backdoor depth.** Measure how rapidly known valid solutions converge on portal/order/turn choices, stratified by source and saturation/completeness. This can help separate allocation/guidance failures from broad combinatorial search.
-5. **Variant-transfer diagnosis.** Join parent-valid replay paths to variant relation/provenance and production outcomes. Distinguish parents whose valid solution basins are exposed by tiny family perturbations from genuinely robust-hard neighborhoods.
-6. **Independent-source agreement.** Path features that recur across production, isolated, external exact, human/witness, enumeration, and variant replay are stronger candidates for level-forced structure than features seen only within one generator/search family.
+### 1. Known-live prefix oracle
 
-All of these remain offline research labels. No saved hint/path/profile may become a direct production routing oracle for the same level.
+The repo already defines known-solution prefix survival as T2 evidence and has observer/replay machinery such as:
+
+- `collect-known-solution-prefix-survival.mjs`;
+- `collect-known-solution-prefix-branches.mjs`;
+- `offline-replay-harness.mjs`;
+- `cpsat-explicit-prefix-reference.mjs`.
+
+The accumulated hint store can greatly expand the **positive** side of this evidence without new exact solving. Every prefix of every referee-validated path is known live; the next path move is a known viable successor.
+
+This does **not** label unsupported alternatives dead, so it cannot replace CP-SAT negative labels. But it is enough to falsify unsound pruning, state abstraction/merging, parity/connectivity reasoning and representation changes. One candidate mechanism rejecting a stored known-live prefix is a decisive counterexample.
+
+This is particularly relevant to the current portal tranche: portal coarse-state merging, portal parity, connectivity and must-cross propagation can all be screened against diverse known-live portal prefixes before broad matched-work testing.
+
+### 2. All-known-basins first-loss autopsy
+
+Current divergence/survival tools often follow one nominated witness/path. With many stored solutions this can misdiagnose search failure: losing one path is harmless if another valid basin remains alive.
+
+For a failed solve, choose diverse representative solution basins across independent origins/techniques and replay/observe the actual search until **all known-live basins** are lost. Record the earliest all-basin extinction and classify it:
+
+- hard-prune/false-reject;
+- state-key alias/merge;
+- score/rank/beam-width cull;
+- gate/action exposure;
+- budget/participation;
+- other representation/reasoning failure.
+
+This produces a much sharper allocation-vs-policy-vs-representation diagnosis than single-witness divergence.
+
+### 3. Policy x solution-basin replay matrix
+
+`hint-divergence.mjs` already replays a candidate path under real scoring profiles and can attribute rank/discrepancy to score terms. Generalize that from one path to representative basins and cross it with relevant techniques/configs.
+
+For each policy/config and basin ask:
+
+- did this policy ever discover the basin according to provenance?;
+- when the basin path is replayed, does the policy locally/rank-wise support it?;
+- does real beam survival preserve it?;
+- where is its first loss?;
+
+A policy that never discovered a basin but treats it favorably points toward exposure/budget/stochastic search. A policy that consistently ranks it badly points toward scoring/search policy. A policy that rejects a known-live state points toward reasoning/representation.
+
+### 4. Exposure x basin capability matrix
+
+Absence of provenance is censored evidence unless the technique/config actually ran. Join path/basin provenance to lifecycle/census telemetry so each level x technique x basin can distinguish:
+
+- discovered this basin;
+- discovered a different basin;
+- exposed and failed;
+- not exposed.
+
+This is more informative for scheduler specialist retention than `solverCount` or solved-set overlap alone. Two techniques can solve the same levels but occupy different basins and therefore provide genuine complementary robustness.
+
+### 5. Replace first-hint analysis with representative-path analysis
+
+Some existing path-aware tools still select the first available hint as the path to analyze. `winning-path-analysis.mjs` and `offline-replay-harness.mjs` are concrete examples. That was reasonable when hint libraries were thin; it is now an information-losing default.
+
+Create one shared representative-path selector that can sample/choose by:
+
+- structural path basin/distance;
+- provenance origin;
+- technique/config;
+- capability admissibility;
+- temporal/version strata;
+- family/variant dependence.
+
+Use it wherever the research question is about solution-path behavior rather than a specifically named witness.
+
+### 6. Decision entropy / forced-choice depth
+
+Instead of only a global prefix-diversity score, compute depth-wise known-live decision support across independent basins: how many distinct next decisions remain at each normalized depth, especially portal pair/order, must-cross order and turn decisions.
+
+Early low entropy nominates a forced/backdoor-like structure; persistent high entropy indicates broad solution latitude. Cross this with all-basin extinction and workSpent. This is a bounded, actionable form of the deferred backdoor-depth question.
+
+Stored hints are sampled unless provenance establishes exhaustive coverage, so low observed entropy is evidence of sampled rigidity, not proof of logical necessity.
+
+### 7. Structural-basin longitudinal stability
+
+Existing cost-drift analysis can compare repeated exact-path discoveries across versions. Exact path identity is often too brittle: harmless tie-breaking can move within the same structural solution family.
+
+Track three nested persistence levels across versions/configs:
+
+1. exact path persistence;
+2. structural basin persistence;
+3. key feature persistence.
+
+This distinguishes robust capability from accidental exact-path recurrence and can supply better evidence for the deferred stability-aware portfolio question.
+
+### 8. Marginal novelty yield by producer/config
+
+Walk discovery history in time order and measure how often each producer/technique/config contributes:
+
+- a new exact path;
+- a new structural basin;
+- a new portal signature/order;
+- a new must-cross order;
+- other new profile features.
+
+This shows which hint-producing workflows add genuine solution-space information and which mostly add repeated confidence/cost history. It can guide future hint-harvest compute without treating rediscovery as useless.
+
+### 9. Independence-aware agreement
+
+Raw provenance-event count is not an independence count. Same-config reruns, same technique family, cross-technique Pathfinder runs, external solving, variant replay and human/witness sources have different dependency structures.
+
+When using repeated discovery to infer that a path feature is likely level-forced or robust, report the dependency strata explicitly. Cross-origin/cross-family agreement is stronger hypothesis-generating evidence than many near-identical reruns, while still not proving necessity absent exhaustive evidence.
+
+### 10. Historical "what was knowable when?" audits
+
+`foundAt` plus solver version/config makes it possible to reconstruct the evidence frontier at earlier dates. For important research decisions, ask whether later-discovered patterns were already visible in the then-existing hint/provenance store. This is useful for improving research triage and identifying cases where new compute was launched before existing evidence was exhausted.
+
+This is process-improvement evidence, not a direct solver mechanism, so it ranks below the live prefix/basin analyses above.
+
+## Proposed standing research workflow for hinted misses
+
+Before launching new solver compute on a hinted failure cohort:
+
+1. characterize available solution-basin diversity and provenance independence;
+2. locate the first point where the current search loses **all** known-live basins;
+3. classify that loss as exposure/allocation, search policy, or reasoning/representation;
+4. use policy x basin replay to test that diagnosis;
+5. use the known-live prefix oracle to falsify candidate pruning/representation changes cheaply;
+6. only then choose the smallest matched-work A/B or exact negative-label campaign still needed.
+
+This does not make hints legal production features. It makes them a much better offline microscope.
 
 ## What still requires repository execution
 
-This connector session cannot execute the repository or regenerate large checked-in profile artifacts. A full checkout should therefore:
+A full checkout should:
 
 - run the new provenance evidence report on all corpora and inspect any reported semantic duplicates before applying `scripts/dedupe-hint-provenance.mjs`;
-- integrate the granular taxonomy into `solution-profile-lib.mjs` so its source buckets match this report rather than maintaining a second classifier;
-- regenerate/build a Corpus-2 solution-profile library and summary, with artifact-size discipline;
-- perform the bounded existing-data joins above and write dated reports for decision-bearing findings;
-- update/remove future-work questions as they are answered or promoted.
+- unify `solution-profile-lib.mjs` with the shared origin/facet/admissibility model;
+- generate a Corpus-2 origin/facet-stratified profile summary with artifact-size discipline;
+- audit path-aware tools for first-hint/single-witness assumptions and add a shared representative-basin selector where useful;
+- build a bounded known-live-prefix regression/observer corpus from diverse provenance/basins, starting with the active portal cohort;
+- perform all-known-basins first-loss, policy x basin, exposure x basin, decision-entropy, basin-stability and producer-novelty analyses where existing data suffices;
+- write dated reports for decision-bearing findings and update/remove future-work questions as they are answered or promoted.
 
-No new GHA solver campaign is justified before exhausting these local-data joins.
+No new broad GHA solver campaign is justified before exhausting these existing-data and bounded replay routes.
