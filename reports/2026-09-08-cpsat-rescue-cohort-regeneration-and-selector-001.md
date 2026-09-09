@@ -1,8 +1,9 @@
 # CP-SAT rescue cohort regeneration and selector characterization 001
 
-> **Status:** concluded-positive for evidence integrity; exploratory-positive for a narrow acquisition selector
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-08 — deterministic current-production join over all 1,700 Corpus-2 levels
-> **Decision:** the quarantined cohorts are repaired. Keep Workstream 5 on demand; use the 12 current production-unsolved/no-isolated-winner rescues as exact-reference counterexamples, and acquire new CP-SAT labels only for a prespecified future question or temporal holdout. Do not put CP-SAT in production.
+> **Decision:** concluded-positive for evidence integrity, exploratory-positive for a narrow acquisition selector. The quarantined cohorts are repaired. Keep Workstream 5 on demand; use the 12 current production-unsolved/no-isolated-winner rescues as exact-reference counterexamples, and acquire new CP-SAT labels only for a prespecified future question or temporal holdout. Do not put CP-SAT in production.
+> **Remaining gate:** none for evidence integrity; the narrow acquisition selector needs a prespecified temporal/new-label holdout before any use.
 > **Evidence role:** observational evidence repair plus internally split discovery; not an independent selector confirmation
 
 ## Result

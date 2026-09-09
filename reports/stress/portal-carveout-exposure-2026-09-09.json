@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "observational-discovery",
+  "sourceIdentities": {
+    "productionRun": {
+      "timestamp": "2026-09-04T08:47:26.160Z",
+      "commitSha": "045bbe904a567929ef4ed3aeeded110bd13b5491",
+      "corpus": "data/stress/stress-levels-random.json",
+      "solved": 975,
+      "total": 1700,
+      "budgetMs": 86400000,
+      "nodeBudget": 50000000,
+      "workBudget": 67000000
+    },
+    "capabilityMap": {
+      "reports/stress/technique-census/33717910218/combined-cells.json": "sha256:915d9712464c2fe99a2c91729340938216f4962539a992a1bd1f082fa56bace0",
+      "reports/stress/technique-census/33717910218/level-technique-coverage.json": "sha256:2bf73455d33b57a478c899bb6e9f69258839e58cfc291211db2e2dffc87f02ad",
+      "data/stress/stress-levels-random.json": "sha256:89cd0b6380a6d585e43411139a0805078e78f883d02f37e7ae3513f4be55b414",
+      "data/stress/stress-levels.json": "sha256:94b9eba5b9bb0b535d188ab195e7f36807b3a28df962a7675ecec7b36d0bd79d",
+      "data/levels.json": "sha256:d91a76d387d95a5fa07952ff73cc1ca076b85ab53b1902d6b93918e7e1e18a01"
+    }
+  },
+  "populations": [
+    {
+      "label": "all",
+      "levels": 1700,
+      "productionSolved": 975,
+      "productionSolveRate": 0.5735,
+      "misses": 725,
+      "missesWithIsolatedWinner": 121,
+      "missesWithoutIsolatedWinner": 604,
+      "medianSolverCount": 2
+    },
+    {
+      "label": "portal-free",
+      "levels": 746,
+      "productionSolved": 572,
+      "productionSolveRate": 0.7668,
+      "misses": 174,
+      "missesWithIsolatedWinner": 34,
+      "missesWithoutIsolatedWinner": 140,
+      "medianSolverCount": 8
+    },
+    {
+      "label": "portal-bearing",
+      "levels": 954,
+      "productionSolved": 403,
+      "productionSolveRate": 0.4224,
+      "misses": 551,
+      "missesWithIsolatedWinner": 87,
+      "missesWithoutIsolatedWinner": 464,
+      "medianSolverCount": 0
+    },
+    {
+      "label": "portal-bearing with must-cross",
+      "levels": 530,
+      "productionSolved": 193,
+      "productionSolveRate": 0.3642,
+      "misses": 337,
+      "missesWithIsolatedWinner": 49,
+      "missesWithoutIsolatedWinner": 288,
+      "medianSolverCount": 0
+    },
+    {
+      "label": "portal-free with must-cross",
+      "levels": 409,
+      "productionSolved": 311,
+      "productionSolveRate": 0.7604,
+      "misses": 98,
+      "missesWithIsolatedWinner": 13,
+      "missesWithoutIsolatedWinner": 85,
+      "medianSolverCount": 7
+    }
+  ],
+  "missShare": {
+    "totalMisses": 725,
+    "portalBearingMisses": 551,
+    "missesWithoutIsolatedWinner": 604,
+    "portalBearingMissesWithoutIsolatedWinner": 464
+  },
+  "parityRestorable": {
+    "note": "A portal pair whose two terminals share cell parity cannot repair a parity mismatch, so the ordinary parity prune argument survives on levels where every pair is same-parity.",
+    "portalBearingLevels": 954,
+    "zeroTwistLevels": 21,
+    "zeroTwistProductionSolved": 9
+  },
+  "inertRetryTiers": [
+    {
+      "stage": "must-cross-neighbor-prune-disabled-retry",
+      "toggles": "PRUNE_MC_NEIGHBOR_BUDGET",
+      "inertBecause": "mustCrossNeighborBudgetDeadlocked returns false when level.portalMap.size > 0",
+      "eligibility": "initialMustCrossMask !== 0 (stage-budget.ts) — no portal term",
+      "portalBearing": {
+        "levels": 954,
+        "dispatched": 359,
+        "workSpent": 14496641014,
+        "wins": 3
+      },
+      "portalFree": {
+        "levels": 746,
+        "dispatched": 109,
+        "workSpent": 4163182062,
+        "wins": 6
+      }
+    },
+    {
+      "stage": "coarse-state-near-tie-retention-disabled-retry",
+      "toggles": "STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION",
+      "inertBecause": "coarse-state merge (and therefore its near-tie runner-up) is off when level.portalMap.size > 0",
+      "eligibility": "any level with main-search configs — no portal term",
+      "portalBearing": {
+        "levels": 954,
+        "dispatched": 643,
+        "workSpent": 9279036402,
+        "wins": 7
+      },
+      "portalFree": {
+        "levels": 746,
+        "dispatched": 225,
+        "workSpent": 3180888926,
+        "wins": 30
+      }
+    }
+  ],
+  "stageLadder": {
+    "totalWorkSpent": 201881450085,
+    "stages": [
+      {
+        "stage": "repair-elite-prefix-dfs-retry",
+        "workSpent": 0,
+        "shareOfCorpusWork": 0,
+        "wins": 0,
+        "workPerWin": null
+      },
+      {
+        "stage": "guidance-goal-distance-retry",
+        "workSpent": 35026840096,
+        "shareOfCorpusWork": 0.1735,
+        "wins": 6,
+        "workPerWin": 5837806683
+      },
+      {
+        "stage": "connectivity-axis-prune-disabled-retry",
+        "workSpent": 18530034163,
+        "shareOfCorpusWork": 0.0918,
+        "wins": 6,
+        "workPerWin": 3088339027
+      },
+      {
+        "stage": "must-cross-neighbor-prune-disabled-retry",
+        "workSpent": 18659823076,
+        "shareOfCorpusWork": 0.0924,
+        "wins": 9,
+        "workPerWin": 2073313675
+      },
+      {
+        "stage": "repair-fallback",
+        "workSpent": 8039359161,
+        "shareOfCorpusWork": 0.0398,
+        "wins": 6,
+        "workPerWin": 1339893194
+      },
+      {
+        "stage": "late-repair-multiseed-retry",
+        "workSpent": 23383146781,
+        "shareOfCorpusWork": 0.1158,
+        "wins": 36,
+        "workPerWin": 649531855
+      },
+      {
+        "stage": "admissible-order-alternate-tiebreak-retry",
+        "workSpent": 12451752044,
+        "shareOfCorpusWork": 0.0617,
+        "wins": 28,
+        "workPerWin": 444705430
+      },
+      {
+        "stage": "coarse-state-near-tie-retention-disabled-retry",
+        "workSpent": 12459925328,
+        "shareOfCorpusWork": 0.0617,
+        "wins": 37,
+        "workPerWin": 336754739
+      },
+      {
+        "stage": "admissible-order-fallback",
+        "workSpent": 13498395543,
+        "shareOfCorpusWork": 0.0669,
+        "wins": 47,
+        "workPerWin": 287199905
+      },
+      {
+        "stage": "late-repair-search",
+        "workSpent": 3832131213,
+        "shareOfCorpusWork": 0.019,
+        "wins": 21,
+        "workPerWin": 182482439
+      },
+      {
+        "stage": "early-repair-search",
+        "workSpent": 20366826223,
+        "shareOfCorpusWork": 0.1009,
+        "wins": 158,
+        "workPerWin": 128903963
+      },
+      {
+        "stage": "goal-attraction-disabled-retry",
+        "workSpent": 897730454,
+        "shareOfCorpusWork": 0.0044,
+        "wins": 10,
+        "workPerWin": 89773045
+      },
+      {
+        "stage": "main-ladder",
+        "workSpent": 34735486003,
+        "shareOfCorpusWork": 0.1721,
+        "wins": 611,
+        "workPerWin": 56850223
+      }
+    ]
+  },
+  "rowMaterialization": "Omitted from the committed artifact; rerun this script to rebuild joined per-level rows."
+}

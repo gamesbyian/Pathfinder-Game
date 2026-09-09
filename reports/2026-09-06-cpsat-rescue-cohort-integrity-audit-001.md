@@ -1,8 +1,8 @@
 # CP-SAT rescue cohort integrity audit 001
 
-> **Status:** concluded-negative; repair gate satisfied 2026-09-08
+> **Status:** concluded-negative
 > **Last evidence:** 2026-09-08 — deterministic regeneration resolved the historical defect; see `2026-09-08-cpsat-rescue-cohort-regeneration-and-selector-001.md`.
-> **Decision:** retain this audit as the record of the defective source list. Use the regenerated machine-readable cohorts, not the printed list below.
+> **Decision:** the repair gate was satisfied 2026-09-08. Retain this audit as the record of the defective source list. Use the regenerated machine-readable cohorts, not the printed list below.
 > **Remaining gate:** none for integrity; selector evidence remains exploratory and Workstream 5 stays on demand.
 > **Scope:** the isolated-no-winner cohort reported by `2026-09-05-cpsat-full-probe-rescue-coverage-001.md`
 > **Production impact:** none. This audit does not authorize production CP-SAT or new exact-search compute.
