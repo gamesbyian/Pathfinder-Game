@@ -1,8 +1,9 @@
 # CI test lifecycle hostile audit — 2026-09-09
 
-> **Status:** concluded-positive pending final-head CI
-> **Last measured evidence:** 2026-09-09 — PR #1693 run 34403154137 passed both lanes after the first cleanup tranche; universal `test:node` fell from a 38.7 s migration-dominated tail to 15.9 s. A second high-confidence lifecycle tranche was then added and must be judged by final-head CI before merge.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-09 — PR #1693 run 34403154137 passed both lanes after the first cleanup tranche; universal `test:node` fell from a 38.7 s migration-dominated tail to 15.9 s. The final two-tranche head is validated by ordinary PR CI before merge.
 > **Decision:** retire completed migration/campaign scaffolding from permanent CI and the maintained workflow surface while preserving live compatibility contracts under current owner-oriented tests.
+> **Remaining gate:** ordinary final-head PR CI for implementation validation; no further research or lifecycle decision is open.
 
 This audit reviewed the permanent pull-request CI graph and maintained GitHub Actions surface with a hostile lifecycle question: what current failure does each check or workflow protect, and does that failure still belong on every unrelated PR or in the permanent Actions catalogue?
 
@@ -73,6 +74,8 @@ Removed from `.github/workflows/`:
 - `solver-repair-fallback-reserve-sample-ab.yml`: purpose-built for `STRATEGY_REPAIR_FALLBACK_NODE_RESERVE`, whose authoritative opt-in ledger disposition is **CLOSED, SAFE BUT USELESS FOR TARGET**. The generic routing-regime and targeted-sweep infrastructure remain for future candidates rather than preserving a workflow around a closed flag.
 
 Git history and the dated reports retain the experiment definitions/evidence; the maintained workflow catalogue now describes live entrypoints rather than serving as an executable archive.
+
+The standard solver-sweep contract inventory was updated at the same time. It no longer names deleted one-off workflows and now includes `static-portfolio-confirmation.yml`, which was already treated elsewhere by the same checker as a maintained confirmation workflow but had been omitted from its main maintained-workflow list.
 
 ## Lifecycle guard
 
