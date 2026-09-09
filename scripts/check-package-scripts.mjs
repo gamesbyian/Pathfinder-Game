@@ -125,7 +125,7 @@ if (missing.length > 0) {
 // must be represented by a current, domain-named owner test instead.
 const permanentGateErrors = [];
 const forbiddenPermanentGateTasks = [
-  [/^(?:check|test):naming(?:-cleanup|-current-authorities|$)/u, 'completed repository-wide naming migration'],
+  [/^(?:check|test):naming/u, 'completed repository-wide naming migration'],
   [/^test:solver-research-resumption$/u, 'completed post-naming solver-resumption bridge'],
   [/^test:legacy-latency-portfolio-report-cli$/u, 'legacy research-report utility'],
 ];
