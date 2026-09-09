@@ -1,5 +1,10 @@
 # Hint/provenance evidence-layer upgrade
 
+> **Status:** active
+> **Last evidence:** 2026-09-09 — persistence semantics, provenance taxonomy, representative-hint selection, and path/replay audit were reviewed against the current repository surfaces.
+> **Decision:** Treat the accumulated hint store as a solution-space atlas, a one-sided positive oracle, and a longitudinal discovery log; exhaust existing-data and bounded replay evidence before broad new solver compute.
+> **Remaining gate:** Run the all-corpus evidence/dedup audit, unify the legacy solution-profile classifier, validate replay witness identity, and execute the promoted basin/exposure/replay analyses in a full checkout.
+
 **Date:** 2026-09-09  
 **Scope:** persistence semantics and fuller exploitation of the accumulated hint/provenance store for solver research.
 
