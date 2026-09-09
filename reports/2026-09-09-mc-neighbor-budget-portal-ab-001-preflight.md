@@ -54,9 +54,9 @@ Per the evidence-hardening report's own section 5.1 gate:
 
 ## Reproduction
 
-Workflow: `solver-level-blind-targeted-sweep.yml`, `ids_file=data/stress/mc-neighbor-budget-portal-ab-001-ids.txt`, `corpus=data/stress/stress-levels-random.json`, `node_budget=50000000`, `strict_total_work_budget=false`.
+Workflow: `solver-level-blind-targeted-sweep.yml`, `ids_file=data/stress/mc-neighbor-budget-portal-ab-001-ids.txt`, `corpus=data/stress/stress-levels-random.json`, `node_budget=50000000`, `strict_total_work_budget=false`, `target_wall_minutes=5` (reduced from the workflow's default 20 after an initial dispatch's shards hit their 40-minute job-timeout ceiling — the shard planner's per-id runtime fallback, used for the 158/530 ids without historical telemetry, undercounted actual solve time for this population by roughly 2x).
 
-- Control dispatch: no `enable_flags`/`disable_flags`.
-- Treatment dispatch: `enable_flags=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL`.
+- Control dispatch: no `enable_flags`/`disable_flags`. Run [`34320087947`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320087947), concurrency group `mcneighbor2`.
+- Treatment dispatch: `enable_flags=PRUNE_MC_NEIGHBOR_BUDGET_PORTAL`. Run [`34320103478`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34320103478), same group (queues behind control).
 
-Both dispatches share the workflow's own default concurrency group, so they run sequentially (control first).
+**Status as of 2026-09-09 ~06:50 UTC:** both dispatched and queued; the control run has not yet been picked up by a runner after over an hour, and zero workflow runs are `in_progress` repository-wide over that same window — a GitHub-hosted-runner capacity/availability constraint on this account, not a workflow or solver defect (confirmed: `GET /repos/.../actions/runs?status=in_progress` returns empty repo-wide; `GET /repos/.../actions/permissions` is blocked by this session's proxy policy, so the exact cause — spending cap vs. runner outage — cannot be confirmed from here). The two connectivity-volume and coarse-state-merge A/B pairs were cancelled back to a clean, undispatched state to avoid competing for whatever capacity does exist; redispatch them (same `target_wall_minutes=5` pattern) once this pair completes and capacity is confirmed available. Do not dispatch multiple pairs concurrently again without first confirming free runner capacity — the earlier 3-pairs-in-parallel attempt appears to have contributed to exhausting it.
