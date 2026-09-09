@@ -7,7 +7,7 @@ Use this when a branch is ready to push or open/update a PR. The goal is to keep
 Before treating ordinary work as push-ready:
 
 1. Run the narrow checks used while editing.
-2. Run the finish-line command required by [`testing.md`](testing.md) and `AGENTS.md`.
+2. Run the finish-line command below, using [`testing.md`](testing.md) to choose any additional targeted/deep/browser validation the change requires.
 3. Fix deterministic failures locally before pushing. Do not use repeated Actions runs as an interactive validator.
 
 For ordinary code/document/tooling changes, the default finish line is:
