@@ -4,9 +4,25 @@
 // must-cross cell's own reserved second crossing. Count DISTINCT such cells, not requirements, to
 // avoid double-counting shared neighbors. Reject when this lower bound exceeds free intersections:
 //   freeInt = requiredIntersections - ints - popcount(mustCrossMask)
-// Abstain on portals, flipper neighbors, and pending-MC neighbors because their future revisit cost
-// is not independently established here; skip hard walls because PRUNE_MC_FORCED_NEIGHBOR owns them.
-// Evidence/derivation: reports/2026-08-08-mc-neighbor-budget-propagation.md.
+// Abstain on flipper neighbors and pending-MC neighbors because their future revisit cost is not
+// independently established here; skip hard walls because PRUNE_MC_FORCED_NEIGHBOR owns them.
+//
+// Portal levels are in scope. A still-open must-cross axis still requires both CARDINAL neighbors;
+// a portal may alter what happens immediately before or after occupying one of those neighbors but
+// cannot remove that occupancy requirement. An unvisited portal terminal can therefore be usable
+// as a required neighbor. Once visited, a portal terminal is actually stricter than this bound:
+// ordinary move generation forbids re-entering any visited portal terminal, so counting it as only
+// one additional intersection underestimates the remaining obligation rather than overestimating
+// it. The `pos` exemption remains conservative because the current cell can already be serving the
+// required interface; if forced portal semantics make it unusable, skipping it only under-prunes.
+// Portal-jump arrivals use applyMove's same visited-cell intersection accounting as ordinary moves,
+// so portal transitions cannot create an uncharged revisit that would invalidate freeInt.
+//
+// IMPORTANT representation contract: prep.staticNeighborKeys is row-major dense-indexed, not
+// packed-key-indexed. Use denseIndex(mcKey, prep.gridW) exactly as production lower-bounds.ts does.
+// Evidence/derivation: reports/2026-08-08-mc-neighbor-budget-propagation.md and
+// reports/2026-09-09-portal-restoration-evidence-hardening-001.md.
+import { denseIndex } from '../../../modules/solver/distance.ts';
 import { AXIS_H, AXIS_V } from '../../../modules/solver/encoding.ts';
 
 const NEIGHBOR_AXIS = [AXIS_H, AXIS_H, AXIS_V, AXIS_V];
@@ -20,7 +36,6 @@ function popcount(n) {
 /** @returns {{ extraNeeded: number, freeInt: number, extraCells: number[] } | { abstain: string }} */
 export function computeMcNeighborBudget(pos, state, level, prep) {
     if (state.mustCrossMask === 0) return { abstain: 'no pending must-cross cells' };
-    if (level.portalMap.size > 0) return { abstain: 'portal levels out of scope (see file doc)' };
 
     const mcKeys = level.mustCrossKeys;
     const eu = state.edgeUsage;
@@ -32,8 +47,8 @@ export function computeMcNeighborBudget(pos, state, level, prep) {
     for (let i = 0; i < mcKeys.length; i++) {
         if ((state.mustCrossMask & (1 << i)) === 0) continue;
         const mcKey = mcKeys[i];
-        const usedAxes = eu[mcKey];
-        const base = mcKey * 4;
+        const usedAxes = eu[mcKey] || 0;
+        const base = denseIndex(mcKey, prep.gridW) * 4;
         for (let d = 0; d < 4; d++) {
             if (usedAxes & NEIGHBOR_AXIS[d]) continue;
             const nk = staticNeighborKeys[base + d] - 1;
