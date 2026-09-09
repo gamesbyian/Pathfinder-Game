@@ -61,4 +61,5 @@ Both dispatches share the workflow's own default concurrency group, so they queu
 
 ### Treatment arm
 
-- Dispatched: run [`34371613615`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34371613615) (`enable_flags=STRATEGY_PORTAL_COARSE_STATE_MERGE`, `target_wall_minutes=5`), in progress as of this writing.
+- Main body: run [`34371613615`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34371613615) (`enable_flags=STRATEGY_PORTAL_COARSE_STATE_MERGE`, `target_wall_minutes=5`). Heavier attrition than control (33/78 shards cancelled): 780/954 reported, 554 solved.
+- Gap-fill (174 missing ids): id list at [`data/stress/portal-coarse-state-merge-treatment-gapfill-001-ids.txt`](../data/stress/portal-coarse-state-merge-treatment-gapfill-001-ids.txt); dispatched as run [`34382565734`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34382565734) (`target_wall_minutes=1`), in progress as of this writing.
