@@ -57,6 +57,20 @@ export interface BeamContinuation {
     nodesExpandedTotal: number;
     ws: SolverSearchState;
     liveUndo: UndoToken[];
+    /** Identity sentinels (2026-09-09, historical regression-risk audit item #5): this doc comment
+     *  already required "only startKey/level/prep must stay the same instance" for a resumeFrom
+     *  call to be valid, but nothing enforced it — a caller passing a continuation captured against
+     *  a DIFFERENT startKey/level/prep would silently reuse `ws`/`_liveUndo` built against the wrong
+     *  state/work-meter/buffer-pool instance, corrupting an experiment plausibly (wrong node counts,
+     *  wrong work accounting, or a `ws` positioned at a cell that does not even exist on the new
+     *  level) rather than failing loudly. Captured by reference identity (`===`), not a value/hash
+     *  comparison: these are meant to be the literal SAME live objects the paused call was using
+     *  (see this interface's own header comment), so reference equality is the correct and cheapest
+     *  check, and `beamSearchFromGate` asserts all three at the top of any `resumeFrom` call before
+     *  touching `resumeFrom.ws`/`resumeFrom.liveUndo`. */
+    _ownerStartKey: number;
+    _ownerLevel: NormalizedLevel;
+    _ownerPrep: PrepLevel;
 }
 // String fallback for beamNumericCoarseStateKey (see its comment): used only on the rare level where
 // the numeric encoding would not fit under Number.MAX_SAFE_INTEGER. Delimited, not a bit-packed
@@ -66,6 +80,30 @@ export interface BeamContinuation {
 // mechanic's cardinality since every field is delimited, not shifted.
 function beamStateKey(c: BeamNode): string {
     return `${c.ints}|${c.mpVisitedMask}|${c.mustCrossMask}|${c.flipperUsedMask}|${c.surroundMask}|${c.mustTurnMask}|${c.adjTurnMask}|${c.usedPortalPairs}`;
+}
+
+/** Single builder for both capture sites below, so the identity sentinels (see BeamContinuation's
+ *  own doc) can never drift between them — a continuation missing one would silently defeat the
+ *  resumeFrom assertion below rather than fail loudly, the exact failure mode this hardening closes. */
+function captureBeamContinuation(frontier: BeamNode[], phasesCompleted: number, nodesExpandedTotal: number,
+    ws: SolverSearchState, liveUndo: UndoToken[], startKey: number, level: NormalizedLevel, prep: PrepLevel): BeamContinuation {
+    return { frontier, phasesCompleted, nodesExpandedTotal, ws, liveUndo, _ownerStartKey: startKey, _ownerLevel: level, _ownerPrep: prep };
+}
+
+/** Runtime identity assertion for a resumeFrom call (see BeamContinuation's own doc comment): the
+ *  captured continuation's `ws`/`liveUndo` are the actual live mutable objects a paused call was
+ *  using, and are only ever safe to hand back into the SAME startKey/level/prep — reusing them
+ *  against a different instance would silently corrupt work accounting and search state rather
+ *  than failing immediately, which is exactly the risk this closes. */
+function assertBeamContinuationOwnership(resumeFrom: BeamContinuation, startKey: number, level: NormalizedLevel, prep: PrepLevel): void {
+    const mismatches: string[] = [];
+    if (resumeFrom._ownerStartKey !== startKey) mismatches.push(`startKey (captured ${resumeFrom._ownerStartKey}, resuming ${startKey})`);
+    if (resumeFrom._ownerLevel !== level) mismatches.push('level (different instance)');
+    if (resumeFrom._ownerPrep !== prep) mismatches.push('prep (different instance)');
+    if (mismatches.length > 0) {
+        throw new Error(`beamSearchFromGate: resumeFrom continuation was captured against a different ${mismatches.join(', ')} than this call is resuming with. `
+            + 'A BeamContinuation carries live mutable execution state (ws/liveUndo) and is only ever safe to resume with the exact same startKey/level/prep it was captured against — see BeamContinuation\'s own doc comment.');
+    }
 }
 
 /** Single implementation of the pre-move forced-first-step prune shared by DFS and beam. */
@@ -610,6 +648,7 @@ export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoa
 // mid-phase capture support this pilot deliberately did not add (see this comment's second
 // paragraph for why that is not a small change).
 export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number, captureContinuationOnBudgetExit?: boolean): Promise<number[] | null> {
+    if (resumeFrom) assertBeamContinuationOwnership(resumeFrom, startKey, level, prep);
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
@@ -787,7 +826,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             // opts in do we skip that credit here (the eventual resumed call's own terminal return
             // credits the correct cumulative total once, exactly like pauseAfterPhases below) and attach
             // the same continuation shape instead.
-            if (out && captureContinuationOnBudgetExit) { _dbgFlush('pausedContinuation-budget'); out.pausedContinuation = { frontier, phasesCompleted, nodesExpandedTotal, ws, liveUndo: _liveUndo }; return null; }
+            if (out && captureContinuationOnBudgetExit) { _dbgFlush('pausedContinuation-budget'); out.pausedContinuation = captureBeamContinuation(frontier, phasesCompleted, nodesExpandedTotal, ws, _liveUndo, startKey, level, prep); return null; }
             if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('budget'); if (out) { out.timedOut = true; out.finalBadness = computeBadness(ws, level); } return null;
         }
         if (phasesCompleted >= maxPhases) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('maxPhases'); if (out) out.timedOut = false; return null; }
@@ -795,7 +834,7 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         // exit for the resumability pilot. Deliberately does NOT credit prep._metrics here — the
         // eventual resumed call's own terminal return credits the correct cumulative total once,
         // using nodesExpandedTotal carried over via resumeFrom.
-        if (pauseAfterPhases !== undefined && phasesCompleted >= pauseAfterPhases) { _dbgFlush('pausedContinuation'); if (out) out.pausedContinuation = { frontier, phasesCompleted, nodesExpandedTotal, ws, liveUndo: _liveUndo }; return null; }
+        if (pauseAfterPhases !== undefined && phasesCompleted >= pauseAfterPhases) { _dbgFlush('pausedContinuation'); if (out) out.pausedContinuation = captureBeamContinuation(frontier, phasesCompleted, nodesExpandedTotal, ws, _liveUndo, startKey, level, prep); return null; }
         phasesCompleted++;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation
