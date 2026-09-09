@@ -1,0 +1,1628 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "observational-development-cross-fit",
+  "featureDefinitions": {
+    "baseline": [
+      "requiredPathLength",
+      "requiredIntersections",
+      "requiredPathCoverageRatio",
+      "constrainedObjects",
+      "portals",
+      "turnConstraintLoad",
+      "area"
+    ],
+    "topologyPlacement": [
+      "gateGoalManhattanMinNorm",
+      "gateGoalCardinalDistanceMinNorm",
+      "gateGoalPortalRelaxedDistanceMinNorm",
+      "gateGoalPortalBenefitNorm",
+      "articulationCountNorm",
+      "bridgeCountNorm",
+      "degreeOneFraction",
+      "degreeTwoFraction",
+      "maxDegreeTwoComponentFraction",
+      "obligationNearestNeighborMeanNorm",
+      "obligationNearestNeighborMaxNorm",
+      "obligationClusterFraction",
+      "obligationGoalDistanceMeanNorm",
+      "obligationGateDistanceMeanNorm",
+      "obligationGateDistanceSpreadNorm",
+      "obligationNearArticulationFraction",
+      "portalSpanMeanNorm",
+      "portalCrossRegionFraction"
+    ],
+    "notes": [
+      "Cardinal topology excludes blocks, geese, false goals, and impassable landmarks.",
+      "Portal-relaxed gate/goal distance adds optional bidirectional portal edges; it is a descriptor, not an exact legality bound.",
+      "Articulation and bridge metrics use the static cardinal graph before portal edges.",
+      "Even/odd level suffix is an interleaved analysis split, never a solver input."
+    ]
+  },
+  "analyses": [
+    {
+      "label": "current-production-unsolved",
+      "population": 1700,
+      "positives": 725,
+      "effects": {
+        "all": [
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 29.532413793103448,
+            "negativeMean": 20.648205128205127,
+            "standardizedDifference": 1.1086995538533901
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 4.201379310344827,
+            "negativeMean": 2.2512820512820513,
+            "standardizedDifference": 0.7304227053361929
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 17.168275862068967,
+            "negativeMean": 12.670769230769231,
+            "standardizedDifference": 0.723696177083294
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.28483254230717286,
+            "negativeMean": 0.15563969975893038,
+            "standardizedDifference": 0.7083139534395535
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.07118476696886158,
+            "negativeMean": 0.08794002010829648,
+            "standardizedDifference": -0.6788134529384593
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.8499608498899058,
+            "negativeMean": 0.7422568003072207,
+            "standardizedDifference": 0.6304412496339034
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.7902838101123085,
+            "negativeMean": 0.733107014555853,
+            "standardizedDifference": 0.5413694621836009
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.15948073765315227,
+            "negativeMean": 0.18629339890878371,
+            "standardizedDifference": -0.4959229883644251
+          },
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 104.25241379310344,
+            "negativeMean": 94.14564102564103,
+            "standardizedDifference": 0.48893128535988384
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.16006239737274244,
+            "negativeMean": 0.08040537240537243,
+            "standardizedDifference": 0.4134715306695134
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.60565818089956,
+            "negativeMean": 0.5671212377366223,
+            "standardizedDifference": 0.28482201445464267
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 6.099310344827586,
+            "negativeMean": 5.340512820512821,
+            "standardizedDifference": 0.2689627894629057
+          },
+          {
+            "feature": "area",
+            "positiveMean": 168.76413793103447,
+            "negativeMean": 160.10564102564103,
+            "standardizedDifference": 0.2393711366373722
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.06146205518619312,
+            "negativeMean": 0.036082814621276174,
+            "standardizedDifference": 0.1986243757346925
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.356360030773824,
+            "negativeMean": 0.39229420152497085,
+            "standardizedDifference": -0.19798942707168715
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.18273602484509302,
+            "negativeMean": 0.17170032979091032,
+            "standardizedDifference": 0.18485015144161734
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.13766540887839568,
+            "negativeMean": 0.12428349649612261,
+            "standardizedDifference": 0.1157415783558645
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.053276497642506845,
+            "negativeMean": 0.05605204523131024,
+            "standardizedDifference": -0.06757021489946477
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.3753709394054224,
+            "negativeMean": 0.38756348779425703,
+            "standardizedDifference": -0.06724221591935682
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.35259390803692,
+            "negativeMean": 0.35660637663062605,
+            "standardizedDifference": -0.056850472773906244
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.41782208596001696,
+            "negativeMean": 0.42837701614624696,
+            "standardizedDifference": -0.046327441504971395
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.052375854575565095,
+            "negativeMean": 0.053828344292712604,
+            "standardizedDifference": -0.03610097335580725
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.024414651463081267,
+            "negativeMean": 0.024022773868914285,
+            "standardizedDifference": 0.02967495578831753
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.043527513708198025,
+            "negativeMean": 0.04401477378349205,
+            "standardizedDifference": -0.016664787327675634
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.3616080342638048,
+            "negativeMean": 0.36189079047323386,
+            "standardizedDifference": -0.0038981702180505913
+          }
+        ],
+        "even": [
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 29.334231805929917,
+            "negativeMean": 21.232032854209447,
+            "standardizedDifference": 1.024524306965302
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 4.261455525606469,
+            "negativeMean": 2.3860369609856265,
+            "standardizedDifference": 0.7058472204479694
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.2935329726641816,
+            "negativeMean": 0.16496492222291584,
+            "standardizedDifference": 0.7053175704435829
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.0715262506541498,
+            "negativeMean": 0.0881072519095095,
+            "standardizedDifference": -0.6350670030302384
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 16.80053908355795,
+            "negativeMean": 12.967145790554415,
+            "standardizedDifference": 0.6223838969568809
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.7966000181098533,
+            "negativeMean": 0.7347463208777385,
+            "standardizedDifference": 0.5918332959779602
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.8464370941490006,
+            "negativeMean": 0.7493602444644741,
+            "standardizedDifference": 0.5746316209985798
+          },
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 104.85175202156334,
+            "negativeMean": 95.14168377823408,
+            "standardizedDifference": 0.4642557987188211
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.1615124094234605,
+            "negativeMean": 0.18579510838237764,
+            "standardizedDifference": -0.44959834087171713
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.17040816326530614,
+            "negativeMean": 0.09189889508164666,
+            "standardizedDifference": 0.38240311174829156
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.6055176180513104,
+            "negativeMean": 0.5666671795008554,
+            "standardizedDifference": 0.29817221321296933
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.06491691148025378,
+            "negativeMean": 0.03300069198426488,
+            "standardizedDifference": 0.26513487782842093
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.18600831893283407,
+            "negativeMean": 0.17171205256740052,
+            "standardizedDifference": 0.23583805567913937
+          },
+          {
+            "feature": "area",
+            "positiveMean": 169.7466307277628,
+            "negativeMean": 161.5934291581109,
+            "standardizedDifference": 0.22397148259536118
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.3515444573396054,
+            "negativeMean": 0.3891327187528421,
+            "standardizedDifference": -0.2116336763265316
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 6.048517520215634,
+            "negativeMean": 5.476386036960986,
+            "standardizedDifference": 0.20333112685789428
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.14563129680984727,
+            "negativeMean": 0.1300247020732537,
+            "standardizedDifference": 0.13160609823599312
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.3514887036479944,
+            "negativeMean": 0.359235960309647,
+            "standardizedDifference": -0.11160623911257579
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.02477860766390683,
+            "negativeMean": 0.02400263879058563,
+            "standardizedDifference": 0.05650772785620183
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.37311955789044715,
+            "negativeMean": 0.38197039100529884,
+            "standardizedDifference": -0.04946614890036248
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.055829314873944325,
+            "negativeMean": 0.057786857572842784,
+            "standardizedDifference": -0.046881319399899715
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.36067294257358745,
+            "negativeMean": 0.3627888038832844,
+            "standardizedDifference": -0.030066383787653587
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.41646136881985935,
+            "negativeMean": 0.42213341073710703,
+            "standardizedDifference": -0.025745847833948034
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.05494057026925393,
+            "negativeMean": 0.055837341067139654,
+            "standardizedDifference": -0.021920737620628232
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.04564508390885185,
+            "negativeMean": 0.04536228865347153,
+            "standardizedDifference": 0.009397589974847657
+          }
+        ],
+        "odd": [
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 29.740112994350284,
+            "negativeMean": 20.065573770491802,
+            "standardizedDifference": 1.1949427672341133
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 17.55367231638418,
+            "negativeMean": 12.375,
+            "standardizedDifference": 0.8282154949401218
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 4.138418079096045,
+            "negativeMean": 2.1168032786885247,
+            "standardizedDifference": 0.7544349186219946
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.070826884349534,
+            "negativeMean": 0.08777313099520025,
+            "standardizedDifference": -0.7312319790772742
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.2757142946731325,
+            "negativeMean": 0.14633358635737154,
+            "standardizedDifference": 0.7105873756208804
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.8536538255392733,
+            "negativeMean": 0.735167912387992,
+            "standardizedDifference": 0.6870186809721734
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.1573514997243809,
+            "negativeMean": 0.18679066834804572,
+            "standardizedDifference": -0.5442078755954768
+          },
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 103.62429378531074,
+            "negativeMean": 93.15163934426229,
+            "standardizedDifference": 0.5133722794150171
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.7836642813917164,
+            "negativeMean": 0.7314710674682361,
+            "standardizedDifference": 0.4899895080308032
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.14921980091471623,
+            "negativeMean": 0.0689354020296643,
+            "standardizedDifference": 0.4507592366917275
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 6.1525423728813555,
+            "negativeMean": 5.204918032786885,
+            "standardizedDifference": 0.3352744722753155
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.6058054939410868,
+            "negativeMean": 0.5675743655251853,
+            "standardizedDifference": 0.2728044829850051
+          },
+          {
+            "feature": "area",
+            "positiveMean": 167.73446327683615,
+            "negativeMean": 158.62090163934425,
+            "standardizedDifference": 0.2538939188237278
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.36140686055940263,
+            "negativeMean": 0.39544920584879606,
+            "standardizedDifference": -0.18373861904513045
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.05784128771416906,
+            "negativeMean": 0.0391586214332116,
+            "standardizedDifference": 0.13903507443874977
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.17930658669099167,
+            "negativeMean": 0.1716886310365032,
+            "standardizedDifference": 0.12985718764931892
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.12931697830616806,
+            "negativeMean": 0.11855405568451785,
+            "standardizedDifference": 0.09602167737788181
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.05060108749317547,
+            "negativeMean": 0.054320787833100556,
+            "standardizedDifference": -0.09243318803426058
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.3777304381117938,
+            "negativeMean": 0.3931451233193037,
+            "standardizedDifference": -0.08395428163806831
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.419248148273572,
+            "negativeMean": 0.4346078272820074,
+            "standardizedDifference": -0.06539151613001344
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.0496879745689023,
+            "negativeMean": 0.05182346431495442,
+            "standardizedDifference": -0.054209615835877516
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.04130825228321892,
+            "negativeMean": 0.042670020214475496,
+            "standardizedDifference": -0.04823723860891964
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.36258803148716817,
+            "negativeMean": 0.3609946172545967,
+            "standardizedDifference": 0.02135517559346042
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.35375218721288443,
+            "negativeMean": 0.35398218144275156,
+            "standardizedDifference": -0.00320866590751519
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.02403321713961725,
+            "negativeMean": 0.02404286768683654,
+            "standardizedDifference": -0.0007639243238825732
+          }
+        ]
+      },
+      "models": {
+        "baseline": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 858,
+              "trainPositives": 371,
+              "testN": 842,
+              "testPositives": 354,
+              "holdoutAuc": 0.8510234324349356
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 842,
+              "trainPositives": 354,
+              "testN": 858,
+              "testPositives": 371,
+              "holdoutAuc": 0.8388892886200235
+            }
+          ],
+          "meanHoldoutAuc": 0.8449563605274796
+        },
+        "topologyPlacement": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 858,
+              "trainPositives": 371,
+              "testN": 842,
+              "testPositives": 354,
+              "holdoutAuc": 0.7552213577845698
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 842,
+              "trainPositives": 354,
+              "testN": 858,
+              "testPositives": 371,
+              "holdoutAuc": 0.749912827864089
+            }
+          ],
+          "meanHoldoutAuc": 0.7525670928243293
+        },
+        "combined": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 858,
+              "trainPositives": 371,
+              "testN": 842,
+              "testPositives": 354,
+              "holdoutAuc": 0.8436081781976474
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 842,
+              "trainPositives": 354,
+              "testN": 858,
+              "testPositives": 371,
+              "holdoutAuc": 0.839725034177012
+            }
+          ],
+          "meanHoldoutAuc": 0.8416666061873297
+        }
+      }
+    },
+    {
+      "label": "no-isolated-winner-among-current-production-misses",
+      "population": 725,
+      "positives": 604,
+      "effects": {
+        "all": [
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 30.08112582781457,
+            "negativeMean": 26.793388429752067,
+            "standardizedDifference": 0.450774083351515
+          },
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 105.61092715231788,
+            "negativeMean": 97.47107438016529,
+            "standardizedDifference": 0.4069674713287942
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 17.54635761589404,
+            "negativeMean": 15.28099173553719,
+            "standardizedDifference": 0.37650495490799896
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.0703236348482142,
+            "negativeMean": 0.07548331077771273,
+            "standardizedDifference": -0.37246235029452235
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.7956437697935937,
+            "negativeMean": 0.7635283088933285,
+            "standardizedDifference": 0.2934601563206878
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.6107802517570728,
+            "negativeMean": 0.5800901577761086,
+            "standardizedDifference": 0.2552312546409895
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.8554268661073035,
+            "negativeMean": 0.8226759424906683,
+            "standardizedDifference": 0.2461272246996246
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.023856194662722176,
+            "negativeMean": 0.027202320119419386,
+            "standardizedDifference": -0.2420555756654069
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.1578518887293727,
+            "negativeMean": 0.16761152071069424,
+            "standardizedDifference": -0.2373857875791852
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.35476836894204067,
+            "negativeMean": 0.34173957426259816,
+            "standardizedDifference": 0.21152119361579924
+          },
+          {
+            "feature": "area",
+            "positiveMean": 169.9023178807947,
+            "negativeMean": 163.08264462809916,
+            "standardizedDifference": 0.18495938156896635
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.051488557170231854,
+            "negativeMean": 0.056805008565823156,
+            "standardizedDifference": -0.13785961160567603
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.05243514834688582,
+            "negativeMean": 0.05747629082064825,
+            "standardizedDifference": -0.12924796394725951
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.05820585319757509,
+            "negativeMean": 0.07771615436904694,
+            "standardizedDifference": -0.1170480343038191
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 4.251655629139073,
+            "negativeMean": 3.950413223140496,
+            "standardizedDifference": 0.11611042839542123
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.41300626801454615,
+            "negativeMean": 0.4418613755390616,
+            "standardizedDifference": -0.11590941742789838
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.2879532455416442,
+            "negativeMean": 0.2692548170706376,
+            "standardizedDifference": 0.10708417469791526
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.1636274046042261,
+            "negativeMean": 0.1422668240850059,
+            "standardizedDifference": 0.10106025195630937
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.04313174787341113,
+            "negativeMean": 0.04550307209010943,
+            "standardizedDifference": -0.08525184159517973
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.37319602307185085,
+            "negativeMean": 0.38622754655812513,
+            "standardizedDifference": -0.07330711983595227
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.18211263458189086,
+            "negativeMean": 0.1858478241754574,
+            "standardizedDifference": -0.06484726187093623
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.36227800522642795,
+            "negativeMean": 0.3582637164007937,
+            "standardizedDifference": 0.05964393714478647
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.35480041481697105,
+            "negativeMean": 0.3641452211700146,
+            "standardizedDifference": -0.0551279507083114
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 6.076158940397351,
+            "negativeMean": 6.214876033057851,
+            "standardizedDifference": -0.04752509866773793
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.13785857367337995,
+            "negativeMean": 0.13670118130673767,
+            "standardizedDifference": 0.01067071712989101
+          }
+        ],
+        "even": [
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 29.967741935483872,
+            "negativeMean": 26.114754098360656,
+            "standardizedDifference": 0.5285811366083051
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.07059625956933728,
+            "negativeMean": 0.07625243485565597,
+            "standardizedDifference": -0.4124576046601269
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 17.196774193548386,
+            "negativeMean": 14.78688524590164,
+            "standardizedDifference": 0.40312895333381304
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.8544989492140829,
+            "negativeMean": 0.8054670110313679,
+            "standardizedDifference": 0.3478530770150699
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.15923434092788924,
+            "negativeMean": 0.17308947882718367,
+            "standardizedDifference": -0.3435312075427259
+          },
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 105.85483870967742,
+            "negativeMean": 99.75409836065573,
+            "standardizedDifference": 0.31913467418903546
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.8013334410475624,
+            "negativeMean": 0.7725449179346118,
+            "standardizedDifference": 0.2573669709984791
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 4.370967741935484,
+            "negativeMean": 3.7049180327868854,
+            "standardizedDifference": 0.2555435831262749
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.024228054335652657,
+            "negativeMean": 0.02757650162716571,
+            "standardizedDifference": -0.23334516376230943
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.35383796536148415,
+            "negativeMean": 0.33954983264501387,
+            "standardizedDifference": 0.2288774542321298
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.2992389045286509,
+            "negativeMean": 0.264535614008682,
+            "standardizedDifference": 0.19305636467005155
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.6091409397054556,
+            "negativeMean": 0.587104016202377,
+            "standardizedDifference": 0.17691904470640402
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.1763671274961598,
+            "negativeMean": 0.1401249024199844,
+            "standardizedDifference": 0.17265497967151372
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 5.990322580645161,
+            "negativeMean": 6.344262295081967,
+            "standardizedDifference": -0.1247627094190743
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.14757698200859765,
+            "negativeMean": 0.13574338842275535,
+            "standardizedDifference": 0.11369545673011891
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.18493480428037912,
+            "negativeMean": 0.19146388519940777,
+            "standardizedDifference": -0.11342062442843566
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.04520380136539596,
+            "negativeMean": 0.047887667326414675,
+            "standardizedDifference": -0.09811062136873859
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.055306137614428104,
+            "negativeMean": 0.05848808455345275,
+            "standardizedDifference": -0.08547463813043717
+          },
+          {
+            "feature": "area",
+            "positiveMean": 170.2258064516129,
+            "negativeMean": 167.31147540983608,
+            "standardizedDifference": 0.0791928471736917
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.05449986636090555,
+            "negativeMean": 0.05718021308217193,
+            "standardizedDifference": -0.07500565631830007
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.36131730507325144,
+            "negativeMean": 0.3573983134769358,
+            "standardizedDifference": 0.057762719476194595
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.4153917319239902,
+            "negativeMean": 0.42189722845460537,
+            "standardizedDifference": -0.0260501213507961
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.06419225935354965,
+            "negativeMean": 0.06859956982907803,
+            "standardizedDifference": -0.025231170950168812
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.3736944507105799,
+            "negativeMean": 0.3701979714274795,
+            "standardizedDifference": 0.019606658290231758
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.3511994725704404,
+            "negativeMean": 0.3532976586255275,
+            "standardizedDifference": -0.013219037203260826
+          }
+        ],
+        "odd": [
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 105.35374149659864,
+            "negativeMean": 95.15,
+            "standardizedDifference": 0.49218502240929185
+          },
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 30.200680272108844,
+            "negativeMean": 27.483333333333334,
+            "standardizedDifference": 0.37379417580804974
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 17.91496598639456,
+            "negativeMean": 15.783333333333333,
+            "standardizedDifference": 0.35371009256233704
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.6125087780700025,
+            "negativeMean": 0.5729594017094016,
+            "standardizedDifference": 0.3423387710053825
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.07003617340757422,
+            "negativeMean": 0.0747013679651371,
+            "standardizedDifference": -0.33375012193013126
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.7896444565666195,
+            "negativeMean": 0.7543614230346917,
+            "standardizedDifference": 0.3315585622598063
+          },
+          {
+            "feature": "area",
+            "positiveMean": 169.5612244897959,
+            "negativeMean": 158.78333333333333,
+            "standardizedDifference": 0.2937542686208706
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.02346409772867984,
+            "negativeMean": 0.026821902253210614,
+            "standardizedDifference": -0.2536093433608693
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.051893656230390904,
+            "negativeMean": 0.08698468198468197,
+            "standardizedDifference": -0.2227426731962619
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.4104909829399622,
+            "negativeMean": 0.46215825840825847,
+            "standardizedDifference": -0.20903681939857024
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.04831336720727656,
+            "negativeMean": 0.056423550640868576,
+            "standardizedDifference": -0.1974244955288778
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.35574940673106337,
+            "negativeMean": 0.3439658115738088,
+            "standardizedDifference": 0.1940657209565981
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.04940791476546358,
+            "negativeMean": 0.05644763385896366,
+            "standardizedDifference": -0.17353235463661323
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.3726704701194493,
+            "negativeMean": 0.4025242812742812,
+            "standardizedDifference": -0.16916466299034089
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.15639420103705806,
+            "negativeMean": 0.1620422632922633,
+            "standardizedDifference": -0.13603244819583485
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.8564052818790647,
+            "negativeMean": 0.8401716894742909,
+            "standardizedDifference": 0.13166473130337797
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.35859732670957123,
+            "negativeMean": 0.37517357642357646,
+            "standardizedDifference": -0.09237792893424074
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.12761127236753833,
+            "negativeMean": 0.13767493740545303,
+            "standardizedDifference": -0.08969202531761745
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.04094692956553592,
+            "negativeMean": 0.04307873359986578,
+            "standardizedDifference": -0.07594749177961765
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.36329098838113816,
+            "negativeMean": 0.35914354270671556,
+            "standardizedDifference": 0.0621482382214065
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 4.125850340136054,
+            "negativeMean": 4.2,
+            "standardizedDifference": -0.02886352094045076
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 6.166666666666667,
+            "negativeMean": 6.083333333333333,
+            "standardizedDifference": 0.027809084122411364
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.15019436345966963,
+            "negativeMean": 0.14444444444444446,
+            "standardizedDifference": 0.027112161872055947
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.1791368774168183,
+            "negativeMean": 0.18013816213444106,
+            "standardizedDifference": -0.01748387841405563
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.2760534010315351,
+            "negativeMean": 0.2740526735169592,
+            "standardizedDifference": 0.011849404510827968
+          }
+        ]
+      },
+      "models": {
+        "baseline": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 371,
+              "trainPositives": 310,
+              "testN": 354,
+              "testPositives": 294,
+              "holdoutAuc": 0.7051587301587302
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 354,
+              "trainPositives": 294,
+              "testN": 371,
+              "testPositives": 310,
+              "holdoutAuc": 0.6961924907456373
+            }
+          ],
+          "meanHoldoutAuc": 0.7006756104521837
+        },
+        "topologyPlacement": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 371,
+              "trainPositives": 310,
+              "testN": 354,
+              "testPositives": 294,
+              "holdoutAuc": 0.655952380952381
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 354,
+              "trainPositives": 294,
+              "testN": 371,
+              "testPositives": 310,
+              "holdoutAuc": 0.6142252776308831
+            }
+          ],
+          "meanHoldoutAuc": 0.635088829291632
+        },
+        "combined": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 371,
+              "trainPositives": 310,
+              "testN": 354,
+              "testPositives": 294,
+              "holdoutAuc": 0.7126417233560091
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 354,
+              "trainPositives": 294,
+              "testN": 371,
+              "testPositives": 310,
+              "holdoutAuc": 0.7074034902168165
+            }
+          ],
+          "meanHoldoutAuc": 0.7100226067864128
+        }
+      }
+    },
+    {
+      "label": "cpsat-rescue-among-current-production-misses",
+      "population": 725,
+      "positives": 26,
+      "effects": {
+        "all": [
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 83.6923076923077,
+            "negativeMean": 105.01716738197425,
+            "standardizedDifference": -1.2543088240852538
+          },
+          {
+            "feature": "area",
+            "positiveMean": 136.80769230769232,
+            "negativeMean": 169.95278969957081,
+            "standardizedDifference": -1.0659087995320662
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.08415751516392252,
+            "negativeMean": 0.07070223270123416,
+            "standardizedDifference": 0.933201622836272
+          },
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 22.846153846153847,
+            "negativeMean": 29.781115879828327,
+            "standardizedDifference": -0.906369235039186
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.033147665546743664,
+            "negativeMean": 0.024089818321199705,
+            "standardizedDifference": 0.6491390365667022
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.21933978702929255,
+            "negativeMean": 0.18137451151635314,
+            "standardizedDifference": 0.6489924806703672
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 14.076923076923077,
+            "negativeMean": 17.283261802575108,
+            "standardizedDifference": -0.56343433236675
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.0789485651235356,
+            "negativeMean": 0.05138745618608407,
+            "standardizedDifference": 0.5443611076549207
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.07876537373917335,
+            "negativeMean": 0.05232841355307437,
+            "standardizedDifference": 0.521899630068028
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.1818770972617127,
+            "negativeMean": 0.15864768278931435,
+            "standardizedDifference": 0.5184186165194171
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 4.961538461538462,
+            "negativeMean": 6.141630901287554,
+            "standardizedDifference": -0.4538659356339012
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.5615182894029047,
+            "negativeMean": 0.6073000080510808,
+            "standardizedDifference": -0.4134883683684661
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.055133188575138506,
+            "negativeMean": 0.04309582909226031,
+            "standardizedDifference": 0.3874369125828766
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.5217269909577602,
+            "negativeMean": 0.41395723970831266,
+            "standardizedDifference": 0.3598373005063124
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.7976488184836307,
+            "negativeMean": 0.8519066479107401,
+            "standardizedDifference": -0.34500432260403785
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.1229020979020979,
+            "negativeMean": 0.05917673170892059,
+            "standardizedDifference": 0.3037754528974807
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.42242629165706086,
+            "negativeMean": 0.3736206687923428,
+            "standardizedDifference": 0.26738527368616705
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.3377392472539519,
+            "negativeMean": 0.353146441914398,
+            "standardizedDifference": -0.26255526835252335
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.22042124542124542,
+            "negativeMean": 0.15781729000613143,
+            "standardizedDifference": 0.25729215100493324
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.3988248930556622,
+            "negativeMean": 0.3547805079993922,
+            "standardizedDifference": 0.2351846206998685
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.1536088784761892,
+            "negativeMean": 0.137072375674472,
+            "standardizedDifference": 0.13426372417721347
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.8013819245474115,
+            "negativeMean": 0.7898710047112887,
+            "standardizedDifference": 0.11873824129096171
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.2979849317349318,
+            "negativeMean": 0.28434332610528185,
+            "standardizedDifference": 0.07939583420478687
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 4.384615384615385,
+            "negativeMean": 4.194563662374821,
+            "standardizedDifference": 0.07448996316156263
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.3597295605335293,
+            "negativeMean": 0.3616779059619267,
+            "standardizedDifference": -0.02916205668938216
+          }
+        ],
+        "even": [
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.08977488717782625,
+            "negativeMean": 0.07075734742983757,
+            "standardizedDifference": 1.2980577824743222
+          },
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 20.533333333333335,
+            "negativeMean": 29.70505617977528,
+            "standardizedDifference": -1.1842237042815207
+          },
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 86.93333333333334,
+            "negativeMean": 105.6067415730337,
+            "standardizedDifference": -1.1108666938522629
+          },
+          {
+            "feature": "area",
+            "positiveMean": 137.66666666666666,
+            "negativeMean": 171.09831460674158,
+            "standardizedDifference": -0.9885020691679565
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.0363621703477137,
+            "negativeMean": 0.024290536202510468,
+            "standardizedDifference": 0.7901466514642539
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 12.8,
+            "negativeMean": 16.969101123595507,
+            "standardizedDifference": -0.744393999688827
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.1894960594960595,
+            "negativeMean": 0.16033332304399714,
+            "standardizedDifference": 0.6004266021281086
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.5463286713286714,
+            "negativeMean": 0.6080115343458035,
+            "standardizedDifference": -0.5822405521373335
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.7544643342380207,
+            "negativeMean": 0.8503123508868229,
+            "standardizedDifference": -0.5384527020128171
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.21520790536467974,
+            "negativeMean": 0.1847779992798068,
+            "standardizedDifference": 0.528018280033032
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.10511634959899853,
+            "negativeMean": 0.1473383872822145,
+            "standardizedDifference": -0.4384818803951825
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.3284225444745904,
+            "negativeMean": 0.352460592377211,
+            "standardizedDifference": -0.412681212200178
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 5.133333333333334,
+            "negativeMean": 6.087078651685394,
+            "standardizedDifference": -0.38219278898364145
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.8215502607015507,
+            "negativeMean": 0.7955487438433492,
+            "standardizedDifference": 0.27134370285175746
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.3928116328116328,
+            "negativeMean": 0.34980567185623357,
+            "standardizedDifference": 0.2558853895049647
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.12206349206349205,
+            "negativeMean": 0.1724451578384163,
+            "standardizedDifference": -0.2479728700666279
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.4025086025086025,
+            "negativeMean": 0.3718812554486711,
+            "standardizedDifference": 0.16619282580306602
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.2652316017316017,
+            "negativeMean": 0.29472544615853197,
+            "standardizedDifference": -0.16072898543582229
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.44796314796314796,
+            "negativeMean": 0.41513404666494524,
+            "standardizedDifference": 0.1542286218713189
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 3.8666666666666667,
+            "negativeMean": 4.27808988764045,
+            "standardizedDifference": -0.1523340706548314
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.06097105804991663,
+            "negativeMean": 0.05561266839181064,
+            "standardizedDifference": 0.1354628026981145
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.05801337164638962,
+            "negativeMean": 0.054811098301116204,
+            "standardizedDifference": 0.0869295383463733
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.05515151515151515,
+            "negativeMean": 0.06532837480871186,
+            "standardizedDifference": -0.0832052884546163
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.36595735927921724,
+            "negativeMean": 0.360450284566328,
+            "standardizedDifference": 0.07772966602142559
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.046751665602641476,
+            "negativeMean": 0.04559845827568657,
+            "standardizedDifference": 0.04332065957040901
+          }
+        ],
+        "odd": [
+          {
+            "feature": "requiredPathLength",
+            "positiveMean": 79.27272727272727,
+            "negativeMean": 104.40524781341108,
+            "standardizedDifference": -1.5055302983283119
+          },
+          {
+            "feature": "area",
+            "positiveMean": 135.63636363636363,
+            "negativeMean": 168.76384839650146,
+            "standardizedDifference": -1.2346164512057687
+          },
+          {
+            "feature": "articulationCountNorm",
+            "positiveMean": 0.10749655622873461,
+            "negativeMean": 0.04783405504045288,
+            "standardizedDifference": 1.0059349367833412
+          },
+          {
+            "feature": "bridgeCountNorm",
+            "positiveMean": 0.10303034967906885,
+            "negativeMean": 0.04891968258342379,
+            "standardizedDifference": 0.9228088196536567
+          },
+          {
+            "feature": "portalCrossRegionFraction",
+            "positiveMean": 0.35454545454545455,
+            "negativeMean": 0.14263501318894908,
+            "standardizedDifference": 0.8071491945807112
+          },
+          {
+            "feature": "degreeTwoFraction",
+            "positiveMean": 0.22497417111740095,
+            "negativeMean": 0.1778420285898532,
+            "standardizedDifference": 0.7933357047061613
+          },
+          {
+            "feature": "degreeOneFraction",
+            "positiveMean": 0.06656253808308897,
+            "negativeMean": 0.04049834807389365,
+            "standardizedDifference": 0.7507990879075482
+          },
+          {
+            "feature": "obligationNearArticulationFraction",
+            "positiveMean": 0.21973505421781284,
+            "negativeMean": 0.1264172732477771,
+            "standardizedDifference": 0.6692190750082225
+          },
+          {
+            "feature": "gateGoalPortalBenefitNorm",
+            "positiveMean": 0.2152892561983471,
+            "negativeMean": 0.05279193595520125,
+            "standardizedDifference": 0.58507096016252
+          },
+          {
+            "feature": "constrainedObjects",
+            "positiveMean": 26,
+            "negativeMean": 29.8600583090379,
+            "standardizedDifference": -0.5614034493425488
+          },
+          {
+            "feature": "gateGoalCardinalDistanceMinNorm",
+            "positiveMean": 0.6223140495867768,
+            "negativeMean": 0.4127358307387461,
+            "standardizedDifference": 0.5551644338318357
+          },
+          {
+            "feature": "requiredIntersections",
+            "positiveMean": 4.7272727272727275,
+            "negativeMean": 6.198250728862973,
+            "standardizedDifference": -0.541267540205433
+          },
+          {
+            "feature": "obligationNearestNeighborMeanNorm",
+            "positiveMean": 0.07649746241769008,
+            "negativeMean": 0.0706450290762112,
+            "standardizedDifference": 0.4867951506277482
+          },
+          {
+            "feature": "portalSpanMeanNorm",
+            "positiveMean": 0.34264856355765444,
+            "negativeMean": 0.2735677146214422,
+            "standardizedDifference": 0.46707643924896575
+          },
+          {
+            "feature": "portals",
+            "positiveMean": 5.090909090909091,
+            "negativeMean": 4.107871720116618,
+            "standardizedDifference": 0.4421371900144634
+          },
+          {
+            "feature": "maxDegreeTwoComponentFraction",
+            "positiveMean": 0.028764249909057238,
+            "negativeMean": 0.023881493056632296,
+            "standardizedDifference": 0.4320887520506203
+          },
+          {
+            "feature": "gateGoalManhattanMinNorm",
+            "positiveMean": 0.4495867768595042,
+            "negativeMean": 0.37542600742309173,
+            "standardizedDifference": 0.4163557352173278
+          },
+          {
+            "feature": "obligationNearestNeighborMaxNorm",
+            "positiveMean": 0.1714876033057851,
+            "negativeMean": 0.15689815529465662,
+            "standardizedDifference": 0.38830370419404026
+          },
+          {
+            "feature": "turnConstraintLoad",
+            "positiveMean": 15.818181818181818,
+            "negativeMean": 17.60932944606414,
+            "standardizedDifference": -0.3225823922498011
+          },
+          {
+            "feature": "gateGoalPortalRelaxedDistanceMinNorm",
+            "positiveMean": 0.40702479338842984,
+            "negativeMean": 0.3599438947835446,
+            "standardizedDifference": 0.22400205266311654
+          },
+          {
+            "feature": "obligationGateDistanceSpreadNorm",
+            "positiveMean": 0.5822314049586776,
+            "negativeMean": 0.6065615142874616,
+            "standardizedDifference": -0.21126717314055524
+          },
+          {
+            "feature": "obligationGoalDistanceMeanNorm",
+            "positiveMean": 0.3512371076985002,
+            "negativeMean": 0.36295205528214003,
+            "standardizedDifference": -0.19419681022469365
+          },
+          {
+            "feature": "requiredPathCoverageRatio",
+            "positiveMean": 0.7738796479735851,
+            "negativeMean": 0.7839780743001695,
+            "standardizedDifference": -0.10665638344772031
+          },
+          {
+            "feature": "obligationGateDistanceMeanNorm",
+            "positiveMean": 0.35044384195308137,
+            "negativeMean": 0.3538582857489131,
+            "standardizedDifference": -0.0589355156524622
+          },
+          {
+            "feature": "obligationClusterFraction",
+            "positiveMean": 0.8565367515458259,
+            "negativeMean": 0.8535613701862934,
+            "standardizedDifference": 0.026886887608756984
+          }
+        ]
+      },
+      "models": {
+        "baseline": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 371,
+              "trainPositives": 15,
+              "testN": 354,
+              "testPositives": 11,
+              "holdoutAuc": 0.9464617015637424
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 354,
+              "trainPositives": 11,
+              "testN": 371,
+              "testPositives": 15,
+              "holdoutAuc": 0.9104868913857678
+            }
+          ],
+          "meanHoldoutAuc": 0.9284742964747551
+        },
+        "topologyPlacement": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 371,
+              "trainPositives": 15,
+              "testN": 354,
+              "testPositives": 11,
+              "holdoutAuc": 0.7590776570368407
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 354,
+              "trainPositives": 11,
+              "testN": 371,
+              "testPositives": 15,
+              "holdoutAuc": 0.803932584269663
+            }
+          ],
+          "meanHoldoutAuc": 0.7815051206532518
+        },
+        "combined": {
+          "folds": [
+            {
+              "fold": "even-to-odd",
+              "trainN": 371,
+              "trainPositives": 15,
+              "testN": 354,
+              "testPositives": 11,
+              "holdoutAuc": 0.8844420885237212
+            },
+            {
+              "fold": "odd-to-even",
+              "trainN": 354,
+              "trainPositives": 11,
+              "testN": 371,
+              "testPositives": 15,
+              "holdoutAuc": 0.8831460674157303
+            }
+          ],
+          "meanHoldoutAuc": 0.8837940779697258
+        }
+      }
+    }
+  ],
+  "rowMaterialization": "Omitted from the committed artifact; rerun this script to rebuild joined per-level rows."
+}
