@@ -174,7 +174,14 @@ jobs:
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-targeted-sweep/shard-plan.json
-          shards_json=$(jq -c . logs/solver-targeted-sweep/shard-plan.json)
+          # {shard: [...]} ONLY -- the file also carries a top-level `planning` provenance object
+          # (plan-highbudget-shards.mjs) that is not itself an array; spreading the WHOLE file into
+          # `strategy.matrix` (as `jq -c .` did) makes GitHub Actions treat `planning` as a second,
+          # invalid matrix axis, silently producing zero solve-shards job instances (regression from
+          # the 2026-09-05 commit that added `planning` -- see plan-highbudget-shards.mjs's own
+          # history; caught when this workflow's very first post-regression dispatch expanded to 0
+          # shard jobs despite the plan step itself reporting a nonzero shard count).
+          shards_json=$(jq -c '{shard: .shard}' logs/solver-targeted-sweep/shard-plan.json)
           echo "shards=${shards_json}" >> "$GITHUB_OUTPUT"
           echo "shard_count=$(jq '.shard | length' logs/solver-targeted-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
 

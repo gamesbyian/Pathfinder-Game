@@ -105,7 +105,12 @@ jobs:
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-highbudget-sweep/shard-plan.json
-          shards_json=$(jq -c . logs/solver-highbudget-sweep/shard-plan.json)
+          # {shard: [...]} ONLY -- see solver-level-blind-targeted-sweep.yml's identical fix for why:
+          # the file also carries a top-level `planning` provenance object (plan-highbudget-shards.mjs)
+          # that is not itself an array, and spreading the WHOLE file into `strategy.matrix` makes
+          # GitHub Actions treat `planning` as a second, invalid matrix axis, silently producing zero
+          # solve-shards job instances (regression from the 2026-09-05 commit that added `planning`).
+          shards_json=$(jq -c '{shard: .shard}' logs/solver-highbudget-sweep/shard-plan.json)
           echo "shards=${shards_json}" >> "$GITHUB_OUTPUT"
           echo "shard_count=$(jq '.shard | length' logs/solver-highbudget-sweep/shard-plan.json)" >> "$GITHUB_OUTPUT"
 
