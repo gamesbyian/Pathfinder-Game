@@ -26,6 +26,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 | Default-off disposition | [`docs/solver-opt-in-experiment-ledger.md`](docs/solver-opt-in-experiment-ledger.md) |
 | Stress corpus | [`data/stress/README.md`](data/stress/README.md) |
 | Validation choice | [`docs/testing.md`](docs/testing.md) |
+| Push/PR finish line or red CI | [`docs/ci-preflight.md`](docs/ci-preflight.md), then the failing validator/owning authority |
 
 [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post-naming-resumption.md) is conditional: use it when executing or translating frozen pre-cleanup solver evidence with historical names/contracts, not for ordinary current-head orientation.
 
@@ -37,8 +38,9 @@ Compact router for coding/research agents. Load task-specific material, not accu
 4. Use cheap discovery before broad context: `tooling-census --compact`, `research-status-index --compact`, `research-asset-query.mjs`.
 5. Audit cross-boundary propagation with [`docs/change-recipes.md`](docs/change-recipes.md).
 6. Prefer branch/PR validation; do not use `main` as experiment scratch space unless the required execution path cannot exercise a branch and the reason is recorded.
-7. Do not weaken validation to pass. Root-cause unexpected invariant, CSP, architecture, referee, or type failures.
-8. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
+7. Before treating work as push-ready, run the applicable local finish-line gate from [`docs/testing.md`](docs/testing.md); for ordinary work this is `npm run ci:fast`. GitHub Actions should not be the first discovery point for deterministic repository failures.
+8. Do not weaken validation to pass. Root-cause unexpected invariant, CSP, architecture, referee, or type failures.
+9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
 
 ## Solver research invariants
 
@@ -80,7 +82,7 @@ node scripts/agent-context-budget.mjs
 node scripts/agent-context-budget.mjs --check
 ```
 
-Repository growth is acceptable; mandatory preload growth should be deliberate. The normal CI check path enforces hard route ceilings.
+Repository growth is acceptable; mandatory preload growth should be deliberate. Treat warning thresholds as a prompt to compact/archive before the hard route ceiling makes CI the first feedback. The normal CI check path enforces hard route ceilings.
 
 ## Verification
 
