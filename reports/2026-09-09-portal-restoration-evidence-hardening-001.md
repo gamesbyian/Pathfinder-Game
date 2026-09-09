@@ -1,8 +1,9 @@
 # Portal restoration evidence hardening 001
 
-> **Status:** active preflight; derivation gates closed for must-cross neighbour-budget propagation and ordinary connectivity volume, with implementation/A-B gates still open
+> **Status:** active
 > **Last evidence:** 2026-09-09 — current solver semantics at `08bb5c6c` plus the committed 975/1,700 Corpus-2 production boundary and portal-carveout census
 > **Decision:** the blanket portal exclusions on must-cross neighbour-budget propagation and the ordinary connectivity volume check are not required by their current soundness arguments. Keep production behaviour unchanged until the remaining differential/atlas and matched-work gates run. Same-parity-only portal levels also preserve the ordinary parity invariant and are a bounded cleanup candidate.
+> **Remaining gate:** refresh the corrected portal branch atlas, run the frozen matched-work MC and connectivity treatments, complete the false-goal triggerability differential, and perform the bounded same-parity implementation/regression cleanup.
 > **Evidence role:** derivation / experiment preflight
 > **Selection:** no outcome-selected sample; proposed populations are deterministic structural predicates over the frozen Corpus-2 source identified below
 
