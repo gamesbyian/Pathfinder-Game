@@ -60,6 +60,7 @@ export const FEATURES: Record<string, string> = {
     PRUNE_MC_FORCED_NEIGHBOR:   'Prune once a pending must-cross cell\'s still-needed straight pass has a neighbor that is now a hard wall (both axis bits used, or an already-used flipper)',
     PRUNE_MC_FORCED_FIRST_MOVE: 'Force the first move out of a gate that is orthogonally adjacent to exactly one must-cross cell onto that cell (the gate can never be re-entered, so this is its only chance to serve that cell\'s pass)',
     PRUNE_MC_NEIGHBOR_BUDGET:   'Production default-ON: dynamic must-cross/intersection propagation. Excluded from repair randomized survivor selection; retained for DFS/beam and deterministic repair sub-searches. Disposition: docs/solver-opt-in-experiment-ledger.md.',
+    PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: 'Production default-OFF; opt-in: lets PRUNE_MC_NEIGHBOR_BUDGET evaluate on portal-bearing levels instead of unconditionally passing them. Correctness gates clean (zero false rejects/soundness violations); pending the frozen matched-work A/B on the 530-level portal+must-cross Corpus-2 population. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',
@@ -143,6 +144,7 @@ export const FEATURES: Record<string, string> = {
  * docs/solver-opt-in-experiment-ledger.md before deciding that an opt-in needs more testing. */
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
+    'PRUNE_MC_NEIGHBOR_BUDGET_PORTAL',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
     'STRATEGY_REPAIR_FALLBACK_GATE_WIDEN',

@@ -58,6 +58,12 @@ const bad = [];
 for (const raw of rawLevels.slice(0, Number.isFinite(limit) ? limit : undefined)) {
     let level, prep;
     try { level = normalizeRawLevel(raw); prep = prepLevel(level); } catch { continue; }
+    // Force the opt-in portal-evaluation flag so this gate actually exercises the removed portal
+    // carve-out (production stays default-OFF pending the population-scale A/B — see
+    // ablation-config.ts's PRUNE_MC_NEIGHBOR_BUDGET_PORTAL and reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
+    // Without this, mustCrossNeighborBudgetDeadlocked silently no-ops on every portal level and
+    // this check would validate nothing beyond the pre-restoration baseline.
+    prep._cfg = { PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: true };
 
     const paths = [];
     const w = raw?.stressMeta?.witnessSolution;

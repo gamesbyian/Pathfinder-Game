@@ -107,8 +107,21 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
 // don't guess), and a required neighbor that is ITSELF a pending must-cross cell (its own
 // eventual re-entry may be the SAME physical event PRUNE_MC_CEILING already reserves for it —
 // counting it again would double-count a single intersection against two different obligations).
-// Portal levels are out of scope entirely (portal forced-move semantics need separate validation,
-// same carve-out reports/2026-07-31-mustcross-forced-structure.md's own step-4 follow-up notes).
+//
+// Portal levels are IN SCOPE (reports/2026-09-09-portal-restoration-evidence-hardening-001.md
+// closes the derivation; the original blanket exclusion above predated it and was never required
+// by this proof). A still-open must-cross axis is a straight cardinal pass and still requires both
+// cardinal neighbors regardless of portals — a portal can only change what happens immediately
+// before/after occupying an adjacent cell, not remove the occupancy requirement — so an UNVISITED
+// portal terminal is a legitimate required neighbor exactly like any other cell (and, being
+// unvisited, is already excluded below by the `state.visited[nk] === 0` check, same as any other
+// fresh cell). A VISITED portal terminal is actually stricter than this bound assumes: ordinary
+// move validation categorically forbids re-entering ANY visited portal terminal, so charging it
+// only one future intersection UNDERSTATES the real obstruction — understatement can miss a dead
+// state but can never manufacture a false reject. Portal jumps also cannot create an uncharged
+// revisit: applyMove increments the target's visit count on every move including a jump, and the
+// intersection increment (`prevVisited > 0`, goal/gate-exempt only) is independent of whether the
+// move was a jump, so `freeInt` accounting is unaffected.
 //
 // Validated (2026-08-08): 0 false rejects across all 3 corpora' stored solutions (97,812 valid
 // paths, 8.5M replayed steps — scripts/stress/mc-neighbor-budget-soundness-check.mjs) and 0 false
@@ -118,9 +131,24 @@ export function mustCrossForcedNeighborDeadlocked(pos: number, state: SolverSear
 // production default-on 2026-08-12 (PRUNE_MC_NEIGHBOR_BUDGET) after a matched-node, level-blind
 // full-population A/B on corpus-2 (611→665, +54 net, 59 gained / 5 lost) plus zero regressions on
 // the published corpus and corpus-1 — see docs/solver-opt-in-experiment-ledger.md.
+//
+// Portal gating: the derivation above is now unconditional, but portal-level EVALUATION stays
+// behind the opt-in `PRUNE_MC_NEIGHBOR_BUDGET_PORTAL` flag (default OFF; see ablation-config.ts,
+// docs/solver-opt-in-experiment-ledger.md) until the frozen matched-work A/B on the 530-level
+// portal+must-cross Corpus-2 population lands — a sound prune can still perturb a budget-limited
+// search and lose solves through survivor/order effects, so production stays unchanged until that
+// population-scale evidence is in. Correctness gates are clean with the flag forced on: 0 false
+// rejects on the full 5,518-branch atlas (now including 922 portal+must-cross branches across 97
+// levels, 235/235 alive-labelled correctly passed when isolated to that subset) and 0 violations
+// on every known stored solution across all 3 corpora (scripts/stress/mc-neighbor-budget-soundness-check.mjs)
+// — see reports/2026-09-09-portal-restoration-evidence-hardening-001.md.
 // Permitted error: false negatives only; see property: deadlock helpers only report independently unsatisfiable reachable states.
 export function mustCrossNeighborBudgetDeadlocked(pos: number, state: SolverSearchState, level: NormalizedLevel, prep: PrepLevel): boolean {
-    if (state.mustCrossMask === 0 || level.portalMap.size > 0) return false;
+    if (state.mustCrossMask === 0) return false;
+    if (level.portalMap.size > 0) {
+        const _cfg = prep._cfg;
+        if (!_cfg || _cfg.PRUNE_MC_NEIGHBOR_BUDGET_PORTAL !== true) return false;
+    }
     const mcKeys = level.mustCrossKeys;
     const eu = state.edgeUsage;
     const staticNeighborKeys = prep.staticNeighborKeys;
