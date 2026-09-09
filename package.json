@@ -11,6 +11,7 @@
     "check:audit-artifacts": "node scripts/check-audit-artifacts.mjs",
     "check:documentation-links": "node scripts/check-documentation-links.mjs",
     "research:index": "node scripts/research-status-index.mjs",
+    "naming:status": "node scripts/naming-cleanup-status.mjs",
     "check:csp": "node scripts/check-csp.mjs",
     "check:modal-a11y": "node scripts/check-modal-a11y.mjs",
     "check:css-dead-components": "node scripts/check-css-dead-components.mjs",
