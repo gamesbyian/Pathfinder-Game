@@ -13,14 +13,26 @@
  * to its at-cap throughput (and won't be a target again once solved), so it's excluded from the
  * EMA and its telemetry entry (if any, from a previous still-unsolved round) is dropped.
  *
+ * Each entry now also carries a `configKey` (scripts/plan-highbudget-shards.mjs's
+ * canonicalConfigKey(enableFlags, disableFlags)) recording which ablation flags were active when
+ * the sample was taken. This workflow's only caller (solver-highbudget-unsolved-sweep.yml)
+ * historically never varied flags, so every pre-existing entry implicitly means production-default
+ * ('|') -- see classifyTelemetry()'s own comment for why treating a missing configKey that way is
+ * precise, not a guess. Going forward, an incoming sample whose configKey differs from an entry's
+ * stored one starts a FRESH EMA (does not blend against it): a flag that changes pruning/retry
+ * behavior can change real per-node cost by an amount the old config's samples never measured, so
+ * blending across configs would quietly contaminate the estimate for both.
+ *
  * Usage:
  *   node scripts/update-highbudget-telemetry.mjs --sweep=<combined-report.json> \
  *       --node-budget=<n> --telemetry=<existing-telemetry.json-or-new-path> \
+ *       [--enable-flags=<comma-separated>] [--disable-flags=<comma-separated>] \
  *       [--alpha=0.5] [--out=<path, defaults to --telemetry>]
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { canonicalConfigKey } from './plan-highbudget-shards.mjs';
 
 const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
     const [k, ...v] = a.split('=');
@@ -31,6 +43,7 @@ const nodeBudget = Number(args.get('--node-budget'));
 const telemetryPath = args.get('--telemetry');
 const alpha = args.has('--alpha') ? Number(args.get('--alpha')) : 0.5;
 const outPath = args.get('--out') || telemetryPath;
+const configKey = canonicalConfigKey(args.get('--enable-flags'), args.get('--disable-flags'));
 
 if (!sweepPath || !Number.isFinite(nodeBudget) || nodeBudget <= 0 || !telemetryPath) {
     console.error('Usage: node scripts/update-highbudget-telemetry.mjs --sweep=<file> --node-budget=<n> --telemetry=<file> [--alpha=0.5] [--out=<file>]');
@@ -61,10 +74,15 @@ for (const lv of sweep.levels ?? []) {
     if (elapsedMs <= 0) continue;
     const sampleMsPerGiganode = elapsedMs / (nodeBudget / 1e9);
     const prev = telemetry.levels[lv.id];
-    const ema = prev ? alpha * sampleMsPerGiganode + (1 - alpha) * prev.emaMsPerGiganode : sampleMsPerGiganode;
+    // A stored entry from a DIFFERENT config is not comparable evidence for this one -- start a
+    // fresh EMA rather than blending, per this file's header comment.
+    const prevConfigKey = prev?.configKey ?? '|';
+    const sameConfig = prev && prevConfigKey === configKey;
+    const ema = sameConfig ? alpha * sampleMsPerGiganode + (1 - alpha) * prev.emaMsPerGiganode : sampleMsPerGiganode;
     telemetry.levels[lv.id] = {
         emaMsPerGiganode: ema,
-        samples: (prev?.samples ?? 0) + 1,
+        samples: (sameConfig ? prev.samples : 0) + 1,
+        configKey,
         lastElapsedMs: elapsedMs,
         lastNodeBudget: nodeBudget,
         lastNodesExpanded: nodesExpanded,
