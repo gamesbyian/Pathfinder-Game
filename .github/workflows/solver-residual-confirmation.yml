@@ -116,7 +116,13 @@ jobs:
   generate-pool:
     name: Generate and seal the phase-1 pool
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 30, not the generation bookkeeping's own cost: the execution-family canary step below does
+    # one real full-node_budget, single-worker solve under this dispatch's exact resolved control
+    # config, and this job's own timeout applies to that solve too. A 10-minute plan-job budget
+    # killed a sibling workflow's real dispatch on 2026-09-10 (solver-level-blind-targeted-
+    # sweep.yml) before its shard planner ever ran. 30 matches the shard planner's own solo-shard
+    # floor (plan-highbudget-shards.mjs: max(30, ...)).
+    timeout-minutes: 30
     permissions:
       contents: read
     outputs:
@@ -310,7 +316,13 @@ jobs:
     name: Freeze the control-failure residual
     needs: [generate-pool, solve-phase1]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 30, not the freeze bookkeeping's own cost: the execution-family canary step below does one
+    # real full-node_budget, single-worker solve under this dispatch's exact resolved treatment
+    # config, and this job's own timeout applies to that solve too. A 10-minute plan-job budget
+    # killed a sibling workflow's real dispatch on 2026-09-10 (solver-level-blind-targeted-
+    # sweep.yml) before its shard planner ever ran. 30 matches the shard planner's own solo-shard
+    # floor (plan-highbudget-shards.mjs: max(30, ...)).
+    timeout-minutes: 30
     permissions:
       contents: read
     outputs:

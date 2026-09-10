@@ -129,7 +129,13 @@ jobs:
   generate:
     name: Generate and seal the cohort
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 45, not the generation bookkeeping's own cost: the two execution-family canary steps below
+    # each do one real full-node_budget, single-worker solve (control then treatment) under this
+    # dispatch's exact resolved config, sequentially, and this job's own timeout covers both. A
+    # 10-minute plan-job budget (single canary) killed a sibling workflow's real dispatch on
+    # 2026-09-10 (solver-level-blind-targeted-sweep.yml) before its shard planner ever ran; this
+    # job runs two such solves back to back, so it needs proportionally more headroom.
+    timeout-minutes: 45
     permissions:
       contents: read
     outputs:

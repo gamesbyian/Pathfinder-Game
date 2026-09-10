@@ -99,7 +99,13 @@ jobs:
   plan:
     name: Select stratified sample and plan shards
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 30, not the planning bookkeeping's own few-second cost: the execution-family canary step
+    # below does one real full-node_budget, single-worker solve under this dispatch's exact
+    # resolved config, and this job's own timeout applies to that solve too. A 10-minute plan-job
+    # budget killed a sibling workflow's real dispatch on 2026-09-10 (solver-level-blind-targeted-
+    # sweep.yml) before its shard planner ever ran. 30 matches the shard planner's own solo-shard
+    # floor (plan-highbudget-shards.mjs: max(30, ...)).
+    timeout-minutes: 30
     permissions:
       contents: read
     outputs:
