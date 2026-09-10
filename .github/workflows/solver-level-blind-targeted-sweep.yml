@@ -74,6 +74,10 @@ on:
         description: 'Floor under every shard''s timeout-minutes, regardless of how low its telemetry-predicted wall time is. Raise this above the 30-minute default when this population''s real per-level cost under THIS resolved config is already known (from a prior run) to exceed what corpus2-runtime-telemetry.json predicts -- that telemetry reflects whatever config last refreshed it, not necessarily this dispatch''s flags/budget.'
         required: false
         default: '30'
+      fixed_group_size:
+        description: 'Bypass telemetry-driven capacity packing and group ids into fixed-size shards of exactly this many ids instead (leave blank for normal packing). Set this equal to `workers` when a population''s real per-level cost is already known to be badly underestimated by telemetry: the normal packer keeps packing many "supposedly cheap" ids together regardless of target_wall_minutes, producing one shard per group of `workers` ids that all solve truly concurrently (not queued sequentially) keeps each shard''s real wall time close to ONE id''s real cost no matter how wrong the telemetry is. Pairs with a generously raised min_timeout_minutes, which becomes the sole timeout basis in this mode.'
+        required: false
+        default: ''
       seed:
         description: "Shard-packing tie-break shuffle seed (blank = derived from this run's id)."
         required: false
@@ -267,6 +271,8 @@ jobs:
         run: |
           planning_node_budget="${{ inputs.node_budget }}"
           [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && planning_node_budget=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          fixedGroupSize=()
+          [ -n "${{ inputs.fixed_group_size }}" ] && fixedGroupSize+=("--fixed-group-size=${{ inputs.fixed_group_size }}")
           node scripts/plan-highbudget-shards.mjs \
             --ids-file=logs/solver-targeted-sweep/ids.txt \
             --corpus2="${{ inputs.corpus }}" \
@@ -275,6 +281,7 @@ jobs:
             --target-wall-minutes="${{ inputs.target_wall_minutes }}" \
             --solo-threshold-multiplier="${{ inputs.solo_threshold_multiplier }}" \
             --min-timeout-minutes="${{ inputs.min_timeout_minutes }}" \
+            "${fixedGroupSize[@]}" \
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-targeted-sweep/shard-plan.json

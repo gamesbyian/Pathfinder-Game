@@ -179,6 +179,30 @@ async function main() {
         assert.ok(plannedRaisedFloor.shard.every(s => s.timeoutMinutes === 90), '--min-timeout-minutes raises the floor for every shard');
         console.log('  ✓ --min-timeout-minutes raises the per-shard timeout floor above telemetry-derived predictions');
 
+        // --fixed-group-size bypasses telemetry-driven packing entirely: groups of exactly N ids,
+        // regardless of what the (already-known-wrong) telemetry predicts for any of them.
+        const fixedGroupIds = corpus2.levels.slice(0, 9).map(level => level.id);
+        assert.equal(fixedGroupIds.length, 9, 'fixed-group fixture needs nine corpus2 ids');
+        const fixedGroupIdsFile = path.join(tempDir, 'fixed-group-ids.txt');
+        const fixedGroupOut = path.join(tempDir, 'fixed-group-plan.json');
+        await writeFile(fixedGroupIdsFile, fixedGroupIds.join('\n') + '\n');
+        await runPlanner([
+            `--ids-file=${fixedGroupIdsFile}`,
+            '--corpus2=data/stress/stress-levels-random.json',
+            '--node-budget=50000000',
+            '--workers=4',
+            '--fixed-group-size=4',
+            '--min-timeout-minutes=90',
+            '--seed=node-test',
+            `--out=${fixedGroupOut}`,
+        ]);
+        const fixedGroupPlanned = JSON.parse(await readFile(fixedGroupOut, 'utf8'));
+        assert.equal(fixedGroupPlanned.shard.length, 3, '9 ids at group size 4 makes 3 shards (4, 4, 1)');
+        assert.deepEqual(fixedGroupPlanned.shard.map(s => s.ids.length).sort(), [1, 4, 4]);
+        assert.deepEqual(fixedGroupPlanned.shard.flatMap(s => s.ids).sort(), fixedGroupIds.slice().sort(), 'every id appears in exactly one shard');
+        assert.ok(fixedGroupPlanned.shard.every(s => s.timeoutMinutes === 90), 'fixed-group shards use --min-timeout-minutes directly, not a telemetry-derived estimate');
+        console.log('  ✓ --fixed-group-size groups ids into fixed-size shards independent of telemetry');
+
         const sweepSource = await readFile(path.join(ROOT, 'scripts/level-blind-capability-sweep.mjs'), 'utf8');
         assert.match(sweepSource, /solveOpts\.admissibleOrderNonDefaultRetryBudgetFractionOverride = admissibleOrderNonDefaultRetryBudgetFraction/u);
         assert.match(sweepSource, /admissibleOrderNonDefaultRetryBudgetFraction: Number\.isFinite\(admissibleOrderNonDefaultRetryBudgetFraction\)/u);

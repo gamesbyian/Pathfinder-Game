@@ -37,6 +37,9 @@ const soloThresholdMultiplier = args.has('--solo-threshold-multiplier') ? Number
 // exceeds the default floor needs a way to raise it without also having to fabricate fake
 // telemetry or pack multiple levels together (which only compounds the underestimate).
 const minTimeoutMinutes = args.has('--min-timeout-minutes') ? Number(args.get('--min-timeout-minutes')) : 30;
+// Bypasses telemetry-based capacity packing in favor of fixed-size groups -- see the usage note
+// at this flag's consumption site below for why and when to reach for it.
+const fixedGroupSize = args.has('--fixed-group-size') ? Number(args.get('--fixed-group-size')) : null;
 const seed = args.get('--seed') || new Date().toISOString().slice(0, 10);
 // GHA matrix runs cap at 256 jobs; keep a small default margin.
 const maxShards = args.has('--max-shards') ? Number(args.get('--max-shards')) : 250;
@@ -99,41 +102,67 @@ const predictedMsById = new Map(ids.map(id => {
     return [id, ms];
 }));
 
-const shardCapacityMs = targetWallMinutes * 60_000 * workers;
-// Only true tail outliers go solo; moderate slow ids still benefit from packing.
-const soloThresholdMs = targetWallMinutes * 60_000 * soloThresholdMultiplier;
-
-const soloIds = ids.filter(id => predictedMsById.get(id) >= soloThresholdMs);
-const packableIds = ids.filter(id => predictedMsById.get(id) < soloThresholdMs);
-
-// Shuffle before stable weight sorting so equal/fallback weights do not always share a shard.
-const shuffled = seededShuffle(packableIds, seed);
-const sorted = shuffled.slice().sort((a, b) => predictedMsById.get(b) - predictedMsById.get(a));
-
-const bins = [];
-for (const id of sorted) {
-    const ms = predictedMsById.get(id);
-    let placed = false;
-    for (const bin of bins) {
-        if (bin.sumMs + ms <= shardCapacityMs) { bin.ids.push(id); bin.sumMs += ms; placed = true; break; }
-    }
-    if (!placed) bins.push({ ids: [id], sumMs: ms });
-}
-
-if (bins.length + soloIds.length > maxShards) {
-    console.error(`Planned ${bins.length + soloIds.length} shards, exceeding --max-shards=${maxShards}. Raise --target-wall-minutes or --max-shards.`);
-    process.exit(1);
-}
-
 const shardDefs = [];
-for (const id of soloIds) {
-    const ms = predictedMsById.get(id);
-    const wallMinutes = Math.ceil(ms / 60_000);
-    shardDefs.push({ ids: [id], predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(minTimeoutMinutes, Math.ceil(wallMinutes * 1.5) + 10) });
-}
-for (const bin of bins) {
-    const wallMinutes = Math.ceil(bin.sumMs / workers / 60_000);
-    shardDefs.push({ ids: bin.ids, predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(minTimeoutMinutes, Math.ceil(wallMinutes * 1.5) + 10) });
+let soloCount = 0;
+let packedCount = 0;
+if (fixedGroupSize) {
+    // Bypass telemetry-driven capacity packing entirely: group ids into fixed-size chunks of
+    // exactly --fixed-group-size, matched to --workers so every id in a shard runs on its own
+    // worker concurrently rather than queueing sequentially behind the first `workers` of them.
+    // For a population where telemetry is already known (from a prior run) to underestimate real
+    // cost, the normal sum-of-predicted-ms-vs-capacity bin packer keeps packing "supposedly cheap"
+    // ids together regardless of --target-wall-minutes -- exactly what produced a 23-level shard
+    // that completed only 5 levels in 40 minutes on 2026-09-10 (connectivity-volume-portal-ab-001
+    // treatment arm, run 34425486566). A fixed group size sized to --workers keeps each shard's
+    // real wall time close to ONE id's real cost regardless of how wrong the telemetry is, with
+    // --min-timeout-minutes (not a telemetry-derived estimate) as the sole timeout basis.
+    const shuffled = seededShuffle(ids, seed);
+    for (let i = 0; i < shuffled.length; i += fixedGroupSize) {
+        shardDefs.push({ ids: shuffled.slice(i, i + fixedGroupSize), predictedWallMinutes: minTimeoutMinutes, timeoutMinutes: minTimeoutMinutes });
+    }
+    packedCount = shardDefs.length;
+    if (shardDefs.length > maxShards) {
+        console.error(`Planned ${shardDefs.length} shards, exceeding --max-shards=${maxShards}. Raise --fixed-group-size or --max-shards.`);
+        process.exit(1);
+    }
+} else {
+    const shardCapacityMs = targetWallMinutes * 60_000 * workers;
+    // Only true tail outliers go solo; moderate slow ids still benefit from packing.
+    const soloThresholdMs = targetWallMinutes * 60_000 * soloThresholdMultiplier;
+
+    const soloIds = ids.filter(id => predictedMsById.get(id) >= soloThresholdMs);
+    const packableIds = ids.filter(id => predictedMsById.get(id) < soloThresholdMs);
+
+    // Shuffle before stable weight sorting so equal/fallback weights do not always share a shard.
+    const shuffled = seededShuffle(packableIds, seed);
+    const sorted = shuffled.slice().sort((a, b) => predictedMsById.get(b) - predictedMsById.get(a));
+
+    const bins = [];
+    for (const id of sorted) {
+        const ms = predictedMsById.get(id);
+        let placed = false;
+        for (const bin of bins) {
+            if (bin.sumMs + ms <= shardCapacityMs) { bin.ids.push(id); bin.sumMs += ms; placed = true; break; }
+        }
+        if (!placed) bins.push({ ids: [id], sumMs: ms });
+    }
+
+    if (bins.length + soloIds.length > maxShards) {
+        console.error(`Planned ${bins.length + soloIds.length} shards, exceeding --max-shards=${maxShards}. Raise --target-wall-minutes or --max-shards.`);
+        process.exit(1);
+    }
+
+    for (const id of soloIds) {
+        const ms = predictedMsById.get(id);
+        const wallMinutes = Math.ceil(ms / 60_000);
+        shardDefs.push({ ids: [id], predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(minTimeoutMinutes, Math.ceil(wallMinutes * 1.5) + 10) });
+    }
+    for (const bin of bins) {
+        const wallMinutes = Math.ceil(bin.sumMs / workers / 60_000);
+        shardDefs.push({ ids: bin.ids, predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(minTimeoutMinutes, Math.ceil(wallMinutes * 1.5) + 10) });
+    }
+    soloCount = soloIds.length;
+    packedCount = bins.length;
 }
 
 // Corpus-1 stragglers run sequentially before Corpus-2 in their assigned jobs and have no C2 EMA,
@@ -171,7 +200,7 @@ const wallMinutesList = shard.map(s => s.predictedWallMinutes).sort((a, b) => a 
 const pctl = (p) => wallMinutesList[Math.min(wallMinutesList.length - 1, Math.floor(wallMinutesList.length * p))];
 const waves = Math.ceil(shard.length / 20);
 console.log(`Planning telemetry: ${telemetryPath ?? '(none)'}; ${knownPredictions.length}/${ids.length} requested id(s) have historical runtime estimates; fallback=${Math.round(fallbackMs / 1000)}s.`);
-console.log(`Planned ${shard.length} shard(s) (${soloIds.length} solo, ${bins.length} packed) from ${ids.length} ids + ${corpus1Ids.length} corpus-1 straggler(s).`);
+console.log(`Planned ${shard.length} shard(s) (${soloCount} solo, ${packedCount} packed${fixedGroupSize ? `, fixed group size ${fixedGroupSize}` : ''}) from ${ids.length} ids + ${corpus1Ids.length} corpus-1 straggler(s).`);
 console.log(`Predicted wall minutes/shard: min=${wallMinutesList[0]} p50=${pctl(0.5)} p90=${pctl(0.9)} max=${wallMinutesList[wallMinutesList.length - 1]}`);
 console.log(`At max-parallel=20: ${waves} wave(s); rough total wall estimate (sum of the slowest shard per wave, optimistic) needs the actual matrix run to confirm.`);
 console.log(`Wrote ${outPath}.`);
