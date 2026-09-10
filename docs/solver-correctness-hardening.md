@@ -107,6 +107,8 @@ Historical reverse-oracle/admissible-order evidence has cases where an isolated 
 
 **2026-09-03:** ran the required-handling reproduction below for real (15 cases, `main-search`-stage winners, predecessor depth up to 18 prior attempts on the same `prep`, current HEAD) — no discrepancy found; see [`../reports/2026-09-03-fresh-vs-preceded-main-search-reproduction-check.md`](../reports/2026-09-03-fresh-vs-preceded-main-search-reproduction-check.md) for method, scope limits, and results. Status remains "no known current instance," now backed by an actual empirical sweep rather than code-reading confidence alone.
 
+**2026-09-10:** attempted to extend this to `admissible-order-fallback`/`admissible-order-alternate-tiebreak-retry` (reached only after `*-disabled-retry` override stages run) and found the naive extension methodologically invalid, not evidence of a discrepancy: any stage reachable only after a `*-disabled-retry` tier requires reconstructing that tier's hand-rolled ablation-config Proxy overlay for every preceding attempt in the chain, which no diagnostic round did — see [`../reports/2026-09-10-fresh-vs-preceded-late-ladder-extension-attempt-001.md`](../reports/2026-09-10-fresh-vs-preceded-late-ladder-extension-attempt-001.md) for the full diagnosis (predecessor-replay fidelity as low as 6/22 once one `goal-attraction-disabled-retry` override went unreconstructed). `main-search` stays the only stage this blocker's status actually covers; every other stage remains untested by this method.
+
 Required handling:
 
 1. reproduce the action from a freshly prepared state and from the predecessor-stage sequence with identical explicit action/config/seed/work limits;
