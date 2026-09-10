@@ -1,9 +1,9 @@
 # STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL: reach-conditioned confirmation 002 preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-05 — Prior development was +1/-0 with direct mechanism reproduction, confirmation 001 was a clean null, and fresh lifecycle evidence shows goal-attraction-disabled retry starvation on all 605/605 starvation cases among 725 current production-unsolved levels.
-> **Decision:** run confirmation 002 on a cohort selected only from independent historical control-side starvation so the candidate mechanism is genuinely exercised.
-> **Remaining gate:** materialize and freeze the starvation-conditioned cohort, then dispatch matched control/treatment arms and require real tier participation before interpreting efficacy.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-10 — Confirmation-002 ran clean: control (node reserve alone) 14/150 solved vs. treatment (node reserve + fresh work pool) 17/150 — +3/-0, control's solved set a strict subset of treatment's, all three gains (`R01124`, `R02020`, `R02060`) directly attributable to a winning `goal-attraction-disabled-retry` attempt. Tier reach rose 104/150 → 140/150 between arms, zero errors/deadline truncation, symmetric `node-budget-reached` censoring. See "Result" below.
+> **Decision:** promotion supported per the frozen decision rule's first branch (zero losses + treatment-exclusive tier-attributable solve + real participation). Both `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE` and `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` promoted to production default-ON as a validated pair (see "Result" for why both, not the pool alone).
+> **Remaining gate:** none — closed.
 > **Evidence role:** second independent confirmation, conditioned only on historical control-side starvation/reach
 > **Candidate:** `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL`
 > **Control:** `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE`
@@ -92,3 +92,36 @@ Treatment:
 `enable_flags=STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE,STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL`
 
 Use the same committed IDs file for both arms and distinct concurrency suffixes only if parallel dispatch is desired and no shared-run interference exists.
+
+## Result (2026-09-10)
+
+**Execution.** Population materialized per the selection contract: `scripts/stress/materialize-goal-attraction-fresh-work-pool-confirmation-002.mjs` drew 150 of 484 eligible unexposed ids from `buckets.starved.ids` (605 historical control-side starved candidates, 300 distinct prior-exposure ids excluded — development A/B + confirmation-001 + `R00355`), seed `goal-attraction-fresh-work-pool-confirmation-002`. Both arms dispatched via `solver-level-blind-targeted-sweep.yml` on main at commit `7ac1a99`, `node_budget=50000000`, `strict_total_work_budget=false` (the frozen envelope, unchanged), `enable_flags` as specified above and otherwise identical dispatch inputs (same `ids_file`, `corpus`, `workers=4`) — the only intended difference between arms. Both first passes completed the full 150/150 population with zero timeout-recovery needed (`Plan recovery shards for missing ids` skipped on both runs); `validate-solver-sweep-integrity.mjs` confirmed exact population match on both.
+
+**Solved sets.**
+
+- Control: 14/150 — `R02427, R02038, R03014, R01590, R02647, R02815, R02081, R03031, R03137, R02900, R02168, R02915, R03205, R03153`
+- Treatment: 17/150 — control's 14 plus `R01124, R02020, R02060`
+- Gained: `R01124, R02020, R02060` (+3). Lost: none (-0). Control's solved set is a strict subset of treatment's.
+
+**Attribution.** All three gains are directly attributable to the fresh-pool-enabled tier itself: in the treatment arm each shows a `goal-attraction-disabled-retry` attempt with `stageSolved: true` (a single winning attempt, not an incidental earlier-stage solve). In control, `R01124` and `R02020` never reached the tier at all (0 attempts — full starvation); `R02060` reached it (13 attempts, 843,896 nodes) but did not win there.
+
+**Stage reach/participation/starvation conversion** (population-wide, `goal-attraction-disabled-retry`):
+
+| | control | treatment |
+|---|---:|---:|
+| reach (levels with ≥1 attempt) | 104/150 | 140/150 |
+| attempts | 877 | 1,127 |
+| stage solves | 2 (`R02038`, `R03031`) | 5 (`R02038`, `R03031`, `R01124`, `R02020`, `R02060`) |
+| aggregate nodesExpanded | 85,938,206 | 115,366,483 |
+
+Control shows full starvation (zero attempts, zero nodes) on 46/150 levels — the tier never gets a single dispatch before the shared, already-depleting pool is spent. Treatment's own fresh pool is purely additive (never removes an attempt control would have gotten), so the reach increase (+36, 104→140) is the pool converting control-side non-dispatch into genuine treatment dispatch on those levels.
+
+**Work/censoring.** Aggregate `workSpent`: control 30,736,644,907, treatment 30,714,901,902 (net change under 0.1%, no directional cost regression). All 136 (control) / 133 (treatment) remaining unsolved levels carry status `node-budget-reached` — a real, symmetric, enforced stop in both arms. Zero attempt errors, zero `deadlineTruncated` levels, in either arm.
+
+**Effective-configuration agreement.** Both arms' workflow dispatch inputs are identical apart from `enable_flags` (confirmed directly from each run's own dispatch record: same `ids_file`, `corpus`, `node_budget`, `strict_total_work_budget`, `workers`); the workflow has no per-shard config override mechanism, so shards within each arm cannot diverge from that dispatch-level config (see `docs/solver-correctness-hardening.md`'s effective-configuration-contract entry). No gap-fill/recovery pass was needed on either arm.
+
+**Decision rule applied.** Zero losses + three treatment-exclusive solves directly attributable to the fresh-pool-enabled tier + real, substantial treatment participation (93% reach, not a non-participating population) — matches the frozen rule's first branch exactly: **promotion supported.**
+
+**Promotion scope.** The candidate is `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL`, but every A/B in this line (development, confirmation-001, confirmation-002) ran it paired with `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE` also on — the pool's tested value was never isolated from the reserve. Promoting the pool alone would ship an untested combination (pool on, reserve off) in production. Both flags were promoted to default-ON together as the validated unit; `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE`'s earlier "closed, node-dimension-only, negligible" verdict is superseded by this result, which supplies the work-dimension evidence that closure explicitly flagged as missing.
+
+**Applied changes:** both flags removed from `OPT_IN_FEATURES` (`modules/solver/ablation-config.ts`), descriptions updated to reflect default-ON status and this result; `docs/solver-opt-in-experiment-ledger.md` and `docs/solver-optimization-workstreams.md` updated; `orchestration.test.ts`'s opt-in-convention test for this reserve rewritten to assert the new default-ON resolution. Full suite (`npm run ci` equivalent: `check`, `test:unit`, `test:node`, `build`) green; `solver:regression --check` reports 160/160 published-corpus solves with no regressions; CI's 9-level canary unaffected.
