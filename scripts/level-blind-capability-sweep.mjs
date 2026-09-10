@@ -22,6 +22,7 @@ import { createHintCapture } from './hint-capture-lib.mjs';
 import { buildRow } from './portfolio-solve-sweep-lib.mjs';
 import { runWorkerPool } from './solver-worker-pool.mjs';
 import { canonicalAblationFeatureName, FEATURES } from '../modules/solver/ablation-config.js';
+import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from '../modules/solver/stage-budget.js';
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -81,6 +82,13 @@ const earlyRepairSearchAdaptiveMinScale = argMap.has('--early-repair-search-adap
 // Same optional/omitted-means-production-default shape as the flags above.
 const repairLateProbeNodeBudget = argMap.has('--repair-late-probe-node-budget')
     ? Number(argMap.get('--repair-late-probe-node-budget')) : undefined;
+// 2026-09-05 (reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md): lets a
+// matched sweep truncate REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS to its first N entries
+// (e.g. 6 -> exactly salts 1-6) for the 7-vs-6 seed-count confirmation, without editing
+// modules/solver/stage-budget.ts. Same optional/omitted-means-production-default shape as the
+// flags above; experiment-only, not a permanent ablation flag.
+const repairLateProbeMultiSeedRetrySeedCount = argMap.has('--repair-late-probe-multi-seed-retry-seed-count')
+    ? Number(argMap.get('--repair-late-probe-multi-seed-retry-seed-count')) : undefined;
 
 if (admissibleOrderNodeReserveFraction !== undefined &&
     (!Number.isFinite(admissibleOrderNodeReserveFraction) || admissibleOrderNodeReserveFraction < 0 || admissibleOrderNodeReserveFraction > 1)) {
@@ -91,6 +99,13 @@ if (admissibleOrderNodeReserveFraction !== undefined &&
 if (admissibleOrderNonDefaultRetryBudgetFraction !== undefined &&
     (!Number.isFinite(admissibleOrderNonDefaultRetryBudgetFraction) || admissibleOrderNonDefaultRetryBudgetFraction < 0)) {
     console.error('--admissible-order-non-default-retry-budget-fraction must be >= 0.');
+    process.exit(2);
+}
+
+if (repairLateProbeMultiSeedRetrySeedCount !== undefined &&
+    (!Number.isInteger(repairLateProbeMultiSeedRetrySeedCount) || repairLateProbeMultiSeedRetrySeedCount < 0
+        || repairLateProbeMultiSeedRetrySeedCount > REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length)) {
+    console.error(`--repair-late-probe-multi-seed-retry-seed-count must be an integer in [0, ${REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length}].`);
     process.exit(2);
 }
 
@@ -182,6 +197,7 @@ if (Number.isFinite(admissibleOrderNonDefaultRetryBudgetFraction)) solveOpts.adm
 if (Number.isFinite(earlyRepairSearchAdaptiveBadnessGate)) solveOpts.earlyRepairSearchAdaptiveBiasedBadnessGateOverride = earlyRepairSearchAdaptiveBadnessGate;
 if (Number.isFinite(earlyRepairSearchAdaptiveMinScale)) solveOpts.earlyRepairSearchAdaptiveBiasedMinScaleOverride = earlyRepairSearchAdaptiveMinScale;
 if (Number.isFinite(repairLateProbeNodeBudget)) solveOpts.repairLateProbeNodeBudgetOverride = repairLateProbeNodeBudget;
+if (Number.isInteger(repairLateProbeMultiSeedRetrySeedCount)) solveOpts.repairLateProbeMultiSeedRetrySeedCountOverride = repairLateProbeMultiSeedRetrySeedCount;
 if (ablation) solveOpts.ablation = ablation;
 
 // Output-side hint state is deliberately distinct from mechanicsOnlyCorpus. Never pass hintLevels

@@ -3168,6 +3168,42 @@ test('late-repair-multiseed-retry now honors an explicit baseWorkBudget instead 
         'an explicit baseWorkBudget must now size this tier\'s own dose');
 });
 
+// Experiment-only seam for the late-repair-multiseed-retry 7-vs-6 seed-count confirmation
+// (reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md). exhaustingDispatch
+// reports spending exactly the nodeBudget handed to runAttempt, and the small
+// repairLateProbeNodeBudgetOverride: 100 in isolateLateRepairMultiSeedRetryWorkDoseOpts means the
+// FIRST gate attempt of each round always exhausts that round's own 100-node allotment, so exactly
+// one attempt (carrying its round's seedSalt) is recorded per seed round -- this makes the exact
+// sequence of recorded seedSalt values a precise, deterministic proxy for which salts the
+// orchestration loop actually iterated, not just how many attempts happened to be pushed.
+function recordedMultiSeedRetrySeedSalts(result: Awaited<ReturnType<typeof solveLevel>>) {
+    return result.attempts
+        .filter(a => a.stageId === 'late-repair-multiseed-retry')
+        .map(a => a.seedSalt ?? 0);
+}
+
+test('late-repair-multiseed-retry seed-count override omitted: production-equivalent, executes all seven salts 1-7', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const result = await solveLevel(level, isolateLateRepairMultiSeedRetryWorkDoseOpts());
+    assert.deepEqual(recordedMultiSeedRetrySeedSalts(result), [1, 2, 3, 4, 5, 6, 7]);
+});
+
+test('late-repair-multiseed-retry seed-count override = 6: executes exactly salts 1-6, with the seventh round never attempted', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const result = await solveLevel(level, isolateLateRepairMultiSeedRetryWorkDoseOpts({
+        repairLateProbeMultiSeedRetrySeedCountOverride: 6,
+    }));
+    assert.deepEqual(recordedMultiSeedRetrySeedSalts(result), [1, 2, 3, 4, 5, 6]);
+});
+
+test('late-repair-multiseed-retry seed-count override = 0: the tier still "will run" but attempts nothing (empty salt slice)', async () => {
+    const level = makeGoalAttractionDisabledRetryGatedInfeasibleLevel();
+    const result = await solveLevel(level, isolateLateRepairMultiSeedRetryWorkDoseOpts({
+        repairLateProbeMultiSeedRetrySeedCountOverride: 0,
+    }));
+    assert.deepEqual(recordedMultiSeedRetrySeedSalts(result), []);
+});
+
 test('adaptive gate weighting cannot claim more than the remaining tier budget (regression, fixed 2026-08-20)', async () => {
     // adaptiveGateWeight is unbounded above ((share*n)**2 for a gate that has accumulated more
     // than its "fair" 1/n share of nodesExpanded progress) and used to multiply attBudget without
