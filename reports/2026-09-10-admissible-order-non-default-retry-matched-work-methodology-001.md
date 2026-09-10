@@ -1,73 +1,64 @@
-# admissible-order-non-default-retry matched-work methodology: node headroom, not the work fraction, is the actual binding constraint at small scale
+# admissible-order-non-default-retry matched-work confirmation: architecturally unreachable by configuration alone — the search primitive never consults its own soft work cap
 
-> **Status:** inconclusive
-> **Last evidence:** 2026-09-10 — local single-level probes on `R02367` at commit `6931bc468ab26ac6a7367a5028452a3aafbfb5ba`, `--node-budget=50000000`, explicit `--work-budget=100000000`, non-strict, real (non-advisory) node budget, `--admissible-order-non-default-retry-budget-fraction` 1.0 vs 0.18
-> **Decision:** the frozen queue gate ("a matched-work test with nonzero target-stage work") is still not satisfied by any tested configuration so far. This session's local probe gets real, nonzero target-stage participation and correctly-propagated, correctly-sized `allocatedWorkCeiling` values (100,000,000 control / 18,000,000 treatment) — a genuine improvement over confirmation-006's zero-participation result — but the attempt's actual outcome is still byte-identical between arms, because the tier's own stacked NODE ceiling, not its WORK ceiling, is what terminates the attempt in both arms
-> **Remaining gate:** unchanged from `2026-09-10-admissible-order-confirmation-006-artifact-recovery.md` — a matched-work confirmation in which the target stage's *work* ceiling (not its node ceiling) is what actually binds, differently, in the two arms. This report narrows what that requires; it does not supply it
-> **Evidence role:** forensic / methodology preparation — local single-level diagnostic only, no population-scale execution
-> **Selection:** one level (`R02367`), reused from an earlier probe in this same investigation; not a frozen population
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-10 — seven local single-level probes on `R02367` across five distinct budget configurations (node-only bound, explicit finite work-budget at two node scales, strict-mode with a generous ceiling, strict-mode with a ceiling deliberately well below natural need), plus direct code verification of the dispatch path (`modules/solver/attempt-dispatch.ts:40-43`, `modules/solver/admissible-order-search.ts:176-317`)
+> **Decision:** the queue gate ("a matched-work test with nonzero target-stage work in which the work ceiling actually differs the outcome") is **not satisfiable by any CLI/workflow configuration**, because `admissibleOrderNonDefaultConfigs` (all four non-default `ADMISSIBLE_ORDER_PROFILES`: `none`, `mustCrossFirst`, `intersectionHarvest`, `nearClosureRescue`) dispatch exclusively through the plain `admissibleOrderSearch` primitive, which never reads the per-tier soft work cap (`prep._workCap`) that the tier's own `admissibleOrderNonDefaultRetryBudgetFractionOverride`-scaled `withWorkCapScope` call installs. Only the raw node ceiling (always enforced) and the global whole-solve `prep._strictWorkCap` (enforced only under `--strict-total-work-budget`, and only as an incidental whole-solve-wide constraint, never this tier's own scoped allocation) can ever stop this tier's search. This is a code-level architectural gap, not a parameter-tuning problem
+> **Remaining gate:** a genuine confirmation of the `1.0 → 0.18` work-fraction candidate requires a prerequisite code change (making `admissibleOrderSearch`'s hot loop consult `prep._workCap`, mirroring the fix `2026-08-28-admissible-order-work-cap-gap-discovery.md` already proposed-but-did-not-implement for the sibling `admissible-order-fallback` tier) — not further methodology or budget-sizing work. That code change was not made here (out of scope: analysis/preflight only, no solver-behavior changes without explicit direction)
+> **Evidence role:** forensic — local single-level diagnostic plus direct source-code verification, no population-scale execution
+> **Selection:** one level (`R02367`), reused across this investigation's probes; not a frozen population
 
-## Why this report exists
+## Why this supersedes this report's own earlier finding
 
-`2026-09-10-admissible-order-confirmation-006-artifact-recovery.md` established that confirmation-006's own dispatch (`node_budget_advisory_only=true` + `strict_total_work_budget=true`, `node_budget=750,000,000`) gave the target stage (`admissible-order-alternate-tiebreak-retry`) **zero** participation in both arms — `allocatedWorkCeiling: 0` / `workSpent: 0` / `nodesExpanded: 0` on all 256 target-stage attempt records — because the whole-solve strict work cap (`prep._strictWorkCap`, set once at solve start) was already exhausted by earlier ladder tiers before this very-late tier ever ran. The current queue (`docs/solver-optimization-workstreams.md`, item 2A.3) requires a matched-work test with nonzero target-stage work before production's `1.0` fraction can be reconsidered.
-
-This session picked that gate back up as analysis-only preparation (per explicit instruction: determine methodology, do not spend broad compute). The obvious first fix — drop `strict_total_work_budget` and `node_budget_advisory_only`, use a real finite `--node-budget`, and supply an explicit, independently-sized `--work-budget` via the CLI/workflow input built for the six-seed confirmation (`solver-level-blind-targeted-sweep.yml`'s `work_budget` input, `scripts/level-blind-capability-sweep.mjs --work-budget=`) — was tested locally. It fixes the *participation* problem but exposes a **third**, distinct confound.
+An earlier revision of this report (still visible in git history) concluded the binding constraint was the tier's own stacked NODE ceiling being exhausted by earlier ladder tiers at small `node_budget` scale, and recommended re-deriving budgets at a larger scale (matching the 750,000,000 used by confirmation-004/-005/-006) as the next step. That diagnosis was correct as far as it went, but incomplete: further probes at 3x node scale (150,000,000, comfortably more absolute node headroom) and — decisively — with `--strict-total-work-budget` added (the one mode where a per-attempt work check is even theoretically possible for this code path) all reproduced the exact same byte-identical result regardless of the work ceiling's value. That ruled out "not enough node headroom" as the root cause and pointed at something structural, which direct code reading then confirmed.
 
 ## Method
 
-Single level `R02367` (chosen because an earlier probe in this same investigation thread already established it reaches this stage with real, non-starved participation under a real node budget). Two local runs via `scripts/level-blind-capability-sweep.mjs` (through `scripts/run-bundled.mjs`), differing only in `--admissible-order-non-default-retry-budget-fraction`:
+Seven local runs via `scripts/level-blind-capability-sweep.mjs` (through `scripts/run-bundled.mjs`) on level `R02367`, `--lifecycle-telemetry --workers=1`, varying `--node-budget`, `--work-budget`, `--strict-total-work-budget`, and `--admissible-order-non-default-retry-budget-fraction`:
 
+| # | `node_budget` | `work_budget` | strict? | fraction | `allocatedWorkCeiling` | `allocatedNodeCeiling` | `actualWork` | `actualNodes` |
+|---|---:|---:|:---:|---:|---:|---:|---:|---:|
+| 1 | 50,000,000 | (default, derived) | no | 1.0 | (large, derived) | 12,499,809 | 319,965,776¹ | 192,500,001¹ |
+| 2 | 50,000,000 | 100,000,000 | no | 1.0 | 100,000,000 | 12,499,809 | 59,092,879 | 12,499,968 |
+| 3 | 50,000,000 | 100,000,000 | no | 0.18 | 18,000,000 | 12,499,809 | **59,092,879** | 12,499,968 |
+| 4 | 150,000,000 | 500,000,000 | no | 1.0 | 500,000,000 | 37,499,864 | 168,652,151 | 37,499,904 |
+| 5 | 150,000,000 | 500,000,000 | no | 0.18 | 90,000,000 | 37,499,864 | **168,652,151** | 37,499,904 |
+| 6 | 150,000,000 | 1,000,000,000 | **yes** | 0.18 | 180,000,000 | 37,499,797 | **168,652,151** | 37,499,904 |
+| 7 | 150,000,000 | 500,000,000 | **yes** | 0.18 | 90,000,000 | 37,499,864 | **168,652,151** | 37,499,904 |
+
+¹ Whole-solve totals from an earlier unbounded-work-budget probe in this investigation, before an explicit `--work-budget` was introduced; included for context only.
+
+Runs 4/5 are a matched control/treatment pair at 3x node scale with a generous, non-strict work ceiling (fraction never binds either way — consistent with the "node ceiling wins" hypothesis this report originally proposed). Run 6 adds `--strict-total-work-budget` with a ceiling (180,000,000) still above the natural 168,652,151 — inconclusive by construction, since a non-binding ceiling looks the same whether or not it's being checked. **Run 7 is the decisive test**: `--strict-total-work-budget` on, `allocatedWorkCeiling=90,000,000`, well below the 168,652,151 every other run at this node scale naturally consumes. If the strict cap were actually enforced against this tier's own allocation, `actualWork` should truncate near 90,000,000. It does not — `actualWork` and `actualNodes` come back byte-identical to every non-strict run at the same node scale.
+
+## Root cause (code-verified)
+
+`modules/solver/attempt-dispatch.ts:40-43`:
+
+```ts
+return admissibleOrder
+  ? admissibleOrderLds
+    ? admissibleOrderSearchLDS(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
+    : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
 ```
---node-budget=50000000 --work-budget=100000000 --lifecycle-telemetry --workers=1
---admissible-order-non-default-retry-budget-fraction=1.0   (control)
---admissible-order-non-default-retry-budget-fraction=0.18  (treatment)
-```
 
-No `--strict-total-work-budget`, no advisory-only node budget — `--node-budget` is real and applies to the whole solve, same as every earlier tier.
+`modules/solver/attempts.ts:226`: `ADMISSIBLE_ORDER_PROFILES = ['default', 'none', 'mustCrossFirst', 'intersectionHarvest', 'nearClosureRescue']`. Per `2026-08-28-admissible-order-work-cap-gap-discovery.md`'s own established finding, `admissibleOrderLds` is never set `true` by ordinary config generation (`getAttemptConfigs`/`ADMISSIBLE_ORDER_PROFILES`) — it is exclusively a `method-probe.mjs` research-tool construct. So every config in `admissibleOrderNonDefaultConfigs` (`orchestration.ts:1847`, `admissibleOrderConfigs.filter(c => c.scoringProfileId !== 'default')` — all four non-`default` profiles) dispatches through the plain `admissibleOrderSearch`, never `admissibleOrderSearchLDS`.
 
-## Result
+`modules/solver/admissible-order-search.ts`:
+- `admissibleOrderSearch` (line 176): its hot-loop checks are `prep._strictWorkCap !== undefined && prep._workMeter.units >= prep._strictWorkCap` (lines 189, 213) — **the global, whole-solve-cumulative strict cap only**, undefined and therefore never true under non-strict semantics.
+- `admissibleOrderSearchLDS` (line 296): its check is `prep._workMeter.units >= (prep._workCap ?? Infinity)` (line 317) — **the per-tier soft cap** `withWorkCapScope` installs. Unreachable from this tier's ordinary dispatch.
 
-Both arms: whole-solve `status=node-budget-reached`, `ok=false`, `workSpent≈311.5M`, `nodesExpanded≈192,500,020` (level does not solve either way, consistent with `2026-09-05-admissible-order-tiebreak-production-exposure-001.md`'s finding that only `tieBreak=none` ever wins a real production solve — this level's ladder never gets there).
+The tier's own call site (`orchestration.ts:2479`, `withWorkCapScope(prep, prep._workMeter.units + nonDefaultRetryWorkBudget, ...)`) genuinely computes a correctly fraction-scaled number and installs it as `prep._workCap` — this is real, and it is exactly why `allocatedWorkCeiling` in the telemetry always shows the right, fraction-differentiated value. But nothing downstream of that ever reads `prep._workCap` for this tier's actual search. Even under `--strict-total-work-budget` (run 7), the check that *does* fire (`prep._strictWorkCap`) is a global cumulative one set once at solve start (`workStart + workBudget`) — it has nothing to do with this tier's own fraction-scaled slice, and in practice never bound at any node/work scale tried, because the whole ladder's cumulative consumption by the time this dead-last tier runs was always comfortably under whatever generous strict total was chosen. Only the raw `remainingNodeBudget` argument passed directly into `admissibleOrderSearch` (checked far more frequently, inside the search's own node-expansion loop, not shown above) ever actually terminates this tier's attempt.
 
-Target-stage (`admissible-order-alternate-tiebreak-retry`) lifecycle, one attempt in each arm:
+This is the same structural gap `2026-08-28-admissible-order-work-cap-gap-discovery.md` already proved for the sibling `admissible-order-fallback` tier — but that report's own "What this does not establish" section explicitly declined to claim coverage of `admissible-order-non-default-retry`, reasoning it "already installs a fresh cap" (verified only at the orchestration/dispatch level, i.e. that `withWorkCapScope` is called with a correctly-computed number). This report closes that gap: installing the cap and the search primitive consulting it are different things, and for this tier's actual dispatch path, only the first is true.
 
-| | control (fraction=1.0) | treatment (fraction=0.18) |
-|---|---:|---:|
-| `allocatedWorkCeiling` | 100,000,000 | 18,000,000 |
-| `allocatedNodeCeilings` | 12,499,809 | 12,499,809 |
-| `allocatedBudgetMs` | 86,400,000 | 15,552,000 |
-| `actualWork` / `workSpent` | 59,092,879 | 59,092,879 |
-| `actualNodes` / `nodesExpanded` | 12,499,968 | 12,499,968 |
-| `attempt.outcome` | `timed-out` | `timed-out` |
+## What this means for the queue gate
 
-The fraction propagates correctly this time (unlike confirmation-006, `allocatedWorkCeiling` genuinely differs 100M vs 18M, and `allocatedBudgetMs` genuinely differs too), and the tier gets real, nonzero, identical-magnitude participation in both arms — a real fix of the confirmation-006 problem. But `workSpent` (59,092,879) **exceeds** the treatment's own `allocatedWorkCeiling` (18,000,000), and is byte-identical to control's, which has a >5x larger ceiling. The work ceiling never actually binds in either arm.
+The candidate's premise — "does reducing `admissible_order_non_default_retry_budget_fraction` from `1.0` to `0.18` cost solves for a work saving" — cannot be tested by any combination of `node_budget`, `work_budget`, or `strict_total_work_budget` values, local or population-scale, because the fraction's only effects (`allocatedWorkCeiling` in telemetry, `nonDefaultRetryTotalBudget`'s wall-clock slice) are either never consulted by the search (`prep._workCap`) or dominated in practice by the real node ceiling and the ms deadline, neither of which the fraction touches independent of its work-budget scaling. Every prior non-informative result in this candidate's confirmation history (`-001` through `-006`, plus this session's own probes) is consistent with this: the fraction has never had a code path capable of making it bind.
 
-## Root cause
-
-`allocatedNodeCeilings: [12,499,809]` is identical in both arms and matches `actualNodes` almost exactly (off by 159 — one node-check granularity). This is `nonDefaultRetryNodeCeiling - prep._metrics.nodesExpanded` at the moment this tier starts (`modules/solver/orchestration.ts:2497`, `remainingNodeBudget`), where `nonDefaultRetryNodeCeiling = nodeBudget + floor(nodeBudget * ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION)` = `50,000,000 + floor(50,000,000 * 0.5)` = `75,000,000` (`modules/solver/stage-budget.ts:503,1100-1103`). Since `allocatedNodeCeilings` came out to 12,499,809, the earlier ladder (main search, repair fallback, goal-attraction-disabled-retry, coarse-state-near-tie-retention-disabled-retry, connectivity-axis-exhausted retry, etc. — every tier that runs before this one) had already driven `nodesExpanded` to `75,000,000 - 12,499,809 = 62,500,191` — **more than the base `nodeBudget` itself** — before this tier's single attempt ever starts.
-
-So this tier's own stacked NODE ceiling, not its WORK ceiling, is what actually terminates its attempt here, and that node ceiling is a residual leftover of everything upstream, not a function of this tier's own fraction at all. The `admissibleOrderNonDefaultRetryBudgetFractionOverride` CLI flag only scales the WORK axis (`scaledStageWorkBudget(workBudget, fraction, ...)`) and the wall-clock axis (`nonDefaultRetryTotalBudget = floor(timeBudgetMs * fraction)`) — it has no effect on `ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION`, which is a separate, already-production-validated constant (`stage-budget.ts:503`, promoted 2026-08-15, population-confirmed +45/0 at the time). Changing that reserve fraction as part of this confirmation would confound it against actual production behavior, so it is not a lever this confirmation should pull.
-
-This is a **third, distinct** failure mode in this candidate's confirmation history, different from both:
-- confirmation-001's raw node-cap-too-early problem, and
-- confirmation-006's whole-solve strict-cap-exhausted-by-earlier-tiers problem (zero participation, `2026-09-10-admissible-order-confirmation-006-artifact-recovery.md`).
-
-Here participation is real and the work axis is correctly wired, but the **node** axis (not the work axis under test) is what happens to bind, because `node_budget=50,000,000` is small enough that the whole ladder consumes more than one full `nodeBudget`'s worth of nodes before this last-resort tier's turn comes — leaving a small, fraction-independent node headroom that happens to be almost exactly what one attempt needs here (~12.5M nodes ≈ 59M work), for both arms.
-
-## Why this is plausibly a small-scale artifact, not necessarily true at the confirmation's actual dispatch scale
-
-Every population-scale dispatch of this candidate so far (`-004`, `-005`, `-006`) used `node_budget=750,000,000` — 15x this probe's local `50,000,000`. At that scale, the same tier's additive reserve is `0.5 * 750,000,000 = 375,000,000`, and if earlier tiers consume a similar *proportion* of the stacked ceiling (rather than a similar *absolute* amount), the absolute node headroom left for this tier at dispatch scale would be roughly 15x larger too — plausibly large enough that the node axis stops binding and the (correctly-sized) work axis could become the real differentiator instead. This is a plausible hypothesis, not verified evidence: it has not been checked at 750M scale, locally or otherwise, in this session.
-
-## What would still be needed before a valid confirmation
-
-1. Confirm (a cheap qualitative check, not necessarily a full local solve) whether node headroom for this tier scales the way hypothesized above at `node_budget=750,000,000`, or pick a `node_budget` scale where it demonstrably does not bind.
-2. Re-derive the explicit `--work-budget` candidate at whatever `node_budget` scale is chosen, sized from real natural-need evidence (the existing `2026-09-03-admissible-order-profile-cost-probe-preflight.md` census — median 3.8-4.1M, mean 4.6-5.6M work when solving under an isolated 20M cap — plus this session's own failing-level natural-exhaustion figure, ~59M work at 50M node scale) so that `0.18 * work_budget` is genuinely below natural need (binds) while `1.0 * work_budget` stays comfortably above it (non-binding, production-equivalent).
-3. Re-validate on at least one more representative level once both axes are sized, confirming the work ceiling — not the node ceiling — is what differs between arms before any population dispatch.
-
-None of this was executed here: per the governing instruction for this queue item, this session performed diagnosis and methodology only and did not spend further local or population-scale compute past the single-level check above.
+A genuine confirmation would require a prerequisite code change — install a `prep._workCap` (or equivalent) check inside `admissibleOrderSearch`'s hot loop, matching `admissibleOrderSearchLDS`'s existing pattern — before any matched-work A/B of the fraction is meaningful. Per `2026-08-28-admissible-order-work-cap-gap-discovery.md`'s own stated standard for exactly this kind of change ("a genuine behavior-changing addition... needs evidence before being executed, not just a plausibility argument"), that is a real, separate, behavior-affecting code change requiring its own validation — not something to fold into a confirmation dispatch's parameter choices, and not made here.
 
 ## What this does not establish
 
-- Does not establish a validated node_budget/work_budget pair for the actual confirmation — only rules out the specific small-scale local pair tried here and explains precisely why it failed to differentiate.
-- Does not revisit whether `ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION` (0.5, production-validated) itself needs adjustment — it should not be touched by this confirmation.
-- Does not change production disposition: the fraction stays `1.0` pending a genuinely matched-work confirmation.
+- Does not establish that shrinking this tier's work allocation would or would not cost solves in practice — the question remains genuinely open, just untestable via the current code path.
+- Does not touch `admissible-order-fallback`'s own already-closed finding (`2026-08-28-admissible-order-work-cap-gap-discovery.md`) — this report corrects that report's disclaimed-but-unverified assumption about the sibling tier, it does not reopen the fallback tier's own closed question.
+- Does not implement the prerequisite code fix, evaluate its safety, or estimate its likely effect — that is future work, gated on an explicit decision to pursue it, not something this analysis-only pass should decide unilaterally.
+- Does not change production disposition: the fraction stays `1.0`.
