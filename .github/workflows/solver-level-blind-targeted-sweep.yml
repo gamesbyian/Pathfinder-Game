@@ -70,6 +70,10 @@ on:
         description: 'An id predicted to take >= target_wall_minutes * this multiplier gets its own dedicated shard instead of being packed with others.'
         required: false
         default: '2.5'
+      min_timeout_minutes:
+        description: 'Floor under every shard''s timeout-minutes, regardless of how low its telemetry-predicted wall time is. Raise this above the 30-minute default when this population''s real per-level cost under THIS resolved config is already known (from a prior run) to exceed what corpus2-runtime-telemetry.json predicts -- that telemetry reflects whatever config last refreshed it, not necessarily this dispatch''s flags/budget.'
+        required: false
+        default: '30'
       seed:
         description: "Shard-packing tie-break shuffle seed (blank = derived from this run's id)."
         required: false
@@ -270,6 +274,7 @@ jobs:
             --workers="${{ inputs.workers }}" \
             --target-wall-minutes="${{ inputs.target_wall_minutes }}" \
             --solo-threshold-multiplier="${{ inputs.solo_threshold_multiplier }}" \
+            --min-timeout-minutes="${{ inputs.min_timeout_minutes }}" \
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-targeted-sweep/shard-plan.json

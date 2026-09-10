@@ -27,6 +27,16 @@ const nodeBudget = Number(req('--node-budget'));
 const workers = args.has('--workers') ? Number(args.get('--workers')) : 4;
 const targetWallMinutes = args.has('--target-wall-minutes') ? Number(args.get('--target-wall-minutes')) : 18;
 const soloThresholdMultiplier = args.has('--solo-threshold-multiplier') ? Number(args.get('--solo-threshold-multiplier')) : 2.5;
+// Floor under every shard's timeout, regardless of how low its telemetry-predicted wall time is.
+// Was a hardcoded 30 with no override until 2026-09-10: a telemetry-vs-real-cost mismatch this
+// severe recurred twice in one day on the same research line (connectivity-volume-*) -- once on a
+// packed multi-level bin (control-arm gap-fill, run 34414099319) and once on a population-wide
+// dispatch where even single-level solo-shard costs plausibly exceed 30 minutes (treatment arm,
+// run 34425486566: one 23-level packed shard completed only 5 levels in 40 minutes at 4-way
+// concurrency, ~32 worker-minutes/level). A caller that already knows a population's real cost
+// exceeds the default floor needs a way to raise it without also having to fabricate fake
+// telemetry or pack multiple levels together (which only compounds the underestimate).
+const minTimeoutMinutes = args.has('--min-timeout-minutes') ? Number(args.get('--min-timeout-minutes')) : 30;
 const seed = args.get('--seed') || new Date().toISOString().slice(0, 10);
 // GHA matrix runs cap at 256 jobs; keep a small default margin.
 const maxShards = args.has('--max-shards') ? Number(args.get('--max-shards')) : 250;
@@ -119,16 +129,16 @@ const shardDefs = [];
 for (const id of soloIds) {
     const ms = predictedMsById.get(id);
     const wallMinutes = Math.ceil(ms / 60_000);
-    shardDefs.push({ ids: [id], predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(30, Math.ceil(wallMinutes * 1.5) + 10) });
+    shardDefs.push({ ids: [id], predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(minTimeoutMinutes, Math.ceil(wallMinutes * 1.5) + 10) });
 }
 for (const bin of bins) {
     const wallMinutes = Math.ceil(bin.sumMs / workers / 60_000);
-    shardDefs.push({ ids: bin.ids, predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(30, Math.ceil(wallMinutes * 1.5) + 10) });
+    shardDefs.push({ ids: bin.ids, predictedWallMinutes: wallMinutes, timeoutMinutes: Math.max(minTimeoutMinutes, Math.ceil(wallMinutes * 1.5) + 10) });
 }
 
 // Corpus-1 stragglers run sequentially before Corpus-2 in their assigned jobs and have no C2 EMA,
 // so add a conservative target-wall-sized timeout allowance.
-const c1TimeoutMinutes = Math.max(30, Math.ceil(targetWallMinutes * 1.5));
+const c1TimeoutMinutes = Math.max(minTimeoutMinutes, Math.ceil(targetWallMinutes * 1.5));
 
 const shard = shardDefs.map((d, i) => {
     const idx = String(i + 1).padStart(3, '0');
