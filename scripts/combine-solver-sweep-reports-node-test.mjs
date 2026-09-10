@@ -221,6 +221,33 @@ async function main() {
         await assert.rejects(() => run([`--in=${batch1},${duplicatePosition}`, `--out=${outFile}`]), /Duplicate level position 1/);
         console.log('  ✓ rejects duplicate level positions even when ids differ');
 
+        // Cross-run reconciliation (e.g. an original dispatch plus gap-fill dispatches for ids
+        // that individually timed out) feeds this tool's OWN previously-flattened output back in as
+        // input -- no `summary` wrapper, budgetMs/corpus/etc. sit at the top level -- so combining
+        // must be idempotent rather than requiring a raw {summary, levels} shard shape every time.
+        const flatSource1 = path.join(tempDir, 'flat-source-01.json');
+        const flatSource2 = path.join(tempDir, 'flat-source-02.json');
+        await run([`--in=${batch1}`, `--out=${flatSource1}`]);
+        await writeFile(flatSource2, JSON.stringify({
+            commitSha: 'abc123', corpus: 'data/stress/stress-levels-random.json', budgetMs: 8000, nodeBudget: 50000000,
+            levels: [{ level: 2, id: 'R00002', ok: true, status: 'success', totalMs: 200, elapsedMs: 200, attempts: [], attemptCount: 0, failedStrategies: [] }],
+        }));
+        const reconciled = path.join(tempDir, 'reconciled.json');
+        await run([`--in=${flatSource1},${flatSource2}`, `--out=${reconciled}`]);
+        const reconciledReport = JSON.parse(await readFile(reconciled, 'utf8'));
+        assert.equal(reconciledReport.levels.length, 2, 'both already-flattened sources merged into one population');
+        assert.deepEqual(reconciledReport.levels.map(l => l.id).sort(), ['R00001', 'R00002']);
+        assert.equal(reconciledReport.solved, 2);
+        console.log('  ✓ re-combines already-flattened reports (cross-run reconciliation) idempotently');
+
+        const flatMismatch = path.join(tempDir, 'flat-mismatch.json');
+        await writeFile(flatMismatch, JSON.stringify({
+            corpus: 'data/stress/stress-levels-random.json', budgetMs: 99999,
+            levels: [{ level: 3, id: 'R00003', ok: true }],
+        }));
+        await assert.rejects(() => run([`--in=${flatSource1},${flatMismatch}`, `--out=${reconciled}`]), /Mismatched budgetMs/);
+        console.log('  ✓ still enforces budgetMs agreement across already-flattened sources');
+
         const nb1 = path.join(tempDir, 'nb-01.json');
         const nb2 = path.join(tempDir, 'nb-02.json');
         const nbOut = path.join(tempDir, 'combined-nb.json');
