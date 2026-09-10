@@ -54,6 +54,10 @@ on:
         description: 'If true, enforce the derived work budget as a true whole-solve ceiling. Default false preserves legacy additive-pass semantics. Mandatory (and enforced) when node_budget_advisory_only=true -- see that input''s own description.'
         required: false
         default: 'false'
+      work_budget:
+        description: 'Optional explicit per-level work ceiling, independent of node_budget. Blank (default) preserves existing behavior exactly: work_budget is derived as node_budget * 1.34, same as always. A supplied value replaces ONLY that derived number passed to --work-budget on the actual solve -- it does not change whether --node-budget is passed (node_budget_advisory_only still controls that) and does not change the shard planner''s own capacity/timeout sizing, which stays keyed to node_budget (real node consumption, not work, is what telemetry predicts). Use this to set a genuinely independent STRICT work ceiling (with strict_total_work_budget=true) while node_budget keeps bounding the search as a real, enforced cap -- the combination node_budget_advisory_only=true otherwise forces (removing the node cap entirely) is not always what a comparison needs. See docs/solver-correctness-hardening.md and reports/2026-09-10-repair-late-probe-six-seed-envelope-audit-001.md for why this was added.'
+        required: false
+        default: ''
       budget_ms:
         description: 'Per-level wall-safety deadline. Default 24h is intentionally non-binding; allocation is governed by node/work inputs, with additive tiers unless strict_total_work_budget=true.'
         required: false
@@ -256,7 +260,8 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
-          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          work="${{ inputs.work_budget }}"
+          [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           nodebudget=()
@@ -354,7 +359,8 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
-          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          work="${{ inputs.work_budget }}"
+          [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           nodebudget=()
@@ -654,7 +660,8 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
-          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          work="${{ inputs.work_budget }}"
+          [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
           nodebudget=()
