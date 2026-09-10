@@ -106,7 +106,13 @@ jobs:
   plan:
     name: Select stratified sample and plan shards
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 30, not the planning bookkeeping's own few-second cost: the execution-family canary step
+    # below does one real full-node_budget, single-worker solve under this dispatch's exact
+    # resolved config, and this job's own timeout applies to that solve too. A 10-minute plan-job
+    # budget killed a sibling workflow's real dispatch on 2026-09-10 (solver-level-blind-targeted-
+    # sweep.yml) before its shard planner ever ran. 30 matches the shard planner's own solo-shard
+    # floor (plan-highbudget-shards.mjs: max(30, ...)).
+    timeout-minutes: 30
     permissions:
       contents: read
     outputs:
@@ -147,23 +153,25 @@ jobs:
       - name: 'Execution-family canary: verify the resolved config on one representative level'
         # See scripts/verify-canary-cell.mjs's own header comment and solver-level-blind-targeted-
         # sweep.yml's identical step for the full rationale (docs/solver-research-operating-
-        # model.md's "before expensive decision-bearing runs" checklist, gate #4). Uses the first
-        # id in the just-selected eligible/control sample (already corpus-2, the population this
-        # flag can affect), under the exact resolved flags/gate/budget the real shards will use.
+        # model.md's "before expensive decision-bearing runs" checklist, gate #4), under the exact
+        # resolved flags/gate/budget the real shards will use.
+        #
+        # Deliberately corpus position 1, NOT the first id in the just-selected eligible/control
+        # sample: verify-canary-cell.mjs checks structural sanity only (crash, zero attempts,
+        # malformed fields, unexpected deadline truncation), never stage participation, so using an
+        # "eligible" (and often harder-to-solve) sample level buys no real verification value here
+        # while risking exactly what took down a sibling workflow's real dispatch on 2026-09-10
+        # (solver-level-blind-targeted-sweep.yml, run 34423190297: canary alone ran past 9m28s,
+        # killed by the plan job's own timeout before the shard planner ever ran). Position 1 is one
+        # of the known-fast, known-solvable levels recorded in logs/solver-canary-baseline.json
+        # (solved in ~300ms under production defaults); a config that is fundamentally broken --
+        # the actual thing this canary checks for -- misbehaves on ANY level, not only hard ones.
         shell: bash
         env:
           DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
         run: |
           set -euo pipefail
-          export CANARY_ID=$(head -n1 logs/solver-early-repair-search-adaptive-sample/sample.txt)
-          canary_pos=$(node -e "
-            const fs = require('node:fs');
-            const corpus = JSON.parse(fs.readFileSync('data/stress/stress-levels-random.json', 'utf8'));
-            const levels = Array.isArray(corpus) ? corpus : corpus.levels;
-            const idx = levels.findIndex(lv => lv.id === process.env.CANARY_ID);
-            if (idx === -1) { console.error(\`canary id \${process.env.CANARY_ID} not found in data/stress/stress-levels-random.json\`); process.exit(1); }
-            console.log(idx + 1);
-          ")
+          canary_pos=1
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
