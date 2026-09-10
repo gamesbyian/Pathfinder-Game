@@ -1,0 +1,153 @@
+name: Solver combine sweep runs (cross-run reconciliation)
+
+# Merges N sibling dispatches of solver-level-blind-targeted-sweep.yml (or any workflow that
+# publishes the same "solver-sweep-result" artifact shape) that together cover ONE frozen
+# population -- e.g. an original dispatch plus one or more gap-fill dispatches for ids that
+# individually timed out. This is thin cross-run-fetch glue only: the actual combining,
+# population-completeness validation, and per-stage summary all reuse the same scripts the
+# single-dispatch workflows already use (combine-solver-sweep-reports.mjs,
+# validate-solver-sweep-integrity.mjs, summarize-targeted-sweep-work.mjs,
+# publish-solver-sweep-result.mjs) so a reconciled report is indistinguishable in shape from a
+# report produced by a single successful dispatch.
+on:
+  workflow_dispatch:
+    inputs:
+      run_ids:
+        description: 'Comma-separated workflow run IDs whose solver-sweep-result artifact should be merged (e.g. an original dispatch + its gap-fill dispatches).'
+        required: true
+      artifact_name:
+        description: 'Artifact name to fetch from each run.'
+        required: false
+        default: 'solver-sweep-result'
+      expected_ids_file:
+        description: 'Path (in this checkout) to the frozen ids file the merged population must exactly match.'
+        required: true
+      label:
+        description: 'Short label used for output paths and the published artifact name.'
+        required: true
+      highlight_stages:
+        description: 'Optional comma-separated stage ids to print a per-level breakdown for.'
+        required: false
+        default: ''
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  combine:
+    name: Combine ${{ inputs.label }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download every source run's artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p logs/solver-combined/sources
+          # gh run download, not actions/download-artifact's cross-run path: this repository has
+          # measured that path silently dropping pages of results (see harvest-solver-evidence.yml's
+          # own note). One artifact per run here, but stay consistent with the house convention.
+          IFS=',' read -ra RUN_IDS <<< "${{ inputs.run_ids }}"
+          for run_id in "${RUN_IDS[@]}"; do
+            run_id="$(echo "$run_id" | tr -d '[:space:]')"
+            [ -n "$run_id" ] || continue
+            dest="logs/solver-combined/sources/${run_id}"
+            mkdir -p "$dest"
+            gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "${{ inputs.artifact_name }}" --dir "$dest"
+            if [ ! -f "$dest/result.json" ]; then
+              echo "Run $run_id's ${{ inputs.artifact_name }} artifact has no result.json at its root." >&2
+              exit 1
+            fi
+          done
+
+      - name: Combine every source run's report into one
+        shell: bash
+        run: |
+          FILES=$(find logs/solver-combined/sources -mindepth 2 -maxdepth 2 -name result.json | sort | paste -sd, -)
+          if [ -z "$FILES" ]; then
+            echo "No source result.json files found -- check run_ids." >&2
+            exit 1
+          fi
+          node scripts/combine-solver-sweep-reports.mjs --in="${FILES}" --out=logs/solver-combined/combined.json
+
+      - name: Validate exact population completeness
+        shell: bash
+        run: |
+          node scripts/validate-solver-sweep-integrity.mjs \
+            --expected-ids="${{ inputs.expected_ids_file }}" \
+            --result=logs/solver-combined/combined.json
+
+      - name: Print a solved-count summary to the job log
+        if: always()
+        shell: bash
+        run: |
+          node -e "
+          let d;
+          try {
+            d = JSON.parse(require('fs').readFileSync('logs/solver-combined/combined.json', 'utf8'));
+          } catch (e) {
+            console.log('No combined.json present (' + e.message + ') -- combining likely failed before writing output.');
+            process.exit(0);
+          }
+          const solved = d.levels.filter(l => l.ok).length;
+          console.log('Combined sweep: ' + solved + '/' + d.levels.length + ' solved.');
+          console.log('Solved: ' + d.levels.filter(l => l.ok).map(l => l.id).join(', '));
+          console.log('Unsolved: ' + d.levels.filter(l => !l.ok).map(l => l.id + ' (' + l.status + ')').join(', '));
+          "
+
+      - name: Print an aggregate/per-level workSpent and per-stage breakdown to the job log
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -f logs/solver-combined/combined.json ]; then
+            echo "No combined.json present -- combining likely failed before writing output."
+            exit 0
+          fi
+          extra=()
+          [ -n "${{ inputs.highlight_stages }}" ] && extra+=("--stage=${{ inputs.highlight_stages }}")
+          node scripts/summarize-targeted-sweep-work.mjs --in=logs/solver-combined/combined.json "${extra[@]}"
+
+      - name: Upload the combined result as an artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.label }}-combined
+          path: logs/solver-combined/combined.json
+          retention-days: 90
+
+      - name: Publish standard solver sweep result
+        if: always()
+        shell: bash
+        run: |
+          node scripts/publish-solver-sweep-result.mjs \
+            --primary="logs/solver-combined/combined.json" \
+            --include="${{ inputs.expected_ids_file }}" \
+            --shards-expected="$(echo '${{ inputs.run_ids }}' | tr ',' '\n' | grep -c .)" \
+            --shards-observed="$(find logs/solver-combined/sources -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
+            --shards-basis="source runs merged; exact expected population validated separately" \
+            --source-artifact="${{ inputs.label }}-combined"
+
+      - name: Upload standard solver sweep result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: solver-sweep-result
+          path: logs/solver-sweep-result/
+          if-no-files-found: error
+          retention-days: 90
