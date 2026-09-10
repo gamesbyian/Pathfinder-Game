@@ -1,0 +1,46 @@
+{
+  "experiment": "goal-attraction-fresh-work-pool-confirmation-002",
+  "corpus": "corpus2",
+  "seed": "goal-attraction-fresh-work-pool-confirmation-002",
+  "sampleSize": 150,
+  "selectionSource": {
+    "path": "reports/stress/capability-runs/33841017634/lifecycle-failure-map-corpus2.json",
+    "bucket": "buckets.starved.ids",
+    "historicalCandidateCount": 605,
+    "contentSha256": "3a3dcb79fea9f9ad3f82dbb64b4a4accb37a9d525a69168bb605de5c7f6b419a"
+  },
+  "exclusions": {
+    "files": [
+      {
+        "path": "data/stress/goal-attraction-disabled-retry-fresh-work-pool-ab-001-ids.txt",
+        "ids": 150,
+        "contentSha256": "47b56f17676c94fe6e0a51018fe7c8eafa17e6c9db3fd95bb8bef337d2eb83a1"
+      },
+      {
+        "path": "data/stress/goal-attraction-fresh-work-pool-confirmation-001-ids.txt",
+        "ids": 150,
+        "contentSha256": "7e8e0183a58d67a0adb67ae245f04e1d3a1dec0ae8c94a20a1ff04b9eafbe058"
+      }
+    ],
+    "explicitTuningIds": [
+      "R00355"
+    ],
+    "distinctPriorExposureIds": 300
+  },
+  "eligibleHistoricalStarvedIdsAfterExclusions": 484,
+  "outputs": {
+    "population": {
+      "path": "data/stress/goal-attraction-fresh-work-pool-confirmation-002-population.json",
+      "sha256": "bd48685ce51bd30fc60750720bf8c42b35e56eee55940c608f101ffa61e380af"
+    },
+    "ids": {
+      "path": "data/stress/goal-attraction-fresh-work-pool-confirmation-002-ids.txt",
+      "sha256": "3c01cf73988b4fb06700fe8428ae8c7682d5ca8c62b97cb3a14bab9855f4ac84"
+    }
+  },
+  "invariants": {
+    "allSampledIdsHistoricallyStarved": true,
+    "overlapWithPriorExposure": 0,
+    "uniqueSampledIds": 150
+  }
+}
