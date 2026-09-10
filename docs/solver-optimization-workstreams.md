@@ -40,7 +40,7 @@ Treat independently:
 After portal restoration and 2A, refresh the production ladder/capability map, then:
 
 - **Flag-inert dispatch/full-population repricing:** equal-total-work repricing only after refresh. [`Portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md)
-- **Resumable portfolio:** portfolio-18 first pass + same-policy continuation inside 67M; exact continuation must be correct at widths 2000/5000 first. [`Preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md)
+- **Resumable portfolio:** portfolio-18 first pass + same-policy continuation inside 67M. Production-width (2000/5000) continuation capture is now implemented and validated (bounded-overshoot form, single-digit-percent measured overshoot, 2026-09-10) — the engineering prerequisite is met; next is the fixed-work development A/B itself. [`Preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md)
 - **Priced residual lane:** recompute the isolated-winner residue after restoration/2A, separating missing from failed exposure and protecting specialists. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
 
 ### 2. Workstream 1: automatic solver action selection

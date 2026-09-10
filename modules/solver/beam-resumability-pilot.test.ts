@@ -197,23 +197,25 @@ test('beam pause/resume: captureContinuationOnBudgetExit pauses at prep._workCap
   assertEquivalent({ result, workUnits: prep._workMeter.units, nodesExpanded: prep._metrics.nodesExpanded }, reference, 'work-cap pause/resume');
 });
 
-// Locks in a real discovery from running the rung-2 pilot script (see search.ts's own
-// "CAVEAT (found running the rung-2 pilot...)" comment and reports/2026-09-03-beam-policy-switch-
-// complementarity-pilot-001.md's "Finding 1"): the SEPARATE mid-phase budget check (every 256
-// frontier nodes, inside one phase's own candidate walk) evaluates unconditionally, independent of
-// prep._workCap's size, so for any beamWidth > 256 it always notices a crossed cap before the
-// top-of-loop check gets a turn, once a single phase's own frontier is actually bigger than 256 --
-// captureContinuationOnBudgetExit then silently never fires (no error, just a plain timeout,
-// identical to leaving the flag off). Rather than relying on organic multi-phase branching to grow
-// a >256 frontier (calibration on several real level shapes found coarse-state-merge collapses
-// candidates down well before that on every level shape tried), this manufactures an oversized
-// frontier directly: pause a real, valid, small SOLVED_LEVEL search after one phase, then splice
-// its own single frontier node 300 times into a synthetic resumeFrom. Every one of those 300
-// "positions" is byte-identical and legitimately reachable (it's a real captured node, just
-// listed many times) -- the mid-phase check only counts iterations of the walk, so this is a
-// faithful, minimal way to force a >256-node single phase without needing a level big enough to
-// grow one organically.
-test('beam pause/resume: captureContinuationOnBudgetExit cannot capture past the mid-phase check once a phase is bigger than 256, at beamWidth > 256', async () => {
+// Historical discovery from running the rung-2 pilot script (see search.ts's own historical CAVEAT
+// comment and reports/2026-09-03-beam-policy-switch-complementarity-pilot-001.md's "Finding 1"):
+// the separate mid-phase budget check (every 256 frontier nodes, inside one phase's own candidate
+// walk) used to evaluate unconditionally, independent of prep._workCap's size, so for any
+// beamWidth > 256 it always noticed a crossed cap before the top-of-loop check got a turn, once a
+// single phase's own frontier was actually bigger than 256 -- captureContinuationOnBudgetExit then
+// silently never fired. FIXED 2026-09-10 (search.ts's own "RESOLUTION" comment): a capturing caller
+// now skips the mid-phase early exit entirely, so this same >256-node scenario captures correctly
+// at the next phase boundary instead. This test now proves the FIX, not the historical limitation.
+//
+// Rather than relying on organic multi-phase branching to grow a >256 frontier (calibration on
+// several real level shapes found coarse-state-merge collapses candidates down well before that on
+// every level shape tried), this manufactures an oversized frontier directly: pause a real, valid,
+// small SOLVED_LEVEL search after one phase, then splice its own single frontier node 300 times
+// into a synthetic resumeFrom. Every one of those 300 "positions" is byte-identical and legitimately
+// reachable (it's a real captured node, just listed many times) -- the mid-phase check only counts
+// iterations of the walk, so this is a faithful, minimal way to force a >256-node single phase
+// without needing a level big enough to grow one organically.
+test('beam pause/resume: captureContinuationOnBudgetExit now captures a phase bigger than 256, at beamWidth > 256, via the bounded-overshoot mid-phase skip', async () => {
   const seedPrep = prepLevel(SOLVED_LEVEL);
   seedPrep._cfg = null;
   const seedOut: { pausedContinuation?: BeamContinuation } = {};
@@ -224,20 +226,28 @@ test('beam pause/resume: captureContinuationOnBudgetExit cannot capture past the
 
   // Resume with the SAME startKey/level/prep the continuation was captured against (seedPrep) --
   // search.ts's runtime ownership assertion (2026-09-09, historical regression-risk audit item #5)
-  // now rejects a resumeFrom call against a different prep instance, which an earlier version of
-  // this test did (a fresh prepLevel(SOLVED_LEVEL) call), relying on prep._workCap being compared
-  // against a workMeter that approximated nodesExpandedTotal only because it started at zero. Using
-  // seedPrep's own CURRENT prep._workMeter.units directly is both the fix for that ownership
-  // violation and a strictly more accurate cap than the old node-count approximation.
-  seedPrep._workCap = seedPrep._workMeter.units + 200; // well inside the 300-node synthetic phase's own walk
+  // rejects a resumeFrom call against a different prep instance. Using seedPrep's own CURRENT
+  // prep._workMeter.units directly gives an accurate cap relative to this exact prep's state.
+  const capBeforeResume = seedPrep._workMeter.units + 200; // well inside the 300-node synthetic phase's own walk
+  seedPrep._workCap = capBeforeResume;
   const out: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
   const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 300, null, false, out, Infinity, syntheticContinuation, undefined, true);
   assert.equal(path, null);
-  assert.equal(out.timedOut, true, 'beamWidth > 256 with a >256-node phase means the mid-phase check (never capture-aware) wins the race, so this degrades to a plain timeout');
-  assert.equal(out.pausedContinuation, undefined, 'no continuation is ever attached once the mid-phase check has already returned');
+  assert.equal(out.timedOut, undefined, 'a captured-continuation budget exit is a pause, not a plain timeout');
+  assert.ok(out.pausedContinuation, 'beamWidth > 256 with a >256-node phase must still capture, now that the mid-phase check defers to the top-of-loop check instead of racing it');
+  assert.ok(seedPrep._workMeter.units >= capBeforeResume, 'the pause must land at/past the requested cap');
+  // Bounded-overshoot contract: the capture can overshoot by at most one phase's own work (this
+  // synthetic phase processes 300 candidate-generation batches from the same position), never more.
+  // Exact bound depends on per-candidate cost, so this only asserts the qualitative direction that
+  // motivated the fix -- it does overshoot somewhat, it does not run away unboundedly.
+  assert.ok(seedPrep._workMeter.units < capBeforeResume + 5_000_000, 'overshoot must stay bounded to roughly one phase\'s own work, not runaway');
 });
 
-test('beam pause/resume: the mid-phase check is governed by actual phase size, not the nominal beamWidth parameter', async () => {
+// The mid-phase check's own counting behavior (real walked nodes, not the nominal beamWidth
+// parameter) survives unchanged for the NON-capturing path -- captureContinuationOnBudgetExit left
+// off is byte-for-byte the historical behavior this test originally locked in, since the 2026-09-10
+// fix only changes what happens when a caller explicitly opts in (see the test above).
+test('beam pause/resume: without capturing, the mid-phase check is still governed by actual phase size, not the nominal beamWidth parameter', async () => {
   const seedPrep = prepLevel(SOLVED_LEVEL);
   seedPrep._cfg = null;
   const seedOut: { pausedContinuation?: BeamContinuation } = {};
@@ -246,8 +256,6 @@ test('beam pause/resume: the mid-phase check is governed by actual phase size, n
   const oversizedFrontier = Array.from({ length: 300 }, () => seed.frontier[0]);
   const syntheticContinuation: BeamContinuation = { ...seed, frontier: oversizedFrontier };
 
-  // Same ownership-assertion fix as the test above: resume with seedPrep itself, and size the cap
-  // off its own current prep._workMeter.units rather than a fresh prep's approximated zero-start.
   seedPrep._workCap = seedPrep._workMeter.units + 200;
   const out: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
   // beamWidth itself stays irrelevant to how many nodes THIS phase walks (that's resumeFrom's
@@ -256,10 +264,56 @@ test('beam pause/resume: the mid-phase check is governed by actual phase size, n
   // same way regardless of beamWidth). The real controlling constant is the hardcoded 256 in the
   // `(frontierIndex & 255) === 0` check itself, not beamWidth -- pass an arbitrary small beamWidth
   // here to isolate that: even a tiny nominal beamWidth cannot stop this pre-supplied 300-node
-  // frontier from tripping the same mid-phase counter once frontierIndex reaches 256.
-  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, out, Infinity, syntheticContinuation, undefined, true);
+  // frontier from tripping the same mid-phase counter once frontierIndex reaches 256. No trailing
+  // `true` argument here -- captureContinuationOnBudgetExit left at its default (false).
+  const path = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, seedPrep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, out, Infinity, syntheticContinuation, undefined);
   assert.equal(path, null);
-  assert.equal(out.timedOut, true, 'the mid-phase check counts walked nodes, not beamWidth -- a 300-node phase still trips it regardless of the nominal beamWidth');
+  assert.equal(out.timedOut, true, 'the mid-phase check counts walked nodes, not beamWidth -- a 300-node phase still trips it regardless of the nominal beamWidth, when not capturing');
+  assert.equal(out.pausedContinuation, undefined, 'no continuation without opting in, matching every production caller');
+});
+
+// Full pause/resume EQUIVALENCE at a >256-node phase (search.ts's own bounded-overshoot fix is only
+// useful if resuming from the overshot capture still reproduces the same eventual outcome as an
+// uninterrupted run of the identical oversized-phase scenario -- the two tests above only check
+// that capture happens, not that resuming from it is safe). Builds the same synthetic oversized
+// continuation TWICE, independently, from two separately-seeded preps (BeamContinuation ownership
+// requires the resuming prep to be the exact instance the continuation was captured against, so one
+// synthetic continuation cannot be shared across a reference and a staged run) -- both constructions
+// are fully deterministic (no RNG in this fixture/path), so they are equivalent starting points.
+test('beam pause/resume: capturing past a >256-node phase and resuming reproduces an uninterrupted run of the identical oversized-phase scenario', async () => {
+  async function buildSyntheticOversizedContinuation(): Promise<{ prep: ReturnType<typeof prepLevel>; continuation: BeamContinuation }> {
+    const prep = prepLevel(SOLVED_LEVEL);
+    prep._cfg = null;
+    prep._metrics = { nodesExpanded: 0 };
+    const seedOut: { pausedContinuation?: BeamContinuation } = {};
+    await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 16, null, false, seedOut, Infinity, undefined, 1);
+    const seed = seedOut.pausedContinuation!;
+    const oversizedFrontier = Array.from({ length: 300 }, () => seed.frontier[0]);
+    return { prep, continuation: { ...seed, frontier: oversizedFrontier } };
+  }
+
+  // Reference: run the oversized phase (and beyond) to natural completion, uninterrupted.
+  const ref = await buildSyntheticOversizedContinuation();
+  const refOut: { pausedContinuation?: BeamContinuation } = {};
+  const refPath = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, ref.prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 300, null, false, refOut, Infinity, ref.continuation, undefined);
+
+  // Staged: capture partway through the SAME oversized phase (independently constructed, same
+  // deterministic inputs), then resume with the cap lifted.
+  const staged = await buildSyntheticOversizedContinuation();
+  const cap = staged.prep._workMeter.units + 200;
+  staged.prep._workCap = cap;
+  const pausedOut: { timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
+  const pausedPath = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, staged.prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 300, null, false, pausedOut, Infinity, staged.continuation, undefined, true);
+  assert.equal(pausedPath, null, 'sanity: the boundary must land before this oversized phase itself resolves the search');
+  assert.ok(pausedOut.pausedContinuation, 'must actually capture past the >256-node phase');
+
+  staged.prep._workCap = Infinity; // lift the cap so the resumed call can run to completion
+  const resumedOut: { pausedContinuation?: BeamContinuation } = {};
+  const resumedPath = await beamSearchFromGate(PACK(0, 0), SOLVED_LEVEL, staged.prep, SCORING_PROFILES.default, 60_000, Date.now(), null, 300, null, false, resumedOut, Infinity, pausedOut.pausedContinuation, undefined);
+
+  assert.deepEqual(resumedPath, refPath, 'staged capture+resume must reach the same eventual result as the uninterrupted reference');
+  assert.equal(staged.prep._workMeter.units, ref.prep._workMeter.units, 'cumulative canonical work must match exactly despite the mid-phase pause');
+  assert.equal(staged.prep._metrics!.nodesExpanded, ref.prep._metrics!.nodesExpanded, 'nodesExpanded diagnostic must match exactly despite the mid-phase pause');
 });
 
 test('beam pause/resume: captureContinuationOnBudgetExit left false (default) leaves the existing budget-exit contract byte-for-byte unaffected', async () => {

@@ -12,7 +12,7 @@ This document owns the **current resumability mechanism and research disposition
 
 - `resumeFrom`: resume an existing in-memory beam continuation;
 - `pauseAfterPhases`: pause at a deterministic phase boundary;
-- `captureContinuationOnBudgetExit`: capture continuation at an exact work-cap exit when the budget check reaches that boundary first.
+- `captureContinuationOnBudgetExit`: capture continuation at a work-cap exit. Exact at `beamWidth <= 256` (a phase always completes before the 256-node mid-phase checkpoint); at wider production widths (2026-09-10) the mid-phase check defers to the next phase boundary instead of exiting, so capture is reliable but can overshoot `prep._workCap` by up to one phase's own work — measured at single-digit-percent on real corpus levels at widths 2000/5000.
 
 Same-policy pause/resume has reproduced uninterrupted `W + Δ` execution with the same solve/unsolved outcome, solution, and cumulative canonical work. Correct continuation carries the live mutable working/search state as well as the frontier; frontier-only replay incorrectly repays work.
 
@@ -56,7 +56,7 @@ The resulting WS2B candidate is deliberately narrow:
 
 This does **not** reopen the closed one-shot static scheduler or the cold `static -> production` fallback. It tests whether already-paid first-pass work can be reused to recover dose-truncation losses cheaply.
 
-Current blocker: exact work-boundary capture is not yet reliable at production beam widths 2000/5000 because the mid-phase budget check can exit before `captureContinuationOnBudgetExit` produces a continuation. The concrete engineering gate is therefore production-width same-policy equivalence, followed by the fixed-work A/B in [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md).
+Engineering gate status (2026-09-10): production-width capture is now reliable via a bounded-overshoot approximation (the mid-phase budget check defers to the next phase boundary instead of exiting early when capturing), validated for pause/resume equivalence and measured at single-digit-percent overshoot on real corpus levels at widths 2000/5000. True mid-phase-exact capture remains unimplemented but is not required to proceed. The next gate is the fixed-work A/B itself, in [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md), reporting each continuation's real overshoot honestly.
 
 ## Tested policy-switch forms
 
