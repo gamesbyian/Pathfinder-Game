@@ -500,20 +500,24 @@ export function isConnected(pos: number, state: SolverSearchState, level: Normal
         }
     }
     // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
-    // reports/2026-09-09-portal-restoration-evidence-hardening-001.md section 3 closes the portal
+    // reports/2026-09-09-portal-restoration-evidence-hardening-001.md section 3 closed the portal
     // derivation: a portal jump spends zero counted length but may occupy an additional fresh
     // cell, which makes `freshVolume` MORE generous relative to the counted steps still required
     // (the flood fill also traverses portal edges as reachability edges and already
     // over-approximates legal continuation) — both effects weaken the prune, never make it unsound.
     // MC levels use the same formula since intNeeded accounts for the extra revisit steps — the
-    // double-count concern was unfounded. Evaluation on portal levels stays behind the opt-in
-    // PRUNE_CONNECTIVITY_VOLUME_PORTAL flag (default OFF; see ablation-config.ts,
-    // docs/solver-opt-in-experiment-ledger.md) pending the frozen matched-work A/B on the 954-level
-    // portal Corpus-2 population — a sound prune can still perturb a budget-limited search and
-    // lose solves through survivor/order effects. The false-goal trigger-search mirror
-    // (isConnectedForFalseGoalTriggerSearch below) is a SEPARATE correctness treatment with its
-    // own triggerable-endpoint differential gate; it is not affected by this flag.
-    if (level.portalMap.size === 0 || _cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === true) {
+    // double-count concern was unfounded. Portal gating: promoted to production default-on
+    // 2026-09-10 (PRUNE_CONNECTIVITY_VOLUME_PORTAL) after the frozen matched-work A/B on the
+    // 954-level portal Corpus-2 population found 2 gains / 0 losses (net +2) plus a small aggregate
+    // workSpent/nodesExpanded reduction — see docs/solver-opt-in-experiment-ledger.md and
+    // reports/2026-09-09-connectivity-volume-portal-ab-001-preflight.md. PRUNE_CONNECTIVITY_VOLUME_PORTAL
+    // stays a named flag (now default-on) rather than being deleted, so a future regression can
+    // still disable just the portal-level evaluation without touching the portal-free derivation
+    // (research escape hatch, matching PRUNE_MC_NEIGHBOR_BUDGET_PORTAL's own promoted convention —
+    // see lower-bounds.ts). The false-goal trigger-search mirror (isConnectedForFalseGoalTriggerSearch
+    // below) is a SEPARATE correctness treatment with its own triggerable-endpoint differential
+    // gate; it is not affected by this flag.
+    if (!(level.portalMap.size > 0 && _cfg?.PRUNE_CONNECTIVITY_VOLUME_PORTAL === false)) {
         const rSteps = level.requiredLength - getRealLengthFromState(state);
         if (freshVolume + intNeeded < rSteps) {
             if (research) _reportConnectivityRejection(research, 'volume', undefined, pos, state, level, prep, intNeeded, mcOpenMask, freshVolume, maxVisit, axisExhausted, rSteps);

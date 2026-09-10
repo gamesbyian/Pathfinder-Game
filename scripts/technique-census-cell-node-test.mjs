@@ -347,7 +347,11 @@ test('real solver, generous work budget: workSpent matches the unconstrained sol
     assert.equal(result.workBudget, 5_000_000);
     // A generous ceiling must not change what the real solver finds or how much it costs --
     // matches the same technique/level/gate's own unconstrained (node-budget-only) cost exactly.
-    assert.equal(result.workSpent, 1884);
+    // Pinned cost dropped from 1884 to 1850 when PRUNE_CONNECTIVITY_VOLUME_PORTAL was promoted to
+    // production default-on (2026-09-10): this fixture's published-corpus level is portal-bearing,
+    // so isConnected's volume check now also evaluates (and correctly prunes) on it -- same solved
+    // outcome, cheaper search. See docs/solver-opt-in-experiment-ledger.md.
+    assert.equal(result.workSpent, 1850);
     assert.ok(result.workSpent < result.workBudget);
     assert.equal(result.deadlineTruncated, false);
 });
@@ -358,7 +362,9 @@ test('real solver, node-budget mode (no workBudget) is completely unaffected', a
 
     assert.equal(result.ok, true);
     assert.equal(result.status, 'success');
-    assert.equal(result.nodesExpanded, 1049);
+    // Pinned cost dropped from 1049 to 1028 for the same reason as the workBudget test above
+    // (PRUNE_CONNECTIVITY_VOLUME_PORTAL promoted to default-on, 2026-09-10).
+    assert.equal(result.nodesExpanded, 1028);
     assert.equal(Object.hasOwn(result, 'workBudget'), false);
     assert.equal(Object.hasOwn(result, 'workSpent'), false);
 });

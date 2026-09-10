@@ -54,7 +54,7 @@ export const FEATURES: Record<string, string> = {
     PRUNE_INTERSECTION_DEFICIT: 'Remaining steps < intersections still needed',
     PRUNE_CONNECTIVITY:         'Flood-fill connectivity + volume check',
     PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: 'Treat both-axes-spent cells as walls in the connectivity flood fill',
-    PRUNE_CONNECTIVITY_VOLUME_PORTAL: 'Production default-OFF; opt-in: lets isConnected\'s volume check (freshVolume + intNeeded < rSteps) evaluate on portal-bearing levels instead of unconditionally passing them. Derivation closed (a portal jump only makes the bound MORE generous, never unsound); pending the frozen matched-work A/B on the 954-level portal Corpus-2 population. Does not affect isConnectedForFalseGoalTriggerSearch, which is a separate correctness treatment. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
+    PRUNE_CONNECTIVITY_VOLUME_PORTAL: 'Production default-ON (promoted 2026-09-10): lets isConnected\'s volume check (freshVolume + intNeeded < rSteps) evaluate on portal-bearing levels instead of unconditionally passing them. Correctness gates clean; frozen matched-work A/B on the 954-level portal Corpus-2 population found 2 gains / 0 losses (net +2) plus a small aggregate workSpent/nodesExpanded reduction. Does not affect isConnectedForFalseGoalTriggerSearch, which is a separate correctness treatment. See docs/solver-opt-in-experiment-ledger.md.',
     PRUNE_SURROUND_LB:          'Lower bound on steps needed to visit all surround-landmark neighbors',
     PRUNE_ADJ_TURN_LB:          'Lower bound on steps needed to satisfy all adjacent-turn landmark objects',
     PRUNE_MUST_TURN_DEADLOCK:   'Prune once a pending must-turn cell has both axis bits used (provably unsatisfiable)',
@@ -146,7 +146,6 @@ export const FEATURES: Record<string, string> = {
  * docs/solver-opt-in-experiment-ledger.md before deciding that an opt-in needs more testing. */
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
-    'PRUNE_CONNECTIVITY_VOLUME_PORTAL',
     'STRATEGY_PORTAL_COARSE_STATE_MERGE',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',

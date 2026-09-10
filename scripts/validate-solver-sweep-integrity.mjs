@@ -18,24 +18,40 @@ export function readExpectedIds(file) {
   return ids;
 }
 
-export function validateSweepIntegrity({ expectedIds, levels, requiredStage = null, minParticipatingLevels = 0, minParticipationRate = 0 }) {
-  if (!Array.isArray(levels)) throw new Error('result must contain a levels array');
-  const idOf = row => row?.id ?? row?.level ?? row?.levelId ?? null;
-  const actualIds = levels.map(idOf);
-  if (actualIds.some(id => typeof id !== 'string' || !id)) throw new Error('one or more result rows lack a level id');
+export function idOfRow(row) {
+  return row?.id ?? row?.level ?? row?.levelId ?? null;
+}
 
+// Non-throwing population diff -- the single source of truth validateSweepIntegrity() itself uses
+// below, and also what a timeout-only-recovery caller needs: it must distinguish "some ids never
+// got a result row at all" (potentially recoverable by re-running just those ids) from "duplicate
+// or unexpected rows exist" (a correctness problem no re-run of missing ids can fix, and which must
+// never be silently routed through an auto-recovery path). See
+// scripts/derive-timeout-recovery-population.mjs.
+export function diffPopulation(expectedIds, levels) {
+  const actualIds = levels.map(idOfRow);
+  const malformed = actualIds.some(id => typeof id !== 'string' || !id);
   const duplicateActual = actualIds.filter((id, index) => actualIds.indexOf(id) !== index);
   const expected = new Set(expectedIds);
   const actual = new Set(actualIds);
   const missing = expectedIds.filter(id => !actual.has(id));
   const unexpected = [...actual].filter(id => !expected.has(id)).sort();
+  return { malformed, duplicates: [...new Set(duplicateActual)], missing, unexpected, actualCount: actualIds.length };
+}
+
+export function validateSweepIntegrity({ expectedIds, levels, requiredStage = null, minParticipatingLevels = 0, minParticipationRate = 0 }) {
+  if (!Array.isArray(levels)) throw new Error('result must contain a levels array');
+  const idOf = idOfRow;
+  if (levels.some(row => typeof idOf(row) !== 'string' || !idOf(row))) throw new Error('one or more result rows lack a level id');
+
+  const { duplicates: duplicateActual, missing, unexpected, actualCount } = diffPopulation(expectedIds, levels);
 
   if (duplicateActual.length || missing.length || unexpected.length) {
     const parts = [];
-    if (duplicateActual.length) parts.push(`duplicate results: ${[...new Set(duplicateActual)].join(', ')}`);
+    if (duplicateActual.length) parts.push(`duplicate results: ${duplicateActual.join(', ')}`);
     if (missing.length) parts.push(`missing results: ${missing.join(', ')}`);
     if (unexpected.length) parts.push(`unexpected results: ${unexpected.join(', ')}`);
-    throw new Error(`solver sweep population mismatch (${actualIds.length}/${expectedIds.length} rows): ${parts.join('; ')}`);
+    throw new Error(`solver sweep population mismatch (${actualCount}/${expectedIds.length} rows): ${parts.join('; ')}`);
   }
 
   let participation = null;
@@ -75,7 +91,7 @@ export function validateSweepIntegrity({ expectedIds, levels, requiredStage = nu
     }
   }
 
-  return { complete: true, expectedLevels: expectedIds.length, observedLevels: actualIds.length, participation };
+  return { complete: true, expectedLevels: expectedIds.length, observedLevels: actualCount, participation };
 }
 
 function main() {

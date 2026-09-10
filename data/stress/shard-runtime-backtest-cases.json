@@ -1,0 +1,39 @@
+{
+  "_comment": "Backtest cases for scripts/backtest-shard-runtime-policy.mjs. Each case is a real, verified GHA incident (not a synthetic scenario) recording the shard planner's own predicted per-id ms at the time versus the real observed per-id throughput derived from that run's actual job logs. Granularity is per-shard-batch (average realized ms/id), not per-id, because that is the level of precision actually verifiable from GHA job logs/timestamps for a multi-id packed shard; see each case's `derivation` field for the exact arithmetic. Add a new case here whenever a future dispatch reveals another real predicted-vs-actual gap -- this file is the source of truth scripts/plan-highbudget-shards.mjs's default uncertainty multipliers are calibrated against, not an arbitrary constant.",
+  "cases": [
+    {
+      "id": "2026-09-10-connectivity-volume-control-gapfill-001",
+      "workflowRun": 34414099319,
+      "description": "connectivity-volume-portal-ab-001 control-arm gap-fill: 76 ids, all with SOME telemetry (corpus2-runtime-telemetry.json, calibrated at solver-highbudget-unsolved-sweep.yml's node_budget=1,200,000,000), extrapolated down to this dispatch's node_budget=50,000,000 (24x smaller). Same flag config as telemetry (both production-default, no enable/disable flags) -- isolates the NODE-BUDGET-SCALE mismatch from any flag-config mismatch.",
+      "mismatchKind": "scale-only",
+      "requestedNodeBudget": 50000000,
+      "telemetryNodeBudget": 1200000000,
+      "sameFlagConfig": true,
+      "workers": 4,
+      "idsInShard": 76,
+      "predictedWallMinutes": 17,
+      "predictedMsPerId": 53684,
+      "observedWindow": { "startedAt": "2026-09-09T22:57:32Z", "endedAt": "2026-09-09T23:26:43Z", "completions": 20 },
+      "observedMsPerId": 350200,
+      "derivation": "predictedMsPerId = predictedWallMinutes(17) * workers(4) * 60000 / idsInShard(76) = 53,684ms (matches the planner's own logged fallback=52s for this population, confirming the reconstruction). observedMsPerId = elapsedMs(29min11s=1,751,000ms) * workers(4) / completions(20) = 350,200ms.",
+      "observedOverPredictedRatio": 6.52
+    },
+    {
+      "id": "2026-09-10-connectivity-volume-portal-ab-001-treatment",
+      "workflowRun": 34425486566,
+      "description": "connectivity-volume-portal-ab-001 treatment arm, shard 001/19: 23 ids packed by the sum-of-predicted-ms-vs-capacity bin packer at target_wall_minutes=20, enable_flags=PRUNE_CONNECTIVITY_VOLUME_PORTAL. Telemetry was calibrated under production-default flags (no PRUNE_CONNECTIVITY_VOLUME_PORTAL) AND at node_budget=1,200,000,000 vs this dispatch's 50,000,000 -- BOTH a scale mismatch and a flag-config mismatch stack here.",
+      "mismatchKind": "scale-and-config",
+      "requestedNodeBudget": 50000000,
+      "telemetryNodeBudget": 1200000000,
+      "sameFlagConfig": false,
+      "workers": 4,
+      "idsInShard": 23,
+      "predictedWallMinutes": 20,
+      "predictedMsPerId": 208696,
+      "observedWindow": { "startedAt": "2026-09-10T01:28:26Z", "killedAt": "2026-09-10T02:08:26Z", "completions": 5 },
+      "observedMsPerId": 1920000,
+      "derivation": "predictedMsPerId = predictedWallMinutes(20, the shard's own value inferred from the run-wide min=18/p50=20/p90=20/max=20 clustering, which the sum/capacity packer produces by design when it fills every bin close to its target) * workers(4) * 60000 / idsInShard(23) = 208,696ms. observedMsPerId = elapsedMs(40min=2,400,000ms) * workers(4) / completions(5) = 1,920,000ms.",
+      "observedOverPredictedRatio": 9.2
+    }
+  ]
+}

@@ -74,6 +74,14 @@ on:
         description: 'Floor under every shard''s timeout-minutes, regardless of how low its telemetry-predicted wall time is. Raise this above the 30-minute default when this population''s real per-level cost under THIS resolved config is already known (from a prior run) to exceed what corpus2-runtime-telemetry.json predicts -- that telemetry reflects whatever config last refreshed it, not necessarily this dispatch''s flags/budget.'
         required: false
         default: '30'
+      fixed_group_size:
+        description: 'Bypass telemetry-driven capacity packing and group ids into fixed-size shards of exactly this many ids instead (leave blank for normal packing). Set this equal to `workers` when a population''s real per-level cost is already known to be badly underestimated by telemetry: the normal packer keeps packing many "supposedly cheap" ids together regardless of target_wall_minutes, producing one shard per group of `workers` ids that all solve truly concurrently (not queued sequentially) keeps each shard''s real wall time close to ONE id''s real cost no matter how wrong the telemetry is. Pairs with a generously raised min_timeout_minutes, which becomes the sole timeout basis in this mode.'
+        required: false
+        default: ''
+      auto_recover_timeouts:
+        description: 'If the first-pass population is incomplete for NO reason other than missing ids (every shard job itself succeeded, and there are no duplicate/unexpected/malformed rows), automatically plan and run a second, smaller matrix over exactly the missing ids, then re-combine both passes together. Never triggers for a genuine shard crash, configuration error, or malformed output -- those still fail the run for a human to look at.'
+        required: false
+        default: 'true'
       seed:
         description: "Shard-packing tie-break shuffle seed (blank = derived from this run's id)."
         required: false
@@ -267,6 +275,8 @@ jobs:
         run: |
           planning_node_budget="${{ inputs.node_budget }}"
           [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && planning_node_budget=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          fixedGroupSize=()
+          [ -n "${{ inputs.fixed_group_size }}" ] && fixedGroupSize+=("--fixed-group-size=${{ inputs.fixed_group_size }}")
           node scripts/plan-highbudget-shards.mjs \
             --ids-file=logs/solver-targeted-sweep/ids.txt \
             --corpus2="${{ inputs.corpus }}" \
@@ -275,6 +285,9 @@ jobs:
             --target-wall-minutes="${{ inputs.target_wall_minutes }}" \
             --solo-threshold-multiplier="${{ inputs.solo_threshold_multiplier }}" \
             --min-timeout-minutes="${{ inputs.min_timeout_minutes }}" \
+            --enable-flags="${{ inputs.enable_flags }}" \
+            --disable-flags="${{ inputs.disable_flags }}" \
+            "${fixedGroupSize[@]}" \
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-targeted-sweep/shard-plan.json
@@ -380,10 +393,313 @@ jobs:
           echo "sweep exit_code=${{ steps.sweep.outputs.exit_code }}"
           exit 1
 
-  combine:
-    name: Combine shard results
+  combine-first-pass:
+    name: Combine first-pass shard results
     needs: [plan, solve-shards]
     if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    # NOT the terminal job any more -- outputs feed plan-recovery below. This job therefore never
+    # hard-fails on an incomplete population (every validation-shaped step is continue-on-error):
+    # a first pass that is missing ids ONLY (every shard job itself succeeded -- see solve-shards'
+    # "Fail the job if the sweep failed for a reason other than its own timeout wrapper" step,
+    # which treats an id's own timeout wrapper exit 124/143 as accepted, not a failure) is exactly
+    # the case auto-recovery exists for, and combine-final below still runs the HARD, must-pass
+    # validate once the recovery pass (if any) is folded in. A genuine correctness problem
+    # (duplicates/unexpected/malformed rows, or no result at all) is caught by "Derive timeout-
+    # recovery eligibility" below and never routed to recovery -- it surfaces at combine-final
+    # exactly as it always did, for a human to look at.
+    outputs:
+      recoverable: ${{ steps.recovery.outputs.recoverable }}
+      missing_count: ${{ steps.recovery.outputs.missing_count }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Download exact population and shard plan
+        uses: actions/download-artifact@v8
+        with:
+          name: targeted-shard-plan
+          path: artifact-staging/plan
+
+      - name: Download every first-pass shard's artifact
+        uses: actions/download-artifact@v8
+        with:
+          pattern: 'targeted-shard-[0-9]*'
+          path: artifact-staging/downloaded
+          merge-multiple: true
+
+      - name: Lay the downloaded shard results onto the working tree
+        shell: bash
+        run: |
+          mkdir -p logs/solver-targeted-sweep
+          cp -a artifact-staging/downloaded/. logs/solver-targeted-sweep/ 2>/dev/null || true
+
+      - name: Combine each shard's report into one
+        continue-on-error: true
+        shell: bash
+        run: |
+          if ! ls logs/solver-targeted-sweep/batch-*.json >/dev/null 2>&1; then
+            echo "No shard result files found -- every shard likely failed before writing output." >&2
+            exit 1
+          fi
+          FILES=$(ls logs/solver-targeted-sweep/batch-*.json | paste -sd, -)
+          node scripts/combine-solver-sweep-reports.mjs --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
+
+      - name: Validate exact population completeness and required participation (informational -- see combine-final for the hard gate)
+        continue-on-error: true
+        shell: bash
+        run: |
+          extra=()
+          if [ -n "${{ inputs.required_participation_stage }}" ]; then
+            extra+=("--required-stage=${{ inputs.required_participation_stage }}")
+            extra+=("--min-participating-levels=${{ inputs.min_participating_levels }}")
+            [ -n "${{ inputs.min_participation_rate }}" ] && extra+=("--min-participation-rate=${{ inputs.min_participation_rate }}")
+          fi
+          node scripts/validate-solver-sweep-integrity.mjs \
+            --expected-ids=artifact-staging/plan/ids.txt \
+            --result=logs/solver-targeted-sweep/combined.json \
+            "${extra[@]}"
+
+      - name: Derive timeout-recovery eligibility
+        id: recovery
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          node scripts/derive-timeout-recovery-population.mjs \
+            --expected-ids=artifact-staging/plan/ids.txt \
+            --result=logs/solver-targeted-sweep/combined.json \
+            --out=logs/solver-targeted-sweep/missing-ids.txt
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            missing_count=$(grep -c . logs/solver-targeted-sweep/missing-ids.txt 2>/dev/null || true)
+            missing_count=${missing_count:-0}
+            echo "recoverable=true" >> "$GITHUB_OUTPUT"
+            echo "missing_count=${missing_count}" >> "$GITHUB_OUTPUT"
+          else
+            # exit 3 (duplicates/unexpected/malformed) or 4 (no/unparseable result) -- a genuine
+            # correctness problem, never routed to auto-recovery. combine-final's hard validate
+            # below reports the exact same failure to a human.
+            echo "recoverable=false" >> "$GITHUB_OUTPUT"
+            echo "missing_count=0" >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+
+      - name: Upload the missing-ids population for potential recovery
+        if: steps.recovery.outputs.recoverable == 'true' && steps.recovery.outputs.missing_count != '0'
+        uses: actions/upload-artifact@v7
+        with:
+          name: targeted-recovery-missing-ids
+          path: logs/solver-targeted-sweep/missing-ids.txt
+          retention-days: 90
+
+      - name: Print a solved-count summary to the job log
+        # Runs even when the population-completeness check above fails: that's exactly the
+        # case (a partial/short run) where this per-level breakdown is most needed, since
+        # artifact downloads are blocked in some sandboxed environments and this printed log
+        # is otherwise the only way to recover which ids actually finished and how.
+        if: always()
+        shell: bash
+        run: |
+          node -e "
+          let d;
+          try {
+            d = JSON.parse(require('fs').readFileSync('logs/solver-targeted-sweep/combined.json', 'utf8'));
+          } catch (e) {
+            console.log('No combined.json present (' + e.message + ') -- every shard likely failed before writing output.');
+            process.exit(0);
+          }
+          const solved = d.levels.filter(l => l.ok).length;
+          console.log('First-pass targeted sweep: ' + solved + '/' + d.levels.length + ' solved.');
+          console.log('Solved: ' + d.levels.filter(l => l.ok).map(l => l.id).join(', '));
+          console.log('Unsolved: ' + d.levels.filter(l => !l.ok).map(l => l.id + ' (' + l.status + ')').join(', '));
+          "
+
+  plan-recovery:
+    name: Plan recovery shards for missing ids
+    needs: [plan, solve-shards, combine-first-pass]
+    # No always()/failure()/etc. here, so GitHub Actions' implicit success() check still applies to
+    # every job in `needs` -- plan, solve-shards, AND combine-first-pass all must have concluded
+    # 'success' (not 'failure'/'cancelled') before this condition is even evaluated. combine-first-
+    # pass's own validation-shaped steps are all continue-on-error, so it always concludes success;
+    # solve-shards concludes 'failure' the moment any shard job exits for a reason other than its own
+    # timeout wrapper (see solve-shards' "Fail the job if..." step) -- so a genuine shard crash always
+    # skips this job even before the explicit conditions below are checked.
+    if: >-
+      needs.combine-first-pass.outputs.recoverable == 'true' &&
+      needs.combine-first-pass.outputs.missing_count != '0' &&
+      inputs.auto_recover_timeouts != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      shard_count: ${{ steps.plan.outputs.shard_count }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the missing-ids population
+        uses: actions/download-artifact@v8
+        with:
+          name: targeted-recovery-missing-ids
+          path: artifact-staging/recovery
+
+      - name: Run the shard planner over exactly the missing ids
+        id: plan
+        shell: bash
+        run: |
+          planning_node_budget="${{ inputs.node_budget }}"
+          [ "${{ inputs.node_budget_advisory_only }}" = "true" ] && planning_node_budget=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          recovery_min_timeout=$(( ${{ inputs.min_timeout_minutes }} * 2 ))
+          [ "$recovery_min_timeout" -lt 60 ] && recovery_min_timeout=60
+          # Every id here already timed out once under the first pass' own plan. Force
+          # --fixed-group-size=workers rather than telemetry-driven packing (that packing is exactly
+          # what may have under-estimated these ids in the first place) and double the timeout floor
+          # (floored at 60m): each recovery shard packs exactly `workers` ids that solve truly
+          # concurrently, so a shard's wall time stays close to ONE id's real cost regardless of how
+          # wrong telemetry was -- without resorting to solo shards (rejected as a default; see
+          # docs/solver-scheduling-policy.md) or broadly raising the global timeout.
+          node scripts/plan-highbudget-shards.mjs \
+            --ids-file=artifact-staging/recovery/missing-ids.txt \
+            --corpus2="${{ inputs.corpus }}" \
+            --node-budget="${planning_node_budget}" \
+            --workers="${{ inputs.workers }}" \
+            --target-wall-minutes="${{ inputs.target_wall_minutes }}" \
+            --solo-threshold-multiplier="${{ inputs.solo_threshold_multiplier }}" \
+            --min-timeout-minutes="${recovery_min_timeout}" \
+            --enable-flags="${{ inputs.enable_flags }}" \
+            --disable-flags="${{ inputs.disable_flags }}" \
+            --fixed-group-size="${{ inputs.workers }}" \
+            --seed="${{ inputs.seed || github.run_id }}-recovery" \
+            --max-shards=250 \
+            --out=logs/solver-targeted-sweep/recovery-shard-plan.json
+          shards_json=$(jq -c '{shard: .shard}' logs/solver-targeted-sweep/recovery-shard-plan.json)
+          echo "shards=${shards_json}" >> "$GITHUB_OUTPUT"
+          echo "shard_count=$(jq '.shard | length' logs/solver-targeted-sweep/recovery-shard-plan.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the recovery shard plan
+        uses: actions/upload-artifact@v7
+        with:
+          name: targeted-recovery-shard-plan
+          path: logs/solver-targeted-sweep/recovery-shard-plan.json
+          retention-days: 90
+
+  solve-recovery-shards:
+    name: Recovery shard ${{ matrix.shard.idx }}/${{ needs.plan-recovery.outputs.shard_count }}
+    needs: [plan-recovery]
+    # No explicit `if:` -- when plan-recovery is skipped (the common case: most first passes need no
+    # recovery), this job's own implicit needs-success gate skips it before `strategy.matrix` is ever
+    # evaluated, so an empty/undefined `needs.plan-recovery.outputs.shards` never reaches fromJson().
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.shard.jobTimeoutMinutes }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.plan-recovery.outputs.shards) }}
+    steps:
+      - name: Check out the dispatched commit exactly
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run level-blind-capability-sweep on this recovery shard's slice
+        id: sweep
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          mkdir -p logs/solver-targeted-sweep
+          extra=()
+          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+          [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          nodebudget=()
+          [ "${{ inputs.node_budget_advisory_only }}" != "true" ] && nodebudget+=("--node-budget=${{ inputs.node_budget }}")
+          levels="${{ matrix.shard.levels }}"
+          levels="pos:$(echo "$levels" | sed 's/pos://g')"
+          timeout -k 30s --preserve-status "${{ matrix.shard.timeoutMinutes }}m" node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus="${{ inputs.corpus }}" \
+            --levels="${levels}" \
+            --budget-ms="${{ inputs.budget_ms }}" \
+            "${nodebudget[@]}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers="${{ inputs.workers }}" \
+            "${extra[@]}" \
+            --out="logs/solver-targeted-sweep/recovery-batch-${{ matrix.shard.idx }}.json" \
+            --summary-out="logs/solver-targeted-sweep/recovery-batch-${{ matrix.shard.idx }}-summary.md" \
+            2>&1 | tee -a "logs/solver-targeted-sweep/recovery-batch-${{ matrix.shard.idx }}.console.log"
+          status=${PIPESTATUS[0]}
+          echo "exit_code=${status}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload this recovery shard's raw results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: targeted-recovery-shard-${{ matrix.shard.idx }}
+          path: |
+            logs/solver-targeted-sweep/recovery-batch-${{ matrix.shard.idx }}.json
+            logs/solver-targeted-sweep/recovery-batch-${{ matrix.shard.idx }}-summary.md
+            logs/solver-targeted-sweep/recovery-batch-${{ matrix.shard.idx }}.console.log
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Fail the job if the sweep failed for a reason other than its own timeout wrapper
+        if: >-
+          always() &&
+          steps.sweep.outputs.exit_code != '0' &&
+          steps.sweep.outputs.exit_code != '124' &&
+          steps.sweep.outputs.exit_code != '143'
+        run: |
+          echo "sweep exit_code=${{ steps.sweep.outputs.exit_code }}"
+          exit 1
+
+  combine-final:
+    name: Combine final results
+    needs: [plan, combine-first-pass, plan-recovery, solve-recovery-shards]
+    # always(): must still run (and hard-validate) when plan-recovery/solve-recovery-shards were
+    # skipped (no recovery needed or not eligible) -- only combine-first-pass itself being skipped
+    # (which cannot happen; it is if: always() and depends only on the root `plan` job) would mean
+    # there is nothing to combine at all.
+    if: always() && needs.combine-first-pass.result != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -405,27 +721,47 @@ jobs:
           name: targeted-shard-plan
           path: artifact-staging/plan
 
-      - name: Download every shard's artifact
+      - name: Download every first-pass shard's artifact
         uses: actions/download-artifact@v8
         with:
           pattern: 'targeted-shard-[0-9]*'
           path: artifact-staging/downloaded
           merge-multiple: true
 
+      - name: Download every recovery-pass shard's artifact, if a recovery pass ran
+        if: needs.plan-recovery.result == 'success'
+        uses: actions/download-artifact@v8
+        with:
+          pattern: 'targeted-recovery-shard-[0-9]*'
+          path: artifact-staging/downloaded-recovery
+          merge-multiple: true
+          if-no-files-found: ignore
+
       - name: Lay the downloaded shard results onto the working tree
         shell: bash
         run: |
           mkdir -p logs/solver-targeted-sweep
           cp -a artifact-staging/downloaded/. logs/solver-targeted-sweep/ 2>/dev/null || true
+          cp -a artifact-staging/downloaded-recovery/. logs/solver-targeted-sweep/ 2>/dev/null || true
 
-      - name: Combine each shard's report into one
+      - name: Combine every first-pass and recovery-pass shard report into one
         shell: bash
         run: |
           if ! ls logs/solver-targeted-sweep/batch-*.json >/dev/null 2>&1; then
             echo "No shard result files found -- every shard likely failed before writing output." >&2
             exit 1
           fi
-          FILES=$(ls logs/solver-targeted-sweep/batch-*.json | paste -sd, -)
+          FILES=$(ls logs/solver-targeted-sweep/batch-*.json 2>/dev/null)
+          # Recovery ids replace their first-pass (missing) counterparts, not duplicate them --
+          # first-pass shards never produced a row for a missing id in the first place, so every id
+          # across both passes' batch files appears exactly once. combine-solver-sweep-reports.mjs
+          # concatenates rows as-is; the exact-population validate below is what actually enforces
+          # "no duplicates" if that assumption is ever wrong.
+          if ls logs/solver-targeted-sweep/recovery-batch-*.json >/dev/null 2>&1; then
+            FILES="${FILES}
+          $(ls logs/solver-targeted-sweep/recovery-batch-*.json)"
+          fi
+          FILES=$(echo "$FILES" | paste -sd, -)
           node scripts/combine-solver-sweep-reports.mjs --in="${FILES}" --out=logs/solver-targeted-sweep/combined.json
 
       - name: Validate exact population completeness and required participation
@@ -496,7 +832,7 @@ jobs:
             --include="artifact-staging/plan/ids.txt" \
             --include="artifact-staging/plan/shard-plan.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
-            --shards-observed="$(find logs/solver-targeted-sweep -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --shards-observed="$(find logs/solver-targeted-sweep -maxdepth 1 -name 'batch-*.json' -o -name 'recovery-batch-*.json' | wc -l | tr -d ' ')" \
             --shards-basis="exact expected population validated separately" \
             --source-artifact="targeted-sweep-combined"
 
