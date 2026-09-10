@@ -1,9 +1,9 @@
 # Repair late-probe multi-seed retry: six-seed confirmation preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-05 — The 40-level discovery audit found no reached-level unique best result from seed 7 beyond seeds 1–6, while seed 6 remained load-bearing; larger hints provenance cannot provide same-level multi-seed confirmation.
-> **Decision:** proceed to an independent population-scale fixed-work confirmation of the narrow `7 -> 6` truncation only.
-> **Remaining gate:** add the bounded seed-count experiment override, freeze a fresh disjoint population and strict work envelope, then run the paired seven-seed versus six-seed production A/B.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-10 — population-scale confirmation dispatched and analyzed: 2/150 losses, both confirmed seed-7-exclusive rescues. See [`result`](2026-09-10-repair-late-probe-six-seed-confirmation-001-result.md).
+> **Decision:** do not promote the unconditional six-seed truncation. Production stays at seven seeds; the unconditional `7 -> 6` form is closed absent a narrower conditional premise.
+> **Remaining gate:** none for the unconditional form. A narrower, conditionally-earned reduction remains an open (unstarted) question.
 > **Evidence role:** independent confirmation of the exploratory 2026-09-04 tail audit
 > **Candidate:** truncate `REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS` from `[1, 2, 3, 4, 5, 6, 7]` to `[1, 2, 3, 4, 5, 6]`
 > **Control:** current production seven-seed policy
