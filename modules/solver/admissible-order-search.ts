@@ -182,11 +182,29 @@ export async function admissibleOrderSearch(
     // tie-break."
     tieBreakProfile: ScoringProfile | null = {},
     maxDiscrepancy = Infinity,
+    // STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT (see ablation-config.ts):
+    // default false, so every existing caller (production 'default'-profile admissible-order tier,
+    // both internal admissibleOrderSearchLDS calls above, every offline tool) is byte-for-byte
+    // unaffected. attempt-dispatch.ts is the only call site that can ever pass true, and only for
+    // the admissible-order-non-default-retry tier's own dispatch (scoringProfileId !== 'default').
+    // When true, this makes admissibleOrderSearch consult prep._workCap the same way
+    // admissibleOrderSearchLDS already does (line ~317 below) — closing the gap reports/2026-09-10-
+    // admissible-order-non-default-retry-matched-work-methodology-001.md found: without this, the
+    // tier's own withWorkCapScope-installed cap (orchestration.ts) is computed correctly but never
+    // read, so admissible_order_non_default_retry_budget_fraction has no code path capable of
+    // binding.
+    enforceWorkCap = false,
 ): Promise<number[] | null> {
     // Experiment-only whole-solve enforcement. The historical admissible tier did not consult its
     // inherited work cap inside this loop at all; changing that unconditionally would silently
-    // alter production scheduling. Strict mode opts into the corrected contract explicitly.
+    // alter production scheduling. Strict mode opts into the corrected contract explicitly; so does
+    // enforceWorkCap above, scoped to the non-default-retry tier's own soft per-tier cap instead of
+    // the global strict whole-solve one.
     if (prep._strictWorkCap !== undefined && prep._workMeter.units >= prep._strictWorkCap) {
+        if (out) { out.timedOut = true; out.nodesExpanded = 0; }
+        return null;
+    }
+    if (enforceWorkCap && prep._workCap !== undefined && prep._workMeter.units >= prep._workCap) {
         if (out) { out.timedOut = true; out.nodesExpanded = 0; }
         return null;
     }
@@ -210,7 +228,8 @@ export async function admissibleOrderSearch(
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - levelStartTime > levelBudgetMs || nodesExpanded >= nodeBudget
-                || (prep._strictWorkCap !== undefined && prep._workMeter.units >= prep._strictWorkCap)) {
+                || (prep._strictWorkCap !== undefined && prep._workMeter.units >= prep._strictWorkCap)
+                || (enforceWorkCap && prep._workCap !== undefined && prep._workMeter.units >= prep._workCap)) {
                 if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
                 if (out) { out.timedOut = true; out.nodesExpanded = nodesExpanded; }
                 return null;

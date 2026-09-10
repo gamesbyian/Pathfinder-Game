@@ -99,6 +99,42 @@ test('STRATEGY_REPAIR_BEAM_SEED threads through to repairSearchFromGate\'s enabl
   assert.equal(arrivals.some(a => a.restart === 0), true, 'a beam-seeded elite arrives at restart 0 once the flag is set on prep._cfg');
 });
 
+test('enforceAdmissibleOrderWorkCap threads through to admissibleOrderSearch and is false by default', async () => {
+  // admissibleOrder configs only (admissibleOrderSearch is the only primitive this param affects —
+  // see admissible-order-search.ts's own enforceWorkCap doc and reports/2026-09-10-admissible-
+  // order-non-default-retry-matched-work-methodology-001.md for why this param exists at all).
+  // See admissible-order-search.test.ts's own periodic-check test for why four must-pass cells are
+  // needed to force enough real branching over the 256-node checkpoint (an open grid alone solves
+  // in well under 256 nodes for this search).
+  const level = makeLevel({
+    grid: { w: 11, h: 11 }, requiredLength: 50, goalKey: PACK(10, 10), gateKeys: [PACK(0, 0)],
+    mustPassKeys: [PACK(5, 1), PACK(1, 5), PACK(9, 5), PACK(5, 9)],
+  });
+  const cfg: AttemptConfig = { scoringProfileId: 'mustCrossFirst', orderingBias: null, admissibleOrder: true };
+
+  const refPrep = prepFor(level);
+  const refPath = await runAttemptSearch(cfg, PACK(0, 0), level, refPrep, SCORING_PROFILES.mustCrossFirst, 60_000, Date.now(), null);
+  assert.ok(refPath, 'sanity: reference run solves');
+  assert.ok(refPrep._metrics!.nodesExpanded! > 256, 'sanity: fixture must exercise the periodic work-cap check, not just the pre-search one');
+
+  const cappedWorkCap = Math.floor(refPrep._workMeter.units / 2);
+
+  // Default (param omitted): must ignore prep._workCap entirely, same as before this param existed.
+  const offPrep = prepFor(level);
+  offPrep._workCap = cappedWorkCap;
+  const offPath = await runAttemptSearch(cfg, PACK(0, 0), level, offPrep, SCORING_PROFILES.mustCrossFirst, 60_000, Date.now(), null);
+  assert.deepEqual(offPath, refPath, 'omitting the param must leave admissible-order dispatch byte-for-byte unaffected by prep._workCap');
+
+  // Explicit true: must actually reach admissibleOrderSearch and truncate at the cap.
+  const onPrep = prepFor(level);
+  onPrep._workCap = cappedWorkCap;
+  const onOut: { timedOut?: boolean; nodesExpanded?: number } = {};
+  const onPath = await runAttemptSearch(cfg, PACK(0, 0), level, onPrep, SCORING_PROFILES.mustCrossFirst, 60_000, Date.now(), null, Infinity, onOut, 0, true);
+  assert.equal(onPath, null, 'true must actually enforce the cap and stop short of the solution');
+  assert.equal(onOut.timedOut, true);
+  assert.ok(onPrep._workMeter.units >= cappedWorkCap);
+});
+
 test('the race worker routes through the shared dispatcher instead of re-forking it', () => {
   // Structural drift guard: worker-source.mjs must call runAttemptSearch(), not re-hand-roll the
   // repair/beam/DFS branch by calling the individual search functions directly (the exact fork

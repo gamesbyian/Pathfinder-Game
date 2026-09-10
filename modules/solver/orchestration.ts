@@ -635,6 +635,13 @@ export async function runAttempt(
     // caller but the retry round) is a no-op — behavior is byte-for-byte unchanged from before
     // this parameter existed. No effect on beam/DFS (they don't take a seedSalt at all).
     seedSalt = 0,
+    // STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT passthrough (see
+    // attempt-dispatch.ts's runAttemptSearch, which this ultimately reaches). Default false; only
+    // this file's own admissible-order-non-default-retry call site (inside its withWorkCapScope)
+    // passes true, and only for that one tier — see that call site's own comment for why the
+    // sibling admissible-order-fallback tier (a different call site, same shared runAttempt/
+    // runAttemptSearch dispatcher) must never receive this.
+    enforceAdmissibleOrderWorkCap = false,
 ): Promise<AttemptResult> {
     const { scoringProfileId, orderingBias, beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
     const profile = SCORING_PROFILES[scoringProfileId] ?? SCORING_PROFILES.default;
@@ -651,7 +658,7 @@ export async function runAttempt(
     let attemptError: Attempt['error'] | undefined;
     try {
         const dispatch = testAttemptDispatches.get(prep) ?? runAttemptSearch;
-        path = await dispatch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt);
+        path = await dispatch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt, enforceAdmissibleOrderWorkCap);
     } catch (err) {
         if (isSolverCancellation(err)) throw err;
         const thrown = err as { name?: unknown; message?: unknown } | null;
@@ -2476,6 +2483,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // (`retryBudget` below) — latency safety, not a work-sizing input.
         const nonDefaultRetryTotalBudget = Math.floor(timeBudgetMs * nonDefaultRetryBudgetFraction);
         const nonDefaultRetryWorkBudget = scaledStageWorkBudget(workBudget, nonDefaultRetryBudgetFraction, MIN_ATTEMPT_WORK);
+        // STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT (default off, see
+        // ablation-config.ts): the ONLY call site in the codebase allowed to pass true to
+        // runAttempt's enforceAdmissibleOrderWorkCap param — this loop runs entirely inside the
+        // withWorkCapScope call immediately below, so prep._workCap is exactly this tier's own
+        // fraction-scaled ceiling for its whole duration, never a leftover/outer value. See
+        // reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md for
+        // why this tier's fraction previously had no code path capable of binding.
+        const enforceAdmissibleOrderWorkCap = prep._cfg?.STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT === true;
         await withWorkCapScope(prep, prep._workMeter.units + nonDefaultRetryWorkBudget, async () => {
             // Same per-profile/per-gate loop shape as the admissible-order-fallback tier's own pass above
             // (deliberately NOT a single combined runInterleavedAttempts/runGateSerialAttempts call —
@@ -2497,7 +2512,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                     const remainingNodeBudget = nonDefaultRetryNodeCeiling === Infinity
                         ? Infinity
                         : Math.max(0, nonDefaultRetryNodeCeiling - prep._metrics!.nodesExpanded);
-                    const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
+                    const r = await runAttempt(gateKey, level, prep, admissibleOrderConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget, null, 0, enforceAdmissibleOrderWorkCap);
                     result.attempts.push(withSolverStage(r.attempt, 'admissible-order-alternate-tiebreak-retry'));
                     if (r.path) { result.solution = r.path; break; }
                 }

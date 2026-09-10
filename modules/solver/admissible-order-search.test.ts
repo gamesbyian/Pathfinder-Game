@@ -52,6 +52,75 @@ test('admissibleOrderSearch honors an exhausted experiment-only strict work cap 
   assert.equal(prep._metrics.nodesExpanded, 0);
 });
 
+// STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT (see ablation-config.ts and
+// reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md): closes
+// the gap where this function's hot loop never consulted prep._workCap (only prep._strictWorkCap),
+// unlike admissibleOrderSearchLDS. enforceWorkCap defaults false so every existing caller (this
+// file's own tests above, the admissible-order-fallback tier, offline tooling) is byte-for-byte
+// unaffected; only orchestration.ts's admissible-order-non-default-retry call site may pass true.
+test('admissibleOrderSearch enforceWorkCap left false (default) ignores an already-exhausted prep._workCap', async () => {
+  const level = makeLevel();
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  prep._workCap = prep._workMeter.units; // already exhausted before any search
+  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, null, Infinity, SCORING_PROFILES.default);
+  assert.deepEqual(path, [PACK(0, 0), PACK(1, 0), PACK(2, 0)], 'without opting in, an exhausted soft work cap must not stop the search at all');
+});
+
+test('admissibleOrderSearch enforceWorkCap: true honors an exhausted prep._workCap before search, mirroring the strict-cap test above', async () => {
+  const level = makeLevel();
+  const prep = prepLevel(level);
+  prep._cfg = null;
+  prep._metrics = { nodesExpanded: 0 };
+  prep._workCap = prep._workMeter.units;
+  const out: { timedOut?: boolean; nodesExpanded?: number } = {};
+  const path = await admissibleOrderSearch(PACK(0, 0), level, prep, 1000, Date.now(), null, out, Infinity, SCORING_PROFILES.default, Infinity, true);
+  assert.equal(path, null);
+  assert.deepEqual(out, { timedOut: true, nodesExpanded: 0 });
+  assert.equal(prep._metrics.nodesExpanded, 0);
+});
+
+test('admissibleOrderSearch enforceWorkCap: true truncates mid-search at the periodic (every-256-node) check; enforceWorkCap: false runs the identical level unaffected', async () => {
+  // Richer fixture than the 3-cell line above: an open grid alone (e.g. this file's own line-level
+  // shape scaled up) gives admissible-order's slack ordering almost no real branching -- measured
+  // empirically at under 300 nodes even at 9x9/requiredLength=40. Four must-pass cells forming a
+  // diamond around the direct diagonal route force real backtracking (many admissible orderings to
+  // try before one satisfies every must-pass), measured at ~1,800 nodes for this exact shape --
+  // comfortably over the 256-node periodic-check boundary while staying fast.
+  const level = makeLevel({
+    grid: { w: 11, h: 11 }, requiredLength: 50, goalKey: PACK(10, 10), gateKeys: [PACK(0, 0)],
+    mustPassKeys: [PACK(5, 1), PACK(1, 5), PACK(9, 5), PACK(5, 9)],
+  });
+
+  const refPrep = prepLevel(level);
+  refPrep._cfg = null;
+  refPrep._metrics = { nodesExpanded: 0 };
+  const refPath = await admissibleOrderSearch(PACK(0, 0), level, refPrep, 60_000, Date.now(), null, null, Infinity, SCORING_PROFILES.default);
+  assert.ok(refPath, 'sanity: the reference run must solve');
+  assert.ok(refPrep._metrics.nodesExpanded > 256, 'sanity: this fixture must exercise the periodic (not just pre-search) check');
+
+  const cappedWorkCap = Math.floor(refPrep._workMeter.units / 2);
+
+  const onPrep = prepLevel(level);
+  onPrep._cfg = null;
+  onPrep._metrics = { nodesExpanded: 0 };
+  onPrep._workCap = cappedWorkCap;
+  const onOut: { timedOut?: boolean; nodesExpanded?: number } = {};
+  const onPath = await admissibleOrderSearch(PACK(0, 0), level, onPrep, 60_000, Date.now(), null, onOut, Infinity, SCORING_PROFILES.default, Infinity, true);
+  assert.equal(onPath, null, 'enforceWorkCap: true must stop before reaching the solution');
+  assert.equal(onOut.timedOut, true);
+  assert.ok(onOut.nodesExpanded! > 0 && onOut.nodesExpanded! < refPrep._metrics.nodesExpanded, 'must truncate strictly partway through, at the periodic check');
+  assert.ok(onPrep._workMeter.units >= cappedWorkCap, 'must stop at/after the cap, never well before it');
+
+  const offPrep = prepLevel(level);
+  offPrep._cfg = null;
+  offPrep._metrics = { nodesExpanded: 0 };
+  offPrep._workCap = cappedWorkCap;
+  const offPath = await admissibleOrderSearch(PACK(0, 0), level, offPrep, 60_000, Date.now(), null, null, Infinity, SCORING_PROFILES.default);
+  assert.deepEqual(offPath, refPath, 'enforceWorkCap: false (default) must reach the exact same solution as if prep._workCap were never set');
+});
+
 test('admissibleOrderSearch solves the same level with tieBreakProfile: null (no tie-break)', async () => {
   const level = makeLevel();
   const prep = prepLevel(level);

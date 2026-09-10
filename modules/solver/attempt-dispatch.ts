@@ -29,6 +29,14 @@ export function runAttemptSearch(
   nodeBudget = Infinity,
   out: AttemptSearchOut = null,
   seedSalt = 0,
+  // STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT (see ablation-config.ts's own
+  // comment): default false, byte-for-byte unaffected. Deliberately NOT computed here from
+  // attemptConfig/prep._cfg — this shared dispatcher also serves the admissible-order-fallback
+  // tier's OWN pass over the very same (non-default-profile) AttemptConfig objects, which has no
+  // withWorkCapScope of its own and must never start consulting a leftover/outer prep._workCap.
+  // Only orchestration.ts's admissible-order-non-default-retry call site (the one tier this flag is
+  // actually validated for) may pass true, explicitly, for that one call.
+  enforceAdmissibleOrderWorkCap = false,
 ): Promise<number[] | null> {
   const { beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
   const orderingBias = attemptConfig.orderingBias ?? null;
@@ -40,7 +48,7 @@ export function runAttemptSearch(
   return admissibleOrder
     ? admissibleOrderLds
       ? admissibleOrderSearchLDS(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
-      : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
+      : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile, Infinity, enforceAdmissibleOrderWorkCap)
     : repair
     ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed)
     : beamWidth
