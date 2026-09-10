@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-04T08:47:33.376Z",
+ "generatedAt": "2026-09-10T23:32:45.423Z",
  "description": "Curated development benchmark: a fixed, information-dense subset of Corpus 2's unsolved levels for iterative solver work — see scripts/stress/curate-dev-benchmark.mjs for the selection algorithm. NOT a difficulty-sorted top-N; selected for coverage across failure mode (exhausted vs. timed-out), mechanic routingRegime, near-miss depth, and structural/failure-signature diversity.",
  "sources": {
   "benchmark": "reports/stress/solver-corpus2-latest.json",
@@ -11,7 +11,7 @@
   "floor": 8,
   "dedupThreshold": 0.05
  },
- "poolSize": 725,
+ "poolSize": 671,
  "selectedCount": 112,
  "strata": [
   {
@@ -22,7 +22,7 @@
   },
   {
    "key": "must-cross-heavy/budget-edge",
-   "poolSize": 60,
+   "poolSize": 52,
    "quota": 22,
    "selected": 22
   },
@@ -34,14 +34,14 @@
   },
   {
    "key": "intersection-heavy/budget-edge",
-   "poolSize": 591,
+   "poolSize": 545,
    "quota": 58,
    "selected": 58
   }
  ],
  "badnessSanityCheck": {
-  "meanBadnessFullUnsolvedPool": 13.664827586206897,
-  "meanBadnessSelected": 7.535714285714286,
+  "meanBadnessFullUnsolvedPool": 13.88375558867362,
+  "meanBadnessSelected": 7.589285714285714,
   "note": "Selected mean should sit BELOW the pool mean (near-miss halves pull it down) but not equal to the pool minimum (diversity halves intentionally include some levels that are not close misses, per the \"exhausts search\" / \"diverse mechanics\" requirements)."
  },
  "levelIds": [
@@ -60,7 +60,6 @@
   "R01174",
   "R01179",
   "R01461",
-  "R01477",
   "R01489",
   "R01504",
   "R01568",
@@ -77,16 +76,14 @@
   "R02049",
   "R02059",
   "R02072",
-  "R02077",
   "R02080",
   "R02117",
   "R02118",
   "R02150",
-  "R02151",
   "R02162",
-  "R02168",
   "R02170",
   "R02180",
+  "R02182",
   "R02183",
   "R02191",
   "R02231",
@@ -99,38 +96,44 @@
   "R02398",
   "R02419",
   "R02422",
-  "R02427",
   "R02431",
   "R02437",
   "R02445",
   "R02446",
   "R02448",
   "R02451",
+  "R02452",
   "R02456",
   "R02459",
   "R02468",
   "R02530",
   "R02533",
+  "R02539",
   "R02541",
+  "R02546",
+  "R02555",
   "R02565",
   "R02567",
   "R02586",
   "R02588",
   "R02590",
+  "R02596",
   "R02625",
   "R02640",
   "R02643",
+  "R02654",
   "R02661",
   "R02733",
   "R02741",
   "R02751",
   "R02757",
+  "R02758",
   "R02789",
   "R02802",
+  "R02857",
   "R02896",
   "R02902",
   "R02956",
-  "R02975",
   "R03030",
   "R03031",
   "R03033",
@@ -138,18 +141,15 @@
   "R03056",
   "R03067",
   "R03115",
-  "R03137",
-  "R03153",
   "R03156",
   "R03161",
   "R03168",
   "R03169",
   "R03178",
   "R03201",
-  "R03205",
+  "R03215",
   "R03216",
   "R03241",
-  "R03242",
   "R03259",
   "R03261",
   "R03269",
@@ -165,7 +165,7 @@
    "stability": "budget-edge",
    "badness": 24,
    "nodesExpanded": 144218031,
-   "elapsedMs": 262736,
+   "elapsedMs": 214634,
    "attemptCount": 29,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 69,
@@ -193,8 +193,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02422",
-    "nearestDistance": 0.242
+    "nearestSelectedId": "R02539",
+    "nearestDistance": 0.2305
    }
   },
   {
@@ -202,8 +202,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 150000081,
-   "elapsedMs": 465835,
+   "nodesExpanded": 150000038,
+   "elapsedMs": 442180,
    "attemptCount": 26,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 35,
@@ -239,8 +239,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 17,
-   "nodesExpanded": 225000062,
-   "elapsedMs": 478295,
+   "nodesExpanded": 225000049,
+   "elapsedMs": 539223,
    "attemptCount": 54,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 30,
@@ -281,8 +281,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 23,
-   "nodesExpanded": 225000056,
-   "elapsedMs": 627222,
+   "nodesExpanded": 225000188,
+   "elapsedMs": 700056,
    "attemptCount": 54,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 41,
@@ -325,7 +325,7 @@
    "stability": "budget-edge",
    "badness": 8,
    "nodesExpanded": 192500003,
-   "elapsedMs": 1005375,
+   "elapsedMs": 928268,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 38,
@@ -376,8 +376,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 150000212,
-   "elapsedMs": 410732,
+   "nodesExpanded": 150000137,
+   "elapsedMs": 361802,
    "attemptCount": 26,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 53,
@@ -405,7 +405,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.032
+    "badnessPercentile": 0.031
    }
   },
   {
@@ -413,8 +413,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 12,
-   "nodesExpanded": 164648578,
-   "elapsedMs": 299084,
+   "nodesExpanded": 164438277,
+   "elapsedMs": 267490,
    "attemptCount": 35,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 25,
@@ -451,8 +451,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 192500042,
-   "elapsedMs": 855944,
+   "nodesExpanded": 192500009,
+   "elapsedMs": 770868,
    "attemptCount": 65,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 53,
@@ -485,7 +485,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.034
+    "badnessPercentile": 0.033
    }
   },
   {
@@ -493,8 +493,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 198036624,
-   "elapsedMs": 463307,
+   "nodesExpanded": 197676962,
+   "elapsedMs": 451969,
    "attemptCount": 41,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 39,
@@ -524,7 +524,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.036
+    "badnessPercentile": 0.035
    }
   },
   {
@@ -533,7 +533,7 @@
    "stability": "budget-edge",
    "badness": 10,
    "nodesExpanded": 163841497,
-   "elapsedMs": 485037,
+   "elapsedMs": 414083,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 49,
@@ -562,8 +562,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02661",
-    "nearestDistance": 0.2231
+    "nearestSelectedId": "R02231",
+    "nearestDistance": 0.1888
    }
   },
   {
@@ -572,7 +572,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 150000149,
-   "elapsedMs": 249972,
+   "elapsedMs": 217020,
    "attemptCount": 25,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 38,
@@ -608,7 +608,7 @@
    "stability": "budget-edge",
    "badness": 7,
    "nodesExpanded": 145841811,
-   "elapsedMs": 481405,
+   "elapsedMs": 391152,
    "attemptCount": 30,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 40,
@@ -646,8 +646,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 30,
-   "nodesExpanded": 190733641,
-   "elapsedMs": 799209,
+   "nodesExpanded": 189695925,
+   "elapsedMs": 716983,
    "attemptCount": 41,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 68,
@@ -686,8 +686,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 4,
-   "nodesExpanded": 163697621,
-   "elapsedMs": 443638,
+   "nodesExpanded": 164416317,
+   "elapsedMs": 399173,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 26,
@@ -716,7 +716,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.153
+    "badnessPercentile": 0.118
    }
   },
   {
@@ -725,7 +725,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 180036547,
-   "elapsedMs": 482359,
+   "elapsedMs": 527452,
    "attemptCount": 46,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -756,50 +756,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.003
-   }
-  },
-  {
-   "id": "R01477",
-   "routingRegime": "must-cross-heavy",
-   "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 214210792,
-   "elapsedMs": 619200,
-   "attemptCount": 61,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 29,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 2,
-    "portalPairs": 5,
-    "flippers": 0,
-    "surround": 0,
-    "mustTurn": 6,
-    "adjTurn": 0
-   },
-   "requiredPathCoverageRatio": 0.5362,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "repair|score=repair|guidance=must-turn-biased",
-    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
-    "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
-    "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
-    "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "dfs|score=perimeterSweep|bias=perimeterCW",
-    "dfs|score=perimeterSweep|bias=perimeterCCW",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.051
+    "badnessPercentile": 0.004
    }
   },
   {
@@ -807,8 +764,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 23,
-   "nodesExpanded": 205831081,
-   "elapsedMs": 596216,
+   "nodesExpanded": 205345247,
+   "elapsedMs": 598230,
    "attemptCount": 70,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -843,8 +800,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02170",
-    "nearestDistance": 0.2088
+    "nearestSelectedId": "R02182",
+    "nearestDistance": 0.2046
    }
   },
   {
@@ -853,7 +810,7 @@
    "stability": "budget-edge",
    "badness": 7,
    "nodesExpanded": 192500000,
-   "elapsedMs": 238495,
+   "elapsedMs": 265463,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 42,
@@ -905,7 +862,7 @@
    "stability": "budget-edge",
    "badness": 15,
    "nodesExpanded": 192500007,
-   "elapsedMs": 762882,
+   "elapsedMs": 822943,
    "attemptCount": 49,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 36,
@@ -947,7 +904,7 @@
    "stability": "budget-edge",
    "badness": 20,
    "nodesExpanded": 207350069,
-   "elapsedMs": 630689,
+   "elapsedMs": 695000,
    "attemptCount": 71,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -992,8 +949,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 192500016,
-   "elapsedMs": 824079,
+   "nodesExpanded": 192500015,
+   "elapsedMs": 896672,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 34,
@@ -1044,7 +1001,7 @@
    "stability": "budget-edge",
    "badness": 8,
    "nodesExpanded": 192500013,
-   "elapsedMs": 685161,
+   "elapsedMs": 746712,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 28,
@@ -1095,8 +1052,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 7,
-   "nodesExpanded": 192500005,
-   "elapsedMs": 591991,
+   "nodesExpanded": 192500000,
+   "elapsedMs": 829272,
    "attemptCount": 49,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 38,
@@ -1137,8 +1094,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 188352299,
-   "elapsedMs": 341735,
+   "nodesExpanded": 187308451,
+   "elapsedMs": 565568,
    "attemptCount": 40,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 64,
@@ -1176,7 +1133,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 192500006,
-   "elapsedMs": 405966,
+   "elapsedMs": 523303,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 28,
@@ -1227,7 +1184,7 @@
    "stability": "budget-edge",
    "badness": 18,
    "nodesExpanded": 146926705,
-   "elapsedMs": 210554,
+   "elapsedMs": 181704,
    "attemptCount": 29,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 40,
@@ -1265,7 +1222,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 138496837,
-   "elapsedMs": 457313,
+   "elapsedMs": 400427,
    "attemptCount": 30,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -1294,7 +1251,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.005
+    "badnessPercentile": 0.006
    }
   },
   {
@@ -1302,8 +1259,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 4,
-   "nodesExpanded": 192500000,
-   "elapsedMs": 846042,
+   "nodesExpanded": 192500021,
+   "elapsedMs": 667243,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 27,
@@ -1353,8 +1310,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 4,
-   "nodesExpanded": 165442964,
-   "elapsedMs": 383333,
+   "nodesExpanded": 165814656,
+   "elapsedMs": 332423,
    "attemptCount": 35,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -1382,7 +1339,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.169
+    "badnessPercentile": 0.137
    }
   },
   {
@@ -1391,7 +1348,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 178866489,
-   "elapsedMs": 670023,
+   "elapsedMs": 1188612,
    "attemptCount": 46,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 38,
@@ -1431,7 +1388,7 @@
    "stability": "budget-edge",
    "badness": 3,
    "nodesExpanded": 192500005,
-   "elapsedMs": 372938,
+   "elapsedMs": 562930,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -1482,7 +1439,7 @@
    "stability": "budget-edge",
    "badness": 6,
    "nodesExpanded": 192500004,
-   "elapsedMs": 640440,
+   "elapsedMs": 535173,
    "attemptCount": 65,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -1520,54 +1477,12 @@
    }
   },
   {
-   "id": "R02077",
-   "routingRegime": "intersection-heavy",
-   "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 225000101,
-   "elapsedMs": 518967,
-   "attemptCount": 55,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 25,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 5,
-    "mustCross": 4,
-    "portalPairs": 5,
-    "flippers": 7,
-    "surround": 0,
-    "mustTurn": 7,
-    "adjTurn": 8
-   },
-   "requiredPathCoverageRatio": 0.881,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "repair|score=repair|guidance=must-turn-biased",
-    "dfs|score=perimeterSweep|bias=perimeterCW",
-    "dfs|score=perimeterSweep|bias=perimeterCCW",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "dfs|score=knotBuilder|bias=none",
-    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
-    "dfs|score=perimeterSweep|bias=sideCommitment",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.039
-   }
-  },
-  {
    "id": "R02080",
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 195034556,
-   "elapsedMs": 424184,
+   "nodesExpanded": 194419253,
+   "elapsedMs": 300614,
    "attemptCount": 40,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 47,
@@ -1596,7 +1511,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.008
+    "badnessPercentile": 0.009
    }
   },
   {
@@ -1604,8 +1519,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 4,
-   "nodesExpanded": 192500007,
-   "elapsedMs": 934297,
+   "nodesExpanded": 192500013,
+   "elapsedMs": 736758,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 38,
@@ -1656,8 +1571,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 12,
-   "nodesExpanded": 162887782,
-   "elapsedMs": 698011,
+   "nodesExpanded": 162995533,
+   "elapsedMs": 601953,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 21,
@@ -1695,8 +1610,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 208714632,
-   "elapsedMs": 621374,
+   "nodesExpanded": 207335703,
+   "elapsedMs": 636744,
    "attemptCount": 71,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 26,
@@ -1732,46 +1647,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.041
-   }
-  },
-  {
-   "id": "R02151",
-   "routingRegime": "must-cross-heavy",
-   "stability": "budget-edge",
-   "badness": 13,
-   "nodesExpanded": 163409636,
-   "elapsedMs": 471322,
-   "attemptCount": 36,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 26,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 3,
-    "portalPairs": 6,
-    "flippers": 7,
-    "surround": 0,
-    "mustTurn": 7,
-    "adjTurn": 8
-   },
-   "requiredPathCoverageRatio": 0.663,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "repair|score=repair|guidance=must-turn-biased",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02118",
-    "nearestDistance": 0.1853
+    "badnessPercentile": 0.039
    }
   },
   {
@@ -1779,8 +1655,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 221867999,
-   "elapsedMs": 416399,
+   "nodesExpanded": 219591513,
+   "elapsedMs": 375465,
    "attemptCount": 60,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 24,
@@ -1813,46 +1689,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.068
-   }
-  },
-  {
-   "id": "R02168",
-   "routingRegime": "intersection-heavy",
-   "stability": "budget-edge",
-   "badness": 5,
-   "nodesExpanded": 200100479,
-   "elapsedMs": 529490,
-   "attemptCount": 40,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 39,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 7,
-    "portalPairs": 4,
-    "flippers": 8,
-    "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "requiredPathCoverageRatio": 0.8017,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02080",
-    "nearestDistance": 0.2081
+    "badnessPercentile": 0.039
    }
   },
   {
@@ -1860,8 +1697,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 204796415,
-   "elapsedMs": 671525,
+   "nodesExpanded": 204334468,
+   "elapsedMs": 661984,
    "attemptCount": 71,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 31,
@@ -1897,7 +1734,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.042
+    "badnessPercentile": 0.04
    }
   },
   {
@@ -1906,7 +1743,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 192500003,
-   "elapsedMs": 726365,
+   "elapsedMs": 833773,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -1952,12 +1789,57 @@
    }
   },
   {
+   "id": "R02182",
+   "routingRegime": "intersection-heavy",
+   "stability": "budget-edge",
+   "badness": 4,
+   "nodesExpanded": 203053121,
+   "elapsedMs": 617442,
+   "attemptCount": 70,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 52,
+   "maxStepRank": 3,
+   "mechanicCounts": {
+    "mustPass": 8,
+    "mustCross": 5,
+    "portalPairs": 7,
+    "flippers": 8,
+    "surround": 0,
+    "mustTurn": 0,
+    "adjTurn": 5
+   },
+   "requiredPathCoverageRatio": 0.6648,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "dfs|score=perimeterSweep|bias=perimeterCW",
+    "dfs|score=perimeterSweep|bias=perimeterCCW",
+    "dfs|score=knotBuilder|bias=none",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02445",
+    "nearestDistance": 0.2184
+   }
+  },
+  {
    "id": "R02183",
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 192500042,
-   "elapsedMs": 326346,
+   "elapsedMs": 407015,
    "attemptCount": 49,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 19,
@@ -1989,7 +1871,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.01
+    "badnessPercentile": 0.011
    }
   },
   {
@@ -1997,8 +1879,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 7,
-   "nodesExpanded": 192500007,
-   "elapsedMs": 678969,
+   "nodesExpanded": 192500003,
+   "elapsedMs": 786027,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 26,
@@ -2050,7 +1932,7 @@
    "stability": "budget-edge",
    "badness": 4,
    "nodesExpanded": 163846081,
-   "elapsedMs": 704660,
+   "elapsedMs": 464519,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 25,
@@ -2078,9 +1960,8 @@
     "admissible-order|tieBreak=none|lds=off"
    ],
    "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R01080",
-    "nearestDistance": 0.1888
+    "reason": "near-miss",
+    "badnessPercentile": 0.157
    }
   },
   {
@@ -2089,7 +1970,7 @@
    "stability": "budget-edge",
    "badness": 11,
    "nodesExpanded": 225000085,
-   "elapsedMs": 616719,
+   "elapsedMs": 475134,
    "attemptCount": 55,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 36,
@@ -2131,8 +2012,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 192500001,
-   "elapsedMs": 736257,
+   "nodesExpanded": 192500024,
+   "elapsedMs": 521583,
    "attemptCount": 49,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 24,
@@ -2164,7 +2045,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.044
+    "badnessPercentile": 0.042
    }
   },
   {
@@ -2173,7 +2054,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 192500007,
-   "elapsedMs": 698021,
+   "elapsedMs": 952284,
    "attemptCount": 65,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -2206,7 +2087,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.012
+    "badnessPercentile": 0.013
    }
   },
   {
@@ -2215,7 +2096,7 @@
    "stability": "budget-edge",
    "badness": 8,
    "nodesExpanded": 192500017,
-   "elapsedMs": 617829,
+   "elapsedMs": 672455,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 29,
@@ -2266,8 +2147,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 192500012,
-   "elapsedMs": 633143,
+   "nodesExpanded": 192500010,
+   "elapsedMs": 651751,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -2318,7 +2199,7 @@
    "stability": "budget-edge",
    "badness": 5,
    "nodesExpanded": 192500001,
-   "elapsedMs": 885671,
+   "elapsedMs": 680887,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 39,
@@ -2368,8 +2249,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 192500005,
-   "elapsedMs": 707342,
+   "nodesExpanded": 192500000,
+   "elapsedMs": 611480,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 30,
@@ -2419,8 +2300,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 23,
-   "nodesExpanded": 201686919,
-   "elapsedMs": 688038,
+   "nodesExpanded": 201867861,
+   "elapsedMs": 761348,
    "attemptCount": 40,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 28,
@@ -2459,7 +2340,7 @@
    "stability": "budget-edge",
    "badness": 3,
    "nodesExpanded": 182193800,
-   "elapsedMs": 526940,
+   "elapsedMs": 522655,
    "attemptCount": 45,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 46,
@@ -2489,51 +2370,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.046
-   }
-  },
-  {
-   "id": "R02427",
-   "routingRegime": "intersection-heavy",
-   "stability": "budget-edge",
-   "badness": 2,
-   "nodesExpanded": 203250177,
-   "elapsedMs": 725637,
-   "attemptCount": 70,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 53,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 5,
-    "mustCross": 4,
-    "portalPairs": 5,
-    "flippers": 7,
-    "surround": 2,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "requiredPathCoverageRatio": 0.6199,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "dfs|score=perimeterSweep|bias=perimeterCW",
-    "dfs|score=perimeterSweep|bias=perimeterCCW",
-    "dfs|score=knotBuilder|bias=none",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.014
+    "badnessPercentile": 0.044
    }
   },
   {
@@ -2542,7 +2379,7 @@
    "stability": "budget-edge",
    "badness": 16,
    "nodesExpanded": 198626469,
-   "elapsedMs": 783665,
+   "elapsedMs": 669612,
    "attemptCount": 71,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 46,
@@ -2578,8 +2415,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R01461",
-    "nearestDistance": 0.2373
+    "nearestSelectedId": "R02956",
+    "nearestDistance": 0.218
    }
   },
   {
@@ -2588,7 +2425,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 150000248,
-   "elapsedMs": 455593,
+   "elapsedMs": 476380,
    "attemptCount": 26,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 64,
@@ -2624,8 +2461,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 192500009,
-   "elapsedMs": 753083,
+   "nodesExpanded": 192500010,
+   "elapsedMs": 1016463,
    "attemptCount": 65,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 48,
@@ -2666,8 +2503,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 150000019,
-   "elapsedMs": 618330,
+   "nodesExpanded": 150000241,
+   "elapsedMs": 601902,
    "attemptCount": 26,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 66,
@@ -2695,7 +2532,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.047
+    "badnessPercentile": 0.046
    }
   },
   {
@@ -2703,8 +2540,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 150000242,
-   "elapsedMs": 456950,
+   "nodesExpanded": 150000247,
+   "elapsedMs": 383720,
    "attemptCount": 26,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 30,
@@ -2732,7 +2569,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.019
+    "badnessPercentile": 0.018
    }
   },
   {
@@ -2741,7 +2578,7 @@
    "stability": "budget-edge",
    "badness": 28,
    "nodesExpanded": 150000043,
-   "elapsedMs": 371073,
+   "elapsedMs": 376795,
    "attemptCount": 25,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 62,
@@ -2773,12 +2610,54 @@
    }
   },
   {
+   "id": "R02452",
+   "routingRegime": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 4,
+   "nodesExpanded": 213622900,
+   "elapsedMs": 425219,
+   "attemptCount": 60,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 33,
+   "maxStepRank": 3,
+   "mechanicCounts": {
+    "mustPass": 8,
+    "mustCross": 3,
+    "portalPairs": 7,
+    "flippers": 0,
+    "surround": 1,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "requiredPathCoverageRatio": 0.7677,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+    "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+    "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+    "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "dfs|score=perimeterSweep|bias=perimeterCW",
+    "dfs|score=perimeterSweep|bias=perimeterCCW",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.176
+   }
+  },
+  {
    "id": "R02456",
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 216919329,
-   "elapsedMs": 783193,
+   "nodesExpanded": 210174957,
+   "elapsedMs": 681314,
    "attemptCount": 61,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 54,
@@ -2812,7 +2691,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.085
+    "badnessPercentile": 0.059
    }
   },
   {
@@ -2821,7 +2700,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 192500013,
-   "elapsedMs": 643160,
+   "elapsedMs": 762169,
    "attemptCount": 49,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 32,
@@ -2860,9 +2739,9 @@
    "id": "R02468",
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
-   "badness": 33,
-   "nodesExpanded": 150000059,
-   "elapsedMs": 195495,
+   "badness": 32,
+   "nodesExpanded": 150000166,
+   "elapsedMs": 194605,
    "attemptCount": 25,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -2898,8 +2777,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 225000218,
-   "elapsedMs": 627459,
+   "nodesExpanded": 225000251,
+   "elapsedMs": 613597,
    "attemptCount": 55,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 19,
@@ -2940,8 +2819,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 203742204,
-   "elapsedMs": 801281,
+   "nodesExpanded": 199148541,
+   "elapsedMs": 822878,
    "attemptCount": 71,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 50,
@@ -2981,12 +2860,52 @@
    }
   },
   {
+   "id": "R02539",
+   "routingRegime": "intersection-heavy",
+   "stability": "budget-edge",
+   "badness": 3,
+   "nodesExpanded": 177269874,
+   "elapsedMs": 859705,
+   "attemptCount": 46,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 57,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 7,
+    "mustCross": 7,
+    "portalPairs": 0,
+    "flippers": 0,
+    "surround": 1,
+    "mustTurn": 7,
+    "adjTurn": 7
+   },
+   "requiredPathCoverageRatio": 0.6828,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "repair|score=repair|guidance=must-turn-biased",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "dfs|score=intersectionHarvest|bias=none",
+    "dfs|score=objectiveFirst|bias=none",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.048
+   }
+  },
+  {
    "id": "R02541",
    "routingRegime": "general",
    "stability": "budget-edge",
    "badness": 4,
    "nodesExpanded": 192500009,
-   "elapsedMs": 781542,
+   "elapsedMs": 800579,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 27,
@@ -3032,12 +2951,89 @@
    }
   },
   {
+   "id": "R02546",
+   "routingRegime": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 10,
+   "nodesExpanded": 164211017,
+   "elapsedMs": 471813,
+   "attemptCount": 36,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 23,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 2,
+    "portalPairs": 5,
+    "flippers": 5,
+    "surround": 0,
+    "mustTurn": 5,
+    "adjTurn": 5
+   },
+   "requiredPathCoverageRatio": 0.6434,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "repair|score=repair|guidance=must-turn-biased",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02118",
+    "nearestDistance": 0.1832
+   }
+  },
+  {
+   "id": "R02555",
+   "routingRegime": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 11,
+   "nodesExpanded": 165146130,
+   "elapsedMs": 488698,
+   "attemptCount": 35,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 51,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 3,
+    "portalPairs": 7,
+    "flippers": 6,
+    "surround": 0,
+    "mustTurn": 0,
+    "adjTurn": 0
+   },
+   "requiredPathCoverageRatio": 0.6171,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02032",
+    "nearestDistance": 0.1852
+   }
+  },
+  {
    "id": "R02565",
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 267500019,
-   "elapsedMs": 1158727,
+   "nodesExpanded": 267500007,
+   "elapsedMs": 1234352,
    "attemptCount": 122,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 47,
@@ -3087,8 +3083,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 216969648,
-   "elapsedMs": 510284,
+   "nodesExpanded": 217416658,
+   "elapsedMs": 565975,
    "attemptCount": 61,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 34,
@@ -3122,7 +3118,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.102
+    "badnessPercentile": 0.078
    }
   },
   {
@@ -3130,8 +3126,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 218127039,
-   "elapsedMs": 553491,
+   "nodesExpanded": 211173126,
+   "elapsedMs": 542587,
    "attemptCount": 61,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -3173,8 +3169,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 27,
-   "nodesExpanded": 150000163,
-   "elapsedMs": 286597,
+   "nodesExpanded": 150000152,
+   "elapsedMs": 294491,
    "attemptCount": 26,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 45,
@@ -3211,8 +3207,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 11,
-   "nodesExpanded": 164706511,
-   "elapsedMs": 455376,
+   "nodesExpanded": 164367682,
+   "elapsedMs": 466560,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 21,
@@ -3246,12 +3242,53 @@
    }
   },
   {
+   "id": "R02596",
+   "routingRegime": "intersection-heavy",
+   "stability": "budget-edge",
+   "badness": 3,
+   "nodesExpanded": 192500000,
+   "elapsedMs": 716703,
+   "attemptCount": 49,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 29,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 7,
+    "mustCross": 0,
+    "portalPairs": 0,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 7,
+    "adjTurn": 7
+   },
+   "requiredPathCoverageRatio": 0.91,
+   "failedStrategies": [
+    "dfs|score=perimeterSweep|bias=perimeterCW",
+    "dfs|score=perimeterSweep|bias=perimeterCCW",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "dfs|score=perimeterSweep|bias=sideCommitment",
+    "admissible-order|tieBreak=default|lds=off",
+    "dfs|score=knotBuilder|bias=none",
+    "admissible-order|tieBreak=none|lds=off",
+    "repair|score=repair|guidance=standard"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.05
+   }
+  },
+  {
    "id": "R02625",
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 11,
    "nodesExpanded": 192500000,
-   "elapsedMs": 389662,
+   "elapsedMs": 399580,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 41,
@@ -3303,7 +3340,7 @@
    "stability": "budget-edge",
    "badness": 4,
    "nodesExpanded": 192500001,
-   "elapsedMs": 834477,
+   "elapsedMs": 679722,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -3355,7 +3392,7 @@
    "stability": "budget-edge",
    "badness": 15,
    "nodesExpanded": 218258605,
-   "elapsedMs": 723524,
+   "elapsedMs": 509628,
    "attemptCount": 61,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 46,
@@ -3394,12 +3431,57 @@
    }
   },
   {
+   "id": "R02654",
+   "routingRegime": "intersection-heavy",
+   "stability": "budget-edge",
+   "badness": 3,
+   "nodesExpanded": 200602387,
+   "elapsedMs": 546241,
+   "attemptCount": 71,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 35,
+   "maxStepRank": 3,
+   "mechanicCounts": {
+    "mustPass": 0,
+    "mustCross": 4,
+    "portalPairs": 4,
+    "flippers": 0,
+    "surround": 0,
+    "mustTurn": 8,
+    "adjTurn": 0
+   },
+   "requiredPathCoverageRatio": 0.748,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "repair|score=repair|guidance=must-turn-biased",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "dfs|score=perimeterSweep|bias=perimeterCW",
+    "dfs|score=perimeterSweep|bias=perimeterCCW",
+    "dfs|score=knotBuilder|bias=none",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.051
+   }
+  },
+  {
    "id": "R02661",
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 162434657,
-   "elapsedMs": 450634,
+   "nodesExpanded": 160895212,
+   "elapsedMs": 357674,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 30,
@@ -3428,7 +3510,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.119
+    "badnessPercentile": 0.098
    }
   },
   {
@@ -3436,8 +3518,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 6,
-   "nodesExpanded": 264783440,
-   "elapsedMs": 1033258,
+   "nodesExpanded": 261676379,
+   "elapsedMs": 974207,
    "attemptCount": 123,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 26,
@@ -3488,8 +3570,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 207972922,
-   "elapsedMs": 372281,
+   "nodesExpanded": 207789433,
+   "elapsedMs": 431062,
    "attemptCount": 70,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 31,
@@ -3524,7 +3606,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.025
+    "badnessPercentile": 0.026
    }
   },
   {
@@ -3533,7 +3615,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 192500015,
-   "elapsedMs": 507829,
+   "elapsedMs": 536144,
    "attemptCount": 65,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 38,
@@ -3566,7 +3648,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.027
+    "badnessPercentile": 0.028
    }
   },
   {
@@ -3575,7 +3657,7 @@
    "stability": "budget-edge",
    "badness": 6,
    "nodesExpanded": 192500002,
-   "elapsedMs": 453203,
+   "elapsedMs": 472076,
    "attemptCount": 49,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 49,
@@ -3612,12 +3694,50 @@
    }
   },
   {
+   "id": "R02758",
+   "routingRegime": "must-cross-heavy",
+   "stability": "budget-edge",
+   "badness": 4,
+   "nodesExpanded": 164408007,
+   "elapsedMs": 305488,
+   "attemptCount": 36,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 28,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 6,
+    "mustCross": 2,
+    "portalPairs": 4,
+    "flippers": 5,
+    "surround": 0,
+    "mustTurn": 7,
+    "adjTurn": 0
+   },
+   "requiredPathCoverageRatio": 0.74,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "repair|score=repair|guidance=must-turn-biased",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "near-miss",
+    "badnessPercentile": 0.196
+   }
+  },
+  {
    "id": "R02789",
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 3,
    "nodesExpanded": 192500022,
-   "elapsedMs": 1041811,
+   "elapsedMs": 947207,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 39,
@@ -3668,7 +3788,7 @@
    "stability": "budget-edge",
    "badness": 11,
    "nodesExpanded": 267500000,
-   "elapsedMs": 690837,
+   "elapsedMs": 592570,
    "attemptCount": 122,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -3715,12 +3835,57 @@
    }
   },
   {
+   "id": "R02857",
+   "routingRegime": "intersection-heavy",
+   "stability": "budget-edge",
+   "badness": 14,
+   "nodesExpanded": 202132746,
+   "elapsedMs": 603100,
+   "attemptCount": 70,
+   "status": "node-budget-reached",
+   "cumulativeDiscrepancy": 46,
+   "maxStepRank": 2,
+   "mechanicCounts": {
+    "mustPass": 7,
+    "mustCross": 5,
+    "portalPairs": 4,
+    "flippers": 7,
+    "surround": 3,
+    "mustTurn": 0,
+    "adjTurn": 7
+   },
+   "requiredPathCoverageRatio": 0.5297,
+   "failedStrategies": [
+    "repair|score=repair|guidance=standard",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+    "dfs|score=objectiveFirst|bias=none",
+    "dfs|score=intersectionHarvest|bias=none",
+    "dfs|score=perimeterSweep|bias=perimeterCW",
+    "dfs|score=perimeterSweep|bias=perimeterCCW",
+    "dfs|score=knotBuilder|bias=none",
+    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "admissible-order|tieBreak=default|lds=off",
+    "admissible-order|tieBreak=none|lds=off"
+   ],
+   "selection": {
+    "reason": "diversity",
+    "nearestSelectedId": "R02182",
+    "nearestDistance": 0.2127
+   }
+  },
+  {
    "id": "R02896",
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 10,
    "nodesExpanded": 192500008,
-   "elapsedMs": 745662,
+   "elapsedMs": 773300,
    "attemptCount": 65,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 50,
@@ -3762,8 +3927,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 11,
-   "nodesExpanded": 235779652,
-   "elapsedMs": 1033695,
+   "nodesExpanded": 234689837,
+   "elapsedMs": 1135536,
    "attemptCount": 70,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 30,
@@ -3795,8 +3960,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R03303",
-    "nearestDistance": 0.2008
+    "nearestSelectedId": "R02162",
+    "nearestDistance": 0.3361
    }
   },
   {
@@ -3805,7 +3970,7 @@
    "stability": "budget-edge",
    "badness": 23,
    "nodesExpanded": 205181386,
-   "elapsedMs": 632978,
+   "elapsedMs": 437983,
    "attemptCount": 70,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 55,
@@ -3840,50 +4005,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02431",
-    "nearestDistance": 0.218
-   }
-  },
-  {
-   "id": "R02975",
-   "routingRegime": "must-cross-heavy",
-   "stability": "budget-edge",
-   "badness": 3,
-   "nodesExpanded": 215789149,
-   "elapsedMs": 402546,
-   "attemptCount": 60,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 28,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 6,
-    "mustCross": 2,
-    "portalPairs": 6,
-    "flippers": 0,
-    "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 7
-   },
-   "requiredPathCoverageRatio": 0.7419,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
-    "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
-    "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
-    "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "dfs|score=perimeterSweep|bias=perimeterCW",
-    "dfs|score=perimeterSweep|bias=perimeterCCW",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.136
+    "nearestSelectedId": "R02302",
+    "nearestDistance": 0.2449
    }
   },
   {
@@ -3891,8 +4014,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 8,
-   "nodesExpanded": 190678671,
-   "elapsedMs": 492830,
+   "nodesExpanded": 190294817,
+   "elapsedMs": 719061,
    "attemptCount": 40,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 66,
@@ -3930,8 +4053,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 13,
-   "nodesExpanded": 198918684,
-   "elapsedMs": 466150,
+   "nodesExpanded": 198621999,
+   "elapsedMs": 647663,
    "attemptCount": 41,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 18,
@@ -3971,7 +4094,7 @@
    "stability": "budget-edge",
    "badness": 3,
    "nodesExpanded": 192500000,
-   "elapsedMs": 611553,
+   "elapsedMs": 782041,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 29,
@@ -4021,8 +4144,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 192500017,
-   "elapsedMs": 560150,
+   "nodesExpanded": 192500002,
+   "elapsedMs": 881441,
    "attemptCount": 103,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -4073,7 +4196,7 @@
    "stability": "budget-edge",
    "badness": 2,
    "nodesExpanded": 192500015,
-   "elapsedMs": 529956,
+   "elapsedMs": 762438,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 47,
@@ -4124,7 +4247,7 @@
    "stability": "budget-edge",
    "badness": 14,
    "nodesExpanded": 267500000,
-   "elapsedMs": 1098020,
+   "elapsedMs": 973959,
    "attemptCount": 59,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 46,
@@ -4166,7 +4289,7 @@
    "stability": "budget-edge",
    "badness": 3,
    "nodesExpanded": 192500000,
-   "elapsedMs": 547557,
+   "elapsedMs": 626143,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 33,
@@ -4212,102 +4335,12 @@
    }
   },
   {
-   "id": "R03137",
-   "routingRegime": "intersection-heavy",
-   "stability": "budget-edge",
-   "badness": 9,
-   "nodesExpanded": 200374625,
-   "elapsedMs": 481106,
-   "attemptCount": 70,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 55,
-   "maxStepRank": 3,
-   "mechanicCounts": {
-    "mustPass": 5,
-    "mustCross": 6,
-    "portalPairs": 4,
-    "flippers": 6,
-    "surround": 0,
-    "mustTurn": 0,
-    "adjTurn": 6
-   },
-   "requiredPathCoverageRatio": 0.6961,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "dfs|score=perimeterSweep|bias=perimeterCW",
-    "dfs|score=perimeterSweep|bias=perimeterCCW",
-    "dfs|score=knotBuilder|bias=none",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02741",
-    "nearestDistance": 0.2142
-   }
-  },
-  {
-   "id": "R03153",
-   "routingRegime": "intersection-heavy",
-   "stability": "budget-edge",
-   "badness": 2,
-   "nodesExpanded": 205795112,
-   "elapsedMs": 562922,
-   "attemptCount": 71,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 18,
-   "maxStepRank": 1,
-   "mechanicCounts": {
-    "mustPass": 7,
-    "mustCross": 4,
-    "portalPairs": 5,
-    "flippers": 0,
-    "surround": 1,
-    "mustTurn": 7,
-    "adjTurn": 0
-   },
-   "requiredPathCoverageRatio": 0.7596,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "repair|score=repair|guidance=must-turn-biased",
-    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "dfs|score=perimeterSweep|bias=perimeterCW",
-    "dfs|score=perimeterSweep|bias=perimeterCCW",
-    "dfs|score=knotBuilder|bias=none",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.029
-   }
-  },
-  {
    "id": "R03156",
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 10,
-   "nodesExpanded": 164086908,
-   "elapsedMs": 662913,
+   "nodesExpanded": 165411588,
+   "elapsedMs": 652367,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 46,
@@ -4336,8 +4369,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R01080",
-    "nearestDistance": 0.2036
+    "nearestSelectedId": "R02032",
+    "nearestDistance": 0.2043
    }
   },
   {
@@ -4345,8 +4378,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 4,
-   "nodesExpanded": 192500000,
-   "elapsedMs": 895237,
+   "nodesExpanded": 192500007,
+   "elapsedMs": 924745,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 43,
@@ -4397,8 +4430,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 3,
-   "nodesExpanded": 192500010,
-   "elapsedMs": 409610,
+   "nodesExpanded": 192500006,
+   "elapsedMs": 410406,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 29,
@@ -4448,8 +4481,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 22,
-   "nodesExpanded": 205404931,
-   "elapsedMs": 491549,
+   "nodesExpanded": 205095303,
+   "elapsedMs": 483105,
    "attemptCount": 71,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 25,
@@ -4495,7 +4528,7 @@
    "stability": "budget-edge",
    "badness": 5,
    "nodesExpanded": 192500002,
-   "elapsedMs": 785397,
+   "elapsedMs": 856336,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 60,
@@ -4546,8 +4579,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 6,
-   "nodesExpanded": 150000042,
-   "elapsedMs": 324173,
+   "nodesExpanded": 150000247,
+   "elapsedMs": 327263,
    "attemptCount": 26,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 26,
@@ -4580,40 +4613,42 @@
    }
   },
   {
-   "id": "R03205",
-   "routingRegime": "must-cross-heavy",
+   "id": "R03215",
+   "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
-   "badness": 2,
-   "nodesExpanded": 163682961,
-   "elapsedMs": 519366,
-   "attemptCount": 35,
+   "badness": 4,
+   "nodesExpanded": 145827602,
+   "elapsedMs": 570810,
+   "attemptCount": 30,
    "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 31,
-   "maxStepRank": 3,
+   "cumulativeDiscrepancy": 51,
+   "maxStepRank": 2,
    "mechanicCounts": {
-    "mustPass": 8,
-    "mustCross": 3,
-    "portalPairs": 6,
+    "mustPass": 6,
+    "mustCross": 0,
+    "portalPairs": 0,
     "flippers": 7,
-    "surround": 4,
-    "mustTurn": 0,
-    "adjTurn": 0
+    "surround": 2,
+    "mustTurn": 7,
+    "adjTurn": 6
    },
-   "requiredPathCoverageRatio": 0.5862,
+   "requiredPathCoverageRatio": 0.86,
    "failedStrategies": [
     "repair|score=repair|guidance=standard",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "repair|score=repair|guidance=must-turn-biased",
     "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
     "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+    "dfs|score=intersectionHarvest|bias=none",
+    "dfs|score=objectiveFirst|bias=none",
+    "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
     "admissible-order|tieBreak=default|lds=off",
     "admissible-order|tieBreak=none|lds=off"
    ],
    "selection": {
-    "reason": "near-miss",
-    "badnessPercentile": 0.017
+    "reason": "diversity",
+    "nearestSelectedId": "R02020",
+    "nearestDistance": 0.2015
    }
   },
   {
@@ -4622,7 +4657,7 @@
    "stability": "budget-edge",
    "badness": 7,
    "nodesExpanded": 192500000,
-   "elapsedMs": 713659,
+   "elapsedMs": 721367,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 47,
@@ -4673,8 +4708,8 @@
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 5,
-   "nodesExpanded": 191241834,
-   "elapsedMs": 606787,
+   "nodesExpanded": 191806594,
+   "elapsedMs": 441269,
    "attemptCount": 40,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 41,
@@ -4708,51 +4743,12 @@
    }
   },
   {
-   "id": "R03242",
-   "routingRegime": "intersection-heavy",
-   "stability": "budget-edge",
-   "badness": 11,
-   "nodesExpanded": 193664622,
-   "elapsedMs": 492265,
-   "attemptCount": 40,
-   "status": "node-budget-reached",
-   "cumulativeDiscrepancy": 39,
-   "maxStepRank": 2,
-   "mechanicCounts": {
-    "mustPass": 0,
-    "mustCross": 5,
-    "portalPairs": 7,
-    "flippers": 7,
-    "surround": 1,
-    "mustTurn": 0,
-    "adjTurn": 0
-   },
-   "requiredPathCoverageRatio": 0.6957,
-   "failedStrategies": [
-    "repair|score=repair|guidance=standard",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
-    "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
-    "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
-    "dfs|score=objectiveFirst|bias=none",
-    "dfs|score=intersectionHarvest|bias=none",
-    "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
-    "admissible-order|tieBreak=default|lds=off",
-    "admissible-order|tieBreak=none|lds=off"
-   ],
-   "selection": {
-    "reason": "diversity",
-    "nearestSelectedId": "R02419",
-    "nearestDistance": 0.2047
-   }
-  },
-  {
    "id": "R03259",
    "routingRegime": "intersection-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 192500039,
-   "elapsedMs": 742023,
+   "nodesExpanded": 192500033,
+   "elapsedMs": 632694,
    "attemptCount": 65,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 37,
@@ -4785,7 +4781,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.031
+    "badnessPercentile": 0.029
    }
   },
   {
@@ -4794,7 +4790,7 @@
    "stability": "budget-edge",
    "badness": 3,
    "nodesExpanded": 192500006,
-   "elapsedMs": 807522,
+   "elapsedMs": 692713,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 46,
@@ -4845,7 +4841,7 @@
    "stability": "budget-edge",
    "badness": 14,
    "nodesExpanded": 161418049,
-   "elapsedMs": 583848,
+   "elapsedMs": 565731,
    "attemptCount": 36,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 27,
@@ -4874,8 +4870,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02661",
-    "nearestDistance": 0.2571
+    "nearestSelectedId": "R02231",
+    "nearestDistance": 0.2293
    }
   },
   {
@@ -4883,8 +4879,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 11,
-   "nodesExpanded": 236504568,
-   "elapsedMs": 609092,
+   "nodesExpanded": 236374448,
+   "elapsedMs": 558310,
    "attemptCount": 70,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 52,
@@ -4916,8 +4912,8 @@
    ],
    "selection": {
     "reason": "diversity",
-    "nearestSelectedId": "R02162",
-    "nearestDistance": 0.3202
+    "nearestSelectedId": "R02902",
+    "nearestDistance": 0.2008
    }
   },
   {
@@ -4925,8 +4921,8 @@
    "routingRegime": "must-cross-heavy",
    "stability": "budget-edge",
    "badness": 2,
-   "nodesExpanded": 220266038,
-   "elapsedMs": 457215,
+   "nodesExpanded": 216068486,
+   "elapsedMs": 451387,
    "attemptCount": 61,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 24,
@@ -4960,7 +4956,7 @@
    ],
    "selection": {
     "reason": "near-miss",
-    "badnessPercentile": 0.034
+    "badnessPercentile": 0.02
    }
   },
   {
@@ -4968,8 +4964,8 @@
    "routingRegime": "multi-portal",
    "stability": "budget-edge",
    "badness": 8,
-   "nodesExpanded": 192500016,
-   "elapsedMs": 532482,
+   "nodesExpanded": 192500009,
+   "elapsedMs": 623019,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 19,
@@ -5021,7 +5017,7 @@
    "stability": "budget-edge",
    "badness": 13,
    "nodesExpanded": 192500008,
-   "elapsedMs": 695371,
+   "elapsedMs": 600434,
    "attemptCount": 102,
    "status": "node-budget-reached",
    "cumulativeDiscrepancy": 24,
