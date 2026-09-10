@@ -109,6 +109,7 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 
 - `collect-variant-family-dataset.yml` — native solver work already defaults to 4 workers per runner; its hints belong to generated variants under `data/families`, not canonical levels.
 - `firestore-level-fingerprint-boundary.yml` — narrow emulator-backed persistence proof for level-fingerprint identity: rating document IDs, submission fields/legacy duplicate fallback, and local-hint path keys through real Firestore rules/repositories.
+- `solver-combine-sweep-runs.yml` — cross-run reconciliation utility: merges N sibling dispatches of a workflow that publishes the `solver-sweep-result` artifact (e.g. an original population dispatch plus one or more gap-fill dispatches for ids that individually timed out) into one combined/validated report. Thin `gh run download` + `combine-solver-sweep-reports.mjs`/`validate-solver-sweep-integrity.mjs`/`publish-solver-sweep-result.mjs` glue; no new combining logic.
 
 ## Repository / diagnostic workflows
 
