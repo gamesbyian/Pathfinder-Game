@@ -1,19 +1,19 @@
 {
- "generatedAt": "2026-09-09T04:29:42.295Z",
+ "generatedAt": "2026-09-09T23:42:35.862Z",
  "corpora": [
   "published"
  ],
  "minRatio": 1.25,
  "comparisons": 6170,
- "stable": 4743,
- "drifted": 1427,
+ "stable": 4740,
+ "drifted": 1430,
  "groups": [
   {
    "corpus": "published",
    "level": "P00002",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 3165,
    "maxNodes": 3454,
    "ratio": 1.0913112164296999,
@@ -900,6 +900,12 @@
      "nodes": 3454,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.294Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 3454,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.365Z"
     }
    ]
   },
@@ -3094,7 +3100,7 @@
    "level": "P00005",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 745,
    "maxNodes": 815,
    "ratio": 1.0939597315436242,
@@ -3981,6 +3987,12 @@
      "nodes": 745,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.351Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 745,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.456Z"
     }
    ]
   },
@@ -4464,7 +4476,7 @@
    "level": "P00006",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 18662,
    "maxNodes": 21890,
    "ratio": 1.172971814382167,
@@ -5351,6 +5363,12 @@
      "nodes": 18662,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.392Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 18662,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.495Z"
     }
    ]
   },
@@ -7102,7 +7120,7 @@
    "level": "P00009",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 4452,
    "maxNodes": 5278,
    "ratio": 1.1855345911949686,
@@ -7989,6 +8007,12 @@
      "nodes": 4452,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.432Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 4452,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.558Z"
     }
    ]
   },
@@ -8777,7 +8801,7 @@
    "level": "P00010",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 153,
    "maxNodes": 228,
    "ratio": 1.4901960784313726,
@@ -9664,6 +9688,12 @@
      "nodes": 153,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.446Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 153,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.574Z"
     }
    ]
   },
@@ -11293,7 +11323,7 @@
    "level": "P00011",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 7268,
    "maxNodes": 7333,
    "ratio": 1.00894331315355,
@@ -12180,6 +12210,12 @@
      "nodes": 7268,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.470Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 7268,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.614Z"
     }
    ]
   },
@@ -12833,7 +12869,7 @@
    "level": "P00012",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 182,
    "maxNodes": 209,
    "ratio": 1.1483516483516483,
@@ -13720,6 +13756,12 @@
      "nodes": 182,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.481Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 182,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.636Z"
     }
    ]
   },
@@ -13844,12 +13886,6 @@
      "foundAt": "2026-09-03T21:02:30.987Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 601,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.295Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 722,
      "unit": "nodes",
@@ -13880,7 +13916,7 @@
    "level": "P00015",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 25807,
    "maxNodes": 26222,
    "ratio": 1.016080908280699,
@@ -14767,6 +14803,12 @@
      "nodes": 25807,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.534Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 25807,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.718Z"
     }
    ]
   },
@@ -14852,12 +14894,6 @@
      "nodes": 12057,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:31.033Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 12848,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.299Z"
     },
     {
      "version": "1b73539",
@@ -15152,12 +15188,6 @@
      "foundAt": "2026-09-03T21:02:30.955Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 8326,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.306Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 8346,
      "unit": "nodes",
@@ -15280,12 +15310,6 @@
      "foundAt": "2026-09-03T21:02:30.966Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 8302,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.311Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 8325,
      "unit": "nodes",
@@ -15345,12 +15369,6 @@
      "nodes": 8352,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:30.971Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 8352,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.291Z"
     },
     {
      "version": "1b73539",
@@ -15414,12 +15432,6 @@
      "foundAt": "2026-09-03T21:02:30.976Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 8385,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.316Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 8389,
      "unit": "nodes",
@@ -15479,12 +15491,6 @@
      "nodes": 8352,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:30.982Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 8352,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.286Z"
     },
     {
      "version": "1b73539",
@@ -15668,12 +15674,6 @@
      "nodes": 8302,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:31.014Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 8302,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.320Z"
     },
     {
      "version": "1b73539",
@@ -17691,7 +17691,7 @@
    "level": "P00021",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 791,
    "maxNodes": 1116,
    "ratio": 1.4108723135271808,
@@ -18578,6 +18578,12 @@
      "nodes": 791,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.602Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 791,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.822Z"
     }
    ]
   },
@@ -19022,7 +19028,7 @@
    "level": "P00022",
    "hintIndex": 1,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 438,
    "maxNodes": 723,
    "ratio": 1.6506849315068493,
@@ -19909,6 +19915,12 @@
      "nodes": 438,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.608Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 438,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.835Z"
     }
    ]
   },
@@ -20087,7 +20099,7 @@
    "level": "P00023",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1638,
    "maxNodes": 2118,
    "ratio": 1.293040293040293,
@@ -20974,6 +20986,12 @@
      "nodes": 1677,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:55.619Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1677,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.852Z"
     }
    ]
   },
@@ -22517,10 +22535,10 @@
    "level": "P00026",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
-   "minNodes": 2675873,
+   "versions": 148,
+   "minNodes": 5170,
    "maxNodes": 3147844,
-   "ratio": 1.1763801944262675,
+   "ratio": 608.8673114119923,
    "drifted": true,
    "byVersion": [
     {
@@ -23404,6 +23422,12 @@
      "nodes": 2675873,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.090Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 5170,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.933Z"
     }
    ]
   },
@@ -25473,7 +25497,7 @@
    "level": "P00029",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 2338,
    "maxNodes": 2352,
    "ratio": 1.0059880239520957,
@@ -26360,6 +26384,12 @@
      "nodes": 2338,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.121Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2338,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.987Z"
     }
    ]
   },
@@ -26708,7 +26738,7 @@
    "level": "P00031",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 2663,
    "maxNodes": 2879,
    "ratio": 1.0811115283514834,
@@ -27595,6 +27625,12 @@
      "nodes": 2663,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.146Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2663,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.019Z"
     }
    ]
   },
@@ -27632,12 +27668,6 @@
      "nodes": 2200,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:31.682Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 2200,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.400Z"
     },
     {
      "version": "1b73539",
@@ -27882,12 +27912,6 @@
      "nodes": 21471,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:31.674Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 21471,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.415Z"
     },
     {
      "version": "1b73539",
@@ -28451,12 +28475,6 @@
      "foundAt": "2026-09-03T21:02:31.626Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 48384,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.404Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 48554,
      "unit": "nodes",
@@ -28931,12 +28949,6 @@
      "nodes": 13493,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:31.709Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 13333,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.397Z"
     },
     {
      "version": "1b73539",
@@ -31439,7 +31451,7 @@
    "level": "P00036",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1218,
    "maxNodes": 2878,
    "ratio": 2.3628899835796386,
@@ -32326,6 +32338,12 @@
      "nodes": 1218,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.246Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1223,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.123Z"
     }
    ]
   },
@@ -32334,10 +32352,10 @@
    "level": "P00037",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
-   "minNodes": 1805058,
+   "versions": 148,
+   "minNodes": 23528,
    "maxNodes": 2119602,
-   "ratio": 1.1742570044840663,
+   "ratio": 90.08849030941856,
    "drifted": true,
    "byVersion": [
     {
@@ -33221,6 +33239,12 @@
      "nodes": 1805058,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.521Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 23528,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.141Z"
     }
    ]
   },
@@ -34144,10 +34168,10 @@
    "level": "P00038",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
-   "minNodes": 1197,
+   "versions": 148,
+   "minNodes": 1171,
    "maxNodes": 1293,
-   "ratio": 1.0802005012531328,
+   "ratio": 1.1041844577284372,
    "drifted": true,
    "byVersion": [
     {
@@ -35031,6 +35055,12 @@
      "nodes": 1197,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.529Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1171,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.157Z"
     }
    ]
   },
@@ -35209,7 +35239,7 @@
    "level": "P00040",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 48476,
    "maxNodes": 85975,
    "ratio": 1.7735580493440053,
@@ -36096,6 +36126,12 @@
      "nodes": 48476,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.568Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 48476,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.212Z"
     }
    ]
   },
@@ -37010,7 +37046,7 @@
    "level": "P00043",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 54644,
    "maxNodes": 55575,
    "ratio": 1.017037552155772,
@@ -37897,6 +37933,12 @@
      "nodes": 54644,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.635Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 54644,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.263Z"
     }
    ]
   },
@@ -37905,7 +37947,7 @@
    "level": "P00044",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 666,
    "maxNodes": 1377,
    "ratio": 2.0675675675675675,
@@ -38792,6 +38834,12 @@
      "nodes": 666,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.642Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 666,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.277Z"
     }
    ]
   },
@@ -39297,7 +39345,7 @@
    "level": "P00047",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 4336,
    "maxNodes": 7047,
    "ratio": 1.625230627306273,
@@ -40184,6 +40232,12 @@
      "nodes": 4336,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.672Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 4336,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.333Z"
     }
    ]
   },
@@ -40598,12 +40652,6 @@
      "nodes": 38398,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:32.079Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 38332,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.431Z"
     },
     {
      "version": "1b73539",
@@ -41257,7 +41305,7 @@
    "level": "P00049",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 234822,
    "maxNodes": 239567,
    "ratio": 1.0202067949340352,
@@ -42144,6 +42192,12 @@
      "nodes": 234822,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.765Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 234822,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.400Z"
     }
    ]
   },
@@ -42152,7 +42206,7 @@
    "level": "P00052",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 76850,
    "maxNodes": 76856,
    "ratio": 1.000078074170462,
@@ -43039,6 +43093,12 @@
      "nodes": 76850,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.808Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 76850,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.469Z"
     }
    ]
   },
@@ -43546,7 +43606,7 @@
    "level": "P00054",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 40194,
    "maxNodes": 40261,
    "ratio": 1.0016669154600188,
@@ -44433,6 +44493,12 @@
      "nodes": 40194,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.843Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 40194,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.513Z"
     }
    ]
   },
@@ -45426,10 +45492,10 @@
    "level": "P00056",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
-   "minNodes": 7419,
+   "versions": 148,
+   "minNodes": 6783,
    "maxNodes": 11459,
-   "ratio": 1.5445477827200431,
+   "ratio": 1.6893704850361198,
    "drifted": true,
    "byVersion": [
     {
@@ -46313,6 +46379,12 @@
      "nodes": 7419,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.867Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 6783,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.553Z"
     }
    ]
   },
@@ -47108,7 +47180,7 @@
    "level": "P00058",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 6501,
    "maxNodes": 7527,
    "ratio": 1.1578218735579142,
@@ -47995,6 +48067,12 @@
      "nodes": 6501,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.889Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 6501,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.594Z"
     }
    ]
   },
@@ -54333,7 +54411,7 @@
    "level": "P00064",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1829,
    "maxNodes": 1842,
    "ratio": 1.0071077091306726,
@@ -55220,6 +55298,12 @@
      "nodes": 1829,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.948Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1829,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.704Z"
     }
    ]
   },
@@ -55398,7 +55482,7 @@
    "level": "P00065",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 32290,
    "maxNodes": 32344,
    "ratio": 1.0016723443790647,
@@ -56285,6 +56369,12 @@
      "nodes": 32290,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.963Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 32290,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.727Z"
     }
    ]
   },
@@ -56908,7 +56998,7 @@
    "level": "P00066",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 14913,
    "maxNodes": 793316,
    "ratio": 53.196271709246965,
@@ -57795,6 +57885,12 @@
      "nodes": 14913,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.979Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 14913,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.754Z"
     }
    ]
   },
@@ -58143,7 +58239,7 @@
    "level": "P00067",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1282,
    "maxNodes": 2038,
    "ratio": 1.5897035881435257,
@@ -59030,6 +59126,12 @@
      "nodes": 1282,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:56.988Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1282,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.769Z"
     }
    ]
   },
@@ -60068,7 +60170,7 @@
    "level": "P00069",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 3558,
    "maxNodes": 3995,
    "ratio": 1.122821810005621,
@@ -60955,6 +61057,12 @@
      "nodes": 3558,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.008Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 3558,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.806Z"
     }
    ]
   },
@@ -63279,7 +63387,7 @@
    "level": "P00071",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 15606,
    "maxNodes": 20454,
    "ratio": 1.310649750096117,
@@ -64166,6 +64274,12 @@
      "nodes": 15606,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.030Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 15606,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.847Z"
     }
    ]
   },
@@ -65028,7 +65142,7 @@
    "level": "P00073",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 7025,
    "maxNodes": 14140,
    "ratio": 2.012811387900356,
@@ -65915,6 +66029,12 @@
      "nodes": 7025,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.054Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 7025,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.891Z"
     }
    ]
   },
@@ -67701,10 +67821,10 @@
    "level": "P00074",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
-   "minNodes": 2141359,
+   "versions": 148,
+   "minNodes": 4602,
    "maxNodes": 3145283,
-   "ratio": 1.4688256382979221,
+   "ratio": 683.4600173837462,
    "drifted": true,
    "byVersion": [
     {
@@ -68588,6 +68708,12 @@
      "nodes": 2141359,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.335Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 4602,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.907Z"
     }
    ]
   },
@@ -68596,7 +68722,7 @@
    "level": "P00075",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 42341,
    "maxNodes": 90798,
    "ratio": 2.1444462813821117,
@@ -69483,6 +69609,12 @@
      "nodes": 42341,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.349Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 42341,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.925Z"
     }
    ]
   },
@@ -69520,12 +69652,6 @@
      "nodes": 10703,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:21.674Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 10703,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.458Z"
     },
     {
      "version": "1b73539",
@@ -70089,12 +70215,6 @@
      "foundAt": "2026-09-03T21:02:21.657Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 18,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.471Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 65,
      "unit": "nodes",
@@ -70154,12 +70274,6 @@
      "nodes": 18,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:21.663Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 18,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.454Z"
     },
     {
      "version": "1b73539",
@@ -70223,12 +70337,6 @@
      "foundAt": "2026-09-03T21:02:21.666Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 1094,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.475Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 1064,
      "unit": "nodes",
@@ -70288,12 +70396,6 @@
      "nodes": 18,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:21.670Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 18,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.451Z"
     },
     {
      "version": "1b73539",
@@ -70479,12 +70581,6 @@
      "foundAt": "2026-09-03T21:02:21.698Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 261,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.478Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 1370,
      "unit": "nodes",
@@ -70568,12 +70664,6 @@
      "nodes": 10278,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:21.711Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 10226,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.462Z"
     },
     {
      "version": "1b73539",
@@ -70983,7 +71073,7 @@
    "level": "P00076",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 113958,
    "maxNodes": 115123,
    "ratio": 1.010223064637849,
@@ -71870,6 +71960,12 @@
      "nodes": 113958,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.378Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 113958,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.964Z"
     }
    ]
   },
@@ -73384,12 +73480,6 @@
      "foundAt": "2026-09-03T21:02:30.848Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 23330,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.262Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 23330,
      "unit": "nodes",
@@ -73505,7 +73595,7 @@
    "level": "P00078",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 9720,
    "maxNodes": 10414,
    "ratio": 1.0713991769547324,
@@ -74392,6 +74482,12 @@
      "nodes": 9720,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.394Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 9720,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.995Z"
     }
    ]
   },
@@ -74594,7 +74690,7 @@
    "level": "P00079",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1299,
    "maxNodes": 1386,
    "ratio": 1.0669745958429562,
@@ -75481,6 +75577,12 @@
      "nodes": 1299,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.404Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1299,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.012Z"
     }
    ]
   },
@@ -75744,7 +75846,7 @@
    "level": "P00080",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 16620,
    "maxNodes": 17420,
    "ratio": 1.0481347773766547,
@@ -76631,6 +76733,12 @@
      "nodes": 16620,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.415Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 16620,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.031Z"
     }
    ]
   },
@@ -76724,7 +76832,7 @@
    "level": "P00081",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1165,
    "maxNodes": 1235,
    "ratio": 1.0600858369098713,
@@ -77611,6 +77719,12 @@
      "nodes": 1165,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.426Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1165,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.045Z"
     }
    ]
   },
@@ -78715,7 +78829,7 @@
    "level": "P00083",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 4206,
    "maxNodes": 4398,
    "ratio": 1.0456490727532097,
@@ -79602,6 +79716,12 @@
      "nodes": 4206,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.447Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 4206,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.083Z"
     }
    ]
   },
@@ -79610,7 +79730,7 @@
    "level": "P00084",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 11729,
    "maxNodes": 80636,
    "ratio": 6.874925398584705,
@@ -80497,6 +80617,12 @@
      "nodes": 11978,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.463Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 11978,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.101Z"
     }
    ]
   },
@@ -81163,7 +81289,7 @@
    "level": "P00085",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 100843,
    "maxNodes": 101944,
    "ratio": 1.0109179615838482,
@@ -82050,6 +82176,12 @@
      "nodes": 100843,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.485Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 100843,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.130Z"
     }
    ]
   },
@@ -82058,7 +82190,7 @@
    "level": "P00086",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 2967,
    "maxNodes": 3415,
    "ratio": 1.150994270306707,
@@ -82945,6 +83077,12 @@
      "nodes": 3010,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.495Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 3010,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.151Z"
     }
    ]
   },
@@ -84001,7 +84139,7 @@
    "level": "P00087",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 23510,
    "maxNodes": 143124,
    "ratio": 6.087792428753722,
@@ -84888,6 +85026,12 @@
      "nodes": 23510,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.506Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 23510,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.169Z"
     }
    ]
   },
@@ -85723,7 +85867,7 @@
    "level": "P00088",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 105405,
    "maxNodes": 109140,
    "ratio": 1.0354347516721218,
@@ -86610,6 +86754,12 @@
      "nodes": 105405,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.532Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 105405,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.204Z"
     }
    ]
   },
@@ -86703,7 +86853,7 @@
    "level": "P00089",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 22160,
    "maxNodes": 25321,
    "ratio": 1.14264440433213,
@@ -87590,6 +87740,12 @@
      "nodes": 22160,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.543Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 22160,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.223Z"
     }
    ]
   },
@@ -87683,7 +87839,7 @@
    "level": "P00090",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 9430,
    "maxNodes": 9431,
    "ratio": 1.0001060445387062,
@@ -88570,6 +88726,12 @@
      "nodes": 9430,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.552Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 9430,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.239Z"
     }
    ]
   },
@@ -88578,7 +88740,7 @@
    "level": "P00091",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 2306,
    "maxNodes": 2508,
    "ratio": 1.0875975715524717,
@@ -89465,6 +89627,12 @@
      "nodes": 2306,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.562Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2306,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.257Z"
     }
    ]
   },
@@ -89558,7 +89726,7 @@
    "level": "P00092",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 17110,
    "maxNodes": 19045,
    "ratio": 1.1130917592051432,
@@ -90445,6 +90613,12 @@
      "nodes": 17110,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.572Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 17110,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.273Z"
     }
    ]
   },
@@ -91599,7 +91773,7 @@
    "level": "P00093",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 56458,
    "maxNodes": 57124,
    "ratio": 1.0117963796096212,
@@ -92486,6 +92660,12 @@
      "nodes": 57124,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.593Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 57124,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.303Z"
     }
    ]
   },
@@ -92523,12 +92703,6 @@
      "nodes": 17180,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:32.202Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 17180,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.350Z"
     },
     {
      "version": "1b73539",
@@ -92651,12 +92825,6 @@
      "nodes": 17993,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:32.269Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 17993,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.364Z"
     },
     {
      "version": "1b73539",
@@ -92903,12 +93071,6 @@
      "foundAt": "2026-09-03T21:02:32.215Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 20680,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.355Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 21916,
      "unit": "nodes",
@@ -92968,12 +93130,6 @@
      "nodes": 18825,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:32.225Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 18825,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.359Z"
     },
     {
      "version": "1b73539",
@@ -93220,12 +93376,6 @@
      "foundAt": "2026-09-03T21:02:32.235Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 318033,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.334Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 317292,
      "unit": "nodes",
@@ -93370,12 +93520,6 @@
      "nodes": 62641,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:32.282Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 62555,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.338Z"
     },
     {
      "version": "1b73539",
@@ -93633,7 +93777,7 @@
    "level": "P00094",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 27072,
    "maxNodes": 28043,
    "ratio": 1.03586731678487,
@@ -94520,6 +94664,12 @@
      "nodes": 27072,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.606Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 27072,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.324Z"
     }
    ]
   },
@@ -94698,7 +94848,7 @@
    "level": "P00095",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 42181,
    "maxNodes": 42971,
    "ratio": 1.018728811550224,
@@ -95585,6 +95735,12 @@
      "nodes": 42193,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.617Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 42193,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.342Z"
     }
    ]
   },
@@ -96532,7 +96688,7 @@
    "level": "P00097",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 9567,
    "maxNodes": 10928,
    "ratio": 1.142259851573116,
@@ -97419,6 +97575,12 @@
      "nodes": 9567,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.735Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 9567,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.470Z"
     }
    ]
   },
@@ -97456,12 +97618,6 @@
      "nodes": 5472,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:18.624Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 5472,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.032Z"
     },
     {
      "version": "1b73539",
@@ -97791,12 +97947,6 @@
      "nodes": 100956,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:18.681Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 100944,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.038Z"
     },
     {
      "version": "1b73539",
@@ -98206,7 +98356,7 @@
    "level": "P00099",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 67817,
    "maxNodes": 75264,
    "ratio": 1.109810224574959,
@@ -99093,6 +99243,12 @@
      "nodes": 67817,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.984Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 67817,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.756Z"
     }
    ]
   },
@@ -99186,7 +99342,7 @@
    "level": "P00100",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 8597,
    "maxNodes": 8690,
    "ratio": 1.0108177271141097,
@@ -100073,6 +100229,12 @@
      "nodes": 8690,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:57.999Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 8690,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.796Z"
     }
    ]
   },
@@ -100166,7 +100328,7 @@
    "level": "P00101",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 39647,
    "maxNodes": 57807,
    "ratio": 1.4580422226145735,
@@ -101053,6 +101215,12 @@
      "nodes": 39647,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.026Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 39647,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.830Z"
     }
    ]
   },
@@ -101061,7 +101229,7 @@
    "level": "P00102",
    "hintIndex": 4,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 18803,
    "maxNodes": 19319,
    "ratio": 1.0274424293995639,
@@ -101948,6 +102116,12 @@
      "nodes": 18803,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.038Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 18803,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.847Z"
     }
    ]
   },
@@ -102639,7 +102813,7 @@
    "level": "P00103",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 2723,
    "maxNodes": 2976,
    "ratio": 1.0929122291590159,
@@ -103526,6 +103700,12 @@
      "nodes": 2723,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.049Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2723,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.865Z"
     }
    ]
   },
@@ -104070,7 +104250,7 @@
    "level": "P00104",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 5286,
    "maxNodes": 22117,
    "ratio": 4.1840711312902,
@@ -104957,6 +105137,12 @@
      "nodes": 5299,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.066Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 5299,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.890Z"
     }
    ]
   },
@@ -107777,12 +107963,6 @@
      "foundAt": "2026-09-03T21:02:27.110Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 252295,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.947Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 253005,
      "unit": "nodes",
@@ -107842,12 +108022,6 @@
      "nodes": 252295,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:27.128Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 252295,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.928Z"
     },
     {
      "version": "1b73539",
@@ -107911,12 +108085,6 @@
      "foundAt": "2026-09-03T21:02:27.132Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 252295,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.957Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 253005,
      "unit": "nodes",
@@ -107976,12 +108144,6 @@
      "nodes": 252295,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:27.137Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 252295,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.923Z"
     },
     {
      "version": "1b73539",
@@ -108104,12 +108266,6 @@
      "nodes": 252295,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:27.175Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 252295,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.961Z"
     },
     {
      "version": "1b73539",
@@ -108476,12 +108632,6 @@
      "nodes": 51740,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:27.039Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 51740,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.937Z"
     },
     {
      "version": "1b73539",
@@ -109111,7 +109261,7 @@
    "level": "P00107",
    "hintIndex": 0,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 4226,
    "maxNodes": 5535,
    "ratio": 1.3097491717936582,
@@ -109998,6 +110148,12 @@
      "nodes": 5535,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.130Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 5535,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:52.970Z"
     }
    ]
   },
@@ -112366,7 +112522,7 @@
    "level": "P00109",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 8204,
    "maxNodes": 8335,
    "ratio": 1.015967820575329,
@@ -113253,6 +113409,12 @@
      "nodes": 8208,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.173Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 8208,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.023Z"
     }
    ]
   },
@@ -114054,7 +114216,7 @@
    "level": "P00111",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 66146,
    "maxNodes": 66419,
    "ratio": 1.0041272336951592,
@@ -114941,6 +115103,12 @@
      "nodes": 66146,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.358Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 66146,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.251Z"
     }
    ]
   },
@@ -115034,10 +115202,10 @@
    "level": "P00112",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
-   "minNodes": 10214,
+   "versions": 148,
+   "minNodes": 2684,
    "maxNodes": 12724,
-   "ratio": 1.2457411396122968,
+   "ratio": 4.740685543964233,
    "drifted": true,
    "byVersion": [
     {
@@ -115921,6 +116089,12 @@
      "nodes": 10214,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.371Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2684,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.270Z"
     }
    ]
   },
@@ -117313,7 +117487,7 @@
    "level": "P00114",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 16373,
    "maxNodes": 37028,
    "ratio": 2.261528125572589,
@@ -118200,6 +118374,12 @@
      "nodes": 16373,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.393Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 16373,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.308Z"
     }
    ]
   },
@@ -119391,7 +119571,7 @@
    "level": "P00115",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 7586,
    "maxNodes": 31393,
    "ratio": 4.138281044028473,
@@ -120278,6 +120458,12 @@
      "nodes": 7586,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.404Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 7586,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.324Z"
     }
    ]
   },
@@ -120578,7 +120764,7 @@
    "level": "P00116",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 381,
    "maxNodes": 1252,
    "ratio": 3.286089238845144,
@@ -121465,6 +121651,12 @@
      "nodes": 381,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.414Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 381,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.342Z"
     }
    ]
   },
@@ -123127,10 +123319,10 @@
    "level": "P00118",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 147,
-   "minNodes": 4251,
+   "versions": 148,
+   "minNodes": 3445,
    "maxNodes": 5052,
-   "ratio": 1.1884262526464362,
+   "ratio": 1.4664731494920173,
    "drifted": true,
    "byVersion": [
     {
@@ -124014,6 +124206,12 @@
      "nodes": 4251,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.443Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 3445,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.387Z"
     }
    ]
   },
@@ -126103,7 +126301,7 @@
    "level": "P00121",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 14102,
    "maxNodes": 14196,
    "ratio": 1.0066657211743015,
@@ -126990,6 +127188,12 @@
      "nodes": 14154,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.502Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 14154,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.471Z"
     }
    ]
   },
@@ -129900,10 +130104,10 @@
    "level": "P00124",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
-   "minNodes": 1483,
+   "versions": 148,
+   "minNodes": 1012,
    "maxNodes": 1997,
-   "ratio": 1.3465947403910992,
+   "ratio": 1.9733201581027668,
    "drifted": true,
    "byVersion": [
     {
@@ -130787,6 +130991,12 @@
      "nodes": 1483,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:58.554Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1012,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:53.537Z"
     }
    ]
   },
@@ -132046,7 +132256,7 @@
    "level": "P00125",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 2527412,
    "maxNodes": 2570837,
    "ratio": 1.017181607114313,
@@ -132933,6 +133143,12 @@
      "nodes": 2527412,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:59.482Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2527412,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:54.489Z"
     }
    ]
   },
@@ -133062,7 +133278,7 @@
    "level": "P00126",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 111853,
    "maxNodes": 124782,
    "ratio": 1.1155892108392265,
@@ -133949,6 +134165,12 @@
      "nodes": 112107,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:59.512Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 112095,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:54.527Z"
     }
    ]
   },
@@ -134079,7 +134301,7 @@
    "level": "P00127",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 170,
    "maxNodes": 4694,
    "ratio": 27.611764705882354,
@@ -134966,6 +135188,12 @@
      "nodes": 170,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:59.521Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 170,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:54.550Z"
     }
    ]
   },
@@ -137234,7 +137462,7 @@
    "level": "P00129",
    "hintIndex": 27,
    "config": "beam|mustCrossFirst|-|2000|-|74",
-   "versions": 136,
+   "versions": 137,
    "minNodes": 287883,
    "maxNodes": 369090,
    "ratio": 1.2820833463594585,
@@ -138055,6 +138283,12 @@
      "nodes": 369090,
      "unit": "work",
      "foundAt": "2026-09-09T04:28:59.711Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 369090,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:54.716Z"
     }
    ]
   },
@@ -139197,10 +139431,10 @@
    "level": "P00132",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
-   "minNodes": 5366,
+   "versions": 148,
+   "minNodes": 5016,
    "maxNodes": 7039,
-   "ratio": 1.3117778606038017,
+   "ratio": 1.4033094098883572,
    "drifted": true,
    "byVersion": [
     {
@@ -140084,6 +140318,12 @@
      "nodes": 5366,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:00.130Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 5016,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:55.104Z"
     }
    ]
   },
@@ -140092,7 +140332,7 @@
    "level": "P00133",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|perimeterCCW|-|-|73",
-   "versions": 128,
+   "versions": 129,
    "minNodes": 5346071,
    "maxNodes": 6603916,
    "ratio": 1.2352840057679744,
@@ -140865,6 +141105,12 @@
      "nodes": 5346071,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:01.459Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 5346071,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:56.446Z"
     }
    ]
   },
@@ -141000,10 +141246,10 @@
    "level": "P00134",
    "hintIndex": 3,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 147,
-   "minNodes": 7891,
+   "versions": 148,
+   "minNodes": 7269,
    "maxNodes": 16813,
-   "ratio": 2.1306551767836774,
+   "ratio": 2.312972898610538,
    "drifted": true,
    "byVersion": [
     {
@@ -141887,6 +142133,12 @@
      "nodes": 7891,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:01.467Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 7269,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:56.469Z"
     }
    ]
   },
@@ -144845,12 +145097,6 @@
      "foundAt": "2026-09-03T21:02:16.831Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 112124,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.183Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 111947,
      "unit": "nodes",
@@ -145334,12 +145580,6 @@
      "nodes": 77735,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:16.878Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 76540,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.166Z"
     },
     {
      "version": "1b73539",
@@ -146037,12 +146277,6 @@
      "foundAt": "2026-09-03T21:02:16.805Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 290961,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.173Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 284630,
      "unit": "nodes",
@@ -146104,12 +146338,6 @@
      "foundAt": "2026-09-03T21:02:16.824Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 408972,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.161Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 395064,
      "unit": "nodes",
@@ -146169,12 +146397,6 @@
      "nodes": 408905,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:16.836Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 408905,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.155Z"
     },
     {
      "version": "1b73539",
@@ -146299,12 +146521,6 @@
      "foundAt": "2026-09-03T21:02:16.863Z"
     },
     {
-     "version": "277ca21",
-     "nodes": 305954,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.188Z"
-    },
-    {
      "version": "1b73539",
      "nodes": 297684,
      "unit": "nodes",
@@ -146364,12 +146580,6 @@
      "nodes": 164243,
      "unit": "nodes",
      "foundAt": "2026-09-03T21:02:16.818Z"
-    },
-    {
-     "version": "277ca21",
-     "nodes": 164243,
-     "unit": "nodes",
-     "foundAt": "2026-09-03T21:07:05.178Z"
     },
     {
      "version": "1b73539",
@@ -147383,6 +147593,547 @@
   {
    "corpus": "published",
    "level": "P00137",
+   "hintIndex": 10,
+   "config": "dfs|nearClosureRescue|-|-|-|74",
+   "versions": 88,
+   "minNodes": 41594,
+   "maxNodes": 43916,
+   "ratio": 1.0558253594268403,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "1fff5cd",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:22.872Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:59.231Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:18.011Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:57:03.013Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:33.613Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:19.113Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:12:01.220Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:55.454Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:16.082Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:27.397Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:23.083Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:45.615Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:31.759Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:22.788Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:40.439Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:31.253Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:21.832Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:16.233Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:50:00.815Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:53.677Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:26.624Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:12.046Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:23.005Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:30.935Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:05:00.068Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:25.300Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:39.764Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:27.976Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:50.015Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:33.017Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:44.573Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:06.291Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:15.914Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:48.480Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:29.113Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:19.735Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:38.387Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:46.536Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:52.724Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:34.659Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:44.697Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:47.568Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:07:01.268Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:46:03.121Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:35.627Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:13.363Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:28.441Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:18.925Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:34.129Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:13.673Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:34.845Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:57.685Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:53.786Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:38.655Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:46:04.439Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:39.178Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:46.624Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:27.448Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:13.048Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:40.070Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:45.413Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:12:06.155Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:57.498Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:10.096Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:18.477Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:16.402Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:45.287Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:13:03.051Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:51.657Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:43.234Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:54.062Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:20.481Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:59.170Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:51.672Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:45.988Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:17.698Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:23.313Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:53.830Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:27:01.352Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:18.191Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:43.773Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:12.368Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:58.039Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:31.461Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:39.280Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:24.057Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 43916,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:29:02.068Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 41594,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:57.135Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00137",
    "hintIndex": 499,
    "config": "beam|harvestThenFinish|-|2000|-|95",
    "versions": 6,
@@ -147995,10 +148746,10 @@
    "level": "P00138",
    "hintIndex": 57,
    "config": "beam|intersectionHarvest|-|5000|mechanic-buckets|74",
-   "versions": 5,
-   "minNodes": 5392939,
+   "versions": 6,
+   "minNodes": 5222736,
    "maxNodes": 5447892,
-   "ratio": 1.0101898055957985,
+   "ratio": 1.0431107373606479,
    "drifted": true,
    "byVersion": [
     {
@@ -148030,6 +148781,12 @@
      "nodes": 5392939,
      "unit": "work",
      "foundAt": "2026-08-05T01:06:38.419Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 5222736,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:59.031Z"
     }
    ]
   },
@@ -148038,7 +148795,7 @@
    "level": "P00139",
    "hintIndex": 54,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 967790,
    "maxNodes": 971140,
    "ratio": 1.003461494745761,
@@ -148925,6 +149682,12 @@
      "nodes": 967790,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:05.154Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 967790,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:59.293Z"
     }
    ]
   },
@@ -150756,7 +151519,7 @@
    "level": "P00143",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 2205,
    "maxNodes": 2824,
    "ratio": 1.2807256235827664,
@@ -151643,6 +152406,12 @@
      "nodes": 2824,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:17.164Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2705,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:11.230Z"
     }
    ]
   },
@@ -153502,7 +154271,7 @@
    "level": "P00144",
    "hintIndex": 25,
    "config": "repair|repair|-|-|-|100",
-   "versions": 116,
+   "versions": 117,
    "minNodes": 44384,
    "maxNodes": 45125,
    "ratio": 1.016695205479452,
@@ -154203,6 +154972,12 @@
      "nodes": 44384,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:17.247Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 44384,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:11.326Z"
     }
    ]
   },
@@ -155336,6 +156111,547 @@
   },
   {
    "corpus": "published",
+   "level": "P00146",
+   "hintIndex": 315,
+   "config": "repair|repair|-|-|-|100",
+   "versions": 88,
+   "minNodes": 30843,
+   "maxNodes": 30855,
+   "ratio": 1.0003890672113607,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "1fff5cd",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:39.946Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:06:16.585Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:35.752Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:57:20.216Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:51.130Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:36.099Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:12:18.736Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:30:13.042Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:33.227Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:44.125Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:39.983Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:58:01.893Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:49.416Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:40.163Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:56.661Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:46.370Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:38.059Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:32.457Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:50:17.372Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:12:03.828Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:42.645Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:22.805Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:39.478Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:46.324Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:05:16.817Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:42.068Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:56.443Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:40.890Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:23:14.202Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:57.011Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:59.804Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:28.008Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:40.537Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:09:12.660Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:53.298Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:43.228Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:37:03.202Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:37:10.586Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:43:11.311Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:53.590Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:49:03.006Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:40:11.924Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:07:25.371Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:46:28.495Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:59.666Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:38.481Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:46.890Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:44.460Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:57.706Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:39.361Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:58.436Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:54:22.170Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:17:17.456Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:50:02.583Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:46:28.774Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:06:01.258Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:30:11.338Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:42.731Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:37.559Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:38:05.379Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:45:09.728Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:12:30.700Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:33:21.639Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:34.634Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:43.032Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:35.570Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:32:04.801Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:13:27.412Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:25:16.959Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:22:08.419Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:43:16.079Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:45.267Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:59:22.931Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:20:10.300Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:37:10.194Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:42.012Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:42.720Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:57:17.736Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:27:20.952Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:36.725Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:37:03.581Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:36.598Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:15:22.203Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:56.129Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:57.798Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:49.019Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 30855,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:29:26.629Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 30843,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:20.740Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
    "level": "P00147",
    "hintIndex": 0,
    "config": "beam|perimeterSweep|perimeterCW|2000|-|74",
@@ -155406,10 +156722,10 @@
    "level": "P00147",
    "hintIndex": 29,
    "config": "beam|perimeterSweep|perimeterCW|2000|-|74",
-   "versions": 137,
+   "versions": 138,
    "minNodes": 2618419,
-   "maxNodes": 2621739,
-   "ratio": 1.001267940692456,
+   "maxNodes": 2622698,
+   "ratio": 1.0016341922358492,
    "drifted": true,
    "byVersion": [
     {
@@ -156233,6 +157549,12 @@
      "nodes": 2621739,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:28.029Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2622698,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:22.229Z"
     }
    ]
   },
@@ -156363,7 +157685,7 @@
    "level": "P00151",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1245,
    "maxNodes": 3497,
    "ratio": 2.808835341365462,
@@ -157250,6 +158572,12 @@
      "nodes": 1245,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:28.084Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1245,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:22.292Z"
     }
    ]
   },
@@ -159097,7 +160425,7 @@
    "level": "P00152",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 1492,
    "maxNodes": 1699,
    "ratio": 1.138739946380697,
@@ -159984,6 +161312,12 @@
      "nodes": 1492,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:28.106Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1492,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:22.307Z"
     }
    ]
   },
@@ -161203,10 +162537,10 @@
    "level": "P00154",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 4,
-   "minNodes": 4273085,
+   "versions": 5,
+   "minNodes": 1489,
    "maxNodes": 5026671,
-   "ratio": 1.1763564263289872,
+   "ratio": 3375.870382807253,
    "drifted": true,
    "byVersion": [
     {
@@ -161232,6 +162566,12 @@
      "nodes": 4273085,
      "unit": "work",
      "foundAt": "2026-08-29T20:32:44.583Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1489,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:22.328Z"
     }
    ]
   },
@@ -165825,6 +167165,547 @@
   },
   {
    "corpus": "published",
+   "level": "P00156",
+   "hintIndex": 247,
+   "config": "dfs|perimeterSweep|perimeterCW|-|-|74",
+   "versions": 88,
+   "minNodes": 79948,
+   "maxNodes": 81656,
+   "ratio": 1.021363886526242,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "1fff5cd",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:43.546Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:06:20.160Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:39.300Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:57:23.804Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:54.793Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:39.640Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:12:22.342Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:30:16.684Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:36.694Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:47.239Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:43.168Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:58:04.996Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:52.642Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:43.422Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:59.763Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:49.285Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:41.126Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:35.492Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:50:20.484Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:12:05.738Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:45.718Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:24.786Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:42.678Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:49.201Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:05:19.910Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:45.276Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:59.739Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:43.379Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:23:17.165Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:51:00.048Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:28:01.648Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:30.577Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:43.528Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:09:15.599Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:56.258Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:46.190Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:37:06.152Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:37:13.562Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:43:13.534Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:55.907Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:49:05.339Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:40:14.770Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:07:28.336Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:46:31.499Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:01:02.720Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:41.560Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:49.184Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:47.545Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:11:00.628Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:42.397Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:50:01.417Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:54:25.092Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:17:20.348Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:50:05.493Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:46:31.727Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:06:03.894Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:30:14.170Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:44.618Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:40.522Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:38:08.384Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:45:12.684Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:12:33.701Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:33:24.561Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:37.571Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:45.913Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:37.910Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:32:07.145Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:13:30.369Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:25:19.972Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:22:11.382Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:43:18.768Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:48.189Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:59:25.850Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:20:12.660Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:37:13.271Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:44.966Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:45.130Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:57:20.784Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:27:23.303Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:38.974Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:37:05.961Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:39.584Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:15:25.173Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:59.093Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:52:00.091Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:52.042Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 81656,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:29:29.675Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 79948,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:22.419Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
    "level": "P00157",
    "hintIndex": 24,
    "config": "beam|mustCrossFirst|-|2000|-|54",
@@ -166266,7 +168147,7 @@
    "level": "P00157",
    "hintIndex": 159,
    "config": "beam|mustCrossFirst|-|2000|-|72",
-   "versions": 73,
+   "versions": 74,
    "minNodes": 17655313,
    "maxNodes": 25713123,
    "ratio": 1.456395760301729,
@@ -166709,6 +168590,12 @@
      "nodes": 17655313,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:37.466Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 17655313,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:30.082Z"
     }
    ]
   },
@@ -167985,7 +169872,7 @@
    "level": "P00158",
    "hintIndex": 1016,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 21961,
    "maxNodes": 22022,
    "ratio": 1.0027776512909248,
@@ -168872,6 +170759,12 @@
      "nodes": 22022,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:37.484Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 22022,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:30.107Z"
     }
    ]
   },
@@ -170096,7 +171989,7 @@
    "level": "P00160",
    "hintIndex": 646,
    "config": "beam|intersectionHarvest|-|2000|-|74",
-   "versions": 107,
+   "versions": 108,
    "minNodes": 3620374,
    "maxNodes": 3630991,
    "ratio": 1.0029325699499554,
@@ -170743,6 +172636,12 @@
      "nodes": 3620374,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:38.797Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 3620374,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:31.443Z"
     }
    ]
   },
@@ -171452,7 +173351,7 @@
    "level": "P00161",
    "hintIndex": 1003,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 147,
+   "versions": 148,
    "minNodes": 58439,
    "maxNodes": 58457,
    "ratio": 1.0003080134841458,
@@ -172339,6 +174238,12 @@
      "nodes": 58439,
      "unit": "work",
      "foundAt": "2026-09-09T04:29:38.923Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 58439,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:31.658Z"
     }
    ]
   },
