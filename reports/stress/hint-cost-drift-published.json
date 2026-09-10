@@ -1,19 +1,926 @@
 {
- "generatedAt": "2026-09-09T23:42:35.862Z",
+ "generatedAt": "2026-09-10T06:07:02.381Z",
  "corpora": [
   "published"
  ],
  "minRatio": 1.25,
  "comparisons": 6170,
- "stable": 4740,
- "drifted": 1430,
+ "stable": 4732,
+ "drifted": 1438,
  "groups": [
+  {
+   "corpus": "published",
+   "level": "P00001",
+   "hintIndex": 4,
+   "config": "dfs|nearClosureRescue|-|-|-|74",
+   "versions": 149,
+   "minNodes": 1850,
+   "maxNodes": 1884,
+   "ratio": 1.0183783783783784,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:00.996Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:16.926Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:40.209Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:14.302Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:06.486Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:38:59.430Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:07.563Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:18.869Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:18.712Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:31.693Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:02.047Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:44.481Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:55.697Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:39.223Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:29.792Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:57.605Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:19.979Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:20.797Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:18.483Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:05.176Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:34.694Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:02.918Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:48.802Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:04.042Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:28.637Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:50.514Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:39.262Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:20.457Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:07.610Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:48.445Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:04.648Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:48.272Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:36.451Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:08.157Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:15.163Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:09.454Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:22.101Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:27.885Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:48.019Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:11.749Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:38.222Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:30.142Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:53.214Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:19.045Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:40.916Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:41.252Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:41.238Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:02:59.715Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:16.127Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:39.367Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:35.591Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:07.042Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.680Z"
+    },
+    {
+     "version": "bbcf800",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-20T21:18:54.318Z"
+    },
+    {
+     "version": "a519dcc",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-20T22:58:02.220Z"
+    },
+    {
+     "version": "0c1000c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T00:03:40.787Z"
+    },
+    {
+     "version": "b5b10fc",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T01:10:47.772Z"
+    },
+    {
+     "version": "86914e3",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T09:27:37.861Z"
+    },
+    {
+     "version": "c9b8e1a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T11:46:33.674Z"
+    },
+    {
+     "version": "f6cfa5b",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T18:58:36.166Z"
+    },
+    {
+     "version": "1fff5cd",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:15.668Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:51.743Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:10.357Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:56:55.477Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:25.982Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:11.428Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:11:53.736Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:47.777Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:08.293Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:20.094Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:15.439Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:38.437Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:24.160Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:15.069Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:33.675Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:25.138Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:14.793Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:09.193Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:49:53.639Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:49.564Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:19.490Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:07.406Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:16.440Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:24.352Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:04:52.933Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:18.318Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:32.544Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:22.857Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:43.545Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:26.056Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:40.182Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:00.237Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:09.114Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:41.746Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:22.612Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:13.278Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:31.473Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:39.962Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:47.325Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:29.388Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:39.417Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:40.846Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:06:54.680Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:45:56.277Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:28.915Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:06.446Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:23.199Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:11.950Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:27.609Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:06.710Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:28.321Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:50.641Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:47.323Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:32.236Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:45:57.659Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:32.972Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:39.930Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:22.908Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:06.486Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:33.058Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:38.746Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:11:59.600Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:51.015Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:03.432Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:11.590Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:11.249Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:39.754Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:12:56.295Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:44.796Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:36.224Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:47.728Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:13.662Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:52.745Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:46.273Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:39.276Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:10.880Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:18.042Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:47.311Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:26:55.697Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:12.829Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:37.848Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:05.635Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:51.457Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:24.539Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:34.121Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:17.038Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:28:55.280Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1884,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.323Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1850,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:15.857Z"
+    }
+   ]
+  },
   {
    "corpus": "published",
    "level": "P00002",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 3165,
    "maxNodes": 3454,
    "ratio": 1.0913112164296999,
@@ -906,6 +1813,12 @@
      "nodes": 3454,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.365Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 3454,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:15.897Z"
     }
    ]
   },
@@ -3097,10 +4010,917 @@
   },
   {
    "corpus": "published",
+   "level": "P00004",
+   "hintIndex": 2,
+   "config": "dfs|nearClosureRescue|-|-|-|74",
+   "versions": 149,
+   "minNodes": 1923,
+   "maxNodes": 1924,
+   "ratio": 1.000520020800832,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:01.051Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:16.978Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:40.254Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:14.357Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:06.544Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:38:59.483Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:07.614Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:18.923Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:18.775Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:31.737Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:02.092Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:44.538Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:55.756Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:39.267Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:29.828Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:57.655Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:20.035Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:20.850Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:18.539Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:05.212Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:34.746Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:02.973Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:48.858Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:04.111Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:28.697Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:50.557Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:39.318Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:20.514Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:07.667Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:48.507Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:04.691Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:48.338Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:36.503Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:08.218Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:15.220Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:09.499Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:22.152Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:27.951Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:48.075Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:11.801Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:38.288Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:30.194Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:53.271Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:19.111Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:40.972Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:41.309Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:41.300Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:02:59.779Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:16.197Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:39.425Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:35.646Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:07.108Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.736Z"
+    },
+    {
+     "version": "bbcf800",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-20T21:18:54.384Z"
+    },
+    {
+     "version": "a519dcc",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-20T22:58:02.264Z"
+    },
+    {
+     "version": "0c1000c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T00:03:40.867Z"
+    },
+    {
+     "version": "b5b10fc",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T01:10:47.852Z"
+    },
+    {
+     "version": "86914e3",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T09:27:37.911Z"
+    },
+    {
+     "version": "c9b8e1a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T11:46:33.725Z"
+    },
+    {
+     "version": "f6cfa5b",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T18:58:36.216Z"
+    },
+    {
+     "version": "1fff5cd",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:15.720Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:51.795Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:10.415Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:56:55.530Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:26.038Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:11.479Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:11:53.795Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:47.832Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:08.351Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:20.144Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:15.488Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:38.488Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:24.246Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:15.129Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:33.727Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:25.178Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:14.847Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:09.243Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:49:53.694Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:49.595Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:19.540Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:07.439Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:16.492Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:24.399Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:04:52.999Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:18.363Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:32.606Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:22.892Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:43.596Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:26.100Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:40.211Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:00.281Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:09.175Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:41.803Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:22.662Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:13.329Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:31.521Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:40.012Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:47.366Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:29.430Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:39.458Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:40.894Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:06:54.732Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:45:56.325Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:28.971Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:06.500Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:23.235Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:12.007Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:27.666Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:06.774Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:28.376Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:50.691Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:47.376Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:32.289Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:45:57.720Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:33.014Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:39.983Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:22.942Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:06.534Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:33.120Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:38.803Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:11:59.649Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:51.075Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:03.487Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:11.654Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:11.289Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:39.796Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:12:56.353Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:44.855Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:36.294Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:47.780Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:13.711Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:52.800Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:46.318Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:39.350Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:10.937Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:18.085Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:47.358Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:26:55.745Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:12.876Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:37.895Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:05.699Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:51.513Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:24.590Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:34.159Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:17.091Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:28:55.337Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 1924,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.434Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1923,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:15.970Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
    "level": "P00005",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 745,
    "maxNodes": 815,
    "ratio": 1.0939597315436242,
@@ -3993,6 +5813,12 @@
      "nodes": 745,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.456Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 745,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:15.993Z"
     }
    ]
   },
@@ -4476,7 +6302,7 @@
    "level": "P00006",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 18662,
    "maxNodes": 21890,
    "ratio": 1.172971814382167,
@@ -5369,6 +7195,12 @@
      "nodes": 18662,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.495Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 18662,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.028Z"
     }
    ]
   },
@@ -6935,6 +8767,913 @@
   {
    "corpus": "published",
    "level": "P00008",
+   "hintIndex": 3,
+   "config": "dfs|nearClosureRescue|-|-|-|74",
+   "versions": 149,
+   "minNodes": 9242,
+   "maxNodes": 9351,
+   "ratio": 1.0117939839861503,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:01.112Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:17.031Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:40.306Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:14.423Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:06.587Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:38:59.536Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:07.674Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:18.978Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:18.848Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:31.786Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:02.142Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:44.593Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:55.805Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:39.313Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:29.879Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:57.709Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:20.088Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:20.907Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:18.591Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:05.249Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:34.798Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:03.025Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:48.914Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:04.168Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:28.758Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:50.603Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:39.379Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:20.575Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:07.726Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:48.567Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:04.733Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:48.402Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:36.559Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:08.281Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:15.273Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:09.547Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:22.210Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:28.047Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:48.138Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:11.860Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:38.365Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:30.250Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:53.327Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:19.177Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:41.033Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:41.364Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:41.354Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:02:59.837Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:16.291Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:39.485Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:35.689Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:07.180Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.812Z"
+    },
+    {
+     "version": "bbcf800",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-20T21:18:54.437Z"
+    },
+    {
+     "version": "a519dcc",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-20T22:58:02.310Z"
+    },
+    {
+     "version": "0c1000c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T00:03:40.927Z"
+    },
+    {
+     "version": "b5b10fc",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T01:10:47.915Z"
+    },
+    {
+     "version": "86914e3",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T09:27:37.978Z"
+    },
+    {
+     "version": "c9b8e1a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T11:46:33.782Z"
+    },
+    {
+     "version": "f6cfa5b",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T18:58:36.271Z"
+    },
+    {
+     "version": "1fff5cd",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:15.780Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:51.864Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:10.478Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:56:55.594Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:26.102Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:11.548Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:11:53.870Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:47.902Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:08.433Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:20.207Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:15.556Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:38.547Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:24.303Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:15.196Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:33.793Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:25.241Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:14.917Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:09.311Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:49:53.757Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:49.636Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:19.608Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:07.492Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:16.557Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:24.465Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:04:53.080Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:18.432Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:32.680Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:22.944Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:43.663Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:26.167Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:40.257Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:00.344Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:09.251Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:41.892Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:22.728Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:13.400Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:31.587Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:40.084Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:47.422Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:29.487Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:39.516Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:40.959Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:06:54.814Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:45:56.398Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:29.044Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:06.570Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:23.286Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:12.072Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:27.743Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:06.839Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:28.444Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:50.761Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:47.441Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:32.353Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:45:57.789Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:33.076Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:40.043Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:22.987Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:06.600Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:33.187Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:38.866Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:11:59.720Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:51.140Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:03.553Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:11.736Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:11.339Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:39.856Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:12:56.414Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:44.920Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:36.370Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:47.855Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:13.775Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:52.863Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:46.367Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:39.419Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:11.001Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:18.134Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:47.425Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:26:55.800Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:12.930Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:37.953Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:05.771Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:51.578Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:24.666Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:34.213Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:17.162Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:28:55.412Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 9351,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.528Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 9242,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.061Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00008",
    "hintIndex": 958,
    "config": "beam|knotBuilder|-|2000|-|95",
    "versions": 6,
@@ -7120,7 +9859,7 @@
    "level": "P00009",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 4452,
    "maxNodes": 5278,
    "ratio": 1.1855345911949686,
@@ -8013,6 +10752,12 @@
      "nodes": 4452,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.558Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 4452,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.092Z"
     }
    ]
   },
@@ -8801,7 +11546,7 @@
    "level": "P00010",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 153,
    "maxNodes": 228,
    "ratio": 1.4901960784313726,
@@ -9694,6 +12439,12 @@
      "nodes": 153,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.574Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 153,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.106Z"
     }
    ]
   },
@@ -11323,7 +14074,7 @@
    "level": "P00011",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 7268,
    "maxNodes": 7333,
    "ratio": 1.00894331315355,
@@ -12216,6 +14967,12 @@
      "nodes": 7268,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.614Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 7268,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.145Z"
     }
    ]
   },
@@ -12869,7 +15626,7 @@
    "level": "P00012",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 182,
    "maxNodes": 209,
    "ratio": 1.1483516483516483,
@@ -13762,6 +16519,12 @@
      "nodes": 182,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.636Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 182,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.167Z"
     }
    ]
   },
@@ -13852,6 +16615,913 @@
   },
   {
    "corpus": "published",
+   "level": "P00013",
+   "hintIndex": 3,
+   "config": "dfs|nearClosureRescue|-|-|-|74",
+   "versions": 149,
+   "minNodes": 2734,
+   "maxNodes": 2757,
+   "ratio": 1.0084125822970007,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:01.164Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:17.085Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:40.368Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:14.488Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:06.645Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:38:59.604Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:07.729Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:19.037Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:18.928Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:31.837Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:02.201Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:44.649Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:55.862Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:39.372Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:29.940Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:57.778Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:20.163Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:20.984Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:18.662Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:05.299Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:34.869Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:03.095Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:48.988Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:04.248Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:28.835Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:50.666Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:39.455Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:20.655Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:07.798Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:48.647Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:04.787Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:48.506Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:36.637Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:08.358Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:15.348Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:09.616Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:22.287Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:28.151Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:48.220Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:11.936Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:38.436Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:30.323Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:53.407Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:19.262Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:41.118Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:41.440Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:41.432Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:02:59.915Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:16.402Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:39.551Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:35.749Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:07.269Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:20.931Z"
+    },
+    {
+     "version": "bbcf800",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-20T21:18:54.522Z"
+    },
+    {
+     "version": "a519dcc",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-20T22:58:02.370Z"
+    },
+    {
+     "version": "0c1000c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T00:03:40.993Z"
+    },
+    {
+     "version": "b5b10fc",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T01:10:47.992Z"
+    },
+    {
+     "version": "86914e3",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T09:27:38.050Z"
+    },
+    {
+     "version": "c9b8e1a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T11:46:33.848Z"
+    },
+    {
+     "version": "f6cfa5b",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T18:58:36.346Z"
+    },
+    {
+     "version": "1fff5cd",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:15.838Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:51.930Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:10.548Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:56:55.666Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:26.173Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:11.624Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:11:53.955Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:47.971Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:08.526Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:20.271Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:15.630Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:38.612Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:24.377Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:15.274Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:33.857Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:25.302Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:14.983Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:09.369Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:49:53.832Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:49.679Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:19.669Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:07.550Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:16.618Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:24.536Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:04:53.153Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:18.497Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:32.771Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:22.993Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:43.730Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:26.242Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:40.295Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:00.400Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:09.325Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:41.958Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:22.803Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:13.461Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:31.651Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:40.146Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:47.472Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:29.538Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:39.570Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:41.025Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:06:54.881Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:45:56.461Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:29.120Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:06.644Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:23.341Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:12.142Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:27.816Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:06.913Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:28.511Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:50.835Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:47.509Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:32.421Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:45:57.853Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:33.136Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:40.110Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:23.029Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:06.666Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:33.258Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:38.943Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:11:59.790Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:51.218Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:03.618Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:11.820Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:11.394Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:39.918Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:12:56.484Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:44.998Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:36.479Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:47.923Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:13.847Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:52.935Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:46.421Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:39.502Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:11.080Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:18.196Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:47.489Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:26:55.865Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:12.984Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:38.010Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:05.859Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:51.649Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:24.743Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:34.267Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:17.247Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:28:55.494Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 2734,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.656Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2757,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.186Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
    "level": "P00015",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|95",
@@ -13916,7 +17586,7 @@
    "level": "P00015",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 25807,
    "maxNodes": 26222,
    "ratio": 1.016080908280699,
@@ -14809,6 +18479,12 @@
      "nodes": 25807,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.718Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 25807,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.246Z"
     }
    ]
   },
@@ -17691,7 +21367,7 @@
    "level": "P00021",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 791,
    "maxNodes": 1116,
    "ratio": 1.4108723135271808,
@@ -18584,6 +22260,12 @@
      "nodes": 791,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.822Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 791,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.361Z"
     }
    ]
   },
@@ -19028,7 +22710,7 @@
    "level": "P00022",
    "hintIndex": 1,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 438,
    "maxNodes": 723,
    "ratio": 1.6506849315068493,
@@ -19921,6 +23603,12 @@
      "nodes": 438,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.835Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 438,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.374Z"
     }
    ]
   },
@@ -20099,7 +23787,7 @@
    "level": "P00023",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1638,
    "maxNodes": 2118,
    "ratio": 1.293040293040293,
@@ -20992,6 +24680,12 @@
      "nodes": 1677,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.852Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1677,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.392Z"
     }
    ]
   },
@@ -22363,6 +26057,913 @@
   {
    "corpus": "published",
    "level": "P00025",
+   "hintIndex": 2,
+   "config": "dfs|nearClosureRescue|-|-|-|74",
+   "versions": 149,
+   "minNodes": 8997,
+   "maxNodes": 8998,
+   "ratio": 1.0001111481604978,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:01.291Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:17.217Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:40.514Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:14.659Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:06.795Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:38:59.737Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:07.861Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:19.171Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:19.087Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:31.961Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:02.339Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:44.830Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:55.990Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:39.512Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:30.110Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:57.927Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:20.328Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:21.154Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:18.815Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:05.411Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:35.028Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:03.264Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:49.155Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:04.415Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:28.998Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:50.798Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:39.613Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:20.816Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:07.954Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:48.808Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:04.922Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:48.693Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:36.798Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:08.526Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:15.510Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:09.757Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:22.456Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:28.354Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:48.394Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:12.098Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:38.665Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:30.476Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:53.578Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:19.457Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:41.330Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:41.603Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:41.589Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:03:00.109Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:16.583Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:39.733Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:35.878Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:07.469Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:21.127Z"
+    },
+    {
+     "version": "bbcf800",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-20T21:18:54.675Z"
+    },
+    {
+     "version": "a519dcc",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-20T22:58:02.502Z"
+    },
+    {
+     "version": "0c1000c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T00:03:41.179Z"
+    },
+    {
+     "version": "b5b10fc",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T01:10:48.185Z"
+    },
+    {
+     "version": "86914e3",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T09:27:38.240Z"
+    },
+    {
+     "version": "c9b8e1a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T11:46:34.023Z"
+    },
+    {
+     "version": "f6cfa5b",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T18:58:36.525Z"
+    },
+    {
+     "version": "1fff5cd",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:16.017Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:52.118Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:10.774Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:56:55.864Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:26.363Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:11.818Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:11:54.165Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:48.162Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:08.726Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:20.467Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:15.818Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:38.793Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:24.563Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:15.464Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:34.006Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:25.447Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:15.136Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:09.534Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:49:54.010Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:49.787Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:19.833Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:07.703Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:16.764Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:24.695Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:04:53.350Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:18.663Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:32.952Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:23.117Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:43.887Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:26.420Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:40.405Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:00.547Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:09.511Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:42.149Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:22.976Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:13.621Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:31.818Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:40.295Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:47.597Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:29.659Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:39.692Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:41.199Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:06:55.063Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:45:56.625Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:29.288Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:06.808Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:23.472Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:12.318Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:27.997Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:07.080Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:28.688Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:51.047Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:47.662Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:32.584Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:45:58.017Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:33.287Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:40.271Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:23.140Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:06.833Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:33.438Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:39.125Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:11:59.953Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:51.396Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:03.783Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:12.009Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:11.528Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:40.083Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:12:56.655Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:45.162Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:36.673Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:48.105Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:14.054Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:53.140Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:46.595Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:39.762Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:11.299Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:18.376Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:47.642Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:26:56.013Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:13.122Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:38.150Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:06.116Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:51.823Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:24.967Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:34.441Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:17.475Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:28:55.673Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 8998,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:50.919Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 8997,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.454Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00025",
    "hintIndex": 273,
    "config": "beam|intersectionHarvest|-|5000|-|95",
    "versions": 6,
@@ -22535,7 +27136,7 @@
    "level": "P00026",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 5170,
    "maxNodes": 3147844,
    "ratio": 608.8673114119923,
@@ -23428,6 +28029,12 @@
      "nodes": 5170,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.933Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 5170,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.469Z"
     }
    ]
   },
@@ -25497,7 +30104,7 @@
    "level": "P00029",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2338,
    "maxNodes": 2352,
    "ratio": 1.0059880239520957,
@@ -26390,6 +30997,12 @@
      "nodes": 2338,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:50.987Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2338,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.525Z"
     }
    ]
   },
@@ -26738,7 +31351,7 @@
    "level": "P00031",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2663,
    "maxNodes": 2879,
    "ratio": 1.0811115283514834,
@@ -27631,6 +32244,12 @@
      "nodes": 2663,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.019Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2663,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.564Z"
     }
    ]
   },
@@ -31451,7 +36070,7 @@
    "level": "P00036",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1218,
    "maxNodes": 2878,
    "ratio": 2.3628899835796386,
@@ -32344,6 +36963,12 @@
      "nodes": 1223,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.123Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1223,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.675Z"
     }
    ]
   },
@@ -32352,10 +36977,10 @@
    "level": "P00037",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
-   "minNodes": 23528,
+   "versions": 149,
+   "minNodes": 23444,
    "maxNodes": 2119602,
-   "ratio": 90.08849030941856,
+   "ratio": 90.41127793891827,
    "drifted": true,
    "byVersion": [
     {
@@ -33245,6 +37870,12 @@
      "nodes": 23528,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.141Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 23444,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.696Z"
     }
    ]
   },
@@ -34168,7 +38799,7 @@
    "level": "P00038",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1171,
    "maxNodes": 1293,
    "ratio": 1.1041844577284372,
@@ -35061,6 +39692,12 @@
      "nodes": 1171,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.157Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1171,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.712Z"
     }
    ]
   },
@@ -35239,7 +39876,7 @@
    "level": "P00040",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 48476,
    "maxNodes": 85975,
    "ratio": 1.7735580493440053,
@@ -36132,6 +40769,12 @@
      "nodes": 48476,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.212Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 48476,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.771Z"
     }
    ]
   },
@@ -37046,7 +41689,7 @@
    "level": "P00043",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 54644,
    "maxNodes": 55575,
    "ratio": 1.017037552155772,
@@ -37939,6 +42582,12 @@
      "nodes": 54644,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.263Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 54644,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.824Z"
     }
    ]
   },
@@ -37947,7 +42596,7 @@
    "level": "P00044",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 666,
    "maxNodes": 1377,
    "ratio": 2.0675675675675675,
@@ -38840,6 +43489,12 @@
      "nodes": 666,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.277Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 666,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.839Z"
     }
    ]
   },
@@ -39345,7 +44000,7 @@
    "level": "P00047",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 4336,
    "maxNodes": 7047,
    "ratio": 1.625230627306273,
@@ -40238,6 +44893,12 @@
      "nodes": 4336,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.333Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 4337,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.896Z"
     }
    ]
   },
@@ -41305,7 +45966,7 @@
    "level": "P00049",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 234822,
    "maxNodes": 239567,
    "ratio": 1.0202067949340352,
@@ -42198,6 +46859,919 @@
      "nodes": 234822,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.400Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 234999,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:16.965Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00051",
+   "hintIndex": 3,
+   "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
+   "versions": 149,
+   "minNodes": 30307,
+   "maxNodes": 31472,
+   "ratio": 1.0384399643646682,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:02.254Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:18.104Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:41.359Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:15.588Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:07.751Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:39:00.826Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:08.905Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:20.241Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:20.203Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:32.821Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:03.425Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:45.895Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:56.981Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:40.508Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:31.248Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:59.010Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:21.452Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:22.348Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:19.889Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:06.244Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:36.093Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:04.429Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:50.257Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:05.581Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:30.175Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:51.712Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:40.793Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:22.003Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:09.120Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:50.019Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:05.845Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:49.908Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:37.950Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:09.653Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:16.696Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:10.773Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:23.637Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:29.610Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:49.645Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:13.274Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:39.855Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:31.608Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:54.775Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:20.674Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:42.541Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:42.749Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:42.740Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:03:01.327Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:17.738Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:40.920Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:36.810Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:08.676Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.473Z"
+    },
+    {
+     "version": "bbcf800",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-20T21:18:55.772Z"
+    },
+    {
+     "version": "a519dcc",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-20T22:58:03.368Z"
+    },
+    {
+     "version": "0c1000c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T00:03:42.374Z"
+    },
+    {
+     "version": "b5b10fc",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T01:10:49.409Z"
+    },
+    {
+     "version": "86914e3",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T09:27:39.479Z"
+    },
+    {
+     "version": "c9b8e1a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T11:46:35.237Z"
+    },
+    {
+     "version": "f6cfa5b",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T18:58:37.801Z"
+    },
+    {
+     "version": "1fff5cd",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:17.233Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:53.344Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:12.021Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:56:57.117Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:27.633Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:13.106Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:11:55.396Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:49.400Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:10.005Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:21.674Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:17.146Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:40.017Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:25.832Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:16.755Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:35.123Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:26.475Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:16.291Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:10.691Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:49:55.219Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:50.474Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:21.059Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:08.427Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:17.884Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:25.877Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:04:54.573Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:19.836Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:34.141Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:23.997Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:44.884Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:27.504Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:41.144Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:01.540Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:10.591Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:43.235Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:23.973Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:14.633Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:32.873Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:41.318Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:48.516Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:30.461Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:40.499Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:42.239Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:06:56.128Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:45:57.700Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:30.367Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:07.878Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:24.290Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:13.405Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:29.046Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:08.187Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:29.752Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:52.063Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:48.695Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:33.589Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:45:59.075Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:34.270Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:41.327Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:23.887Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:07.891Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:34.511Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:40.212Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:12:00.988Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:52.417Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:04.799Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:13.108Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:12.364Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:40.998Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:12:57.702Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:46.243Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:37.820Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:49.164Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:15.029Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:54.059Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:47.340Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:40.746Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:12.279Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:19.147Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:48.678Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:26:56.907Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:14.003Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:39.055Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:07.124Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:52.862Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:25.979Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:35.198Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:18.500Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:28:56.792Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 31472,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.442Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 30307,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.005Z"
     }
    ]
   },
@@ -42206,7 +47780,7 @@
    "level": "P00052",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 76850,
    "maxNodes": 76856,
    "ratio": 1.000078074170462,
@@ -43099,6 +48673,12 @@
      "nodes": 76850,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.469Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 76850,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.032Z"
     }
    ]
   },
@@ -43606,7 +49186,7 @@
    "level": "P00054",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 40194,
    "maxNodes": 40261,
    "ratio": 1.0016669154600188,
@@ -44499,6 +50079,12 @@
      "nodes": 40194,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.513Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 40194,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.088Z"
     }
    ]
   },
@@ -45492,7 +51078,7 @@
    "level": "P00056",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 6783,
    "maxNodes": 11459,
    "ratio": 1.6893704850361198,
@@ -46385,6 +51971,12 @@
      "nodes": 6783,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.553Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 6783,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.130Z"
     }
    ]
   },
@@ -47180,7 +52772,7 @@
    "level": "P00058",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 6501,
    "maxNodes": 7527,
    "ratio": 1.1578218735579142,
@@ -48073,6 +53665,12 @@
      "nodes": 6501,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.594Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 6501,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.172Z"
     }
    ]
   },
@@ -54411,7 +60009,7 @@
    "level": "P00064",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1829,
    "maxNodes": 1842,
    "ratio": 1.0071077091306726,
@@ -55304,6 +60902,12 @@
      "nodes": 1829,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.704Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1829,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.286Z"
     }
    ]
   },
@@ -55482,10 +61086,10 @@
    "level": "P00065",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
-   "minNodes": 32290,
+   "versions": 149,
+   "minNodes": 32227,
    "maxNodes": 32344,
-   "ratio": 1.0016723443790647,
+   "ratio": 1.0036304961678095,
    "drifted": true,
    "byVersion": [
     {
@@ -56375,6 +61979,12 @@
      "nodes": 32290,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.727Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 32227,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.310Z"
     }
    ]
   },
@@ -56998,7 +62608,7 @@
    "level": "P00066",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 14913,
    "maxNodes": 793316,
    "ratio": 53.196271709246965,
@@ -57891,6 +63501,12 @@
      "nodes": 14913,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.754Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 14913,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.337Z"
     }
    ]
   },
@@ -58239,7 +63855,7 @@
    "level": "P00067",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1282,
    "maxNodes": 2038,
    "ratio": 1.5897035881435257,
@@ -59132,6 +64748,12 @@
      "nodes": 1282,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.769Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1282,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.354Z"
     }
    ]
   },
@@ -60170,7 +65792,7 @@
    "level": "P00069",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 3558,
    "maxNodes": 3995,
    "ratio": 1.122821810005621,
@@ -61063,6 +66685,12 @@
      "nodes": 3558,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.806Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 3558,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.391Z"
     }
    ]
   },
@@ -63387,7 +69015,7 @@
    "level": "P00071",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 15606,
    "maxNodes": 20454,
    "ratio": 1.310649750096117,
@@ -64280,6 +69908,12 @@
      "nodes": 15606,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.847Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 15606,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.433Z"
     }
    ]
   },
@@ -65139,10 +70773,917 @@
   },
   {
    "corpus": "published",
+   "level": "P00072",
+   "hintIndex": 80,
+   "config": "dfs|nearClosureRescue|-|-|-|74",
+   "versions": 149,
+   "minNodes": 11593,
+   "maxNodes": 11633,
+   "ratio": 1.0034503579746399,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "532ce27",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-30T06:54:02.540Z"
+    },
+    {
+     "version": "8665884",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-30T08:33:18.368Z"
+    },
+    {
+     "version": "2b0c531",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-30T14:18:41.635Z"
+    },
+    {
+     "version": "8ec8cce",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-31T00:07:15.888Z"
+    },
+    {
+     "version": "39c19ac",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:03:08.006Z"
+    },
+    {
+     "version": "a79a8c2",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-31T03:39:01.090Z"
+    },
+    {
+     "version": "cbb8571",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:03:09.189Z"
+    },
+    {
+     "version": "051c68c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-31T05:39:20.512Z"
+    },
+    {
+     "version": "9b1c5ab",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-07-31T07:25:20.481Z"
+    },
+    {
+     "version": "57c27f4",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-05T01:06:33.035Z"
+    },
+    {
+     "version": "63270f5",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:18:03.576Z"
+    },
+    {
+     "version": "5973bf1",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:38:46.048Z"
+    },
+    {
+     "version": "a018811",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-05T03:59:57.124Z"
+    },
+    {
+     "version": "8fabcae",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-06T02:32:40.653Z"
+    },
+    {
+     "version": "903dbc0",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-07T19:25:31.404Z"
+    },
+    {
+     "version": "3690f2e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-08T02:59:59.206Z"
+    },
+    {
+     "version": "c26d355",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-08T04:55:21.771Z"
+    },
+    {
+     "version": "d5c4d1f",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-08T07:07:22.562Z"
+    },
+    {
+     "version": "0c4750c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-09T22:30:20.129Z"
+    },
+    {
+     "version": "162d0b0",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:14:06.381Z"
+    },
+    {
+     "version": "be188ae",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:24:36.309Z"
+    },
+    {
+     "version": "65dad32",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-09T23:56:04.649Z"
+    },
+    {
+     "version": "1d98ef2",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:12:50.477Z"
+    },
+    {
+     "version": "cf09b69",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-10T00:41:05.812Z"
+    },
+    {
+     "version": "36083ed",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-10T01:16:30.410Z"
+    },
+    {
+     "version": "aaa743e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-10T02:45:51.877Z"
+    },
+    {
+     "version": "6ef012f",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-11T06:34:41.007Z"
+    },
+    {
+     "version": "9ff4ef1",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:14:22.228Z"
+    },
+    {
+     "version": "a1e8ae8",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-11T18:59:09.371Z"
+    },
+    {
+     "version": "90a8bcb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-11T19:41:50.250Z"
+    },
+    {
+     "version": "1346c34",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-12T00:32:06.018Z"
+    },
+    {
+     "version": "28282a1",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:27:50.151Z"
+    },
+    {
+     "version": "0b63464",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-12T07:33:38.218Z"
+    },
+    {
+     "version": "e3695b9",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-12T21:27:09.908Z"
+    },
+    {
+     "version": "564f6c9",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-12T23:39:16.941Z"
+    },
+    {
+     "version": "002b634",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-13T01:04:10.976Z"
+    },
+    {
+     "version": "0c44892",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-13T20:54:23.855Z"
+    },
+    {
+     "version": "70f9294",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-13T23:34:29.863Z"
+    },
+    {
+     "version": "307a71c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-14T03:32:49.878Z"
+    },
+    {
+     "version": "cced525",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-14T21:34:13.551Z"
+    },
+    {
+     "version": "1fcccd4",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-15T07:24:40.145Z"
+    },
+    {
+     "version": "a7aa4ba",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-15T16:30:31.821Z"
+    },
+    {
+     "version": "c79180e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-15T19:04:55.052Z"
+    },
+    {
+     "version": "f1e5ef4",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:03:20.903Z"
+    },
+    {
+     "version": "6e835ff",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-15T21:58:42.849Z"
+    },
+    {
+     "version": "a698b6f",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:03:43.010Z"
+    },
+    {
+     "version": "fc3040c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-16T00:49:42.962Z"
+    },
+    {
+     "version": "19886e9",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-19T01:03:01.570Z"
+    },
+    {
+     "version": "29f5c36",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-19T02:41:18.012Z"
+    },
+    {
+     "version": "d50113d",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-19T03:18:41.170Z"
+    },
+    {
+     "version": "c96f57c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-19T09:57:37.018Z"
+    },
+    {
+     "version": "6ba0894",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-19T11:34:08.918Z"
+    },
+    {
+     "version": "e021378",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-20T16:44:22.722Z"
+    },
+    {
+     "version": "bbcf800",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-20T21:18:55.993Z"
+    },
+    {
+     "version": "a519dcc",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-20T22:58:03.602Z"
+    },
+    {
+     "version": "0c1000c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T00:03:42.621Z"
+    },
+    {
+     "version": "b5b10fc",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T01:10:49.679Z"
+    },
+    {
+     "version": "86914e3",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T09:27:39.755Z"
+    },
+    {
+     "version": "c9b8e1a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T11:46:35.473Z"
+    },
+    {
+     "version": "f6cfa5b",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T18:58:38.050Z"
+    },
+    {
+     "version": "1fff5cd",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T19:23:17.467Z"
+    },
+    {
+     "version": "9bffae0",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T21:05:53.610Z"
+    },
+    {
+     "version": "6ee76fc",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T22:19:12.295Z"
+    },
+    {
+     "version": "ad32a2f",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-21T23:56:57.371Z"
+    },
+    {
+     "version": "4b651c4",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:00:27.901Z"
+    },
+    {
+     "version": "2dc613a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-22T00:07:13.373Z"
+    },
+    {
+     "version": "7375deb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:11:55.653Z"
+    },
+    {
+     "version": "0c1ae66",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-22T01:29:49.665Z"
+    },
+    {
+     "version": "ae8f676",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-22T03:25:10.280Z"
+    },
+    {
+     "version": "9df49eb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-22T06:08:21.940Z"
+    },
+    {
+     "version": "09a8f9e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-23T00:24:17.399Z"
+    },
+    {
+     "version": "6acc60d",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-23T02:57:40.262Z"
+    },
+    {
+     "version": "7f28377",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-23T06:48:26.087Z"
+    },
+    {
+     "version": "756cae5",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:40:17.033Z"
+    },
+    {
+     "version": "494604a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-23T09:58:35.336Z"
+    },
+    {
+     "version": "4640e6d",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-23T11:32:26.677Z"
+    },
+    {
+     "version": "64e74a8",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-24T06:38:16.529Z"
+    },
+    {
+     "version": "1000ddb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:22:10.917Z"
+    },
+    {
+     "version": "04e0691",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-25T03:49:55.461Z"
+    },
+    {
+     "version": "1024268",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:11:50.611Z"
+    },
+    {
+     "version": "59ac417",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:36:21.290Z"
+    },
+    {
+     "version": "f765d6b",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-25T05:59:08.566Z"
+    },
+    {
+     "version": "95ba1da",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-26T01:56:18.091Z"
+    },
+    {
+     "version": "ca1fb98",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-26T04:18:26.096Z"
+    },
+    {
+     "version": "36c0744",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-26T07:04:54.804Z"
+    },
+    {
+     "version": "4ded0f5",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-26T08:07:20.055Z"
+    },
+    {
+     "version": "d07d2c0",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-26T09:48:34.368Z"
+    },
+    {
+     "version": "4ca945b",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-26T21:23:24.165Z"
+    },
+    {
+     "version": "d1ea9d3",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:22:45.114Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:27.804Z"
+    },
+    {
+     "version": "94b548b",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-27T05:27:41.287Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:01.742Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:10.866Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:08:43.475Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:24.202Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:14.863Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:33.112Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:41.537Z"
+    },
+    {
+     "version": "d2e1a9b",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:42:48.719Z"
+    },
+    {
+     "version": "78bdb6f",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:27:30.645Z"
+    },
+    {
+     "version": "f45e504",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T04:48:40.674Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:39:42.457Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:06:56.360Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:45:57.929Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:30.590Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:08.121Z"
+    },
+    {
+     "version": "62ae0a5",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-28T23:15:24.477Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:13.646Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:29.265Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:08.428Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:29.970Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:53:52.315Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:16:48.918Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:33.814Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:45:59.305Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:34.484Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:29:41.542Z"
+    },
+    {
+     "version": "3d768ba",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T20:32:24.037Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:08.174Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:34.760Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:40.448Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:12:01.214Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:32:52.637Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:05.026Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:13.338Z"
+    },
+    {
+     "version": "15cbf90",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-31T00:40:12.545Z"
+    },
+    {
+     "version": "4a03350",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-31T03:31:41.204Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:12:57.926Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:24:46.473Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:38.050Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:42:49.377Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:15.250Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:58:54.273Z"
+    },
+    {
+     "version": "2d62103",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-02T01:19:47.538Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:40.976Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:12.508Z"
+    },
+    {
+     "version": "fb4f09a",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-02T05:00:19.328Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:56:48.925Z"
+    },
+    {
+     "version": "4bf1bfe",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-02T19:26:57.097Z"
+    },
+    {
+     "version": "fa23c15",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-02T21:26:14.190Z"
+    },
+    {
+     "version": "5e6b8f6",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-03T01:36:39.314Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:07.362Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:14:53.106Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:26.228Z"
+    },
+    {
+     "version": "b1bc8ed",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-03T23:51:35.378Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:18.757Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:28:57.046Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 11593,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:41:51.874Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 11633,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.461Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
    "level": "P00073",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 7025,
    "maxNodes": 14140,
    "ratio": 2.012811387900356,
@@ -66035,6 +72576,12 @@
      "nodes": 7025,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.891Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 7025,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.478Z"
     }
    ]
   },
@@ -67821,7 +74368,7 @@
    "level": "P00074",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 4602,
    "maxNodes": 3145283,
    "ratio": 683.4600173837462,
@@ -68714,6 +75261,12 @@
      "nodes": 4602,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.907Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 4602,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.494Z"
     }
    ]
   },
@@ -68722,7 +75275,7 @@
    "level": "P00075",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 42341,
    "maxNodes": 90798,
    "ratio": 2.1444462813821117,
@@ -69615,6 +76168,12 @@
      "nodes": 42341,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.925Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 42341,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.513Z"
     }
    ]
   },
@@ -71073,7 +77632,7 @@
    "level": "P00076",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 113958,
    "maxNodes": 115123,
    "ratio": 1.010223064637849,
@@ -71966,6 +78525,12 @@
      "nodes": 113958,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.964Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 113958,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.553Z"
     }
    ]
   },
@@ -73595,7 +80160,7 @@
    "level": "P00078",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 9720,
    "maxNodes": 10414,
    "ratio": 1.0713991769547324,
@@ -74488,6 +81053,12 @@
      "nodes": 9720,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:51.995Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 9720,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.586Z"
     }
    ]
   },
@@ -74690,7 +81261,7 @@
    "level": "P00079",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1299,
    "maxNodes": 1386,
    "ratio": 1.0669745958429562,
@@ -75583,6 +82154,12 @@
      "nodes": 1299,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.012Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1299,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.604Z"
     }
    ]
   },
@@ -75846,10 +82423,10 @@
    "level": "P00080",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
-   "minNodes": 16620,
+   "versions": 149,
+   "minNodes": 16540,
    "maxNodes": 17420,
-   "ratio": 1.0481347773766547,
+   "ratio": 1.053204353083434,
    "drifted": true,
    "byVersion": [
     {
@@ -76739,6 +83316,12 @@
      "nodes": 16620,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.031Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 16540,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.624Z"
     }
    ]
   },
@@ -76832,7 +83415,7 @@
    "level": "P00081",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1165,
    "maxNodes": 1235,
    "ratio": 1.0600858369098713,
@@ -77725,6 +84308,12 @@
      "nodes": 1165,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.045Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1165,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.639Z"
     }
    ]
   },
@@ -78829,7 +85418,7 @@
    "level": "P00083",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 4206,
    "maxNodes": 4398,
    "ratio": 1.0456490727532097,
@@ -79722,6 +86311,12 @@
      "nodes": 4206,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.083Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 4206,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.687Z"
     }
    ]
   },
@@ -79730,7 +86325,7 @@
    "level": "P00084",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 11729,
    "maxNodes": 80636,
    "ratio": 6.874925398584705,
@@ -80623,6 +87218,12 @@
      "nodes": 11978,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.101Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 11978,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.707Z"
     }
    ]
   },
@@ -81289,7 +87890,7 @@
    "level": "P00085",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 100843,
    "maxNodes": 101944,
    "ratio": 1.0109179615838482,
@@ -82182,6 +88783,12 @@
      "nodes": 100843,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.130Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 100843,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.737Z"
     }
    ]
   },
@@ -82190,7 +88797,7 @@
    "level": "P00086",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2967,
    "maxNodes": 3415,
    "ratio": 1.150994270306707,
@@ -83083,6 +89690,12 @@
      "nodes": 3010,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.151Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 3010,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.758Z"
     }
    ]
   },
@@ -84139,7 +90752,7 @@
    "level": "P00087",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 23510,
    "maxNodes": 143124,
    "ratio": 6.087792428753722,
@@ -85032,6 +91645,12 @@
      "nodes": 23510,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.169Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 23510,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.777Z"
     }
    ]
   },
@@ -85867,7 +92486,7 @@
    "level": "P00088",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 105405,
    "maxNodes": 109140,
    "ratio": 1.0354347516721218,
@@ -86760,6 +93379,12 @@
      "nodes": 105405,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.204Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 105405,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.827Z"
     }
    ]
   },
@@ -86853,7 +93478,7 @@
    "level": "P00089",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 22160,
    "maxNodes": 25321,
    "ratio": 1.14264440433213,
@@ -87746,6 +94371,12 @@
      "nodes": 22160,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.223Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 22160,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.848Z"
     }
    ]
   },
@@ -87839,10 +94470,10 @@
    "level": "P00090",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
-   "minNodes": 9430,
+   "versions": 149,
+   "minNodes": 9416,
    "maxNodes": 9431,
-   "ratio": 1.0001060445387062,
+   "ratio": 1.0015930331350893,
    "drifted": true,
    "byVersion": [
     {
@@ -88732,6 +95363,12 @@
      "nodes": 9430,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.239Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 9416,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.864Z"
     }
    ]
   },
@@ -88740,7 +95377,7 @@
    "level": "P00091",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2306,
    "maxNodes": 2508,
    "ratio": 1.0875975715524717,
@@ -89633,6 +96270,12 @@
      "nodes": 2306,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.257Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2306,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.882Z"
     }
    ]
   },
@@ -89726,7 +96369,7 @@
    "level": "P00092",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 17110,
    "maxNodes": 19045,
    "ratio": 1.1130917592051432,
@@ -90619,6 +97262,12 @@
      "nodes": 17110,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.273Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 17110,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.899Z"
     }
    ]
   },
@@ -91773,7 +98422,7 @@
    "level": "P00093",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 56458,
    "maxNodes": 57124,
    "ratio": 1.0117963796096212,
@@ -92666,6 +99315,12 @@
      "nodes": 57124,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.303Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 57124,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.939Z"
     }
    ]
   },
@@ -93777,7 +100432,7 @@
    "level": "P00094",
    "hintIndex": 2,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 27072,
    "maxNodes": 28043,
    "ratio": 1.03586731678487,
@@ -94670,6 +101325,12 @@
      "nodes": 27072,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.324Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 27072,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.964Z"
     }
    ]
   },
@@ -94848,7 +101509,7 @@
    "level": "P00095",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 42181,
    "maxNodes": 42971,
    "ratio": 1.018728811550224,
@@ -95741,6 +102402,12 @@
      "nodes": 42193,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.342Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 42193,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:17.999Z"
     }
    ]
   },
@@ -96688,7 +103355,7 @@
    "level": "P00097",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 9567,
    "maxNodes": 10928,
    "ratio": 1.142259851573116,
@@ -97581,6 +104248,12 @@
      "nodes": 9567,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.470Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 9567,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.175Z"
     }
    ]
   },
@@ -98356,7 +105029,7 @@
    "level": "P00099",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 67817,
    "maxNodes": 75264,
    "ratio": 1.109810224574959,
@@ -99249,6 +105922,12 @@
      "nodes": 67817,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.756Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 67817,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.454Z"
     }
    ]
   },
@@ -99342,7 +106021,7 @@
    "level": "P00100",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 8597,
    "maxNodes": 8690,
    "ratio": 1.0108177271141097,
@@ -100235,6 +106914,12 @@
      "nodes": 8690,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.796Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 8689,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.470Z"
     }
    ]
   },
@@ -100328,10 +107013,10 @@
    "level": "P00101",
    "hintIndex": 0,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
-   "minNodes": 39647,
+   "versions": 149,
+   "minNodes": 39605,
    "maxNodes": 57807,
-   "ratio": 1.4580422226145735,
+   "ratio": 1.4595884358035602,
    "drifted": true,
    "byVersion": [
     {
@@ -101221,6 +107906,12 @@
      "nodes": 39647,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.830Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 39605,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.503Z"
     }
    ]
   },
@@ -101229,7 +107920,7 @@
    "level": "P00102",
    "hintIndex": 4,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 18803,
    "maxNodes": 19319,
    "ratio": 1.0274424293995639,
@@ -102122,6 +108813,12 @@
      "nodes": 18803,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.847Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 18803,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.521Z"
     }
    ]
   },
@@ -102813,7 +109510,7 @@
    "level": "P00103",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2723,
    "maxNodes": 2976,
    "ratio": 1.0929122291590159,
@@ -103706,6 +110403,12 @@
      "nodes": 2723,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.865Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2723,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.539Z"
     }
    ]
   },
@@ -104250,7 +110953,7 @@
    "level": "P00104",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 5286,
    "maxNodes": 22117,
    "ratio": 4.1840711312902,
@@ -105143,6 +111846,12 @@
      "nodes": 5299,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.890Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 5299,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.560Z"
     }
    ]
   },
@@ -109261,10 +115970,10 @@
    "level": "P00107",
    "hintIndex": 0,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 148,
-   "minNodes": 4226,
+   "versions": 149,
+   "minNodes": 3860,
    "maxNodes": 5535,
-   "ratio": 1.3097491717936582,
+   "ratio": 1.4339378238341969,
    "drifted": true,
    "byVersion": [
     {
@@ -110154,6 +116863,12 @@
      "nodes": 5535,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:52.970Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 3860,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.641Z"
     }
    ]
   },
@@ -112522,7 +119237,7 @@
    "level": "P00109",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 8204,
    "maxNodes": 8335,
    "ratio": 1.015967820575329,
@@ -113415,6 +120130,12 @@
      "nodes": 8208,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.023Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 8208,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.695Z"
     }
    ]
   },
@@ -114216,7 +120937,7 @@
    "level": "P00111",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 66146,
    "maxNodes": 66419,
    "ratio": 1.0041272336951592,
@@ -115109,6 +121830,12 @@
      "nodes": 66146,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.251Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 66146,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.877Z"
     }
    ]
   },
@@ -115202,7 +121929,7 @@
    "level": "P00112",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2684,
    "maxNodes": 12724,
    "ratio": 4.740685543964233,
@@ -116095,6 +122822,12 @@
      "nodes": 2684,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.270Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2684,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.895Z"
     }
    ]
   },
@@ -117487,7 +124220,7 @@
    "level": "P00114",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 16373,
    "maxNodes": 37028,
    "ratio": 2.261528125572589,
@@ -118380,6 +125113,12 @@
      "nodes": 16373,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.308Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 16373,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.935Z"
     }
    ]
   },
@@ -119571,10 +126310,10 @@
    "level": "P00115",
    "hintIndex": 2,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 148,
-   "minNodes": 7586,
+   "versions": 149,
+   "minNodes": 7584,
    "maxNodes": 31393,
-   "ratio": 4.138281044028473,
+   "ratio": 4.1393723628691985,
    "drifted": true,
    "byVersion": [
     {
@@ -120464,6 +127203,12 @@
      "nodes": 7586,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.324Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 7584,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.952Z"
     }
    ]
   },
@@ -120764,7 +127509,7 @@
    "level": "P00116",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 381,
    "maxNodes": 1252,
    "ratio": 3.286089238845144,
@@ -121657,6 +128402,12 @@
      "nodes": 381,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.342Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 381,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:18.974Z"
     }
    ]
   },
@@ -123319,7 +130070,7 @@
    "level": "P00118",
    "hintIndex": 3,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 3445,
    "maxNodes": 5052,
    "ratio": 1.4664731494920173,
@@ -124212,6 +130963,12 @@
      "nodes": 3445,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.387Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 3445,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:19.026Z"
     }
    ]
   },
@@ -126301,7 +133058,7 @@
    "level": "P00121",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 14102,
    "maxNodes": 14196,
    "ratio": 1.0066657211743015,
@@ -127194,6 +133951,12 @@
      "nodes": 14154,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.471Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 14154,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:19.121Z"
     }
    ]
   },
@@ -130104,7 +136867,7 @@
    "level": "P00124",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1012,
    "maxNodes": 1997,
    "ratio": 1.9733201581027668,
@@ -130997,6 +137760,12 @@
      "nodes": 1012,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:53.537Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1012,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:19.241Z"
     }
    ]
   },
@@ -132256,7 +139025,7 @@
    "level": "P00125",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2527412,
    "maxNodes": 2570837,
    "ratio": 1.017181607114313,
@@ -133149,6 +139918,12 @@
      "nodes": 2527412,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:54.489Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2527412,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:20.281Z"
     }
    ]
   },
@@ -133278,7 +140053,7 @@
    "level": "P00126",
    "hintIndex": 3,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 111853,
    "maxNodes": 124782,
    "ratio": 1.1155892108392265,
@@ -134171,6 +140946,12 @@
      "nodes": 112095,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:54.527Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 112095,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:20.320Z"
     }
    ]
   },
@@ -134301,7 +141082,7 @@
    "level": "P00127",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 170,
    "maxNodes": 4694,
    "ratio": 27.611764705882354,
@@ -135194,6 +141975,12 @@
      "nodes": 170,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:54.550Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 170,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:20.339Z"
     }
    ]
   },
@@ -137462,7 +144249,7 @@
    "level": "P00129",
    "hintIndex": 27,
    "config": "beam|mustCrossFirst|-|2000|-|74",
-   "versions": 137,
+   "versions": 138,
    "minNodes": 287883,
    "maxNodes": 369090,
    "ratio": 1.2820833463594585,
@@ -138289,6 +145076,12 @@
      "nodes": 369090,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:54.716Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 369090,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:20.501Z"
     }
    ]
   },
@@ -139431,7 +146224,7 @@
    "level": "P00132",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 5016,
    "maxNodes": 7039,
    "ratio": 1.4033094098883572,
@@ -140324,6 +147117,12 @@
      "nodes": 5016,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:55.104Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 5016,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:20.894Z"
     }
    ]
   },
@@ -140332,7 +147131,7 @@
    "level": "P00133",
    "hintIndex": 2,
    "config": "dfs|perimeterSweep|perimeterCCW|-|-|73",
-   "versions": 129,
+   "versions": 130,
    "minNodes": 5346071,
    "maxNodes": 6603916,
    "ratio": 1.2352840057679744,
@@ -141111,6 +147910,12 @@
      "nodes": 5346071,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:56.446Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 5346071,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:22.460Z"
     }
    ]
   },
@@ -141246,10 +148051,10 @@
    "level": "P00134",
    "hintIndex": 3,
    "config": "dfs|portalFirstTransfer|-|-|-|74",
-   "versions": 148,
-   "minNodes": 7269,
+   "versions": 149,
+   "minNodes": 6852,
    "maxNodes": 16813,
-   "ratio": 2.312972898610538,
+   "ratio": 2.4537361354349096,
    "drifted": true,
    "byVersion": [
     {
@@ -142139,6 +148944,12 @@
      "nodes": 7269,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:56.469Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 6852,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:22.472Z"
     }
    ]
   },
@@ -147595,7 +154406,7 @@
    "level": "P00137",
    "hintIndex": 10,
    "config": "dfs|nearClosureRescue|-|-|-|74",
-   "versions": 88,
+   "versions": 89,
    "minNodes": 41594,
    "maxNodes": 43916,
    "ratio": 1.0558253594268403,
@@ -148128,6 +154939,12 @@
      "nodes": 41594,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:57.135Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 41594,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:23.145Z"
     }
    ]
   },
@@ -148746,7 +155563,7 @@
    "level": "P00138",
    "hintIndex": 57,
    "config": "beam|intersectionHarvest|-|5000|mechanic-buckets|74",
-   "versions": 6,
+   "versions": 7,
    "minNodes": 5222736,
    "maxNodes": 5447892,
    "ratio": 1.0431107373606479,
@@ -148787,6 +155604,12 @@
      "nodes": 5222736,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:59.031Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 5231303,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:25.009Z"
     }
    ]
   },
@@ -148795,7 +155618,7 @@
    "level": "P00139",
    "hintIndex": 54,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 967790,
    "maxNodes": 971140,
    "ratio": 1.003461494745761,
@@ -149688,6 +156511,12 @@
      "nodes": 967790,
      "unit": "work",
      "foundAt": "2026-09-09T23:41:59.293Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 967790,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:25.285Z"
     }
    ]
   },
@@ -150577,6 +157406,301 @@
      "nodes": 6486211,
      "unit": "nodes",
      "foundAt": "2026-09-04T08:54:59.179Z"
+    }
+   ]
+  },
+  {
+   "corpus": "published",
+   "level": "P00140",
+   "hintIndex": 133,
+   "config": "dfs|objectiveFirst|-|-|-|71",
+   "versions": 47,
+   "minNodes": 22139672,
+   "maxNodes": 22179746,
+   "ratio": 1.0018100539158845,
+   "drifted": true,
+   "byVersion": [
+    {
+     "version": "d1ea9d3",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-26T22:23:03.221Z"
+    },
+    {
+     "version": "ff3a93d",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-27T04:50:46.204Z"
+    },
+    {
+     "version": "969cedb",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:24:18.402Z"
+    },
+    {
+     "version": "7f2d463",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-27T20:31:29.572Z"
+    },
+    {
+     "version": "40c3234",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-27T21:09:01.877Z"
+    },
+    {
+     "version": "c8d45cc",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:21:42.484Z"
+    },
+    {
+     "version": "3367405",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:27:32.522Z"
+    },
+    {
+     "version": "d833b16",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T02:36:52.355Z"
+    },
+    {
+     "version": "584cf08",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T03:36:59.823Z"
+    },
+    {
+     "version": "3df23a0",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T08:40:01.217Z"
+    },
+    {
+     "version": "5b234cd",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:07:14.485Z"
+    },
+    {
+     "version": "839536a",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T09:46:17.384Z"
+    },
+    {
+     "version": "4ce3668",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T20:00:49.181Z"
+    },
+    {
+     "version": "3a3eb86",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-28T21:42:27.488Z"
+    },
+    {
+     "version": "2a7f5eb",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:03:33.241Z"
+    },
+    {
+     "version": "69217cb",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:10:47.006Z"
+    },
+    {
+     "version": "5a29bfc",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T04:26:28.273Z"
+    },
+    {
+     "version": "d1bca93",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:49:47.710Z"
+    },
+    {
+     "version": "598712c",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T05:54:11.468Z"
+    },
+    {
+     "version": "8fbfa7a",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:17:06.792Z"
+    },
+    {
+     "version": "d8b8e4e",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T06:49:51.872Z"
+    },
+    {
+     "version": "e0a2b98",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T07:46:18.134Z"
+    },
+    {
+     "version": "3ac64e2",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:05:51.411Z"
+    },
+    {
+     "version": "4ab210d",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T08:30:00.366Z"
+    },
+    {
+     "version": "ca64dc5",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T21:37:26.712Z"
+    },
+    {
+     "version": "02abde6",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-29T23:37:54.376Z"
+    },
+    {
+     "version": "4932518",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-30T01:44:58.788Z"
+    },
+    {
+     "version": "417da07",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:12:19.614Z"
+    },
+    {
+     "version": "4a79b69",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:33:10.881Z"
+    },
+    {
+     "version": "e6a385a",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-30T02:49:23.689Z"
+    },
+    {
+     "version": "d41204e",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-30T07:07:32.182Z"
+    },
+    {
+     "version": "e3eccc9",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-31T08:13:16.764Z"
+    },
+    {
+     "version": "a4139ce",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-31T20:25:05.965Z"
+    },
+    {
+     "version": "786e3eb",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-08-31T23:21:57.402Z"
+    },
+    {
+     "version": "3f2f6f5",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-01T06:43:06.259Z"
+    },
+    {
+     "version": "eab4a7a",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:42:34.392Z"
+    },
+    {
+     "version": "de101a4",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-01T23:59:12.226Z"
+    },
+    {
+     "version": "3bc6f7d",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-02T02:36:59.380Z"
+    },
+    {
+     "version": "915754e",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-02T04:17:31.325Z"
+    },
+    {
+     "version": "007fd00",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-02T07:57:07.072Z"
+    },
+    {
+     "version": "b51e60b",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-03T21:56:25.783Z"
+    },
+    {
+     "version": "ff0d7fb",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:15:11.386Z"
+    },
+    {
+     "version": "f85c63e",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-03T22:44:45.435Z"
+    },
+    {
+     "version": "b2e929e",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-04T03:24:38.178Z"
+    },
+    {
+     "version": "775e33c",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-09T04:29:15.664Z"
+    },
+    {
+     "version": "6e62763",
+     "nodes": 22179746,
+     "unit": "work",
+     "foundAt": "2026-09-09T23:42:09.792Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 22139672,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:36.407Z"
     }
    ]
   },
@@ -151519,7 +158643,7 @@
    "level": "P00143",
    "hintIndex": 1,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 2205,
    "maxNodes": 2824,
    "ratio": 1.2807256235827664,
@@ -152412,6 +159536,12 @@
      "nodes": 2705,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:11.230Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2705,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:37.924Z"
     }
    ]
   },
@@ -154271,7 +161401,7 @@
    "level": "P00144",
    "hintIndex": 25,
    "config": "repair|repair|-|-|-|100",
-   "versions": 117,
+   "versions": 118,
    "minNodes": 44384,
    "maxNodes": 45125,
    "ratio": 1.016695205479452,
@@ -154978,6 +162108,12 @@
      "nodes": 44384,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:11.326Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 44384,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:38.025Z"
     }
    ]
   },
@@ -156114,7 +163250,7 @@
    "level": "P00146",
    "hintIndex": 315,
    "config": "repair|repair|-|-|-|100",
-   "versions": 88,
+   "versions": 89,
    "minNodes": 30843,
    "maxNodes": 30855,
    "ratio": 1.0003890672113607,
@@ -156647,6 +163783,12 @@
      "nodes": 30843,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:20.740Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 30843,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:47.312Z"
     }
    ]
   },
@@ -156722,7 +163864,7 @@
    "level": "P00147",
    "hintIndex": 29,
    "config": "beam|perimeterSweep|perimeterCW|2000|-|74",
-   "versions": 138,
+   "versions": 139,
    "minNodes": 2618419,
    "maxNodes": 2622698,
    "ratio": 1.0016341922358492,
@@ -157555,6 +164697,12 @@
      "nodes": 2622698,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:22.229Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 2622698,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:48.770Z"
     }
    ]
   },
@@ -157685,7 +164833,7 @@
    "level": "P00151",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1245,
    "maxNodes": 3497,
    "ratio": 2.808835341365462,
@@ -158578,6 +165726,12 @@
      "nodes": 1245,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:22.292Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1245,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:48.829Z"
     }
    ]
   },
@@ -160425,7 +167579,7 @@
    "level": "P00152",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 1492,
    "maxNodes": 1699,
    "ratio": 1.138739946380697,
@@ -161318,6 +168472,12 @@
      "nodes": 1492,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:22.307Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1492,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:48.844Z"
     }
    ]
   },
@@ -162537,7 +169697,7 @@
    "level": "P00154",
    "hintIndex": 0,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 5,
+   "versions": 6,
    "minNodes": 1489,
    "maxNodes": 5026671,
    "ratio": 3375.870382807253,
@@ -162572,6 +169732,12 @@
      "nodes": 1489,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:22.328Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 1489,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:48.866Z"
     }
    ]
   },
@@ -167168,10 +174334,10 @@
    "level": "P00156",
    "hintIndex": 247,
    "config": "dfs|perimeterSweep|perimeterCW|-|-|74",
-   "versions": 88,
-   "minNodes": 79948,
+   "versions": 89,
+   "minNodes": 79650,
    "maxNodes": 81656,
-   "ratio": 1.021363886526242,
+   "ratio": 1.0251851851851852,
    "drifted": true,
    "byVersion": [
     {
@@ -167701,6 +174867,12 @@
      "nodes": 79948,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:22.419Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 79650,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:48.969Z"
     }
    ]
   },
@@ -168147,7 +175319,7 @@
    "level": "P00157",
    "hintIndex": 159,
    "config": "beam|mustCrossFirst|-|2000|-|72",
-   "versions": 74,
+   "versions": 75,
    "minNodes": 17655313,
    "maxNodes": 25713123,
    "ratio": 1.456395760301729,
@@ -168596,6 +175768,12 @@
      "nodes": 17655313,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:30.082Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 17655313,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:56.780Z"
     }
    ]
   },
@@ -169872,7 +177050,7 @@
    "level": "P00158",
    "hintIndex": 1016,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 21961,
    "maxNodes": 22022,
    "ratio": 1.0027776512909248,
@@ -170765,6 +177943,12 @@
      "nodes": 22022,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:30.107Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 22022,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:56.806Z"
     }
    ]
   },
@@ -171989,7 +179173,7 @@
    "level": "P00160",
    "hintIndex": 646,
    "config": "beam|intersectionHarvest|-|2000|-|74",
-   "versions": 108,
+   "versions": 109,
    "minNodes": 3620374,
    "maxNodes": 3630991,
    "ratio": 1.0029325699499554,
@@ -172642,6 +179826,12 @@
      "nodes": 3620374,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:31.443Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 3620374,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:58.065Z"
     }
    ]
   },
@@ -173351,7 +180541,7 @@
    "level": "P00161",
    "hintIndex": 1003,
    "config": "dfs|perimeterSweep|cornerHarvest|-|-|74",
-   "versions": 148,
+   "versions": 149,
    "minNodes": 58439,
    "maxNodes": 58457,
    "ratio": 1.0003080134841458,
@@ -174244,6 +181434,12 @@
      "nodes": 58439,
      "unit": "work",
      "foundAt": "2026-09-09T23:42:31.658Z"
+    },
+    {
+     "version": "011b3be",
+     "nodes": 58439,
+     "unit": "work",
+     "foundAt": "2026-09-10T06:06:58.289Z"
     }
    ]
   },
