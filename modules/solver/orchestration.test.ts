@@ -1318,15 +1318,18 @@ test('repair-fallback reserve is a no-op when mainSearchLateReserve is 0 (accept
     assert.equal(result.nodesExpanded, 1000, 'the main loop alone spends the entire (undivided) earlyTierNodeBudget, exactly as if the flag were off');
 });
 
-// STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE (opt-in, default OFF — see GOAL_ATTRACTION_DISABLED_RETRY_NODE_
+// STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE (promoted default-ON 2026-09-10 as a pair
+// with STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL — see GOAL_ATTRACTION_DISABLED_RETRY_NODE_
 // RESERVE_FRACTION's own comment). Reuses repairFallbackReserveDispatch() and
 // makeRepairGatedInfeasibleLevel() above: this reserve nests inside the SAME mainSearchLateReserve
 // pool as the sibling reserve, one layer deeper, so the fixture and mock dispatch are identical.
 
-test('goal-attraction-disabled-retry reserve is inert by default (cfg=null) even with its sibling reserve on', async () => {
-    // Same opt-in-convention check as the sibling reserve's own first test: cfg is non-null here
-    // (both STRATEGY_EARLY_REPAIR_SEARCH and STRATEGY_REPAIR_FALLBACK_NODE_RESERVE are set), but THIS flag
-    // is unset within it — the opt-in Proxy must resolve it to false regardless of what else is set.
+test('goal-attraction-disabled-retry reserve is active by default (cfg leaves it unset) now that it is promoted default-ON', async () => {
+    // Was "...inert by default..." pre-promotion (2026-09-10): this flag used to be opt-in, so an
+    // ablation cfg that set sibling flags but left THIS one unset resolved it to false. Now that it
+    // is promoted default-ON, the SAME unset-in-partial-cfg shape must resolve to true instead —
+    // this is the mirror check for the promotion, using the exact numbers the explicit
+    // STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE: true arm below already validates.
     const level = makeRepairGatedInfeasibleLevel();
     const result = await solveLevel(level, {
         timeBudgetMs: 1000, workBudget: 1_000_000, nodeBudget: 1000,
@@ -1342,15 +1345,13 @@ test('goal-attraction-disabled-retry reserve is inert by default (cfg=null) even
         goalAttractionDisabledRetryNodeReserveFractionOverride: 0.4,
         attemptSearchForTesting: repairFallbackReserveDispatch(),
     });
-    // Diversity itself is NOT disabled (its own fraction is unaffected by this flag), but with this
-    // reserve off, repairFallbackNodeCeiling equals the unprotected earlyTierNodeBudget, so the main
-    // loop (850) + repair fallback (150) already exhaust the whole 1000 before diversity's own gate
-    // (`nodesExpanded < earlyTierNodeBudget`) is even checked -- it never gets a single node, whether
-    // that shows up as zero attempts or all-zero-node attempts depends only on exact timing, so assert
-    // the node total, which is what this flag is actually supposed to leave unchanged when off.
+    // Same arithmetic as the explicit "on" arm below: earlyTierNodeBudget=1000, mainSearchLateReserve=
+    // floor(1000*0.3)=300, repairFallbackNodeReserve=floor(300*0.5)=150,
+    // goalAttractionDisabledRetryNodeReserve=floor((300-150)*0.4)=60, so the main loop spends 790 and
+    // diversity gets real (nonzero) node room instead of being starved out by the sibling reserve alone.
     const diversityAttempts = result.attempts.filter(a => a.stageId === 'goal-attraction-disabled-retry');
-    assert.equal(diversityAttempts.every(a => (a.nodesExpanded ?? 0) === 0), true, 'no room was withheld for diversity: the sibling reserve alone already exhausted earlyTierNodeBudget');
-    assert.equal(result.nodesExpanded, 1000, 'byte-identical total to the sibling reserve running alone (this flag contributes nothing when unset)');
+    assert.equal(diversityAttempts.some(a => (a.nodesExpanded ?? 0) > 0), true, 'diversity must receive real node room now that this reserve is on by default');
+    assert.equal(result.nodesExpanded, 1000, 'total stays the full nodeBudget; only the internal split shifts');
 });
 
 test('goal-attraction-disabled-retry reserve gives the diversity pass room without touching the probe/main-search/repair-fallback-reserve slice', async () => {
