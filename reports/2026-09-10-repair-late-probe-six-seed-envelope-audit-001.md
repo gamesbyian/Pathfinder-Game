@@ -1,9 +1,9 @@
 # Repair late-probe six-seed confirmation: envelope audit
 
-> **Status:** pre-dispatch blocker
-> **Date:** 2026-09-10
+> **Status:** active
+> **Last evidence:** 2026-09-10 — PR #1704's strict-work probe also removed the production 50M node cap; a fresh node-capped production-shaped artifact puts current target-stage reachers around 196M-295M whole-solve work.
 > **Decision:** keep the merged seed-count implementation and frozen 150-level reach-conditioned population, but **do not dispatch the 7-vs-6 confirmation under the current `strict_total_work_budget=false` addendum**. The original confirmation contract requires matched whole-solve work. The local test that motivated abandoning strict work changed two budget axes at once by also removing the production 50M node cap.
-> **Next gate:** give `solver-level-blind-targeted-sweep.yml` an independent optional `work_budget` input, preserving the 50M node cap while applying a separately sized strict total work ceiling; validate that envelope on frozen-population reachers before either arm is dispatched.
+> **Remaining gate:** give `solver-level-blind-targeted-sweep.yml` an independent optional `work_budget` input, preserving the 50M node cap while applying a separately sized strict total work ceiling; validate that envelope on frozen-population reachers before either arm is dispatched.
 > **Evidence role:** methodology audit / execution guard. No treatment outcomes have been observed and no solver behavior is changed here.
 
 ## What changed
