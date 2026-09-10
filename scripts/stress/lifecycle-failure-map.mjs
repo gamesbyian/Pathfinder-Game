@@ -10,6 +10,13 @@
  * Usage:
  *   node scripts/stress/lifecycle-failure-map.mjs --in=<a.json[,b.json]> [--in-dir=<dir>]
  *       [--out=reports/stress/lifecycle-failure-map.json] [--summary-out=<file.md>]
+ *
+ * READING THE work-starved COLUMN: for admissible-order-fallback and admissible-order-alternate-
+ * tiebreak-retry, a "work-starved" count does not mean the search stopped short — admissibleOrderSearch
+ * does not consult prep._workCap by default (modules/solver/orchestration.ts's workStarvedAtDispatch
+ * comment), so those two techniques can report allocatedWorkCeiling:0 while still running a full,
+ * uncapped attempt. Cross-check actualWork/actualNodes before treating either as under-resourced. See
+ * reports/2026-09-10-ws1-existing-data-exposure-classification-001.md.
  */
 import { readFileSync, writeFileSync, readdirSync, mkdirSync } from 'node:fs';
 import path from 'node:path';

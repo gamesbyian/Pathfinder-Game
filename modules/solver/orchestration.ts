@@ -1986,6 +1986,17 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             const attempts = solveResult.attempts.filter(attempt => classify(attempt) === name);
             const reached = attempts.length > 0;
             const nodeStarvedAtDispatch = reached && attempts.every(attempt => attempt.allocatedNodeCeiling === 0);
+            // CAVEAT for admissible-order-fallback/admissible-order-alternate-tiebreak-retry (see
+            // attempt-dispatch.ts's budgetStarvedAtDispatch comment): allocatedWorkCeiling reading 0
+            // does not mean the search stopped short for either of those two techniques, because
+            // admissibleOrderSearch's hot loop does not consult prep._workCap by default (only the
+            // opt-in STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT changes that,
+            // and only for the alternate-tiebreak-retry tier). Empirically, EVERY corpus-2 unsolved
+            // level admissible-order-fallback reports workStarved for still shows substantial real
+            // actualWork/actualNodes (mean ~15M/~12.5M — see reports/2026-09-10-ws1-existing-data-
+            // exposure-classification-001.md) — i.e. a full, uncapped attempt that still failed, not
+            // a starved one. Do not read this field as "give this stage more budget" for those two
+            // techniques without cross-checking actualWork/actualNodes first.
             const workStarvedAtDispatch = reached && attempts.every(attempt => attempt.allocatedWorkCeiling === 0);
             const nodeStarved = runnable.get(name) === true && (nodeStarvedAtDispatch
                 || (!reached && !solveResult.ok && solveResult.status === 'node-budget-reached'));

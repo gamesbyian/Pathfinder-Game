@@ -66,6 +66,8 @@ Reuse existing prefix-survival, divergence, rank and replay tools before creatin
 
 Current high-risk cohort: 396 intersection-heavy + must-cross-heavy + multi-portal levels, 118 solved. Portal carve-outs are the first causal explanation to resolve. After restoration, refresh lifecycle/capability evidence and classify residual informative misses before any new joint propagation. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
 
+First eligible/exposed/failed pass on retained (pre-refresh) telemetry, plus a telemetry-artifact correction for `admissible-order-fallback`'s "work-starved" label (real work, not missing exposure) and residual-lane recompute tooling scope: [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md). Rerun against refreshed capability data before treating any count as current.
+
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
