@@ -37,9 +37,9 @@ Treat independently:
 
 #### 2B. Broader allocation construction
 
-After portal restoration and 2A, refresh the production ladder/capability map, then:
+Production ladder/capability refresh is **done** (2026-09-10, run `34531412380`: 99/102 + 1,029/1,700, net +55/-0 vs. pre-restoration, zero errors/truncation). The prerequisite for the items below is met; none has an executed repricing/allocation decision yet.
 
-- **Flag-inert dispatch/full-population repricing:** equal-total-work repricing only after refresh. [`Portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md)
+- **Flag-inert dispatch/full-population repricing:** equal-total-work repricing can now proceed. `admissible-order-alternate-tiebreak-retry` is the most actionable near-term candidate (its own work-cap enforcement prerequisite also landed 2026-09-10; see the opt-in ledger). [`Portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md), [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md)
 - **Resumable portfolio:** portfolio-18 first pass + same-policy continuation inside 67M. Production-width (2000/5000) continuation capture is now implemented and validated (bounded-overshoot form, single-digit-percent measured overshoot, 2026-09-10) — the engineering prerequisite is met; next is the fixed-work development A/B itself. [`Preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md)
 - **Priced residual lane:** recompute the isolated-winner residue after restoration/2A, separating missing from failed exposure and protecting specialists. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
 
@@ -66,7 +66,7 @@ Reuse existing prefix-survival, divergence, rank and replay tools before creatin
 
 Current high-risk cohort: 396 intersection-heavy + must-cross-heavy + multi-portal levels, 118 solved. Portal carve-outs are the first causal explanation to resolve. After restoration, refresh lifecycle/capability evidence and classify residual informative misses before any new joint propagation. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
 
-First eligible/exposed/failed pass on retained (pre-refresh) telemetry, plus a telemetry-artifact correction for `admissible-order-fallback`'s "work-starved" label (real work, not missing exposure) and residual-lane recompute tooling scope: [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md). Rerun against refreshed capability data before treating any count as current.
+Eligible/exposed/failed classification, refreshed against the post-restoration capability run (2026-09-10, run `34531412380`: net +55/-0 across the full 1,802-level corpus, validating the week's portal + goal-attraction promotions at full population scale), plus a telemetry-artifact correction for `admissible-order-fallback`'s "work-starved" label (real work, not missing exposure): [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md). Residual-lane recompute remains blocked on the broader isolated-T1-winner census join (separate pipeline, unaffected by this refresh).
 
 ## Workstream state
 

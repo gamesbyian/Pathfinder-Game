@@ -1,11 +1,34 @@
 # WS1 existing-data exposure classification 001: mechanically-eligible-unexposed vs. exposed-and-failed
 
-> **Status:** active
-> **Last evidence:** 2026-09-10 — direct join of retained `stageLifecycle` telemetry from run `33841017634` (2026-09-04, pre-portal-restoration, pre-lifecycle-instantiation-fix) against `reports/stress/solver-corpus2-latest.json`/`solver-corpus1-latest.json`
-> **Decision:** the eligible/exposed/failed split below is directionally trustworthy for most stages and reproduces known ledger numbers exactly (`goal-attraction-disabled-retry` 605/725 starved matches the ledger's own figure), but two stages' `instantiated` field is known-stale (see below) and every count reflects pre-portal-restoration, pre-goal-attraction-fresh-pool production defaults. **Do not treat any count here as current production truth** — rerun this exact join against GHA run `34531412380` (in flight at write time) once it lands, per this workstream's own "refresh the target cohort" gate.
-> **Remaining gate:** rerun against the refreshed capability run; then feed corrected `goal-attraction-disabled-retry`/`must-cross-neighbor-prune-disabled-retry` exposure counts into the priced residual-lane recompute.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-10 — rerun against GHA run `34531412380` (the refreshed capability run this report originally waited on): coverage complete, zero errors, zero deadline truncation on both corpora. See "2026-09-10 refresh update" below for the current numbers; the original (2026-09-04, pre-refresh) analysis is preserved below it for provenance and comparison.
+> **Decision:** the refresh confirms the earlier analysis's structure held up (same stages show the same eligible/unexposed/exposed-failed *pattern*), while updating the numbers: net **+55 solves / 0 regressions** across the full 1,802-level published research corpus (corpus1 99/102, corpus2 1,029/1,700) validates the cumulative effect of this week's portal restoration + goal-attraction fresh-pool promotions at full population scale, not just their own narrower confirmation populations. The `admissible-order-fallback` telemetry-artifact finding reproduces identically (169/169 "work-starved" levels on the new population still show substantial real work). The two previously-stale `instantiated` fields (`guidance-goal-distance-retry`, `late-repair-multiseed-retry`) now report correctly.
+> **Remaining gate:** the residual-lane recompute is still blocked on the broader isolated-T1-winner technique-census join (unaffected by this capability refresh — that census is a separate pipeline); see "Residual-lane recompute readiness" below, unchanged.
 > **Evidence role:** discovery
-> **Selection:** observational — full corpus-2 unsolved population (725/1,700) plus corpus-1 (4 unsolved), no sampling.
+> **Selection:** observational — full corpus-2 unsolved population, no sampling (725/1,700 pre-refresh, 671/1,700 post-refresh; corpus-1 too small to classify meaningfully in either snapshot).
+
+## 2026-09-10 refresh update
+
+Rejoined the identical method against `34531412380`'s output (`solver-corpus{1,2}-latest.json`, `stageLifecycle` from `--lifecycle-telemetry`).
+
+**Full-corpus solve-set diff (old commit `92c3155` pre-refresh vs. new `92c3155` control run — same commit, same defaults, just a fresh level-blind solve):** corpus1 98→99 (+1, `R01407`), corpus2 975→1,029 (+54) — **55 gains, 0 losses** combined. The +54 on corpus2 lines up almost exactly with the two portal restorations' own matched-work A/B net effects (+52 must-cross-neighbor-budget-portal, +2 connectivity-volume-portal = +54), a clean full-population reproduction of narrower controlled results — real, if circumstantial, validation that those A/Bs generalize.
+
+**Refreshed classification (unsolved corpus-2, n=671):**
+
+| technique | eligible | exposed | unexposed | exposed, failed |
+|---|---:|---:|---:|---:|
+| `guidance-goal-distance-retry` | 671 (was "0", now fixed) | 671 | 0 | 671 |
+| `late-repair-multiseed-retry` | 184 (was "0", now fixed) | 184 | 0 | 184 |
+| `goal-attraction-disabled-retry` | 671 | 120 | **551** | 120 |
+| `must-cross-neighbor-prune-disabled-retry` | 671 | 381 | **290** | 381 |
+| `repair-fallback` | 487 | 436 | 51 | 436 |
+| `admissible-order-fallback` | 671 | 671 | 0 | 671 (169 telemetry-mislabeled "starved," same artifact as before) |
+
+**Notable non-finding, worth recording accurately rather than glossing over:** `goal-attraction-disabled-retry`'s raw `reached` count is **still exactly 120**, identical to the pre-refresh snapshot, even though this run already includes the 2026-09-10 fresh-work-pool promotion in its defaults. The *unexposed* count shrank only because the total unsolved population shrank (725→671, from the unrelated portal fixes), not because more levels newly reached this stage — the starvation *rate* is essentially unchanged (83.4%→82.1%). Likewise `must-cross-neighbor-prune-disabled-retry`'s `routing-skipped` count is unchanged at exactly 290 both times, consistent with that being a level-identity-determined structural condition unrelated to this week's portal fixes. Neither is a bug: the fresh-work-pool fix's own confirmation evidence was about work-quantity per dispatch on a reach-conditioned population, not the binary reached/unreached count this lifecycle field measures — but it means the aggregate "551 unexposed" here should not be read as "the fix didn't work," only as "this specific binary metric doesn't move the way a first glance might expect." A future pass wanting to see the fix's real aggregate effect should compare per-attempt `workSpent`/`allocatedWorkCeiling` distributions for this stage, not the reached/unexposed split.
+
+Zero new stage-level surprises beyond the above; the flag-inert/repricing-candidate list and the admissible-order-fallback telemetry-artifact caution from the original pass both stand unchanged.
+
+## Original (2026-09-04, pre-refresh) analysis, preserved for provenance
 
 ## Method
 
@@ -56,7 +79,7 @@ Cross-checking `starvedByWorkBudget` against `actualWork`/`actualNodes` for ever
 
 Among currently **default-ON, live-allocation-holding** stages (excluding `repair-elite-prefix-dfs-retry`, already closed and off):
 
-- **Genuinely under-exposed by budget/reserve, not capability** (real repricing/allocation targets once refreshed): `goal-attraction-disabled-retry` (605/725, actively being fixed by the 2026-09-10 promotion — re-measure, don't reprice further until the fix's effect is seen), `must-cross-neighbor-prune-disabled-retry` (290/725, pre-portal-restoration — re-measure post-refresh before any repricing), `repair-fallback` (57/725, smaller and structurally gated by `hasRepairConfig` — lower priority).
+- **Genuinely under-exposed by budget/reserve, not capability** (real repricing/allocation targets — refreshed 2026-09-10): `goal-attraction-disabled-retry` (551/671, essentially unchanged rate pre/post its own promotion — see "notable non-finding" above; a repricing case needs a work-distribution join, not this binary metric), `must-cross-neighbor-prune-disabled-retry` (290/671, unchanged count, structural not portal-related), `repair-fallback` (51/487, smaller and structurally gated by `hasRepairConfig` — lower priority).
 - **Already flagged and tail-audited in the ledger — no new action from this pass:** `connectivity-axis-prune-disabled-retry` and `must-cross-neighbor-prune-disabled-retry`'s DFS-monopolization cost is already forensically confirmed (`reports/2026-09-04-whole-ladder-retry-tier-dfs-monopolization-forensic-note-001.md`); do not re-open without new evidence.
 - **Freshly unblocked for repricing (this session):** `admissible-order-alternate-tiebreak-retry` — the ledger already names this "retain as baseline but reprice residual value," and today's `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT` fix (see `docs/solver-opt-in-experiment-ledger.md`) removes the sole architectural blocker to actually testing a reduced allocation for it. This is the most actionable near-term repricing candidate: prerequisite done, confirmation not yet run.
 - **Do not reprice on the "starved" label alone:** `admissible-order-fallback` (see finding above) — its cost is earning real, if unsuccessful, work; a repricing case for it needs a different argument (e.g. marginal-value/redundancy, not "it's starved").
