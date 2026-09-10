@@ -111,7 +111,14 @@ jobs:
   plan:
     name: Plan weighted shards
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 30, not the planning bookkeeping's own few-second cost: the execution-family canary step
+    # below does one real full-node_budget, single-worker solve under this dispatch's exact
+    # resolved config, and this job's own timeout applies to that solve too. A 10-minute budget
+    # killed a real dispatch here (2026-09-10, connectivity-volume-portal-ab-001 treatment arm,
+    # position-1 canary still running at 9m28s) before the shard planner ever ran. 30 matches the
+    # shard planner's own solo-shard floor (plan-highbudget-shards.mjs: max(30, ...)), so the
+    # canary gets at least as much headroom as production gives its cheapest real shard.
+    timeout-minutes: 30
     permissions:
       contents: read
     outputs:

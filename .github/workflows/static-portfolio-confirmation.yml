@@ -81,7 +81,12 @@ jobs:
   build-plan:
     name: Build static-portfolio plan
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 30, not the plan-build bookkeeping's own cost: the execution-family canary step below does
+    # one real full-work_budget solve of a representative cell under this dispatch's exact
+    # resolved plan, and this job's own timeout applies to that solve too. A 10-minute plan-job
+    # budget killed a sibling workflow's real dispatch on 2026-09-10 (solver-level-blind-targeted-
+    # sweep.yml) before its shard planner ever ran.
+    timeout-minutes: 30
     permissions:
       contents: read
     outputs:

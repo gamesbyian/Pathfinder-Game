@@ -66,7 +66,14 @@ jobs:
   plan:
     name: Plan weighted shards
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # 40, not the planning bookkeeping's own few-second cost: the execution-family canary step
+    # below does one real full-node_budget (default 120M, higher than most sibling workflows),
+    # single-worker solve under this dispatch's exact resolved config, and this job's own timeout
+    # applies to that solve too. A 10-minute plan-job budget killed a sibling workflow's real
+    # dispatch on 2026-09-10 (solver-level-blind-targeted-sweep.yml, connectivity-volume-portal-
+    # ab-001 treatment arm) before its shard planner ever ran. 40 gives extra margin over that
+    # fix's 30 given this workflow's larger default node budget.
+    timeout-minutes: 40
     permissions:
       contents: read
     outputs:
