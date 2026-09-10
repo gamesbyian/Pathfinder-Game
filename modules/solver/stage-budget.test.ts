@@ -6,6 +6,7 @@ import {
     ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_NODE_RESERVE_FRACTION, CONNECTIVITY_AXIS_EXHAUSTED_RETRY_NODE_RESERVE_FRACTION,
     MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION,
     REPAIR_LATE_PROBE_NODE_BUDGET, MAIN_SEARCH_LATE_RESERVE_FRACTION, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT,
+    REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS,
 } from './stage-budget.js';
 import { defaultConfig } from './ablation-config.js';
 
@@ -85,6 +86,58 @@ test('late-repair-search: no-repair-config levels get the flat REPAIR_LATE_PROBE
     assert.equal(plan.repairLateProbeTierWillRun, true);
     assert.equal(plan.repairLateProbeNodeReserve, REPAIR_LATE_PROBE_NODE_BUDGET);
     assert.equal(plan.repairLateProbeNodeCeiling, plan.mcNeighborBudgetRetryNodeCeiling + REPAIR_LATE_PROBE_NODE_BUDGET);
+});
+
+// Experiment-only seam for the late-repair-multiseed-retry 7-vs-6 seed-count confirmation
+// (reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md). These four tests
+// prove the resolved repairLateProbeMultiSeedRetrySeedSalts array -- the SAME array both the
+// reserve calc here and orchestration.ts's execution loop read -- so budget and execution can
+// never drift apart (see repairLateProbeMultiSeedRetrySeedCountOverride's own comment on
+// SolveOpts in orchestration.ts).
+test('late-repair-multiseed-retry seed-count override: omitted preserves the full production seed-salt array exactly (no-op)', () => {
+    const nodeBudget = 50_000_000;
+    const plan = computeStageBudgetPlan({ ...baseInput, nodeBudget, repairConfigsCount: 0 });
+    assert.equal(plan.repairLateProbeMultiSeedRetryTierWillRun, true);
+    assert.deepEqual(plan.repairLateProbeMultiSeedRetrySeedSalts, REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS);
+    assert.equal(plan.repairLateProbeMultiSeedRetryNodeReserve,
+        plan.repairLateProbeNodeBudget * REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length);
+});
+
+test('late-repair-multiseed-retry seed-count override: 6 truncates to exactly salts 1-6 and reserves six per-seed budgets, in lockstep', () => {
+    const nodeBudget = 50_000_000;
+    const plan = computeStageBudgetPlan({
+        ...baseInput, nodeBudget, repairConfigsCount: 0,
+        opts: { repairLateProbeMultiSeedRetrySeedCountOverride: 6 },
+    });
+    assert.deepEqual(plan.repairLateProbeMultiSeedRetrySeedSalts, [1, 2, 3, 4, 5, 6]);
+    assert.equal(plan.repairLateProbeMultiSeedRetryNodeReserve, plan.repairLateProbeNodeBudget * 6);
+    assert.equal(plan.repairLateProbeMultiSeedRetryNodeCeiling,
+        plan.goalAttractionGuidanceDistanceRetryNodeCeiling + plan.repairLateProbeNodeBudget * 6);
+});
+
+test('late-repair-multiseed-retry seed-count override: 0 disables the tier entirely (empty salt slice, zero reserve, no-op ceiling)', () => {
+    const nodeBudget = 50_000_000;
+    const plan = computeStageBudgetPlan({
+        ...baseInput, nodeBudget, repairConfigsCount: 0,
+        opts: { repairLateProbeMultiSeedRetrySeedCountOverride: 0 },
+    });
+    assert.deepEqual(plan.repairLateProbeMultiSeedRetrySeedSalts, []);
+    assert.equal(plan.repairLateProbeMultiSeedRetryNodeReserve, 0);
+    assert.equal(plan.repairLateProbeMultiSeedRetryNodeCeiling, plan.goalAttractionGuidanceDistanceRetryNodeCeiling);
+});
+
+test('late-repair-multiseed-retry seed-count override: out-of-range or non-integer values are treated exactly like omitted', () => {
+    const nodeBudget = 50_000_000;
+    const base = computeStageBudgetPlan({ ...baseInput, nodeBudget, repairConfigsCount: 0 });
+    for (const bad of [8, -1, 3.5, NaN]) {
+        const plan = computeStageBudgetPlan({
+            ...baseInput, nodeBudget, repairConfigsCount: 0,
+            opts: { repairLateProbeMultiSeedRetrySeedCountOverride: bad },
+        });
+        assert.deepEqual(plan.repairLateProbeMultiSeedRetrySeedSalts, REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS,
+            `override=${bad} must fall back to the full production array`);
+        assert.equal(plan.repairLateProbeMultiSeedRetryNodeReserve, base.repairLateProbeMultiSeedRetryNodeReserve);
+    }
 });
 
 test('disableExtraBudgetPasses zeroes every retry-tier budget fraction unless an explicit per-tier override wins', () => {

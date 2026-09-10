@@ -893,6 +893,7 @@ export interface StageBudgetPlanInput {
         | 'mcNeighborBudgetRetryBudgetFractionOverride' | 'mcNeighborBudgetRetryNodeReserveFractionOverride'
         | 'admissibleOrderBudgetFractionOverride' | 'admissibleOrderNodeReserveFractionOverride'
         | 'repairLateProbeNodeBudgetOverride' | 'admissibleOrderProfileNodeReserveFractionOverride'
+        | 'repairLateProbeMultiSeedRetrySeedCountOverride'
         | 'mainSearchLateReserveFractionOverride' | 'mainLoopLateReserveFractionOverride'
         | 'mainSearchLateReserveConfigCountOverride' | 'mainLoopLateReserveConfigCountOverride'
         | 'repairFallbackNodeReserveFractionOverride' | 'repairShrinkRecoveryNodeReserveFractionOverride'
@@ -1236,12 +1237,27 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
     // NOT on repairLateProbeNodeCeiling directly, so it never contends with that tier's own budget.
     const repairLateProbeMultiSeedRetryTierWillRun = repairLateProbeTierWillRun
         && !!(!cfg || cfg.STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY);
+    // Experiment-only seed-count seam (repairLateProbeMultiSeedRetrySeedCountOverride — see that
+    // SolveOpts field's own comment in orchestration.ts) for the 7-vs-6 seed-count confirmation.
+    // Resolved into the ACTUAL salt slice exactly once, here: both the reserve calc immediately
+    // below and orchestration.ts's execution loop read this same array (via the plan return value),
+    // so a requested count and the salts actually attempted cannot drift apart. An out-of-range or
+    // non-integer override (including the common omitted/undefined case) is treated exactly like
+    // production default — the full seven-salt array — which keeps omitted-means-production-
+    // default a strict no-op.
+    const repairLateProbeMultiSeedRetrySeedCountRaw = Number(opts.repairLateProbeMultiSeedRetrySeedCountOverride);
+    const repairLateProbeMultiSeedRetrySeedSalts = Number.isInteger(repairLateProbeMultiSeedRetrySeedCountRaw)
+        && repairLateProbeMultiSeedRetrySeedCountRaw >= 0
+        && repairLateProbeMultiSeedRetrySeedCountRaw <= REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length
+        ? REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.slice(0, repairLateProbeMultiSeedRetrySeedCountRaw)
+        : REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS;
     // Flat additive reserve (like repairLateProbeNodeReserve itself): each seed gets its own full
     // REPAIR_LATE_PROBE_NODE_BUDGET, not a fraction split across seeds — diluting an already-
     // calibrated per-seed budget would confound "does more seeds help" with "does less budget per
-    // seed hurt."
+    // seed hurt." Sized off the RESOLVED salts array above (not the raw constant), so a truncated
+    // override reserves exactly as many seed-budgets as will actually run.
     const repairLateProbeMultiSeedRetryNodeReserve = repairLateProbeMultiSeedRetryTierWillRun
-        ? repairLateProbeNodeBudget * REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length
+        ? repairLateProbeNodeBudget * repairLateProbeMultiSeedRetrySeedSalts.length
         : 0;
     const repairLateProbeMultiSeedRetryNodeCeiling = goalAttractionGuidanceDistanceRetryNodeCeiling === Infinity
         ? Infinity
@@ -1557,7 +1573,7 @@ export function computeStageBudgetPlan(input: StageBudgetPlanInput) {
         goalAttractionGuidanceDistanceRetryBudgetFraction, goalAttractionGuidanceDistanceRetryTierWillRun,
         goalAttractionGuidanceDistanceRetryNodeReserve, goalAttractionGuidanceDistanceRetryNodeCeiling,
         repairLateProbeMultiSeedRetryTierWillRun, repairLateProbeMultiSeedRetryNodeReserve,
-        repairLateProbeMultiSeedRetryNodeCeiling,
+        repairLateProbeMultiSeedRetryNodeCeiling, repairLateProbeMultiSeedRetrySeedSalts,
         retryTierStaircase, earlyTierNodeBudget,
         admissibleOrderProfileNodeReserveEligible, admissibleOrderProfileNodeReserve, admissibleOrderDefaultProfileCeiling,
         mainSearchLateReserveEnabled, mainSearchLateReserveFraction, mainSearchLateReserveConfigCount,

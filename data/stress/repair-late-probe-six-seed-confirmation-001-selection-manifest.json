@@ -1,0 +1,43 @@
+{
+  "experiment": "repair-late-probe-six-seed-confirmation-001",
+  "corpus": "corpus2",
+  "seed": "repair-late-probe-six-seed-confirmation-001",
+  "sampleSize": 150,
+  "targetTechnique": "late-repair-multiseed-retry",
+  "selectionSource": {
+    "path": "reports/stress/capability-runs/33841017634/lifecycle-failure-map-corpus2.json",
+    "ghaProvenancePath": "reports/stress/capability-runs/33841017634/gha-source-run.json",
+    "ghaRunUrl": "https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33841017634",
+    "conditioning": "reachedTechniques includes late-repair-multiseed-retry (control-side, level-blind, production-default seven-seed dispatch)",
+    "totalCorpusLevels": 1700,
+    "reachedCount": 223,
+    "contentSha256": "3a3dcb79fea9f9ad3f82dbb64b4a4accb37a9d525a69168bb605de5c7f6b419a"
+  },
+  "exclusions": {
+    "files": [
+      {
+        "path": "data/stress/static-portfolio-entrypoint-production-ab-001-population.json",
+        "ids": 40,
+        "contentSha256": "1b342ce8cb631ad37cf25b8951ab3226b383151042d356ba12fba8147f776be3"
+      }
+    ],
+    "distinctPriorExposureIds": 40,
+    "overlapBetweenDiscoveryAndReached": 9
+  },
+  "eligibleReachConditionedIdsAfterExclusions": 214,
+  "outputs": {
+    "population": {
+      "path": "data/stress/repair-late-probe-six-seed-confirmation-001-population.json",
+      "sha256": "81130abc8d33fc83743e75ccd4cb50342e1ea2d6c76dd3c105ae7138bb806e50"
+    },
+    "ids": {
+      "path": "data/stress/repair-late-probe-six-seed-confirmation-001-ids.txt",
+      "sha256": "3a4ca6cbca86f06a7b2889b4eb04e7eceb57ef8c41025776e9e7529841a058ec"
+    }
+  },
+  "invariants": {
+    "allSampledIdsReachLateRepairMultiSeedRetryUnderControl": true,
+    "overlapWithPriorExposure": 0,
+    "uniqueSampledIds": 150
+  }
+}

@@ -422,6 +422,19 @@ export interface SolveOpts {
      *  condition also requires this to be > 0). STRATEGY_REPAIR_LATE_PROBE is default-on, so this
      *  override takes effect unless that flag is explicitly disabled. */
     repairLateProbeNodeBudgetOverride?: number;
+    /** Overrides the number of REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS entries the
+     *  late-repair-multiseed-retry tier consumes for this solve only — an experiment-only seam for
+     *  the 7-vs-6 seed-count confirmation (reports/2026-09-05-repair-late-probe-six-seed-
+     *  confirmation-preflight.md), NOT a permanent ablation flag. Must be an integer in
+     *  [0, REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS.length]; an out-of-range or non-integer
+     *  value is treated exactly like omitted. Undefined (production default) preserves the full
+     *  constant exactly. computeStageBudgetPlan (stage-budget.ts) resolves this into the actual
+     *  salt slice ONCE (repairLateProbeMultiSeedRetrySeedSalts) and both the additive node reserve
+     *  and the orchestration loop below read that same resolved array, so budget and execution
+     *  cannot drift apart — 6 always means exactly salts 1-6 with six per-seed reserves.
+     *  STRATEGY_REPAIR_LATE_PROBE_MULTI_SEED_RETRY is default-on, so this override takes effect
+     *  unless that flag (or the tier's own prerequisite repairLateProbeTierWillRun) is off. */
+    repairLateProbeMultiSeedRetrySeedCountOverride?: number;
     /** Overrides ADMISSIBLE_ORDER_BUDGET_FRACTION for this solve only — same dedicated
      *  top-level-option shape and rationale as the two overrides above (NOT an ablation flag, a
      *  THIRD independently-costed extension a batch-tooling caller may want to isolate). Undefined
@@ -998,10 +1011,11 @@ export {
 // them locally (every real use lives inside stage-budget.ts's own computeStageBudgetPlan now);
 // the `export { ... } from` statement is self-contained and needs no paired import.
 import { computeStageBudgetPlan, computeShrinkRecoveryBudget, buildStageBudgetEnvelopes } from './stage-budget.js';
-// Genuinely imported (not just re-exported): this file's own late-repair-multiseed-retry
-// block iterates the array directly, unlike the fraction constants above which are only ever
-// consumed inside stage-budget.ts's computeStageBudgetPlan.
-import { REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS } from './stage-budget.js';
+// REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS is NOT imported here: this file's own
+// late-repair-multiseed-retry block iterates stageBudgetPlan's own resolved
+// repairLateProbeMultiSeedRetrySeedSalts (computeStageBudgetPlan, stage-budget.ts) instead of the
+// raw constant, so an experiment-only seed-count override (repairLateProbeMultiSeedRetrySeedCount
+// Override) cannot drift between the additive reserve and the actual execution loop.
 
 /** Small, strictly ADDITIONAL budgets (never subtracted from mainConfigs' timeBudgetMs or from
  *  REPAIR_ADDITIVE_BUDGET_MULTIPLIER's own later allotment) given to a cheap early probe of the
@@ -1870,6 +1884,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         goalAttractionGuidanceDistanceRetryBudgetFraction, goalAttractionGuidanceDistanceRetryTierWillRun,
         goalAttractionGuidanceDistanceRetryNodeCeiling,
         repairLateProbeMultiSeedRetryTierWillRun, repairLateProbeMultiSeedRetryNodeCeiling,
+        repairLateProbeMultiSeedRetrySeedSalts,
         retryTierStaircase, earlyTierNodeBudget, admissibleOrderDefaultProfileCeiling,
         mainSearchLateReserve, mainSearchEarlyNodeBudget, mainSearchLateConfigStart,
         mainSearchLateReserveEnabled, mainSearchLateReserveFraction, mainSearchLateReserveConfigCount,
@@ -2814,13 +2829,17 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     //
     // `repairLateProbeMultiSeedRetryTierWillRun` is the SAME predicate
     // repairLateProbeMultiSeedRetryNodeReserve is derived from (stage-budget.ts) — the two must
-    // stay in lockstep.
+    // stay in lockstep. The loop below iterates `repairLateProbeMultiSeedRetrySeedSalts`, the SAME
+    // resolved array the reserve above was sized from (computeStageBudgetPlan, stage-budget.ts) —
+    // not the raw REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS constant — so
+    // repairLateProbeMultiSeedRetrySeedCountOverride (orchestration.ts SolveOpts) always resolves
+    // budget and execution to the identical salt slice.
     if (!result.solution && repairLateProbeMultiSeedRetryTierWillRun && prep._metrics.nodesExpanded < repairLateProbeMultiSeedRetryNodeCeiling) {
         const repairLateProbeMultiSeedConfig = repairAttempt();
         const originalWorkCap = prep._workCap;
         try {
             seedLoop:
-            for (const seedSalt of REPAIR_LATE_PROBE_MULTI_SEED_RETRY_SEED_SALTS) {
+            for (const seedSalt of repairLateProbeMultiSeedRetrySeedSalts) {
                 if (prep._metrics.nodesExpanded >= repairLateProbeMultiSeedRetryNodeCeiling) break;
                 const roundStart = Date.now();
                 const roundEntryNodes = prep._metrics.nodesExpanded;
