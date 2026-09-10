@@ -157,6 +157,28 @@ async function main() {
         assert.match(plannerSource, /existsSync\(path\.resolve\(root, DEFAULT_TELEMETRY_PATH\)\)/u);
         console.log('  ✓ shard planner uses supplied runtime telemetry and retains standing-telemetry autodiscovery');
 
+        // Every predicted wall time above is tiny (a few seconds), so the timeout floor dominates
+        // both shards' timeoutMinutes regardless of --target-wall-minutes -- exactly the case a
+        // caller who already knows telemetry is underestimating a population's real cost (this
+        // recurred twice in one day, 2026-09-10, on the connectivity-volume-* research line) needs
+        // to raise without fabricating fake telemetry or forcing levels to pack together.
+        assert.ok(planned.shard.every(s => s.timeoutMinutes === 30), 'default floor is still 30 when --min-timeout-minutes is omitted');
+        const plannerOutRaisedFloor = path.join(tempDir, 'planner-raised-floor.json');
+        await runPlanner([
+            `--ids-file=${plannerIdsFile}`,
+            '--corpus2=data/stress/stress-levels-random.json',
+            `--telemetry=${plannerTelemetry}`,
+            '--node-budget=50000000',
+            '--workers=4',
+            '--target-wall-minutes=20',
+            '--min-timeout-minutes=90',
+            '--seed=node-test',
+            `--out=${plannerOutRaisedFloor}`,
+        ]);
+        const plannedRaisedFloor = JSON.parse(await readFile(plannerOutRaisedFloor, 'utf8'));
+        assert.ok(plannedRaisedFloor.shard.every(s => s.timeoutMinutes === 90), '--min-timeout-minutes raises the floor for every shard');
+        console.log('  ✓ --min-timeout-minutes raises the per-shard timeout floor above telemetry-derived predictions');
+
         const sweepSource = await readFile(path.join(ROOT, 'scripts/level-blind-capability-sweep.mjs'), 'utf8');
         assert.match(sweepSource, /solveOpts\.admissibleOrderNonDefaultRetryBudgetFractionOverride = admissibleOrderNonDefaultRetryBudgetFraction/u);
         assert.match(sweepSource, /admissibleOrderNonDefaultRetryBudgetFraction: Number\.isFinite\(admissibleOrderNonDefaultRetryBudgetFraction\)/u);
