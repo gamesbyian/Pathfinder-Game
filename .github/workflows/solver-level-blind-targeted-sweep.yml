@@ -209,23 +209,28 @@ jobs:
           # under the EXACT resolved cap/flags/selector mode, verifying work/node/deadline stop
           # semantics and expected output fields BEFORE scaling. Nothing previously enforced this
           # mechanically anywhere (2026-09-09 solver-development-operating-loop audit). One level
-          # (the first resolved id -- deterministic, no extra selection logic needed) is enough to
-          # catch the structural failure modes this guards against: a resolved ablation/flag
-          # combination that eliminates every attempt config (zero attempts dispatched), a crash/
-          # exception path, a malformed output row, or a wall-clock deadline that fires when it
-          # should be non-binding -- before committing to the full (potentially 250-shard) matrix.
-          # See scripts/verify-canary-cell.mjs's own header comment for why this deliberately does
-          # NOT check target-stage participation rate (that stays validate-solver-sweep-
-          # integrity.mjs's job on the full population).
-          export CANARY_ID=$(head -n1 logs/solver-targeted-sweep/ids.txt)
-          canary_pos=$(node -e "
-            const fs = require('node:fs');
-            const corpus = JSON.parse(fs.readFileSync(process.env.CORPUS_PATH, 'utf8'));
-            const levels = Array.isArray(corpus) ? corpus : corpus.levels;
-            const idx = levels.findIndex(lv => lv.id === process.env.CANARY_ID);
-            if (idx === -1) { console.error(\`canary id \${process.env.CANARY_ID} not found in \${process.env.CORPUS_PATH}\`); process.exit(1); }
-            console.log(idx + 1);
-          ")
+          # is enough to catch the structural failure modes this guards against: a resolved
+          # ablation/flag combination that eliminates every attempt config (zero attempts
+          # dispatched), a crash/exception path, a malformed output row, or a wall-clock deadline
+          # that fires when it should be non-binding -- before committing to the full (potentially
+          # 250-shard) matrix. See scripts/verify-canary-cell.mjs's own header comment for why this
+          # deliberately does NOT check target-stage participation rate (that stays validate-
+          # solver-sweep-integrity.mjs's job on the full population), which is also why the canary
+          # level need not come from the dispatched population at all.
+          #
+          # Deliberately corpus position 1, NOT the first resolved id from this dispatch's own
+          # population: that population is frequently curated specifically because it contains
+          # hard/anomalous levels (targeted-sweep ids, highbudget "still unsolved" ids, stratified
+          # samples, ...), so "the first id" can be one of the expensive ones -- exactly what
+          # happened on 2026-09-10 (connectivity-volume-portal-ab-001 treatment arm, run
+          # 34423190297: the canary alone ran past 9m28s and got killed by the plan job's own
+          # timeout before the shard planner ever ran). Position 1 is one of the known-fast,
+          # known-solvable levels recorded in logs/solver-canary-baseline.json (solved in ~300ms
+          # under production defaults); a config that is fundamentally broken -- the actual thing
+          # this canary checks for -- misbehaves on ANY level, not only hard ones, so trading
+          # "representative of this dispatch's difficulty" for "cheap and reliable every time" costs
+          # nothing here.
+          canary_pos=1
           # Flag construction here is DELIBERATELY duplicated from "Run level-blind-capability-
           # sweep on this shard's slice" below, not factored into a shared script: the whole point
           # of a canary is that it runs under the SAME resolved config the real shards will use --
@@ -251,8 +256,6 @@ jobs:
             --out=logs/solver-targeted-sweep/canary.json \
             --summary-out=logs/solver-targeted-sweep/canary-summary.md
           node scripts/verify-canary-cell.mjs --result=logs/solver-targeted-sweep/canary.json --expect-no-deadline-truncation=true
-        env:
-          CORPUS_PATH: ${{ inputs.corpus }}
 
       - name: Run the shard planner
         id: plan
