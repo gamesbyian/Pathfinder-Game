@@ -1,8 +1,9 @@
 # Goal-attraction-disabled retry fresh-work-pool confirmation 002
 
 > **Status:** concluded-positive
-> **Date:** 2026-09-10
+> **Last evidence:** 2026-09-10 — frozen 150-level confirmation completed in both arms at commit `7ac1a9907bd02783238e137f07fe2254203751c8`: 14/150 control versus 17/150 treatment, +3/-0 with all gains inside the target stage.
 > **Decision:** promotion of `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` is supported by the frozen confirmation rule. The independent historical-starvation cohort produced **3 treatment-exclusive solves and 0 losses**, all three gains were won inside `goal-attraction-disabled-retry`, and treatment materially increased real stage participation.
+> **Remaining gate:** normal default-ON promotion mechanics plus opt-in-ledger and Workstream-2 2A reconciliation; no further confirmation of this unchanged global form is earned before promotion.
 > **Evidence role:** second independent confirmation, conditioned only on historical control-side starvation/reach as prespecified.
 > **Control:** GHA `34444934580`, artifact `targeted-sweep-combined` / `10141247127`
 > **Treatment:** GHA `34444937307`, artifact `targeted-sweep-combined` / `10141871432`
