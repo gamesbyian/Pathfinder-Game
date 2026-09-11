@@ -210,13 +210,36 @@ descendant after its results influence redesign.
 
 Decision-bearing populations and reusable rows require explicit provenance, not plausible defaults.
 
+### Hint provenance is purpose-specific evidence
+
+A referee-valid stored path and the event that discovered it answer different questions. Never give a provenance event one global “good/bad” or “current/stale” meaning. Before a hint/provenance join influences a classification, ranking, cohort, or research decision, declare the evidence purpose and apply the shared provenance applicability rules.
+
+| Purpose | What provenance can establish |
+|---|---|
+| `positive-oracle` | The referee-valid path/prefix is known live; producer history cannot make a valid path less live. |
+| `solution-atlas` | Known solution geometry/basin structure, including context-bound, replayed, witness, external, guided, randomized, or unattributed paths. |
+| `current-production-capability` | Only an explicitly comparable cold Pathfinder discovery under the named current/equivalent solver regime; historical cold solves without established equivalence are nominations, not present capability proof. |
+| `technique-performance` | Positive discovery events can supply success/cost context, but never solve-rate or relative-performance claims without the originating attempted population, failures, comparable `workSpent`, and protocol identity. |
+| `longitudinal-process` | Attributed/versioned discovery history, including context-bound evidence whose present capability meaning is unresolved. |
+
+Rules:
+
+- Missing legacy context stays **unknown**. In particular, absent booleans such as `isolatedTechnique` must not be upgraded to modern `false` when capability classification depends on them.
+- Variant-parent replay, construction/inherited witnesses, external solver output, hint-guided or `usedExistingHints` discoveries, isolated-technique runs, and exhaustive enumeration can remain valuable oracle/atlas/history evidence while being inadmissible for a current cold-capability claim.
+- Randomization is an orthogonal facet, not an automatic disqualifier; production repair can itself be seeded. Judge producer/context, not the mere existence of a seed.
+- Solver age alone is not staleness. A historical event becomes current capability/performance evidence only after the relevant code/config/scheduler/work semantics are shown comparable, or after bounded current replay.
+- Raw provenance-event count is not independent support. Collapse or stratify dependent rediscoveries, including same-regime/config repetitions and variant-family replay clouds, before using support volume in ranking or confidence language.
+- A current technique-performance claim normally comes from run/census evidence with denominators, not from a hint sidecar selected on success.
+
+The executable authority is the shared provenance applicability/dependency helper surfaced through `hint-query --purpose=...` and `scripts/stress/hint-provenance-evidence-report.mjs`; the September 11 audit documents the measured legacy hazards and rationale. Do not reimplement these rules ad hoc in downstream analysis.
+
 - Missing production-baseline provenance is **unknown**, never implicitly “production-unsolved.” A census/frontier class that depends on production status must preserve the tri-state distinction until a real baseline is joined.
 - Timeout/deadline truncation and execution errors are indeterminate buckets, never ordinary failures.
 - Reuse benchmark/census rows only when the meaning-changing protocol identity matches: code/fingerprint schema, corpus/content identity, scheduler/config/flags, deterministic budgets and relevant execution mode.
 - Under across-level parallel execution, do not partially reuse old rows when doing so would mix contention regimes that the original run cannot reproduce exactly; rerun the affected comparison coherently instead.
 - Versioned solver fingerprints are regression evidence only within their declared schema. Schema-v1 and schema-v2 fingerprints are different evidence contracts, not interchangeable strings.
 
-These rules were hardened by the 2026-09-10 solver audit; see [`../reports/2026-09-10-solver-system-audit.md`](../reports/2026-09-10-solver-system-audit.md).
+These rules were hardened by the 2026-09-10 solver audit and the 2026-09-11 hint-provenance relevance audit; see [`../reports/2026-09-10-solver-system-audit.md`](../reports/2026-09-10-solver-system-audit.md) and [`../reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md`](../reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md).
 
 ## Promotion and claim rules
 
