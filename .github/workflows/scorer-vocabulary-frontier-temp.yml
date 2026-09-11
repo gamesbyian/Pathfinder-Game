@@ -33,10 +33,23 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p tmp
+          # The frozen per-level capability report is an array while the current diagnostic's
+          # --report reader expects {levels:[...]}. Normalize only for this temporary evidence run;
+          # the durable parser fix is tracked separately from the research conclusion.
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const sourcePath = 'reports/stress/capability-runs/34531412380/per-level-corpus2.json';
+          const source = JSON.parse(readFileSync(sourcePath, 'utf8'));
+          const levels = Array.isArray(source) ? source : source.levels;
+          if (!Array.isArray(levels)) throw new Error('frozen production report has no level array');
+          writeFileSync('tmp/production-report-object.json', JSON.stringify({ levels }));
+          console.log(`Normalized production report shape: ${Array.isArray(source) ? 'array' : 'object'}; rows=${levels.length}; solved=${levels.filter(row => row.ok).length}`);
+          NODE
+
           node scripts/run-bundled.mjs scripts/stress/witness-scoring-vocabulary-diagnostic.mjs -- \
             --corpus=corpus2 \
             --unsolved-only \
-            --report=reports/stress/capability-runs/34531412380/per-level-corpus2.json \
+            --report=tmp/production-report-object.json \
             --sources=witness \
             --scoring-profile=default \
             --out=tmp/scorer-vocabulary-witness-only.json
