@@ -9,7 +9,9 @@
  * `benchmarkProtocol`. Legacy reports without that protocol are intentionally ignored rather than
  * guessed compatible: reusing a row changes the evidence just as surely as executing a row, so its
  * solver ref, corpus, budgets, execution engine, parallelism and additive-budget overrides must all
- * match the current run.
+ * match the current run. Across-level `--parallel` runs cannot safely reuse rows because executing
+ * only the remainder changes CPU contention even when the nominal worker count matches; that
+ * combination fails loudly instead of mixing contention regimes.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { formatAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
@@ -224,10 +226,11 @@ async function main() {
     const parallelArg = argMap.has('--parallel')
         ? (argMap.get('--parallel') === '' ? Math.max(1, (os.availableParallelism?.() ?? os.cpus().length) - 1) : Number(argMap.get('--parallel')))
         : 1;
-    // Resolve execution mode from the original target population, before resume filtering. This
-    // keeps resumed rows and newly executed rows under the same protocol even when only one row
-    // remains to run.
     const parallel = Math.max(1, Math.min(parallelArg, targetLevels.length));
+    if (cfg.skipExistingDir && parallel > 1) {
+        console.error('--skip-existing-dir cannot be combined with across-level --parallel: executing only the unreused remainder changes CPU contention, so nominally matching worker counts do not make old and new rows comparable. Re-run without --parallel or without --skip-existing-dir.');
+        process.exit(2);
+    }
     const requestedEngine = argMap.get('--engine') || 'raced';
     const engine = parallel > 1 ? 'sequential' : requestedEngine;
     const poolSizeArg = argMap.get('--pool-size') ? Number(argMap.get('--pool-size')) : undefined;
