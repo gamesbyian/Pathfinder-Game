@@ -27,6 +27,13 @@ function mean(xs) {
     return xs.reduce((a, b) => a + b, 0) / xs.length;
 }
 
+function median(xs) {
+    if (!xs.length) return null;
+    const sorted = [...xs].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 function stats(rows, feature) {
     const values = rows.map((row) => row.features?.[feature]).filter(Number.isFinite);
     if (!values.length) throw new Error(`No numeric values for difficulty feature ${feature}`);
@@ -65,6 +72,27 @@ export function assignDifficultyStrata(rows, stratumCount = 5, features = DEFAUL
 
 function sign(value) {
     return value > 0 ? 1 : value < 0 ? -1 : 0;
+}
+
+function summarizeMultiplicity(rows) {
+    const counts = rows.map((row) => Array.isArray(row.solvingActions) ? row.solvingActions.length : 0);
+    return {
+        n: counts.length,
+        meanSolverCount: counts.length ? mean(counts) : null,
+        medianSolverCount: median(counts),
+        thinShare: counts.length ? counts.filter((count) => count <= 2).length / counts.length : null,
+        broadShare: counts.length ? counts.filter((count) => count >= 6).length / counts.length : null,
+    };
+}
+
+function pairMultiplicityContext(base, leftAction, rightAction) {
+    const leftOnly = base.levels.filter((row) => row.solvingActions.includes(leftAction) && !row.solvingActions.includes(rightAction));
+    const rightOnly = base.levels.filter((row) => row.solvingActions.includes(rightAction) && !row.solvingActions.includes(leftAction));
+    return {
+        leftOnly: summarizeMultiplicity(leftOnly),
+        rightOnly: summarizeMultiplicity(rightOnly),
+        interpretation: 'Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input.',
+    };
 }
 
 function summarizePairAcrossStrata(pairIndex, stratumResults, { minExclusivePerSide = 5, materialThreshold = 0.20 } = {}) {
@@ -140,6 +168,13 @@ export function analyzeDifficultyStratifiedRelativeAdvantage(base, {
         analysis: analyzeRelativeAdvantage({ ...base, levels: stratum.rows }),
     }));
     const pairCount = stratumResults[0].analysis.pairs.length;
+    const pairs = Array.from({ length: pairCount }, (_, pairIndex) => {
+        const summary = summarizePairAcrossStrata(pairIndex, stratumResults, { minExclusivePerSide, materialThreshold });
+        return {
+            ...summary,
+            multiplicityContext: pairMultiplicityContext(base, summary.leftAction, summary.rightAction),
+        };
+    });
     return {
         schemaVersion: 1,
         evidenceRole: 'observational-development-difficulty-stratified',
@@ -151,13 +186,17 @@ export function analyzeDifficultyStratifiedRelativeAdvantage(base, {
         stratumCount,
         minExclusivePerSide,
         materialThreshold,
-        pairs: Array.from({ length: pairCount }, (_, pairIndex) => summarizePairAcrossStrata(pairIndex, stratumResults, { minExclusivePerSide, materialThreshold })),
-        interpretationBoundary: 'Persistence within generic-burden strata weakens the explanation that a pairwise niche is merely overall difficulty. It does not establish causality; variant-family and operational/mechanism evidence remain the next escalation for stable effects.',
+        pairs,
+        interpretationBoundary: 'Persistence within generic-burden strata weakens the explanation that a pairwise niche is merely overall difficulty. Multiplicity supplies offline fragility context. Neither establishes causality; variant-family and operational/mechanism evidence remain the next escalation for stable effects.',
     };
 }
 
 function fmt(value) {
     return Number.isFinite(value) ? value.toFixed(2) : 'n/a';
+}
+
+function pct(value) {
+    return Number.isFinite(value) ? `${(100 * value).toFixed(0)}%` : 'n/a';
 }
 
 export function renderMarkdown(result, input) {
@@ -168,17 +207,18 @@ export function renderMarkdown(result, input) {
         `> **Input:** \`${input}\`.`,
         `> **Generic burden:** ${result.burdenScore.features.join(', ')}.`,
         '',
-        `The population is split into ${result.stratumCount} equal-count bands by the established generic structural-burden score. Pairwise A-only/B-only effects are then recomputed inside each band. A stratum is interpretation-eligible only with at least ${result.minExclusivePerSide} exclusive wins on each side.`,
+        `The population is split into ${result.stratumCount} equal-count bands by the established generic structural-burden score. Pairwise A-only/B-only effects are then recomputed inside each band. A stratum is interpretation-eligible only with at least ${result.minExclusivePerSide} exclusive wins on each side. Multiplicity is reported only as offline fragility context.`,
         '',
-        '| pair | eligible strata | recurring same-direction material effects |',
-        '|---|---:|---|',
+        '| pair | eligible strata | recurring same-direction material effects | thin share L / R |',
+        '|---|---:|---|---:|',
     ];
     for (const pair of result.pairs) {
         const name = `${pair.leftAction} vs ${pair.rightAction}`.replaceAll('|', '\\|');
         const stable = pair.stableFeatures.length
             ? pair.stableFeatures.map((feature) => `${feature.feature} (${feature.materialStrata} strata)`).join('; ')
             : 'none at current thresholds';
-        lines.push(`| ${name} | ${pair.eligibleStrata} | ${stable} |`);
+        const thin = `${pct(pair.multiplicityContext.leftOnly.thinShare)} / ${pct(pair.multiplicityContext.rightOnly.thinShare)}`;
+        lines.push(`| ${name} | ${pair.eligibleStrata} | ${stable} | ${thin} |`);
     }
     lines.push('', '## Strata', '');
     if (result.pairs[0]) {
