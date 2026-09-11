@@ -29,22 +29,32 @@ describe('difficulty-stratified relative advantage', () => {
         expect(strata[0].maxScore).toBeLessThan(strata[3].minScore);
     });
 
-    it('recomputes the frozen pair analyses inside burden bands', () => {
+    it('supports a reduced burden feature set for sensitivity checks', () => {
+        const rows = Array.from({ length: 20 }, (_, i) => row(`R${i}`, i));
+        const strata = assignDifficultyStrata(rows, 4, ['constrainedObjects', 'portals']);
+        expect(strata.map((s) => s.rows.length)).toEqual([5, 5, 5, 5]);
+    });
+
+    it('recomputes frozen pair analyses and reports multiplicity context', () => {
         const left = 'admissible-order|tieBreak=default|lds=off';
         const right = 'admissible-order|tieBreak=mustCrossFirst|lds=off';
+        const unrelated = 'dfs|score=default|bias=none';
         const rows = [];
         for (let i = 0; i < 40; i++) {
-            const actions = i % 4 < 2 ? [left] : [right];
+            const actions = i % 4 < 2 ? [left] : [right, unrelated];
             rows.push(row(`R${i}`, i, actions));
         }
         const base = { schemaVersion: 2, levels: rows };
         const result = analyzeDifficultyStratifiedRelativeAdvantage(base, {
             stratumCount: 2,
+            difficultyFeatures: ['constrainedObjects', 'portals'],
             minExclusivePerSide: 2,
         });
         expect(result.stratumCount).toBe(2);
         expect(result.pairs).toHaveLength(8);
         expect(result.pairs[0].eligibleStrata).toBe(2);
-        expect(result.burdenScore.features).toContain('constrainedObjects');
+        expect(result.burdenScore.features).toEqual(['constrainedObjects', 'portals']);
+        expect(result.pairs[0].multiplicityContext.leftOnly.meanSolverCount).toBe(1);
+        expect(result.pairs[0].multiplicityContext.rightOnly.meanSolverCount).toBe(2);
     });
 });
