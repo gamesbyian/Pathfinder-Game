@@ -176,25 +176,30 @@ test('capability-memory comparisons preserve negative verdicts while exposing co
     assert.ok(historical.warning.includes('may not steer production'));
 });
 
-test('capability-memory CLI materializes a derived view without solver compute', () => {
+test('capability-memory CLI materializes JSON and human summary without solver compute', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'capability-memory-cli-test-'));
-    writeFileSync(path.join(dir, 'baseline.json'), JSON.stringify({ levels: [{ id: 'A', ok: true }, { id: 'B', ok: false }] }));
-    writeFileSync(path.join(dir, 'candidate.json'), JSON.stringify({ levels: [{ id: 'A', ok: true }, { id: 'B', ok: true, workSpent: 25 }] }));
+    writeFileSync(path.join(dir, 'baseline.json'), JSON.stringify({ levels: [{ id: 'A', ok: true }, { id: 'B', ok: false }, { id: 'C', ok: false, deadlineTruncated: true }] }));
+    writeFileSync(path.join(dir, 'candidate.json'), JSON.stringify({ levels: [{ id: 'A', ok: true }, { id: 'B', ok: true, workSpent: 25 }, { id: 'C', ok: true }] }));
     writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify({
         schemaVersion: 1,
         baseline: { id: 'current', path: 'baseline.json' },
         candidates: [
             { id: 'row-policy', path: 'candidate.json', disposition: 'closed-negative' },
-            { id: 'historical-policy', signature: { gainIds: ['B'], lossIds: [] }, disposition: 'closed-negative' },
+            { id: 'historical-policy', signature: { gainIds: ['B', 'C'], lossIds: [] }, disposition: 'closed-negative' },
         ],
     }));
     const out = path.join(dir, 'memory.json');
-    execFileSync('node', ['scripts/solver-capability-memory.mjs', `--manifest=${path.join(dir, 'manifest.json')}`, `--out=${out}`], { encoding: 'utf8' });
+    const summaryOut = path.join(dir, 'memory.md');
+    execFileSync('node', ['scripts/solver-capability-memory.mjs', `--manifest=${path.join(dir, 'manifest.json')}`, `--out=${out}`, `--summary-out=${summaryOut}`], { encoding: 'utf8' });
     const result = JSON.parse(readFileSync(out, 'utf8'));
+    const summaryText = readFileSync(summaryOut, 'utf8');
     assert.equal(result.baseline.residual, 1);
-    assert.equal(result.baseline.unknown, 0);
+    assert.equal(result.baseline.unknown, 1);
     assert.equal(result.candidates.find(x => x.id === 'row-policy').currentResidualConfirmedGains, 1);
+    assert.deepEqual(result.candidates.find(x => x.id === 'historical-policy').currentResidualNominationIds, ['B']);
     assert.equal(result.candidates.find(x => x.id === 'historical-policy').currentResidualConfirmedGains, 0);
+    assert.ok(summaryText.includes('residual 1; unknown 1'));
+    assert.ok(summaryText.includes('baseline unknown/censored rows are excluded'));
 });
 
 console.log(`\nappend-solver-health-record tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);
