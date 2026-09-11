@@ -1,9 +1,9 @@
 # Solver system audit — 2026-09-10
 
-> **Status:** active
-> **Last evidence:** 2026-09-11 — Audit 19 follow-up and CI recovery are committed: parallel partial-reuse provenance is guarded, fast-gate is green, and three stale deep-verification assertions were aligned with the Audit 12 retry-distinctness contract.
-> **Decision:** No additional source-audit area remains open; completed CI or review failures reopen the relevant row and are repaired without waiting on in-flight jobs.
-> **Remaining gate:** Green required CI/review on the current branch tip; repair any concrete regression it exposes.
+> **Status:** complete
+> **Last evidence:** 2026-09-11 — CI run 4165 is green on the recovered branch tip: fast-gate, ordinary deep verification, and heavyweight implementation proofs all passed after the retry-contract assertion repairs.
+> **Decision:** All 23 source-audit areas and the recovery/CI follow-up are closed. Later evidence may still reopen the relevant row under the follow-up rule below.
+> **Remaining gate:** None for this audit campaign.
 
 This is the compact ledger for the cross-cutting solver audit requested on 2026-09-10. Canonical design, correctness, and priority changes still belong in their owning docs; this report records what was actually inspected, concrete fixes, and only the follow-up that remains.
 
