@@ -1,7 +1,9 @@
 # New-premise reopen map 001
 
-> **Status:** decision support / bounded premise map
-> **Date:** 2026-09-11
+> **Status:** active
+> **Last evidence:** 2026-09-11 — the promoted must-cross x visited-portal-terminal joint-obligation hard prune (+21/-0), which earns the one bounded premise this map currently marks EARNED.
+> **Decision:** a bounded premise map, not an experiment result — routes each deferred/closed solver area to either an earned bounded pilot now available or an explicit first-loss trigger that must fire before reopening. No production solver behavior changes.
+> **Remaining gate:** none for this map itself; each row's own gate is its trigger condition or its pilot's own success/stop gates below.
 > **Scope:** identify solver work that was closed or deferred pending a materially new premise, and distinguish premises already earned by current evidence from premises that the active first-loss program can now earn.
 > **Production authority:** none. Current priority remains `docs/solver-optimization-workstreams.md`; deferred/reopen contracts remain `docs/solver-future-work.md`.
 
