@@ -37,7 +37,7 @@ Production repricing dispositions:
 1. **Post-1,029 residual atlas: DONE.** Full per-level five-class rejoin of the 671 misses. Result: not-offered 26 (3.9%), offered-unreached/starved 21 (3.1%), reached-comparable-work-failed 36 (5.4%), no-T1-winner-but-provenance-rescuer 200 (29.8%), no-known-rescuer 388 (57.8%). Portal-bearing structure dominates every class (497/671, 74.1%). Also nominates a small, cheap WS1 menu-expansion candidate: 26 never-offered levels, two recurring `width=5000`/`mechanic-buckets` beam configs. [`atlas report`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
 2. **Portal coarse-state salvage: DONE, CLOSED NEGATIVE (2026-09-11).** Exact `R01273` reproduction localized the true first-loss collision (depth 17) to trailing visited-cell identity omitted from the coarse key. Bounded second-survivor retention and a predecessor-identity subkey (1/2/4-hop) each only delayed the failure (death depth 17 -> 20 -> 40 -> 41 -> 43) with no convergence — closed per the prespecified rule; the 12-loss/158-gain ladder was never reached; no salvage code retained. [`R01273 collision forensic`](../reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md)
 3. **Admissible-order repricing: DEFERRED.** Atlas classes 2+3 (allocation/exposure) are only 8.5% of the residual, materially smaller than the 57.8% no-known-rescuer class — per the gate's own rule, do not spend the next population-scale run here. If ever run, use the tier-scoped enforcement path and prove target-stage participation first.
-4. **No-known-rescuer residue (388/671, 57.8%): NEXT, atlas-justified.** Meets [`2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)'s own reopening trigger. Structurally concentrated as predicted: 269/388 portal-bearing, 325/388 `intersection-heavy`, 130/388 triple-overlap. Next gate: its **observer-only joint-obligation propagation pilot** (log pass/reject/abstain against real search, no pruning yet; promote only after clearing its zero-false-rejection/material-dead-work gates). Not started this session — needs its own design/implementation/validation pass. The atlas's class-1 menu-expansion candidate is a smaller parallel-track WS1 option.
+4. **No-known-rescuer residue (388/671, 57.8%): NEXT, atlas-justified.** Meets [`2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)'s own reopening trigger. Next gate: its **observer-only joint-obligation propagation pilot** (log pass/reject/abstain against real search, no pruning yet; promote only after clearing zero-false-rejection/material-dead-work gates). **Near-control requirement:** class 4 is more portal-bearing than class 5 (86.5% vs 69.3%) and has more portal+must-cross+intersection-heavy overlap (43.5% vs 33.5%), so mechanic concentration alone cannot explain frontier membership. Include class 4, composition-matched where practical, and require a differential mechanism-level signal before promotion. [`frontier contrast`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -47,14 +47,16 @@ Use capability, lifecycle, provenance, profile, variant, census, trace and accep
 
 Stored paths, provenance, profile/family labels and same-level outcomes are offline diagnostics, not production routing inputs. [`evidence-layer upgrade`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
 
+**Frontier + structural-response characterization: ACTIVE / OFFLINE SUPPORT.** Use class 4 as the primary control for class 5, and screen broader technique niches for temporal stability plus generic-difficulty confounding before escalating to existing-family flips, source-controlled profiles or traces. [`frontier plan`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md), [`structural-response audit`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md)
+
 The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing only. Recomputed by the post-1,029 residual atlas: 232/671 (34.6%) triple-overlap, still the largest structural concentration. The broader T1/provenance capability join and per-level five-class rescuer breakdown is done. [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md), [`residual atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Atlas + portal salvage done; repricing deferred (8.5% of residual) -> observer-only joint-obligation propagation pilot on the 388-level no-known-rescuer residue. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Atlas's 26-level never-offered `width=5000`/`mechanic-buckets` beam cohort is a small, cheap menu-expansion candidate, parallel-runnable with the joint-obligation pilot; protect low-multiplicity capability before routing changes. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Observer-only joint-obligation propagation on the 388-level no-known-rescuer residue, with class-4 near-control evidence required before promotion. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Run frontier + temporal/difficulty-controlled technique-response screening; escalate only surviving distinctions. The 26-level never-offered beam cohort remains a small parallel menu-expansion candidate. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Static block count is exploratory only (AUC 0.69, n=8 vs 22). Fresh prespecified CP-SAT confirmation only if worth buying. `bestBadnessTechnique` is not a valid substitute signal (beam/DFS rarely populate `bestProgress` the way repair does). |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen only for a materially different mechanism or newly measured hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Concrete methodological failure. |
@@ -83,6 +85,9 @@ The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solve
 - research assets: `node scripts/research-asset-query.mjs --query=<term>`
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
 - hint/provenance audit: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all`
+- frontier contrast: `node scripts/stress/analyze-frontier-contrast.mjs --out=tmp/post-1029-frontier-contrast.json`
+- structural niche stability: `node scripts/analyze-technique-niche-stability.mjs`
+- difficulty-controlled niches: `node scripts/analyze-difficulty-stratified-relative-advantage.mjs`
 - current missing-exposure rejoin: `node scripts/run-bundled.mjs scripts/stress/analyze-current-missing-attempt-exposure.mjs -- --baseline=reports/stress/capability-runs/34531412380/per-level-corpus2.json --census=reports/stress/technique-census/33717910218/combined-cells.json --out=tmp/post-1029-missing-attempt-exposure.json`
 
 Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for evidence topology. Search named mechanisms through `research-status-index --compact`; chronology belongs in matched reports or frozen snapshots.
