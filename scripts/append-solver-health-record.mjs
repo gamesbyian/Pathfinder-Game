@@ -8,8 +8,9 @@
  *
  * In addition to scalar solve/work health, this records capability composition: population/solved
  * set hashes plus gain/loss churn against the most recent protocol-compatible tracked capability
- * run whose per-level snapshot is still available. Churn is research/health evidence only; exact
- * level identities remain forbidden production-routing inputs.
+ * run whose per-level snapshot is still available. The timeline keeps only compact churn counts and
+ * set hashes; exact IDs remain recoverable from the referenced per-level run snapshots. Churn is
+ * research/health evidence only and may not steer production by level identity.
  */
 import { existsSync, readFileSync, appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -165,8 +166,8 @@ export function buildHealthRecord(summary, combinedByCorpus, previousCompatible 
             gained: churn.gained,
             lost: churn.lost,
             retained: churn.retained,
-            gainedIds: churn.gainedIds,
-            lostIds: churn.lostIds,
+            gainedIdHash: hashIds(churn.gainedIds),
+            lostIdHash: hashIds(churn.lostIds),
         };
     }
     return {
