@@ -1,8 +1,9 @@
 # Algorithmic frontier execution handoff 001
 
-> **Status:** ready-for-execution
+> **Status:** active
 > **Last evidence:** 2026-09-11 — post-1,029 residual atlas, class-4/class-5 coarse contrast, portal coarse-state salvage closed negative, admissible-order repricing deferred, and observer-only joint-obligation propagation promoted as the next frontier mechanism gate.
 > **Decision:** characterize class 5 against class 4 while executing the joint-obligation observer. Exhaust existing static, provenance/profile, family, and bounded replay evidence before proposing a new algorithm family or broad solve campaign.
+> **Remaining gate:** execute the static contrast, class-4-controlled observer, source-controlled profile/family joins, and bounded all-known-basin extinction sequence below.
 > **Owner:** WS1 offline frontier characterization supporting the active WS2/WS1 joint-obligation observer gate.
 
 ## Execute first: static + production-response contrast
