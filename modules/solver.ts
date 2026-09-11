@@ -5,6 +5,7 @@
 // must-cross, surround/turn landmarks, and exact length/intersection targets.
 
 import { validateCandidatePath } from './domain/path-validator.js';
+import { validateRawLevel } from './domain/level-schema.js';
 import { normalizeRawLevel } from './solver/normalization.js';
 import { prepLevel } from './solver/prep.js';
 import { createVarietySearch as makeVarietySearch } from './solver/variety-search.js';
@@ -50,7 +51,17 @@ function createSolver(): SolverApi {
         if (!rawLevel || typeof rawLevel !== 'object') throw new Error('Solver: missing level');
         const candidate = rawLevel as Record<string, unknown>;
         // Raw normalisation — applied when opts.source === 'raw' or the level is in raw wire format.
+        // This is a public runtime boundary accepting `unknown`, so enforce the canonical raw schema
+        // before translating into solver bitmasks/typed arrays. normalizeRawLevel itself remains a
+        // deliberately permissive internal primitive because tests and research tooling construct
+        // synthetic normalized fixtures outside the published-level schema (for example rectangular
+        // micro-fixtures). Callers that enter through this public facade must not be able to bypass
+        // cardinality, bounds, occupancy, or other representation-safety invariants.
         if ((opts.source === 'raw') || (candidate.goal && Array.isArray(candidate.gates) && !Array.isArray(candidate.gateKeys))) {
+            const validation = validateRawLevel(rawLevel);
+            if (!validation.ok) {
+                throw new Error(`Solver: invalid raw level: ${validation.errors.join('; ')}`);
+            }
             return normalizeRawLevel(rawLevel, opts.levelNumber ?? opts.level ?? null);
         }
         return rawLevel as NormalizedLevel;
