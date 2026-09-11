@@ -26,18 +26,21 @@ Before treating any older-plan question as backlog, first reconcile it against l
 
 The post-1,029 residual atlas now identifies 388 current Corpus-2 misses in class 5, `no known rescuer after cross-evidence reconciliation`. Treat this as the current **algorithmic-frontier candidate cohort**: it is the set for which the registered T1 census plus the atlas's reconciled production/provenance evidence exposes no known rescue capability. It is an evidence class, not a proof that every existing or conceivable search procedure must fail.
 
+The first characterization stage is now promoted into active WS1 offline work. Use **class 4** as the primary near-control: its 200 levels also have zero isolated T1 winners, but each has a historical strict cold-capability Pathfinder rescuer. This isolates the more interesting distinction between “beyond the frozen T1 census but sometimes solvable by Pathfinder” and “no known Pathfinder rescue at all.” Use classes 1-4 combined only as a secondary operational comparison. [`active contrast`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md)
+
 When a current workstream promotes frontier research, prefer this sequence rather than jumping directly to heavyweight machinery:
 
 1. establish or refresh the reconciled frontier cohort against the current production boundary;
-2. group by structural, fingerprint, family, solution-profile and response phenotype without using those offline labels as production routing inputs;
-3. compare known solutions, accepted paths, hint/provenance basins and live trajectories where available;
-4. localize the earliest recurring decision, prune, merge, representation loss or search-policy divergence that destroys all known-live continuation;
-5. reduce recurring failures to minimal counterexamples where that improves causal confidence;
-6. state the smallest generic level-blind mechanism that should restore or create capability;
-7. test that mechanism first on the implicated frontier cohort under a shared-work contract and explicit regression fixtures;
-8. require independent or whole-family holdout confirmation before production promotion.
+2. contrast frontier membership against the strongest available near-control, controlling obvious mechanic/routing composition before interpreting raw differences;
+3. group by structural, fingerprint, family, solution-profile and response phenotype without using those offline labels as production routing inputs;
+4. compare known solutions, accepted paths, hint/provenance basins and live trajectories where available, with provenance/source control where the class definition itself changes evidence availability;
+5. localize the earliest recurring decision, prune, merge, representation loss or search-policy divergence that destroys all known-live continuation;
+6. reduce recurring failures to minimal counterexamples where that improves causal confidence;
+7. state the smallest generic level-blind mechanism that should restore or create capability;
+8. test that mechanism first on the implicated frontier cohort under a shared-work contract and explicit regression fixtures;
+9. require independent or whole-family holdout confirmation before production promotion.
 
-Advanced frameworks below become justified only when a recurring frontier mechanism gives them a bounded job. Frontier membership by itself is not permission to build a large new subsystem.
+Advanced frameworks below become justified only when a recurring frontier mechanism gives them a bounded job. Frontier membership by itself is not permission to build a large new subsystem. A null frontier-wide contrast is also useful: if class 5 does not share one stable mechanism, split it by extinction/failure phenotype instead of forcing a single “frontier algorithm.”
 
 ## Deferred questions
 
