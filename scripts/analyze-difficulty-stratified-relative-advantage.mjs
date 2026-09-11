@@ -2,9 +2,9 @@
 /**
  * Re-run the frozen technique relative-advantage contrasts within coarse generic-difficulty strata.
  *
- * This is deliberately not a production classifier. The burden score uses the nine static features
- * whose no-T1-winner association survived the 2026-09-03 census refresh, then asks whether an
- * A-only/B-only structural distinction survives among levels of roughly comparable generic burden.
+ * This is deliberately not a production classifier. The burden score uses established static risk
+ * features, then asks whether an A-only/B-only structural distinction survives among levels of
+ * roughly comparable generic burden. Feature-set overrides support multicollinearity sensitivity.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -57,6 +57,7 @@ export function attachGenericDifficulty(rows, features = DEFAULT_DIFFICULTY_FEAT
 
 export function assignDifficultyStrata(rows, stratumCount = 5, features = DEFAULT_DIFFICULTY_FEATURES) {
     if (!Number.isInteger(stratumCount) || stratumCount < 2) throw new Error('stratumCount must be an integer >= 2');
+    if (!Array.isArray(features) || !features.length) throw new Error('difficulty features must be a non-empty array');
     const scored = attachGenericDifficulty(rows, features)
         .sort((a, b) => a.genericDifficultyScore - b.genericDifficultyScore || String(a.row.id).localeCompare(String(b.row.id)));
     const strata = Array.from({ length: stratumCount }, (_, index) => ({ index, rows: [], minScore: null, maxScore: null }));
@@ -180,14 +181,14 @@ export function analyzeDifficultyStratifiedRelativeAdvantage(base, {
         evidenceRole: 'observational-development-difficulty-stratified',
         burdenScore: {
             features: difficultyFeatures,
-            construction: 'mean within-population z-score; all retained features are oriented so larger values tracked greater no-T1-winner risk in the refreshed census',
+            construction: 'mean within-population z-score; configured features must be oriented so larger values indicate greater generic burden',
             purpose: 'coarse nuisance stratification only; not a production feature or calibrated difficulty probability',
         },
         stratumCount,
         minExclusivePerSide,
         materialThreshold,
         pairs,
-        interpretationBoundary: 'Persistence within generic-burden strata weakens the explanation that a pairwise niche is merely overall difficulty. Multiplicity supplies offline fragility context. Neither establishes causality; variant-family and operational/mechanism evidence remain the next escalation for stable effects.',
+        interpretationBoundary: 'Persistence within generic-burden strata weakens the explanation that a pairwise niche is merely overall difficulty. Multiplicity supplies offline fragility context. Because the burden features are correlated, decision-bearing effects should also survive a plausible reduced-feature sensitivity run. None of this establishes causality; variant-family and operational/mechanism evidence remain the next escalation for stable effects.',
     };
 }
 
@@ -207,7 +208,7 @@ export function renderMarkdown(result, input) {
         `> **Input:** \`${input}\`.`,
         `> **Generic burden:** ${result.burdenScore.features.join(', ')}.`,
         '',
-        `The population is split into ${result.stratumCount} equal-count bands by the established generic structural-burden score. Pairwise A-only/B-only effects are then recomputed inside each band. A stratum is interpretation-eligible only with at least ${result.minExclusivePerSide} exclusive wins on each side. Multiplicity is reported only as offline fragility context.`,
+        `The population is split into ${result.stratumCount} equal-count bands by the configured generic structural-burden score. Pairwise A-only/B-only effects are then recomputed inside each band. A stratum is interpretation-eligible only with at least ${result.minExclusivePerSide} exclusive wins on each side. Multiplicity is reported only as offline fragility context.`,
         '',
         '| pair | eligible strata | recurring same-direction material effects | thin share L / R |',
         '|---|---:|---|---:|',
@@ -245,8 +246,17 @@ async function main() {
     const stratumCount = Number(a.get('--strata') ?? 5);
     const minExclusivePerSide = Number(a.get('--min-exclusive-per-side') ?? 5);
     const materialThreshold = Number(a.get('--material-threshold') ?? 0.20);
+    const featureArg = a.get('--difficulty-features');
+    const difficultyFeatures = typeof featureArg === 'string'
+        ? featureArg.split(',').map((value) => value.trim()).filter(Boolean)
+        : DEFAULT_DIFFICULTY_FEATURES;
     const base = JSON.parse(readFileSync(input, 'utf8'));
-    const result = analyzeDifficultyStratifiedRelativeAdvantage(base, { stratumCount, minExclusivePerSide, materialThreshold });
+    const result = analyzeDifficultyStratifiedRelativeAdvantage(base, {
+        stratumCount,
+        difficultyFeatures,
+        minExclusivePerSide,
+        materialThreshold,
+    });
     writeFileSync(out, JSON.stringify(result, null, 2) + '\n');
     writeFileSync(mdOut, renderMarkdown(result, input) + '\n');
     console.log(`Wrote ${out} and ${mdOut}: ${result.pairs.length} frozen pairs across ${result.stratumCount} burden bands`);
