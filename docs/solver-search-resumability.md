@@ -1,6 +1,6 @@
 # Resumable solver search
 
-> **Status:** opt-in beam continuation primitive exists; a concrete WS2B same-policy tranche candidate is active, but no production scheduling policy currently consumes continuation.
+> **Status:** opt-in in-memory beam continuation primitive exists; the portfolio-18 same-policy residual-tranche scheduler test is CLOSED NULL, and no production scheduling policy currently consumes continuation.
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) decides whether resumability work is active.
 > **History:** [`archive/snapshots/solver-search-resumability-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-search-resumability-2026-09-04-pre-consolidation.md) plus dated reports below.
 
@@ -12,9 +12,9 @@ This document owns the **current resumability mechanism and research disposition
 
 - `resumeFrom`: resume an existing in-memory beam continuation;
 - `pauseAfterPhases`: pause at a deterministic phase boundary;
-- `captureContinuationOnBudgetExit`: capture continuation at a work-cap exit. Exact at `beamWidth <= 256` (a phase always completes before the 256-node mid-phase checkpoint); at wider production widths (2026-09-10) the mid-phase check defers to the next phase boundary instead of exiting, so capture is reliable but can overshoot `prep._workCap` by up to one phase's own work — measured at single-digit-percent on real corpus levels at widths 2000/5000.
+- `captureContinuationOnBudgetExit`: capture continuation at a work-cap exit. Exact at `beamWidth <= 256`; at wider production widths the mid-phase check defers to the next phase boundary, so capture is reliable but may overshoot `prep._workCap` by up to one phase's own work. Measured overshoot on real corpus levels at widths 2000/5000 is single-digit-percent.
 
-Same-policy pause/resume has reproduced uninterrupted `W + Δ` execution with the same solve/unsolved outcome, solution, and cumulative canonical work. Correct continuation carries the live mutable working/search state as well as the frontier; frontier-only replay incorrectly repays work.
+Same-policy pause/resume has reproduced uninterrupted `W + Δ` execution with the same solve/unsolved outcome, solution, and cumulative canonical work. Correct continuation carries live mutable working/search state as well as the frontier; frontier-only replay incorrectly repays work.
 
 The primitive is **in-memory only**. It does not authorize serialization, cross-process checkpoints, persisted continuation compatibility, or production scheduler use.
 
@@ -40,72 +40,45 @@ Rules:
 - default production behavior remains unchanged unless a separately validated scheduler policy promotes continuation use;
 - fresh-vs-resumed equivalence tests must guard hidden predecessor-state dependence.
 
-## Current concrete scheduler use case: portfolio-18 same-policy residual tranche
+## Tested scheduler use case: portfolio-18 same-policy residual tranche
 
-The failed `portfolio-18-tranche-v2` production-replacement test supplied a materially new reason to use same-policy continuation. Static lost 14/40 vs production 18/40, but postmortem attribution found that **three of the four production-only wins were beam configurations already present in the static portfolio and capped only ~2–12% short in node count**. The fourth loss was a genuinely missing production retry action.
+The failed `portfolio-18-tranche-v2` production-replacement test supplied a concrete reason to try same-policy continuation. Static lost 14/40 vs production 18/40; three of the four production-only wins were beam configurations already present in the static portfolio and capped only about 2-12% short in node count. A prior lifecycle-only tranche pilot had also found added work could rescue capped searches, while cold restart made reuse impractical.
 
-A prior lifecycle-only tranche pilot independently found added work rescued capped searches (3/30) and no naturally exhausted searches (0/39), but its matched-envelope scheduler could dispatch no second tranches because every continuation required a cold restart. Same-policy resumability removes that specific restart-tax premise for beam searches.
+The bounded candidate therefore kept the validated portfolio-18 first pass frozen, retired naturally exhausted beam attempts, retained capped beam attempts, and allowed each retained continuation at most one additional same-policy tranche inside the same 67M per-level envelope.
 
-The resulting WS2B candidate is deliberately narrow:
+**CLOSED NULL (2026-09-11).** Production-width capture was implemented and `runStaticPortfolio` gained opt-in `resumableResidualPass`, exposed through `portfolio-solve-sweep.mjs` as `--resumable-residual-pass`. A fresh 120-level Corpus-2 fixed-work development A/B then showed real continuation participation but no coverage value: control 52/120, treatment 52/120, 120/120 eligible, 64 continuation dispatches, zero errors/truncation, zero losses, and zero treatment-exclusive gains.
 
-1. keep the validated `portfolio-18-tranche-v2` first pass frozen;
-2. retire naturally exhausted beam attempts;
-3. retain capped beam attempts;
-4. resume the same beam config for at most one additional tranche using only work left inside the same 67M per-level envelope;
-5. do not switch profile/retention/width or add missing residual actions in the first A/B.
-
-This does **not** reopen the closed one-shot static scheduler or the cold `static -> production` fallback. It tests whether already-paid first-pass work can be reused to recover dose-truncation losses cheaply.
-
-**Closed NULL (2026-09-11).** Production-width capture was implemented via a bounded-overshoot approximation (2026-09-10; validated for pause/resume equivalence, single-digit-percent measured overshoot at widths 2000/5000) and `runStaticPortfolio` gained an opt-in `resumableResidualPass` mode using it. The fixed-work development A/B (120 fresh Corpus-2 levels, same 67M envelope) then found real continuation participation (120/120 levels eligible, 64 dispatched, 0 errors/truncation) but zero net coverage gain: control 52/120, treatment 52/120, 0 losses, 0 treatment-exclusive gains. Per the candidate's own frozen decision rule this closes the simple salvage form — do not retry with different tranche sizes, beam policies, or a larger portfolio menu. Full result: [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md).
+Per the candidate's frozen decision rule, the simple same-policy residual-tranche salvage is closed. Do **not** retry it by varying tranche size, beam policy, or portfolio menu without a materially new premise. Evidence: [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md), [`../reports/portfolio/resumable-tranche-development-ab-001/result.md`](../reports/portfolio/resumable-tranche-development-ab-001/result.md).
 
 ## Tested policy-switch forms
 
 ### One beam-policy handoff
 
-A single `intersectionHarvest → objectiveFirst` inherited-frontier switch produced rare complementarity on two independent 30-level Corpus-2 samples: 2/60 cases solved only by inherited switching, with no opposite-direction loss in that pilot. This is **development evidence**, not a production rule or cross-generator confirmation.
+A single `intersectionHarvest -> objectiveFirst` inherited-frontier switch produced rare complementarity on two independent 30-level Corpus-2 samples: 2/60 cases solved only by inherited switching, with no opposite-direction loss in that pilot. This is development evidence, not a production rule or cross-generator confirmation.
 
 Evidence: [`../reports/2026-09-03-beam-policy-switch-complementarity-pilot-001.md`](../reports/2026-09-03-beam-policy-switch-complementarity-pilot-001.md).
 
 ### Repeated/staged switching
 
-For that same profile family:
-
-- cyclic `A,B,A,B,...` alternation added no reliable value over one handoff across tested segment sizes;
-- a non-cyclic three-profile staged schedule also added no value over the two-profile handoff.
-
-Those schedule shapes are closed for the tested profile family. Reopen only with a structurally different premise, such as policies differing materially in retention/ordering behavior rather than another schedule variation.
+For that same profile family, cyclic `A,B,A,B,...` alternation and a non-cyclic three-profile staged schedule added no reliable value over one handoff. Those schedule shapes are closed for the tested profile family. Reopen only with a structurally different premise, such as policies differing materially in retention/ordering behavior rather than another schedule variation.
 
 Evidence: [`../reports/2026-09-03-beam-alternating-policy-schedule-pilot-001.md`](../reports/2026-09-03-beam-alternating-policy-schedule-pilot-001.md), [`../reports/2026-09-03-beam-staged-three-policy-pilot-001.md`](../reports/2026-09-03-beam-staged-three-policy-pilot-001.md).
 
 ## Cross-method handoff
 
-The simplest beam→DFS form, handing one inherited beam state directly to DFS without a selection strategy, is closed negative for the tested population/profile pair. Shared state representation does not imply compatible search shape; fresh-gate DFS was materially better.
+The simplest beam-to-DFS form, handing one inherited beam state directly to DFS without a selection strategy, is closed negative for the tested population/profile pair. Shared state representation does not imply compatible search shape; fresh-gate DFS was materially better.
 
-A **genuine state-selection mechanism** that chooses a DFS-suitable frontier state remains a distinct untested form. It has no current priority merely because it remains logically open.
+A genuine state-selection mechanism that chooses a DFS-suitable frontier state remains a distinct untested form. It has no current priority merely because it remains logically open.
 
 Evidence: [`../reports/2026-09-03-beam-to-dfs-handoff-pilot-001.md`](../reports/2026-09-03-beam-to-dfs-handoff-pilot-001.md).
 
-## Research interpretation
+## Research interpretation and reopen gates
 
-Resumability changes the executable cost of “give this attempt another tranche”:
+Resumability changes the executable cost of giving an attempt another tranche from `0->W + restart 0->W+Δ` to `0->W + resume W->W+Δ`. That can matter for dynamic allocation, but the now-closed portfolio experiment demonstrates that removing restart tax does not by itself establish useful marginal continuation value.
 
-```text
-0→W + resume W→W+Δ
-```
+Additional work needs a current workstream premise and should isolate a materially distinct question:
 
-instead of repaying:
-
-```text
-0→W + restart 0→W+Δ
-```
-
-That can matter for racing/dynamic allocation, but a useful continuation primitive does not itself prove that continuation should receive production work. Scheduler value must be established under a fixed/shared work envelope and current residual population.
-
-## Reopen/extension gates
-
-Do not generalize resumability merely because the primitive exists. Additional work needs a current workstream premise and should isolate one of these distinct questions:
-
-- same search, later tranche value — **tested by the portfolio-18 resumable-tranche candidate above; closed NULL, no further work on this form without a new premise**;
+- same search, later tranche value: **tested and CLOSED NULL** for the portfolio-18 residual-tranche form;
 - same frontier, materially different future beam policy;
 - selected-state cross-method handoff;
 - memory/runtime overhead of retained continuations;
