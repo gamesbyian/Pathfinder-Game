@@ -1,6 +1,9 @@
 # Solver capability-memory integration
 
-> **Status:** implemented on branch `chatgpt/capability-memory-research-loop-2026-09-11`.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-11 — capability-memory analyzer, protocol-aware zero-compute health churn, evidence-topology registration, current-authority reconciliation/compaction, censoring hardening, and report-header normalization are implemented on `chatgpt/capability-memory-research-loop-2026-09-11`.
+> **Decision:** retain this as durable research/evidence infrastructure. It adds no production solver policy and does not authorize historical exact-level steering; future capability-memory descendants remain subject to the ordinary level-blind matched-work and confirmation gates.
+> **Remaining gate:** repository CI only. No solver-side experimental gate remains for this tooling integration itself.
 > **Evidence role:** research-process/tooling integration; no solver-policy promotion and no solve-count claim.
 > **Production impact:** none. The cold solver, attempt ladder, budgets, scoring, pruning, routing, and level-blind runtime information boundary are unchanged.
 
@@ -94,6 +97,10 @@ The canonical production boundary remains **1,029/1,700 Corpus 2** from run `345
 
 The workstream summary also no longer calls repair operator reachability open after the detailed 28-level study resolved it (4/28 reconstructable if seeded, 24/28 operator-incapable). The four reconstructable cases remain a Card-E nomination, not an implemented mechanism.
 
+### 6. Report-contract reconciliation
+
+The incremental documentation gate exposed four other September 11 investigation reports with descriptive/free-text `Status` values rather than the repository's canonical status enum. Those report bodies and decisions were already current; only their top-level metadata shape was stale. This branch normalizes the headers to `active` or `concluded-positive` as appropriate, without changing findings.
+
 ## Validation
 
 `append-solver-health-record-node-test.mjs` now covers:
@@ -109,7 +116,7 @@ The workstream summary also no longer calls repair operator reachability open af
 9. historical-signature nomination versus confirmed-current-gain separation;
 10. capability-memory JSON and human-summary materialization, including censored-baseline visibility.
 
-The first PR CI attempt reached deep verification successfully but the fast gate stopped on the repository's agent-context budget checker because the two touched live solver authority docs were already over their hard size limits. The branch fixes this by compacting those authorities rather than weakening the limits. Full repository CI remains the integration authority.
+The first PR CI attempt reached deep verification successfully but the fast gate stopped on the repository's agent-context budget checker because the two touched live solver authority docs were already over their hard size limits. The branch fixed this by compacting those authorities rather than weakening the limits; a subsequent run explicitly passed the package/tooling/context-budget checker and then exposed the stale report-header metadata described above. Full repository CI remains the integration authority.
 
 ## What this deliberately does not do
 
