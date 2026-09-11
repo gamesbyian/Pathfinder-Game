@@ -53,7 +53,7 @@ function renderSummary(result) {
   const lines = [];
   lines.push('# Solver capability-memory summary');
   lines.push('');
-  lines.push(`Baseline: ${result.baseline.id}; solved ${result.baseline.solved}/${result.baseline.population}; residual ${result.baseline.residual}.`);
+  lines.push(`Baseline: ${result.baseline.id}; population ${result.baseline.population}; conclusive ${result.baseline.conclusive}; solved ${result.baseline.solved}; residual ${result.baseline.residual}; unknown ${result.baseline.unknown}.`);
   lines.push('');
   lines.push('| Candidate | Mode | Disposition | Current residual nominations | Confirmed current-baseline gains | Unique nominations | Losses | Residual work/gain |');
   lines.push('|---|---|---|---:|---:|---:|---:|---:|');
@@ -67,7 +67,7 @@ function renderSummary(result) {
   lines.push('');
   lines.push(`Union of current-residual nominations: ${result.union.nominated}/${result.union.residual} (${result.union.nominationCoverage == null ? 'n/a' : `${(100 * result.union.nominationCoverage).toFixed(1)}%`}).`);
   lines.push('');
-  lines.push('Interpretation: historical-signature rows are nomination evidence only. They must not be treated as current capability or used for exact-level runtime routing.');
+  lines.push('Interpretation: baseline unknown/censored rows are excluded from residual capability claims. Historical-signature rows are nomination evidence only and must not be treated as current capability or used for exact-level runtime routing.');
   return `${lines.join('\n')}\n`;
 }
 
