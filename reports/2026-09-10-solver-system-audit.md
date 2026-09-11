@@ -1,5 +1,10 @@
 # Solver system audit — 2026-09-10
 
+> **Status:** active
+> **Last evidence:** 2026-09-11 — Audits 8 and 12 closed after aligning whole-ladder retry budget eligibility with executor distinctness.
+> **Decision:** Continue the audit campaign in discrete, committed batches; fixes that reopen an earlier audit remain in that audit until its regression surface is green.
+> **Remaining gate:** Restore branch CI, then complete Audits 15–23 and close any newly reopened earlier audit.
+
 This is the compact ledger for the cross-cutting solver audit requested on 2026-09-10. Canonical design, correctness, and priority changes still belong in their owning docs; this report records what was actually inspected, concrete fixes, and only the follow-up that remains.
 
 ## Audit status
