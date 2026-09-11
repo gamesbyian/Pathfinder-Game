@@ -76,7 +76,7 @@ test('runWholeLadderRetryTier: restores prep._cfg even when runLadder throws', a
     const originalCfg = null;
     prep._cfg = originalCfg;
     await assert.rejects(runWholeLadderRetryTier({
-        stageId: 'goal-attraction-disabled-retry', proxyOverrides: {},
+        stageId: 'goal-attraction-disabled-retry', proxyOverrides: { SCORE_GOAL_ATTRACTION: false },
         activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
         runLadder: async () => { throw new Error('boom'); },
         totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,
