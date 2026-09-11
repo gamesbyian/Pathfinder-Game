@@ -1,0 +1,208 @@
+{
+  "excludedGains": [
+    "R00726",
+    "R01274",
+    "R01489",
+    "R01849",
+    "R01882",
+    "R02036",
+    "R02060",
+    "R02162",
+    "R02389",
+    "R02479",
+    "R02546",
+    "R02654",
+    "R02707",
+    "R02823",
+    "R02832",
+    "R02864",
+    "R02932",
+    "R03097",
+    "R03106",
+    "R03254",
+    "R03336"
+  ],
+  "class4": [
+    {
+      "id": "R03101",
+      "class": 4,
+      "rejectRate": 0.002491226003013037,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "ablation-ui",
+        "beam",
+        "prefix-anchored",
+        "repair",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    },
+    {
+      "id": "R00329",
+      "class": 4,
+      "rejectRate": 0.02638897017633337,
+      "clusterCount": 1,
+      "routingRegime": "must-cross-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "beam",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    },
+    {
+      "id": "R03275",
+      "class": 4,
+      "rejectRate": 0.05307264711520031,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "repair",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    },
+    {
+      "id": "R02530",
+      "class": 4,
+      "rejectRate": 0.07492039867411601,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "repair",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    },
+    {
+      "id": "R02309",
+      "class": 4,
+      "rejectRate": 0.09823418915535263,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "beam",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    },
+    {
+      "id": "R03351",
+      "class": 4,
+      "rejectRate": 0.13634945658067046,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "beam",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    },
+    {
+      "id": "R01190",
+      "class": 4,
+      "rejectRate": 0.22199245009103363,
+      "clusterCount": 3,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "beam",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    }
+  ],
+  "class5": [
+    {
+      "id": "R01632",
+      "class": 5,
+      "rejectRate": 0.00954505209056385,
+      "clusterCount": 1,
+      "routingRegime": "must-cross-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": false
+    },
+    {
+      "id": "R03088",
+      "class": 5,
+      "rejectRate": 0.06690519888469276,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": false
+    },
+    {
+      "id": "R01097",
+      "class": 5,
+      "rejectRate": 0.09327965412072864,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": false
+    },
+    {
+      "id": "R03229",
+      "class": 5,
+      "rejectRate": 0.13310123661598314,
+      "clusterCount": 1,
+      "routingRegime": "must-cross-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": false
+    },
+    {
+      "id": "R03197",
+      "class": 5,
+      "rejectRate": 0.1604372405000003,
+      "clusterCount": 3,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": false
+    },
+    {
+      "id": "R02185",
+      "class": 5,
+      "rejectRate": 0.21189169033610075,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "bucket": "starved",
+      "provenanceKinds": [
+        "repair",
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": true
+    },
+    {
+      "id": "R02733",
+      "class": 5,
+      "rejectRate": 0.3551746224296433,
+      "clusterCount": 1,
+      "routingRegime": "multi-portal",
+      "bucket": "capped",
+      "provenanceKinds": [
+        "variant-parent-replay"
+      ],
+      "hasProductionProvenance": false
+    }
+  ]
+}
