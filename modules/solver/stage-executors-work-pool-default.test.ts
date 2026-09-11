@@ -50,7 +50,7 @@ async function capturedExecutorWorkStart(
         _metrics: { nodesExpanded: 0 },
     } as unknown as PrepLevel;
     let captured = NaN;
-    const proxyOverrides = stageId === 'goal-attraction-disabled-retry'
+    const proxyOverrides: Readonly<Record<string, boolean>> = stageId === 'goal-attraction-disabled-retry'
         ? { SCORE_GOAL_ATTRACTION: false }
         : { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false };
     await runWholeLadderRetryTier({
