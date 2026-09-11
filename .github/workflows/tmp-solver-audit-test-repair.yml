@@ -1,0 +1,126 @@
+name: Temporary solver audit test repair
+
+on:
+  push:
+    branches:
+      - chatgpt/solver-audit-campaign-2026-09-10
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: chatgpt/solver-audit-campaign-2026-09-10
+          fetch-depth: 1
+      - name: Patch stale retry-contract tests
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('modules/solver/orchestration.test.ts')
+          text = path.read_text()
+
+          old = """        nodeBudget: 200, // < 288 (main loop's own total) -- budget runs out before the pass's own gate check
+"""
+          new = """        // Deliberately below the ordinary ladder's current demand. The exact historical
+        // per-config total is not a contract; the invariant is that a genuinely exhausted finite
+        // early-tier ceiling must not manufacture headroom for this retry.
+        nodeBudget: 100,
+"""
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one node-budget calibration target, found {text.count(old)}')
+          text = text.replace(old, new)
+
+          old = """test('a sparse unrelated ablation object leaves the promoted default-ON pass active (the normalizeAblationConfig sparse-default fix this promotion now depends on)', async () => {
+    // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
+    // so a sparse config that only touches a DIFFERENT flag (STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION here)
+    // must still leave THIS one active — the opposite assertion from the pre-promotion opt-in test
+    // this replaces, and exactly the normalizeAblationConfig sparse-default behavior CLAUDE.md's own
+    // gotcha describes (an under-registered opt-in flag silently defaulting to true; here the flag is
+    // correctly registered as default-ON so a sparse object must NOT silently disable it either).
+    const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.ok(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), 'expected the promoted tier to still run: only an unrelated flag was set');
+});
+"""
+          new = """test('a sparse config that already disables near-tie retention suppresses the behavior-identical retry', async () => {
+    // Audit 12 requires a funded retry to change effective behavior. This sparse config already
+    // applies the exact treatment the retry would force, so rerunning it would only buy the same
+    // search a second dose and corrupt rescue attribution.
+    const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
+        ablation: { STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: false },
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false,
+        'retry must not rerun when its forced treatment is already the caller\'s effective setting');
+});
+"""
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one near-tie stale test block, found {text.count(old)}')
+          text = text.replace(old, new)
+
+          old = """test('a sparse unrelated ablation object leaves the promoted default-ON connectivity-axis-prune-disabled-retry pass active', async () => {
+    // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
+    // so a sparse config that only touches a DIFFERENT flag (PRUNE_CONNECTIVITY_AXIS_EXHAUSTED here,
+    // the mechanism this tier disables INTERNALLY once it starts, not the tier's own on/off switch)
+    // must still leave THIS one active — same check as the coarse-state-near-tie-retention-disabled-retry/admissible-order-fallback-
+    // non-default-retry suites' own equivalent tests.
+    const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
+        ablation: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.ok(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), 'expected the promoted tier to still run: only an unrelated flag was set');
+});
+"""
+          new = """test('a sparse config that already disables connectivity-axis pruning suppresses the behavior-identical retry', async () => {
+    // Audit 12 applies the same distinctness rule here: the mechanism flag is the retry treatment,
+    // not an unrelated setting. If it is already false, the retry has no behavioral delta to fund.
+    const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
+        timeBudgetMs: 1000,
+        repairLateProbeNodeBudgetOverride: 0,
+        ablation: { PRUNE_CONNECTIVITY_AXIS_EXHAUSTED: false },
+        goalAttractionDisabledRetryBudgetFractionOverride: 0,
+        admissibleOrderBudgetFractionOverride: 0,
+        coarseStateNearTieRetentionRetryBudgetFractionOverride: 0,
+        admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false,
+        'retry must not rerun when its forced treatment is already the caller\'s effective setting');
+});
+"""
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one connectivity stale test block, found {text.count(old)}')
+          text = text.replace(old, new)
+
+          path.write_text(text)
+          Path('.github/workflows/tmp-solver-audit-test-repair.yml').unlink()
+      - name: Commit exact test repair
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add modules/solver/orchestration.test.ts .github/workflows/tmp-solver-audit-test-repair.yml
+          git diff --cached --check
+          git commit -m "test(solver): align retry tests with distinctness contract"
+          git push origin HEAD:chatgpt/solver-audit-campaign-2026-09-10
