@@ -64,7 +64,10 @@ function loadEffectiveConfig(file) {
         throw new Error(`${file}: summary.effectiveConfigDigest is missing or empty`);
     }
     const recomputed = stableStringify(summary.effectiveConfig);
-    return { file, effectiveConfig: summary.effectiveConfig, effectiveConfigDigest: summary.effectiveConfigDigest, recomputed };
+    if (summary.effectiveConfigDigest !== recomputed) {
+        throw new Error(`${file}: summary.effectiveConfigDigest does not match the canonical serialization of summary.effectiveConfig -- report provenance is stale or malformed`);
+    }
+    return { file, effectiveConfig: summary.effectiveConfig, effectiveConfigDigest: summary.effectiveConfigDigest };
 }
 
 /** Field-level diff between two effectiveConfig objects (shallow keys, deep stableStringify per
