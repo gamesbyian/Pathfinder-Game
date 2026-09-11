@@ -12,9 +12,10 @@
  * CP-SAT-labelled branches as of 2026-08-05, see that script's own doc for the oracle-labelling
  * method). No new CP-SAT calls here: replays each labelled branch through the real solver-state
  * primitives (same getNeighbors/applyMove/undoMove a live search would use) to reconstruct the
- * exact SolverSearchState at that decision point, cheaply, in-process. This is what makes the
- * harness itself fast — the expensive oracle-labelling step already happened once, upstream, and
- * its answer is reused for every probe this harness will ever be asked to score.
+ * exact SolverSearchState at that decision point, cheaply, in-process. New prune-gap artifacts
+ * carry the exact witness-path identity used to create their labels, and replay resolves that
+ * identity rather than trusting current hint-array order. Legacy artifacts without identity fail
+ * closed unless --allow-unverified-legacy-witness is supplied explicitly.
  *
  * PROBE CONTRACT. A probe module exports:
  *   export const name = '<short id>';
@@ -41,6 +42,10 @@
  *   node scripts/run-bundled.mjs scripts/stress/offline-replay-harness.mjs -- \
  *     --prune-gap-dir=reports/stress --probes=scripts/stress/probes/separator-resource-probe.mjs \
  *     --out=reports/stress/interface-probe-harness-results.json
+ *
+ * Historical compatibility only:
+ *   --allow-unverified-legacy-witness   Replay an identity-less legacy artifact against the current
+ *                                       first stored hint. Outputs mark that replay unverified.
  */
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
@@ -51,6 +56,7 @@ import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { PROBE_REGISTRY } from './probes/index.mjs';
+import { selectReplayWitness } from './witness-path-identity.mjs';
 
 installBrowserStubs();
 const Solver = createSolver();
@@ -68,6 +74,7 @@ const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); retur
 const PRUNE_GAP_DIR = arg('prune-gap-dir', 'reports/stress');
 const PROBE_NAMES = (arg('probes', [...PROBE_REGISTRY.keys()].join(','))).split(',').map(s => s.trim()).filter(Boolean);
 const OUT_FILE = arg('out', null);
+const ALLOW_UNVERIFIED_LEGACY_WITNESS = argv.includes('--allow-unverified-legacy-witness');
 
 const probes = PROBE_NAMES.map((n) => {
     const mod = PROBE_REGISTRY.get(n);
@@ -75,6 +82,9 @@ const probes = PROBE_NAMES.map((n) => {
     return { name: mod.name, soundnessClass: mod.soundnessClass || 'UNLABELLED — fix the probe module', evaluate: mod.evaluate };
 });
 console.log(`interface-probe-harness: ${probes.length} probe(s): ${probes.map(p => p.name).join(', ')}`);
+if (ALLOW_UNVERIFIED_LEGACY_WITNESS) {
+    console.warn('WARNING: --allow-unverified-legacy-witness enabled; identity-less legacy artifacts may only support historical compatibility, not new witness-bound claims.');
+}
 
 const pruneGapFiles = readdirSync(path.resolve(root, PRUNE_GAP_DIR)).filter(f => /^prune-gap-.*\.json$/.test(f));
 if (pruneGapFiles.length === 0) { console.error(`No prune-gap-*.json files found under ${PRUNE_GAP_DIR}.`); process.exit(1); }
@@ -87,7 +97,13 @@ function freshTally() {
 }
 
 const perProbe = new Map(probes.map(p => [p.name, { tally: freshTally(), falseRejects: [], catchesByDepth: [] }]));
-const results = { pruneGapDir: PRUNE_GAP_DIR, probes: probes.map(p => ({ name: p.name, soundnessClass: p.soundnessClass })), perFile: [], summary: null };
+const results = {
+    pruneGapDir: PRUNE_GAP_DIR,
+    allowUnverifiedLegacyWitness: ALLOW_UNVERIFIED_LEGACY_WITNESS,
+    probes: probes.map(p => ({ name: p.name, soundnessClass: p.soundnessClass })),
+    perFile: [],
+    summary: null,
+};
 
 function persist() {
     if (!OUT_FILE) return;
@@ -123,8 +139,19 @@ for (const file of pruneGapFiles.sort()) {
     const prep = prepLevel(level);
     prep._cfg = null;
     prep._metrics = { nodesExpanded: 0 };
-    const solution = (raw.hintRecords || [])[0]?.path;
-    if (!solution) { console.warn(`${file}: ${levelId} has no stored hint to replay, skipping.`); continue; }
+
+    let selectedWitness;
+    try {
+        selectedWitness = selectReplayWitness(raw.hintRecords || [], atlas.witnessIdentity, {
+            allowUnverifiedLegacy: ALLOW_UNVERIFIED_LEGACY_WITNESS,
+        });
+    } catch (err) {
+        throw new Error(`${file}: ${levelId}: ${err.message}`);
+    }
+    const solution = selectedWitness.path;
+    if (!selectedWitness.verified) {
+        console.warn(`  ${file}: ${levelId}: replaying legacy artifact against current first hint WITHOUT verified witness identity`);
+    }
 
     const state = createState(solution[0], level, prep);
     const branchesByStep = new Map();
@@ -168,8 +195,15 @@ for (const file of pruneGapFiles.sort()) {
         applyMove(solution[step], state, level, prep, !!(pAtPos && !state.lastWasPortalJump && pAtPos.dest === solution[step]));
     }
 
-    results.perFile.push({ file, level: levelId, branchesEvaluated: fileEvaluated });
-    console.log(`  ${file}: ${fileEvaluated} branch(es) replayed`);
+    results.perFile.push({
+        file,
+        level: levelId,
+        branchesEvaluated: fileEvaluated,
+        witnessIdentityVerified: selectedWitness.verified,
+        witnessSource: selectedWitness.source,
+        witnessIdentity: atlas.witnessIdentity || null,
+    });
+    console.log(`  ${file}: ${fileEvaluated} branch(es) replayed${selectedWitness.verified ? ' [witness verified]' : ' [witness UNVERIFIED]'}`);
     persist();
 }
 

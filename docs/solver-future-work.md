@@ -12,11 +12,11 @@ Capability memory is another **premise source, not a reopen exemption**. Complem
 
 ## Algorithmic frontier
 
-At the provenance-audited post-1,029 boundary, class 5 contains **445** misses with no known admissible/T1 candidate; class 4 contains **143** zero-T1 levels with an explicit historical production-context candidate. The older 388/200 split is pre-audit historical sizing.
+At the provenance-audited post-1,029 boundary, class 5 contains **445** misses with no known admissible/T1 candidate; class 4 contains **143** zero-T1 levels with an explicit historical production-context candidate. The older 388/200 split is pre-audit historical sizing; the report that produced it is retained only for method/hypothesis history, not current cohort membership or odds ratios. See [`historical class4-vs5 contrast`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md).
 
 Funnel: **class4/class5 contrast -> source-controlled profile/family comparison -> all-known-basin first loss -> smallest generic capability -> bounded pilot -> independent/whole-family validation**. Missing baseline/provenance stays `unknown`. Capability-memory intersections may nominate contrasts but do not create current capability. [`atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md), [`provenance audit`](../reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md)
 
-The broad scorer-vocabulary discriminator is closed negative: the corrected 671-level witness-only run found no class-5 enrichment in exact 12-weight collisions or weight-invariant fixed preferences. Do not resume broad scorer tuning from that result. [`report`](../reports/2026-09-11-scorer-vocabulary-frontier-witness-only-001.md)
+The broad scorer-vocabulary discriminator is closed negative: the corrected 671-level witness-only run found no class-5 enrichment in exact 12-weight collisions or weight-invariant fixed preferences. Its old class labels predate the final provenance cohort correction, so reuse the mechanistic null only; do not reuse its class counts as current frontier sizing. Do not resume broad scorer tuning from that result. [`report`](../reports/2026-09-11-scorer-vocabulary-frontier-witness-only-001.md)
 
 ## Structural response extension
 

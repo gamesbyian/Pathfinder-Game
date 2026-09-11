@@ -46,6 +46,7 @@ import { evaluatePrunedMove } from '../../modules/solver/hard-prune-pipeline.ts'
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { getRealLengthFromState } from '../../modules/solver/solution.ts';
 import { UNPACK } from '../../modules/domain/cell-key.ts';
+import { buildWitnessIdentity } from './witness-path-identity.mjs';
 
 installBrowserStubs();
 const Solver = createSolver();
@@ -76,10 +77,11 @@ const prep = prepLevel(level);
 prep._cfg = null;                 // production defaults: every prune enabled (see normalizeAblationConfig's doc)
 prep._metrics = { nodesExpanded: 0 };
 
-// Walk a stored, referee-valid solution. Any one will do — the oracle question is about the
-// prefix, not about which solution reaches it — but a real solution guarantees the prefix is alive.
+// Walk one stored, referee-valid solution. The exact path identity is stamped into every artifact
+// because downstream replay labels are only valid relative to the witness that generated them.
 const solution = (raw.hintRecords || [])[0]?.path;
 if (!solution) { console.error(`${levelId}: no stored hint to walk.`); process.exit(1); }
+const witnessIdentity = buildWitnessIdentity(solution);
 const xy = k => { const p = UNPACK(k); return [p.x + 1, p.y + 1]; };   // probe wants 1-indexed pairs
 
 /**
@@ -224,6 +226,6 @@ if (unsound.length) console.log(`  !! UNSOUND PRUNE on ${unsound.length} branch(
 if (outFile) {
     const abs = path.resolve(root, outFile);
     mkdirSync(path.dirname(abs), { recursive: true });
-    writeFileSync(abs, JSON.stringify({ level: levelId, every, oracleLimit, tally, gaps, unsound, branches }, null, 1));
+    writeFileSync(abs, JSON.stringify({ level: levelId, every, oracleLimit, witnessIdentity, tally, gaps, unsound, branches }, null, 1));
     console.log(`Wrote ${outFile}`);
 }

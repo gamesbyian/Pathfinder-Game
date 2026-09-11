@@ -1,16 +1,20 @@
 # Algorithmic frontier class-4 vs class-5 contrast 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-11 — post-1,029 residual atlas: class 4 = 200 zero-T1-winner levels with a historical/provenance rescuer; class 5 = 388 no-known-rescuer levels after reconciliation.
-> **Decision:** use class 4 as the primary near-control for frontier characterization. Use classes 1-4 combined only as a secondary operational comparison. Feed the contrast into the active observer-only joint-obligation propagation gate so it must demonstrate a frontier-specific mechanism, not merely common mechanic structure.
-> **Remaining gate:** execute [`2026-09-11-algorithmic-frontier-execution-handoff-001.md`](2026-09-11-algorithmic-frontier-execution-handoff-001.md).
-> **Evidence role:** development characterization / mechanism nomination; offline labels are not production routing inputs.
+> **Status:** historical — cohort sizing superseded by final provenance audit
+> **Last evidence:** 2026-09-11 — this report used the pre-final split class 4 = 200 / class 5 = 388. The final provenance audit subsequently corrected legacy missing context booleans from implicit `false` to `unknown`, yielding 143 explicit historical candidates / 445 no-admissible-rescuer rows in the live post-1,029 atlas.
+> **Decision:** retain this report for method and hypothesis history only. Do not reuse its class membership, denominators, percentages, odds ratios, or prevalence as current frontier evidence. Rebuild any new class-4/class-5 contrast from the provenance-audited atlas.
+> **Remaining gate:** none owned here. Current execution lives in [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md); the former joint-obligation gate has since been resolved and promoted.
+> **Evidence role:** historical development characterization / mechanism nomination; offline labels are not production routing inputs.
+
+## Supersession note
+
+The analysis below is preserved verbatim as the evidence state that existed when the contrast was run. Its **methodology** remains useful: compare zero-T1 historical-candidate levels with zero-T1 no-known-rescuer levels, control composition, then escalate through source-controlled solution structure, families, and first-loss evidence. Its **numeric cohort results are not current** because 57 legacy rows whose provenance context had been treated too confidently moved when the September 11 provenance audit required missing `isolatedTechnique` and related context to remain unknown.
+
+Current authority is the provenance-audited five-class atlas: 143 explicit historical candidates and 445 no-admissible-rescuer rows among the 671 misses. See [`2026-09-11-hint-provenance-evidence-relevance-audit-001.md`](2026-09-11-hint-provenance-evidence-relevance-audit-001.md) and [`2026-09-11-post-1029-residual-atlas-001.md`](2026-09-11-post-1029-residual-atlas-001.md).
 
 ## Why class 4 is the primary control
 
 Classes 1-3 already have an isolated T1 rescuer, so comparing class 5 only with the other 283 misses conflates frontier membership with known isolated capability. Class 4 is cleaner: both class 4 and class 5 have zero isolated T1 winners; class 4 differs by having a strict cold-capability Pathfinder rescue somewhere in history.
-
-The sharper question is: **what distinguishes zero-T1 levels that Pathfinder has nevertheless solved in some cold context from zero-T1 levels for which no cold Pathfinder rescue has been recorded?**
 
 ## Coarse contrast already available
 

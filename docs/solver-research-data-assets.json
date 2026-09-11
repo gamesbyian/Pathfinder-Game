@@ -60,24 +60,31 @@
       "id": "hint-provenance",
       "name": "Hint discovery provenance",
       "status": "current",
-      "grain": ["level", "hint-path", "independent-discovery"],
+      "grain": ["level", "hint-path", "provenance-event", "dependency-stratum"],
       "locations": [
         { "kind": "pattern", "path": "data/**/hints*/<level-id>.json" }
       ],
-      "authorities": ["modules/domain/hint-types.ts", "scripts/level-data-io.mjs", "scripts/hint-query.mjs"],
-      "queryEntryPoints": ["npx tsx scripts/hint-query.mjs --id=<ID> --summary", "npx tsx scripts/hint-query.mjs --id=<ID> --full", "node scripts/stress/hint-cost-drift.mjs"],
-      "joinKeys": ["level.id", "hintPathSignature(path)", "solver.id", "solver.technique", "solver configuration fields", "search.randomSeed", "context.levelRevision"],
-      "evidenceRoles": ["discovery", "forensic", "historical-cost"],
+      "authorities": ["modules/domain/hint-types.ts", "scripts/level-data-io.mjs", "scripts/hint-query.mjs", "docs/solver-evaluation-evidence.md", "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md"],
+      "queryEntryPoints": ["npx tsx scripts/hint-query.mjs --id=<ID> --summary", "npx tsx scripts/hint-query.mjs --id=<ID> --full --purpose=<positive-oracle|solution-atlas|current-production-capability|technique-performance|longitudinal-process>", "node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all", "node scripts/stress/hint-cost-drift.mjs"],
+      "joinKeys": ["level.id", "hintPathSignature(path)", "provenance event identity", "provenance dependency stratum", "solver.id", "solver.technique", "solver configuration fields", "search.randomSeed", "context.levelRevision", "solver version/comparable-version set"],
+      "evidenceRoles": ["positive-oracle", "solution-atlas", "capability-nomination", "technique-performance-context", "longitudinal-process", "forensic", "historical-cost"],
       "relatedAssets": ["published-levels", "stress-corpora", "solution-space-profiles", "production-benchmarks", "technique-census", "level-structure-fingerprint"],
       "affordances": [
-        "Distinguish witness, human, exhaustive, randomized, production-solver, isolated-technique, hint-guided, and other discovery classes.",
-        "Recover exact solver/configuration, work, nodes, termination, seed, forcing, and run-context information for independent rediscoveries.",
-        "Mine same-config cost drift and source-specific solution-space sampling without rerunning historical searches.",
-        "Test whether an apparent technique or corpus effect is confounded by how known solutions were discovered."
+        "Ask an explicit evidence-purpose question instead of treating every valid historical discovery as equivalent evidence.",
+        "Keep every referee-valid path available as positive-oracle/solution-atlas material while filtering producer/context appropriately for capability or performance claims.",
+        "Distinguish witness, human, external, variant-replay and Pathfinder origins from overlapping exhaustive, randomized, isolated, hint-guided and production-retry facets.",
+        "Recover exact solver/configuration, work, nodes, termination, seed, forcing, run-context and solver-regime information for historical rediscoveries.",
+        "Collapse dependent replay/configuration clouds into conservative within-path dependency strata before interpreting support volume.",
+        "Test whether an apparent technique, corpus, solution-profile or current-capability effect is confounded by how and when known solutions were discovered."
       ],
       "caveats": [
-        "Coverage differs by corpus/source and legacy entries may have unknown fields.",
-        "A stored path can have multiple provenance entries and therefore multiple source memberships.",
+        "Evidence applicability is query-dependent: one event may be strong atlas/history evidence and inadmissible current-capability evidence.",
+        "Coverage differs by corpus/source and legacy entries may have unknown fields; absent legacy booleans remain unknown rather than modern false values.",
+        "A stored path can have multiple provenance entries and therefore multiple source memberships; raw event count is not independent support.",
+        "Variant replay, witness, external, guided, isolated and exhaustive contexts do not establish current cold Pathfinder capability merely because the path is valid.",
+        "Randomization is an orthogonal facet rather than an automatic disqualifier because production repair can be seeded.",
+        "Old solver versions are not automatically stale, but current capability/performance use requires audited code/config/scheduler/work equivalence or bounded current replay.",
+        "Technique-performance claims require originating-run denominators/failures and comparable work; success-selected hint events alone cannot establish solve rate or relative performance.",
         "Provenance is powerful offline evidence but must not become level-specific runtime steering."
       ]
     },
@@ -500,16 +507,16 @@
     {
       "id": "hint-provenance-to-solution-profiles",
       "assets": ["hint-provenance", "solution-space-profiles"],
-      "join": "levelId plus provenance-source bucket and, when needed, hint path signature",
+      "join": "levelId plus evidence-purpose-filtered provenance source/facets/dependency stratum and, when needed, hint path signature",
       "questions": ["Is apparent solution-space rigidity a property of the puzzle or of the discovery source?", "Do technique-response cohorts differ by independently sampled solution mode?"],
-      "boundary": "Offline diagnosis only; provenance/profile labels do not become runtime routing inputs."
+      "boundary": "Declare solution-atlas or another explicit purpose before selection; raw provenance-event volume is not independent support. Offline diagnosis only; provenance/profile labels do not become runtime routing inputs."
     },
     {
       "id": "hint-provenance-to-benchmarks",
       "assets": ["hint-provenance", "production-benchmarks"],
-      "join": "levelId plus normalized solver/configuration identity and comparable work fields",
-      "questions": ["Did the same configuration historically solve this level at materially different work?", "Is a current regression/cost cliff likely semantic drift, search drift, or historical protocol mismatch?"],
-      "boundary": "Historical rediscovery is nomination/forensic evidence until protocol and code comparability are established."
+      "join": "levelId plus normalized solver/configuration identity, comparable solver regime, dependency stratum, and comparable work fields",
+      "questions": ["Did the same configuration historically solve this level at materially different work?", "Is a current regression/cost cliff likely semantic drift, search drift, or historical protocol mismatch?", "Does this historical discovery establish current capability, or only nominate a bounded current replay?"],
+      "boundary": "Historical rediscovery is nomination/forensic evidence until code/config/scheduler/work comparability is established. Technique-performance claims require the originating attempted population; success-selected hint events alone are insufficient."
     },
     {
       "id": "level-fingerprint-to-provenance",
