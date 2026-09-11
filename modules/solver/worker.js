@@ -69,16 +69,29 @@ import { enumerateFromGate } from './hint-enumeration.js';
 // avoided the same way worker-source.mjs's per-job solveLevelRaced jobs already do. A size-1
 // cache with a simple equality check, not a state-keyed correctness-sensitive one (see CLAUDE.md's
 // memoization gotcha for why that distinction matters).
-let cachedLevelKey = null, cachedPrep = null;
+/** @type {unknown} */
+let cachedLevelKey = Symbol('unset');
+/** @type {any} */
+let cachedPrep = null;
+/** @param {unknown} levelKey @param {any} level */
 function getEnumeratePrep(levelKey, level) {
-    if (cachedLevelKey !== levelKey) {
+    if (cachedLevelKey !== levelKey || cachedPrep === null) {
         cachedPrep = prepLevel(level);
         cachedLevelKey = levelKey;
     }
     return cachedPrep;
 }
 
+/** @param {unknown} error */
+function errorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+}
+
 // cancelledIds: Set<id> shared between the message handler and the CANCEL branch.
+/**
+ * @param {any} data
+ * @param {{ postBack: (message: any) => void, cancelledIds: Set<any> }} adapters
+ */
 export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
     const { type, id } = data;
 
@@ -91,6 +104,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
         const { levelKey, level, gateKey, rootChildren, nodeBudget = Infinity } = data;
         try {
             const prep = getEnumeratePrep(levelKey, level);
+            /** @type {Array<{ path: number[], nodes: number, elapsedMs: number }>} */
             let pending = [];
             let lastFlush = 0;
             const flush = () => {
@@ -116,7 +130,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
             postBack({ type: 'ENUMERATE_RESULT', id, exhausted: result.exhausted, nodes: result.nodes });
         } catch (err) {
             cancelledIds.delete(id);
-            postBack({ type: 'ERROR', id, message: err?.message ?? String(err) });
+            postBack({ type: 'ERROR', id, message: errorMessage(err) });
         }
         return;
     }
@@ -124,8 +138,10 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
     if (type === 'FALSE_GOAL_TRIGGER_SEARCH' || type === 'TRAP') {
         const { level, budgetMs = 30000 } = data;
         try {
+            /** @type {number[]} */
             let pendingTriggerableCells = [];
             let lastFlush = 0;
+            /** @param {any} [progress] */
             const flush = (progress = null) => {
                 if (pendingTriggerableCells.length === 0 && !progress) return;
                 postBack({ type: 'FALSE_GOAL_TRIGGER_SEARCH_PROGRESS', id, newTriggerableCells: pendingTriggerableCells, ...(progress || {}) });
@@ -158,7 +174,7 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
             });
         } catch (err) {
             cancelledIds.delete(id);
-            postBack({ type: 'ERROR', id, message: err?.message ?? String(err) });
+            postBack({ type: 'ERROR', id, message: errorMessage(err) });
         }
         return;
     }
@@ -193,16 +209,21 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
         postBack(buildSolveWorkerResult(id, result));
     } catch (err) {
         cancelledIds.delete(id);
-        if (err?.message === 'Solver:cancelled') {
+        if (err instanceof Error && err.message === 'Solver:cancelled') {
             postBack({ type: 'RESULT', id, ok: false, solution: null, elapsedMs: 0, nodesExpanded: 0, attempts: [], cancelled: true });
         } else {
-            postBack({ type: 'ERROR', id, message: err?.message ?? String(err) });
+            postBack({ type: 'ERROR', id, message: errorMessage(err) });
         }
     }
 }
 
-// Bootstrap: only run in an actual Worker context.
-if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
+// Bootstrap: only run in an actual Worker context. Route through an `any`-typed global solely so
+// Node's checkJs environment need not declare DOM WorkerGlobalScope; runtime detection is unchanged.
+const workerGlobal = /** @type {any} */ (globalThis);
+if (typeof workerGlobal.WorkerGlobalScope !== 'undefined' && workerGlobal.self instanceof workerGlobal.WorkerGlobalScope) {
     const _cancelledIds = new Set();
-    self.onmessage = ({ data }) => handleWorkerMessage(data, { postBack: (msg) => self.postMessage(msg), cancelledIds: _cancelledIds });
+    workerGlobal.self.onmessage = ({ data }) => handleWorkerMessage(data, {
+        postBack: (msg) => workerGlobal.self.postMessage(msg),
+        cancelledIds: _cancelledIds,
+    });
 }
