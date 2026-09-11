@@ -41,7 +41,7 @@ For row reports the analyzer:
 - joins only IDs actually observed in both baseline and candidate;
 - requires both baseline and candidate rows to be conclusive before calling a gain/loss;
 - treats missing rows, errors and deadline truncation as unknown/inconclusive, never ordinary failure;
-- reports baseline conclusive/residual/unknown counts and hashes;
+- reports baseline conclusive/residual/unknown counts and hashes in JSON and the human summary;
 - computes gains, losses, residual denominator, work/nodes/wall aggregates, work per gain, unique capability, pairwise overlap/Jaccard, and greedy residual-union coverage.
 
 For historical signatures it:
@@ -107,7 +107,7 @@ The workstream summary also no longer calls repair operator reachability open af
 7. CLI longitudinal append/churn without duplicating exact IDs;
 8. baseline-side and candidate-side censoring/unknown semantics;
 9. historical-signature nomination versus confirmed-current-gain separation;
-10. capability-memory manifest/CLI materialization.
+10. capability-memory JSON and human-summary materialization, including censored-baseline visibility.
 
 The first PR CI attempt reached deep verification successfully but the fast gate stopped on the repository's agent-context budget checker because the two touched live solver authority docs were already over their hard size limits. The branch fixes this by compacting those authorities rather than weakening the limits. Full repository CI remains the integration authority.
 
