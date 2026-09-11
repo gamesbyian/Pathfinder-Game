@@ -36,9 +36,14 @@ Rules:
 - resumed work charges only newly performed work;
 - natural exhaustion produces no continuation;
 - pause/censoring is distinct from failure/exhaustion;
+- a continuation is owned by the exact `startKey`, `level`, and `PrepLevel` instance that created it; mismatched ownership is a programming error and must fail loudly;
+- retained continuations must detach mutable pooled beam storage before any later attempt can reuse that storage; cross-attempt aliasing is forbidden even when the owner `PrepLevel` is the same;
+- changing future beam policy/profile on resume is an intentional scheduler experiment, not a continuation-validity violation; ownership/state invariants still apply;
 - continuation cannot contain identity-derived policy or historical per-level outcomes;
 - default production behavior remains unchanged unless a separately validated scheduler policy promotes continuation use;
-- fresh-vs-resumed equivalence tests must guard hidden predecessor-state dependence.
+- fresh-vs-resumed and fresh-vs-preceded differential tests must guard hidden predecessor-state dependence.
+
+The 2026-09-10 solver audit hardened both ownership and pooled-state detachment. See [`../reports/2026-09-10-solver-system-audit.md`](../reports/2026-09-10-solver-system-audit.md).
 
 ## Tested scheduler use case: portfolio-18 same-policy residual tranche
 
