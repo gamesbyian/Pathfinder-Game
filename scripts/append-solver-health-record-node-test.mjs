@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { buildHealthRecord, findPreviousCompatibleRun, summarizeStageParticipation } from './append-solver-health-record.mjs';
-import { buildCapabilityMemory, compareCandidateRows } from './solver-capability-memory-lib.mjs';
+import { buildCapabilityMemory, compareCandidateRows, hashIds } from './solver-capability-memory-lib.mjs';
 
 let passed = 0;
 function test(name, fn) {
@@ -25,7 +25,7 @@ test('summarizeStageParticipation aggregates reach/attempts/solves/nodesExpanded
     assert.deepEqual(stats['repair-fallback'], { reach: 1, attempts: 1, solves: 0, nodesExpanded: 3, workSpent: 4 });
 });
 
-test('buildHealthRecord carries set hashes and explicit capability churn', () => {
+test('buildHealthRecord carries set hashes and compact capability churn', () => {
     const summary = {
         runId: '12345', solverRef: 'abc123', levelBlind: true, deterministic: true, enableFlags: '', disableFlags: '',
         corpus1: { total: 3, solved: 1, nodes: 35, work: 100 }, corpus2: null,
@@ -45,7 +45,10 @@ test('buildHealthRecord carries set hashes and explicit capability churn', () =>
     assert.equal(record.corpus1.solved, 1);
     assert.equal(record.corpus1.populationIdHash.length, 64);
     assert.equal(record.corpus1.solvedIdHash.length, 64);
-    assert.deepEqual(record.capabilityChurn.corpus1, { comparedRunId: '11111', gained: 1, lost: 1, retained: 0, gainedIds: ['A'], lostIds: ['B'] });
+    assert.deepEqual(record.capabilityChurn.corpus1, {
+        comparedRunId: '11111', gained: 1, lost: 1, retained: 0,
+        gainedIdHash: hashIds(['A']), lostIdHash: hashIds(['B']),
+    });
 });
 
 test('findPreviousCompatibleRun skips incompatible flag/protocol snapshots', () => {
@@ -70,7 +73,7 @@ test('findPreviousCompatibleRun skips incompatible flag/protocol snapshots', () 
     assert.equal(found.runId, 'old-good');
 });
 
-test('CLI appends longitudinal lines and computes churn once a prior tracked snapshot exists', () => {
+test('CLI appends compact longitudinal churn once a prior tracked snapshot exists', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'solver-health-record-test-'));
     const runs = path.join(dir, 'capability-runs');
     const outFile = path.join(dir, 'nested', 'solver-health-timeline.jsonl');
@@ -92,8 +95,12 @@ test('CLI appends longitudinal lines and computes churn once a prior tracked sna
     assert.equal(lines.length, 2);
     const record = JSON.parse(lines[1]);
     assert.equal(record.runId, 'r1');
-    assert.deepEqual(record.capabilityChurn.corpus1.gainedIds, ['A']);
-    assert.deepEqual(record.capabilityChurn.corpus1.lostIds, ['B']);
+    assert.equal(record.capabilityChurn.corpus1.gained, 1);
+    assert.equal(record.capabilityChurn.corpus1.lost, 1);
+    assert.equal(record.capabilityChurn.corpus1.gainedIdHash, hashIds(['A']));
+    assert.equal(record.capabilityChurn.corpus1.lostIdHash, hashIds(['B']));
+    assert.equal('gainedIds' in record.capabilityChurn.corpus1, false);
+    assert.equal('lostIds' in record.capabilityChurn.corpus1, false);
 });
 
 test('capability-memory comparisons preserve negative verdicts while exposing complementary gains', () => {
