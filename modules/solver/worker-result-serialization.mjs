@@ -1,33 +1,28 @@
-/** Build the successful SOLVE response posted by the solver worker. Attempt records deliberately
- * remain raw: structured-clone is the worker transport contract, unlike the bounded whitelist used
- * for persisted reports, and therefore carries new own Attempt fields without another projection.
+/** Build the successful SOLVE response posted by the solver worker.
  *
- * Includes every field the direct (on-thread) SolveResult carries (see orchestration.ts's own
- * interface) — fixed 2026-08-20: this used to return only a fixed subset (ok/status/solution/
- * elapsedMs/nodesExpanded/attempts/deadlineTruncated), silently dropping solutions/
- * nodeBudgetReached/workSpent/workBudget/solvedByPrime/stageLifecycle/schedulerMode/legacyLatencyPortfolioExperiment
- * for any caller that swapped the worker client in for the direct solver — the whole point of the
- * client's own "drop-in swap for on-thread solving" doc comment. Every one of these fields is
- * plain, structured-clone-safe data (numbers/strings/booleans/plain objects/arrays), so there is no
- * serialization reason to have excluded any of them. */
+ * Attempt records deliberately remain raw: structured-clone is the worker transport contract,
+ * unlike the bounded whitelist used for persisted reports, and therefore carries new own Attempt
+ * fields without another projection. The same rule applies to the aggregate SolveResult itself.
+ * Keep the worker-only envelope (`type`/`id`) and the historical `elapsedMs` transport name, but
+ * otherwise forward the direct solver's own enumerable result fields instead of maintaining a
+ * second whitelist that can drift whenever SolveResult grows.
+ *
+ * `techniqueLifecycle` and `portfolio` are historical internal aliases. If present, normalize them
+ * onto the current public field names rather than exposing both dialects across the worker seam. */
 export function buildSolveWorkerResult(id, result) {
+  const {
+    totalMs,
+    techniqueLifecycle,
+    portfolio,
+    ...solveResult
+  } = result;
+
   return {
     type: 'RESULT',
     id,
-    ok: result.ok,
-    status: result.status,
-    solution: result.solution,
-    solutions: result.solutions,
-    elapsedMs: result.totalMs,
-    nodesExpanded: result.nodesExpanded,
-    attempts: result.attempts,
-    deadlineTruncated: result.deadlineTruncated,
-    nodeBudgetReached: result.nodeBudgetReached,
-    workSpent: result.workSpent,
-    workBudget: result.workBudget,
-    solvedByPrime: result.solvedByPrime,
-    stageLifecycle: result.stageLifecycle ?? result.techniqueLifecycle,
-    schedulerMode: result.schedulerMode,
-    legacyLatencyPortfolioExperiment: result.legacyLatencyPortfolioExperiment ?? result.portfolio,
+    ...solveResult,
+    elapsedMs: totalMs,
+    stageLifecycle: result.stageLifecycle ?? techniqueLifecycle,
+    legacyLatencyPortfolioExperiment: result.legacyLatencyPortfolioExperiment ?? portfolio,
   };
 }
