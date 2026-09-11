@@ -1,96 +1,172 @@
-name: TEMP scorer-vocabulary frontier evidence
+name: TEMP class1 unoffered-rescuer menu audit
 
 on:
   pull_request:
     paths:
       - '.github/workflows/scorer-vocabulary-frontier-temp.yml'
-      - 'scripts/stress/witness-scoring-vocabulary-diagnostic.mjs'
-      - 'scripts/stress/analyze-scoring-vocabulary-frontier.mjs'
-      - 'scripts/stress/scoring-vocabulary-lib.mjs'
 
 permissions:
   contents: read
 
 jobs:
-  scorer-frontier:
+  class1-menu-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     steps:
       - name: Check out the PR merge commit
         uses: actions/checkout@v7
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: '20'
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run prespecified witness-only scorer-vocabulary diagnostic
+      - name: Audit class-1 known rescuers without solver dispatch
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p tmp
-          # The frozen per-level capability report stores level results under `rows`, while the
-          # current diagnostic's --report reader expects {levels:[...]}. Normalize only for this
-          # temporary evidence run; the durable parser fix is tracked separately.
-          node --input-type=module <<'NODE'
-          import { readFileSync, writeFileSync } from 'node:fs';
-          const sourcePath = 'reports/stress/capability-runs/34531412380/per-level-corpus2.json';
-          const source = JSON.parse(readFileSync(sourcePath, 'utf8'));
-          const levels = Array.isArray(source) ? source : (source.levels ?? source.rows);
-          if (!Array.isArray(levels)) throw new Error('frozen production report has no level-result array');
-          writeFileSync('tmp/production-report-object.json', JSON.stringify({ levels }));
-          console.log(`Normalized production report rows=${levels.length}; solved=${levels.filter(row => row.ok).length}; unsolved=${levels.filter(row => !row.ok).length}`);
-          NODE
-
-          node scripts/run-bundled.mjs scripts/stress/witness-scoring-vocabulary-diagnostic.mjs -- \
-            --corpus=corpus2 \
-            --unsolved-only \
-            --report=tmp/production-report-object.json \
-            --sources=witness \
-            --scoring-profile=default \
-            --out=tmp/scorer-vocabulary-witness-only.json
-
-          node scripts/stress/analyze-scoring-vocabulary-frontier.mjs \
-            --diagnostic=tmp/scorer-vocabulary-witness-only.json \
-            --atlas=reports/stress/residual-atlas/2026-09-11-post-1029-671/atlas.json \
-            --out=tmp/scorer-vocabulary-frontier.json
-
-      - name: Print compact decision evidence
-        shell: bash
-        run: |
           node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
-          const diagnostic = JSON.parse(readFileSync('tmp/scorer-vocabulary-witness-only.json', 'utf8'));
-          const frontier = JSON.parse(readFileSync('tmp/scorer-vocabulary-frontier.json', 'utf8'));
-          const preferred = diagnostic.weightInvariantExamples
-            .flatMap(row => (row.weightInvariantPairs || [])
-              .filter(pair => pair.relation === 'alternative-preferred')
-              .map(pair => ({ levelId: row.levelId, depth: row.depth, pos: row.pos, ...pair })))
-            .slice(0, 50);
-          const topLevels = diagnostic.levels
-            .filter(row => (row.weightInvariantAlternativePreferredDecisions || 0) > 0)
-            .sort((a, b) => (b.weightInvariantAlternativePreferredDecisions - a.weightInvariantAlternativePreferredDecisions)
-              || String(a.id).localeCompare(String(b.id)))
-            .slice(0, 50)
-            .map(row => ({
-              id: row.id,
-              branchingDecisions: row.branchingDecisions,
-              invariantDecisions: row.weightInvariantDecisions,
-              alternativePreferredDecisions: row.weightInvariantAlternativePreferredDecisions,
-              alternativePreferredPairs: row.weightInvariantAlternativePreferredPairs,
-              collisions: row.exactVocabularyCollisionDecisions,
-            }));
-          console.log('__SCORER_FRONTIER_EVIDENCE_BEGIN__');
-          console.log(JSON.stringify({
-            diagnosticTotals: diagnostic.totals,
-            skippedLevels: diagnostic.skippedLevels,
-            frontier,
-            firstAlternativePreferredPairs: preferred,
-            topAlternativePreferredLevels: topLevels,
-          }, null, 2));
-          console.log('__SCORER_FRONTIER_EVIDENCE_END__');
+
+          const atlasPath = 'reports/stress/residual-atlas/2026-09-11-post-1029-671/atlas.json';
+          const atlas = JSON.parse(readFileSync(atlasPath, 'utf8'));
+          const rows = (atlas.rows || []).filter(row => Number(row.primaryClass) === 1);
+          if (rows.length !== 26) throw new Error(`expected 26 class-1 rows, found ${rows.length}`);
+
+          const identityStats = new Map();
+          const routingRegimes = new Map();
+          const anomalies = [];
+          const noT1Wins = [];
+
+          const addCount = (map, key) => map.set(key, (map.get(key) || 0) + 1);
+          const median = values => {
+            if (!values.length) return null;
+            const s = [...values].sort((a, b) => a - b);
+            const mid = Math.floor(s.length / 2);
+            return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+          };
+          const quantile = (values, q) => {
+            if (!values.length) return null;
+            const s = [...values].sort((a, b) => a - b);
+            return s[Math.min(s.length - 1, Math.floor(q * (s.length - 1)))];
+          };
+
+          for (const row of rows) {
+            addCount(routingRegimes, row.routingRegime || 'unknown');
+            const wins = row.t1Wins || [];
+            if (!wins.length) noT1Wins.push(row.id);
+            for (const win of wins) {
+              const identity = String(win.identity || 'unknown');
+              let stat = identityStats.get(identity);
+              if (!stat) {
+                stat = { identity, levels: new Set(), wins: 0, nodes: [], families: new Set(), gates: new Set() };
+                identityStats.set(identity, stat);
+              }
+              stat.levels.add(row.id);
+              stat.wins++;
+              if (Number.isFinite(win.nodes)) stat.nodes.push(win.nodes);
+              if (win.family) stat.families.add(win.family);
+              if (win.gate != null) stat.gates.add(win.gate);
+              if (win.offered !== false || win.dispatched !== false) {
+                anomalies.push({ levelId: row.id, identity, offered: win.offered, dispatched: win.dispatched });
+              }
+            }
+          }
+
+          const identities = [...identityStats.values()].map(stat => ({
+            identity: stat.identity,
+            levelCount: stat.levels.size,
+            levelIds: [...stat.levels].sort(),
+            winRows: stat.wins,
+            families: [...stat.families].sort(),
+            gateCount: stat.gates.size,
+            medianNodes: median(stat.nodes),
+            p90Nodes: quantile(stat.nodes, 0.90),
+            maxNodes: stat.nodes.length ? Math.max(...stat.nodes) : null,
+          })).sort((a, b) => b.levelCount - a.levelCount || (a.medianNodes ?? Infinity) - (b.medianNodes ?? Infinity) || a.identity.localeCompare(b.identity));
+
+          const remaining = new Set(rows.map(row => row.id));
+          const greedyCoverage = [];
+          const unused = new Map([...identityStats.entries()]);
+          while (remaining.size && unused.size) {
+            let best = null;
+            for (const stat of unused.values()) {
+              const newlyCovered = [...stat.levels].filter(id => remaining.has(id));
+              if (!newlyCovered.length) continue;
+              const candidate = {
+                identity: stat.identity,
+                newlyCovered,
+                newCount: newlyCovered.length,
+                medianNodes: median(stat.nodes),
+              };
+              if (!best || candidate.newCount > best.newCount
+                || (candidate.newCount === best.newCount && (candidate.medianNodes ?? Infinity) < (best.medianNodes ?? Infinity))
+                || (candidate.newCount === best.newCount && candidate.medianNodes === best.medianNodes && candidate.identity < best.identity)) {
+                best = candidate;
+              }
+            }
+            if (!best) break;
+            for (const id of best.newlyCovered) remaining.delete(id);
+            unused.delete(best.identity);
+            greedyCoverage.push({
+              rank: greedyCoverage.length + 1,
+              identity: best.identity,
+              newlyCovered: best.newlyCovered.sort(),
+              newlyCoveredCount: best.newCount,
+              cumulativeCovered: rows.length - remaining.size,
+              cumulativeCoverageRate: (rows.length - remaining.size) / rows.length,
+              medianWinnerNodes: best.medianNodes,
+            });
+          }
+
+          const perLevel = rows.map(row => ({
+            id: row.id,
+            routingRegime: row.routingRegime,
+            productionNodes: row.productionNodes,
+            productionWork: row.productionWork,
+            productionAttemptCount: row.productionAttemptCount,
+            t1WinMultiplicity: row.t1WinMultiplicity,
+            features: row.features,
+            wins: (row.t1Wins || []).map(win => ({
+              identity: win.identity,
+              nodes: win.nodes,
+              gate: win.gate,
+              family: win.family,
+              offered: win.offered,
+              dispatched: win.dispatched,
+            })),
+          })).sort((a, b) => a.id.localeCompare(b.id));
+
+          const familyProfile = new Map();
+          for (const identity of identities) {
+            const parts = identity.identity.split('|');
+            const family = parts[0] || 'unknown';
+            const score = parts.find(part => part.startsWith('score='))?.slice('score='.length) || 'n/a';
+            const retention = parts.find(part => part.startsWith('retention='))?.slice('retention='.length) || 'n/a';
+            const width = parts.find(part => part.startsWith('width='))?.slice('width='.length) || 'n/a';
+            const key = `${family}|score=${score}|width=${width}|retention=${retention}`;
+            let row = familyProfile.get(key);
+            if (!row) row = { key, levelIds: new Set(), identities: [] };
+            for (const id of identity.levelIds) row.levelIds.add(id);
+            row.identities.push(identity.identity);
+            familyProfile.set(key, row);
+          }
+
+          const result = {
+            population: {
+              class1Levels: rows.length,
+              noT1WinRows: noT1Wins,
+              routingRegimes: Object.fromEntries([...routingRegimes.entries()].sort()),
+            },
+            anomalies,
+            identities,
+            groupedFamilies: [...familyProfile.values()].map(row => ({
+              key: row.key,
+              levelCount: row.levelIds.size,
+              levelIds: [...row.levelIds].sort(),
+              identities: row.identities.sort(),
+            })).sort((a, b) => b.levelCount - a.levelCount || a.key.localeCompare(b.key)),
+            greedyCoverage,
+            uncoveredAfterAllKnownT1Identities: [...remaining].sort(),
+            perLevel,
+          };
+
+          console.log('__CLASS1_MENU_AUDIT_BEGIN__');
+          console.log(JSON.stringify(result, null, 2));
+          console.log('__CLASS1_MENU_AUDIT_END__');
           NODE
