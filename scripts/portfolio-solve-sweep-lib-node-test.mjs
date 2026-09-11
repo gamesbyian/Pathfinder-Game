@@ -265,6 +265,10 @@ test('maximal Attempt round-trips completely through attemptRecord and buildRow'
     }, 'legacy-latency-portfolio');
     for (const projected of [direct, row.attempts[0]]) {
         for (const field of PERSISTENT_ATTEMPT_FIELDS) {
+            if (field === 'repairTurnBiased' && MAXIMALLY_POPULATED_SOLVER_ATTEMPT[field] === false) {
+                assert.ok(!(field in projected), 'compact attempt projection intentionally omits false optional guidance flags');
+                continue;
+            }
             assert.deepEqual(projected[field], MAXIMALLY_POPULATED_SOLVER_ATTEMPT[field], `${field} changed during projection`);
         }
         for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {
