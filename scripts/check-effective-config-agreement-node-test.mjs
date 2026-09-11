@@ -11,10 +11,17 @@ function test(name, fn) {
     catch (err) { console.error(`  ✗ ${name}\n    ${err.stack || err.message}`); process.exitCode = 1; }
 }
 
+function stableStringify(value) {
+    if (value === undefined) return undefined;
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return `[${value.map(v => stableStringify(v) ?? 'null').join(',')}]`;
+    const keys = Object.keys(value).filter(k => value[k] !== undefined).sort();
+    return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
+}
+
 const dir = mkdtempSync(path.join(tmpdir(), 'effective-config-agreement-test-'));
 function writeReport(name, effectiveConfig) {
     const file = path.join(dir, name);
-    const stableStringify = (v) => JSON.stringify(v, Object.keys(v).sort());
     writeFileSync(file, JSON.stringify({
         summary: {
             effectiveConfig,
@@ -37,6 +44,19 @@ test('checkAgreement fails and names the differing field when one shard silently
     const a = writeReport('c.json', { nodeBudget: 100, workBudget: 200 });
     const b = writeReport('d.json', { nodeBudget: 999, workBudget: 200 });
     assert.throws(() => checkAgreement([a, b]), /differs in \[nodeBudget\]/);
+});
+
+test('checkAgreement rejects a stale or malformed effectiveConfigDigest', () => {
+    const file = path.join(dir, 'stale-digest.json');
+    writeFileSync(file, JSON.stringify({
+        summary: {
+            effectiveConfig: { nodeBudget: 100, ablation: { X: true } },
+            effectiveConfigDigest: '{"nodeBudget":100}',
+        },
+        levels: [],
+    }));
+    const other = writeReport('stale-digest-peer.json', { nodeBudget: 100, ablation: { X: true } });
+    assert.throws(() => checkAgreement([file, other]), /does not match the canonical serialization/);
 });
 
 test('checkAgreement requires at least 2 result files', () => {
