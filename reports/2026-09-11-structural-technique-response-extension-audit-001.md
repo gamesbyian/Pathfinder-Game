@@ -11,7 +11,7 @@ The repository already has strong evidence for generic structural difficulty and
 
 Use this evidence ladder:
 
-1. **temporal niche stability** across the two committed censuses;
+1. **temporal niche persistence beyond the single leading feature** across the two committed censuses;
 2. **difficulty-stratified relative advantage** so generic hardness is less able to masquerade as technique affinity;
 3. **existing variant-family boundary flips** for stable associations;
 4. **source-controlled solution-space mediators** for the same nominated contrasts;
@@ -27,17 +27,17 @@ The refreshed no-T1 comparison preserved the earlier broad anatomy: `constrained
 
 This burden signal is useful here primarily as a **nuisance baseline**. A technique niche is more informative when it survives among levels of comparable generic burden.
 
-### Some pairwise structural niches survived a solver refresh
+### Temporal leader drift is already established
 
-The existing Gate-0F conclusion delta already establishes several temporal facts without another run:
+[`2026-09-05-relative-advantage-pairs-temporal-drift-001.md`](2026-09-05-relative-advantage-pairs-temporal-drift-001.md) already compared the same eight frozen relative-advantage pairs across the September-1 and September-3 censuses using the canonical attempt-identity normalizer. It found that disagreement counts stayed reasonably stable while **5/8 pairs changed their single leading structural feature**. Only three retained the same leading feature and direction:
 
-- objective-first and intersection-harvest 5K **plain vs mechanic-bucket retention** preserve the portal-direction effect across the September-1 and September-3 censuses;
-- intersection-harvest plain-vs-buckets also preserves the required-intersection direction, with the effect stronger in the refresh;
-- the **objective-first 2K vs 5K width inversion persists but its old structural explanation does not**: the older scale/navigable-area story was replaced by turn-constraint/coverage/density effects in the refresh;
-- beam CW-vs-CCW remains a large outcome-disagreement population with weak coarse structural separation;
-- DFS CW-vs-CCW retains structural separation, but the leading feature identity changed materially.
+- objective-first 5K plain vs mechanic-buckets: `portals` −1.060 -> −0.677;
+- intersection-harvest 5K plain vs mechanic-buckets: `requiredIntersections` +0.655 -> +0.903;
+- perimeter beam CW vs CCW: `width` +0.215 -> +0.247, a weak separator despite stable identity.
 
-These are exactly the distinctions a temporal niche analyzer should expose systematically: stable association, persistent outcome inversion with unstable explanation, and structurally opaque disagreement.
+The other five changed leaders, including objective beam 2K-vs-5K (`navigableArea` -> `turnConstraintLoad`) and DFS CW-vs-CCW (`mustCross` -> `portals`). This already proves that a one-snapshot leading feature is not a reliable causal explanation even when the underlying technique disagreement persists.
+
+The new temporal analyzer therefore **extends rather than repeats** that result: it asks whether material same-direction effects persist anywhere across each pair's stored top-eight effect set, not merely whether `topEffects[0]` keeps its identity.
 
 ### Provisional eight-pair triage from existing evidence
 
@@ -45,16 +45,16 @@ This ranking is **discovery triage**, not a result of the new analyzers yet. Its
 
 | contrast | current reading | next evidence if screening survives |
 |---|---|---|
-| intersection-harvest 5K plain vs mechanic-buckets | **strongest current structural-niche candidate**: portal and required-intersection directions are large and survive the refresh; density/path-length effects also recur | difficulty-stratified check, then existing-family portal/intersection boundary flips and basin/portal-order mediation |
-| objective-first 5K plain vs mechanic-buckets | **strong candidate**: portal direction clearly survives; several secondary burden/mechanic effects remain material | difficulty-stratified check, then existing-family flip + basin mediation |
-| DFS harvest-then-finish vs portal-first-transfer | **promising but not yet consolidated**: turn-load/surround/flipper/adjacent-turn directions recur while relative magnitudes move | temporal analyzer first; if stable, family/profile mediator before tracing |
-| intersection-harvest beam 2K vs 5K | **partial stable signal**: portal direction survives, but width itself is a retention/dose intervention and other explanations move | difficulty control; trace only if a compact family/profile mediator fails |
-| objective-first beam 2K vs 5K | **mechanism candidate, poor routing candidate today**: the inversion persists while its original scale-based explanation reversed | matched structure/burden cohort + bounded beam frontier/churn divergence |
-| admissible-order default vs must-cross-first | **structural explanation appears unstable**: refreshed `mustPass`/intersection effects are much stronger/different than the old leaders | temporal analyzer; do not escalate unless a persistent common effect emerges |
-| beam perimeter CW vs CCW | **structurally opaque by coarse features** despite a large disagreement population | controlled symmetry/family cliffs + inverse-transform first divergence, not more count features |
-| DFS perimeter CW vs CCW | **real disagreement with explanation drift**: refreshed portal separation strengthened while the leading old feature differed | temporal/difficulty screening; symmetry trace only if the effect proves recurring |
+| intersection-harvest 5K plain vs mechanic-buckets | **strongest current candidate**: the leading required-intersection effect strengthened across refresh and the pair retains a large disagreement population | top-eight persistence + difficulty-stratified check, then existing-family intersection/portal boundary flips and basin/order mediation |
+| objective-first 5K plain vs mechanic-buckets | **strong candidate**: the large portal effect remained the leading separator across refresh | top-eight persistence + difficulty-stratified check, then existing-family flip + basin/portal-order mediation |
+| DFS harvest-then-finish vs portal-first-transfer | **real stable outcome disagreement, unstable leader**: `requiredPathLength` -> `flippingFilters` | search the broader top-eight set for persistent effects; if present, family/profile mediator before tracing |
+| intersection-harvest beam 2K vs 5K | **persistent inversion, unstable leader**: `constrainedObjectDensity` -> `portals` | difficulty control; treat as retention/dose mechanism unless a stable secondary descriptor emerges |
+| objective-first beam 2K vs 5K | **mechanism candidate, poor routing candidate today**: inversion persists while `navigableArea` -> `turnConstraintLoad` | matched structure/burden cohort + bounded beam frontier/churn divergence |
+| admissible-order default vs must-cross-first | **structural explanation unstable**: `mustTurn` -> `mustPass` | top-eight persistence first; do not escalate unless a recurring effect survives |
+| beam perimeter CW vs CCW | **structurally opaque**: same weak `width` leader (~0.22 -> ~0.25) despite >200 disagreement levels | controlled symmetry/family cliffs + inverse-transform first divergence, not more count features |
+| DFS perimeter CW vs CCW | **real disagreement with strong explanation drift**: `mustCross` +0.344 -> `portals` −0.620 | temporal/difficulty screening; symmetry trace only if a recurring mechanism emerges |
 
-The first two rows are therefore the default family/profile candidates **if** the new temporal and burden-stratified outputs confirm them. The width and orientation rows are better treated as search-mechanism questions than as immediate static-routing opportunities.
+The first two rows are therefore the default family/profile candidates **if** the new persistence and burden-stratified outputs confirm them. The width and orientation rows are better treated as search-mechanism questions than as immediate static-routing opportunities.
 
 ### Richer generic topology has already failed its current value test
 
@@ -62,11 +62,11 @@ The later 18-feature topology/placement bundle added effectively no held-out val
 
 ### Capability multiplicity is a strong offline reliability signal
 
-Isolated `solverCount` strongly predicts production success and has already shown temporal/budget-edge robustness. Use multiplicity to stratify or qualify offline evidence where useful, especially rare/singleton technique claims. Do **not** use historical per-level multiplicity as a cold production steering lookup.
+Isolated `solverCount` strongly predicts production success and has already shown temporal/budget-edge robustness. Use multiplicity to stratify or qualify offline evidence where useful, especially rare/singleton technique claims. Do **not** use historical per-level multiplicity as a cold production steering lookup. The difficulty-stratified analyzer now reports left-only/right-only multiplicity summaries for exactly this confidence context.
 
 ## New reusable analysis added with this report
 
-### 1. Temporal structural-niche stability
+### 1. Persistent-effect extension of the temporal drift result
 
 Run:
 
@@ -74,7 +74,7 @@ Run:
 node scripts/analyze-technique-niche-stability.mjs
 ```
 
-Inputs are the frozen eight pairwise relative-advantage summaries from the September-1 and September-3 census snapshots. The helper normalizes pre-cleanup action identities, compares disagreement population and top effects, and marks a feature **persistent** when it remains in the stored top-eight effects with the same direction and at least the configured material standardized-difference threshold in both snapshots.
+Inputs are the frozen eight pairwise relative-advantage summaries from the September-1 and September-3 census snapshots. Identity normalization delegates to `modules/solver/attempt-identity.mjs`. The analyzer extends the concluded Sep-5 leader-drift report by comparing all stored top effects and marking a feature **persistent** when it remains in both top-eight lists with the same direction and at least the configured material standardized-difference threshold.
 
 Outputs by default:
 
@@ -95,7 +95,7 @@ The script builds a deliberately simple generic-burden score from the nine struc
 
 `constrainedObjects`, `turnConstraintLoad`, `constrainedObjectDensity`, `requiredPathLength`, `portals`, `requiredPathCoverageRatio`, `mustTurn`, `surround`, `blocks`.
 
-It averages within-population z-scores, divides the population into equal-count burden bands, and reruns the same frozen pairwise A-only/B-only analysis inside each band. This is **nuisance stratification**, not a calibrated difficulty model and not a production selector.
+It averages within-population z-scores, divides the population into equal-count burden bands, and reruns the same frozen pairwise A-only/B-only analysis inside each band. It also reports census multiplicity for the two exclusive populations as **offline fragility context**. This is nuisance stratification, not a calibrated difficulty model and not a production selector.
 
 Outputs by default:
 
@@ -137,7 +137,7 @@ A further cheap extension is to treat the difference between expected isolated c
 - high isolated support but production-missed;
 - zero isolated support but production-solved.
 
-Join these cohorts to lifecycle reach/work, provenance, solution profiles and traces only when they sharpen a current WS1/WS2 decision. This is a microscope for orchestration/search-policy failure versus missing repertoire capability, not a mandate for another classifier.
+The repo already has pieces of this through the production-boundary join, 35-row production-solved/no-T1 anatomy, multiplicity-vs-production work and the newer five-class residual atlas. Therefore do **not** create another generic mismatch classifier by default. Rejoin those existing cohorts to lifecycle/provenance/profile/trace evidence only when a current WS1/WS2 mechanism needs the distinction.
 
 ## CP-SAT/reference evidence extension
 
@@ -164,8 +164,8 @@ This is a synthesis contract, not a requirement to fill every column before any 
 
 ## Execution handoff: work that still needs a full checkout
 
-1. Run the new temporal-niche analyzer and commit its generated JSON/Markdown if outputs validate the expected eight-pair mapping.
-2. Run the difficulty-stratified analyzer; inspect denominator adequacy before interpreting any recurring effect.
+1. Run the new persistent-effect temporal analyzer and commit its generated JSON/Markdown if all eight pairs normalize and match as expected.
+2. Run the difficulty-stratified analyzer; inspect denominator adequacy before interpreting any recurring effect or multiplicity difference.
 3. Rank only contrasts that are both temporally credible and difficulty-robust enough to deserve causal follow-up.
 4. For the top one or two contrasts, query the existing family dataset branch (`claude/variant-levels-solver-insights-tpk4qg`) for controlled response flips. Do not generate variants first.
 5. Generate/use Corpus-2 source-stratified solution profiles for those selected cohorts; control provenance source so discovery method does not masquerade as basin structure.
