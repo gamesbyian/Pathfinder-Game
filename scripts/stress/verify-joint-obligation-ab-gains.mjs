@@ -13,7 +13,7 @@ import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 
 installBrowserStubs();
-const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/solver.ts');
+const { createSolver } = await import('../../modules/solver.ts');
 const { defaultConfig } = await import('../../modules/solver/ablation-config.ts');
 const Solver = createSolver();
 
