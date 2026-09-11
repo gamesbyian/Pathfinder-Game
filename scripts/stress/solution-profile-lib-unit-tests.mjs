@@ -13,6 +13,7 @@ import {
     buildBucketProfile, buildLevelSolutionProfile, buildSinglePathProfile, profileDistance,
     profileDistanceTerms, nearestProfiles, summarizeCorpusProfiles, PROVENANCE_SOURCES,
     computeHintSignature,
+    hasCurrentSolutionProfileTaxonomy, SOLUTION_PROFILE_SCHEMA_VERSION, SOLUTION_PROFILE_TAXONOMY,
 } from './solution-profile-lib.mjs';
 
 const p = (x, y) => PACK(x, y);
@@ -37,20 +38,10 @@ test('classifyProvenanceSource: a human-player id -> human-solved, even with sol
     assert.equal(classifyProvenanceSource(e), 'human-solved');
 });
 
-test('classifyProvenanceSource: exhaustive termination -> complete-enumeration', () => {
-    assert.equal(classifyProvenanceSource(entry({ search: { termination: 'exhaustive' } })), 'complete-enumeration');
-});
-
-test('classifyProvenanceSource: hintGuided -> prefix-anchored-completion', () => {
-    assert.equal(classifyProvenanceSource(entry({ context: { hintGuided: true } })), 'prefix-anchored-completion');
-});
-
-test('classifyProvenanceSource: a random seed without hintGuided -> randomized-enumeration', () => {
-    assert.equal(classifyProvenanceSource(entry({ search: { randomSeed: 42 } })), 'randomized-enumeration');
-});
-
-test('classifyProvenanceSource: plain solver id, no seed -> production-solver', () => {
-    assert.equal(classifyProvenanceSource(entry()), 'production-solver');
+test('classifyProvenanceSource delegates to the shared origin taxonomy', () => {
+    assert.equal(classifyProvenanceSource(entry({ search: { termination: 'exhaustive' } })), 'pathfinder-solver');
+    assert.equal(classifyProvenanceSource(entry({ context: { hintGuided: true } })), 'pathfinder-solver');
+    assert.equal(classifyProvenanceSource(entry({ search: { randomSeed: 42 } })), 'pathfinder-solver');
 });
 
 test('classifyProvenanceSource: unknown solver id -> other; null entry -> other', () => {
@@ -62,17 +53,15 @@ test('classifyProvenanceSource: unknown solver id -> other; null entry -> other'
 // an isolated single-technique run (e.g. technique-census tooling) still carries
 // solver.id === SOLVER_ID, so without this check it would be misread as ordinary production-
 // solver capability evidence — the same contamination behind e.g. R02900.
-test('classifyProvenanceSource: isolatedTechnique overrides production-solver', () => {
-    assert.equal(classifyProvenanceSource(entry({ context: { isolatedTechnique: true } })), 'isolated-technique');
-    assert.equal(PROVENANCE_SOURCES.includes('isolated-technique'), true);
+test('isolated technique remains a facet and does not replace Pathfinder origin', () => {
+    assert.equal(classifyProvenanceSource(entry({ context: { isolatedTechnique: true } })), 'pathfinder-solver');
+    assert.equal(PROVENANCE_SOURCES.includes('pathfinder-solver'), true);
 });
 
 test('sourcesForHint: a hint rediscovered by two techniques belongs to both buckets', () => {
     const hint = { path: [1, 2, 3], provenance: [entry({ search: { randomSeed: 7 } }), entry({ context: { hintGuided: true } })] };
     const sources = sourcesForHint(hint);
-    assert.ok(sources.has('randomized-enumeration'));
-    assert.ok(sources.has('prefix-anchored-completion'));
-    assert.equal(sources.size, 2);
+    assert.deepEqual([...sources], ['pathfinder-solver']);
 });
 
 test('sourcesForHint: empty provenance falls into "other" rather than being dropped', () => {
@@ -82,7 +71,7 @@ test('sourcesForHint: empty provenance falls into "other" rather than being drop
 test('bucketHintsBySource: covers every declared source key, even when empty', () => {
     const buckets = bucketHintsBySource([{ path: [1, 2], provenance: [entry()] }]);
     assert.deepEqual([...buckets.keys()], PROVENANCE_SOURCES);
-    assert.equal(buckets.get('production-solver').length, 1);
+    assert.equal(buckets.get('pathfinder-solver').length, 1);
     assert.equal(buckets.get('witness').length, 0);
 });
 
@@ -249,8 +238,8 @@ test('buildLevelSolutionProfile: per-source buckets below minHintsPerSource are 
         hintRecords: [{ path: [p(0, 0), p(1, 0), p(2, 0)], provenance: [entry()] }],
     };
     const result = buildLevelSolutionProfile(level, 1, { minHintsPerSource: 3 });
-    assert.equal(result.bySource['production-solver'].insufficientData, true);
-    assert.equal(result.bySource['production-solver'].pathCount, 1);
+    assert.equal(result.bySource['pathfinder-solver'].insufficientData, true);
+    assert.equal(result.bySource['pathfinder-solver'].pathCount, 1);
     assert.equal(result.combined.pathCount, 1); // combined bucket has no per-source floor
 });
 
@@ -269,7 +258,7 @@ test('buildLevelSolutionProfile: a source bucket identical to combined is marked
     const result = buildLevelSolutionProfile(level, 1, { minHintsPerSource: 3 });
     assert.equal(result.bySource.other.sameAsCombined, true);
     assert.equal(result.bySource.other.pathCount, 3);
-    assert.equal(result.bySource['production-solver'].insufficientData, true);
+    assert.equal(result.bySource['pathfinder-solver'].insufficientData, true);
 });
 
 test('buildSinglePathProfile: degenerates cleanly for a lone witness path', () => {
@@ -361,4 +350,13 @@ test('computeHintSignature: restricting to a level-number subset only signs thos
     const firstLevelOnly = computeHintSignature(levels, [1]);
     assert.notEqual(wholeCorpus.hash, firstLevelOnly.hash);
     assert.equal(firstLevelOnly.totalHints, 1);
+});
+
+test('solution-profile taxonomy stamp rejects legacy or partially stamped libraries', () => {
+    assert.equal(hasCurrentSolutionProfileTaxonomy({}), false);
+    assert.equal(hasCurrentSolutionProfileTaxonomy({ schemaVersion: SOLUTION_PROFILE_SCHEMA_VERSION }), false);
+    assert.equal(hasCurrentSolutionProfileTaxonomy({
+        schemaVersion: SOLUTION_PROFILE_SCHEMA_VERSION,
+        provenanceTaxonomy: SOLUTION_PROFILE_TAXONOMY,
+    }), true);
 });

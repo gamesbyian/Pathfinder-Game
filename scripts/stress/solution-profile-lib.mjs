@@ -28,64 +28,26 @@ import { resolveLandmarkTurn, baseLandmarkRole } from '../../modules/domain/land
 import {
     buildHintEdgeCounts, pathVisitCells, mustCrossKeysOf, requiredPathCoverageRatio, entropy, percentile,
 } from '../../modules/domain/hint-novelty.ts';
-import { WITNESS_GENERATOR_ID, SOLVER_ID, HUMAN_PLAYER_ID } from '../../modules/domain/hint-types.ts';
 import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
+import {
+    PROVENANCE_ORIGINS as PROVENANCE_SOURCES,
+    classifyProvenanceOrigin as classifyProvenanceSource,
+    originsForHint as sourcesForHint,
+    bucketHintsByOrigin as bucketHintsBySource,
+} from './provenance-source-taxonomy.mjs';
+export { PROVENANCE_SOURCES, classifyProvenanceSource, sourcesForHint, bucketHintsBySource };
 
-// ─── Provenance-source classification ────────────────────────────────────────
-//
-// Maps the existing HintProvenanceEntry shape onto source categories WITHOUT any new schema for
-// this module — every field read here already exists on every stored hint (isolatedTechnique was
-// added directly to HintContextProvenance for exactly this consumer, see its own doc comment).
-// Precedence matters: checked top to bottom, first match wins. A hint found independently by two
-// techniques belongs to BOTH buckets (see sourcesForHint) — that's the point: structure appearing
-// in both is more likely level-forced than generator-tic. `human-solved` sits above every
-// algorithmic category (alongside `witness`, for the same reason: neither is a solver "technique",
-// so the technique-specific fields below — termination/hintGuided/randomSeed — are meaningless for
-// them and must not be consulted first) — a human independently solving a level, with zero
-// connection to any solver heuristic, is the single strongest cross-validation signal this
-// bucketing scheme has: stronger than two algorithmic techniques agreeing, since neither is running
-// the solver's search at all.
-//
-// `isolated-technique` sits directly above `production-solver`, checked last among the
-// non-`other` categories: an isolated single-technique run (e.g. technique-census tooling) still
-// carries `solver.id === SOLVER_ID` (the same search code ran), so without this check it would
-// silently fall into `production-solver` — the exact contamination
-// docs/solver-optimization-workstreams.md's Priority 0 traced (e.g. R02900: a technique-census
-// win persisted and later misread as evidence the real competitively-budgeted ladder can solve the
-// level, when `Solver.solve(level,{})` still failed after hundreds of millions of nodes).
+export const SOLUTION_PROFILE_SCHEMA_VERSION = 2;
+export const SOLUTION_PROFILE_TAXONOMY = 'origin-facet-applicability-v2';
 
-export const PROVENANCE_SOURCES = [
-    'witness', 'human-solved', 'complete-enumeration', 'prefix-anchored-completion',
-    'randomized-enumeration', 'isolated-technique', 'production-solver', 'other',
-];
-
-/** One provenance entry → one source category. See module doc for the precedence rationale. */
-export function classifyProvenanceSource(entry) {
-    if (!entry) return 'other';
-    if (entry.solver?.id === WITNESS_GENERATOR_ID) return 'witness';
-    if (entry.solver?.id === HUMAN_PLAYER_ID) return 'human-solved';
-    if (entry.search?.termination === 'exhaustive') return 'complete-enumeration';
-    if (entry.context?.hintGuided) return 'prefix-anchored-completion';
-    if (entry.search?.randomSeed !== null && entry.search?.randomSeed !== undefined) return 'randomized-enumeration';
-    if (entry.context?.isolatedTechnique === true) return 'isolated-technique';
-    if (entry.solver?.id === SOLVER_ID) return 'production-solver';
-    return 'other';
+export function hasCurrentSolutionProfileTaxonomy(library) {
+    return library?.schemaVersion === SOLUTION_PROFILE_SCHEMA_VERSION &&
+        library?.provenanceTaxonomy === SOLUTION_PROFILE_TAXONOMY;
 }
 
-/** All source categories a Hint qualifies for, across every independent find recorded on it. */
-export function sourcesForHint(hint) {
-    const sources = new Set();
-    for (const entry of hint.provenance || []) sources.add(classifyProvenanceSource(entry));
-    if (sources.size === 0) sources.add('other');
-    return sources;
-}
-
-/** Buckets Hint[] by source; a hint rediscovered by multiple techniques appears in each bucket. */
-export function bucketHintsBySource(hints) {
-    const buckets = new Map(PROVENANCE_SOURCES.map(s => [s, []]));
-    for (const hint of hints) for (const src of sourcesForHint(hint)) buckets.get(src).push(hint);
-    return buckets;
-}
+// ─── Provenance-origin compatibility exports ─────────────────────────────────
+// Origin/facet/applicability semantics are owned by provenance-source-taxonomy.mjs. Keeping these
+// exports lets legacy profile callers compile without retaining a competing precedence classifier.
 
 // ─── Objective extraction + satisfaction depth ───────────────────────────────
 //
@@ -765,6 +727,8 @@ export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, ou
     const summary = summarizeCorpusProfiles(levelProfiles);
     const corpusTag = path.basename(levelsJsonLabel, '.json') === 'levels' ? 'published' : path.basename(levelsJsonLabel, '.json');
     const output = {
+        schemaVersion: SOLUTION_PROFILE_SCHEMA_VERSION,
+        provenanceTaxonomy: SOLUTION_PROFILE_TAXONOMY,
         generatedAt: new Date().toISOString(),
         source: levelsJsonLabel,
         description: 'Per-level solution-space fingerprints (combined + per-provenance-source) for a '

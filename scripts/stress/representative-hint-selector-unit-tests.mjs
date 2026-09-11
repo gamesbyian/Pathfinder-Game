@@ -57,3 +57,44 @@ test('zero limit and pathless records produce no representatives', () => {
     assert.deepEqual(selectRepresentativeHints([hint([p(0, 0), p(1, 0)])], { limit: 0 }), []);
     assert.deepEqual(selectRepresentativeHints([{ provenance: [solverEvent()] }], { limit: 3 }), []);
 });
+
+test('dependent replay clouds do not outrank independent evidence for capability questions', () => {
+    const replay = i => ({
+        solver: { id: 'variant-corpus-diagnostic', technique: `variant-parent-replay:F:P:V${i}`, version: 'v1' },
+        search: {}, context: {},
+    });
+    const replayCloud = hint([p(0, 0), p(1, 0), p(2, 0)], Array.from({ length: 20 }, (_, i) => replay(i)));
+    const cold = hint([p(0, 0), p(0, 1), p(0, 2)], [solverEvent({ solver: { version: 'v1' } })]);
+    assert.equal(selectRepresentativeHints([replayCloud, cold], {
+        limit: 1,
+        evidencePurpose: 'current-production-capability',
+        currentSolverVersion: 'v1',
+    })[0], cold);
+});
+
+test('an unattributed valid path remains applicable for atlas selection', () => {
+    const unattributed = hint([p(0, 0), p(1, 0), p(2, 0)], []);
+    const described = selectRepresentativeHints([unattributed], {
+        limit: 1, evidencePurpose: 'solution-atlas',
+    });
+    assert.deepEqual(described, [unattributed]);
+});
+
+test('decision-bearing selection returns no representative when no event is admissible', () => {
+    const replayOnly = hint([p(0, 0), p(1, 0), p(2, 0)], [{
+        solver: { id: 'variant-corpus-diagnostic', technique: 'variant-parent-replay:F:P:V1', version: 'v1' },
+        search: {}, context: {},
+    }]);
+    assert.deepEqual(selectRepresentativeHints([replayOnly], {
+        limit: 2,
+        evidencePurpose: 'current-production-capability',
+        comparableSolverVersions: ['v1'],
+    }), []);
+    assert.deepEqual(selectRepresentativeHints([hint([p(0, 0), p(0, 1)], [solverEvent({
+        solver: { version: 'v1' }, context: { isolatedTechnique: true },
+    })])], {
+        limit: 1,
+        evidencePurpose: 'technique-performance',
+        comparableSolverVersions: ['v1'],
+    }), [], 'positive-only isolated successes cannot become performance representatives');
+});

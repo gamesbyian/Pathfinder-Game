@@ -41,6 +41,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { selectRepresentativeHints } from './representative-hint-selector.mjs';
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.ts');
@@ -73,7 +74,7 @@ const COLD_SOLVE_WORK_BUDGET = 5_000_000;
 const corpusLevels = readLevelsWithHints(CORPUS);
 const eligible = corpusLevels
     .map((raw, idx) => ({ raw, idx }))
-    .filter(({ raw }) => (raw.hintRecords || [])[0]?.path?.length >= 4);
+    .filter(({ raw }) => (raw.hintRecords || []).some(hint => hint?.path?.length >= 4));
 
 const rng = mulberry32(SEED);
 const shuffled = eligible.slice();
@@ -96,7 +97,11 @@ function persist() {
 
 for (const { raw, idx } of sample) {
     const levelId = raw.id || `pos:${idx + 1}`;
-    const path0 = raw.hintRecords[0].path;
+    const representative = selectRepresentativeHints(
+        (raw.hintRecords || []).filter(hint => hint?.path?.length >= 4),
+        { limit: 1, evidencePurpose: 'solution-atlas' },
+    )[0];
+    const path0 = representative.path;
 
     const prodLevel = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: idx + 1 });
 
@@ -153,6 +158,10 @@ for (const { raw, idx } of sample) {
 
     results.push({
         levelId, coldSolved, pathLength: path0.length,
+        representativeEvidence: {
+            purpose: 'solution-atlas',
+            provenanceEntries: representative.provenance?.length || 0,
+        },
         stepsMeasured: steps.length, unrankedSteps: steps.length - rankedSteps.length,
         rank1Fraction: rankedSteps.length ? rank1Count / rankedSteps.length : null,
         meanRank, steps,

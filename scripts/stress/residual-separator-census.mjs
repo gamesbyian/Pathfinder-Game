@@ -34,6 +34,7 @@ import { readLevelsWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { computeResidualChambers } from './lib/residual-decomposition.mjs';
+import { selectRepresentativeHints } from './representative-hint-selector.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -68,6 +69,7 @@ function persist() {
     mkdirSync(path.dirname(abs), { recursive: true });
     const summary = {
         corpus: CORPUS_FILE, every: EVERY, maxChamberSize: MAX_CHAMBER_SIZE,
+        solutionSelection: 'representative-solution-atlas-v1',
         levelsTested: perLevel.length, levelsWithNoHint, levelsWithAnyChamber,
         onSolution: {
             ...totals.onSolution,
@@ -101,7 +103,9 @@ function persist() {
 
 for (let i = 0; i < levels.length; i++) {
     const raw = levels[i];
-    const solution = (raw.hintRecords || [])[0]?.path;
+    const solution = selectRepresentativeHints(raw.hintRecords || [], {
+        limit: 1, evidencePurpose: 'solution-atlas',
+    })[0]?.path;
     if (!solution) { levelsWithNoHint++; perLevel.push({ id: raw.id ?? null, skipped: 'no-hint' }); persist(); continue; }
 
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: i + 1 });

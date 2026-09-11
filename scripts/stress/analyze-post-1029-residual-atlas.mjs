@@ -27,7 +27,7 @@ import path from 'node:path';
 
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { normalizeAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
-import { classifyProvenanceClass } from './provenance-classes.mjs';
+import { isProductionContextEvidence } from './provenance-source-taxonomy.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -125,7 +125,7 @@ function classifyWin(win, { offeredLadder, dispatchedIdentities, reachedSet, sta
 }
 
 // --- hint-store provenance cross-check for zero-T1-winner levels -----------------------------
-function coldCapabilityRescuer(id) {
+function historicalProductionContextCandidate(id) {
     const file = path.join(HINTS_DIR, `${id}.json`);
     if (!existsSync(file)) return null;
     let doc;
@@ -133,7 +133,7 @@ function coldCapabilityRescuer(id) {
     const hints = doc.hints ?? [];
     for (const hint of hints) {
         for (const entry of hint.provenance ?? []) {
-            if (classifyProvenanceClass(entry, { standard: 'strict' }) === 'cold-capability') {
+            if (isProductionContextEvidence(entry)) {
                 return {
                     technique: entry.solver?.technique ?? null,
                     scoringProfileId: entry.solver?.scoringProfileId ?? null,
@@ -189,7 +189,7 @@ for (const id of currentResidual) {
     let hasClass4 = false;
     let hasClass5 = false;
     if (t1Wins.length === 0) {
-        provenanceRescuer = coldCapabilityRescuer(id);
+        provenanceRescuer = historicalProductionContextCandidate(id);
         if (provenanceRescuer) hasClass4 = true; else hasClass5 = true;
     }
 
@@ -220,7 +220,7 @@ const classCounts = {
     1: { label: 'known rescuer not offered', primary: count(r => r.primaryClass === 1), any: count(r => r.classes[1]) },
     2: { label: 'known rescuer offered but not reached or materially starved', primary: count(r => r.primaryClass === 2), any: count(r => r.classes[2]) },
     3: { label: 'known rescuer reached with comparable work but failed', primary: count(r => r.primaryClass === 3), any: count(r => r.classes[3]) },
-    4: { label: 'no T1 winner but another historical/provenance rescuer exists', primary: count(r => r.primaryClass === 4), any: count(r => r.classes[4]) },
+    4: { label: 'no T1 winner but a historical production-context candidate exists', primary: count(r => r.primaryClass === 4), any: count(r => r.classes[4]) },
     5: { label: 'no known rescuer after cross-evidence reconciliation', primary: count(r => r.primaryClass === 5), any: count(r => r.classes[5]) },
 };
 

@@ -12,6 +12,8 @@ import {
     PROVENANCE_FACETS,
     bucketHintsByOrigin,
     bucketHintsByFacet,
+    EVIDENCE_PURPOSES,
+    hasApplicableEvidence,
 } from './provenance-source-taxonomy.mjs';
 
 const argv = process.argv.slice(2);
@@ -31,6 +33,12 @@ const corpus = args.get('--corpus') || 'stress2';
 const levelsJson = args.get('--levels-json') || aliases[corpus] || corpus;
 const minHints = Number(args.get('--min-hints') || 3);
 const seed = Number(args.get('--seed') || 20260703);
+const evidencePurpose = args.get('--purpose') || 'solution-atlas';
+const comparableSolverVersions = (args.get('--comparable-solver-versions') || args.get('--solver-version') || '')
+    .split(',').map(value => value.trim()).filter(Boolean);
+if (!EVIDENCE_PURPOSES.includes(evidencePurpose)) {
+    throw new Error(`--purpose must be one of: ${EVIDENCE_PURPOSES.join(', ')}`);
+}
 const levels = readLevelsWithHints(levelsJson);
 
 function countsFromBuckets(buckets) {
@@ -48,12 +56,16 @@ function profilesFromBuckets(buckets, level, objectives, mcKeys, useCrossings) {
 }
 
 function buildLevel(level, index) {
-    const hints = level?.hintRecords || [];
+    const allHints = level?.hintRecords || [];
+    const hints = allHints.filter(hint => hasApplicableEvidence(hint, evidencePurpose, {
+        comparableSolverVersions,
+    }));
     const originBuckets = bucketHintsByOrigin(hints);
     const facetBuckets = bucketHintsByFacet(hints);
     if (!hints.length) {
         return {
             level: level?.id || index + 1,
+            totalHintCount: allHints.length,
             hintCount: 0,
             originCounts: Object.fromEntries(PROVENANCE_ORIGINS.map(origin => [origin, 0])),
             facetCounts: Object.fromEntries(PROVENANCE_FACETS.map(facet => [facet, 0])),
@@ -68,6 +80,7 @@ function buildLevel(level, index) {
     const useCrossings = requiredPathCoverageRatio(level) >= NEAR_HAMILTONIAN_COVERAGE_THRESHOLD;
     return {
         level: level.id || index + 1,
+        totalHintCount: allHints.length,
         hintCount: hints.length,
         originCounts: countsFromBuckets(originBuckets),
         facetCounts: countsFromBuckets(facetBuckets),
@@ -100,6 +113,8 @@ const output = {
         origins: PROVENANCE_ORIGINS,
         facets: PROVENANCE_FACETS,
         capabilityAdmissibility: 'scripts/stress/provenance-classes.mjs',
+        evidencePurpose,
+        comparableSolverVersions,
     },
     minHintsPerBucket: minHints,
     seed,
@@ -107,6 +122,7 @@ const output = {
         levels: profiles.length,
         levelsWithHints: profiles.filter(profile => profile.hintCount > 0).length,
         hints: profiles.reduce((sum, profile) => sum + profile.hintCount, 0),
+        totalHintsBeforeApplicability: profiles.reduce((sum, profile) => sum + profile.totalHintCount, 0),
         originCoverage: coverage(PROVENANCE_ORIGINS, 'originCounts', profiles),
         originPaths: paths(PROVENANCE_ORIGINS, 'originCounts', profiles),
         facetCoverage: coverage(PROVENANCE_FACETS, 'facetCounts', profiles),
