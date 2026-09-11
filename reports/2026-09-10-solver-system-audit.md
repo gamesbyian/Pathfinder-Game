@@ -1,7 +1,7 @@
 # Solver system audit — 2026-09-10
 
 > **Status:** active
-> **Last evidence:** 2026-09-11 — all 23 source-audit areas are implementation-complete; final open source fixes landed, and completed CI remains rolling validation evidence.
+> **Last evidence:** 2026-09-11 — Audit 19 follow-up and CI recovery are committed: parallel partial-reuse provenance is guarded, fast-gate is green, and three stale deep-verification assertions were aligned with the Audit 12 retry-distinctness contract.
 > **Decision:** No additional source-audit area remains open; completed CI or review failures reopen the relevant row and are repaired without waiting on in-flight jobs.
 > **Remaining gate:** Green required CI/review on the current branch tip; repair any concrete regression it exposes.
 
