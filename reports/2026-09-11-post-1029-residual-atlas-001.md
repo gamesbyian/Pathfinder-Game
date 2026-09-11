@@ -35,6 +35,8 @@ An initial version of the script mapped beam/dfs offered-ness to the same lifecy
 | 4 | no T1 winner but another historical/provenance rescuer exists | **200** | 200 |
 | 5 | no known rescuer after cross-evidence reconciliation | **388** | 388 |
 
+Class 5 is the current **algorithmic-frontier candidate cohort** for research planning. That means the registered T1 matrix plus the production/provenance evidence reconciled by this atlas exposes no known rescue capability for those levels. It is a positive evidence classification, not shorthand for `no T1 winner`, and not proof that every existing configuration, larger budget, future technique, or conceivable algorithm must fail. Refresh the classification after material capability promotions or materially broader evidence.
+
 Class 4's provenance-rescuer technique families: beam 108, repair 72, admissible-order 10, admissible-order-fallback-labelled 5, dfs 5 — i.e. production-context evidence (different seeds/gates/tiebreaks/widths than the frozen T1 matrix tests) accounts for nearly a third of the residual once reconciled, exactly the failure mode the workstream authority warned not to miscount as "no known rescuer."
 
 68/671 misses (10.1%) have low-multiplicity T1 capability (<=2 isolated winners); these cluster in classes 1-3 disproportionately (repricing/exposure fixes on a thin-margin winner) and deserve protection in any future specialist-retention or repricing decision.
