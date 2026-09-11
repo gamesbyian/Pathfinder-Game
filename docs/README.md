@@ -22,6 +22,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer and holdout discipline |
 | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection and fixed-work allocation research |
 | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline semantics |
+| [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) | **Active remediation plan for solver/research workflows, sweep-result integrity, workflow retirement, and historical evidence repair** |
 | [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary |
 | [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational technique/configuration meaning |
 | [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Current profile-led speed gates/dispositions |
@@ -67,6 +68,8 @@ Default orientation:
 4. compact evidence/tool queries before broad artifacts
 
 Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence.
+
+For the active solver-workflow/evidence cleanup, use [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md); it owns the remediation sequence but does not replace the ordinary solver-priority authority.
 
 ### Research instruments
 
