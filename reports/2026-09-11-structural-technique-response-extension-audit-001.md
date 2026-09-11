@@ -39,6 +39,23 @@ The existing Gate-0F conclusion delta already establishes several temporal facts
 
 These are exactly the distinctions a temporal niche analyzer should expose systematically: stable association, persistent outcome inversion with unstable explanation, and structurally opaque disagreement.
 
+### Provisional eight-pair triage from existing evidence
+
+This ranking is **discovery triage**, not a result of the new analyzers yet. Its purpose is to prevent all eight frozen contrasts from entering the expensive causal stages with equal priority.
+
+| contrast | current reading | next evidence if screening survives |
+|---|---|---|
+| intersection-harvest 5K plain vs mechanic-buckets | **strongest current structural-niche candidate**: portal and required-intersection directions are large and survive the refresh; density/path-length effects also recur | difficulty-stratified check, then existing-family portal/intersection boundary flips and basin/portal-order mediation |
+| objective-first 5K plain vs mechanic-buckets | **strong candidate**: portal direction clearly survives; several secondary burden/mechanic effects remain material | difficulty-stratified check, then existing-family flip + basin mediation |
+| DFS harvest-then-finish vs portal-first-transfer | **promising but not yet consolidated**: turn-load/surround/flipper/adjacent-turn directions recur while relative magnitudes move | temporal analyzer first; if stable, family/profile mediator before tracing |
+| intersection-harvest beam 2K vs 5K | **partial stable signal**: portal direction survives, but width itself is a retention/dose intervention and other explanations move | difficulty control; trace only if a compact family/profile mediator fails |
+| objective-first beam 2K vs 5K | **mechanism candidate, poor routing candidate today**: the inversion persists while its original scale-based explanation reversed | matched structure/burden cohort + bounded beam frontier/churn divergence |
+| admissible-order default vs must-cross-first | **structural explanation appears unstable**: refreshed `mustPass`/intersection effects are much stronger/different than the old leaders | temporal analyzer; do not escalate unless a persistent common effect emerges |
+| beam perimeter CW vs CCW | **structurally opaque by coarse features** despite a large disagreement population | controlled symmetry/family cliffs + inverse-transform first divergence, not more count features |
+| DFS perimeter CW vs CCW | **real disagreement with explanation drift**: refreshed portal separation strengthened while the leading old feature differed | temporal/difficulty screening; symmetry trace only if the effect proves recurring |
+
+The first two rows are therefore the default family/profile candidates **if** the new temporal and burden-stratified outputs confirm them. The width and orientation rows are better treated as search-mechanism questions than as immediate static-routing opportunities.
+
 ### Richer generic topology has already failed its current value test
 
 The later 18-feature topology/placement bundle added effectively no held-out value beyond the coarse baseline for production failure or no-T1 status, and worsened the CP-SAT-rescue model. Therefore this program should not respond to unexplained technique response by manufacturing another broad descriptor bundle. Add a new static descriptor only when a solution/profile/trace/family mechanism nominates it.
