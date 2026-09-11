@@ -50,6 +50,7 @@ import { readLevelsWithHints, selectLevelsBySpec } from '../level-data-io.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { keyParity } from '../../modules/domain/cell-key.ts';
 import { getDistanceFromArray } from '../../modules/solver/distance.ts';
+import { selectRepresentativeHints } from './representative-hint-selector.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -80,6 +81,7 @@ function persist() {
     mkdirSync(path.dirname(abs), { recursive: true });
     const summary = {
         corpus: CORPUS_FILE, levelsTotal: levels.length, levelsWithTwistPortal, levelsWithNoHint,
+        solutionSelection: 'representative-solution-atlas-v1',
         levelsChecked, totalSteps, mismatchSteps, mismatchWithUnusedTwist,
         mismatchWithPlausiblyReachableTwist, violations, violationDetails,
     };
@@ -115,7 +117,9 @@ for (let i = 0; i < levels.length; i++) {
     if (twistPairs.length === 0) { perLevel.push({ id: raw.id ?? null, skipped: 'no-twist-portal' }); continue; }
     levelsWithTwistPortal++;
 
-    const solution = (raw.hintRecords || [])[0]?.path;
+    const solution = selectRepresentativeHints(raw.hintRecords || [], {
+        limit: 1, evidencePurpose: 'solution-atlas',
+    })[0]?.path;
     if (!solution) { levelsWithNoHint++; perLevel.push({ id: raw.id ?? null, skipped: 'no-hint', twistPairs: twistPairs.length }); persist(); continue; }
     levelsChecked++;
 

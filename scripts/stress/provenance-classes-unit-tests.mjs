@@ -13,7 +13,10 @@ import {
     hasColdCapabilityEvidence, summarizeProvenanceClasses, PROVENANCE_CLASSES,
 } from './provenance-classes.mjs';
 
-const entry = (context = {}, solver = { id: SOLVER_ID }) => ({ solver, context });
+const entry = (context = {}, solver = { id: SOLVER_ID }) => ({
+    solver,
+    context: { usedExistingHints: false, hintGuided: false, isolatedTechnique: false, ...context },
+});
 
 describe('classifyProvenanceClass', () => {
     test('a clean production-solver find is cold under both standards', () => {
@@ -63,8 +66,8 @@ describe('classifyProvenanceClass', () => {
         }
     });
 
-    test('absent flags on a production-solver event are treated as false, not as contamination', () => {
-        assert.equal(classifyProvenanceClass(entry({})), 'cold-capability');
+    test('absent legacy context flags are unknown rather than silently treated as false', () => {
+        assert.equal(classifyProvenanceClass({ solver: { id: SOLVER_ID }, context: {} }), 'unknown');
     });
 
     test('an unknown standard is rejected rather than silently defaulting', () => {

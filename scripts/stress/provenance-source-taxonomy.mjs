@@ -37,6 +37,17 @@ export const PROVENANCE_FACETS = [
     'production-retry-tier',
 ];
 
+/** Questions for which persisted discovery events are commonly consumed as evidence. */
+export const EVIDENCE_PURPOSES = [
+    'positive-oracle',
+    'solution-atlas',
+    'current-production-capability',
+    'technique-performance',
+    'longitudinal-process',
+];
+
+export const EVIDENCE_APPLICABILITY = ['admissible', 'context-bound', 'inadmissible'];
+
 // Compatibility aliases for callers written while this module still called every bucket a source.
 // Source now means origin only; modality belongs in PROVENANCE_FACETS.
 export const PROVENANCE_SOURCES = PROVENANCE_ORIGINS;
@@ -69,6 +80,21 @@ export function provenanceFacets(entry) {
     if (entry.context?.isolatedTechnique === true) facets.add('isolated-technique');
     if (entry.solver?.id === SOLVER_ID && entry.solver?.forcing?.retryTier) facets.add('production-retry-tier');
     return facets;
+}
+
+export function hasExplicitCapabilityContext(entry) {
+    const context = entry?.context;
+    return Boolean(context && ['usedExistingHints', 'hintGuided', 'isolatedTechnique']
+        .every(field => Object.hasOwn(context, field)));
+}
+
+/** Historical existential production-context candidate; randomization is an orthogonal facet. */
+export function isProductionContextEvidence(entry) {
+    if (classifyProvenanceClass(entry, { standard: 'strict' }) !== 'cold-capability') return false;
+    if (!hasExplicitCapabilityContext(entry)) return false;
+    if (!entry?.solver?.version) return false;
+    const facets = provenanceFacets(entry);
+    return !facets.has('complete-enumeration');
 }
 
 export function originsForHint(hint) {
@@ -119,6 +145,101 @@ export function provenanceTechniqueKey(entry) {
         retryTier,
     ];
     return JSON.stringify(parts);
+}
+
+/**
+ * A conservative dependency stratum. Event count is never an independence count: repeated runs
+ * of one solver/config regime and all children replayed to one variant parent remain one stratum.
+ * This key is for aggregation, not persisted identity or a claim of statistical independence.
+ */
+export function provenanceDependencyStratum(entry) {
+    const origin = classifyProvenanceOrigin(entry);
+    if (origin === 'variant-parent-replay') {
+        const technique = entry?.solver?.technique || '';
+        const match = /^variant-parent-replay:([^:]+):([^:]+)/.exec(technique);
+        return match ? `variant-family:${match[1]}:parent:${match[2]}` : 'variant-family:unknown';
+    }
+    if (origin !== 'pathfinder-solver') return origin;
+    return [
+        origin,
+        entry?.solver?.version || 'unknown-version',
+        provenanceTechniqueKey(entry),
+        entry?.context?.isolatedTechnique === true ? 'isolated' : 'ladder',
+        entry?.context?.hintGuided === true || entry?.context?.usedExistingHints === true ? 'hint-context' : 'cold-context',
+    ].join('|');
+}
+
+/**
+ * Classify one valid historical event for a stated research question. Path validity belongs to
+ * the referee/Hint record, so oracle and atlas use do not depend on how the path was discovered.
+ * `current-production-capability` deliberately requires the caller to name the compared solver
+ * version; without that query context a historical cold solve is context-bound, not current proof.
+ */
+export function classifyEvidenceApplicability(entry, purpose, {
+    currentSolverVersion = null,
+    comparableSolverVersions = currentSolverVersion ? [currentSolverVersion] : [],
+} = {}) {
+    if (!EVIDENCE_PURPOSES.includes(purpose)) throw new Error(`unknown evidence purpose: ${purpose}`);
+    if (!entry) {
+        return purpose === 'positive-oracle' || purpose === 'solution-atlas'
+            ? { applicability: 'admissible', reason: 'referee-valid-path-with-unattributed-history' }
+            : { applicability: 'inadmissible', reason: 'unattributed-history' };
+    }
+    const origin = classifyProvenanceOrigin(entry);
+    if (purpose === 'positive-oracle') return { applicability: 'admissible', reason: 'referee-valid-path' };
+    if (purpose === 'solution-atlas') return {
+        applicability: 'admissible',
+        reason: origin === 'variant-parent-replay' ? 'valid-context-bound-path' : 'valid-path',
+    };
+    if (purpose === 'longitudinal-process') {
+        const fullyDated = Boolean(entry.foundAt && entry?.solver?.id && entry?.solver?.version);
+        return fullyDated
+            ? { applicability: 'admissible', reason: 'dated-versioned-discovery-event' }
+            : { applicability: 'context-bound', reason: 'legacy-or-incomplete-event-metadata' };
+    }
+    if (purpose === 'technique-performance') {
+        if (origin !== 'pathfinder-solver' || entry?.context?.isolatedTechnique !== true) {
+            return { applicability: 'inadmissible', reason: 'not-isolated-pathfinder-technique-run' };
+        }
+        if (!entry?.solver?.version || !entry?.solver?.technique || !Number.isFinite(entry?.search?.workSpent)) {
+            return { applicability: 'context-bound', reason: 'missing-version-config-or-work-envelope' };
+        }
+        if (!comparableSolverVersions.length) {
+            return { applicability: 'context-bound', reason: 'comparison-regime-not-specified' };
+        }
+        return comparableSolverVersions.includes(entry.solver.version)
+            ? { applicability: 'context-bound', reason: 'positive-only-success-needs-run-denominator' }
+            : { applicability: 'context-bound', reason: 'different-solver-regime' };
+    }
+
+    if (entry?.search?.termination === 'exhaustive') {
+        return { applicability: 'inadmissible', reason: 'enumeration-context' };
+    }
+    if (origin === 'pathfinder-solver' && !hasExplicitCapabilityContext(entry) &&
+        entry?.context?.hintGuided !== true && entry?.context?.usedExistingHints !== true &&
+        entry?.context?.isolatedTechnique !== true) {
+        return { applicability: 'context-bound', reason: 'legacy-context-ambiguity' };
+    }
+    if (classifyProvenanceClass(entry, { standard: 'strict' }) === 'cold-capability' &&
+        !entry?.solver?.version) {
+        return { applicability: 'context-bound', reason: 'unknown-solver-regime' };
+    }
+    if (!isProductionContextEvidence(entry)) {
+        return { applicability: 'inadmissible', reason: 'not-strict-cold-production-pathfinder' };
+    }
+    if (!comparableSolverVersions.length) {
+        return { applicability: 'context-bound', reason: 'current-regime-not-specified' };
+    }
+    if (!comparableSolverVersions.includes(entry?.solver?.version)) {
+        return { applicability: 'context-bound', reason: 'different-or-unknown-solver-regime' };
+    }
+    return { applicability: 'admissible', reason: 'matching-comparable-cold-production-regime' };
+}
+
+/** Hint-level predicate for consumers whose unit is a stored path rather than one discovery event. */
+export function hasApplicableEvidence(hint, purpose, options = {}) {
+    const entries = hint?.provenance?.length ? hint.provenance : [null];
+    return entries.some(entry => classifyEvidenceApplicability(entry, purpose, options).applicability === 'admissible');
 }
 
 function increment(map, key, amount = 1) {

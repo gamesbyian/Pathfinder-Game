@@ -7,8 +7,9 @@
 // predicate is subtle enough, and load-bearing enough (CLAUDE.md's Provenance section forbids
 // using the corpus as a capability measure without it), that it belongs in one tested place.
 //
-// This module answers one narrow admissibility question: "is this discovery evidence that the
-// production Pathfinder solver can find the level cold?" Discovery origin and search/run facets
+// This module answers one narrow historical admissibility question: "does this entry explicitly
+// record an uncontaminated Pathfinder production context?" Current-regime applicability still
+// belongs to provenance-source-taxonomy.mjs and requires an explicit comparison regime. Discovery origin and search/run facets
 // are separate axes in provenance-source-taxonomy.mjs. Keeping those axes separate matters because
 // external solvers, variant-parent replay, witness inheritance, randomized search and isolation can
 // overlap without any of them becoming production cold-capability evidence.
@@ -67,6 +68,9 @@ export function classifyProvenanceClass(entry, { standard = 'strict' } = {}) {
     if (context.isolatedTechnique === true) return 'isolated-technique';
     if (context.hintGuided === true) return 'hint-guided';
     if (standard === 'strict' && context.usedExistingHints === true) return 'hint-guided';
+    const hasExplicitContext = ['usedExistingHints', 'hintGuided', 'isolatedTechnique']
+        .every(field => Object.hasOwn(context, field));
+    if (!hasExplicitContext) return 'unknown';
     return 'cold-capability';
 }
 
