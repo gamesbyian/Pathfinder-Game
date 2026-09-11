@@ -1,6 +1,6 @@
 # Post-1029 residual priority refresh 001
 
-> **Status:** ready
+> **Status:** active
 > **Last evidence:** 2026-09-10 — production capability run `34531412380`: Corpus 1 99/102, Corpus 2 1,029/1,700, zero errors and zero deadline truncation; Corpus 2 is +54/-0 against the pre-restoration solved set.
 > **Decision:** refresh the residual boundary before further family sizing, elevate portal coarse-state-merge salvage from a low-priority closed promotion to a high-value constrained research target, and keep bounded admissible-order repricing/resumable-portfolio work available in parallel.
 > **Remaining gate:** execute the existing residual joins against the 671-level post-restoration miss set and use those results to choose the next production-changing experiment.
