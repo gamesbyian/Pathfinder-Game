@@ -1,0 +1,2835 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "observational-development-difficulty-stratified",
+  "burdenScore": {
+    "features": [
+      "constrainedObjects",
+      "turnConstraintLoad",
+      "constrainedObjectDensity",
+      "requiredPathLength",
+      "portals",
+      "requiredPathCoverageRatio",
+      "mustTurn",
+      "surround",
+      "blocks"
+    ],
+    "construction": "mean within-population z-score; configured features must be oriented so larger values indicate greater generic burden",
+    "purpose": "coarse nuisance stratification only; not a production feature or calibrated difficulty probability"
+  },
+  "stratumCount": 5,
+  "minExclusivePerSide": 5,
+  "materialThreshold": 0.2,
+  "pairs": [
+    {
+      "leftAction": "admissible-order|tieBreak=default|lds=off",
+      "rightAction": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+      "eligibleStrata": 1,
+      "stableFeatures": [],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 4,
+          "rightOnly": 3,
+          "both": 241,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "mustPass",
+              "leftMean": 4.25,
+              "rightMean": 0.6666666666666666,
+              "standardizedDifference": 1.4582556319835065
+            },
+            {
+              "feature": "geese",
+              "leftMean": 3,
+              "rightMean": 0,
+              "standardizedDifference": 1.3764944032233704
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 6.75,
+              "rightMean": 2.3333333333333335,
+              "standardizedDifference": 1.2040790886037773
+            },
+            {
+              "feature": "surround",
+              "leftMean": 1,
+              "rightMean": 0,
+              "standardizedDifference": 1.1547005383792517
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 0,
+              "rightMean": 1.6666666666666667,
+              "standardizedDifference": -1.0000000000000002
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 1.5,
+              "rightMean": 0,
+              "standardizedDifference": 0.816496580927726
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 4,
+              "rightMean": 5.666666666666667,
+              "standardizedDifference": -0.7980868844676223
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 2.5,
+              "rightMean": 4.333333333333333,
+              "standardizedDifference": -0.626275036540529
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 8,
+          "rightOnly": 6,
+          "both": 87,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "blocks",
+              "leftMean": 16.875,
+              "rightMean": 31.5,
+              "standardizedDifference": -1.8051701191015332
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 4.375,
+              "rightMean": 0,
+              "standardizedDifference": 1.7688954350174413
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.1520387539949228,
+              "rightMean": 0.2284193513039667,
+              "standardizedDifference": -1.7497768362456219
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 19.5,
+              "rightMean": 14.666666666666666,
+              "standardizedDifference": 1.0240255997423506
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 3.625,
+              "rightMean": 1,
+              "standardizedDifference": 0.8520128672302584
+            },
+            {
+              "feature": "mustPass",
+              "leftMean": 4.625,
+              "rightMean": 2.3333333333333335,
+              "standardizedDifference": 0.7395051982050471
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 2.125,
+              "rightMean": 4.166666666666667,
+              "standardizedDifference": -0.700321650133126
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.15637248776322596,
+              "rightMean": 0.1222360643671054,
+              "standardizedDifference": 0.6944726705000365
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 4,
+          "rightOnly": 4,
+          "both": 42,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 2.25,
+              "rightMean": 5.5,
+              "standardizedDifference": -2.3162640965743444
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 3,
+              "rightMean": 0,
+              "standardizedDifference": 1.3764944032233704
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.7266287546776277,
+              "rightMean": 0.7883727807043215,
+              "standardizedDifference": -1.3370126063722263
+            },
+            {
+              "feature": "portals",
+              "leftMean": 3,
+              "rightMean": 1,
+              "standardizedDifference": 1.1547005383792517
+            },
+            {
+              "feature": "area",
+              "leftMean": 176.25,
+              "rightMean": 156.5,
+              "standardizedDifference": 1.11773180680911
+            },
+            {
+              "feature": "width",
+              "leftMean": 13.25,
+              "rightMean": 12.5,
+              "standardizedDifference": 1.0954451150103321
+            },
+            {
+              "feature": "height",
+              "leftMean": 13.25,
+              "rightMean": 12.5,
+              "standardizedDifference": 1.0954451150103321
+            },
+            {
+              "feature": "mustPass",
+              "leftMean": 6,
+              "rightMean": 3.5,
+              "standardizedDifference": 0.9901475429766744
+            }
+          ]
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 3,
+          "rightOnly": 2,
+          "both": 33,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "mustCross",
+              "leftMean": 0,
+              "rightMean": 3.5,
+              "standardizedDifference": -9.899494936611665
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 37,
+              "rightMean": 14,
+              "standardizedDifference": 4.142071553794883
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 2,
+              "rightMean": 7,
+              "standardizedDifference": -2.3570226039551585
+            },
+            {
+              "feature": "geese",
+              "leftMean": 6,
+              "rightMean": 7.5,
+              "standardizedDifference": -2.215646837627989
+            },
+            {
+              "feature": "width",
+              "leftMean": 13.333333333333334,
+              "rightMean": 11.5,
+              "standardizedDifference": 1.9295276424754648
+            },
+            {
+              "feature": "height",
+              "leftMean": 13.333333333333334,
+              "rightMean": 11.5,
+              "standardizedDifference": 1.9295276424754648
+            },
+            {
+              "feature": "area",
+              "leftMean": 179.33333333333334,
+              "rightMean": 132.5,
+              "standardizedDifference": 1.8518730690648206
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.2614896997589305,
+              "rightMean": 0.22334136822773187,
+              "standardizedDifference": 1.6086466448722772
+            }
+          ]
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 1,
+          "rightOnly": 1,
+          "both": 33,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "width",
+              "leftMean": 11,
+              "rightMean": 14,
+              "standardizedDifference": 0
+            },
+            {
+              "feature": "height",
+              "leftMean": 11,
+              "rightMean": 14,
+              "standardizedDifference": 0
+            },
+            {
+              "feature": "area",
+              "leftMean": 121,
+              "rightMean": 196,
+              "standardizedDifference": 0
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 90,
+              "rightMean": 147,
+              "standardizedDifference": 0
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 72,
+              "rightMean": 130,
+              "standardizedDifference": 0
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 9,
+              "rightMean": 10,
+              "standardizedDifference": 0
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.8,
+              "rightMean": 0.8843537414965986,
+              "standardizedDifference": 0
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.256198347107438,
+              "rightMean": 0.25,
+              "standardizedDifference": 0
+            }
+          ]
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 20,
+          "meanSolverCount": 10,
+          "medianSolverCount": 6,
+          "thinShare": 0.25,
+          "broadShare": 0.55
+        },
+        "rightOnly": {
+          "n": 16,
+          "meanSolverCount": 9.9375,
+          "medianSolverCount": 8.5,
+          "thinShare": 0.1875,
+          "broadShare": 0.5625
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    },
+    {
+      "leftAction": "dfs|score=harvestThenFinish|bias=none",
+      "rightAction": "dfs|score=portalFirstTransfer|bias=none",
+      "eligibleStrata": 0,
+      "stableFeatures": [],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 3,
+          "rightOnly": 7,
+          "both": 211,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "flippingFilters",
+              "leftMean": 6.666666666666667,
+              "rightMean": 1.7142857142857142,
+              "standardizedDifference": 2.918310372984832
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 0,
+              "rightMean": 2.2857142857142856,
+              "standardizedDifference": -1.2977713690461004
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 3,
+              "rightMean": 6.571428571428571,
+              "standardizedDifference": -1.2079503172198744
+            },
+            {
+              "feature": "portals",
+              "leftMean": 0,
+              "rightMean": 1.5714285714285714,
+              "standardizedDifference": -0.9838699100999074
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.6850088183421517,
+              "rightMean": 0.6026243687234087,
+              "standardizedDifference": 0.9345139732873896
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 0,
+              "rightMean": 1.1428571428571428,
+              "standardizedDifference": -0.8576900278702358
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.13931523022432113,
+              "rightMean": 0.08214884714099786,
+              "standardizedDifference": 0.8288847816570074
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 1.6666666666666667,
+              "rightMean": 0.2857142857142857,
+              "standardizedDifference": 0.7942970017139263
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 5,
+          "rightOnly": 4,
+          "both": 65,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "surround",
+              "leftMean": 0.4,
+              "rightMean": 1.5,
+              "standardizedDifference": -1.5634719199411433
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.12435644475404714,
+              "rightMean": 0.20842917814508724,
+              "standardizedDifference": -1.533917223184565
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 2.4,
+              "rightMean": 0,
+              "standardizedDifference": 1.1288650420603168
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 21.2,
+              "rightMean": 14.75,
+              "standardizedDifference": 1.1283925853601404
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 6.4,
+              "rightMean": 3.5,
+              "standardizedDifference": 1.088734030878503
+            },
+            {
+              "feature": "portals",
+              "leftMean": 3.6,
+              "rightMean": 1,
+              "standardizedDifference": 1.0596808897209893
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 1.4,
+              "rightMean": 4.25,
+              "standardizedDifference": -1.0574611377357435
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.6431774013581533,
+              "rightMean": 0.7119541712028752,
+              "standardizedDifference": -0.8484490535611772
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 0,
+          "rightOnly": 2,
+          "both": 30,
+          "eligible": false,
+          "topEffects": []
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 0,
+          "rightOnly": 1,
+          "both": 20,
+          "eligible": false,
+          "topEffects": []
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 0,
+          "rightOnly": 0,
+          "both": 27,
+          "eligible": false,
+          "topEffects": []
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 8,
+          "meanSolverCount": 18.625,
+          "medianSolverCount": 17.5,
+          "thinShare": 0,
+          "broadShare": 1
+        },
+        "rightOnly": {
+          "n": 14,
+          "meanSolverCount": 15.785714285714286,
+          "medianSolverCount": 12,
+          "thinShare": 0,
+          "broadShare": 0.9285714285714286
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    },
+    {
+      "leftAction": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+      "rightAction": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "eligibleStrata": 3,
+      "stableFeatures": [
+        {
+          "feature": "turnConstraintLoad",
+          "observedEligibleStrata": 3,
+          "materialStrata": 3,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.8015448750176744
+            },
+            {
+              "stratum": 1,
+              "effect": -0.6906288974212819
+            },
+            {
+              "stratum": 2,
+              "effect": -0.5689399098491923
+            }
+          ]
+        },
+        {
+          "feature": "nonNavigableDensity",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.59882276818504
+            },
+            {
+              "stratum": 1,
+              "effect": -1.1448235618801241
+            }
+          ]
+        },
+        {
+          "feature": "geese",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.564195942243935
+            },
+            {
+              "stratum": 1,
+              "effect": -0.5985915186181482
+            }
+          ]
+        }
+      ],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 10,
+          "rightOnly": 34,
+          "both": 295,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.5158040773428924,
+              "rightMean": 0.6702776586153835,
+              "standardizedDifference": -0.9405543603120436
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 1.2,
+              "rightMean": 3.676470588235294,
+              "standardizedDifference": -0.8613667633427026
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 3,
+              "rightMean": 5.617647058823529,
+              "standardizedDifference": -0.8015448750176744
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.056225619097535914,
+              "rightMean": 0.08487313416178827,
+              "standardizedDifference": -0.7072135211857974
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.09559882324850688,
+              "rightMean": 0.1465977861061454,
+              "standardizedDifference": -0.59882276818504
+            },
+            {
+              "feature": "geese",
+              "leftMean": 1.9,
+              "rightMean": 3.6470588235294117,
+              "standardizedDifference": -0.564195942243935
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 8,
+              "rightMean": 10.735294117647058,
+              "standardizedDifference": -0.5579606093714183
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 74.1,
+              "rightMean": 87.82352941176471,
+              "standardizedDifference": -0.5065223819895565
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 6,
+          "rightOnly": 63,
+          "both": 106,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 0,
+              "rightMean": 3.6825396825396823,
+              "standardizedDifference": -1.624285087051362
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 0.16666666666666666,
+              "rightMean": 2.2857142857142856,
+              "standardizedDifference": -1.1928858855022193
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.1147610586771426,
+              "rightMean": 0.18515291935669176,
+              "standardizedDifference": -1.1448235618801241
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 13,
+              "rightMean": 20.428571428571427,
+              "standardizedDifference": -0.7794934937900897
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 8.833333333333334,
+              "rightMean": 12.285714285714286,
+              "standardizedDifference": -0.6906288974212819
+            },
+            {
+              "feature": "portals",
+              "leftMean": 3,
+              "rightMean": 1.2063492063492063,
+              "standardizedDifference": 0.649704319270958
+            },
+            {
+              "feature": "geese",
+              "leftMean": 1.8333333333333333,
+              "rightMean": 3.634920634920635,
+              "standardizedDifference": -0.5985915186181482
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 3.6666666666666665,
+              "rightMean": 1.9523809523809523,
+              "standardizedDifference": 0.5167168390116299
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 10,
+          "rightOnly": 42,
+          "both": 41,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "mustPass",
+              "leftMean": 1.3,
+              "rightMean": 4.428571428571429,
+              "standardizedDifference": -1.0752727344215955
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 13.5,
+              "rightMean": 15.80952380952381,
+              "standardizedDifference": -0.5689399098491923
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 106.9,
+              "rightMean": 94.97619047619048,
+              "standardizedDifference": 0.5249046003072353
+            },
+            {
+              "feature": "width",
+              "leftMean": 13.5,
+              "rightMean": 12.833333333333334,
+              "standardizedDifference": 0.4670690383232297
+            },
+            {
+              "feature": "height",
+              "leftMean": 13.5,
+              "rightMean": 12.833333333333334,
+              "standardizedDifference": 0.4670690383232297
+            },
+            {
+              "feature": "area",
+              "leftMean": 183.9,
+              "rightMean": 167.11904761904762,
+              "standardizedDifference": 0.4493062932145022
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 4.5,
+              "rightMean": 3.0476190476190474,
+              "standardizedDifference": 0.41404060727967257
+            },
+            {
+              "feature": "surround",
+              "leftMean": 0.7,
+              "rightMean": 1.2142857142857142,
+              "standardizedDifference": -0.37183284362277685
+            }
+          ]
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 2,
+          "rightOnly": 26,
+          "both": 22,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 11.5,
+              "rightMean": 5.538461538461538,
+              "standardizedDifference": 3.078828870920483
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.11442420190539862,
+              "rightMean": 0.21622498766364562,
+              "standardizedDifference": -1.9379858274159252
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 132,
+              "rightMean": 94.5,
+              "standardizedDifference": 1.9363675509567935
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 174,
+              "rightMean": 127.57692307692308,
+              "standardizedDifference": 1.828060953620662
+            },
+            {
+              "feature": "surround",
+              "leftMean": 3.5,
+              "rightMean": 1.4615384615384615,
+              "standardizedDifference": 1.7963521655884944
+            },
+            {
+              "feature": "width",
+              "leftMean": 14.5,
+              "rightMean": 12.692307692307692,
+              "standardizedDifference": 1.7732692930756815
+            },
+            {
+              "feature": "height",
+              "leftMean": 14.5,
+              "rightMean": 12.692307692307692,
+              "standardizedDifference": 1.7732692930756815
+            },
+            {
+              "feature": "area",
+              "leftMean": 210.5,
+              "rightMean": 162.92307692307693,
+              "standardizedDifference": 1.7731737619422776
+            }
+          ]
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 1,
+          "rightOnly": 8,
+          "both": 13,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "mustTurn",
+              "leftMean": 0,
+              "rightMean": 7.375,
+              "standardizedDifference": -14.986014986022479
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.43333333333333335,
+              "rightMean": 0.33323720440730203,
+              "standardizedDifference": 2.3865584621876104
+            },
+            {
+              "feature": "geese",
+              "leftMean": 0,
+              "rightMean": 4.875,
+              "standardizedDifference": -2.3496534092022343
+            },
+            {
+              "feature": "surround",
+              "leftMean": 0,
+              "rightMean": 2.125,
+              "standardizedDifference": -2.0691741061306277
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 72,
+              "rightMean": 95.25,
+              "standardizedDifference": -1.9243896512570224
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 8,
+              "rightMean": 4.875,
+              "standardizedDifference": 1.8659834271551898
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 8,
+              "rightMean": 6.75,
+              "standardizedDifference": 1.8257418583505538
+            },
+            {
+              "feature": "portals",
+              "leftMean": 6,
+              "rightMean": 3,
+              "standardizedDifference": 1.7693034738587656
+            }
+          ]
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 29,
+          "meanSolverCount": 12.724137931034482,
+          "medianSolverCount": 9,
+          "thinShare": 0.034482758620689655,
+          "broadShare": 0.7931034482758621
+        },
+        "rightOnly": {
+          "n": 173,
+          "meanSolverCount": 12.300578034682081,
+          "medianSolverCount": 10,
+          "thinShare": 0.03468208092485549,
+          "broadShare": 0.8034682080924855
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    },
+    {
+      "leftAction": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+      "rightAction": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+      "eligibleStrata": 3,
+      "stableFeatures": [
+        {
+          "feature": "portals",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": 1.3995920006452722
+            },
+            {
+              "stratum": 1,
+              "effect": 0.3708679388961569
+            }
+          ]
+        },
+        {
+          "feature": "falseGoals",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -1.1882959346631636
+            },
+            {
+              "stratum": 1,
+              "effect": -0.25414332941309997
+            }
+          ]
+        }
+      ],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 7,
+          "rightOnly": 31,
+          "both": 293,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.4392705260241749,
+              "rightMean": 0.6622316563375428,
+              "standardizedDifference": -1.51227670118307
+            },
+            {
+              "feature": "portals",
+              "leftMean": 3,
+              "rightMean": 0.5806451612903226,
+              "standardizedDifference": 1.3995920006452722
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.036753555787646705,
+              "rightMean": 0.1248705527694281,
+              "standardizedDifference": -1.2473745952601325
+            },
+            {
+              "feature": "geese",
+              "leftMean": 0,
+              "rightMean": 2.935483870967742,
+              "standardizedDifference": -1.2322074366152875
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 0,
+              "rightMean": 2.7096774193548385,
+              "standardizedDifference": -1.1882959346631636
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 4,
+              "rightMean": 11.35483870967742,
+              "standardizedDifference": -0.8954060860736652
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 66.28571428571429,
+              "rightMean": 87.51612903225806,
+              "standardizedDifference": -0.7503227873092936
+            },
+            {
+              "feature": "surround",
+              "leftMean": 0,
+              "rightMean": 0.45161290322580644,
+              "standardizedDifference": -0.6759263694193746
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 20,
+          "rightOnly": 64,
+          "both": 98,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 1.9,
+              "rightMean": 3.484375,
+              "standardizedDifference": -0.5081917093100061
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 19.6,
+              "rightMean": 17.46875,
+              "standardizedDifference": 0.47774873575594573
+            },
+            {
+              "feature": "mustPass",
+              "leftMean": 4.75,
+              "rightMean": 3.546875,
+              "standardizedDifference": 0.41073647954628245
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 4.85,
+              "rightMean": 3.546875,
+              "standardizedDifference": 0.3978515920762103
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.1664051022914556,
+              "rightMean": 0.14604430748875855,
+              "standardizedDifference": 0.39645417061574095
+            },
+            {
+              "feature": "portals",
+              "leftMean": 1.75,
+              "rightMean": 0.921875,
+              "standardizedDifference": 0.3708679388961569
+            },
+            {
+              "feature": "geese",
+              "leftMean": 3.9,
+              "rightMean": 3.078125,
+              "standardizedDifference": 0.2548172684407221
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 2.8,
+              "rightMean": 3.625,
+              "standardizedDifference": -0.25414332941309997
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 8,
+          "rightOnly": 33,
+          "both": 40,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.7839936771959821,
+              "rightMean": 0.7180777363311717,
+              "standardizedDifference": 0.8195746273597984
+            },
+            {
+              "feature": "geese",
+              "leftMean": 1.5,
+              "rightMean": 3.5757575757575757,
+              "standardizedDifference": -0.706918485499459
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 13.625,
+              "rightMean": 16.424242424242426,
+              "standardizedDifference": -0.6942302213176824
+            },
+            {
+              "feature": "width",
+              "leftMean": 12.125,
+              "rightMean": 13.030303030303031,
+              "standardizedDifference": -0.6602625632430588
+            },
+            {
+              "feature": "height",
+              "leftMean": 12.125,
+              "rightMean": 13.030303030303031,
+              "standardizedDifference": -0.6602625632430588
+            },
+            {
+              "feature": "area",
+              "leftMean": 148.625,
+              "rightMean": 171.93939393939394,
+              "standardizedDifference": -0.6542621117690018
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 123.375,
+              "rightMean": 142.5151515151515,
+              "standardizedDifference": -0.5641281400493323
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 7.625,
+              "rightMean": 5.848484848484849,
+              "standardizedDifference": 0.5624328062472163
+            }
+          ]
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 2,
+          "rightOnly": 22,
+          "both": 21,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 0,
+              "rightMean": 5.181818181818182,
+              "standardizedDifference": -2.740828109955766
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 16.5,
+              "rightMean": 32.13636363636363,
+              "standardizedDifference": -2.251542284628394
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 7,
+              "rightMean": 3.090909090909091,
+              "standardizedDifference": 1.544605597430264
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 32.5,
+              "rightMean": 24.863636363636363,
+              "standardizedDifference": 1.5412844036697246
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 5.5,
+              "rightMean": 2.9545454545454546,
+              "standardizedDifference": 1.1694616904553359
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.2949469884953756,
+              "rightMean": 0.1966130959000001,
+              "standardizedDifference": 1.1508660230593646
+            },
+            {
+              "feature": "area",
+              "leftMean": 145,
+              "rightMean": 176.5909090909091,
+              "standardizedDifference": -1.0787628031982939
+            },
+            {
+              "feature": "width",
+              "leftMean": 12,
+              "rightMean": 13.227272727272727,
+              "standardizedDifference": -1.070199047640714
+            }
+          ]
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 2,
+          "rightOnly": 4,
+          "both": 8,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "mustPass",
+              "leftMean": 7.5,
+              "rightMean": 1.25,
+              "standardizedDifference": 3.97778642087865
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 7.5,
+              "rightMean": 6.25,
+              "standardizedDifference": 2.6726124191242437
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 137.5,
+              "rightMean": 94,
+              "standardizedDifference": 2.4592564870377296
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 6.5,
+              "rightMean": 2.75,
+              "standardizedDifference": 1.8823674154144756
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 0,
+              "rightMean": 3.75,
+              "standardizedDifference": -1.8534061896456462
+            },
+            {
+              "feature": "area",
+              "leftMean": 210.5,
+              "rightMean": 164.25,
+              "standardizedDifference": 1.8250310034607666
+            },
+            {
+              "feature": "width",
+              "leftMean": 14.5,
+              "rightMean": 12.75,
+              "standardizedDifference": 1.778001778002667
+            },
+            {
+              "feature": "height",
+              "leftMean": 14.5,
+              "rightMean": 12.75,
+              "standardizedDifference": 1.778001778002667
+            }
+          ]
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 39,
+          "meanSolverCount": 11.333333333333334,
+          "medianSolverCount": 9,
+          "thinShare": 0.1282051282051282,
+          "broadShare": 0.7948717948717948
+        },
+        "rightOnly": {
+          "n": 154,
+          "meanSolverCount": 13.14935064935065,
+          "medianSolverCount": 12,
+          "thinShare": 0.032467532467532464,
+          "broadShare": 0.8181818181818182
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    },
+    {
+      "leftAction": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "rightAction": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "eligibleStrata": 5,
+      "stableFeatures": [
+        {
+          "feature": "portals",
+          "observedEligibleStrata": 5,
+          "materialStrata": 5,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.8022082632505165
+            },
+            {
+              "stratum": 1,
+              "effect": -0.7390301908767354
+            },
+            {
+              "stratum": 2,
+              "effect": -0.673273126819052
+            },
+            {
+              "stratum": 3,
+              "effect": -1.2269435175653585
+            },
+            {
+              "stratum": 4,
+              "effect": -0.8549344851149482
+            }
+          ]
+        },
+        {
+          "feature": "constrainedObjects",
+          "observedEligibleStrata": 3,
+          "materialStrata": 3,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.8905512365988331
+            },
+            {
+              "stratum": 3,
+              "effect": -0.4555760313808834
+            },
+            {
+              "stratum": 4,
+              "effect": -0.8757370765789961
+            }
+          ]
+        },
+        {
+          "feature": "flippingFilters",
+          "observedEligibleStrata": 3,
+          "materialStrata": 3,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.7715294915177924
+            },
+            {
+              "stratum": 1,
+              "effect": -0.48476150994430345
+            },
+            {
+              "stratum": 3,
+              "effect": -0.29071780063061364
+            }
+          ]
+        },
+        {
+          "feature": "turnConstraintLoad",
+          "observedEligibleStrata": 3,
+          "materialStrata": 3,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 1,
+              "effect": 0.635591985626837
+            },
+            {
+              "stratum": 2,
+              "effect": 0.605343717928068
+            },
+            {
+              "stratum": 3,
+              "effect": 1.0985021730667295
+            }
+          ]
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.6982693659091113
+            },
+            {
+              "stratum": 2,
+              "effect": -0.5584426754255786
+            }
+          ]
+        },
+        {
+          "feature": "adjacentTurn",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 1,
+              "effect": 0.6407547973003785
+            },
+            {
+              "stratum": 3,
+              "effect": 0.3342465619815256
+            }
+          ]
+        },
+        {
+          "feature": "mustTurn",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 3,
+              "effect": 1.0060060600071374
+            },
+            {
+              "stratum": 4,
+              "effect": 1.2504688163293174
+            }
+          ]
+        }
+      ],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 8,
+          "rightOnly": 15,
+          "both": 321,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 11.75,
+              "rightMean": 16.133333333333333,
+              "standardizedDifference": -0.8905512365988331
+            },
+            {
+              "feature": "portals",
+              "leftMean": 2.125,
+              "rightMean": 3.8,
+              "standardizedDifference": -0.8022082632505165
+            },
+            {
+              "feature": "filters",
+              "leftMean": 0.625,
+              "rightMean": 0,
+              "standardizedDifference": 0.79555728417573
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 3.5,
+              "rightMean": 2,
+              "standardizedDifference": 0.7720275189824681
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 1.625,
+              "rightMean": 3.8,
+              "standardizedDifference": -0.7715294915177924
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.08693539074949307,
+              "rightMean": 0.12266564766731264,
+              "standardizedDifference": -0.6982693659091113
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 5.75,
+              "rightMean": 4.266666666666667,
+              "standardizedDifference": 0.6177056333920827
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 97.125,
+              "rightMean": 83.46666666666667,
+              "standardizedDifference": 0.5534579327353245
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 15,
+          "rightOnly": 42,
+          "both": 154,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 7.066666666666666,
+              "rightMean": 4.428571428571429,
+              "standardizedDifference": 0.834587254168182
+            },
+            {
+              "feature": "portals",
+              "leftMean": 1.2,
+              "rightMean": 3.0476190476190474,
+              "standardizedDifference": -0.7390301908767354
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 4.4,
+              "rightMean": 2.4285714285714284,
+              "standardizedDifference": 0.6407547973003785
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 13.133333333333333,
+              "rightMean": 10.119047619047619,
+              "standardizedDifference": 0.635591985626837
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.1763179246291134,
+              "rightMean": 0.1406328094229478,
+              "standardizedDifference": 0.6143718044252108
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 4.2,
+              "rightMean": 2.5238095238095237,
+              "standardizedDifference": 0.5367462881381372
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.7211879726928992,
+              "rightMean": 0.6748820332745463,
+              "standardizedDifference": 0.5163328831282498
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 4.2,
+              "rightMean": 5.690476190476191,
+              "standardizedDifference": -0.48476150994430345
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 20,
+          "rightOnly": 38,
+          "both": 63,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "surround",
+              "leftMean": 1.5,
+              "rightMean": 0.3684210526315789,
+              "standardizedDifference": 0.8479596584419183
+            },
+            {
+              "feature": "portals",
+              "leftMean": 1.5,
+              "rightMean": 3.236842105263158,
+              "standardizedDifference": -0.673273126819052
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.6749448817396227,
+              "rightMean": 0.7294560792436774,
+              "standardizedDifference": -0.6673527825540982
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 15.9,
+              "rightMean": 13.157894736842104,
+              "standardizedDifference": 0.605343717928068
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 155.35,
+              "rightMean": 135.02631578947367,
+              "standardizedDifference": 0.5829098681558577
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.1594119501482177,
+              "rightMean": 0.19130270585382136,
+              "standardizedDifference": -0.5584426754255786
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.13887950041134361,
+              "rightMean": 0.17322382074288067,
+              "standardizedDifference": -0.5240378429001085
+            },
+            {
+              "feature": "mustPass",
+              "leftMean": 4.1,
+              "rightMean": 2.6052631578947367,
+              "standardizedDifference": 0.5008522347225787
+            }
+          ]
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 15,
+          "rightOnly": 12,
+          "both": 33,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "portals",
+              "leftMean": 2.466666666666667,
+              "rightMean": 5.666666666666667,
+              "standardizedDifference": -1.2269435175653585
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 19.066666666666666,
+              "rightMean": 13.75,
+              "standardizedDifference": 1.0985021730667295
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 5.8,
+              "rightMean": 3,
+              "standardizedDifference": 1.0060060600071374
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 27.933333333333334,
+              "rightMean": 29.916666666666668,
+              "standardizedDifference": -0.4555760313808834
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 3.4,
+              "rightMean": 2.3333333333333335,
+              "standardizedDifference": 0.4106277900397223
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 5.333333333333333,
+              "rightMean": 4.25,
+              "standardizedDifference": 0.3342465619815256
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 3.933333333333333,
+              "rightMean": 4.833333333333333,
+              "standardizedDifference": -0.29071780063061364
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.7340382306165155,
+              "rightMean": 0.7156241399719047,
+              "standardizedDifference": 0.27178290686634976
+            }
+          ]
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 5,
+          "rightOnly": 11,
+          "both": 16,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "mustCross",
+              "leftMean": 2.8,
+              "rightMean": 5.7272727272727275,
+              "standardizedDifference": -1.9274872526355833
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.8862044619034826,
+              "rightMean": 0.7714663027916839,
+              "standardizedDifference": 1.3834283927218491
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 7.4,
+              "rightMean": 5,
+              "standardizedDifference": 1.2504688163293174
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 1.4,
+              "rightMean": 4.090909090909091,
+              "standardizedDifference": -0.8855292779874966
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 33.4,
+              "rightMean": 37.18181818181818,
+              "standardizedDifference": -0.8757370765789961
+            },
+            {
+              "feature": "portals",
+              "leftMean": 2.8,
+              "rightMean": 4.818181818181818,
+              "standardizedDifference": -0.8549344851149482
+            },
+            {
+              "feature": "geese",
+              "leftMean": 4.6,
+              "rightMean": 2,
+              "standardizedDifference": 0.792757957497191
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 4.8,
+              "rightMean": 6.636363636363637,
+              "standardizedDifference": -0.6889424701339657
+            }
+          ]
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 63,
+          "meanSolverCount": 7.444444444444445,
+          "medianSolverCount": 7,
+          "thinShare": 0.09523809523809523,
+          "broadShare": 0.6190476190476191
+        },
+        "rightOnly": {
+          "n": 118,
+          "meanSolverCount": 8.90677966101695,
+          "medianSolverCount": 6,
+          "thinShare": 0.17796610169491525,
+          "broadShare": 0.5169491525423728
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    },
+    {
+      "leftAction": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+      "rightAction": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "eligibleStrata": 3,
+      "stableFeatures": [
+        {
+          "feature": "portals",
+          "observedEligibleStrata": 3,
+          "materialStrata": 3,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 1,
+              "effect": -0.9902182412327305
+            },
+            {
+              "stratum": 2,
+              "effect": -0.5666075911473383
+            },
+            {
+              "stratum": 3,
+              "effect": -0.8288138737624283
+            }
+          ]
+        },
+        {
+          "feature": "requiredIntersections",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 1,
+              "effect": 1.108263349626657
+            },
+            {
+              "stratum": 3,
+              "effect": 0.6727300965773809
+            }
+          ]
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 1,
+              "effect": -0.616340351762658
+            },
+            {
+              "stratum": 2,
+              "effect": -0.6168718218923103
+            }
+          ]
+        },
+        {
+          "feature": "constrainedObjects",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 1,
+              "effect": -0.4955723924029812
+            },
+            {
+              "stratum": 3,
+              "effect": -0.5731876318472704
+            }
+          ]
+        },
+        {
+          "feature": "turnConstraintLoad",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 2,
+              "effect": 0.9693439626820503
+            },
+            {
+              "stratum": 3,
+              "effect": 0.881308121309202
+            }
+          ]
+        },
+        {
+          "feature": "flippingFilters",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 2,
+              "effect": -0.7412339935194308
+            },
+            {
+              "stratum": 3,
+              "effect": -0.6737159027852283
+            }
+          ]
+        }
+      ],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 4,
+          "rightOnly": 17,
+          "both": 320,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.058746776876463805,
+              "rightMean": 0.11858856315385366,
+              "standardizedDifference": -1.8586003423112603
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 9,
+              "rightMean": 15.411764705882353,
+              "standardizedDifference": -1.5562696854366178
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 8,
+              "rightMean": 4.882352941176471,
+              "standardizedDifference": 1.335580473956205
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 4.25,
+              "rightMean": 2.0588235294117645,
+              "standardizedDifference": 1.3031377708714755
+            },
+            {
+              "feature": "portals",
+              "leftMean": 0.75,
+              "rightMean": 3.235294117647059,
+              "standardizedDifference": -1.2673673294268124
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.05909297052154194,
+              "rightMean": 0.09754192745573913,
+              "standardizedDifference": -0.8065635327683646
+            },
+            {
+              "feature": "geese",
+              "leftMean": 0.5,
+              "rightMean": 2.1176470588235294,
+              "standardizedDifference": -0.8014478881910744
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 1.5,
+              "rightMean": 3.7058823529411766,
+              "standardizedDifference": -0.7325706991293854
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 17,
+          "rightOnly": 52,
+          "both": 145,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 7.588235294117647,
+              "rightMean": 4.5576923076923075,
+              "standardizedDifference": 1.108263349626657
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 4.823529411764706,
+              "rightMean": 1.9038461538461537,
+              "standardizedDifference": 1.0676768614635097
+            },
+            {
+              "feature": "portals",
+              "leftMean": 0.5882352941176471,
+              "rightMean": 2.9423076923076925,
+              "standardizedDifference": -0.9902182412327305
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 105.23529411764706,
+              "rightMean": 92.28846153846153,
+              "standardizedDifference": 0.7492262669425735
+            },
+            {
+              "feature": "geese",
+              "leftMean": 1.0588235294117647,
+              "rightMean": 2.8846153846153846,
+              "standardizedDifference": -0.6215611222865306
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.13977548126085132,
+              "rightMean": 0.1666791293267324,
+              "standardizedDifference": -0.616340351762658
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.747991638092839,
+              "rightMean": 0.6950282301180029,
+              "standardizedDifference": 0.5359779409229195
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 19.294117647058822,
+              "rightMean": 21.23076923076923,
+              "standardizedDifference": -0.4955723924029812
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 10,
+          "rightOnly": 45,
+          "both": 63,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 16.8,
+              "rightMean": 12.688888888888888,
+              "standardizedDifference": 0.9693439626820503
+            },
+            {
+              "feature": "mustPass",
+              "leftMean": 5.2,
+              "rightMean": 2.8444444444444446,
+              "standardizedDifference": 0.7836816148556086
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 4.2,
+              "rightMean": 2.3555555555555556,
+              "standardizedDifference": 0.7618527288259723
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 3.1,
+              "rightMean": 5.133333333333334,
+              "standardizedDifference": -0.7412339935194308
+            },
+            {
+              "feature": "surround",
+              "leftMean": 1.5,
+              "rightMean": 0.5555555555555556,
+              "standardizedDifference": 0.7235025194642202
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.15810610317120818,
+              "rightMean": 0.1892861406893569,
+              "standardizedDifference": -0.6168718218923103
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 157.8,
+              "rightMean": 135.57777777777778,
+              "standardizedDifference": 0.6019402792919646
+            },
+            {
+              "feature": "portals",
+              "leftMean": 1.8,
+              "rightMean": 3.2888888888888888,
+              "standardizedDifference": -0.5666075911473383
+            }
+          ]
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 9,
+          "rightOnly": 17,
+          "both": 34,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "mustTurn",
+              "leftMean": 6.222222222222222,
+              "rightMean": 3.6470588235294117,
+              "standardizedDifference": 0.9154476722377407
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 20.333333333333332,
+              "rightMean": 16.294117647058822,
+              "standardizedDifference": 0.881308121309202
+            },
+            {
+              "feature": "surround",
+              "leftMean": 0.1111111111111111,
+              "rightMean": 1.2941176470588236,
+              "standardizedDifference": -0.8542298636867335
+            },
+            {
+              "feature": "portals",
+              "leftMean": 2,
+              "rightMean": 4.411764705882353,
+              "standardizedDifference": -0.8288138737624283
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 2.6666666666666665,
+              "rightMean": 4.764705882352941,
+              "standardizedDifference": -0.6737159027852283
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 7.222222222222222,
+              "rightMean": 5.470588235294118,
+              "standardizedDifference": 0.6727300965773809
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 27,
+              "rightMean": 29.88235294117647,
+              "standardizedDifference": -0.5731876318472704
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 2.5555555555555554,
+              "rightMean": 4.235294117647059,
+              "standardizedDifference": -0.5500828947076482
+            }
+          ]
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 1,
+          "rightOnly": 9,
+          "both": 11,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "mustPass",
+              "leftMean": 0,
+              "rightMean": 6.222222222222222,
+              "standardizedDifference": -3.7500373690215802
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.6739130434782609,
+              "rightMean": 0.8254380307058425,
+              "standardizedDifference": -3.7471680389312185
+            },
+            {
+              "feature": "area",
+              "leftMean": 196,
+              "rightMean": 139.55555555555554,
+              "standardizedDifference": 3.634138148431251
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 138,
+              "rightMean": 99.11111111111111,
+              "standardizedDifference": 3.6048009664093073
+            },
+            {
+              "feature": "width",
+              "leftMean": 14,
+              "rightMean": 11.777777777777779,
+              "standardizedDifference": 3.429971702850176
+            },
+            {
+              "feature": "height",
+              "leftMean": 14,
+              "rightMean": 11.777777777777779,
+              "standardizedDifference": 3.429971702850176
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 8,
+              "rightMean": 4.444444444444445,
+              "standardizedDifference": 3.1999999999999997
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 49,
+              "rightMean": 31.444444444444443,
+              "standardizedDifference": 2.6907506779961783
+            }
+          ]
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 41,
+          "meanSolverCount": 9.634146341463415,
+          "medianSolverCount": 8,
+          "thinShare": 0.0975609756097561,
+          "broadShare": 0.6829268292682927
+        },
+        "rightOnly": {
+          "n": 140,
+          "meanSolverCount": 8.657142857142857,
+          "medianSolverCount": 7,
+          "thinShare": 0.15,
+          "broadShare": 0.5714285714285714
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    },
+    {
+      "leftAction": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "rightAction": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+      "eligibleStrata": 4,
+      "stableFeatures": [
+        {
+          "feature": "area",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": 0.3265893681381479
+            },
+            {
+              "stratum": 1,
+              "effect": 0.34843954235580565
+            }
+          ]
+        },
+        {
+          "feature": "blocks",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": 0.3169298403194576
+            },
+            {
+              "stratum": 3,
+              "effect": 0.3364362951147809
+            }
+          ]
+        },
+        {
+          "feature": "width",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": 0.2951237695602114
+            },
+            {
+              "stratum": 1,
+              "effect": 0.36183925565457054
+            }
+          ]
+        }
+      ],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 25,
+          "rightOnly": 24,
+          "both": 257,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 5.64,
+              "rightMean": 4.083333333333333,
+              "standardizedDifference": 0.6421372132649408
+            },
+            {
+              "feature": "geese",
+              "leftMean": 4,
+              "rightMean": 2.4166666666666665,
+              "standardizedDifference": 0.48628192485435556
+            },
+            {
+              "feature": "surround",
+              "leftMean": 0.16,
+              "rightMean": 0.5,
+              "standardizedDifference": -0.422629358639084
+            },
+            {
+              "feature": "mustPass",
+              "leftMean": 2.52,
+              "rightMean": 1.5416666666666667,
+              "standardizedDifference": 0.34240268610351837
+            },
+            {
+              "feature": "area",
+              "leftMean": 152.92,
+              "rightMean": 142.91666666666666,
+              "standardizedDifference": 0.3265893681381479
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 15.08,
+              "rightMean": 11.958333333333334,
+              "standardizedDifference": 0.3169298403194576
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 2.64,
+              "rightMean": 3.6666666666666665,
+              "standardizedDifference": -0.31502164627804413
+            },
+            {
+              "feature": "width",
+              "leftMean": 12.28,
+              "rightMean": 11.916666666666666,
+              "standardizedDifference": 0.2951237695602114
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 36,
+          "rightOnly": 43,
+          "both": 91,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 97.38888888888889,
+              "rightMean": 87.69767441860465,
+              "standardizedDifference": 0.4937153029336235
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.1379803609302484,
+              "rightMean": 0.15970428644494106,
+              "standardizedDifference": -0.43247131426899477
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 133.55555555555554,
+              "rightMean": 123,
+              "standardizedDifference": 0.367683291281178
+            },
+            {
+              "feature": "width",
+              "leftMean": 12.694444444444445,
+              "rightMean": 12.232558139534884,
+              "standardizedDifference": 0.36183925565457054
+            },
+            {
+              "feature": "height",
+              "leftMean": 12.694444444444445,
+              "rightMean": 12.232558139534884,
+              "standardizedDifference": 0.36183925565457054
+            },
+            {
+              "feature": "area",
+              "leftMean": 162.69444444444446,
+              "rightMean": 151.34883720930233,
+              "standardizedDifference": 0.34843954235580565
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 17.47222222222222,
+              "rightMean": 18.651162790697676,
+              "standardizedDifference": -0.252074733851102
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 2.7222222222222223,
+              "rightMean": 2.0930232558139537,
+              "standardizedDifference": 0.21413101330479686
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 27,
+          "rightOnly": 27,
+          "both": 23,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 4.518518518518518,
+              "rightMean": 5.111111111111111,
+              "standardizedDifference": -0.31980817262738126
+            },
+            {
+              "feature": "portals",
+              "leftMean": 1.8148148148148149,
+              "rightMean": 2.6296296296296298,
+              "standardizedDifference": -0.29849894477109146
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 4.111111111111111,
+              "rightMean": 3.185185185185185,
+              "standardizedDifference": 0.27760646861700183
+            },
+            {
+              "feature": "geese",
+              "leftMean": 2.4444444444444446,
+              "rightMean": 3.2962962962962963,
+              "standardizedDifference": -0.2713215126123144
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 14.185185185185185,
+              "rightMean": 12.925925925925926,
+              "standardizedDifference": 0.25451212247432053
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 1.8518518518518519,
+              "rightMean": 1.2592592592592593,
+              "standardizedDifference": 0.2528558164964056
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 3.925925925925926,
+              "rightMean": 4.62962962962963,
+              "standardizedDifference": -0.21469269198514515
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 3.6296296296296298,
+              "rightMean": 2.962962962962963,
+              "standardizedDifference": 0.20532913102978598
+            }
+          ]
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 11,
+          "rightOnly": 13,
+          "both": 14,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "mustTurn",
+              "leftMean": 3.727272727272727,
+              "rightMean": 5.538461538461538,
+              "standardizedDifference": -0.6527512926896281
+            },
+            {
+              "feature": "adjacentTurn",
+              "leftMean": 5,
+              "rightMean": 3.3846153846153846,
+              "standardizedDifference": 0.5616499299179374
+            },
+            {
+              "feature": "geese",
+              "leftMean": 5,
+              "rightMean": 3.4615384615384617,
+              "standardizedDifference": 0.503938087221088
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 4.818181818181818,
+              "rightMean": 6.153846153846154,
+              "standardizedDifference": -0.47390018347284096
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.7511518591151224,
+              "rightMean": 0.7886924666582096,
+              "standardizedDifference": -0.363514495822651
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 2.3636363636363638,
+              "rightMean": 3.4615384615384617,
+              "standardizedDifference": -0.3368276737058273
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 32.36363636363637,
+              "rightMean": 29.46153846153846,
+              "standardizedDifference": 0.3364362951147809
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 1.1818181818181819,
+              "rightMean": 1.9230769230769231,
+              "standardizedDifference": -0.3162319877251673
+            }
+          ]
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 5,
+          "rightOnly": 4,
+          "both": 10,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "surround",
+              "leftMean": 1.4,
+              "rightMean": 3,
+              "standardizedDifference": -1.6681153124565982
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.24465605966904666,
+              "rightMean": 0.31206611570247933,
+              "standardizedDifference": -1.4379684941024793
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 4.6,
+              "rightMean": 1.5,
+              "standardizedDifference": 1.2355599618717257
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 33.4,
+              "rightMean": 24.75,
+              "standardizedDifference": 1.2146558461267276
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 4.2,
+              "rightMean": 2,
+              "standardizedDifference": 0.952925780013262
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 6.8,
+              "rightMean": 4.75,
+              "standardizedDifference": 0.8843315755003003
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.7936145862366801,
+              "rightMean": 0.9021184683669383,
+              "standardizedDifference": -0.8728800986191324
+            },
+            {
+              "feature": "portals",
+              "leftMean": 3.8,
+              "rightMean": 1.75,
+              "standardizedDifference": 0.6660286342998694
+            }
+          ]
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 104,
+          "meanSolverCount": 10.932692307692308,
+          "medianSolverCount": 7,
+          "thinShare": 0.22115384615384615,
+          "broadShare": 0.625
+        },
+        "rightOnly": {
+          "n": 111,
+          "meanSolverCount": 12.18018018018018,
+          "medianSolverCount": 10,
+          "thinShare": 0.18018018018018017,
+          "broadShare": 0.6486486486486487
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    },
+    {
+      "leftAction": "dfs|score=perimeterSweep|bias=perimeterCW",
+      "rightAction": "dfs|score=perimeterSweep|bias=perimeterCCW",
+      "eligibleStrata": 2,
+      "stableFeatures": [
+        {
+          "feature": "portals",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": -0.780442396890591
+            },
+            {
+              "stratum": 1,
+              "effect": -0.54697889244653
+            }
+          ]
+        },
+        {
+          "feature": "requiredPathCoverageRatio",
+          "observedEligibleStrata": 2,
+          "materialStrata": 2,
+          "sameMaterialDirection": true,
+          "effects": [
+            {
+              "stratum": 0,
+              "effect": 0.5340227803450136
+            },
+            {
+              "stratum": 1,
+              "effect": 0.3008940433067524
+            }
+          ]
+        }
+      ],
+      "strata": [
+        {
+          "stratum": 0,
+          "population": 393,
+          "minScore": -1.7242804420747055,
+          "maxScore": -0.4309887609373052,
+          "leftOnly": 19,
+          "rightOnly": 21,
+          "both": 227,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "portals",
+              "leftMean": 0.15789473684210525,
+              "rightMean": 1.2857142857142858,
+              "standardizedDifference": -0.780442396890591
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.6823895937306629,
+              "rightMean": 0.6120515004528299,
+              "standardizedDifference": 0.5340227803450136
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 1.1578947368421053,
+              "rightMean": 0.3333333333333333,
+              "standardizedDifference": 0.4550897649567452
+            },
+            {
+              "feature": "geese",
+              "leftMean": 1.8421052631578947,
+              "rightMean": 3.0952380952380953,
+              "standardizedDifference": -0.38993944819692317
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 2.4210526315789473,
+              "rightMean": 1.380952380952381,
+              "standardizedDifference": 0.356899895285586
+            },
+            {
+              "feature": "area",
+              "leftMean": 157.52631578947367,
+              "rightMean": 169.8095238095238,
+              "standardizedDifference": -0.3421851423616478
+            },
+            {
+              "feature": "width",
+              "leftMean": 12.473684210526315,
+              "rightMean": 12.952380952380953,
+              "standardizedDifference": -0.33938732817369666
+            },
+            {
+              "feature": "height",
+              "leftMean": 12.473684210526315,
+              "rightMean": 12.952380952380953,
+              "standardizedDifference": -0.33938732817369666
+            }
+          ]
+        },
+        {
+          "stratum": 1,
+          "population": 392,
+          "minScore": -0.43090227463796327,
+          "maxScore": -0.06616210329651066,
+          "leftOnly": 18,
+          "rightOnly": 19,
+          "both": 47,
+          "eligible": true,
+          "topEffects": [
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 16.38888888888889,
+              "rightMean": 20.736842105263158,
+              "standardizedDifference": -0.9930821460232285
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 23.27777777777778,
+              "rightMean": 15.105263157894736,
+              "standardizedDifference": 0.9814787563252616
+            },
+            {
+              "feature": "constrainedObjectDensity",
+              "leftMean": 0.129747581318927,
+              "rightMean": 0.1635858073440436,
+              "standardizedDifference": -0.6811934092681986
+            },
+            {
+              "feature": "portals",
+              "leftMean": 3.7777777777777777,
+              "rightMean": 5.157894736842105,
+              "standardizedDifference": -0.54697889244653
+            },
+            {
+              "feature": "flippingFilters",
+              "leftMean": 2.5555555555555554,
+              "rightMean": 4.315789473684211,
+              "standardizedDifference": -0.5261236854968624
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.17613351176579617,
+              "rightMean": 0.14872972853834096,
+              "standardizedDifference": 0.5141899866077915
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 2.9444444444444446,
+              "rightMean": 4.105263157894737,
+              "standardizedDifference": -0.35074305113065946
+            },
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.6940247695524756,
+              "rightMean": 0.6720051131471794,
+              "standardizedDifference": 0.3008940433067524
+            }
+          ]
+        },
+        {
+          "stratum": 2,
+          "population": 393,
+          "minScore": -0.0661178849659034,
+          "maxScore": 0.19458628878044087,
+          "leftOnly": 4,
+          "rightOnly": 8,
+          "both": 24,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "portals",
+              "leftMean": 2.75,
+              "rightMean": 6.25,
+              "standardizedDifference": -1.710372220988273
+            },
+            {
+              "feature": "nonNavigableDensity",
+              "leftMean": 0.255222681359045,
+              "rightMean": 0.15696793785080498,
+              "standardizedDifference": 1.6507493306343195
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 14.25,
+              "rightMean": 9.25,
+              "standardizedDifference": 1.3703774196550633
+            },
+            {
+              "feature": "navigableArea",
+              "leftMean": 94.75,
+              "rightMean": 135,
+              "standardizedDifference": -1.3216493355671393
+            },
+            {
+              "feature": "requiredPathLength",
+              "leftMean": 74,
+              "rightMean": 101.125,
+              "standardizedDifference": -1.2925026858404034
+            },
+            {
+              "feature": "mustCross",
+              "leftMean": 0.75,
+              "rightMean": 0,
+              "standardizedDifference": 1.2792042981336627
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 22.25,
+              "rightMean": 14.625,
+              "standardizedDifference": 1.15495922524281
+            },
+            {
+              "feature": "width",
+              "leftMean": 11.25,
+              "rightMean": 12.5,
+              "standardizedDifference": -1.078327732034384
+            }
+          ]
+        },
+        {
+          "stratum": 3,
+          "population": 392,
+          "minScore": 0.19498003932947616,
+          "maxScore": 0.513832330204608,
+          "leftOnly": 1,
+          "rightOnly": 2,
+          "both": 21,
+          "eligible": false,
+          "topEffects": [
+            {
+              "feature": "requiredPathCoverageRatio",
+              "leftMean": 0.780952380952381,
+              "rightMean": 0.7206937799043063,
+              "standardizedDifference": 5.277236429045854
+            },
+            {
+              "feature": "constrainedObjects",
+              "leftMean": 30,
+              "rightMean": 28.5,
+              "standardizedDifference": 4.242640687119285
+            },
+            {
+              "feature": "blocks",
+              "leftMean": 26,
+              "rightMean": 37,
+              "standardizedDifference": -3.111269837220809
+            },
+            {
+              "feature": "mustTurn",
+              "leftMean": 8,
+              "rightMean": 2.5,
+              "standardizedDifference": 3.111269837220809
+            },
+            {
+              "feature": "requiredIntersections",
+              "leftMean": 0,
+              "rightMean": 7,
+              "standardizedDifference": -1.979898987322333
+            },
+            {
+              "feature": "geese",
+              "leftMean": 6,
+              "rightMean": 2.5,
+              "standardizedDifference": 1.979898987322333
+            },
+            {
+              "feature": "turnConstraintLoad",
+              "leftMean": 16,
+              "rightMean": 11.5,
+              "standardizedDifference": 1.8182745801939793
+            },
+            {
+              "feature": "falseGoals",
+              "leftMean": 6,
+              "rightMean": 3,
+              "standardizedDifference": 1.4142135623730951
+            }
+          ]
+        },
+        {
+          "stratum": 4,
+          "population": 392,
+          "minScore": 0.5159337380829948,
+          "maxScore": 1.5988230696392502,
+          "leftOnly": 0,
+          "rightOnly": 0,
+          "both": 26,
+          "eligible": false,
+          "topEffects": []
+        }
+      ],
+      "multiplicityContext": {
+        "leftOnly": {
+          "n": 42,
+          "meanSolverCount": 16.30952380952381,
+          "medianSolverCount": 16,
+          "thinShare": 0.047619047619047616,
+          "broadShare": 0.8571428571428571
+        },
+        "rightOnly": {
+          "n": 50,
+          "meanSolverCount": 13.86,
+          "medianSolverCount": 15.5,
+          "thinShare": 0.06,
+          "broadShare": 0.72
+        },
+        "interpretation": "Offline confidence context only: solverCount/multiplicity is historical census evidence and is not a legal cold-solver routing input."
+      }
+    }
+  ],
+  "interpretationBoundary": "Persistence within generic-burden strata weakens the explanation that a pairwise niche is merely overall difficulty. Multiplicity supplies offline fragility context. Because the burden features are correlated, decision-bearing effects should also survive a plausible reduced-feature sensitivity run. None of this establishes causality; variant-family and operational/mechanism evidence remain the next escalation for stable effects."
+}
