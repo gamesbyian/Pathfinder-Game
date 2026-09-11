@@ -32,6 +32,34 @@ export function buildRetryTierAblationOverride(originalCfg: AblationConfig | nul
     });
 }
 
+/**
+ * Canonical work-pool start for whole-ladder retry execution.
+ *
+ * `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` was promoted to production-default ON
+ * on 2026-09-10, but its orchestration call site retained the old opt-in-only
+ * `cfg && cfg.FLAG === true` read. That made `ablation: null` use the depleted solve-wide pool while
+ * any normalized non-null config used a fresh pool. Enforce the promoted polarity here as a
+ * runtime safety net at the one executor that owns the retry: null/unset means ON, only explicit
+ * false means shared. This also keeps sparse normalized configs and the null production fast path
+ * behaviorally aligned instead of letting mere config-object presence change scheduling.
+ *
+ * The caller still supplies the stage work-budget amount. Today the promoted tier's production
+ * fraction is 1.0, so changing the start mark is the entire default-path fix. A future non-1.0
+ * production fraction must keep the caller's amount and this start-mark rule in lockstep.
+ */
+export function retryTierEffectiveWorkStart(
+    stageId: SolverStageId,
+    cfg: AblationConfig | null | undefined,
+    requestedWorkStart: number,
+    currentWork: number,
+): number {
+    if (stageId === 'goal-attraction-disabled-retry'
+        && cfg?.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL !== false) {
+        return currentWork;
+    }
+    return requestedWorkStart;
+}
+
 export interface WholeLadderRetryTierInput {
     /** Canonical stage identity applied to every resulting Attempt. */
     stageId: SolverStageId;
@@ -48,7 +76,7 @@ export interface WholeLadderRetryTierInput {
     totalBudgetMs: number;
     /** Absolute cumulative node ceiling. */
     nodeCeiling: number;
-    /** Stage policy chooses shared or fresh work pool; this adapter does not infer it. */
+    /** Stage policy chooses shared or fresh work pool; this adapter normalizes promoted default polarity. */
     workBudget: number;
     workStart: number;
     /** Subdivide node ceiling into cumulative per-config staircase steps. */
@@ -64,13 +92,14 @@ export async function runWholeLadderRetryTier(input: WholeLadderRetryTierInput):
     const { stageId, proxyOverrides, activeGates, mainConfigs, level, prep, yieldFn, runLadder,
         totalBudgetMs, nodeCeiling, workBudget, workStart, staircase } = input;
     const originalCfg = prep._cfg;
+    const effectiveWorkStart = retryTierEffectiveWorkStart(stageId, originalCfg, workStart, prep._workMeter.units);
     prep._cfg = buildRetryTierAblationOverride(originalCfg, proxyOverrides);
     try {
         const start = Date.now();
         const staircaseEntry = staircase ? (prep._metrics ? prep._metrics.nodesExpanded : 0) : undefined;
         const staircaseStart = staircase ? 0 : undefined;
         const raw = await runLadder(activeGates, mainConfigs, level, prep, totalBudgetMs, start, yieldFn,
-            nodeCeiling, workBudget, workStart, staircaseEntry, staircaseStart);
+            nodeCeiling, workBudget, effectiveWorkStart, staircaseEntry, staircaseStart);
         const attempts = raw.attempts.map(attempt => withSolverStage(attempt, stageId));
         // Staircase reuses lateConfigStart=0, which makes runners set this unrelated main-search tag.
         if (staircase) for (const attempt of attempts) delete attempt.mainSearchLateReserve;
