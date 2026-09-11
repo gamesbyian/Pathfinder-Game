@@ -3,6 +3,7 @@ import { test } from 'vitest';
 import type { NormalizedLevel } from '../domain/types.js';
 import { AXIS_H } from './encoding.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
+import type { PruneDiagnostics } from './hard-prune-pipeline.js';
 import { evaluateObligationClusters, findObligationClusters } from './joint-obligation-propagation.js';
 import { PACK } from './encoding.js';
 import { prepLevel } from './prep.js';
@@ -143,4 +144,50 @@ test('observer-only: attaching the observer never changes evaluatePrunedMove\'s 
     const on = runOnce(true);
     assert.equal(on.verdict, off.verdict, 'observer presence must never change the prune verdict');
     assert.equal(on.observedCount, 1, 'the active cluster on this fixture is expected to be observed exactly once');
+});
+
+// requiredIntersections=2 (vs makeLevel's 1) gives the existing PRUNE_MC_NEIGHBOR_BUDGET soft
+// check one full free intersection (freeInt = 2 - 0 - 1 = 1 >= its extraNeeded of 1), so it PASSES
+// here — isolating PRUNE_MC_PORTAL_FORCED_NEIGHBOR's unconditional rejection (budget-independent)
+// from the existing budget-dependent one below it in the gauntlet.
+function makeLevelWithSlack(): NormalizedLevel {
+    return { ...makeLevel(), requiredIntersections: 2 } as unknown as NormalizedLevel;
+}
+
+test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR is opt-in: default (no cfg) never rejects on this mechanism', () => {
+    const level = makeLevelWithSlack();
+    const prep = prepLevel(level);
+    const state = createState(PACK(0, 0), level, prep);
+    state.visited[PACK(2, 1)] = 1;
+
+    assert.equal(evaluatePrunedMove(PACK(1, 2), 1, state, level, prep, null, false), 'pass');
+});
+
+test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR rejects when explicitly enabled, even with free intersection budget', () => {
+    const level = makeLevelWithSlack();
+    const prep = prepLevel(level);
+    const state = createState(PACK(0, 0), level, prep);
+    state.visited[PACK(2, 1)] = 1;
+    const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
+
+    const verdict = evaluatePrunedMove(PACK(1, 2), 1, state, level, prep,
+        { PRUNE_MC_PORTAL_FORCED_NEIGHBOR: true }, false, { diagnostics });
+
+    assert.equal(verdict, 'reject');
+    assert.equal(diagnostics.rejected.PRUNE_MC_PORTAL_FORCED_NEIGHBOR, 1);
+});
+
+test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR + observer share one evaluation, not two', () => {
+    const level = makeLevelWithSlack();
+    const prep = prepLevel(level);
+    const observed: JointObligationRecord[] = [];
+    prep._jointObligationObserver = { observe: (r) => observed.push(r) };
+    const state = createState(PACK(0, 0), level, prep);
+    state.visited[PACK(2, 1)] = 1;
+
+    const verdict = evaluatePrunedMove(PACK(1, 2), 1, state, level, prep,
+        { PRUNE_MC_PORTAL_FORCED_NEIGHBOR: true }, false);
+
+    assert.equal(verdict, 'reject');
+    assert.equal(observed.length, 1, 'the shared verdict computation should still produce exactly one observed record');
 });

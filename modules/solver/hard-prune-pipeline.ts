@@ -18,7 +18,7 @@ export type PruneId =
     | 'PRUNE_MC_FORCED_FIRST_MOVE' | 'PRUNE_MC_CEILING' | 'PRUNE_DISTANCE_BOUND' | 'PRUNE_PARITY'
     | 'PRUNE_PORTAL_PARITY_ENVELOPE' | 'PRUNE_MUST_PASS_LB' | 'PRUNE_MUST_CROSS_LB'
     | 'PRUNE_SURROUND_LB' | 'PRUNE_ADJ_TURN_LB' | 'PRUNE_MUST_TURN_DEADLOCK'
-    | 'PRUNE_MC_FORCED_NEIGHBOR' | 'PRUNE_MC_NEIGHBOR_BUDGET'
+    | 'PRUNE_MC_FORCED_NEIGHBOR' | 'PRUNE_MC_NEIGHBOR_BUDGET' | 'PRUNE_MC_PORTAL_FORCED_NEIGHBOR'
     | 'PRUNE_INTERSECTION_DEFICIT' | 'PRUNE_CONNECTIVITY';
 
 /** Optional caller-owned counters; production stays allocation-free. */
@@ -59,10 +59,16 @@ export function evaluatePrunedMove(
     // property read plus an early-return when absent, so this is free in production. Runs before
     // any prune decision below so every node this function evaluates gets exactly one pass over
     // the (typically empty) obligation-cluster list, independent of what does or doesn't reject it.
+    // Shared with the opt-in PRUNE_MC_PORTAL_FORCED_NEIGHBOR check below so an A/B run that also
+    // wants observer logging never computes obligation clusters twice for the same node.
     const jointObligationObserver = prep._jointObligationObserver;
-    if (jointObligationObserver) {
-        const verdicts = evaluateObligationClusters(next, state, level, prep);
-        for (const v of verdicts) {
+    const jointObligationPruneEnabled = !!(cfg && cfg.PRUNE_MC_PORTAL_FORCED_NEIGHBOR === true);
+    let jointObligationVerdicts: ReturnType<typeof evaluateObligationClusters> | null = null;
+    if (jointObligationObserver || jointObligationPruneEnabled) {
+        jointObligationVerdicts = evaluateObligationClusters(next, state, level, prep);
+    }
+    if (jointObligationObserver && jointObligationVerdicts) {
+        for (const v of jointObligationVerdicts) {
             // Full path is only needed to spot-check a REJECT against known live prefixes offline;
             // copying it on every pass/abstain evaluation would be an O(depth) cost on every node a
             // long search visits while the must-cross cell stays pending. depth already summarizes
@@ -169,6 +175,18 @@ export function evaluatePrunedMove(
     if ((!cfg || cfg.PRUNE_MC_FORCED_NEIGHBOR) && state.mustCrossMask !== 0) {
         reached(diagnostics, 'PRUNE_MC_FORCED_NEIGHBOR');
         if (mustCrossForcedNeighborDeadlocked(next, state, level, prep)) return reject(diagnostics, 'PRUNE_MC_FORCED_NEIGHBOR');
+    }
+
+    // Opt-in (default-OFF, pending matched-work A/B — reports/2026-09-11-joint-obligation-
+    // propagation-observer-pilot-001.md): a forced neighbor that is a VISITED portal terminal is a
+    // stronger, unconditional case PRUNE_MC_FORCED_NEIGHBOR's hard-wall test does not cover (a
+    // portal terminal can be a hard deadlock with only one edgeUsage axis bit set) — see
+    // joint-obligation-propagation.ts's own derivation. Reuses the verdicts computed above so an
+    // A/B run with the observer also attached never evaluates obligation clusters twice.
+    if (jointObligationPruneEnabled && state.mustCrossMask !== 0) {
+        reached(diagnostics, 'PRUNE_MC_PORTAL_FORCED_NEIGHBOR');
+        const verdicts = jointObligationVerdicts ?? evaluateObligationClusters(next, state, level, prep);
+        if (verdicts.some(v => v.verdict === 'reject')) return reject(diagnostics, 'PRUNE_MC_PORTAL_FORCED_NEIGHBOR');
     }
 
     // Previously visited required neighbors consume free intersection budget on revisit. Stochastic
