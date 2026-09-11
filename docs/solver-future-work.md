@@ -22,6 +22,23 @@ If an item becomes active, its live gate moves to the owning workstream/speciali
 
 Before treating any older-plan question as backlog, first reconcile it against later evidence. An old question is not research debt if a newer report already answers it; carry forward only the smallest unexplained residue.
 
+## Algorithmic-frontier research funnel
+
+The post-1,029 residual atlas now identifies 388 current Corpus-2 misses in class 5, `no known rescuer after cross-evidence reconciliation`. Treat this as the current **algorithmic-frontier candidate cohort**: it is the set for which the registered T1 census plus the atlas's reconciled production/provenance evidence exposes no known rescue capability. It is an evidence class, not a proof that every existing or conceivable search procedure must fail.
+
+When a current workstream promotes frontier research, prefer this sequence rather than jumping directly to heavyweight machinery:
+
+1. establish or refresh the reconciled frontier cohort against the current production boundary;
+2. group by structural, fingerprint, family, solution-profile and response phenotype without using those offline labels as production routing inputs;
+3. compare known solutions, accepted paths, hint/provenance basins and live trajectories where available;
+4. localize the earliest recurring decision, prune, merge, representation loss or search-policy divergence that destroys all known-live continuation;
+5. reduce recurring failures to minimal counterexamples where that improves causal confidence;
+6. state the smallest generic level-blind mechanism that should restore or create capability;
+7. test that mechanism first on the implicated frontier cohort under a shared-work contract and explicit regression fixtures;
+8. require independent or whole-family holdout confirmation before production promotion.
+
+Advanced frameworks below become justified only when a recurring frontier mechanism gives them a bounded job. Frontier membership by itself is not permission to build a large new subsystem.
+
 ## Deferred questions
 
 | Question | Reopen condition / boundary |
