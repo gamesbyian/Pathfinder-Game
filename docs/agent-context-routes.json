@@ -36,6 +36,14 @@
       "maxBytes": 55000
     },
     {
+      "id": "solver-workflow-evidence-remediation",
+      "description": "Active solver workflow/result-contract/evidence-integrity remediation work.",
+      "required": ["AGENTS.md", "docs/solver-workflow-evidence-remediation-plan.md"],
+      "optional": ["docs/solver-research-operating-model.md", "docs/solver-evaluation-evidence.md", "docs/solver-budget-determinism.md", ".github/workflows/README.md"],
+      "warnBytes": 50000,
+      "maxBytes": 75000
+    },
+    {
       "id": "solver-scheduler-research",
       "description": "Allocation/scheduler work after the workstream authority identifies Workstream 2 as relevant.",
       "required": ["AGENTS.md", "docs/solver-optimization-workstreams.md", "docs/solver-research-operating-model.md", "docs/solver-scheduling-policy.md"],
@@ -108,6 +116,12 @@
       "purpose": "Current work/budget/determinism contract; migration chronology belongs in reports/archive.",
       "warnBytes": 12000,
       "maxBytes": 16000
+    },
+    {
+      "path": "docs/solver-workflow-evidence-remediation-plan.md",
+      "purpose": "Active implementation plan for solver workflow/result integrity, retirements, and historical evidence repair; archive or mark complete after closeout.",
+      "warnBytes": 28000,
+      "maxBytes": 38000
     },
     {
       "path": "docs/tooling-catalog.md",
