@@ -1,9 +1,9 @@
 # Solver system audit — 2026-09-10
 
-> **Status:** implementation complete; CI validation rolling
-> **Last evidence:** 2026-09-11 — coverage review is complete through Audit 23. The final open implementation findings in Audits 18–19 are fixed: census production-baseline state is tri-state, benchmark truncations are not failures, benchmark row reuse requires exact protocol provenance, and partial reuse is rejected under across-level parallelism because contention cannot be reproduced.
-> **Decision:** No additional audit area remains open on source inspection. Keep this branch as the durable campaign record and treat completed CI/review findings as reopen triggers, not reasons to idle while jobs are in flight.
-> **Execution:** Inspect completed CI as rolling evidence; repair any concrete regression it exposes. Do not poll in-flight jobs as a work loop.
+> **Status:** active
+> **Last evidence:** 2026-09-11 — all 23 source-audit areas are implementation-complete; final open source fixes landed, and completed CI remains rolling validation evidence.
+> **Decision:** No additional source-audit area remains open; completed CI or review failures reopen the relevant row and are repaired without waiting on in-flight jobs.
+> **Remaining gate:** Green required CI/review on the current branch tip; repair any concrete regression it exposes.
 
 This is the compact ledger for the cross-cutting solver audit requested on 2026-09-10. Canonical design, correctness, and priority changes still belong in their owning docs; this report records what was actually inspected, concrete fixes, and only the follow-up that remains.
 
