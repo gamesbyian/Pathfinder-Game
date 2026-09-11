@@ -41,7 +41,7 @@ Current authorities were reconciled after the campaign:
 - `solver-optimization-workstreams.md`: priority order preserved; the class-1 candidate now explicitly uses the current 26-level population under fixed total work, not the stale 8/9 menu.
 - `solver-architecture.md`: portal restorations, fresh-work retry policy, continuation hardening, and benchmark reuse reconciled to current behavior.
 
-`solver-research-data-assets.json` remains structurally valid; tightening individual caveat strings there is optional maintenance rather than a blocker or priority change.
+`solver-research-data-assets.json` remains structurally valid. Its individual asset caveat strings have not been duplicated with these cross-asset rules because the human guide and `solver-evaluation-evidence.md` now own them; update the JSON only when an asset-specific field/location/join contract changes.
 
 ## Sole remaining branch-local action
 
