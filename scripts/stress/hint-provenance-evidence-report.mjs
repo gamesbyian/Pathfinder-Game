@@ -3,7 +3,12 @@ import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { provenanceEventIdentity } from '../../modules/domain/hint-runtime.mjs';
-import { summarizeProvenanceEvidence } from './provenance-source-taxonomy.mjs';
+import {
+    EVIDENCE_PURPOSES,
+    classifyEvidenceApplicability,
+    provenanceDependencyStratum,
+    summarizeProvenanceEvidence,
+} from './provenance-source-taxonomy.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(arg => arg.startsWith('--') && arg.includes('=')).map(arg => {
@@ -52,6 +57,76 @@ function flattenHints(levels) {
     return levels.flatMap(level => level?.hintRecords || []);
 }
 
+function auditPurposes(hints, comparableSolverVersions) {
+    const result = {};
+    for (const purpose of EVIDENCE_PURPOSES) {
+        const applicability = { admissible: 0, 'context-bound': 0, inadmissible: 0 };
+        const reasons = new Map();
+        let independentSupportStrata = 0;
+        let hintsWithDependentCollapse = 0;
+        let hintsWithAdmissibleEvidence = 0;
+        for (const hint of hints) {
+            const entries = hint.provenance?.length ? hint.provenance : [null];
+            let hintAdmissible = false;
+            let hintAdmissibleEvents = 0;
+            const hintStrata = new Set();
+            for (const entry of entries) {
+                const classification = classifyEvidenceApplicability(entry, purpose, { comparableSolverVersions });
+                applicability[classification.applicability]++;
+                reasons.set(classification.reason, (reasons.get(classification.reason) || 0) + 1);
+                if (classification.applicability === 'admissible') {
+                    hintAdmissible = true;
+                    hintAdmissibleEvents++;
+                    if (entry) hintStrata.add(provenanceDependencyStratum(entry));
+                }
+            }
+            if (hintAdmissible) hintsWithAdmissibleEvidence++;
+            const support = hintStrata.size || (hintAdmissible ? 1 : 0);
+            independentSupportStrata += support;
+            if (hintAdmissibleEvents > support) hintsWithDependentCollapse++;
+        }
+        result[purpose] = {
+            events: applicability,
+            hintsWithAdmissibleEvidence,
+            independentSupportStrata,
+            hintsWithDependentCollapse,
+            rawAdmissibleEventsPerStratum: independentSupportStrata
+                ? Number((applicability.admissible / independentSupportStrata).toFixed(2)) : null,
+            reasons: Object.fromEntries([...reasons].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+        };
+    }
+    return result;
+}
+
+function auditVersions(hints, currentSolverVersion) {
+    const versions = new Map();
+    for (const hint of hints) for (const entry of hint.provenance || []) {
+        const version = entry?.solver?.version || 'unknown';
+        versions.set(version, (versions.get(version) || 0) + 1);
+    }
+    return {
+        currentSolverVersion,
+        distinctVersions: versions.size,
+        eventsOnCurrentVersion: versions.get(currentSolverVersion) || 0,
+        eventsByVersion: Object.fromEntries([...versions].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+    };
+}
+
+function auditLegacyAmbiguity(hints) {
+    const fields = ['usedExistingHints', 'hintGuided', 'isolatedTechnique'];
+    const missingContextFields = Object.fromEntries(fields.map(field => [field, 0]));
+    let entriesMissingAnyCapabilityContext = 0;
+    let strictColdMissingCapabilityContext = 0;
+    for (const hint of hints) for (const entry of hint.provenance || []) {
+        const missing = fields.filter(field => !Object.hasOwn(entry?.context || {}, field));
+        if (missing.length) entriesMissingAnyCapabilityContext++;
+        for (const field of missing) missingContextFields[field]++;
+        const classification = classifyEvidenceApplicability(entry, 'current-production-capability');
+        if (classification.reason === 'legacy-context-ambiguity') strictColdMissingCapabilityContext++;
+    }
+    return { entriesMissingAnyCapabilityContext, strictColdMissingCapabilityContext, missingContextFields };
+}
+
 const report = {
     generatedAt: new Date().toISOString(),
     schemaVersion: 2,
@@ -59,9 +134,13 @@ const report = {
         origin: 'mutually-exclusive producer identity',
         facets: 'overlapping search/run properties',
         admissibility: 'strict and narrow production cold-capability classification',
+        purposeApplicability: 'query-dependent applicability with within-hint dependency strata',
     },
     corpora: {},
 };
+const currentSolverVersion = args.get('--current-solver-version') || null;
+const comparableSolverVersions = (args.get('--comparable-solver-versions') || currentSolverVersion || '')
+    .split(',').map(value => value.trim()).filter(Boolean);
 
 for (const [label, corpusPath] of corpora) {
     const levels = readLevelsWithHints(corpusPath);
@@ -72,11 +151,38 @@ for (const [label, corpusPath] of corpora) {
         corpusPath,
         levels: levels.length,
         ...evidence,
+        evidencePurposeAudit: auditPurposes(hints, comparableSolverVersions),
+        solverRegimeAudit: auditVersions(hints, currentSolverVersion),
+        legacyAmbiguityAudit: auditLegacyAmbiguity(hints),
         semanticDedupAudit: dedupAudit,
     };
 }
 
 const totals = Object.values(report.corpora);
+function combinePurposeAudits(corpora) {
+    return Object.fromEntries(EVIDENCE_PURPOSES.map(purpose => {
+        const rows = corpora.map(corpus => corpus.evidencePurposeAudit[purpose]);
+        const reasons = new Map();
+        for (const row of rows) for (const [reason, count] of Object.entries(row.reasons)) {
+            reasons.set(reason, (reasons.get(reason) || 0) + count);
+        }
+        const events = {
+            admissible: rows.reduce((sum, row) => sum + row.events.admissible, 0),
+            'context-bound': rows.reduce((sum, row) => sum + row.events['context-bound'], 0),
+            inadmissible: rows.reduce((sum, row) => sum + row.events.inadmissible, 0),
+        };
+        const independentSupportStrata = rows.reduce((sum, row) => sum + row.independentSupportStrata, 0);
+        return [purpose, {
+            events,
+            hintsWithAdmissibleEvidence: rows.reduce((sum, row) => sum + row.hintsWithAdmissibleEvidence, 0),
+            independentSupportStrata,
+            hintsWithDependentCollapse: rows.reduce((sum, row) => sum + row.hintsWithDependentCollapse, 0),
+            rawAdmissibleEventsPerStratum: independentSupportStrata
+                ? Number((events.admissible / independentSupportStrata).toFixed(2)) : null,
+            reasons: Object.fromEntries([...reasons].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+        }];
+    }));
+}
 report.total = {
     levels: totals.reduce((n, c) => n + c.levels, 0),
     hints: totals.reduce((n, c) => n + c.hints, 0),
@@ -85,6 +191,16 @@ report.total = {
     multiOriginHints: totals.reduce((n, c) => n + c.multiOriginHints, 0),
     duplicateEvents: totals.reduce((n, c) => n + c.semanticDedupAudit.duplicateEvents, 0),
     hintsWithDuplicates: totals.reduce((n, c) => n + c.semanticDedupAudit.hintsWithDuplicates, 0),
+    evidencePurposeAudit: combinePurposeAudits(totals),
+    legacyAmbiguityAudit: {
+        entriesMissingAnyCapabilityContext: totals.reduce((sum, corpus) =>
+            sum + corpus.legacyAmbiguityAudit.entriesMissingAnyCapabilityContext, 0),
+        strictColdMissingCapabilityContext: totals.reduce((sum, corpus) =>
+            sum + corpus.legacyAmbiguityAudit.strictColdMissingCapabilityContext, 0),
+        missingContextFields: Object.fromEntries(['usedExistingHints', 'hintGuided', 'isolatedTechnique']
+            .map(field => [field, totals.reduce((sum, corpus) =>
+                sum + corpus.legacyAmbiguityAudit.missingContextFields[field], 0)])),
+    },
 };
 
 const json = JSON.stringify(report, null, 2);
