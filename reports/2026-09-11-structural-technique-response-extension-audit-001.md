@@ -1,9 +1,11 @@
 # Structural properties x technique response: extension audit 001
 
-> **Status:** active existing-data extension / execution-ready
-> **Evidence role:** synthesis plus reusable offline analysis; no new solver dispatch
-> **Current priority relationship:** supports WS1 and the class-4/class-5 frontier work; does not displace the current observer-only joint-obligation propagation gate
-> **Question:** where can already-successful structural/capability methods be extended into technique-response research without buying broad new compute?
+> **Status:** active
+> **Last evidence:** 2026-09-11 — Sep-1/Sep-3 frozen relative-advantage summaries, the existing Sep-5 leading-feature temporal-drift report, and the persistent-effects cross-check added in this tranche.
+> **Decision:** extend strong existing structural/census methods through temporal persistence and generic-difficulty control before escalating a technique niche to family, solution-space, or operational mechanism evidence.
+> **Remaining gate:** run the new temporal-persistence and difficulty-stratified analyzers in a full checkout, then escalate only surviving contrasts according to the staged ladder below.
+> **Evidence role:** synthesis plus reusable offline analysis; no new solver dispatch.
+> **Current priority relationship:** supports WS1 and the class-4/class-5 frontier work; does not displace the current observer-only joint-obligation propagation gate.
 
 ## Bottom line
 
