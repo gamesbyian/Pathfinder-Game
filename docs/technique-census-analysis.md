@@ -44,6 +44,16 @@ The ranked program is [`../reports/2026-09-04-census-cross-evidence-research-pla
 
 The first temporal holdout is already complete: [`../reports/2026-09-04-portfolio-18-fresh-census-temporal-holdout.md`](../reports/2026-09-04-portfolio-18-fresh-census-temporal-holdout.md) finds the fixed `portfolio-18-specialists` composition retains 147/155 (94.8%) of refreshed full-menu singleton exclusives, essentially unchanged from the old 144/151 (95.4%) result despite broad support churn.
 
+### Structural technique-response extension
+
+Pairwise structural niches should now inherit that same cross-evidence discipline. [`../reports/2026-09-11-structural-technique-response-extension-audit-001.md`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md) records the staged contract:
+
+1. compare the frozen relative-advantage pairs across the September-1 and September-3 censuses with `scripts/analyze-technique-niche-stability.mjs`;
+2. re-evaluate those contrasts inside comparable generic-burden bands with `scripts/analyze-difficulty-stratified-relative-advantage.mjs` so broad difficulty is less able to masquerade as technique affinity;
+3. escalate only surviving associations to existing variant-family boundary flips, source-controlled solution-space mediators, and finally bounded operational first-divergence/all-known-basin extinction.
+
+The generic burden score is nuisance control, not a production classifier. Existing evidence also closes the obvious alternative of indiscriminately adding more topology descriptors: the tested 18-feature topology/placement bundle did not materially improve held-out prediction beyond the coarse structural baseline. A new static descriptor should therefore be mechanism-nominated, not added simply because a niche remains unexplained.
+
 Known solutions, fingerprints, historical winners, construction witnesses and family identities remain offline labels. A cross-evidence association must be translated into a compact legal current-level/current-state descriptor or mechanism and independently tested before it can affect production search.
 
 ## Scheduler-facing `techniqueBudgetCurves`
