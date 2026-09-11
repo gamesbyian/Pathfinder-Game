@@ -57,6 +57,7 @@ import { buildSolveWorkerResult } from './worker-result-serialization.mjs';
 // The exported handleWorkerMessage() function contains all logic so it can be
 // unit-tested in Node.js without a real Worker environment.
 
+import { validateRawLevel } from '../domain/level-schema.js';
 import { normalizeRawLevel } from './normalization.js';
 import { solveLevel } from './orchestration.js';
 import { findTriggerableFalseGoalCells } from './false-goal-trigger-search.js';
@@ -174,6 +175,13 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
     const { levelRaw, budgetMs = 30000, solveOpts = {} } = data;
 
     try {
+        // SOLVE is a raw-wire public boundary just like createSolver().prepareLevelForSolver().
+        // Enforce the canonical schema before translating into solver bitmasks/typed arrays so the
+        // worker cannot bypass cardinality, bounds, occupancy, or representation-safety invariants.
+        const validation = validateRawLevel(levelRaw);
+        if (!validation.ok) {
+            throw new Error(`Solver: invalid raw level: ${validation.errors.join('; ')}`);
+        }
         const level = normalizeRawLevel(levelRaw);
         const yieldFn = () => {
             if (cancelledIds.has(id)) throw new Error('Solver:cancelled');
