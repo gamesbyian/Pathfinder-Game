@@ -34,3 +34,15 @@ test('public raw solver boundary still accepts schema-valid raw levels', () => {
     assert.equal(normalized.mustCrossKeys.length, 2);
     assert.equal(normalized.gateKeys.length, 1);
 });
+
+test('public raw solver boundary preserves rectangular synthetic levels supported by the solver core', () => {
+    const solver = createSolver();
+    const normalized = solver.prepareLevelForSolver({
+        grid: { w: 4, h: 3 },
+        gates: [{ x: 1, y: 1 }],
+        goal: { x: 4, y: 3 },
+        reqLen: 5,
+        reqInt: 0,
+    }, { source: 'raw' });
+    assert.deepEqual(normalized.grid, { w: 4, h: 3 });
+});
