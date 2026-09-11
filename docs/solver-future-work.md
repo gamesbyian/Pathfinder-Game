@@ -22,6 +22,12 @@ If an item becomes active, its live gate moves to the owning workstream/speciali
 
 Before treating any older-plan question as backlog, first reconcile it against later evidence. An old question is not research debt if a newer report already answers it; carry forward only the smallest unexplained residue.
 
+## Algorithmic-frontier research funnel
+
+The post-1,029 atlas identifies 388 current Corpus-2 misses in class 5, `no known rescuer after cross-evidence reconciliation`. Treat these as the current **algorithmic-frontier candidate cohort**, not proof that every existing or conceivable search procedure must fail. Class 4 is the preferred near-control: its 200 levels also have zero isolated T1 winners, but each has a historical strict cold-capability Pathfinder rescuer.
+
+When frontier research is active, prefer: **class-4/class-5 contrast -> source-controlled solution/profile and family comparison -> all-known-basin first-loss localization -> smallest generic level-blind capability -> bounded frontier pilot -> independent/whole-family validation**. If no coherent frontier-wide distinction survives, split class 5 by failure/extinction phenotype rather than forcing one mechanism. Heavy frameworks below need a recurring bounded mechanism, not frontier membership alone.
+
 ## Deferred questions
 
 | Question | Reopen condition / boundary |
