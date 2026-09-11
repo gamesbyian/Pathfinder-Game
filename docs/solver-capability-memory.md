@@ -74,7 +74,9 @@ Two candidate evidence modes are supported.
 
 ### Row report
 
-A candidate points at a report containing per-level rows (`levels`, `rows`, or `results`). The analyzer joins only IDs actually present in both baseline and candidate, treats errors/truncation as inconclusive, and reports:
+A candidate points at a report containing per-level rows (`levels`, `rows`, or `results`). The analyzer joins only IDs actually present in both baseline and candidate. A gain/loss requires **both** rows to be conclusive; an error/truncation on either side abstains. The baseline separately reports conclusive rows and unknown/censored rows so an unknown is never silently converted into a current residual miss.
+
+The analyzer reports:
 
 - confirmed gains against the supplied baseline;
 - confirmed losses against the supplied baseline;
@@ -92,7 +94,7 @@ When a durable historical report contains explicit gain/loss IDs but no convenie
 Historical signatures produce only:
 
 - demonstrated historical gains/losses;
-- intersection of historical gains with the supplied baseline residual, labelled **current-residual nominations**;
+- intersection of historical gains with the supplied **conclusive** baseline residual, labelled **current-residual nominations**;
 - overlap/uniqueness among nominations.
 
 They produce **zero confirmed current-baseline gains** by construction. A historical gain that still sits in today's residual says “reconcile/rerun/explain this capability,” not “production can solve this now with that policy.”
@@ -162,13 +164,16 @@ This is a **counterfactual regression bank** conceptually, not necessarily a new
 - solved-ID hash;
 - per-stage `workSpent` in addition to nodes;
 - gain/loss/retained solved-set churn against the most recent protocol-compatible tracked run with the same population;
-- gain/loss set hashes plus the comparison run ID, while exact IDs remain recoverable by diffing the existing per-level snapshots for those two run IDs.
+- gain/loss set hashes plus the comparison run ID, while exact IDs remain recoverable by diffing the existing per-level snapshots for those two run IDs;
+- a compact normalized protocol object and SHA-256 protocol hash.
 
-Protocol compatibility requires matching level-blind/deterministic mode, enabled/disabled flag sets, corpus totals, and population-ID hashes. Experimental flag runs therefore do not silently become the comparison baseline for ordinary production health.
+For ordinary `solver-stress-refresh.yml` runs, protocol identity is read directly from the workflow-dispatch event inputs via `GITHUB_EVENT_PATH`, with the workflow's current defaults filled in for omitted inputs. A caller may also provide `summary.protocol` explicitly. Protocol comparison therefore covers the actual dispatch knobs, including budgets, strict-work mode, worker/shard/concurrency inputs, lifecycle telemetry, flags and optional reserve/probe overrides, without changing solver execution.
+
+Churn comparison additionally requires matching level-blind/deterministic mode, enabled/disabled flag sets, corpus totals, and population-ID hashes. Experimental or differently budgeted runs therefore do not silently become the comparison baseline for ordinary production health. Legacy timeline records without protocol identity abstain rather than compare.
 
 A scalar change such as `1029 -> 1041` can now be distinguished from `+12/-0`, `+27/-15`, or another composition change. Net score remains the product objective; churn tells research what was exchanged to get there.
 
-The first refresh after this feature may have no compatible prior churn comparison if the required historical per-level snapshot is unavailable. That is an abstention, not zero churn.
+The first refresh after this feature may have no compatible prior churn comparison because older timeline rows lack protocol hashes. That is expected and is an abstention, not zero churn. The next protocol-identical refresh can compare normally.
 
 ## Temporal solver diversity
 
@@ -219,7 +224,7 @@ After a material capability promotion or a provenance reinterpretation that chan
 - treat old gain/loss signatures as nominations until their level structures and protocol meaning are reconciled;
 - never convert missing provenance into a negative.
 
-The owning current workstream remains authoritative for current residual counts. Derived views should carry baseline ID plus population/solved-set hashes so accidental joins to a different production boundary are visible.
+The owning current workstream remains authoritative for current residual counts. Derived views carry baseline ID plus population/solved/unknown-set hashes so accidental joins to a different or censored production boundary are visible.
 
 ## Closeout checklist
 
