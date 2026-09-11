@@ -15,7 +15,7 @@ import { formatAttemptIdentityKey } from './attempt-identity.mjs';
 import { buildRetryTierAblationOverride, runWholeLadderRetryTier } from './stage-executors.js';
 import { keyParity } from '../domain/cell-key.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver } from './types.js';
+import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
 type AttemptSearchDispatch = typeof runAttemptSearch;
@@ -329,6 +329,10 @@ export interface SolveOpts {
      *  types.ts and docs/solver-optimization-workstreams.md item #0's learned-failure Stage A).
      *  Never persisted or exposed by Solver's facade; absent in every production caller. */
     connectivityRejectionObserver?: ConnectivityRejectionObserver;
+    /** Research-only joint-obligation propagation observer (see JointObligationObserver's doc in
+     *  types.ts and reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md). Never
+     *  persisted or exposed by Solver's facade; absent in every production caller. */
+    jointObligationObserver?: JointObligationObserver;
     legacyLatencyPortfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
     /** @deprecated Historical option name; read for compatibility, never emitted. */
     portfolioExperiment?: LegacyLatencyPortfolioExperimentDefinition;
@@ -1604,6 +1608,7 @@ async function runLegacyLatencyPortfolioExperiment(
     const prep = prepLevel(level);
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
     if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
+    if (opts.jointObligationObserver) prep._jointObligationObserver = opts.jointObligationObserver;
     const prepMs = Date.now() - prepStart;
     const cfg = normalizeAblationConfig(opts.ablation);
     prep._cfg = cfg;
@@ -1733,6 +1738,7 @@ async function runStaticPortfolio(level: NormalizedLevel, opts: SolveOpts): Prom
     const workStart = prep._workMeter.units;
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
     if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
+    if (opts.jointObligationObserver) prep._jointObligationObserver = opts.jointObligationObserver;
     prep._attemptBudgetTelemetry = true;
     const cfg = normalizeAblationConfig(opts.ablation);
     prep._cfg = cfg;
@@ -1914,6 +1920,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         || opts.strictTotalWorkBudget === true;
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
     if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
+    if (opts.jointObligationObserver) prep._jointObligationObserver = opts.jointObligationObserver;
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
 
     // Ablation config: attach to prep so all inner functions can read it. Normalized (see

@@ -241,6 +241,28 @@ if (stats.length) {
   }
 }
 
+// Solved rows already carry a full path (portfolio-solve-sweep-lib.mjs's buildRow), but only the
+// artifact -- not this printed summary -- previously exposed it. An agent whose egress policy
+// blocks the GH Actions artifact host (Azure Blob Storage, which every artifact download redirects
+// to regardless of workflow config) had no way to referee-check a claimed solve without re-solving
+// it from scratch. Bounded to keep this printed summary (which also lands in $GITHUB_STEP_SUMMARY)
+// well under GitHub's size limits even for a large population; the cap only ever bites when most of
+// a large population solved, which is not the "bounded miss/gain population" case this tooling is
+// mainly dispatched for.
+const MAX_PRINTED_SOLUTION_PATHS = 300;
+const solvedRows = stats.flatMap(s => s.levels.filter(row => row?.ok && Array.isArray(row?.solution))
+  .map(row => ({ source: path.relative(outDir, s.file).replaceAll('\\', '/'), id: row.id ?? row.level, solution: row.solution })));
+if (solvedRows.length) {
+  lines.push('', '## Solved level paths', '');
+  lines.push('Packed-key paths, one per solved level, so a referee/re-check can proceed without the artifact.');
+  for (const row of solvedRows.slice(0, MAX_PRINTED_SOLUTION_PATHS)) {
+    lines.push(`- \`${row.source}\` ${row.id}: ${JSON.stringify(row.solution)}`);
+  }
+  if (solvedRows.length > MAX_PRINTED_SOLUTION_PATHS) {
+    lines.push(`- ... ${solvedRows.length - MAX_PRINTED_SOLUTION_PATHS} more solved level(s) omitted (see the artifact for the full set).`);
+  }
+}
+
 const stagedStats = stats.filter(s => s.stages.length).slice(0, 12);
 if (stagedStats.length) {
   lines.push('', '## Stage participation', '');

@@ -1,0 +1,4153 @@
+{
+  "generatedAt": "2026-09-11T02:56:14.496Z",
+  "evidenceRole": "observer-only real-search pilot (no pruning; class-4 near-control vs class-5 frontier)",
+  "atlas": "reports/stress/residual-atlas/2026-09-11-post-1029-671/atlas.json",
+  "corpus": "data/stress/stress-levels-random.json",
+  "budgetMs": 3000,
+  "class4": {
+    "primaryClass": 4,
+    "opportunityLevels": 86,
+    "firedLevels": 86,
+    "firedRate": 1,
+    "totalReject": 11289048,
+    "totalPass": 75710298,
+    "totalAbstain": 0,
+    "solvedInThisRun": 0,
+    "totalFalseRejects": 0
+  },
+  "class5": {
+    "primaryClass": 5,
+    "opportunityLevels": 120,
+    "firedLevels": 120,
+    "firedRate": 1,
+    "totalReject": 27455434,
+    "totalPass": 107739023,
+    "totalAbstain": 0,
+    "solvedInThisRun": 0,
+    "totalFalseRejects": 0
+  },
+  "class4Rows": [
+    {
+      "id": "R00073",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3266,
+      "nodesExpanded": 360113,
+      "counts": {
+        "pass": 491951,
+        "reject": 74591,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 491951,
+        "visited-portal-terminal-forced-neighbor": 74591
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R00082",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3082,
+      "nodesExpanded": 360063,
+      "counts": {
+        "pass": 232130,
+        "reject": 168076,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 232130,
+        "visited-portal-terminal-forced-neighbor": 168076
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R00329",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3590,
+      "nodesExpanded": 360203,
+      "counts": {
+        "pass": 582234,
+        "reject": 15781,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 582234,
+        "visited-portal-terminal-forced-neighbor": 15781
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R00506",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1857,
+      "nodesExpanded": 360054,
+      "counts": {
+        "pass": 406864,
+        "reject": 114933,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 406864,
+        "visited-portal-terminal-forced-neighbor": 114933
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R00537",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3176,
+      "nodesExpanded": 360077,
+      "counts": {
+        "pass": 441155,
+        "reject": 35628,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 441155,
+        "visited-portal-terminal-forced-neighbor": 35628
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R00690",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2848,
+      "nodesExpanded": 360212,
+      "counts": {
+        "pass": 1143968,
+        "reject": 215460,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1143968,
+        "visited-portal-terminal-forced-neighbor": 215460
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R00726",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2891,
+      "nodesExpanded": 360167,
+      "counts": {
+        "pass": 908816,
+        "reject": 56322,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 908816,
+        "visited-portal-terminal-forced-neighbor": 56322
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R00786",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3806,
+      "nodesExpanded": 360062,
+      "counts": {
+        "pass": 896438,
+        "reject": 119087,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 896438,
+        "visited-portal-terminal-forced-neighbor": 119087
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R00869",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3187,
+      "nodesExpanded": 360138,
+      "counts": {
+        "pass": 1369049,
+        "reject": 144153,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1369049,
+        "visited-portal-terminal-forced-neighbor": 144153
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R00912",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3522,
+      "nodesExpanded": 360202,
+      "counts": {
+        "pass": 592900,
+        "reject": 10720,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 592900,
+        "visited-portal-terminal-forced-neighbor": 10720
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01023",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2828,
+      "nodesExpanded": 360120,
+      "counts": {
+        "pass": 762216,
+        "reject": 221967,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 762216,
+        "visited-portal-terminal-forced-neighbor": 221967
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01052",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3120,
+      "nodesExpanded": 360234,
+      "counts": {
+        "pass": 1483206,
+        "reject": 130626,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1483206,
+        "visited-portal-terminal-forced-neighbor": 130626
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01058",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3602,
+      "nodesExpanded": 360102,
+      "counts": {
+        "pass": 1646909,
+        "reject": 127296,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1646909,
+        "visited-portal-terminal-forced-neighbor": 127296
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01105",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3192,
+      "nodesExpanded": 360252,
+      "counts": {
+        "pass": 542165,
+        "reject": 8086,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 542165,
+        "visited-portal-terminal-forced-neighbor": 8086
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01190",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1199,
+      "nodesExpanded": 360126,
+      "counts": {
+        "pass": 390142,
+        "reject": 111321,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 390142,
+        "visited-portal-terminal-forced-neighbor": 111321
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01208",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3191,
+      "nodesExpanded": 360198,
+      "counts": {
+        "pass": 918254,
+        "reject": 106616,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 918254,
+        "visited-portal-terminal-forced-neighbor": 106616
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01274",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3370,
+      "nodesExpanded": 360032,
+      "counts": {
+        "pass": 347470,
+        "reject": 195260,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 347470,
+        "visited-portal-terminal-forced-neighbor": 195260
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01382",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3593,
+      "nodesExpanded": 360127,
+      "counts": {
+        "pass": 1665853,
+        "reject": 132195,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1665853,
+        "visited-portal-terminal-forced-neighbor": 132195
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01397",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3119,
+      "nodesExpanded": 360066,
+      "counts": {
+        "pass": 778234,
+        "reject": 113920,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 778234,
+        "visited-portal-terminal-forced-neighbor": 113920
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01489",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2724,
+      "nodesExpanded": 360027,
+      "counts": {
+        "pass": 1086518,
+        "reject": 98970,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1086518,
+        "visited-portal-terminal-forced-neighbor": 98970
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01872",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2846,
+      "nodesExpanded": 360023,
+      "counts": {
+        "pass": 477049,
+        "reject": 83251,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 477049,
+        "visited-portal-terminal-forced-neighbor": 83251
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02042",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 28505,
+      "nodesExpanded": 2901009,
+      "counts": {
+        "pass": 3924974,
+        "reject": 3004022,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 3924974,
+        "visited-portal-terminal-forced-neighbor": 3004022
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02060",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3263,
+      "nodesExpanded": 360053,
+      "counts": {
+        "pass": 1014720,
+        "reject": 84239,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1014720,
+        "visited-portal-terminal-forced-neighbor": 84239
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02074",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3774,
+      "nodesExpanded": 360057,
+      "counts": {
+        "pass": 974881,
+        "reject": 113321,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 974881,
+        "visited-portal-terminal-forced-neighbor": 113321
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02086",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3048,
+      "nodesExpanded": 360112,
+      "counts": {
+        "pass": 907325,
+        "reject": 174810,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 907325,
+        "visited-portal-terminal-forced-neighbor": 174810
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02100",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2884,
+      "nodesExpanded": 360164,
+      "counts": {
+        "pass": 513108,
+        "reject": 8663,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 513108,
+        "visited-portal-terminal-forced-neighbor": 8663
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02150",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3079,
+      "nodesExpanded": 360062,
+      "counts": {
+        "pass": 430202,
+        "reject": 20745,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 430202,
+        "visited-portal-terminal-forced-neighbor": 20745
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02215",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4275,
+      "nodesExpanded": 360200,
+      "counts": {
+        "pass": 2211772,
+        "reject": 191714,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2211772,
+        "visited-portal-terminal-forced-neighbor": 191714
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R02245",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3474,
+      "nodesExpanded": 360176,
+      "counts": {
+        "pass": 1116252,
+        "reject": 50641,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1116252,
+        "visited-portal-terminal-forced-neighbor": 50641
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02276",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3302,
+      "nodesExpanded": 360210,
+      "counts": {
+        "pass": 456217,
+        "reject": 81616,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 456217,
+        "visited-portal-terminal-forced-neighbor": 81616
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02303",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2928,
+      "nodesExpanded": 360216,
+      "counts": {
+        "pass": 1093642,
+        "reject": 473693,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1093642,
+        "visited-portal-terminal-forced-neighbor": 473693
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02309",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3279,
+      "nodesExpanded": 360186,
+      "counts": {
+        "pass": 889555,
+        "reject": 96904,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 889555,
+        "visited-portal-terminal-forced-neighbor": 96904
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02337",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4125,
+      "nodesExpanded": 360092,
+      "counts": {
+        "pass": 841312,
+        "reject": 72772,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 841312,
+        "visited-portal-terminal-forced-neighbor": 72772
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02346",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3431,
+      "nodesExpanded": 360083,
+      "counts": {
+        "pass": 286474,
+        "reject": 55922,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 286474,
+        "visited-portal-terminal-forced-neighbor": 55922
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02365",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2619,
+      "nodesExpanded": 360222,
+      "counts": {
+        "pass": 841404,
+        "reject": 91607,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 841404,
+        "visited-portal-terminal-forced-neighbor": 91607
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02424",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3080,
+      "nodesExpanded": 360189,
+      "counts": {
+        "pass": 530283,
+        "reject": 27481,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 530283,
+        "visited-portal-terminal-forced-neighbor": 27481
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02438",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3348,
+      "nodesExpanded": 360045,
+      "counts": {
+        "pass": 429530,
+        "reject": 13090,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 429530,
+        "visited-portal-terminal-forced-neighbor": 13090
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02452",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2727,
+      "nodesExpanded": 360087,
+      "counts": {
+        "pass": 675806,
+        "reject": 51707,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 675806,
+        "visited-portal-terminal-forced-neighbor": 51707
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02479",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2854,
+      "nodesExpanded": 360161,
+      "counts": {
+        "pass": 737652,
+        "reject": 93932,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 737652,
+        "visited-portal-terminal-forced-neighbor": 93932
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02530",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1585,
+      "nodesExpanded": 360122,
+      "counts": {
+        "pass": 325690,
+        "reject": 26377,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 325690,
+        "visited-portal-terminal-forced-neighbor": 26377
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02546",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3052,
+      "nodesExpanded": 360080,
+      "counts": {
+        "pass": 429691,
+        "reject": 36730,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 429691,
+        "visited-portal-terminal-forced-neighbor": 36730
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02555",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2926,
+      "nodesExpanded": 360248,
+      "counts": {
+        "pass": 878582,
+        "reject": 31807,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 878582,
+        "visited-portal-terminal-forced-neighbor": 31807
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02558",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1376,
+      "nodesExpanded": 360057,
+      "counts": {
+        "pass": 334017,
+        "reject": 174242,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 334017,
+        "visited-portal-terminal-forced-neighbor": 174242
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02580",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3278,
+      "nodesExpanded": 360150,
+      "counts": {
+        "pass": 793272,
+        "reject": 70151,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 793272,
+        "visited-portal-terminal-forced-neighbor": 70151
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02581",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3000,
+      "nodesExpanded": 360212,
+      "counts": {
+        "pass": 464866,
+        "reject": 67976,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 464866,
+        "visited-portal-terminal-forced-neighbor": 67976
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02590",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3183,
+      "nodesExpanded": 360203,
+      "counts": {
+        "pass": 512723,
+        "reject": 30196,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 512723,
+        "visited-portal-terminal-forced-neighbor": 30196
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02613",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3249,
+      "nodesExpanded": 360192,
+      "counts": {
+        "pass": 644698,
+        "reject": 2273,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 644698,
+        "visited-portal-terminal-forced-neighbor": 2273
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02654",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3176,
+      "nodesExpanded": 360102,
+      "counts": {
+        "pass": 477981,
+        "reject": 61127,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 477981,
+        "visited-portal-terminal-forced-neighbor": 61127
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02662",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3292,
+      "nodesExpanded": 360215,
+      "counts": {
+        "pass": 499764,
+        "reject": 6610,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 499764,
+        "visited-portal-terminal-forced-neighbor": 6610
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02703",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1723,
+      "nodesExpanded": 360178,
+      "counts": {
+        "pass": 134746,
+        "reject": 112822,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 134746,
+        "visited-portal-terminal-forced-neighbor": 112822
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02730",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3584,
+      "nodesExpanded": 360181,
+      "counts": {
+        "pass": 957074,
+        "reject": 163114,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 957074,
+        "visited-portal-terminal-forced-neighbor": 163114
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02741",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3232,
+      "nodesExpanded": 360078,
+      "counts": {
+        "pass": 909494,
+        "reject": 113920,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 909494,
+        "visited-portal-terminal-forced-neighbor": 113920
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02758",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2894,
+      "nodesExpanded": 360150,
+      "counts": {
+        "pass": 539826,
+        "reject": 2890,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 539826,
+        "visited-portal-terminal-forced-neighbor": 2890
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02767",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4782,
+      "nodesExpanded": 360233,
+      "counts": {
+        "pass": 1134176,
+        "reject": 30374,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1134176,
+        "visited-portal-terminal-forced-neighbor": 30374
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02807",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3197,
+      "nodesExpanded": 360242,
+      "counts": {
+        "pass": 1330977,
+        "reject": 82791,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1330977,
+        "visited-portal-terminal-forced-neighbor": 82791
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02823",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2971,
+      "nodesExpanded": 360198,
+      "counts": {
+        "pass": 398377,
+        "reject": 104177,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 398377,
+        "visited-portal-terminal-forced-neighbor": 104177
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02830",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4456,
+      "nodesExpanded": 360053,
+      "counts": {
+        "pass": 3309700,
+        "reject": 140734,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 3309700,
+        "visited-portal-terminal-forced-neighbor": 140734
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 6
+    },
+    {
+      "id": "R02832",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2956,
+      "nodesExpanded": 360137,
+      "counts": {
+        "pass": 291222,
+        "reject": 80399,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 291222,
+        "visited-portal-terminal-forced-neighbor": 80399
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02887",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4140,
+      "nodesExpanded": 360090,
+      "counts": {
+        "pass": 408728,
+        "reject": 89435,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 408728,
+        "visited-portal-terminal-forced-neighbor": 89435
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02897",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3261,
+      "nodesExpanded": 360066,
+      "counts": {
+        "pass": 374653,
+        "reject": 21216,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 374653,
+        "visited-portal-terminal-forced-neighbor": 21216
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02991",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3434,
+      "nodesExpanded": 360255,
+      "counts": {
+        "pass": 490328,
+        "reject": 81241,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 490328,
+        "visited-portal-terminal-forced-neighbor": 81241
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03024",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2816,
+      "nodesExpanded": 360210,
+      "counts": {
+        "pass": 778585,
+        "reject": 57325,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 778585,
+        "visited-portal-terminal-forced-neighbor": 57325
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03029",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4088,
+      "nodesExpanded": 360029,
+      "counts": {
+        "pass": 1284018,
+        "reject": 10695,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1284018,
+        "visited-portal-terminal-forced-neighbor": 10695
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03030",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4145,
+      "nodesExpanded": 360165,
+      "counts": {
+        "pass": 461930,
+        "reject": 58667,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 461930,
+        "visited-portal-terminal-forced-neighbor": 58667
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03031",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3755,
+      "nodesExpanded": 360123,
+      "counts": {
+        "pass": 482236,
+        "reject": 45300,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 482236,
+        "visited-portal-terminal-forced-neighbor": 45300
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03038",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3106,
+      "nodesExpanded": 360228,
+      "counts": {
+        "pass": 761796,
+        "reject": 285696,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 761796,
+        "visited-portal-terminal-forced-neighbor": 285696
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03050",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4389,
+      "nodesExpanded": 360227,
+      "counts": {
+        "pass": 3283444,
+        "reject": 327966,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 3283444,
+        "visited-portal-terminal-forced-neighbor": 327966
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 6
+    },
+    {
+      "id": "R03059",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3709,
+      "nodesExpanded": 360216,
+      "counts": {
+        "pass": 565400,
+        "reject": 65145,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 565400,
+        "visited-portal-terminal-forced-neighbor": 65145
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03083",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3725,
+      "nodesExpanded": 360018,
+      "counts": {
+        "pass": 412254,
+        "reject": 71200,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 412254,
+        "visited-portal-terminal-forced-neighbor": 71200
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03097",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27778,
+      "nodesExpanded": 3948216,
+      "counts": {
+        "pass": 3464948,
+        "reject": 317965,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 3464948,
+        "visited-portal-terminal-forced-neighbor": 317965
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03101",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2666,
+      "nodesExpanded": 360187,
+      "counts": {
+        "pass": 474084,
+        "reject": 1184,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 474084,
+        "visited-portal-terminal-forced-neighbor": 1184
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03102",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 905,
+      "nodesExpanded": 360028,
+      "counts": {
+        "pass": 97993,
+        "reject": 5224,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 97993,
+        "visited-portal-terminal-forced-neighbor": 5224
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03106",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1899,
+      "nodesExpanded": 360073,
+      "counts": {
+        "pass": 126897,
+        "reject": 79645,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 126897,
+        "visited-portal-terminal-forced-neighbor": 79645
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03169",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3927,
+      "nodesExpanded": 360061,
+      "counts": {
+        "pass": 2023191,
+        "reject": 63790,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2023191,
+        "visited-portal-terminal-forced-neighbor": 63790
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R03195",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3811,
+      "nodesExpanded": 360126,
+      "counts": {
+        "pass": 532999,
+        "reject": 41844,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 532999,
+        "visited-portal-terminal-forced-neighbor": 41844
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03203",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3775,
+      "nodesExpanded": 360195,
+      "counts": {
+        "pass": 1611950,
+        "reject": 534674,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1611950,
+        "visited-portal-terminal-forced-neighbor": 534674
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R03223",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3690,
+      "nodesExpanded": 360008,
+      "counts": {
+        "pass": 1431322,
+        "reject": 171512,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1431322,
+        "visited-portal-terminal-forced-neighbor": 171512
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R03254",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4004,
+      "nodesExpanded": 360038,
+      "counts": {
+        "pass": 472149,
+        "reject": 14580,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 472149,
+        "visited-portal-terminal-forced-neighbor": 14580
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03268",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3270,
+      "nodesExpanded": 360112,
+      "counts": {
+        "pass": 302886,
+        "reject": 126921,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 302886,
+        "visited-portal-terminal-forced-neighbor": 126921
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03275",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3518,
+      "nodesExpanded": 360184,
+      "counts": {
+        "pass": 494012,
+        "reject": 27688,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 494012,
+        "visited-portal-terminal-forced-neighbor": 27688
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03276",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3408,
+      "nodesExpanded": 360147,
+      "counts": {
+        "pass": 936389,
+        "reject": 90481,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 936389,
+        "visited-portal-terminal-forced-neighbor": 90481
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03294",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3783,
+      "nodesExpanded": 360242,
+      "counts": {
+        "pass": 539020,
+        "reject": 43969,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 539020,
+        "visited-portal-terminal-forced-neighbor": 43969
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03298",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3827,
+      "nodesExpanded": 360130,
+      "counts": {
+        "pass": 1188946,
+        "reject": 12040,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1188946,
+        "visited-portal-terminal-forced-neighbor": 12040
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03336",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2788,
+      "nodesExpanded": 360110,
+      "counts": {
+        "pass": 883225,
+        "reject": 86819,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 883225,
+        "visited-portal-terminal-forced-neighbor": 86819
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03343",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3876,
+      "nodesExpanded": 360178,
+      "counts": {
+        "pass": 1903698,
+        "reject": 145244,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1903698,
+        "visited-portal-terminal-forced-neighbor": 145244
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R03351",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3846,
+      "nodesExpanded": 360210,
+      "counts": {
+        "pass": 517711,
+        "reject": 81734,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 517711,
+        "visited-portal-terminal-forced-neighbor": 81734
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    }
+  ],
+  "class5Rows": [
+    {
+      "id": "R00139",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4127,
+      "nodesExpanded": 360099,
+      "counts": {
+        "pass": 513597,
+        "reject": 56045,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 513597,
+        "visited-portal-terminal-forced-neighbor": 56045
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R00399",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4156,
+      "nodesExpanded": 360097,
+      "counts": {
+        "pass": 900252,
+        "reject": 77199,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 900252,
+        "visited-portal-terminal-forced-neighbor": 77199
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R00417",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1654,
+      "nodesExpanded": 360003,
+      "counts": {
+        "pass": 437042,
+        "reject": 122407,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 437042,
+        "visited-portal-terminal-forced-neighbor": 122407
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R00449",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4376,
+      "nodesExpanded": 360051,
+      "counts": {
+        "pass": 850789,
+        "reject": 90370,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 850789,
+        "visited-portal-terminal-forced-neighbor": 90370
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R00532",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3114,
+      "nodesExpanded": 360094,
+      "counts": {
+        "pass": 446772,
+        "reject": 14465,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 446772,
+        "visited-portal-terminal-forced-neighbor": 14465
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R00561",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1226,
+      "nodesExpanded": 360025,
+      "counts": {
+        "pass": 180691,
+        "reject": 41794,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 180691,
+        "visited-portal-terminal-forced-neighbor": 41794
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R00563",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3394,
+      "nodesExpanded": 360024,
+      "counts": {
+        "pass": 787617,
+        "reject": 98008,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 787617,
+        "visited-portal-terminal-forced-neighbor": 98008
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R00647",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3630,
+      "nodesExpanded": 360146,
+      "counts": {
+        "pass": 967552,
+        "reject": 76725,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 967552,
+        "visited-portal-terminal-forced-neighbor": 76725
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01044",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4759,
+      "nodesExpanded": 360070,
+      "counts": {
+        "pass": 926595,
+        "reject": 206268,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 926595,
+        "visited-portal-terminal-forced-neighbor": 206268
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01097",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3906,
+      "nodesExpanded": 360245,
+      "counts": {
+        "pass": 402242,
+        "reject": 41381,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 402242,
+        "visited-portal-terminal-forced-neighbor": 41381
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01132",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3163,
+      "nodesExpanded": 360025,
+      "counts": {
+        "pass": 317958,
+        "reject": 27719,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 317958,
+        "visited-portal-terminal-forced-neighbor": 27719
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01154",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1534,
+      "nodesExpanded": 360187,
+      "counts": {
+        "pass": 341465,
+        "reject": 24550,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 341465,
+        "visited-portal-terminal-forced-neighbor": 24550
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01174",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4079,
+      "nodesExpanded": 360184,
+      "counts": {
+        "pass": 413117,
+        "reject": 106578,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 413117,
+        "visited-portal-terminal-forced-neighbor": 106578
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01290",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1610,
+      "nodesExpanded": 360015,
+      "counts": {
+        "pass": 283062,
+        "reject": 253865,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 283062,
+        "visited-portal-terminal-forced-neighbor": 253865
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01341",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3723,
+      "nodesExpanded": 360251,
+      "counts": {
+        "pass": 1144494,
+        "reject": 88526,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1144494,
+        "visited-portal-terminal-forced-neighbor": 88526
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01351",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3678,
+      "nodesExpanded": 360108,
+      "counts": {
+        "pass": 496393,
+        "reject": 523201,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 496393,
+        "visited-portal-terminal-forced-neighbor": 523201
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01368",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4294,
+      "nodesExpanded": 360193,
+      "counts": {
+        "pass": 876312,
+        "reject": 135458,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 876312,
+        "visited-portal-terminal-forced-neighbor": 135458
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01416",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27703,
+      "nodesExpanded": 8571417,
+      "counts": {
+        "pass": 4916760,
+        "reject": 4720843,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 4916760,
+        "visited-portal-terminal-forced-neighbor": 4720843
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01417",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3441,
+      "nodesExpanded": 360034,
+      "counts": {
+        "pass": 875873,
+        "reject": 42245,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 875873,
+        "visited-portal-terminal-forced-neighbor": 42245
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01426",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2595,
+      "nodesExpanded": 360083,
+      "counts": {
+        "pass": 773238,
+        "reject": 133963,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 773238,
+        "visited-portal-terminal-forced-neighbor": 133963
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R01632",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3279,
+      "nodesExpanded": 360094,
+      "counts": {
+        "pass": 642106,
+        "reject": 6188,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 642106,
+        "visited-portal-terminal-forced-neighbor": 6188
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01735",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3339,
+      "nodesExpanded": 360162,
+      "counts": {
+        "pass": 325782,
+        "reject": 21132,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 325782,
+        "visited-portal-terminal-forced-neighbor": 21132
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R01765",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1568,
+      "nodesExpanded": 360020,
+      "counts": {
+        "pass": 502299,
+        "reject": 87921,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 502299,
+        "visited-portal-terminal-forced-neighbor": 87921
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R01767",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2931,
+      "nodesExpanded": 360168,
+      "counts": {
+        "pass": 1631019,
+        "reject": 116939,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1631019,
+        "visited-portal-terminal-forced-neighbor": 116939
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R01882",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3704,
+      "nodesExpanded": 360065,
+      "counts": {
+        "pass": 1611852,
+        "reject": 308273,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1611852,
+        "visited-portal-terminal-forced-neighbor": 308273
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R02021",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1287,
+      "nodesExpanded": 360082,
+      "counts": {
+        "pass": 168873,
+        "reject": 75357,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 168873,
+        "visited-portal-terminal-forced-neighbor": 75357
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02025",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1591,
+      "nodesExpanded": 360149,
+      "counts": {
+        "pass": 394018,
+        "reject": 84711,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 394018,
+        "visited-portal-terminal-forced-neighbor": 84711
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02030",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 964,
+      "nodesExpanded": 360166,
+      "counts": {
+        "pass": 104853,
+        "reject": 17065,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 104853,
+        "visited-portal-terminal-forced-neighbor": 17065
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02035",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3787,
+      "nodesExpanded": 360189,
+      "counts": {
+        "pass": 891155,
+        "reject": 103981,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 891155,
+        "visited-portal-terminal-forced-neighbor": 103981
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02036",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3216,
+      "nodesExpanded": 360073,
+      "counts": {
+        "pass": 534550,
+        "reject": 33843,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 534550,
+        "visited-portal-terminal-forced-neighbor": 33843
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02039",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4198,
+      "nodesExpanded": 360199,
+      "counts": {
+        "pass": 780306,
+        "reject": 266918,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 780306,
+        "visited-portal-terminal-forced-neighbor": 266918
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02054",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3926,
+      "nodesExpanded": 360186,
+      "counts": {
+        "pass": 959265,
+        "reject": 11718,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 959265,
+        "visited-portal-terminal-forced-neighbor": 11718
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02058",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1236,
+      "nodesExpanded": 360130,
+      "counts": {
+        "pass": 138133,
+        "reject": 30840,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 138133,
+        "visited-portal-terminal-forced-neighbor": 30840
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02083",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3797,
+      "nodesExpanded": 360230,
+      "counts": {
+        "pass": 1178931,
+        "reject": 30758,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1178931,
+        "visited-portal-terminal-forced-neighbor": 30758
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02120",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1773,
+      "nodesExpanded": 360220,
+      "counts": {
+        "pass": 346149,
+        "reject": 113341,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 346149,
+        "visited-portal-terminal-forced-neighbor": 113341
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02121",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27608,
+      "nodesExpanded": 6375695,
+      "counts": {
+        "pass": 2073922,
+        "reject": 404367,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2073922,
+        "visited-portal-terminal-forced-neighbor": 404367
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02144",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4625,
+      "nodesExpanded": 360174,
+      "counts": {
+        "pass": 1268885,
+        "reject": 319207,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1268885,
+        "visited-portal-terminal-forced-neighbor": 319207
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02166",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1631,
+      "nodesExpanded": 360152,
+      "counts": {
+        "pass": 116845,
+        "reject": 64014,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 116845,
+        "visited-portal-terminal-forced-neighbor": 64014
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02170",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3329,
+      "nodesExpanded": 360239,
+      "counts": {
+        "pass": 367663,
+        "reject": 25451,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 367663,
+        "visited-portal-terminal-forced-neighbor": 25451
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02174",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3790,
+      "nodesExpanded": 360225,
+      "counts": {
+        "pass": 811729,
+        "reject": 215417,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 811729,
+        "visited-portal-terminal-forced-neighbor": 215417
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02185",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3934,
+      "nodesExpanded": 360206,
+      "counts": {
+        "pass": 756662,
+        "reject": 203437,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 756662,
+        "visited-portal-terminal-forced-neighbor": 203437
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02187",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1285,
+      "nodesExpanded": 360086,
+      "counts": {
+        "pass": 54648,
+        "reject": 18014,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 54648,
+        "visited-portal-terminal-forced-neighbor": 18014
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02199",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3613,
+      "nodesExpanded": 360017,
+      "counts": {
+        "pass": 884557,
+        "reject": 127748,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 884557,
+        "visited-portal-terminal-forced-neighbor": 127748
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02210",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1489,
+      "nodesExpanded": 360005,
+      "counts": {
+        "pass": 521750,
+        "reject": 112095,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 521750,
+        "visited-portal-terminal-forced-neighbor": 112095
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02263",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27726,
+      "nodesExpanded": 3700231,
+      "counts": {
+        "pass": 1592090,
+        "reject": 267766,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1592090,
+        "visited-portal-terminal-forced-neighbor": 267766
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02280",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3178,
+      "nodesExpanded": 360100,
+      "counts": {
+        "pass": 1408119,
+        "reject": 66958,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1408119,
+        "visited-portal-terminal-forced-neighbor": 66958
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02281",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3422,
+      "nodesExpanded": 360224,
+      "counts": {
+        "pass": 1285145,
+        "reject": 132454,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1285145,
+        "visited-portal-terminal-forced-neighbor": 132454
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02288",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2699,
+      "nodesExpanded": 360244,
+      "counts": {
+        "pass": 827272,
+        "reject": 90872,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 827272,
+        "visited-portal-terminal-forced-neighbor": 90872
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02300",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4339,
+      "nodesExpanded": 360203,
+      "counts": {
+        "pass": 1081281,
+        "reject": 141791,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1081281,
+        "visited-portal-terminal-forced-neighbor": 141791
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02301",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1659,
+      "nodesExpanded": 360117,
+      "counts": {
+        "pass": 224731,
+        "reject": 96467,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 224731,
+        "visited-portal-terminal-forced-neighbor": 96467
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02317",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27536,
+      "nodesExpanded": 4352569,
+      "counts": {
+        "pass": 1964793,
+        "reject": 2454986,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1964793,
+        "visited-portal-terminal-forced-neighbor": 2454986
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02324",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4315,
+      "nodesExpanded": 360070,
+      "counts": {
+        "pass": 631708,
+        "reject": 243973,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 631708,
+        "visited-portal-terminal-forced-neighbor": 243973
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02326",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4104,
+      "nodesExpanded": 360153,
+      "counts": {
+        "pass": 618253,
+        "reject": 132879,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 618253,
+        "visited-portal-terminal-forced-neighbor": 132879
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02334",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 29017,
+      "nodesExpanded": 2836088,
+      "counts": {
+        "pass": 1116385,
+        "reject": 647015,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1116385,
+        "visited-portal-terminal-forced-neighbor": 647015
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02336",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3878,
+      "nodesExpanded": 360048,
+      "counts": {
+        "pass": 1093482,
+        "reject": 16268,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1093482,
+        "visited-portal-terminal-forced-neighbor": 16268
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02389",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4304,
+      "nodesExpanded": 360001,
+      "counts": {
+        "pass": 468864,
+        "reject": 97797,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 468864,
+        "visited-portal-terminal-forced-neighbor": 97797
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02392",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3000,
+      "nodesExpanded": 360247,
+      "counts": {
+        "pass": 664910,
+        "reject": 77395,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 664910,
+        "visited-portal-terminal-forced-neighbor": 77395
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02419",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3699,
+      "nodesExpanded": 360174,
+      "counts": {
+        "pass": 685855,
+        "reject": 191419,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 685855,
+        "visited-portal-terminal-forced-neighbor": 191419
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02425",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 869,
+      "nodesExpanded": 360055,
+      "counts": {
+        "pass": 220932,
+        "reject": 41479,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 220932,
+        "visited-portal-terminal-forced-neighbor": 41479
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02429",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3794,
+      "nodesExpanded": 360056,
+      "counts": {
+        "pass": 783143,
+        "reject": 125049,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 783143,
+        "visited-portal-terminal-forced-neighbor": 125049
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02473",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4186,
+      "nodesExpanded": 360097,
+      "counts": {
+        "pass": 938254,
+        "reject": 94844,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 938254,
+        "visited-portal-terminal-forced-neighbor": 94844
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02499",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3740,
+      "nodesExpanded": 360209,
+      "counts": {
+        "pass": 1098821,
+        "reject": 81467,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1098821,
+        "visited-portal-terminal-forced-neighbor": 81467
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02508",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4160,
+      "nodesExpanded": 360234,
+      "counts": {
+        "pass": 1107622,
+        "reject": 175902,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1107622,
+        "visited-portal-terminal-forced-neighbor": 175902
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02592",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4691,
+      "nodesExpanded": 360160,
+      "counts": {
+        "pass": 484173,
+        "reject": 87796,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 484173,
+        "visited-portal-terminal-forced-neighbor": 87796
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02619",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3534,
+      "nodesExpanded": 360177,
+      "counts": {
+        "pass": 389973,
+        "reject": 21187,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 389973,
+        "visited-portal-terminal-forced-neighbor": 21187
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02627",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4152,
+      "nodesExpanded": 360106,
+      "counts": {
+        "pass": 1082273,
+        "reject": 85594,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1082273,
+        "visited-portal-terminal-forced-neighbor": 85594
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02629",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4701,
+      "nodesExpanded": 360189,
+      "counts": {
+        "pass": 1094157,
+        "reject": 371489,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1094157,
+        "visited-portal-terminal-forced-neighbor": 371489
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02635",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3922,
+      "nodesExpanded": 360079,
+      "counts": {
+        "pass": 391692,
+        "reject": 48101,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 391692,
+        "visited-portal-terminal-forced-neighbor": 48101
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02656",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1432,
+      "nodesExpanded": 360097,
+      "counts": {
+        "pass": 1138073,
+        "reject": 74924,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1138073,
+        "visited-portal-terminal-forced-neighbor": 74924
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 6
+    },
+    {
+      "id": "R02661",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2849,
+      "nodesExpanded": 360033,
+      "counts": {
+        "pass": 237943,
+        "reject": 22007,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 237943,
+        "visited-portal-terminal-forced-neighbor": 22007
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02664",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27644,
+      "nodesExpanded": 7589744,
+      "counts": {
+        "pass": 2699603,
+        "reject": 546948,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2699603,
+        "visited-portal-terminal-forced-neighbor": 546948
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02676",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3345,
+      "nodesExpanded": 360194,
+      "counts": {
+        "pass": 438485,
+        "reject": 113712,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 438485,
+        "visited-portal-terminal-forced-neighbor": 113712
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02689",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3835,
+      "nodesExpanded": 360168,
+      "counts": {
+        "pass": 305555,
+        "reject": 216382,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 305555,
+        "visited-portal-terminal-forced-neighbor": 216382
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02733",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27503,
+      "nodesExpanded": 4628391,
+      "counts": {
+        "pass": 2087991,
+        "reject": 1150081,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2087991,
+        "visited-portal-terminal-forced-neighbor": 1150081
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02747",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4093,
+      "nodesExpanded": 360115,
+      "counts": {
+        "pass": 848031,
+        "reject": 137885,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 848031,
+        "visited-portal-terminal-forced-neighbor": 137885
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02754",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3791,
+      "nodesExpanded": 360112,
+      "counts": {
+        "pass": 981854,
+        "reject": 82645,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 981854,
+        "visited-portal-terminal-forced-neighbor": 82645
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02774",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3774,
+      "nodesExpanded": 360151,
+      "counts": {
+        "pass": 682733,
+        "reject": 67800,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 682733,
+        "visited-portal-terminal-forced-neighbor": 67800
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02801",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3602,
+      "nodesExpanded": 360079,
+      "counts": {
+        "pass": 809175,
+        "reject": 19556,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 809175,
+        "visited-portal-terminal-forced-neighbor": 19556
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02809",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4659,
+      "nodesExpanded": 360114,
+      "counts": {
+        "pass": 915072,
+        "reject": 165597,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 915072,
+        "visited-portal-terminal-forced-neighbor": 165597
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02857",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4057,
+      "nodesExpanded": 360065,
+      "counts": {
+        "pass": 476097,
+        "reject": 76638,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 476097,
+        "visited-portal-terminal-forced-neighbor": 76638
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02899",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27653,
+      "nodesExpanded": 5194829,
+      "counts": {
+        "pass": 3050632,
+        "reject": 1697098,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 3050632,
+        "visited-portal-terminal-forced-neighbor": 1697098
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02920",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3507,
+      "nodesExpanded": 360087,
+      "counts": {
+        "pass": 430129,
+        "reject": 64298,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 430129,
+        "visited-portal-terminal-forced-neighbor": 64298
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R02932",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3183,
+      "nodesExpanded": 360102,
+      "counts": {
+        "pass": 659625,
+        "reject": 338621,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 659625,
+        "visited-portal-terminal-forced-neighbor": 338621
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02935",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3339,
+      "nodesExpanded": 360019,
+      "counts": {
+        "pass": 2087636,
+        "reject": 94449,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2087636,
+        "visited-portal-terminal-forced-neighbor": 94449
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 5
+    },
+    {
+      "id": "R02936",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4121,
+      "nodesExpanded": 360236,
+      "counts": {
+        "pass": 1055171,
+        "reject": 451463,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1055171,
+        "visited-portal-terminal-forced-neighbor": 451463
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R02938",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3777,
+      "nodesExpanded": 360058,
+      "counts": {
+        "pass": 2119817,
+        "reject": 202392,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2119817,
+        "visited-portal-terminal-forced-neighbor": 202392
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R02949",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 5137,
+      "nodesExpanded": 360254,
+      "counts": {
+        "pass": 1055350,
+        "reject": 153837,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1055350,
+        "visited-portal-terminal-forced-neighbor": 153837
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R02980",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4088,
+      "nodesExpanded": 360025,
+      "counts": {
+        "pass": 955762,
+        "reject": 118368,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 955762,
+        "visited-portal-terminal-forced-neighbor": 118368
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03003",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4725,
+      "nodesExpanded": 360173,
+      "counts": {
+        "pass": 2050215,
+        "reject": 222029,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 2050215,
+        "visited-portal-terminal-forced-neighbor": 222029
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R03011",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3747,
+      "nodesExpanded": 360109,
+      "counts": {
+        "pass": 387511,
+        "reject": 89244,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 387511,
+        "visited-portal-terminal-forced-neighbor": 89244
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03032",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27645,
+      "nodesExpanded": 5231498,
+      "counts": {
+        "pass": 4096792,
+        "reject": 89295,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 4096792,
+        "visited-portal-terminal-forced-neighbor": 89295
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03055",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4062,
+      "nodesExpanded": 360081,
+      "counts": {
+        "pass": 387213,
+        "reject": 80574,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 387213,
+        "visited-portal-terminal-forced-neighbor": 80574
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03067",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27661,
+      "nodesExpanded": 4497659,
+      "counts": {
+        "pass": 4215570,
+        "reject": 2525686,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 4215570,
+        "visited-portal-terminal-forced-neighbor": 2525686
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03088",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3281,
+      "nodesExpanded": 360119,
+      "counts": {
+        "pass": 422998,
+        "reject": 30330,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 422998,
+        "visited-portal-terminal-forced-neighbor": 30330
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03123",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4496,
+      "nodesExpanded": 360183,
+      "counts": {
+        "pass": 1229051,
+        "reject": 305873,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1229051,
+        "visited-portal-terminal-forced-neighbor": 305873
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R03125",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1726,
+      "nodesExpanded": 360208,
+      "counts": {
+        "pass": 524586,
+        "reject": 49417,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 524586,
+        "visited-portal-terminal-forced-neighbor": 49417
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R03128",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2881,
+      "nodesExpanded": 360140,
+      "counts": {
+        "pass": 369987,
+        "reject": 66816,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 369987,
+        "visited-portal-terminal-forced-neighbor": 66816
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03129",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3793,
+      "nodesExpanded": 360081,
+      "counts": {
+        "pass": 482329,
+        "reject": 15059,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 482329,
+        "visited-portal-terminal-forced-neighbor": 15059
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03130",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1846,
+      "nodesExpanded": 360037,
+      "counts": {
+        "pass": 368963,
+        "reject": 89276,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 368963,
+        "visited-portal-terminal-forced-neighbor": 89276
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03156",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3531,
+      "nodesExpanded": 360125,
+      "counts": {
+        "pass": 514723,
+        "reject": 12165,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 514723,
+        "visited-portal-terminal-forced-neighbor": 12165
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03157",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4308,
+      "nodesExpanded": 360039,
+      "counts": {
+        "pass": 1030771,
+        "reject": 107920,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1030771,
+        "visited-portal-terminal-forced-neighbor": 107920
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03166",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3913,
+      "nodesExpanded": 360105,
+      "counts": {
+        "pass": 846514,
+        "reject": 113784,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 846514,
+        "visited-portal-terminal-forced-neighbor": 113784
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03172",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4194,
+      "nodesExpanded": 360163,
+      "counts": {
+        "pass": 1316391,
+        "reject": 276892,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1316391,
+        "visited-portal-terminal-forced-neighbor": 276892
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R03190",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3688,
+      "nodesExpanded": 360170,
+      "counts": {
+        "pass": 606965,
+        "reject": 130414,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 606965,
+        "visited-portal-terminal-forced-neighbor": 130414
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03191",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1292,
+      "nodesExpanded": 360217,
+      "counts": {
+        "pass": 299749,
+        "reject": 36145,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 299749,
+        "visited-portal-terminal-forced-neighbor": 36145
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03193",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1933,
+      "nodesExpanded": 360255,
+      "counts": {
+        "pass": 229073,
+        "reject": 44470,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 229073,
+        "visited-portal-terminal-forced-neighbor": 44470
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03197",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3549,
+      "nodesExpanded": 360224,
+      "counts": {
+        "pass": 1373591,
+        "reject": 262488,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1373591,
+        "visited-portal-terminal-forced-neighbor": 262488
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R03209",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1861,
+      "nodesExpanded": 360105,
+      "counts": {
+        "pass": 304104,
+        "reject": 78359,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 304104,
+        "visited-portal-terminal-forced-neighbor": 78359
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03213",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4206,
+      "nodesExpanded": 360148,
+      "counts": {
+        "pass": 768527,
+        "reject": 169426,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 768527,
+        "visited-portal-terminal-forced-neighbor": 169426
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03221",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4274,
+      "nodesExpanded": 360059,
+      "counts": {
+        "pass": 1008645,
+        "reject": 101262,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1008645,
+        "visited-portal-terminal-forced-neighbor": 101262
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03229",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 2693,
+      "nodesExpanded": 360087,
+      "counts": {
+        "pass": 296814,
+        "reject": 45572,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 296814,
+        "visited-portal-terminal-forced-neighbor": 45572
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03280",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3735,
+      "nodesExpanded": 360076,
+      "counts": {
+        "pass": 521546,
+        "reject": 90007,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 521546,
+        "visited-portal-terminal-forced-neighbor": 90007
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03282",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4351,
+      "nodesExpanded": 360224,
+      "counts": {
+        "pass": 1143875,
+        "reject": 88839,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1143875,
+        "visited-portal-terminal-forced-neighbor": 88839
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03292",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1811,
+      "nodesExpanded": 360084,
+      "counts": {
+        "pass": 333349,
+        "reject": 79436,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 333349,
+        "visited-portal-terminal-forced-neighbor": 79436
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 2
+    },
+    {
+      "id": "R03301",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3212,
+      "nodesExpanded": 360148,
+      "counts": {
+        "pass": 287297,
+        "reject": 89937,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 287297,
+        "visited-portal-terminal-forced-neighbor": 89937
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03313",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 3734,
+      "nodesExpanded": 360217,
+      "counts": {
+        "pass": 474745,
+        "reject": 41191,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 474745,
+        "visited-portal-terminal-forced-neighbor": 41191
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03332",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 4385,
+      "nodesExpanded": 360006,
+      "counts": {
+        "pass": 1808531,
+        "reject": 334160,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1808531,
+        "visited-portal-terminal-forced-neighbor": 334160
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 4
+    },
+    {
+      "id": "R03337",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1449,
+      "nodesExpanded": 360179,
+      "counts": {
+        "pass": 478906,
+        "reject": 170868,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 478906,
+        "visited-portal-terminal-forced-neighbor": 170868
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    },
+    {
+      "id": "R03346",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 27477,
+      "nodesExpanded": 28904933,
+      "counts": {
+        "pass": 1127231,
+        "reject": 192790,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 1127231,
+        "visited-portal-terminal-forced-neighbor": 192790
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 1
+    },
+    {
+      "id": "R03348",
+      "solved": false,
+      "status": "node-budget-reached",
+      "elapsedMs": 1911,
+      "nodesExpanded": 360102,
+      "counts": {
+        "pass": 226026,
+        "reject": 159716,
+        "abstain": 0
+      },
+      "byReasonFamily": {
+        "neighbor-not-yet-visited": 226026,
+        "visited-portal-terminal-forced-neighbor": 159716
+      },
+      "rejectSampleCount": 20,
+      "falseRejectCount": 0,
+      "falseRejectSamples": [],
+      "clusterCount": 3
+    }
+  ]
+}

@@ -292,6 +292,13 @@ export interface PrepLevel {
     _beamResearchObserver?: BeamResearchObserver | null;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
+    /** Research-only joint-obligation propagation observer — see JointObligationObserver's own doc
+     *  below. Absent in every production call; observing an already-computed obligation-cluster
+     *  verdict changes no pruning/ordering/budget decision. */
+    _jointObligationObserver?: JointObligationObserver | null;
+    /** Level-static obligation-cluster cache for joint-obligation-propagation.ts's
+     *  findObligationClusters — a level's must-cross/portal geometry never changes within a solve. */
+    _jointObligationClusters?: ObligationCluster[];
     /** Test-only: force beamSearchFromGate's coarse-state-merge/mechanic-bucket-retention keying onto the delimited-string
      *  fallback path even when the fast numeric encoding would fit — see beamNumericCoarseStateKey's own
      *  comment in search.ts. Lets a differential test run the SAME level/search through both key
@@ -450,6 +457,42 @@ export interface ConnectivityRejectionObserver {
      *  that should be measured separately from Stage A's plain field capture. */
     includeBoundarySketch?: boolean;
 }
+
+/** Observer-only joint-obligation propagation (see joint-obligation-propagation.ts's own doc and
+ *  reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md). Currently one cluster
+ *  kind: a pending must-cross cell's still-open-axis forced neighbor that is itself a portal
+ *  terminal — search-state.ts's unconditional "each portal cell can only be visited once" rule
+ *  makes a VISITED such neighbor a provable hard deadlock that neither the must-cross-specific
+ *  bounds nor generic portal reasoning catch independently. */
+export type ObligationClusterKind = 'must-cross-portal-forced-neighbor';
+
+/** Static (level-only) obligation-cluster descriptor. Computed once per level and cached on prep. */
+export interface ObligationCluster {
+    id: string;
+    kind: ObligationClusterKind;
+    mustCrossIndex: number;
+    mustCrossKey: number;
+    axis: number; // AXIS_H or AXIS_V
+    neighborKey: number;
+}
+
+export type JointObligationVerdict = 'pass' | 'reject' | 'abstain';
+
+export interface JointObligationRecord {
+    clusterId: string;
+    kind: ObligationClusterKind;
+    verdict: JointObligationVerdict;
+    reasonFamily: string;
+    pos: number;
+    path: number[];
+    depth: number;
+    work: number;
+}
+
+/** Research-only sink. Receives one record per ACTIVE cluster per evaluated node (an already-
+ *  satisfied must-cross cell, or one whose axis is already used, is inactive and not logged — it
+ *  carries no obligation-propagation signal). Never affects search. */
+export interface JointObligationObserver { observe(record: JointObligationRecord): void; }
 
 /** Undo token returned by `applyMove` (landmark fields present only when hasLandmarkConstraints). */
 export interface UndoToken {
