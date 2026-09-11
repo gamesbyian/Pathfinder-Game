@@ -1,6 +1,6 @@
 # Solver system audit — 2026-09-10
 
-> **Status:** complete
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-11 — CI run 4165 is green on the recovered branch tip: fast-gate, ordinary deep verification, and heavyweight implementation proofs all passed after the retry-contract assertion repairs.
 > **Decision:** All 23 source-audit areas and the recovery/CI follow-up are closed. Later evidence may still reopen the relevant row under the follow-up rule below.
 > **Remaining gate:** None for this audit campaign.
