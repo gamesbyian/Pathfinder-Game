@@ -16,7 +16,7 @@ The broad scorer-vocabulary discriminator is now closed negative: the corrected 
 
 ## Structural technique-response extension ladder
 
-Extend existing structural/census insight by evidence quality, not feature count: **temporal persistence -> difficulty-stratified relative advantage -> existing-family controlled flips -> source-controlled solution-space mediator -> bounded operational first divergence**. Stop when a compact distinction fails. Richer generic topology remains closed unless a mechanism nominates a specific descriptor. See [`2026-09-11-structural-technique-response-extension-audit-001.md`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md).
+Extend existing structural/census insight by evidence quality, not feature count: **temporal persistence -> difficulty-stratified relative advantage -> existing-family controlled flips -> source-controlled solution-space mediator -> bounded operational first divergence**. Stop when a compact distinction fails. Richer generic topology remains closed unless a mechanism nominates a specific descriptor. Stages 1-2 are now DONE: 2/8 frozen pairs (`beam:objectiveFirst@5000` and `beam:intersectionHarvest@5000`, each plain vs. mechanic-buckets) clear both filters and are ready for stage 3 (existing variant-family boundary flips); the rest stay descriptive (no persistent effect, or too few burden-stratified strata to interpret). See [`2026-09-11-structural-technique-response-extension-audit-001.md`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md), [`temporal+difficulty confirmation`](../reports/2026-09-11-structural-technique-response-temporal-difficulty-confirmation-001.md).
 
 ## Deferred questions
 

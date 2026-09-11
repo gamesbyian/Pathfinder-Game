@@ -1,0 +1,684 @@
+{
+  "schemaVersion": 1,
+  "evidenceRole": "observational-development-temporal-holdout-extension",
+  "persistentThreshold": 0.3,
+  "comparedPairCount": 8,
+  "persistentPairCount": 5,
+  "comparisons": [
+    {
+      "leftAction": "admissible-order|tieBreak=default|lds=off",
+      "rightAction": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+      "oldDisagreement": 29,
+      "freshDisagreement": 36,
+      "oldLeftOnly": 16,
+      "oldRightOnly": 13,
+      "freshLeftOnly": 20,
+      "freshRightOnly": 16,
+      "oldLeader": {
+        "feature": "mustTurn",
+        "effect": -0.6443280312697278
+      },
+      "freshLeader": {
+        "feature": "mustPass",
+        "effect": 0.9189028319223983
+      },
+      "sameLeadingFeature": false,
+      "commonTopFeatureCount": 2,
+      "sameDirectionCommonTopFeatureCount": 1,
+      "persistentFeatures": [
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": -0.3864993646077083,
+          "freshEffect": -0.6095357299118473,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3864993646077083,
+          "absoluteEffectDelta": 0.22303636530413906
+        }
+      ],
+      "commonTopFeatures": [
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": -0.3864993646077083,
+          "freshEffect": -0.6095357299118473,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3864993646077083,
+          "absoluteEffectDelta": 0.22303636530413906
+        },
+        {
+          "feature": "constrainedObjects",
+          "oldEffect": -0.25143847726708346,
+          "freshEffect": 0.30484836459490894,
+          "sameDirection": false,
+          "persistent": false,
+          "minAbsoluteEffect": 0.25143847726708346,
+          "absoluteEffectDelta": 0.05340988732782548
+        }
+      ],
+      "interpretation": "persistent-structural-niche",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    },
+    {
+      "leftAction": "dfs|score=harvestThenFinish|bias=none",
+      "rightAction": "dfs|score=portalFirstTransfer|bias=none",
+      "oldDisagreement": 27,
+      "freshDisagreement": 22,
+      "oldLeftOnly": 12,
+      "oldRightOnly": 15,
+      "freshLeftOnly": 8,
+      "freshRightOnly": 14,
+      "oldLeader": {
+        "feature": "requiredPathLength",
+        "effect": -1.09524184506042
+      },
+      "freshLeader": {
+        "feature": "flippingFilters",
+        "effect": 1.6819041623347484
+      },
+      "sameLeadingFeature": false,
+      "commonTopFeatureCount": 3,
+      "sameDirectionCommonTopFeatureCount": 3,
+      "persistentFeatures": [
+        {
+          "feature": "flippingFilters",
+          "oldEffect": 0.8514637902858482,
+          "freshEffect": 1.6819041623347484,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.8514637902858482,
+          "absoluteEffectDelta": 0.8304403720489002
+        },
+        {
+          "feature": "mustCross",
+          "oldEffect": -0.5842550349736264,
+          "freshEffect": -0.5147159637524598,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.5147159637524598,
+          "absoluteEffectDelta": 0.06953907122116665
+        },
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": -0.9377389954327336,
+          "freshEffect": -0.3022217072497382,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3022217072497382,
+          "absoluteEffectDelta": 0.6355172881829955
+        }
+      ],
+      "commonTopFeatures": [
+        {
+          "feature": "flippingFilters",
+          "oldEffect": 0.8514637902858482,
+          "freshEffect": 1.6819041623347484,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.8514637902858482,
+          "absoluteEffectDelta": 0.8304403720489002
+        },
+        {
+          "feature": "mustCross",
+          "oldEffect": -0.5842550349736264,
+          "freshEffect": -0.5147159637524598,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.5147159637524598,
+          "absoluteEffectDelta": 0.06953907122116665
+        },
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": -0.9377389954327336,
+          "freshEffect": -0.3022217072497382,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3022217072497382,
+          "absoluteEffectDelta": 0.6355172881829955
+        }
+      ],
+      "interpretation": "persistent-structural-niche",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    },
+    {
+      "leftAction": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+      "rightAction": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "oldDisagreement": 196,
+      "freshDisagreement": 202,
+      "oldLeftOnly": 33,
+      "oldRightOnly": 163,
+      "freshLeftOnly": 29,
+      "freshRightOnly": 173,
+      "oldLeader": {
+        "feature": "navigableArea",
+        "effect": 0.6561235480886498
+      },
+      "freshLeader": {
+        "feature": "turnConstraintLoad",
+        "effect": -0.5855818865440586
+      },
+      "sameLeadingFeature": false,
+      "commonTopFeatureCount": 5,
+      "sameDirectionCommonTopFeatureCount": 5,
+      "persistentFeatures": [
+        {
+          "feature": "requiredPathCoverageRatio",
+          "oldEffect": -0.43642524404051,
+          "freshEffect": -0.5273190718038304,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.43642524404051,
+          "absoluteEffectDelta": 0.09089382776332045
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "oldEffect": -0.47707591792429804,
+          "freshEffect": -0.4280850310108132,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.4280850310108132,
+          "absoluteEffectDelta": 0.048990886913484855
+        },
+        {
+          "feature": "nonNavigableDensity",
+          "oldEffect": -0.42260843630168404,
+          "freshEffect": -0.5153038684644391,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.42260843630168404,
+          "absoluteEffectDelta": 0.09269543216275505
+        },
+        {
+          "feature": "mustPass",
+          "oldEffect": -0.4129938161929072,
+          "freshEffect": -0.4138979611077805,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.4129938161929072,
+          "absoluteEffectDelta": 0.0009041449148732839
+        },
+        {
+          "feature": "navigableArea",
+          "oldEffect": 0.6561235480886498,
+          "freshEffect": 0.4109353411456252,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.4109353411456252,
+          "absoluteEffectDelta": 0.24518820694302462
+        }
+      ],
+      "commonTopFeatures": [
+        {
+          "feature": "requiredPathCoverageRatio",
+          "oldEffect": -0.43642524404051,
+          "freshEffect": -0.5273190718038304,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.43642524404051,
+          "absoluteEffectDelta": 0.09089382776332045
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "oldEffect": -0.47707591792429804,
+          "freshEffect": -0.4280850310108132,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.4280850310108132,
+          "absoluteEffectDelta": 0.048990886913484855
+        },
+        {
+          "feature": "nonNavigableDensity",
+          "oldEffect": -0.42260843630168404,
+          "freshEffect": -0.5153038684644391,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.42260843630168404,
+          "absoluteEffectDelta": 0.09269543216275505
+        },
+        {
+          "feature": "mustPass",
+          "oldEffect": -0.4129938161929072,
+          "freshEffect": -0.4138979611077805,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.4129938161929072,
+          "absoluteEffectDelta": 0.0009041449148732839
+        },
+        {
+          "feature": "navigableArea",
+          "oldEffect": 0.6561235480886498,
+          "freshEffect": 0.4109353411456252,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.4109353411456252,
+          "absoluteEffectDelta": 0.24518820694302462
+        }
+      ],
+      "interpretation": "persistent-structural-niche",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    },
+    {
+      "leftAction": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+      "rightAction": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+      "oldDisagreement": 184,
+      "freshDisagreement": 193,
+      "oldLeftOnly": 37,
+      "oldRightOnly": 147,
+      "freshLeftOnly": 39,
+      "freshRightOnly": 154,
+      "oldLeader": {
+        "feature": "constrainedObjectDensity",
+        "effect": -0.44244913813702164
+      },
+      "freshLeader": {
+        "feature": "portals",
+        "effect": 0.4597505886781737
+      },
+      "sameLeadingFeature": false,
+      "commonTopFeatureCount": 2,
+      "sameDirectionCommonTopFeatureCount": 1,
+      "persistentFeatures": [],
+      "commonTopFeatures": [
+        {
+          "feature": "adjacentTurn",
+          "oldEffect": -0.23419215386771425,
+          "freshEffect": -0.3911518589759474,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.23419215386771425,
+          "absoluteEffectDelta": 0.15695970510823315
+        },
+        {
+          "feature": "area",
+          "oldEffect": 0.21232324382447001,
+          "freshEffect": -0.23330238236764558,
+          "sameDirection": false,
+          "persistent": false,
+          "minAbsoluteEffect": 0.21232324382447001,
+          "absoluteEffectDelta": 0.02097913854317557
+        }
+      ],
+      "interpretation": "no-persistent-top-feature-at-threshold",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    },
+    {
+      "leftAction": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+      "rightAction": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "oldDisagreement": 176,
+      "freshDisagreement": 181,
+      "oldLeftOnly": 48,
+      "oldRightOnly": 128,
+      "freshLeftOnly": 63,
+      "freshRightOnly": 118,
+      "oldLeader": {
+        "feature": "portals",
+        "effect": -1.0596350774214012
+      },
+      "freshLeader": {
+        "feature": "portals",
+        "effect": -0.6768439414896071
+      },
+      "sameLeadingFeature": true,
+      "commonTopFeatureCount": 6,
+      "sameDirectionCommonTopFeatureCount": 6,
+      "persistentFeatures": [
+        {
+          "feature": "portals",
+          "oldEffect": -1.0596350774214012,
+          "freshEffect": -0.6768439414896071,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.6768439414896071,
+          "absoluteEffectDelta": 0.38279113593179404
+        },
+        {
+          "feature": "turnConstraintLoad",
+          "oldEffect": 0.5323598138733304,
+          "freshEffect": 0.5365814687594775,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.5323598138733304,
+          "absoluteEffectDelta": 0.004221654886147119
+        },
+        {
+          "feature": "surround",
+          "oldEffect": 0.40032584404889027,
+          "freshEffect": 0.405632796079386,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.40032584404889027,
+          "absoluteEffectDelta": 0.0053069520304957485
+        },
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": 0.6797940224007687,
+          "freshEffect": 0.3432076525513156,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3432076525513156,
+          "absoluteEffectDelta": 0.3365863698494531
+        },
+        {
+          "feature": "requiredPathLength",
+          "oldEffect": 0.3501106145064648,
+          "freshEffect": 0.30227331930016504,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.30227331930016504,
+          "absoluteEffectDelta": 0.04783729520629976
+        }
+      ],
+      "commonTopFeatures": [
+        {
+          "feature": "portals",
+          "oldEffect": -1.0596350774214012,
+          "freshEffect": -0.6768439414896071,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.6768439414896071,
+          "absoluteEffectDelta": 0.38279113593179404
+        },
+        {
+          "feature": "turnConstraintLoad",
+          "oldEffect": 0.5323598138733304,
+          "freshEffect": 0.5365814687594775,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.5323598138733304,
+          "absoluteEffectDelta": 0.004221654886147119
+        },
+        {
+          "feature": "surround",
+          "oldEffect": 0.40032584404889027,
+          "freshEffect": 0.405632796079386,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.40032584404889027,
+          "absoluteEffectDelta": 0.0053069520304957485
+        },
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": 0.6797940224007687,
+          "freshEffect": 0.3432076525513156,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3432076525513156,
+          "absoluteEffectDelta": 0.3365863698494531
+        },
+        {
+          "feature": "requiredPathLength",
+          "oldEffect": 0.3501106145064648,
+          "freshEffect": 0.30227331930016504,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.30227331930016504,
+          "absoluteEffectDelta": 0.04783729520629976
+        },
+        {
+          "feature": "adjacentTurn",
+          "oldEffect": 0.3357748641948417,
+          "freshEffect": 0.2648258785726296,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.2648258785726296,
+          "absoluteEffectDelta": 0.07094898562221208
+        }
+      ],
+      "interpretation": "persistent-structural-niche",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    },
+    {
+      "leftAction": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+      "rightAction": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "oldDisagreement": 175,
+      "freshDisagreement": 181,
+      "oldLeftOnly": 40,
+      "oldRightOnly": 135,
+      "freshLeftOnly": 41,
+      "freshRightOnly": 140,
+      "oldLeader": {
+        "feature": "requiredIntersections",
+        "effect": 0.6551365936106655
+      },
+      "freshLeader": {
+        "feature": "requiredIntersections",
+        "effect": 0.9027217935878605
+      },
+      "sameLeadingFeature": true,
+      "commonTopFeatureCount": 5,
+      "sameDirectionCommonTopFeatureCount": 5,
+      "persistentFeatures": [
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": 0.6551365936106655,
+          "freshEffect": 0.9027217935878605,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.6551365936106655,
+          "absoluteEffectDelta": 0.24758519997719508
+        },
+        {
+          "feature": "portals",
+          "oldEffect": -0.5390740853094248,
+          "freshEffect": -0.8252523821481735,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.5390740853094248,
+          "absoluteEffectDelta": 0.28617829683874874
+        },
+        {
+          "feature": "requiredPathLength",
+          "oldEffect": 0.3865291012250912,
+          "freshEffect": 0.6024453134886986,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3865291012250912,
+          "absoluteEffectDelta": 0.21591621226360735
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "oldEffect": -0.3758780190606311,
+          "freshEffect": -0.5315752887606776,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3758780190606311,
+          "absoluteEffectDelta": 0.1556972697000465
+        }
+      ],
+      "commonTopFeatures": [
+        {
+          "feature": "requiredIntersections",
+          "oldEffect": 0.6551365936106655,
+          "freshEffect": 0.9027217935878605,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.6551365936106655,
+          "absoluteEffectDelta": 0.24758519997719508
+        },
+        {
+          "feature": "portals",
+          "oldEffect": -0.5390740853094248,
+          "freshEffect": -0.8252523821481735,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.5390740853094248,
+          "absoluteEffectDelta": 0.28617829683874874
+        },
+        {
+          "feature": "requiredPathLength",
+          "oldEffect": 0.3865291012250912,
+          "freshEffect": 0.6024453134886986,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3865291012250912,
+          "absoluteEffectDelta": 0.21591621226360735
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "oldEffect": -0.3758780190606311,
+          "freshEffect": -0.5315752887606776,
+          "sameDirection": true,
+          "persistent": true,
+          "minAbsoluteEffect": 0.3758780190606311,
+          "absoluteEffectDelta": 0.1556972697000465
+        },
+        {
+          "feature": "width",
+          "oldEffect": 0.24388050382275414,
+          "freshEffect": 0.456802341879526,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.24388050382275414,
+          "absoluteEffectDelta": 0.21292183805677187
+        }
+      ],
+      "interpretation": "persistent-structural-niche",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    },
+    {
+      "leftAction": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "rightAction": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+      "oldDisagreement": 228,
+      "freshDisagreement": 215,
+      "oldLeftOnly": 115,
+      "oldRightOnly": 113,
+      "freshLeftOnly": 104,
+      "freshRightOnly": 111,
+      "oldLeader": {
+        "feature": "width",
+        "effect": 0.21544616370911668
+      },
+      "freshLeader": {
+        "feature": "width",
+        "effect": 0.24670020612257046
+      },
+      "sameLeadingFeature": true,
+      "commonTopFeatureCount": 5,
+      "sameDirectionCommonTopFeatureCount": 5,
+      "persistentFeatures": [],
+      "commonTopFeatures": [
+        {
+          "feature": "width",
+          "oldEffect": 0.21544616370911668,
+          "freshEffect": 0.24670020612257046,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.21544616370911668,
+          "absoluteEffectDelta": 0.03125404241345378
+        },
+        {
+          "feature": "height",
+          "oldEffect": 0.21544616370911668,
+          "freshEffect": 0.24670020612257046,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.21544616370911668,
+          "absoluteEffectDelta": 0.03125404241345378
+        },
+        {
+          "feature": "area",
+          "oldEffect": 0.2146222232200794,
+          "freshEffect": 0.2460763698838823,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.2146222232200794,
+          "absoluteEffectDelta": 0.03145414666380289
+        },
+        {
+          "feature": "navigableArea",
+          "oldEffect": 0.2112400616689587,
+          "freshEffect": 0.23424347099011705,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.2112400616689587,
+          "absoluteEffectDelta": 0.023003409321158352
+        },
+        {
+          "feature": "requiredPathLength",
+          "oldEffect": 0.19957162468262094,
+          "freshEffect": 0.2323556892965059,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.19957162468262094,
+          "absoluteEffectDelta": 0.03278406461388497
+        }
+      ],
+      "interpretation": "no-persistent-top-feature-at-threshold",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    },
+    {
+      "leftAction": "dfs|score=perimeterSweep|bias=perimeterCW",
+      "rightAction": "dfs|score=perimeterSweep|bias=perimeterCCW",
+      "oldDisagreement": 97,
+      "freshDisagreement": 92,
+      "oldLeftOnly": 47,
+      "oldRightOnly": 50,
+      "freshLeftOnly": 42,
+      "freshRightOnly": 50,
+      "oldLeader": {
+        "feature": "mustCross",
+        "effect": 0.344015295247729
+      },
+      "freshLeader": {
+        "feature": "portals",
+        "effect": -0.6200307716336849
+      },
+      "sameLeadingFeature": false,
+      "commonTopFeatureCount": 5,
+      "sameDirectionCommonTopFeatureCount": 5,
+      "persistentFeatures": [],
+      "commonTopFeatures": [
+        {
+          "feature": "portals",
+          "oldEffect": -0.2507042250363947,
+          "freshEffect": -0.6200307716336849,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.2507042250363947,
+          "absoluteEffectDelta": 0.3693265465972902
+        },
+        {
+          "feature": "constrainedObjectDensity",
+          "oldEffect": -0.23626333286767498,
+          "freshEffect": -0.2809217895668913,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.23626333286767498,
+          "absoluteEffectDelta": 0.04465845669921631
+        },
+        {
+          "feature": "constrainedObjects",
+          "oldEffect": -0.19567824178885085,
+          "freshEffect": -0.4767965932567984,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.19567824178885085,
+          "absoluteEffectDelta": 0.28111835146794756
+        },
+        {
+          "feature": "flippingFilters",
+          "oldEffect": -0.25423609646666673,
+          "freshEffect": -0.18847645931115478,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.18847645931115478,
+          "absoluteEffectDelta": 0.06575963715551195
+        },
+        {
+          "feature": "mustCross",
+          "oldEffect": 0.344015295247729,
+          "freshEffect": 0.18783420840413098,
+          "sameDirection": true,
+          "persistent": false,
+          "minAbsoluteEffect": 0.18783420840413098,
+          "absoluteEffectDelta": 0.15618108684359802
+        }
+      ],
+      "interpretation": "no-persistent-top-feature-at-threshold",
+      "caveat": "Each source artifact stores only its top eight univariate effects, so absence from commonTopFeatures is censored, not evidence of no effect."
+    }
+  ],
+  "unmatchedFreshPairs": [],
+  "unmatchedOldPairs": [],
+  "interpretationBoundary": "Extends the existing 2026-09-05 leading-feature temporal-drift result across the stored top-eight effects. A persistent separator is stronger nomination evidence than a one-snapshot association, but remains correlational and outcome-selected; it must still earn family/mechanism/held-out evidence before production steering."
+}
