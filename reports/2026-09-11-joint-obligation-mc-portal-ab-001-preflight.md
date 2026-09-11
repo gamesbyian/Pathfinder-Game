@@ -1,9 +1,9 @@
 # PRUNE_MC_PORTAL_FORCED_NEIGHBOR: frozen matched-work population A/B preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-11 — [`observer pilot`](2026-09-11-joint-obligation-propagation-observer-pilot-001.md) concluded-positive: 0 false rejects across the oracle-labelled atlas, a full 3-corpus known-solution replay, and a class-4/class-5 real-search run; 15 unique oracle-atlas dead-branch catches beyond the existing gauntlet.
-> **Decision:** dispatch the frozen matched-work A/B below before any promotion decision. Production stays unchanged (`PRUNE_MC_PORTAL_FORCED_NEIGHBOR` default-OFF) until this population evidence lands.
-> **Remaining gate:** both arms complete over the frozen population; apply the acceptance rule below.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-11 — both arms complete over the full frozen 219-id population: control [`34557531960`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34557531960) **0/219 solved** (219/219 `node-budget-reached`), treatment [`34557533731`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34557533731) **21/219 solved**. Since control solved zero, every treatment solve is a pure gain by construction — **21 gains, 0 losses, net +21** — and every gain was independently reproduced and referee-valid on a fresh local rerun (`scripts/stress/verify-joint-obligation-ab-gains.mjs`, not the GHA artifact, which this session's egress policy cannot reach: `productionresultssa*.blob.core.windows.net` returns 403 at the proxy).
+> **Decision:** **PROMOTE.** `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` flips to production default-ON (removed from `OPT_IN_FEATURES`). See [`opt-in ledger`](../docs/solver-opt-in-experiment-ledger.md).
+> **Remaining gate:** none — all acceptance-rule gates below are satisfied.
 > **Evidence role:** population-scale promotion gate for `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` (see [`opt-in ledger`](../docs/solver-opt-in-experiment-ledger.md))
 > **Selection:** deterministic structural predicate (`findObligationClusters` non-empty) over the frozen current 671-miss residual, not outcome-selected
 
@@ -48,4 +48,15 @@ Workflow: `solver-level-blind-targeted-sweep.yml`, `ref=claude/solver-queue-spri
 
 ## Results
 
-Pending both dispatches.
+| arm | run | solved | work | nodes |
+|---|---|---:|---:|---:|
+| control | [`34557531960`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34557531960) | 0/219 | 51,794,598,716 | 45,024,213,737 |
+| treatment | [`34557533731`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34557533731) | 21/219 | 49,662,705,934 | 41,659,932,525 |
+
+**Gains (21, all pure since control solved none):** R00726, R01274, R01489, R01849, R01882, R02036, R02060, R02162, R02389, R02479, R02546, R02654, R02707, R02823, R02832, R02864, R02932, R03097, R03106, R03254, R03336.
+
+**Losses: 0.** Not possible by construction — control solved zero of the 219, so no control-only solve exists for treatment to fail to reproduce.
+
+**Referee validation:** GHA artifact download is blocked by this session's egress policy (`productionresultssa18.blob.core.windows.net` / `productionresultssa9.blob.core.windows.net` both return 403 at the proxy — reported, not routed around). Independently reproduced all 21 gains locally instead, on the exact same commit (`dd28ee0`) with `{ ...defaultConfig(), PRUNE_MC_PORTAL_FORCED_NEIGHBOR: true }`, `nodeBudget=50000000`: all 21 solved and passed `Solver.validateCandidatePath` (canonical referee). See `scripts/stress/verify-joint-obligation-ab-gains.mjs`.
+
+**Attempt errors / deadline-censoring imbalance:** both arms reached complete, identical 219/219 population coverage (101/101 and 55/55 shards respectively, both auto-recovered to completeness), with no differential censoring — every id ran under the identical `node_budget=50,000,000` envelope this report froze.
