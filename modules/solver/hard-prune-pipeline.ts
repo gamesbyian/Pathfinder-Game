@@ -2,6 +2,7 @@
 // apply/undo and choose whether to run connectivity. Used by DFS and repair to keep prune semantics aligned.
 import { getDistanceFromArray } from './distance.js';
 import { popcount } from './encoding.js';
+import { evaluateObligationClusters } from './joint-obligation-propagation.js';
 import { adjTurnLowerBound, mustCrossForcedNeighborDeadlocked, mustCrossLowerBound, mustCrossNeighborBudgetDeadlocked, mustPassLowerBound, mustTurnDeadlocked, surroundLowerBound } from './lower-bounds.js';
 import { isSolutionState } from './solution.js';
 import { isConnected } from './topology.js';
@@ -52,6 +53,28 @@ export function evaluatePrunedMove(
     options: PruneEvaluationOptions = {},
 ): PruneVerdict {
     const diagnostics = options.diagnostics;
+
+    // Research-only joint-obligation propagation observer (see JointObligationObserver's doc in
+    // types.ts and joint-obligation-propagation.ts). Absent in every production call; a single
+    // property read plus an early-return when absent, so this is free in production. Runs before
+    // any prune decision below so every node this function evaluates gets exactly one pass over
+    // the (typically empty) obligation-cluster list, independent of what does or doesn't reject it.
+    const jointObligationObserver = prep._jointObligationObserver;
+    if (jointObligationObserver) {
+        const verdicts = evaluateObligationClusters(next, state, level, prep);
+        for (const v of verdicts) {
+            // Full path is only needed to spot-check a REJECT against known live prefixes offline;
+            // copying it on every pass/abstain evaluation would be an O(depth) cost on every node a
+            // long search visits while the must-cross cell stays pending. depth already summarizes
+            // path length for pass/abstain records.
+            jointObligationObserver.observe({
+                clusterId: v.clusterId, kind: v.kind, verdict: v.verdict, reasonFamily: v.reasonFamily,
+                pos: next, path: v.verdict === 'reject' ? state.path.slice() : [], depth: state.path.length,
+                work: prep._workMeter.units,
+            });
+        }
+    }
+
     // Fundamental limits.
     if (realLen > level.requiredLength) return 'reject';
     if (state.ints > level.requiredIntersections) return 'reject';

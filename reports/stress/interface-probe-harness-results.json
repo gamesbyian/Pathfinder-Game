@@ -1,6 +1,10 @@
 {
- "atlasDir": "reports/stress",
+ "pruneGapDir": "reports/stress",
  "probes": [
+  {
+   "name": "separator-resource-spectrum",
+   "soundnessClass": "sound prune (necessary-condition lower bound over pendant-chamber excursions)"
+  },
   {
    "name": "obligation-tour-mutex",
    "soundnessClass": "sound prune (necessary-condition lower bound over a joint must-pass/must-cross tour)"
@@ -10,8 +14,12 @@
    "soundnessClass": "sound prune (forced-revisit necessary condition from a single-neighbor goal approach)"
   },
   {
-   "name": "separator-resource-spectrum",
-   "soundnessClass": "sound prune (necessary-condition lower bound over pendant-chamber excursions)"
+   "name": "mc-neighbor-budget-propagation",
+   "soundnessClass": "sound prune (dynamic forced-neighbor revisit cost vs. remaining free intersection budget)"
+  },
+  {
+   "name": "joint-obligation-mc-portal",
+   "soundnessClass": "sound prune (must-cross forced-neighbor obligation coupled with an unconditional portal-terminal no-revisit rule)"
   }
  ],
  "perFile": [
@@ -2352,20 +2360,35 @@
   }
  ],
  "summary": {
+  "separator-resource-spectrum": {
+   "deadCaught": 9,
+   "deadMissed": 12,
+   "aliveFalseReject": 0,
+   "aliveOk": 4,
+   "abstained": 5493,
+   "uniqueCatch": 7,
+   "overlapWithGauntlet": 2,
+   "total": 5518,
+   "dead": 21,
+   "alive": 4,
+   "deadCatchRate": 0.42857142857142855,
+   "soundnessViolated": false,
+   "meanCatchDepth": 68.33333333333333
+  },
   "obligation-tour-mutex": {
-   "deadCaught": 15,
-   "deadMissed": 414,
+   "deadCaught": 16,
+   "deadMissed": 413,
    "aliveFalseReject": 0,
    "aliveOk": 230,
    "abstained": 4859,
-   "uniqueCatch": 1,
+   "uniqueCatch": 2,
    "overlapWithGauntlet": 14,
    "total": 5518,
    "dead": 429,
    "alive": 230,
-   "deadCatchRate": 0.03496503496503497,
+   "deadCatchRate": 0.037296037296037296,
    "soundnessViolated": false,
-   "meanCatchDepth": 72.6
+   "meanCatchDepth": 68.125
   },
   "goal-approach-envelope": {
    "deadCaught": 2,
@@ -2382,20 +2405,35 @@
    "soundnessViolated": false,
    "meanCatchDepth": 85
   },
-  "separator-resource-spectrum": {
-   "deadCaught": 9,
-   "deadMissed": 12,
+  "mc-neighbor-budget-propagation": {
+   "deadCaught": 76,
+   "deadMissed": 915,
    "aliveFalseReject": 0,
-   "aliveOk": 4,
-   "abstained": 5493,
-   "uniqueCatch": 7,
+   "aliveOk": 609,
+   "abstained": 3918,
+   "uniqueCatch": 48,
+   "overlapWithGauntlet": 28,
+   "total": 5518,
+   "dead": 991,
+   "alive": 609,
+   "deadCatchRate": 0.07669021190716448,
+   "soundnessViolated": false,
+   "meanCatchDepth": 40.39473684210526
+  },
+  "joint-obligation-mc-portal": {
+   "deadCaught": 17,
+   "deadMissed": 425,
+   "aliveFalseReject": 0,
+   "aliveOk": 235,
+   "abstained": 4841,
+   "uniqueCatch": 15,
    "overlapWithGauntlet": 2,
    "total": 5518,
-   "dead": 21,
-   "alive": 4,
-   "deadCatchRate": 0.42857142857142855,
+   "dead": 442,
+   "alive": 235,
+   "deadCatchRate": 0.038461538461538464,
    "soundnessViolated": false,
-   "meanCatchDepth": 68.33333333333333
+   "meanCatchDepth": 31.705882352941178
   }
  }
 }

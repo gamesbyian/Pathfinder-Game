@@ -10,6 +10,7 @@ import { SCORING_PROFILES } from './policy.js';
 import { PACK } from './encoding.js';
 import { runAttempt, attemptConfigKey, normalizeAblationConfig } from './orchestration.js';
 import { KnownSolutionPrefixSurvivalObserver, KnownSolutionPrefixIndex } from './known-solution-prefix-survival.js';
+import { findObligationClusters, evaluateObligationClusters } from './joint-obligation-propagation.js';
 import { beamSearchFromGate } from './search.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
 import { getRealLengthFromState } from './solution.js';
@@ -59,6 +60,8 @@ export function createSolverTestingApi() {
         normalizeAblationConfig,
         KnownSolutionPrefixIndex,
         KnownSolutionPrefixSurvivalObserver,
+        findObligationClusters,
+        evaluateObligationClusters,
         beamSearchFromGate,
         evaluatePrunedMove,
         getRealLengthFromState,
