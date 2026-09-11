@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, workstream state, and next gates.
-> **Reconciled:** 2026-09-09.
+> **Reconciled:** 2026-09-10.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization.
 
 Keep this file **current-state only**. Detailed evidence belongs in reports; historical snapshots live under `docs/archive/snapshots/`.
@@ -10,42 +10,43 @@ Method: [`solver-research-operating-model.md`](solver-research-operating-model.m
 
 ## Current execution priority
 
-### 1. Workstream 2: fixed-work scheduler allocation and repricing
+### 1. Workstream 2: fixed-work scheduler allocation and residual capability
 
-**State:** active; portal capability restoration first, then bounded 2A closeouts, then broader allocation work on refreshed telemetry.
+**State:** active; post-restoration residual refresh first, portal coarse-state salvage and resumable allocation next, then bounded repricing according to the refreshed failure mix.
 
 #### Portal restoration — DONE (2026-09-09/10)
 
-Portal levels are 954/1,700 of Corpus 2 (551/725 production misses). All four independent matched-work items are resolved:
+Portal levels are 954/1,700 of Corpus 2 (551/725 production misses at the pre-restoration 975/1,700 boundary). All four independent matched-work items are resolved:
 
 1. **Must-cross neighbour-budget propagation** — PROMOTED. 530-level portal+must-cross A/B: 52 gains/0 losses (net +52), every gain referee-valid, zero regressions. [`preflight`](../reports/2026-09-09-mc-neighbor-budget-portal-ab-001-preflight.md)
-2. **Portal-aware beam coarse-state merge** — CLOSED NEGATIVE on promotion, stays opt-in (`STRATEGY_PORTAL_COARSE_STATE_MERGE`). 954-level A/B: 158 gains/12 losses (net +146) but `R01273` is a genuine specialist-retention regression — root cause is the ordinary discard-a-needed-lower-scorer risk every coarse-state merge carries, newly exposed on portals, not the fixed aliasing bug. Low priority, zero production risk. [`preflight`](../reports/2026-09-09-portal-coarse-state-merge-ab-001-preflight.md)
+2. **Portal-aware beam coarse-state merge** — GLOBAL PROMOTION CLOSED NEGATIVE; stays opt-in (`STRATEGY_PORTAL_COARSE_STATE_MERGE`). 954-level A/B: 158 gains/12 losses (net +146), but `R01273` is a genuine specialist-retention regression even at 10x matched work. The unconditional form remains unsafe; **specialist-safe salvage is now an active high-value residual-capability target**, not a low-priority promotion retry. [`preflight`](../reports/2026-09-09-portal-coarse-state-merge-ab-001-preflight.md), [`post-1029 priority refresh`](../reports/2026-09-10-post-1029-residual-priority-refresh-001.md)
 3. **Connectivity volume check** — PROMOTED. 954-level A/B: 2 gains (`R02297`, `R02746`)/0 losses, zero regressions. False-goal mirror stays untouched pending its own differential. [`preflight`](../reports/2026-09-09-connectivity-volume-portal-ab-001-preflight.md)
 4. **Same-parity portal parity prune/gate** — DONE. Unit + stored-path differential (0 violations) + regression (160/160) clean on the 21 zero-twist-pair portal levels; no solve-rate campaign warranted at this size.
 
 Catalog: [`portal carve-outs`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md). Evidence hardening: [`hardening`](../reports/2026-09-09-portal-restoration-evidence-hardening-001.md).
 
-The two-stage lifecycle instantiation projection gap is repaired: `guidance-goal-distance-retry` and `late-repair-multiseed-retry` now report correct `mechanicallyEligible`/`instantiated` telemetry (see [`telemetry gap`](../reports/2026-09-09-stage-lifecycle-instantiation-projection-gap-001.md), closed). After material restorations settle, follow the evidence-hardening refresh contract before interpreting the triple-overlap cohort or repricing the ladder. Do not carry forward the old 975/1,700 attribution.
+The two-stage lifecycle instantiation projection gap is repaired: `guidance-goal-distance-retry` and `late-repair-multiseed-retry` now report correct `mechanicallyEligible`/`instantiated` telemetry. The required post-restoration refresh is complete: run `34531412380` is 99/102 Corpus 1 + 1,029/1,700 Corpus 2, net +55/-0 across both corpora with zero errors/truncation. Do not carry forward the old 975/1,700 residual attribution or old family denominators as current sizing evidence.
 
 #### 2A. Production repricing closeout
 
 Treat independently:
 
-1. **Goal-attraction-disabled retry fresh pool.** **Done (2026-09-10) — PROMOTED.** `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE` + `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` are production default-ON, promoted together (every A/B in this line ran them paired). Confirmation-002 (reach-conditioned 150-level Corpus-2, disjoint from every prior population): control (reserve alone) 14/150 vs. treatment (both) 17/150 — +3/-0, all gains attributable to a winning tier attempt, reach 104→140/150. Zero published-corpus regressions. See [`ledger`](solver-opt-in-experiment-ledger.md).
-2. **Repair late-probe `7 → 6` seeds.** **Done (2026-09-10) — CLOSED NEGATIVE.** 150-level reach-conditioned confirmation found seed 7 is a real, unique rescue on 2/150 levels (`R02460`, `R02553` — both needed all 7 attempts under control, both failed at 6), disqualifying the unconditional truncation despite a real 5.5% aggregate work saving. Production stays at seven seeds; the unconditional `7 → 6` form is closed absent a narrower conditional premise. See [`preflight`](../reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md), [`result`](../reports/2026-09-10-repair-late-probe-six-seed-confirmation-001-result.md).
-3. **Admissible-order retry `1.0 → 0.18`.** **Prerequisite implemented (2026-09-10); confirmation still not run.** The tier dispatched through plain `admissibleOrderSearch`, which never read its scoped `prep._workCap`, so CLI/workflow budget changes could not produce a valid matched-work confirmation. Fixed via a new opt-in `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT` flag (default OFF) that makes `admissibleOrderSearch` additionally consult `prep._workCap`, scoped by an explicit parameter threaded only through the non-default-retry tier's own `orchestration.ts` call site — the sibling admissible-order-fallback tier (same shared dispatcher, same non-default profiles) is structurally unreachable by this flag regardless of polarity. Unit-tested at both the pre-search and periodic (256-node) checks; zero population-scale evidence yet. Production stays `1.0`. Next gate: run the matched-work confirmation this previously-blocking gap prevented. See [`matched-work methodology`](../reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md), [`work-cap gap discovery`](../reports/2026-08-28-admissible-order-work-cap-gap-discovery.md), [`artifact recovery`](../reports/2026-09-10-admissible-order-confirmation-006-artifact-recovery.md), and [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md).
+1. **Goal-attraction-disabled retry fresh pool.** **Done (2026-09-10) — PROMOTED.** `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_NODE_RESERVE` + `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` are production default-ON, promoted together. Confirmation-002 (reach-conditioned 150-level Corpus-2, disjoint from prior populations): 14/150 -> 17/150, +3/-0, all gains attributable to the tier, reach 104 -> 140/150. See [`ledger`](solver-opt-in-experiment-ledger.md).
+2. **Repair late-probe `7 -> 6` seeds.** **Done (2026-09-10) — CLOSED NEGATIVE.** 150-level reach-conditioned confirmation found seed 7 is a unique rescue on `R02460` and `R02553`; unconditional truncation is disqualified despite 5.5% aggregate work saving. See [`preflight`](../reports/2026-09-05-repair-late-probe-six-seed-confirmation-preflight.md), [`result`](../reports/2026-09-10-repair-late-probe-six-seed-confirmation-001-result.md).
+3. **Admissible-order retry `1.0 -> 0.18`.** **Prerequisite implemented (2026-09-10); confirmation still not run.** Plain `admissibleOrderSearch` previously ignored the tier-scoped `prep._workCap`, making the intended matched-work test architecturally inert. `STRATEGY_ADMISSIBLE_ORDER_NON_DEFAULT_RETRY_WORK_CAP_ENFORCEMENT` now supplies an opt-in, tier-scoped enforcement path and is unit-tested at pre-search and periodic checks. Production remains `1.0`; the confirmation is now meaningful but is no longer the default next use of solver compute ahead of the post-1,029 residual refresh. See [`methodology`](../reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md) and [`ledger`](solver-opt-in-experiment-ledger.md).
 
-#### 2B. Broader allocation construction
+#### 2B. Post-restoration residual and allocation construction
 
-Production ladder/capability refresh is **done** (2026-09-10, run `34531412380`: 99/102 + 1,029/1,700, net +55/-0 vs. pre-restoration, zero errors/truncation). The prerequisite for the items below is met; none has an executed repricing/allocation decision yet.
+Production ladder/capability refresh is **done** (2026-09-10, run `34531412380`: 99/102 + 1,029/1,700, net +55/-0 vs. pre-restoration, zero errors/truncation). Corpus 2 now has **671 misses**. The old triple-overlap and 975-boundary residual counts are historical until recomputed.
 
-- **Flag-inert dispatch/full-population repricing:** equal-total-work repricing can now proceed. `admissible-order-alternate-tiebreak-retry` is the most actionable near-term candidate (its own work-cap enforcement prerequisite also landed 2026-09-10; see the opt-in ledger). [`Portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md), [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md)
-- **Resumable portfolio:** portfolio-18 first pass + same-policy continuation inside 67M. Production-width (2000/5000) continuation capture is now implemented and validated (bounded-overshoot form, single-digit-percent measured overshoot, 2026-09-10) — the engineering prerequisite is met; next is the fixed-work development A/B itself. [`Preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md)
-- **Priced residual lane:** recompute the isolated-winner residue after restoration/2A, separating missing from failed exposure and protecting specialists. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
+1. **Post-1,029 residual atlas — NEXT / OFFLINE.** Rejoin the current 671 misses against the frozen isolated-T1 census, post-restoration lifecycle exposure, structural/fingerprint/family data and specialist multiplicity. Separate (a) known rescuer not offered, (b) known rescuer offered/reached but failed, and (c) no-known-rescuer residuals, then size the largest structural overlaps inside each bucket. Reuse `scripts/stress/analyze-current-missing-attempt-exposure.mjs`; do not create another overlapping framework. Exact input paths/output contract: [`post-1029 priority refresh`](../reports/2026-09-10-post-1029-residual-priority-refresh-001.md).
+2. **Portal coarse-state-merge salvage — ACTIVE HIGH-VALUE CAPABILITY TARGET.** Global promotion remains closed/default-OFF. Use the frozen 158-gain/12-loss portal flip set to find the smallest level-blind, state-local discriminator or bounded-retention rule that protects `R01273` and every other specialist loss while retaining meaningful gross upside. Loss-cohort matched-work validation comes before another 954-level run. Same-level hints/provenance may diagnose but may not become production routing inputs. [`post-1029 priority refresh`](../reports/2026-09-10-post-1029-residual-priority-refresh-001.md)
+3. **Resumable portfolio — READY FOR DEVELOPMENT A/B.** Portfolio-18 first pass + same-policy continuation inside 67M. Production-width continuation capture is implemented and validated with bounded single-digit-percent overshoot; next gate is the fixed-work development A/B. [`Preflight`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md)
+4. **Flag-inert dispatch/full-population repricing — READY, BOUNDED.** Equal-total-work repricing can proceed after or in parallel with the offline atlas. `admissible-order-alternate-tiebreak-retry` remains the most actionable candidate because its work-cap prerequisite has landed, but the refreshed residual composition should decide whether this deserves scarce full-population solver compute ahead of representation/search-policy work. [`Portal catalog`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md), [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** active for parallel analysis; production routing changes remain downstream of portal restoration and refreshed WS2 allocation semantics.
+**State:** active for parallel analysis; production routing changes remain downstream of the post-restoration residual atlas and specialist-protected evidence.
 
 Existing capability, lifecycle, provenance, profile, variant, census, trace and accepted-path evidence may be mined now. Promote only held-out/replicated signals.
 
@@ -64,16 +65,16 @@ Before new solver compute on a hinted failure:
 
 Reuse existing prefix-survival, divergence, rank and replay tools before creating new frameworks. Stored paths/provenance/profile/family/winner labels remain offline diagnostics and may not be direct same-level production routing inputs.
 
-Current high-risk cohort: 396 intersection-heavy + must-cross-heavy + multi-portal levels, 118 solved. Portal carve-outs are the first causal explanation to resolve. After restoration, refresh lifecycle/capability evidence and classify residual informative misses before any new joint propagation. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md)
+The former high-risk cohort (`396` intersection-heavy + must-cross-heavy + multi-portal, `118` solved at its old boundary) is now **historical sizing only**. Portal restoration materially changed the solved set. Recompute that structural cohort and its isolated-winner/exposure composition inside the 671 current misses before using it to nominate new joint propagation or routing. [`Handoff`](../reports/2026-09-09-joint-obligation-propagation-and-residual-lane-handoff-001.md), [`post-1029 priority refresh`](../reports/2026-09-10-post-1029-residual-priority-refresh-001.md)
 
-Eligible/exposed/failed classification, refreshed against the post-restoration capability run (2026-09-10, run `34531412380`: net +55/-0 across the full 1,802-level corpus, validating the week's portal + goal-attraction promotions at full population scale), plus a telemetry-artifact correction for `admissible-order-fallback`'s "work-starved" label (real work, not missing exposure): [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md). Residual-lane recompute remains blocked on the broader isolated-T1-winner census join (separate pipeline, unaffected by this refresh).
+Eligible/exposed/failed classification is refreshed against run `34531412380`: [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md). It establishes the current lifecycle side of the atlas, including the `admissible-order-fallback` telemetry-artifact correction, but does not replace the broader isolated-T1-winner join.
 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Existing-data + known-live-basin replay; after portal refresh classify residual failure roles. |
-| 2 | Fixed-work scheduler repricing | **ACTIVE / FIRST PRIORITY** | Portal restoration → 2A → ladder/capability refresh → 2B. |
+| 2 | Fixed-work scheduler + residual capability | **ACTIVE / FIRST PRIORITY** | Offline post-1,029 atlas -> portal coarse-state salvage / resumable A/B -> repricing by refreshed value. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Join current residual to isolated winners, lifecycle and known-live basins; protect specialists before routing changes. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only with cheaper labelled cases or materially new reconstruction evidence. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen only for a materially different mechanism or newly measured hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Concrete methodological failure. |
@@ -90,7 +91,7 @@ Eligible/exposed/failed classification, refreshed against the post-restoration c
 - Clear negatives close tested forms absent materially new evidence.
 - Hold out independent units, including whole variant parents/families where applicable.
 - Audit specialist retention, not only aggregate solves/work; nominal stage reach is not participation.
-- Portal restoration precedes ladder repricing and new joint-propagation implementation; remeasure production afterward.
+- After any material capability promotion, refresh the production residual before treating old family counts or attribution shares as current.
 - A validated hint prefix proves that prefix live, not that alternatives are dead.
 - Capability claims must separate provenance origin/facets/admissibility; only actual Pathfinder solver evidence establishes production cold capability.
 - Repeated provenance is evidence unless it is the same discovery event recorded twice. Raw event count is not independence count.
@@ -103,5 +104,6 @@ Eligible/exposed/failed classification, refreshed against the post-restoration c
 - research assets/joins: `node scripts/research-asset-query.mjs --query=<term>`
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
 - hint/provenance audit: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all`
+- current missing-exposure rejoin: `node scripts/run-bundled.mjs scripts/stress/analyze-current-missing-attempt-exposure.mjs -- --baseline=<per-level-current.json> --census=<combined-cells.json> --out=<output.json>`
 
 Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for evidence-topology guidance. Search named mechanisms through `research-status-index --compact`; detailed chronology belongs in matched reports or frozen snapshots.
