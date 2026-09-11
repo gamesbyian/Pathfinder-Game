@@ -1,5 +1,12 @@
 import { hintProvenanceClasses, summarizeProvenanceClasses } from './stress/provenance-classes.mjs';
-import { classifyProvenanceSource, sourcesForHint } from './stress/solution-profile-lib.mjs';
+import {
+    EVIDENCE_APPLICABILITY,
+    EVIDENCE_PURPOSES,
+    classifyProvenanceOrigin as classifyProvenanceSource,
+    classifyEvidenceApplicability,
+    originsForHint as sourcesForHint,
+    provenanceDependencyStratum,
+} from './stress/provenance-source-taxonomy.mjs';
 import { normalizeSolverStageId } from '../modules/solver/stage-id-normalization.mjs';
 
 const sortedCounts = values => Object.fromEntries([...values.entries()]
@@ -66,7 +73,9 @@ export function summarizeHintRecords(hints, { standard = 'strict' } = {}) {
     };
 }
 
-export function compactHintRecord(hint, index, { standard = 'strict' } = {}) {
+export function compactHintRecord(hint, index, {
+    standard = 'strict', evidencePurpose = null, comparableSolverVersions = [],
+} = {}) {
     const entries = hint?.provenance ?? [];
     const solverIds = new Set();
     const techniques = new Set();
@@ -78,7 +87,7 @@ export function compactHintRecord(hint, index, { standard = 'strict' } = {}) {
         if (entry?.solver?.forcing?.retryTier) retryTiers.add(normalizeRetryTier(entry.solver.forcing.retryTier));
         if (Number.isFinite(entry?.search?.workSpent)) workSpent.push(entry.search.workSpent);
     }
-    return {
+    const result = {
         hintIndex: index + 1,
         moves: Math.max(0, (hint?.path?.length ?? 0) - 1),
         provenanceEntries: entries.length,
@@ -89,19 +98,45 @@ export function compactHintRecord(hint, index, { standard = 'strict' } = {}) {
         retryTiers: [...retryTiers].sort(),
         workSpent: numericSummary(workSpent),
     };
+    if (evidencePurpose) {
+        if (!EVIDENCE_PURPOSES.includes(evidencePurpose)) throw new Error(`unknown evidence purpose: ${evidencePurpose}`);
+        const observations = entries.length ? entries : [null];
+        const classifications = observations.map(entry => ({
+            ...classifyEvidenceApplicability(entry, evidencePurpose, { comparableSolverVersions }),
+            dependencyStratum: entry ? provenanceDependencyStratum(entry) : null,
+        }));
+        result.evidence = {
+            purpose: evidencePurpose,
+            applicabilityCounts: Object.fromEntries(EVIDENCE_APPLICABILITY.map(applicability => [
+                applicability, classifications.filter(item => item.applicability === applicability).length,
+            ])),
+            admissibleDependencyStrata: new Set(classifications
+                .filter(item => item.applicability === 'admissible' && item.dependencyStratum)
+                .map(item => item.dependencyStratum)).size,
+            reasons: [...new Set(classifications.map(item => item.reason))].sort(),
+        };
+    }
+    return result;
 }
 
 export function queryHintRecords(hints, options = {}) {
-    const { standard = 'strict', className, source, solverId, technique, retryTier, query } = options;
+    const {
+        standard = 'strict', className, source, solverId, technique, retryTier, query,
+        evidencePurpose = null, evidenceApplicability = null, comparableSolverVersions = [],
+    } = options;
+    if (evidenceApplicability && !EVIDENCE_APPLICABILITY.includes(evidenceApplicability)) {
+        throw new Error(`unknown evidence applicability: ${evidenceApplicability}`);
+    }
     const needle = query?.toLowerCase();
     const out = [];
     hints.forEach((hint, index) => {
-        const compact = compactHintRecord(hint, index, { standard });
+        const compact = compactHintRecord(hint, index, { standard, evidencePurpose, comparableSolverVersions });
         if (className && !compact.classes.includes(className)) return;
         if (source && !compact.sources.includes(source)) return;
         if (solverId && !compact.solverIds.includes(solverId)) return;
         if (technique && !compact.techniques.some(value => value === technique || value.includes(technique))) return;
         if (retryTier && !compact.retryTiers.includes(normalizeRetryTier(retryTier))) return;
+        if (evidenceApplicability && !compact.evidence?.applicabilityCounts?.[evidenceApplicability]) return;
         if (needle && !JSON.stringify(compact).toLowerCase().includes(needle)) return;
         out.push({ compact, hint });
     });

@@ -42,6 +42,7 @@ import { readLevelsWithHints } from '../level-data-io.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.ts';
 import { undoMove } from '../../modules/solver/search-state.ts';
 import { computeMcNeighborBudget } from './lib/mc-neighbor-budget.mjs';
+import { selectRepresentativeHints } from './representative-hint-selector.mjs';
 
 installBrowserStubs();
 const Solver = createSolver();
@@ -234,7 +235,9 @@ function analyzeAtlas() {
         const prep = prepLevel(level);
         prep._cfg = null;
         prep._metrics = { nodesExpanded: 0 };
-        const solution = (raw.hintRecords || [])[0]?.path;
+        const solution = selectRepresentativeHints(raw.hintRecords || [], {
+            limit: 1, evidencePurpose: 'solution-atlas',
+        })[0]?.path;
         if (!solution) continue;
 
         const branchesByStep = new Map();
@@ -405,6 +408,7 @@ const result = {
     generatedAt: new Date().toISOString(),
     definition: 'crossingSlack = freeInt - forcedFutureNeighbourRevisits',
     proofScope: 'exactly scripts/stress/lib/mc-neighbor-budget.mjs computeMcNeighborBudget; portal-level and documented local exclusions preserved',
+    solutionSelection: 'representative-solution-atlas-v1',
     atlas,
     solutionPrefixes,
 };

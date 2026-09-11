@@ -23,4 +23,30 @@ assert.equal(byLegacyQuery.length, 2, 'querying by the legacy retryTier name mus
 const byCanonicalQuery = queryHintRecords([legacyHint, canonicalHint], { retryTier: 'late-repair-search' });
 assert.equal(byCanonicalQuery.length, 2);
 
+const cold = {
+    path: [1, 3],
+    provenance: [{
+        solver: { id: 'pathfinder-solver', version: 'v2', technique: 'dfs', forcing: null },
+        search: { workSpent: 10 },
+        context: { isolatedTechnique: false, hintGuided: false, usedExistingHints: false },
+        foundAt: '2026-01-01T00:00:00Z',
+    }],
+};
+const current = queryHintRecords([legacyHint, cold], {
+    evidencePurpose: 'current-production-capability',
+    evidenceApplicability: 'admissible',
+    comparableSolverVersions: ['v2'],
+});
+assert.equal(current.length, 1, 'purpose query admits only evidence from an explicitly comparable regime');
+assert.equal(current[0].compact.evidence.admissibleDependencyStrata, 1);
+assert.equal(queryHintRecords([cold], {
+    evidencePurpose: 'current-production-capability', evidenceApplicability: 'admissible',
+}).length, 0, 'capability query without a comparison regime fails closed');
+
+const unattributedAtlas = compactHintRecord({ path: [1, 4], provenance: [] }, 0, {
+    evidencePurpose: 'solution-atlas',
+});
+assert.equal(unattributedAtlas.evidence.applicabilityCounts.admissible, 1,
+    'an unattributed referee-valid path remains atlas evidence');
+
 console.log('hint-query-lib: all tests passed');
