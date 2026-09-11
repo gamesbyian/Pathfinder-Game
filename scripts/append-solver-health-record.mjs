@@ -12,6 +12,7 @@
  * set hashes; exact IDs remain recoverable from the referenced per-level run snapshots. Churn is
  * research/health evidence only and may not steer production by level identity.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, appendFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -35,6 +36,22 @@ function normalizedBoolean(value) {
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value ?? null;
+}
+
+function normalizeProtocol(summary) {
+    const protocol = summary?.protocol;
+    if (!protocol || typeof protocol !== 'object' || Array.isArray(protocol)) return null;
+    return Object.fromEntries(
+        Object.entries(protocol)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, value]) => [key, value == null ? '' : String(value)]),
+    );
+}
+
+function protocolHash(summary) {
+    const protocol = normalizeProtocol(summary);
+    if (!protocol) return null;
+    return createHash('sha256').update(JSON.stringify(protocol)).digest('hex');
 }
 
 function inferCorpusKey(file) {
@@ -80,6 +97,11 @@ function protocolMatches(currentSummary, priorSummary) {
     if (normalizedBoolean(currentSummary?.deterministic) !== normalizedBoolean(priorSummary?.deterministic)) return false;
     if (JSON.stringify(normalizeFlagList(currentSummary?.enableFlags)) !== JSON.stringify(normalizeFlagList(priorSummary?.enableFlags))) return false;
     if (JSON.stringify(normalizeFlagList(currentSummary?.disableFlags)) !== JSON.stringify(normalizeFlagList(priorSummary?.disableFlags))) return false;
+    const currentProtocol = normalizeProtocol(currentSummary);
+    const priorProtocol = normalizeProtocol(priorSummary);
+    // Legacy summaries do not establish enough budget/execution identity for solved-set churn.
+    if (!currentProtocol || !priorProtocol) return false;
+    if (JSON.stringify(currentProtocol) !== JSON.stringify(priorProtocol)) return false;
     for (const corpus of ['corpus1', 'corpus2']) {
         const current = currentSummary?.[corpus];
         const prior = priorSummary?.[corpus];
@@ -178,6 +200,7 @@ export function buildHealthRecord(summary, combinedByCorpus, previousCompatible 
         deterministic: normalizedBoolean(summary?.deterministic),
         enableFlags: summary?.enableFlags || null,
         disableFlags: summary?.disableFlags || null,
+        protocolHash: protocolHash(summary),
         corpus1: corpusSummary('corpus1'),
         corpus2: corpusSummary('corpus2'),
         capabilityChurn,
