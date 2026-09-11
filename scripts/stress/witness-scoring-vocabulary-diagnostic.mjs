@@ -27,6 +27,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { solvedIdsFromBenchmarkReport } from './benchmark-report-lib.mjs';
 import {
     SCORING_WEIGHT_FIELDS,
     analyzeVocabularyDecision,
@@ -81,7 +82,7 @@ let solvedIds = null;
 const reportPath = args.get('--report');
 if (reportPath) {
     const rep = JSON.parse(readFileSync(path.join(root, reportPath), 'utf8'));
-    solvedIds = new Set((rep.levels || []).filter(row => row.ok).map(row => row.id));
+    solvedIds = solvedIdsFromBenchmarkReport(rep);
 }
 if ((flags.has('--unsolved-only') || flags.has('--solved-only')) && !solvedIds) {
     console.error('--unsolved-only/--solved-only requires --report=<benchmark-report>');
