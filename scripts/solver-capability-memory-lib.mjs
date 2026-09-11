@@ -103,7 +103,7 @@ export function compareCandidateRows(baselineRows, candidateRows) {
     const baselineRow = baseline.get(id);
     if (!baselineRow) continue;
     observed.push(candidateRow);
-    if (!isConclusiveRow(candidateRow)) {
+    if (!isConclusiveRow(baselineRow) || !isConclusiveRow(candidateRow)) {
       inconclusive.add(id);
       continue;
     }
@@ -251,7 +251,7 @@ export function buildCapabilityMemory({ baselineId = 'baseline', baselineRows, c
     interpretation: {
       productionBoundary: 'Offline only. Exact-level historical/candidate outcomes are forbidden runtime steering inputs.',
       historicalSignatures: 'Nomination evidence only until reconciled/rerun under current code, population, and budget semantics.',
-      rowReports: 'Gain/loss comparisons are valid only for actually observed, conclusive candidate rows joined to this baseline.',
+      rowReports: 'Gain/loss comparisons are valid only for actually observed rows whose baseline and candidate outcomes are both conclusive.',
     },
     baseline: {
       id: baselineId,
