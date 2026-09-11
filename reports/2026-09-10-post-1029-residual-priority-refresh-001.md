@@ -1,10 +1,10 @@
 # Post-1029 residual priority refresh 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-10/11. Production capability run `34531412380`: Corpus 1 99/102, Corpus 2 1,029/1,700, zero errors/truncation. Current complete isolated-technique census asset: `33717910218`. The portfolio-18 same-policy resumable-tranche development A/B subsequently closed NULL at 52/120 vs 52/120 with real continuation participation.
-> **Decision:** refresh the current residual before further family sizing, pursue portal coarse-state-merge salvage as the highest-upside constrained capability target, and use the atlas to decide whether bounded admissible-order repricing is the next worthwhile population-scale compute. Resumable same-policy tranche salvage is no longer active queue work.
-> **Remaining gate:** execute the existing residual joins against the 671-level post-restoration miss set, reconcile T1 census gaps against provenance/history, and use the resulting failure-role counts to choose the next production-changing experiment.
-> **Evidence role:** research prioritization / preflight
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-11 — Gate 1 (the post-restoration residual atlas) is done; see [`2026-09-11-post-1029-residual-atlas-001.md`](2026-09-11-post-1029-residual-atlas-001.md) for the executed five-class per-level breakdown. Production capability run `34531412380`: Corpus 1 99/102, Corpus 2 1,029/1,700, zero errors/truncation. Current complete isolated-technique census asset: `33717910218`. The portfolio-18 same-policy resumable-tranche development A/B subsequently closed NULL at 52/120 vs 52/120 with real continuation participation.
+> **Decision:** the atlas confirms portal coarse-state-merge salvage (gate 2) as the highest-upside next target and finds allocation/exposure a minority failure mode, so bounded admissible-order repricing (gate 3) stays lower priority until gate 2 resolves. Resumable same-policy tranche salvage is no longer active queue work.
+> **Remaining gate:** none for this handoff; gate 2 (portal coarse-state salvage) and gate 3 (conditional repricing) are tracked directly in `docs/solver-optimization-workstreams.md`.
+> **Evidence role:** research prioritization / preflight (superseded by the executed atlas for Gate 1's own findings)
 
 ## Current boundary
 

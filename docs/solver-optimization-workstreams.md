@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, workstream state, and next gates.
-> **Reconciled:** 2026-09-10.
+> **Reconciled:** 2026-09-11.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization.
 
 Keep this file **current-state only**. Detailed evidence belongs in reports; historical snapshots live under `docs/archive/snapshots/`.
@@ -12,7 +12,7 @@ Method: [`solver-research-operating-model.md`](solver-research-operating-model.m
 
 ### 1. Workstream 2: residual capability and fixed-work allocation
 
-**State:** active. First rebuild the current 671-miss residual map from existing evidence. Then pursue the high-upside portal coarse-state salvage forensic. Spend new population-scale compute on repricing only if the refreshed residual still makes allocation the best lever. The simple same-policy resumable-tranche salvage is closed NULL and is no longer active queue work.
+**State:** active. The 671-miss residual atlas is done and confirms portal coarse-state salvage as the highest-value next target (portal-bearing structure is 74.1% of the residual, concentrated in the classes with a demonstrated-but-lost or reconciled-but-uncensused rescuer); pursue that forensic now. Allocation/exposure is only 8.5% of the residual, so admissible-order repricing stays bounded/lower-priority until gate 2 resolves. The simple same-policy resumable-tranche salvage is closed NULL and is no longer active queue work.
 
 #### Current production boundary
 
@@ -34,9 +34,9 @@ Production repricing dispositions:
 
 #### Ordered next gates
 
-1. **Post-1,029 residual atlas: NEXT / OFFLINE.** Rejoin the 671 misses against registered T1 census `33717910218`, lifecycle exposure, provenance/history, and structural/fingerprint/family data. A zero-winner T1 row is not a `no-known-rescuer` certificate. Separate known rescuer not offered, offered but unreached/starved, reached/comparably-worked but failed, census-gap/history rescuer, and no-known-rescuer after cross-evidence. Reuse `scripts/stress/analyze-current-missing-attempt-exposure.mjs`. [`handoff`](../reports/2026-09-10-post-1029-residual-priority-refresh-001.md)
-2. **Portal coarse-state salvage: ACTIVE HIGH-VALUE.** Reproduce the exact `R01273` control-winning `must-cross-neighbor-prune-disabled-retry` attempt with the existing beam research observer, locate the first harmful treatment collision, and diff future-relevant state omitted from the coarse key. Test the smallest level-blind state-local retention distinction. Require the frozen 12-loss cohort to retain all known control solves before another 954-level portal run. [`source diagnosis`](../reports/2026-09-10-portal-coarse-state-salvage-source-diagnosis-001.md)
-3. **Admissible-order repricing: READY / BOUNDED.** If the atlas still points to allocation as the best next lever, run the real matched-work `1.0 -> 0.18` confirmation through the new tier-scoped enforcement path and prove participation before interpreting the result. If the atlas instead exposes a larger representation/search-policy failure class, follow that evidence first.
+1. **Post-1,029 residual atlas: DONE.** Full per-level five-class rejoin of the 671 misses against T1 census `33717910218`, this run's own per-attempt dispatch log, lifecycle reach/starvation, structural/routing features, and hint-store provenance. Result: known-rescuer-not-offered 26 (3.9%), offered-but-unreached/starved 21 (3.1%), reached-comparable-work-failed 36 (5.4%), no-T1-winner-but-provenance-rescuer 200 (29.8%), no-known-rescuer-after-reconciliation 388 (57.8%). Portal-bearing structure dominates every class (497/671 overall, 74.1%; 86.5% of class 4, 75% of class 3) and confirms gate 2 as the correct next target — allocation/exposure (classes 2+3) is only 8.5% of the residual, materially weakening the case for gate 3 ahead of representation/search-policy work. Also nominates a small, cheap WS1 menu-expansion candidate: 26 never-offered levels, dominated by two recurring `width=5000`/`mechanic-buckets` beam configs on non-portal `intersection-heavy` levels. [`atlas report`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
+2. **Portal coarse-state salvage: ACTIVE HIGH-VALUE, atlas-confirmed.** Reproduce the exact `R01273` control-winning `must-cross-neighbor-prune-disabled-retry` attempt with the existing beam research observer, locate the first harmful treatment collision, and diff future-relevant state omitted from the coarse key. Test the smallest level-blind state-local retention distinction. Require the frozen 12-loss cohort to retain all known control solves before another 954-level portal run. [`source diagnosis`](../reports/2026-09-10-portal-coarse-state-salvage-source-diagnosis-001.md)
+3. **Admissible-order repricing: BOUNDED, lower priority than the atlas suggested.** The atlas found only 21/671 (3.1%) misses with an offered-but-starved known rescuer and 36/671 (5.4%) reached-with-comparable-work failures, spread across repair and admissible-order tiers together — allocation is a minority failure mode. Do not spend the next population-scale run here before gate 2 resolves; if gate 2 closes (either direction) and a matched-work admissible-order confirmation is still wanted, run it through the new tier-scoped enforcement path and prove participation before interpreting the result. The class-1 menu-expansion candidate above is a cheaper, better-evidenced next WS1 action if a small test is wanted in the interim.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -46,14 +46,14 @@ Use capability, lifecycle, provenance, profile, variant, census, trace and accep
 
 Stored paths, provenance, profile/family labels and same-level outcomes are offline diagnostics, not production routing inputs. [`evidence-layer upgrade`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
 
-The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing only. Recompute it inside the current 671 misses before using it to nominate new propagation or routing. Current lifecycle classification is refreshed against run `34531412380`; it does not replace the broader T1/provenance capability join. [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md)
+The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing only. Recomputed inside the current 671 misses by the post-1,029 residual atlas: 232/671 (34.6%) triple-overlap, still the largest single structural concentration in the residual. Current lifecycle classification is refreshed against run `34531412380`; the broader T1/provenance capability join and per-level five-class rescuer breakdown is now also done. [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md), [`residual atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Offline 671-miss atlas -> R01273 coarse-state forensic and 12-loss salvage gate -> bounded repricing only if still highest-value. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Join current residual to T1 + provenance capability and lifecycle; protect low-multiplicity capability before routing changes. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Atlas done, portal-confirmed -> R01273 coarse-state forensic and 12-loss salvage gate -> bounded repricing only if still highest-value after gate 2. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Atlas's 26-level never-offered `width=5000`/`mechanic-buckets` beam cohort is the next small, cheap, well-evidenced menu-expansion candidate; protect low-multiplicity capability before routing changes. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Static block count is an exploratory signal only (AUC 0.69 on 8 vs 22 cases). Run a fresh prespecified confirmation only if current residual evidence makes that non-cheap test worth buying. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen only for a materially different mechanism or newly measured hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Concrete methodological failure. |

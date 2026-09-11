@@ -1,0 +1,5286 @@
+{
+  "generatedAt": "2026-09-11T01:08:34.988Z",
+  "evidenceRole": "development-rejoin",
+  "baseline": "reports/stress/capability-runs/34531412380/per-level-corpus2.json",
+  "census": "reports/stress/technique-census/33717910218/combined-cells.json",
+  "corpus": "data/stress/stress-levels-random.json",
+  "excludedAsNowSolved": [],
+  "baselineUnsolvedBeforeExclusion": 671,
+  "currentResidualLevels": 671,
+  "censusPartialShards": [],
+  "rankingSemantics": "attempt config x current routing regime; only current residual levels where production getAttemptConfigs() lacks the exact normalized base attempt identity; frozen base T1 census only",
+  "rankedAttemptConfigRoutingRegimeCandidates": [
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=standard",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 21,
+      "censusNodes": 22224801615,
+      "nodesPerObservedSolve": 1058323886,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01086",
+          "nodes": 2190036,
+          "gate": 458758,
+          "features": {
+            "reqLen": 78,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02080",
+          "nodes": 3835904,
+          "gate": 131081,
+          "features": {
+            "reqLen": 120,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 7,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02892",
+          "nodes": 5503860,
+          "gate": 917505,
+          "features": {
+            "reqLen": 114,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03241",
+          "nodes": 6210387,
+          "gate": 720898,
+          "features": {
+            "reqLen": 93,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02864",
+          "nodes": 9777766,
+          "gate": 327685,
+          "features": {
+            "reqLen": 78,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 5,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02468",
+          "nodes": 10634531,
+          "gate": 458760,
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03234",
+          "nodes": 10720487,
+          "gate": 196618,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02216",
+          "nodes": 12009256,
+          "gate": 917510,
+          "features": {
+            "reqLen": 130,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03109",
+          "nodes": 12710452,
+          "gate": 851972,
+          "features": {
+            "reqLen": 120,
+            "reqInt": 11,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02160",
+          "nodes": 13806334,
+          "gate": 589824,
+          "features": {
+            "reqLen": 104,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 8,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02138",
+          "nodes": 14583047,
+          "gate": 524301,
+          "features": {
+            "reqLen": 113,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01673",
+          "nodes": 15000389,
+          "gate": 524296,
+          "features": {
+            "reqLen": 133,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02707",
+          "nodes": 16389271,
+          "gate": 131077,
+          "features": {
+            "reqLen": 102,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 6,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01724",
+          "nodes": 20436729,
+          "gate": 262156,
+          "features": {
+            "reqLen": 105,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 6,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03247",
+          "nodes": 22408091,
+          "gate": 917511,
+          "features": {
+            "reqLen": 127,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 8,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01016",
+          "nodes": 24203174,
+          "gate": 262148,
+          "features": {
+            "reqLen": 112,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02655",
+          "nodes": 26649476,
+          "gate": 65544,
+          "features": {
+            "reqLen": 100,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01500",
+          "nodes": 28485231,
+          "gate": 327689,
+          "features": {
+            "reqLen": 77,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02997",
+          "nodes": 36458318,
+          "gate": 720910,
+          "features": {
+            "reqLen": 126,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00050",
+          "nodes": 45655979,
+          "gate": 786446,
+          "features": {
+            "reqLen": 126,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02843",
+          "nodes": 47113134,
+          "gate": 393217,
+          "features": {
+            "reqLen": 106,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=must-turn-biased",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 376,
+      "isolatedSolves": 14,
+      "censusNodes": 15023465808,
+      "nodesPerObservedSolve": 1073104701,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02768",
+          "nodes": 1179294,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02835",
+          "nodes": 4084816,
+          "gate": 589835,
+          "features": {
+            "reqLen": 137,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02849",
+          "nodes": 12955651,
+          "gate": 262145,
+          "features": {
+            "reqLen": 72,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02403",
+          "nodes": 16205371,
+          "gate": 655360,
+          "features": {
+            "reqLen": 119,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02459",
+          "nodes": 16268287,
+          "gate": 65540,
+          "features": {
+            "reqLen": 82,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02249",
+          "nodes": 16733665,
+          "gate": 327681,
+          "features": {
+            "reqLen": 90,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02533",
+          "nodes": 16900545,
+          "gate": 786441,
+          "features": {
+            "reqLen": 112,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 5,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00306",
+          "nodes": 20823229,
+          "gate": 262145,
+          "features": {
+            "reqLen": 120,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00565",
+          "nodes": 23714741,
+          "gate": 131072,
+          "features": {
+            "reqLen": 83,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 4,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02178",
+          "nodes": 29527265,
+          "gate": 655369,
+          "features": {
+            "reqLen": 109,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02490",
+          "nodes": 31275950,
+          "gate": 655368,
+          "features": {
+            "reqLen": 80,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02092",
+          "nodes": 33481216,
+          "gate": 196612,
+          "features": {
+            "reqLen": 84,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02160",
+          "nodes": 37136975,
+          "gate": 589824,
+          "features": {
+            "reqLen": 104,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 8,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02561",
+          "nodes": 38656658,
+          "gate": 196615,
+          "features": {
+            "reqLen": 87,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 282,
+      "censusObservedLevels": 282,
+      "isolatedSolves": 8,
+      "censusNodes": 100526406,
+      "nodesPerObservedSolve": 12565801,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 6,
+      "winsAtOrBelow1m": 8,
+      "winningIds": [
+        {
+          "id": "R02615",
+          "nodes": 292360,
+          "gate": 6,
+          "features": {
+            "reqLen": 111,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00118",
+          "nodes": 300248,
+          "gate": 589829,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 6,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 333365,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 378568,
+          "gate": 327687,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02896",
+          "nodes": 392136,
+          "gate": 524291,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02988",
+          "nodes": 405136,
+          "gate": 327683,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02216",
+          "nodes": 593335,
+          "gate": 917510,
+          "features": {
+            "reqLen": 130,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03260",
+          "nodes": 620371,
+          "gate": 720899,
+          "features": {
+            "reqLen": 135,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=none|lds=off",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 7,
+      "censusNodes": 27102569828,
+      "nodesPerObservedSolve": 3871795690,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02697",
+          "nodes": 15499227,
+          "gate": 393222,
+          "features": {
+            "reqLen": 77,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03354",
+          "nodes": 16076371,
+          "gate": 2,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00050",
+          "nodes": 21255804,
+          "gate": 786446,
+          "features": {
+            "reqLen": 126,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02277",
+          "nodes": 31237421,
+          "gate": 262152,
+          "features": {
+            "reqLen": 65,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01269",
+          "nodes": 33782273,
+          "gate": 524288,
+          "features": {
+            "reqLen": 149,
+            "reqInt": 15,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 7,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 36418730,
+          "gate": 327687,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02979",
+          "nodes": 48231138,
+          "gate": 393223,
+          "features": {
+            "reqLen": 104,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 7,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 6,
+      "censusNodes": 27077775697,
+      "nodesPerObservedSolve": 4512962616,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02896",
+          "nodes": 2770038,
+          "gate": 524291,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01485",
+          "nodes": 9993019,
+          "gate": 327684,
+          "features": {
+            "reqLen": 88,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 4,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02794",
+          "nodes": 17852151,
+          "gate": 1,
+          "features": {
+            "reqLen": 90,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02468",
+          "nodes": 23853375,
+          "gate": 458760,
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02658",
+          "nodes": 30237759,
+          "gate": 851968,
+          "features": {
+            "reqLen": 130,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 43000363,
+          "gate": 65544,
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 5,
+      "censusNodes": 27151584818,
+      "nodesPerObservedSolve": 5430316964,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02896",
+          "nodes": 2752644,
+          "gate": 524291,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02794",
+          "nodes": 17849015,
+          "gate": 1,
+          "features": {
+            "reqLen": 90,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01849",
+          "nodes": 39053394,
+          "gate": 655365,
+          "features": {
+            "reqLen": 130,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 43068459,
+          "gate": 65544,
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02434",
+          "nodes": 48792186,
+          "gate": 786442,
+          "features": {
+            "reqLen": 124,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 282,
+      "censusObservedLevels": 282,
+      "isolatedSolves": 4,
+      "censusNodes": 98452554,
+      "nodesPerObservedSolve": 24613139,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 4,
+      "winningIds": [
+        {
+          "id": "R01613",
+          "nodes": 322025,
+          "gate": 393223,
+          "features": {
+            "reqLen": 93,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 382357,
+          "gate": 327687,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 437588,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00320",
+          "nodes": 682994,
+          "gate": 327686,
+          "features": {
+            "reqLen": 146,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 11,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=standard",
+      "routingRegime": "must-cross-heavy",
+      "absentResidualLevels": 52,
+      "censusObservedLevels": 52,
+      "isolatedSolves": 4,
+      "censusNodes": 2113853652,
+      "nodesPerObservedSolve": 528463413,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02552",
+          "nodes": 11711771,
+          "gate": 393222,
+          "features": {
+            "reqLen": 88,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 3,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02162",
+          "nodes": 33041075,
+          "gate": 458755,
+          "features": {
+            "reqLen": 86,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 3,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01603",
+          "nodes": 36341705,
+          "gate": 589832,
+          "features": {
+            "reqLen": 78,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01011",
+          "nodes": 37210562,
+          "gate": 589825,
+          "features": {
+            "reqLen": 83,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=default|lds=off",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 4,
+      "censusNodes": 27173574122,
+      "nodesPerObservedSolve": 6793393531,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02794",
+          "nodes": 17787701,
+          "gate": 1,
+          "features": {
+            "reqLen": 90,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02468",
+          "nodes": 23851314,
+          "gate": 458760,
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02622",
+          "nodes": 37498200,
+          "gate": 589824,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 44367659,
+          "gate": 65544,
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=intersectionHarvest|lds=off",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 4,
+      "censusNodes": 27181821820,
+      "nodesPerObservedSolve": 6795455455,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02468",
+          "nodes": 18905819,
+          "gate": 458760,
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02658",
+          "nodes": 30227015,
+          "gate": 851968,
+          "features": {
+            "reqLen": 130,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02622",
+          "nodes": 38024152,
+          "gate": 589824,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 44595586,
+          "gate": 65544,
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 401,
+      "censusObservedLevels": 401,
+      "isolatedSolves": 3,
+      "censusNodes": 55891619,
+      "nodesPerObservedSolve": 18630540,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R03236",
+          "nodes": 104049,
+          "gate": 10,
+          "features": {
+            "reqLen": 96,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 144051,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02440",
+          "nodes": 180615,
+          "gate": 589831,
+          "features": {
+            "reqLen": 128,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 3,
+      "censusNodes": 73617088,
+      "nodesPerObservedSolve": 24539029,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 68395,
+          "gate": 524293,
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 144331,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 171683,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 3,
+      "censusNodes": 74222105,
+      "nodesPerObservedSolve": 24740702,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 72986,
+          "gate": 524293,
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 133230,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 175330,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 3,
+      "censusNodes": 74718403,
+      "nodesPerObservedSolve": 24906134,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 66957,
+          "gate": 524293,
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 149324,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 185256,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=must-turn-biased",
+      "routingRegime": "must-cross-heavy",
+      "absentResidualLevels": 52,
+      "censusObservedLevels": 42,
+      "isolatedSolves": 3,
+      "censusNodes": 1692503006,
+      "nodesPerObservedSolve": 564167669,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01603",
+          "nodes": 21856990,
+          "gate": 589832,
+          "features": {
+            "reqLen": 78,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02844",
+          "nodes": 27959034,
+          "gate": 196609,
+          "features": {
+            "reqLen": 63,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 3,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02586",
+          "nodes": 40914795,
+          "gate": 262149,
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=must-turn-biased",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 51,
+      "isolatedSolves": 3,
+      "censusNodes": 2206148490,
+      "nodesPerObservedSolve": 735382830,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03049",
+          "nodes": 12345609,
+          "gate": 327682,
+          "features": {
+            "reqLen": 72,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03056",
+          "nodes": 23299834,
+          "gate": 65541,
+          "features": {
+            "reqLen": 101,
+            "reqInt": 1,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02367",
+          "nodes": 32182920,
+          "gate": 720906,
+          "features": {
+            "reqLen": 76,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=intersectionHarvest|lds=off",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 3,
+      "censusNodes": 3155131407,
+      "nodesPerObservedSolve": 1051710469,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03327",
+          "nodes": 2146935,
+          "gate": 196619,
+          "features": {
+            "reqLen": 114,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01504",
+          "nodes": 17917722,
+          "gate": 131080,
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 35058814,
+          "gate": 720901,
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=sideCommitment",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 430,
+      "censusObservedLevels": 430,
+      "isolatedSolves": 3,
+      "censusNodes": 21371612156,
+      "nodesPerObservedSolve": 7123870719,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 2600286,
+          "gate": 327681,
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02697",
+          "nodes": 6310212,
+          "gate": 393222,
+          "features": {
+            "reqLen": 77,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02988",
+          "nodes": 12648788,
+          "gate": 327683,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=standard",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 2,
+      "censusNodes": 2843197475,
+      "nodesPerObservedSolve": 1421598738,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03049",
+          "nodes": 11461679,
+          "gate": 327682,
+          "features": {
+            "reqLen": 72,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01642",
+          "nodes": 23154625,
+          "gate": 393217,
+          "features": {
+            "reqLen": 103,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=none|lds=off",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 2,
+      "censusNodes": 3200683546,
+      "nodesPerObservedSolve": 1600341773,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02219",
+          "nodes": 14300785,
+          "gate": 262150,
+          "features": {
+            "reqLen": 82,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 36374697,
+          "gate": 720901,
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 2,
+      "censusNodes": 3202863264,
+      "nodesPerObservedSolve": 1601431632,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01504",
+          "nodes": 17917722,
+          "gate": 131080,
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 34937478,
+          "gate": 720901,
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=default|lds=off",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 2,
+      "censusNodes": 3203052193,
+      "nodesPerObservedSolve": 1601526097,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01504",
+          "nodes": 17909978,
+          "gate": 131080,
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 35134151,
+          "gate": 720901,
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 2,
+      "censusNodes": 3203090081,
+      "nodesPerObservedSolve": 1601545041,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01504",
+          "nodes": 17917722,
+          "gate": 131080,
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 35164295,
+          "gate": 720901,
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=perimeterCCW",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 286,
+      "censusObservedLevels": 286,
+      "isolatedSolves": 2,
+      "censusNodes": 14238102869,
+      "nodesPerObservedSolve": 7119051435,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01500",
+          "nodes": 5707332,
+          "gate": 327689,
+          "features": {
+            "reqLen": 77,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00050",
+          "nodes": 32360881,
+          "gate": 786446,
+          "features": {
+            "reqLen": 126,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=portalCommitted|bias=none",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 2,
+      "censusNodes": 27219487973,
+      "nodesPerObservedSolve": 13609743987,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02709",
+          "nodes": 25691473,
+          "gate": 262148,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 11,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02977",
+          "nodes": 43727388,
+          "gate": 393216,
+          "features": {
+            "reqLen": 133,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "routingRegime": "general",
+      "absentResidualLevels": 9,
+      "censusObservedLevels": 9,
+      "isolatedSolves": 1,
+      "censusNodes": 933978,
+      "nodesPerObservedSolve": 933978,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R03261",
+          "nodes": 122390,
+          "gate": 720903,
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "general",
+      "absentResidualLevels": 9,
+      "censusObservedLevels": 9,
+      "isolatedSolves": 1,
+      "censusNodes": 2382614,
+      "nodesPerObservedSolve": 2382614,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R03261",
+          "nodes": 287722,
+          "gate": 720903,
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "routingRegime": "must-cross-heavy",
+      "absentResidualLevels": 28,
+      "censusObservedLevels": 28,
+      "isolatedSolves": 1,
+      "censusNodes": 2847657,
+      "nodesPerObservedSolve": 2847657,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R01080",
+          "nodes": 155548,
+          "gate": 65536,
+          "features": {
+            "reqLen": 112,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 3,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 1,
+      "censusNodes": 20516508,
+      "nodesPerObservedSolve": 20516508,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R01504",
+          "nodes": 384903,
+          "gate": 131080,
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 182,
+      "censusObservedLevels": 182,
+      "isolatedSolves": 1,
+      "censusNodes": 34015869,
+      "nodesPerObservedSolve": 34015869,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R02102",
+          "nodes": 211793,
+          "gate": 327683,
+          "features": {
+            "reqLen": 125,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 401,
+      "censusObservedLevels": 401,
+      "isolatedSolves": 1,
+      "censusNodes": 55852207,
+      "nodesPerObservedSolve": 55852207,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R02229",
+          "nodes": 184522,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=must-turn-biased",
+      "routingRegime": "general",
+      "absentResidualLevels": 9,
+      "censusObservedLevels": 9,
+      "isolatedSolves": 1,
+      "censusNodes": 387885785,
+      "nodesPerObservedSolve": 387885785,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02180",
+          "nodes": 6206072,
+          "gate": 524295,
+          "features": {
+            "reqLen": 82,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=default|bias=none",
+      "routingRegime": "must-cross-heavy",
+      "absentResidualLevels": 52,
+      "censusObservedLevels": 52,
+      "isolatedSolves": 1,
+      "censusNodes": 2586991385,
+      "nodesPerObservedSolve": 2586991385,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02162",
+          "nodes": 36985357,
+          "gate": 458755,
+          "features": {
+            "reqLen": 86,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 3,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=perimeterCW",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 286,
+      "censusObservedLevels": 286,
+      "isolatedSolves": 1,
+      "censusNodes": 14289250570,
+      "nodesPerObservedSolve": 14289250570,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02988",
+          "nodes": 39214904,
+          "gate": 327683,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=closureCommitment|bias=none",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 1,
+      "censusNodes": 27200880789,
+      "nodesPerObservedSolve": 27200880789,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 813416,
+          "gate": 327681,
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=default|bias=none",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 1,
+      "censusNodes": 27202119902,
+      "nodesPerObservedSolve": 27202119902,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 2051881,
+          "gate": 327681,
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=cornerHarvest",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 1,
+      "censusNodes": 27205749508,
+      "nodesPerObservedSolve": 27205749508,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02843",
+          "nodes": 5681848,
+          "gate": 393217,
+          "features": {
+            "reqLen": 106,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=portalFirstTransfer|bias=none",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 1,
+      "censusNodes": 27210342891,
+      "nodesPerObservedSolve": 27210342891,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 10273156,
+          "gate": 327681,
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=harvestThenFinish|bias=none",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 1,
+      "censusNodes": 27210343991,
+      "nodesPerObservedSolve": 27210343991,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 10273301,
+          "gate": 327681,
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=nearClosureRescue|bias=none",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 1,
+      "censusNodes": 27243429445,
+      "nodesPerObservedSolve": 27243429445,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02977",
+          "nodes": 43358834,
+          "gate": 393216,
+          "features": {
+            "reqLen": 133,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    }
+  ],
+  "rankedBeamAttemptConfigRoutingRegimeCandidates": [
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 282,
+      "censusObservedLevels": 282,
+      "isolatedSolves": 8,
+      "censusNodes": 100526406,
+      "nodesPerObservedSolve": 12565801,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 6,
+      "winsAtOrBelow1m": 8,
+      "winningIds": [
+        {
+          "id": "R02615",
+          "nodes": 292360,
+          "gate": 6,
+          "features": {
+            "reqLen": 111,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00118",
+          "nodes": 300248,
+          "gate": 589829,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 6,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 333365,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 378568,
+          "gate": 327687,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02896",
+          "nodes": 392136,
+          "gate": 524291,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02988",
+          "nodes": 405136,
+          "gate": 327683,
+          "features": {
+            "reqLen": 107,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02216",
+          "nodes": 593335,
+          "gate": 917510,
+          "features": {
+            "reqLen": 130,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03260",
+          "nodes": 620371,
+          "gate": 720899,
+          "features": {
+            "reqLen": 135,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 282,
+      "censusObservedLevels": 282,
+      "isolatedSolves": 4,
+      "censusNodes": 98452554,
+      "nodesPerObservedSolve": 24613139,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 4,
+      "winningIds": [
+        {
+          "id": "R01613",
+          "nodes": 322025,
+          "gate": 393223,
+          "features": {
+            "reqLen": 93,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 382357,
+          "gate": 327687,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 437588,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00320",
+          "nodes": 682994,
+          "gate": 327686,
+          "features": {
+            "reqLen": 146,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 11,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 401,
+      "censusObservedLevels": 401,
+      "isolatedSolves": 3,
+      "censusNodes": 55891619,
+      "nodesPerObservedSolve": 18630540,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R03236",
+          "nodes": 104049,
+          "gate": 10,
+          "features": {
+            "reqLen": 96,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 144051,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02440",
+          "nodes": 180615,
+          "gate": 589831,
+          "features": {
+            "reqLen": 128,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 3,
+      "censusNodes": 73617088,
+      "nodesPerObservedSolve": 24539029,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 68395,
+          "gate": 524293,
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 144331,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 171683,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 3,
+      "censusNodes": 74222105,
+      "nodesPerObservedSolve": 24740702,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 72986,
+          "gate": 524293,
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 133230,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 175330,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 545,
+      "censusObservedLevels": 545,
+      "isolatedSolves": 3,
+      "censusNodes": 74718403,
+      "nodesPerObservedSolve": 24906134,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 66957,
+          "gate": 524293,
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 149324,
+          "gate": 458755,
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 185256,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "routingRegime": "general",
+      "absentResidualLevels": 9,
+      "censusObservedLevels": 9,
+      "isolatedSolves": 1,
+      "censusNodes": 933978,
+      "nodesPerObservedSolve": 933978,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R03261",
+          "nodes": 122390,
+          "gate": 720903,
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "general",
+      "absentResidualLevels": 9,
+      "censusObservedLevels": 9,
+      "isolatedSolves": 1,
+      "censusNodes": 2382614,
+      "nodesPerObservedSolve": 2382614,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R03261",
+          "nodes": 287722,
+          "gate": 720903,
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "routingRegime": "must-cross-heavy",
+      "absentResidualLevels": 28,
+      "censusObservedLevels": 28,
+      "isolatedSolves": 1,
+      "censusNodes": 2847657,
+      "nodesPerObservedSolve": 2847657,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R01080",
+          "nodes": 155548,
+          "gate": 65536,
+          "features": {
+            "reqLen": 112,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 3,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "multi-portal",
+      "absentResidualLevels": 65,
+      "censusObservedLevels": 65,
+      "isolatedSolves": 1,
+      "censusNodes": 20516508,
+      "nodesPerObservedSolve": 20516508,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R01504",
+          "nodes": 384903,
+          "gate": 131080,
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 182,
+      "censusObservedLevels": 182,
+      "isolatedSolves": 1,
+      "censusNodes": 34015869,
+      "nodesPerObservedSolve": 34015869,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R02102",
+          "nodes": 211793,
+          "gate": 327683,
+          "features": {
+            "reqLen": 125,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+      "routingRegime": "intersection-heavy",
+      "absentResidualLevels": 401,
+      "censusObservedLevels": 401,
+      "isolatedSolves": 1,
+      "censusNodes": 55852207,
+      "nodesPerObservedSolve": 55852207,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R02229",
+          "nodes": 184522,
+          "gate": 262155,
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    }
+  ],
+  "overallAttemptConfigCandidates": [
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=standard",
+      "routingRegime": "*",
+      "absentResidualLevels": 671,
+      "censusObservedLevels": 671,
+      "isolatedSolves": 27,
+      "censusNodes": 27615972754,
+      "nodesPerObservedSolve": 1022813806,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01086",
+          "nodes": 2190036,
+          "gate": 458758,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 78,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02080",
+          "nodes": 3835904,
+          "gate": 131081,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 120,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 7,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02892",
+          "nodes": 5503860,
+          "gate": 917505,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 114,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03241",
+          "nodes": 6210387,
+          "gate": 720898,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 93,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02864",
+          "nodes": 9777766,
+          "gate": 327685,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 78,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 5,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02468",
+          "nodes": 10634531,
+          "gate": 458760,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03234",
+          "nodes": 10720487,
+          "gate": 196618,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03049",
+          "nodes": 11461679,
+          "gate": 327682,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 72,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02552",
+          "nodes": 11711771,
+          "gate": 393222,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 88,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 3,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02216",
+          "nodes": 12009256,
+          "gate": 917510,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 130,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03109",
+          "nodes": 12710452,
+          "gate": 851972,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 120,
+            "reqInt": 11,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02160",
+          "nodes": 13806334,
+          "gate": 589824,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 104,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 8,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02138",
+          "nodes": 14583047,
+          "gate": 524301,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 113,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01673",
+          "nodes": 15000389,
+          "gate": 524296,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 133,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02707",
+          "nodes": 16389271,
+          "gate": 131077,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 102,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 6,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01724",
+          "nodes": 20436729,
+          "gate": 262156,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 105,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 6,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03247",
+          "nodes": 22408091,
+          "gate": 917511,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 127,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 8,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01642",
+          "nodes": 23154625,
+          "gate": 393217,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 103,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01016",
+          "nodes": 24203174,
+          "gate": 262148,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 112,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02655",
+          "nodes": 26649476,
+          "gate": 65544,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 100,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01500",
+          "nodes": 28485231,
+          "gate": 327689,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 77,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02162",
+          "nodes": 33041075,
+          "gate": 458755,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 86,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 3,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01603",
+          "nodes": 36341705,
+          "gate": 589832,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 78,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02997",
+          "nodes": 36458318,
+          "gate": 720910,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 126,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01011",
+          "nodes": 37210562,
+          "gate": 589825,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 83,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00050",
+          "nodes": 45655979,
+          "gate": 786446,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 126,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02843",
+          "nodes": 47113134,
+          "gate": 393217,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 106,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "repair|score=repair|guidance=must-turn-biased",
+      "routingRegime": "*",
+      "absentResidualLevels": 671,
+      "censusObservedLevels": 478,
+      "isolatedSolves": 21,
+      "censusNodes": 19310003089,
+      "nodesPerObservedSolve": 919523957,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02768",
+          "nodes": 1179294,
+          "gate": 458755,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02835",
+          "nodes": 4084816,
+          "gate": 589835,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 137,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02180",
+          "nodes": 6206072,
+          "gate": 524295,
+          "routingRegime": "general",
+          "features": {
+            "reqLen": 82,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03049",
+          "nodes": 12345609,
+          "gate": 327682,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 72,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02849",
+          "nodes": 12955651,
+          "gate": 262145,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 72,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02403",
+          "nodes": 16205371,
+          "gate": 655360,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 119,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02459",
+          "nodes": 16268287,
+          "gate": 65540,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 82,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02249",
+          "nodes": 16733665,
+          "gate": 327681,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 90,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02533",
+          "nodes": 16900545,
+          "gate": 786441,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 112,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 5,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00306",
+          "nodes": 20823229,
+          "gate": 262145,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 120,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01603",
+          "nodes": 21856990,
+          "gate": 589832,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 78,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03056",
+          "nodes": 23299834,
+          "gate": 65541,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 101,
+            "reqInt": 1,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00565",
+          "nodes": 23714741,
+          "gate": 131072,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 83,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 4,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02844",
+          "nodes": 27959034,
+          "gate": 196609,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 63,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 3,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02178",
+          "nodes": 29527265,
+          "gate": 655369,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 109,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02490",
+          "nodes": 31275950,
+          "gate": 655368,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 80,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02367",
+          "nodes": 32182920,
+          "gate": 720906,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 76,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02092",
+          "nodes": 33481216,
+          "gate": 196612,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 84,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02160",
+          "nodes": 37136975,
+          "gate": 589824,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 104,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 8,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02561",
+          "nodes": 38656658,
+          "gate": 196615,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 87,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02586",
+          "nodes": 40914795,
+          "gate": 262149,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 2,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "*",
+      "absentResidualLevels": 380,
+      "censusObservedLevels": 380,
+      "isolatedSolves": 10,
+      "censusNodes": 130369085,
+      "nodesPerObservedSolve": 13036909,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 8,
+      "winsAtOrBelow1m": 10,
+      "winningIds": [
+        {
+          "id": "R03261",
+          "nodes": 287722,
+          "gate": 720903,
+          "routingRegime": "general",
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02615",
+          "nodes": 292360,
+          "gate": 6,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 111,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00118",
+          "nodes": 300248,
+          "gate": 589829,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 6,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 333365,
+          "gate": 458755,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 378568,
+          "gate": 327687,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01504",
+          "nodes": 384903,
+          "gate": 131080,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02896",
+          "nodes": 392136,
+          "gate": 524291,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02988",
+          "nodes": 405136,
+          "gate": 327683,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02216",
+          "nodes": 593335,
+          "gate": 917510,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 130,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03260",
+          "nodes": 620371,
+          "gate": 720899,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 135,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=none|lds=off",
+      "routingRegime": "*",
+      "absentResidualLevels": 671,
+      "censusObservedLevels": 671,
+      "isolatedSolves": 9,
+      "censusNodes": 33353261182,
+      "nodesPerObservedSolve": 3705917909,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02219",
+          "nodes": 14300785,
+          "gate": 262150,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 82,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02697",
+          "nodes": 15499227,
+          "gate": 393222,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 77,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03354",
+          "nodes": 16076371,
+          "gate": 2,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 5,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00050",
+          "nodes": 21255804,
+          "gate": 786446,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 126,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02277",
+          "nodes": 31237421,
+          "gate": 262152,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 65,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01269",
+          "nodes": 33782273,
+          "gate": 524288,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 149,
+            "reqInt": 15,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 7,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 36374697,
+          "gate": 720901,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 36418730,
+          "gate": 327687,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02979",
+          "nodes": 48231138,
+          "gate": 393223,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 104,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 7,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=mustCrossFirst|lds=off",
+      "routingRegime": "*",
+      "absentResidualLevels": 671,
+      "censusObservedLevels": 671,
+      "isolatedSolves": 8,
+      "censusNodes": 33330873586,
+      "nodesPerObservedSolve": 4166359198,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02896",
+          "nodes": 2770038,
+          "gate": 524291,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01485",
+          "nodes": 9993019,
+          "gate": 327684,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 88,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 4,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02794",
+          "nodes": 17852151,
+          "gate": 1,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 90,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01504",
+          "nodes": 17917722,
+          "gate": 131080,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02468",
+          "nodes": 23853375,
+          "gate": 458760,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02658",
+          "nodes": 30237759,
+          "gate": 851968,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 130,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 35164295,
+          "gate": 720901,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 43000363,
+          "gate": 65544,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=intersectionHarvest|lds=off",
+      "routingRegime": "*",
+      "absentResidualLevels": 671,
+      "censusObservedLevels": 671,
+      "isolatedSolves": 7,
+      "censusNodes": 33386961035,
+      "nodesPerObservedSolve": 4769565862,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03327",
+          "nodes": 2146935,
+          "gate": 196619,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 114,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 13,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01504",
+          "nodes": 17917722,
+          "gate": 131080,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02468",
+          "nodes": 18905819,
+          "gate": 458760,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02658",
+          "nodes": 30227015,
+          "gate": 851968,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 130,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 35058814,
+          "gate": 720901,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02622",
+          "nodes": 38024152,
+          "gate": 589824,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 44595586,
+          "gate": 65544,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=nearClosureRescue|lds=off",
+      "routingRegime": "*",
+      "absentResidualLevels": 671,
+      "censusObservedLevels": 671,
+      "isolatedSolves": 7,
+      "censusNodes": 33404455890,
+      "nodesPerObservedSolve": 4772065127,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02896",
+          "nodes": 2752644,
+          "gate": 524291,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02794",
+          "nodes": 17849015,
+          "gate": 1,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 90,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01504",
+          "nodes": 17917722,
+          "gate": 131080,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 34937478,
+          "gate": 720901,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01849",
+          "nodes": 39053394,
+          "gate": 655365,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 130,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 43068459,
+          "gate": 65544,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02434",
+          "nodes": 48792186,
+          "gate": 786442,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 124,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "admissible-order|tieBreak=default|lds=off",
+      "routingRegime": "*",
+      "absentResidualLevels": 671,
+      "censusObservedLevels": 671,
+      "isolatedSolves": 6,
+      "censusNodes": 33426634123,
+      "nodesPerObservedSolve": 5571105687,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02794",
+          "nodes": 17787701,
+          "gate": 1,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 90,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 5,
+            "portals": 12,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01504",
+          "nodes": 17909978,
+          "gate": 131080,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 92,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02468",
+          "nodes": 23851314,
+          "gate": 458760,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 97,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01761",
+          "nodes": 35134151,
+          "gate": 720901,
+          "routingRegime": "multi-portal",
+          "features": {
+            "reqLen": 70,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02622",
+          "nodes": 37498200,
+          "gate": 589824,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 0,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02084",
+          "nodes": 44367659,
+          "gate": 65544,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 87,
+            "reqInt": 4,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 4,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=knotBuilder|bias=none|width=2000|retention=plain",
+      "routingRegime": "*",
+      "absentResidualLevels": 647,
+      "censusObservedLevels": 647,
+      "isolatedSolves": 5,
+      "censusNodes": 85726536,
+      "nodesPerObservedSolve": 17145307,
+      "winsAtOrBelow250k": 5,
+      "winsAtOrBelow500k": 5,
+      "winsAtOrBelow1m": 5,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 72986,
+          "gate": 524293,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R03261",
+          "nodes": 122390,
+          "gate": 720903,
+          "routingRegime": "general",
+          "features": {
+            "reqLen": 81,
+            "reqInt": 2,
+            "gates": 1,
+            "mustPass": 15,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 133230,
+          "gate": 458755,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R01080",
+          "nodes": 155548,
+          "gate": 65536,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 112,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 3,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 175330,
+          "gate": 262155,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets",
+      "routingRegime": "*",
+      "absentResidualLevels": 384,
+      "censusObservedLevels": 384,
+      "isolatedSolves": 4,
+      "censusNodes": 128804635,
+      "nodesPerObservedSolve": 32201159,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 4,
+      "winningIds": [
+        {
+          "id": "R01613",
+          "nodes": 322025,
+          "gate": 393223,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 93,
+            "reqInt": 6,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00355",
+          "nodes": 382357,
+          "gate": 327687,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 437588,
+          "gate": 262155,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00320",
+          "nodes": 682994,
+          "gate": 327686,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 146,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 11,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=intersectionHarvest|bias=none|width=2000|retention=plain",
+      "routingRegime": "*",
+      "absentResidualLevels": 503,
+      "censusObservedLevels": 503,
+      "isolatedSolves": 3,
+      "censusNodes": 67316740,
+      "nodesPerObservedSolve": 22438913,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R03236",
+          "nodes": 104049,
+          "gate": 10,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 96,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 144051,
+          "gate": 458755,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02440",
+          "nodes": 180615,
+          "gate": 589831,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 128,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 12,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=harvestThenFinish|bias=none|width=2000|retention=plain",
+      "routingRegime": "*",
+      "absentResidualLevels": 647,
+      "censusObservedLevels": 647,
+      "isolatedSolves": 3,
+      "censusNodes": 84923093,
+      "nodesPerObservedSolve": 28307698,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 68395,
+          "gate": 524293,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 144331,
+          "gate": 458755,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 171683,
+          "gate": 262155,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=mustCrossFirst|bias=none|width=2000|retention=plain",
+      "routingRegime": "*",
+      "absentResidualLevels": 644,
+      "censusObservedLevels": 644,
+      "isolatedSolves": 3,
+      "censusNodes": 85745581,
+      "nodesPerObservedSolve": 28581860,
+      "winsAtOrBelow250k": 3,
+      "winsAtOrBelow500k": 3,
+      "winsAtOrBelow1m": 3,
+      "winningIds": [
+        {
+          "id": "R02696",
+          "nodes": 66957,
+          "gate": 524293,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 85,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02020",
+          "nodes": 149324,
+          "gate": 458755,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 89,
+            "reqInt": 8,
+            "gates": 1,
+            "mustPass": 10,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02229",
+          "nodes": 185256,
+          "gate": 262155,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=sideCommitment",
+      "routingRegime": "*",
+      "absentResidualLevels": 482,
+      "censusObservedLevels": 482,
+      "isolatedSolves": 3,
+      "censusNodes": 23971619260,
+      "nodesPerObservedSolve": 7990539753,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 2600286,
+          "gate": 327681,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02697",
+          "nodes": 6310212,
+          "gate": 393222,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 77,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 14,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02988",
+          "nodes": 12648788,
+          "gate": 327683,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=perimeterCCW",
+      "routingRegime": "*",
+      "absentResidualLevels": 314,
+      "censusObservedLevels": 314,
+      "isolatedSolves": 2,
+      "censusNodes": 15638106676,
+      "nodesPerObservedSolve": 7819053338,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R01500",
+          "nodes": 5707332,
+          "gate": 327689,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 77,
+            "reqInt": 7,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R00050",
+          "nodes": 32360881,
+          "gate": 786446,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 126,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 14,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=default|bias=none",
+      "routingRegime": "*",
+      "absentResidualLevels": 597,
+      "censusObservedLevels": 597,
+      "isolatedSolves": 2,
+      "censusNodes": 29789111287,
+      "nodesPerObservedSolve": 14894555644,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 2051881,
+          "gate": 327681,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02162",
+          "nodes": 36985357,
+          "gate": 458755,
+          "routingRegime": "must-cross-heavy",
+          "features": {
+            "reqLen": 86,
+            "reqInt": 3,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 3,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=portalCommitted|bias=none",
+      "routingRegime": "*",
+      "absentResidualLevels": 597,
+      "censusObservedLevels": 597,
+      "isolatedSolves": 2,
+      "censusNodes": 29819494255,
+      "nodesPerObservedSolve": 14909747128,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02709",
+          "nodes": 25691473,
+          "gate": 262148,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 117,
+            "reqInt": 11,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 10,
+            "flippers": 0
+          }
+        },
+        {
+          "id": "R02977",
+          "nodes": 43727388,
+          "gate": 393216,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 133,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+      "routingRegime": "*",
+      "absentResidualLevels": 206,
+      "censusObservedLevels": 206,
+      "isolatedSolves": 1,
+      "censusNodes": 36942218,
+      "nodesPerObservedSolve": 36942218,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R02102",
+          "nodes": 211793,
+          "gate": 327683,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 125,
+            "reqInt": 12,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "beam|score=objectiveFirst|bias=none|width=2000|retention=plain",
+      "routingRegime": "*",
+      "absentResidualLevels": 500,
+      "censusObservedLevels": 500,
+      "isolatedSolves": 1,
+      "censusNodes": 66862023,
+      "nodesPerObservedSolve": 66862023,
+      "winsAtOrBelow250k": 1,
+      "winsAtOrBelow500k": 1,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R02229",
+          "nodes": 184522,
+          "gate": 262155,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 117,
+            "reqInt": 9,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=perimeterCW",
+      "routingRegime": "*",
+      "absentResidualLevels": 311,
+      "censusObservedLevels": 311,
+      "isolatedSolves": 1,
+      "censusNodes": 15539253448,
+      "nodesPerObservedSolve": 15539253448,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02988",
+          "nodes": 39214904,
+          "gate": 327683,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 107,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 5,
+            "mustCross": 0,
+            "portals": 0,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=perimeterSweep|bias=cornerHarvest",
+      "routingRegime": "*",
+      "absentResidualLevels": 594,
+      "censusObservedLevels": 594,
+      "isolatedSolves": 1,
+      "censusNodes": 29655754981,
+      "nodesPerObservedSolve": 29655754981,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02843",
+          "nodes": 5681848,
+          "gate": 393217,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 106,
+            "reqInt": 10,
+            "gates": 1,
+            "mustPass": 8,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=harvestThenFinish|bias=none",
+      "routingRegime": "*",
+      "absentResidualLevels": 594,
+      "censusObservedLevels": 594,
+      "isolatedSolves": 1,
+      "censusNodes": 29660349638,
+      "nodesPerObservedSolve": 29660349638,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 10273301,
+          "gate": 327681,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=closureCommitment|bias=none",
+      "routingRegime": "*",
+      "absentResidualLevels": 597,
+      "censusObservedLevels": 597,
+      "isolatedSolves": 1,
+      "censusNodes": 29800888228,
+      "nodesPerObservedSolve": 29800888228,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 1,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 813416,
+          "gate": 327681,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=portalFirstTransfer|bias=none",
+      "routingRegime": "*",
+      "absentResidualLevels": 597,
+      "censusObservedLevels": 597,
+      "isolatedSolves": 1,
+      "censusNodes": 29810350427,
+      "nodesPerObservedSolve": 29810350427,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R03325",
+          "nodes": 10273156,
+          "gate": 327681,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 121,
+            "reqInt": 13,
+            "gates": 1,
+            "mustPass": 6,
+            "mustCross": 0,
+            "portals": 8,
+            "flippers": 0
+          }
+        }
+      ]
+    },
+    {
+      "attemptConfigIdentity": "dfs|score=nearClosureRescue|bias=none",
+      "routingRegime": "*",
+      "absentResidualLevels": 597,
+      "censusObservedLevels": 597,
+      "isolatedSolves": 1,
+      "censusNodes": 29843435287,
+      "nodesPerObservedSolve": 29843435287,
+      "winsAtOrBelow250k": 0,
+      "winsAtOrBelow500k": 0,
+      "winsAtOrBelow1m": 0,
+      "winningIds": [
+        {
+          "id": "R02977",
+          "nodes": 43358834,
+          "gate": 393216,
+          "routingRegime": "intersection-heavy",
+          "features": {
+            "reqLen": 133,
+            "reqInt": 5,
+            "gates": 1,
+            "mustPass": 7,
+            "mustCross": 0,
+            "portals": 12,
+            "flippers": 0
+          }
+        }
+      ]
+    }
+  ]
+}
