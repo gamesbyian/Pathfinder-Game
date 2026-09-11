@@ -1,11 +1,11 @@
 # Shared-substrate and scoring-vocabulary audit
 
-> **Status:** active
-> **Last evidence:** 2026-09-11 — static shared-substrate audit, historical evidence reconciliation, and scorer-basis tooling added on PR #1718; population execution is still pending
-> **Decision:** keep the class-4/class-5 first-loss and joint-feasibility program primary; run the scorer-vocabulary probe only as cheap supporting evidence, and do not reopen already-answered legality fuzzing, generic prefix rescue, broad solution counting, or generic rank diagnosis
-> **Remaining gate:** pass CI, then run the bounded scorer-basis diagnostic and class-4/class-5 join; escalate only if reconstruction is exact and weight-invariant ties/preferences are frontier-enriched or independently exact-labelled live/dead
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-11 — corrected 671-level witness-only scorer-vocabulary run 34559477019 and class-4/class-5 join
+> **Decision:** close the broad DFS/pre-apply scorer-vocabulary form as a class-5 frontier discriminator: weight-invariant ambiguity exists but is not enriched in class 5. Keep first-loss/residual-feasibility work primary; do not buy scorer-term tuning or an exact-label campaign from this result. The other shared-substrate hypotheses remain routed to their existing workstreams rather than active gates in this report.
+> **Remaining gate:** none for the tested broad scorer-vocabulary form; reopen only if independent first-loss evidence nominates evaluator/rank loss or an independently exact-labelled live/dead pair under this evaluator convention becomes decision-bearing
 > **Evidence role:** forensic
-> **Selection:** observational; the hypotheses and candidate diagnostics were chosen after inspecting current frontier evidence and historical repo experiments, before any new population run
+> **Selection:** observational; the hypotheses and candidate diagnostics were chosen after inspecting current frontier evidence and historical repo experiments. The witness-only source, class-4/class-5 contrast and primary readouts were fixed before the valid population run; the corrected run changed only an input-envelope defect found by the first attempt.
 > **Production behavior:** unchanged
 > **Compute:** no new broad solve, census, variant, solution-count, or exact-reference campaign
 
@@ -62,21 +62,21 @@ Many named techniques are configurations of shared engines. Repair is the strong
 
 A shared-gap claim must identify which substrate is actually independent across the compared actions. Nearby beam widths or score profiles are not independent confirmation merely because their outcomes differ.
 
-## Existing exact evidence leaves one scorer question open
+## Existing exact evidence left one scorer question open
 
 The August winning-lineage work established selected cases where beam scoring preferred a CP-SAT-proven dead future over a live alternative at the same retention boundary. Later descriptor work falsified several simple scalar progress/resource explanations.
 
-That proves **mis-ranking**, but it leaves three explanations:
+That proved **mis-ranking**, but initially left three explanations:
 
-1. the needed signal is already in the current weighted vocabulary and the weights combine it badly;
-2. the current weighted terms cannot distinguish the alternatives although richer raw state can;
-3. even raw state lacks a derived future-opportunity fact needed to distinguish them.
+1. the needed signal was already in the current weighted vocabulary and the weights combined it badly;
+2. the current weighted terms could not distinguish the alternatives although richer raw state could;
+3. even raw state lacked a derived future-opportunity fact needed to distinguish them.
 
-Profile/weight racing explores only (1).
+Profile/weight racing explores only (1). The scorer-basis diagnostic was added to test a proof-grade subset of (2) without launching a tuning sweep.
 
-## New diagnostic: exact scorer-basis decomposition
+## Diagnostic: exact scorer-basis decomposition
 
-New files:
+Files:
 
 - `scripts/stress/scoring-vocabulary-lib.mjs`
 - `scripts/stress/witness-scoring-vocabulary-diagnostic.mjs`
@@ -116,17 +116,17 @@ Basis scoring calls `scoreMove` directly to keep work linear in profile count. A
 
 The zero-profile intercept is meaningful rather than merely algebraic. `scoreMove` has profile-independent contributions, including fixed flipping-filter approach urgency. Those terms remain in `s0(c)` while all twelve tunable weights are zero.
 
-## Scope boundary: this is a DFS/pre-apply evaluator test first
+## Scope boundary: DFS/pre-apply evaluator
 
 The replay matches the **pre-apply `scoreAndSort` calling convention used by DFS ordering**. The same weight vocabulary appears elsewhere, but beam/repair also score under post-apply state conventions in important paths; repair deliberately preserves a different MustCross-axis scoring path as well.
 
-Therefore a weight-invariant result from this tool proves only:
+Therefore a weight-invariant result proves only:
 
-> under the replayed pre-apply evaluator convention, retuning the current twelve profile weights cannot change the pairwise score relationship reported for those candidates at that state.
+> under the replayed pre-apply evaluator convention, retuning the current twelve profile weights cannot change the reported pairwise score relationship at that state.
 
-It does **not** by itself prove that repair or every beam path is equally unable to distinguish them. Cross-action recurrence still has to be demonstrated before promoting the result to a shared evaluator defect.
+It does **not** by itself prove that repair or every beam path is equally unable to distinguish the candidates. Cross-action recurrence remains required before promoting a result to a shared evaluator defect.
 
-## Strong local results
+## Strong local categories
 
 For known-valid child `a` and another legal child `b`, compare the twelve tunable basis components separately from the zero-profile intercept.
 
@@ -134,54 +134,46 @@ If all twelve tunable components match, their score difference under any reweigh
 
 `margin(a,b) = s0(a) - s0(b)`.
 
-That yields two proof-grade local categories:
+That yields two local categories:
 
 - **weight-invariant tie:** all twelve components match and the intercepts match. No profile-weight retuning can distinguish the candidates.
-- **weight-invariant alternative preference:** all twelve components match and `s0(b) > s0(a)`. No profile-weight retuning can stop the current fixed/non-tunable contribution from preferring `b` over the known-live `a` at that state.
+- **weight-invariant alternative preference:** all twelve components match and `s0(b) > s0(a)`. No profile-weight retuning can stop the current fixed/non-tunable contribution from preferring `b` over known-live `a` at that state.
 
 The second category is stronger than a tie for deciding whether more profile tuning is worthwhile. It is not automatically a correctness or capability defect because `b` remains `reference-abstain` unless independently labelled dead.
 
-The strongest follow-up is therefore a weight-invariant pair independently labelled **live versus dead** by the maintained reference model. A fixed alternative preference toward an exact-dead sibling would prove that the replayed evaluator contains a viability-relevant distinction that the twelve tunable weights cannot repair.
+Structural ordering bias is intentionally held outside this test.
 
-Structural ordering bias is intentionally held outside the first test. If weight-invariant cases recur, first ask whether existing ordering-bias features already split them before inventing another descriptor.
+## Population result: negative as a frontier discriminator
 
-## Frontier join
+The corrected witness-only run `34559477019` scored the full **671/671** frozen Corpus-2 production misses with:
 
-`analyze-scoring-vocabulary-frontier.mjs` joins completed diagnostic rows to the post-1,029 residual atlas by level id. It reports for class 4 and class 5:
+- 73,059 witness decisions visited;
+- 42,914 branching decisions;
+- **0** known continuations absent from legal siblings;
+- **0** affine reconstruction failures;
+- maximum reconstruction error `1.1368683772161603e-13`.
 
-- atlas population and diagnostic coverage;
-- levels/decisions with exact weight-invariant ties;
-- levels/decisions with any weight-invariant pair;
-- levels/decisions where the fixed intercept prefers the non-known sibling;
-- pair counts and descriptive class-5 minus class-4 rate differences.
+The preferred class-4 near-control and class-5 frontier comparison did not support enrichment:
 
-Level and decision rates are both retained because decisions within a level are correlated. The join is descriptive, not a significance test, and it exposes coverage denominators because stored-solution coverage can differ by class.
+| Readout | Class 4 | Class 5 | Class 5 - class 4 |
+|---|---:|---:|---:|
+| levels with exact weight-vocabulary collision | 163/200 = **81.50%** | 299/388 = **77.06%** | **-4.44 pp** |
+| collision decisions / branching decisions | 605/12,893 = **4.692%** | 883/24,728 = **3.571%** | **-1.122 pp** |
+| levels with fixed alternative preference | 18/200 = **9.00%** | 36/388 = **9.28%** | **+0.278 pp** |
+| fixed-preference decisions / branching decisions | 37/12,893 = **0.2870%** | 65/24,728 = **0.2629%** | **-0.0241 pp** |
 
-Example:
+Exact scorer ambiguity is actually more common in class 4, while fixed alternative preference is essentially flat. The broad proposition that the twelve-weight evaluator vocabulary distinguishes the no-known-rescuer frontier is therefore closed negative.
 
-```bash
-node scripts/run-bundled.mjs scripts/stress/witness-scoring-vocabulary-diagnostic.mjs -- \
-  --corpus=corpus2 \
-  --unsolved-only \
-  --report=<current-production-report.json> \
-  --out=tmp/witness-scoring-vocabulary-unsolved.json
+See [`2026-09-11-scorer-vocabulary-frontier-witness-only-001.md`](2026-09-11-scorer-vocabulary-frontier-witness-only-001.md) for the full population contract, execution history, and the benchmark-report input-schema defect found during the run.
 
-node scripts/stress/analyze-scoring-vocabulary-frontier.mjs \
-  --diagnostic=tmp/witness-scoring-vocabulary-unsolved.json \
-  --atlas=reports/stress/residual-atlas/2026-09-11-post-1029-671/atlas.json \
-  --out=tmp/witness-scoring-vocabulary-frontier.json
-```
+## Interpretation after the run
 
-## Interpretation gate
-
-1. **Any material reconstruction failure:** stop; the basis/tooling is incomplete or wrong.
-2. **No/rare weight-invariant cases and no class-5 enrichment:** current weighted vocabulary is not disproved. Continue first-loss/future-feasibility work; profile weights may still be poor.
-3. **Weight-invariant cases occur similarly in class 4:** evaluator ambiguity/fixed preference exists but is weak frontier-gap evidence.
-4. **Class-5-enriched weight-invariant ties or fixed alternative preferences:** nominate the smallest independent-parent exact-prefix label sample.
-5. **Exact live/dead weight-invariant pair:** evaluator-vocabulary limitation established locally. A fixed preference toward the dead sibling is especially strong evidence against further weight tuning for that state. Find the smallest cheap raw/derived distinction separating the pair before adding a term.
-6. **The same missing distinction recurs across independent parents and operationally distinct actions:** escalate to shared-capability evidence.
-
-Do not respond to a weight-invariant case by immediately adding another hand-authored scoring term.
+1. The basis reconstructed cleanly, so the negative contrast is interpretable.
+2. Weight-invariant ambiguity is a real general property of the evaluator/search landscape, not a class-5 signature.
+3. Do not add or tune scorer terms from this population result.
+4. Do not buy a new exact live/dead sibling-label campaign solely because many ties/preferences exist.
+5. Reuse the tooling only if independent first-loss evidence later nominates evaluator/rank loss on a smaller mechanism-selected cohort.
+6. A future exact live/dead weight-invariant pair can still establish a **local** evaluator limitation; it would not retroactively make the broad class-5 discriminator positive.
 
 ## Intrinsic-hardness hypothesis is not currently leading
 
@@ -217,9 +209,9 @@ The maintained full reference model has since grown to support exact length/inte
 
 No priority inversion is justified.
 
-The class-4/class-5 joint-obligation and all-known-basin first-loss work remains the strongest near-term shared-future-feasibility test. The scorer-vocabulary probe is cheap supporting evidence that can run alongside it and can prevent needless profile/weight experimentation.
+The class-4/class-5 all-known-basin first-loss and residual-feasibility work remains the stronger near-term shared-capability test. The scorer-vocabulary arm now leaves that funnel rather than running beside it as an active population gate.
 
-Route later results by mechanism:
+Route later evidence by mechanism:
 
 - false hard rejection -> correctness / WS2 reasoning;
 - exact weight-invariant live/dead evaluator result -> evaluator/derived-feature diagnosis, initially action-local;
