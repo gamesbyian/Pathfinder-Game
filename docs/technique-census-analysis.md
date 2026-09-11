@@ -46,11 +46,11 @@ The first temporal holdout is already complete: [`../reports/2026-09-04-portfoli
 
 ### Structural technique-response extension
 
-Pairwise structural niches should now inherit that same cross-evidence discipline. [`../reports/2026-09-11-structural-technique-response-extension-audit-001.md`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md) records the staged contract:
+Pairwise structural niches should now inherit that same cross-evidence discipline. [`../reports/2026-09-05-relative-advantage-pairs-temporal-drift-001.md`](../reports/2026-09-05-relative-advantage-pairs-temporal-drift-001.md) already established that 5/8 frozen pairs changed their single leading structural feature across the Sep-1 -> Sep-3 refresh even though disagreement counts stayed comparatively stable. [`../reports/2026-09-11-structural-technique-response-extension-audit-001.md`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md) extends that result rather than restarting it:
 
-1. compare the frozen relative-advantage pairs across the September-1 and September-3 censuses with `scripts/analyze-technique-niche-stability.mjs`;
-2. re-evaluate those contrasts inside comparable generic-burden bands with `scripts/analyze-difficulty-stratified-relative-advantage.mjs` so broad difficulty is less able to masquerade as technique affinity;
-3. escalate only surviving associations to existing variant-family boundary flips, source-controlled solution-space mediators, and finally bounded operational first-divergence/all-known-basin extinction.
+1. `scripts/analyze-technique-niche-stability.mjs` checks for material same-direction persistence across the full stored top-eight effects using the canonical attempt-identity normalizer;
+2. `scripts/analyze-difficulty-stratified-relative-advantage.mjs` re-evaluates those contrasts inside comparable generic-burden bands, reports multiplicity as offline fragility context, and supports reduced-feature sensitivity checks so one correlated burden-score recipe cannot carry the conclusion;
+3. only surviving associations escalate to existing variant-family boundary flips, source-controlled solution-space mediators, and finally bounded operational first-divergence/all-known-basin extinction.
 
 The generic burden score is nuisance control, not a production classifier. Existing evidence also closes the obvious alternative of indiscriminately adding more topology descriptors: the tested 18-feature topology/placement bundle did not materially improve held-out prediction beyond the coarse structural baseline. A new static descriptor should therefore be mechanism-nominated, not added simply because a niche remains unexplained.
 
