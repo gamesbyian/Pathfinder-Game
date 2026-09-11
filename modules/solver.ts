@@ -52,15 +52,16 @@ function createSolver(): SolverApi {
         const candidate = rawLevel as Record<string, unknown>;
         // Raw normalisation — applied when opts.source === 'raw' or the level is in raw wire format.
         // This is a public runtime boundary accepting `unknown`, so enforce the canonical raw schema
-        // before translating into solver bitmasks/typed arrays. normalizeRawLevel itself remains a
-        // deliberately permissive internal primitive because tests and research tooling construct
-        // synthetic normalized fixtures outside the published-level schema (for example rectangular
-        // micro-fixtures). Callers that enter through this public facade must not be able to bypass
-        // cardinality, bounds, occupancy, or other representation-safety invariants.
+        // before translating into solver bitmasks/typed arrays. One content-authoring rule is
+        // deliberately exempted here: published Pathfinder levels are square, but the solver itself
+        // supports rectangles and its synthetic mechanic/research fixtures rely on that capability.
+        // Square-ness is therefore not a representation-safety invariant; bounds, cardinality,
+        // occupancy, coordinate validity, etc. still are and remain enforced below.
         if ((opts.source === 'raw') || (candidate.goal && Array.isArray(candidate.gates) && !Array.isArray(candidate.gateKeys))) {
             const validation = validateRawLevel(rawLevel);
-            if (!validation.ok) {
-                throw new Error(`Solver: invalid raw level: ${validation.errors.join('; ')}`);
+            const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
+            if (solverBoundaryErrors.length > 0) {
+                throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
             }
             return normalizeRawLevel(rawLevel, opts.levelNumber ?? opts.level ?? null);
         }
