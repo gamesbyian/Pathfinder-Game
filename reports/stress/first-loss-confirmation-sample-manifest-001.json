@@ -1,0 +1,161 @@
+{
+  "purpose": "WS2 independent first-loss confirmation (ws2-gate-5-followup): tests whether the rank-retention-loss (beam score-width cull) phenotype found in the dev sample recurs on an independent, non-overlapping sample from the same population.",
+  "devSampleReport": "reports/2026-09-11-bounded-class4-class5-first-loss-phenotyping-001.md",
+  "sourcePopulation": "reports/stress/joint-obligation-observer-pilot-001.json (86 class4 + 120 class5 = 206)",
+  "excludedGains": [
+    "R00726",
+    "R01274",
+    "R01489",
+    "R01849",
+    "R01882",
+    "R02036",
+    "R02060",
+    "R02162",
+    "R02389",
+    "R02479",
+    "R02546",
+    "R02654",
+    "R02707",
+    "R02823",
+    "R02832",
+    "R02864",
+    "R02932",
+    "R03097",
+    "R03106",
+    "R03254",
+    "R03336"
+  ],
+  "excludedDevSampleIds": [
+    "R03101",
+    "R00329",
+    "R03275",
+    "R02530",
+    "R02309",
+    "R03351",
+    "R01190",
+    "R01632",
+    "R03088",
+    "R01097",
+    "R03229",
+    "R03197",
+    "R02185",
+    "R02733"
+  ],
+  "selectionMethod": "reject-rate tertile stratified, seed=ws2-independent-confirmation-sample-001, deterministic Fisher-Yates within tertile (mulberry32/FNV-1a, repo convention)",
+  "class4": [
+    {
+      "id": "R02438",
+      "class": 4,
+      "rejectRate": 0.02957390086304279,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "pos": 769
+    },
+    {
+      "id": "R02590",
+      "class": 4,
+      "rejectRate": 0.05561787301604843,
+      "clusterCount": 1,
+      "routingRegime": "must-cross-heavy",
+      "pos": 921
+    },
+    {
+      "id": "R02897",
+      "class": 4,
+      "rejectRate": 0.05359348673424794,
+      "clusterCount": 1,
+      "routingRegime": "must-cross-heavy",
+      "pos": 1228
+    },
+    {
+      "id": "R03223",
+      "class": 4,
+      "rejectRate": 0.1070054665673426,
+      "clusterCount": 3,
+      "routingRegime": "intersection-heavy",
+      "pos": 1554
+    },
+    {
+      "id": "R00786",
+      "class": 4,
+      "rejectRate": 0.11726643854164102,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "pos": 124
+    },
+    {
+      "id": "R03083",
+      "class": 4,
+      "rejectRate": 0.14727357721727402,
+      "clusterCount": 1,
+      "routingRegime": "must-cross-heavy",
+      "pos": 1414
+    },
+    {
+      "id": "R01023",
+      "class": 4,
+      "rejectRate": 0.2255342756377625,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "pos": 167
+    }
+  ],
+  "class5": [
+    {
+      "id": "R00139",
+      "class": 5,
+      "rejectRate": 0.09838635493871589,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "pos": 17
+    },
+    {
+      "id": "R02801",
+      "class": 5,
+      "rejectRate": 0.023597524407799393,
+      "clusterCount": 2,
+      "routingRegime": "must-cross-heavy",
+      "pos": 1132
+    },
+    {
+      "id": "R02170",
+      "class": 5,
+      "rejectRate": 0.06474203411732983,
+      "clusterCount": 1,
+      "routingRegime": "intersection-heavy",
+      "pos": 501
+    },
+    {
+      "id": "R02210",
+      "class": 5,
+      "rejectRate": 0.17684922970126765,
+      "clusterCount": 3,
+      "routingRegime": "intersection-heavy",
+      "pos": 541
+    },
+    {
+      "id": "R02025",
+      "class": 5,
+      "rejectRate": 0.1769497983201352,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "pos": 356
+    },
+    {
+      "id": "R01290",
+      "class": 5,
+      "rejectRate": 0.47281101527768205,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "pos": 212
+    },
+    {
+      "id": "R02324",
+      "class": 5,
+      "rejectRate": 0.27860944796107256,
+      "clusterCount": 2,
+      "routingRegime": "intersection-heavy",
+      "pos": 655
+    }
+  ]
+}

@@ -1,0 +1,431 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-11T21:37:02.515Z",
+  "beamSurvivalFile": "reports/stress/first-loss-confirmation-beam-width2000-001.json",
+  "levelsFile": "data/stress/stress-levels-random.json",
+  "scoringProfileId": "objectiveFirst",
+  "sampleLabels": 5,
+  "purpose": "cross-action recurrence check: DFS-greedy per-step rank of the same known-live labels at/around the beam score-width-cull depth",
+  "rows": [
+    {
+      "levelId": "R02438",
+      "gateKey": 131076,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 17,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 3,
+      "meanDfsCumulativeDiscrepancy": 31,
+      "worstRankedStepsSample": [
+        {
+          "step": 1,
+          "rank": 3,
+          "topChoice": 65540,
+          "nCandidates": 4
+        },
+        {
+          "step": 40,
+          "rank": 2,
+          "topChoice": 458754,
+          "nCandidates": 3
+        },
+        {
+          "step": 41,
+          "rank": 2,
+          "topChoice": 589827,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R02590",
+      "gateKey": 589829,
+      "sampledLabels": 4,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 22,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 2,
+      "meanDfsCumulativeDiscrepancy": 22.75,
+      "worstRankedStepsSample": [
+        {
+          "step": 1,
+          "rank": 2,
+          "topChoice": 589830,
+          "nCandidates": 4
+        },
+        {
+          "step": 61,
+          "rank": 2,
+          "topChoice": 5,
+          "nCandidates": 3
+        },
+        {
+          "step": 6,
+          "rank": 1,
+          "topChoice": 196609,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R02897",
+      "gateKey": 131078,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 41,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 3,
+      "meanDfsCumulativeDiscrepancy": 25.8,
+      "worstRankedStepsSample": [
+        {
+          "step": 5,
+          "rank": 3,
+          "topChoice": 458754,
+          "nCandidates": 4
+        },
+        {
+          "step": 62,
+          "rank": 3,
+          "topChoice": 589826,
+          "nCandidates": 4
+        },
+        {
+          "step": 26,
+          "rank": 2,
+          "topChoice": 65546,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R03223",
+      "gateKey": 524292,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 14,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 3,
+      "meanDfsCumulativeDiscrepancy": 46.6,
+      "worstRankedStepsSample": [
+        {
+          "step": 1,
+          "rank": 3,
+          "topChoice": 524291,
+          "nCandidates": 4
+        },
+        {
+          "step": 4,
+          "rank": 2,
+          "topChoice": 524290,
+          "nCandidates": 3
+        },
+        {
+          "step": 9,
+          "rank": 2,
+          "topChoice": 65539,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R00786",
+      "gateKey": 327684,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 21,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 2.4,
+      "meanDfsCumulativeDiscrepancy": 35.2,
+      "worstRankedStepsSample": [
+        {
+          "step": 13,
+          "rank": 2,
+          "topChoice": 524296,
+          "nCandidates": 3
+        },
+        {
+          "step": 46,
+          "rank": 2,
+          "topChoice": 327688,
+          "nCandidates": 3
+        },
+        {
+          "step": 50,
+          "rank": 2,
+          "topChoice": 327688,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R03083",
+      "gateKey": 196618,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 11,
+      "meanDfsRankAtCullDepth": 1,
+      "meanDfsMaxStepRank": 3,
+      "meanDfsCumulativeDiscrepancy": 63.4,
+      "worstRankedStepsSample": [
+        {
+          "step": 47,
+          "rank": 3,
+          "topChoice": 786442,
+          "nCandidates": 4
+        },
+        {
+          "step": 3,
+          "rank": 2,
+          "topChoice": 131080,
+          "nCandidates": 3
+        },
+        {
+          "step": 8,
+          "rank": 2,
+          "topChoice": 131077,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R01023",
+      "gateKey": 196612,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 16,
+      "meanDfsRankAtCullDepth": 2,
+      "meanDfsMaxStepRank": 2,
+      "meanDfsCumulativeDiscrepancy": 24.8,
+      "worstRankedStepsSample": [
+        {
+          "step": 2,
+          "rank": 2,
+          "topChoice": 65540,
+          "nCandidates": 3
+        },
+        {
+          "step": 6,
+          "rank": 2,
+          "topChoice": 262144,
+          "nCandidates": 3
+        },
+        {
+          "step": 13,
+          "rank": 2,
+          "topChoice": 327682,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R00139",
+      "gateKey": 851981,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 14,
+      "meanDfsRankAtCullDepth": 1.6,
+      "meanDfsMaxStepRank": 2.8,
+      "meanDfsCumulativeDiscrepancy": 57,
+      "worstRankedStepsSample": [
+        {
+          "step": 31,
+          "rank": 3,
+          "topChoice": 589826,
+          "nCandidates": 4
+        },
+        {
+          "step": 78,
+          "rank": 3,
+          "topChoice": 131079,
+          "nCandidates": 4
+        },
+        {
+          "step": 8,
+          "rank": 2,
+          "topChoice": 524298,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R02801",
+      "gateKey": 524291,
+      "sampledLabels": 1,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 12,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 3,
+      "meanDfsCumulativeDiscrepancy": 31,
+      "worstRankedStepsSample": [
+        {
+          "step": 1,
+          "rank": 3,
+          "topChoice": 589827,
+          "nCandidates": 4
+        },
+        {
+          "step": 8,
+          "rank": 2,
+          "topChoice": 589824,
+          "nCandidates": 3
+        },
+        {
+          "step": 16,
+          "rank": 2,
+          "topChoice": 262149,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R02170",
+      "gateKey": 458757,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 18,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 2,
+      "meanDfsCumulativeDiscrepancy": 29.6,
+      "worstRankedStepsSample": [
+        {
+          "step": 1,
+          "rank": 2,
+          "topChoice": 393221,
+          "nCandidates": 3
+        },
+        {
+          "step": 14,
+          "rank": 2,
+          "topChoice": 196611,
+          "nCandidates": 3
+        },
+        {
+          "step": 30,
+          "rank": 2,
+          "topChoice": 65547,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R02210",
+      "gateKey": 786437,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 13,
+      "meanDfsRankAtCullDepth": 1,
+      "meanDfsMaxStepRank": 2,
+      "meanDfsCumulativeDiscrepancy": 43.6,
+      "worstRankedStepsSample": [
+        {
+          "step": 10,
+          "rank": 2,
+          "topChoice": 524299,
+          "nCandidates": 3
+        },
+        {
+          "step": 15,
+          "rank": 2,
+          "topChoice": 720899,
+          "nCandidates": 3
+        },
+        {
+          "step": 32,
+          "rank": 2,
+          "topChoice": 655370,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R02025",
+      "gateKey": 131073,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 16,
+      "meanDfsRankAtCullDepth": 0,
+      "meanDfsMaxStepRank": 2.6,
+      "meanDfsCumulativeDiscrepancy": 35.4,
+      "worstRankedStepsSample": [
+        {
+          "step": 72,
+          "rank": 3,
+          "topChoice": 65540,
+          "nCandidates": 4
+        },
+        {
+          "step": 1,
+          "rank": 2,
+          "topChoice": 131074,
+          "nCandidates": 3
+        },
+        {
+          "step": 6,
+          "rank": 2,
+          "topChoice": 393219,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R01290",
+      "gateKey": 196613,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 11,
+      "meanDfsRankAtCullDepth": 1,
+      "meanDfsMaxStepRank": 2,
+      "meanDfsCumulativeDiscrepancy": 43.4,
+      "worstRankedStepsSample": [
+        {
+          "step": 1,
+          "rank": 2,
+          "topChoice": 196614,
+          "nCandidates": 4
+        },
+        {
+          "step": 3,
+          "rank": 2,
+          "topChoice": 327684,
+          "nCandidates": 3
+        },
+        {
+          "step": 7,
+          "rank": 2,
+          "topChoice": 327682,
+          "nCandidates": 3
+        }
+      ]
+    },
+    {
+      "levelId": "R02324",
+      "gateKey": 589836,
+      "sampledLabels": 5,
+      "invalidTraces": 0,
+      "beamScoreWidthCullDepth": 12,
+      "meanDfsRankAtCullDepth": 2,
+      "meanDfsMaxStepRank": 3,
+      "meanDfsCumulativeDiscrepancy": 47.4,
+      "worstRankedStepsSample": [
+        {
+          "step": 20,
+          "rank": 3,
+          "topChoice": 720899,
+          "nCandidates": 4
+        },
+        {
+          "step": 37,
+          "rank": 3,
+          "topChoice": 589832,
+          "nCandidates": 4
+        },
+        {
+          "step": 1,
+          "rank": 2,
+          "topChoice": 589835,
+          "nCandidates": 3
+        }
+      ]
+    }
+  ]
+}

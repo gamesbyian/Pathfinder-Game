@@ -1,0 +1,249 @@
+{
+ "corpus": "../pathfinder-variant-research/data/families/corpus2/family-R02687-sym.json",
+ "only": [
+  "beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+ ],
+ "budgetMs": 120000,
+ "workBudget": 2000000,
+ "nodeBudget": null,
+ "levels": [
+  {
+   "id": "F02687-sym-01",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1849,
+   "nodesExpanded": 234145,
+   "workSpent": 2005240,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 393218,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1849,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2005240,
+     "nodesExpanded": 234145,
+     "timedOut": true,
+     "finalBadness": 26,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-sym-02",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1724,
+   "nodesExpanded": 234145,
+   "workSpent": 2004944,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 131077,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1724,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2004944,
+     "nodesExpanded": 234145,
+     "timedOut": true,
+     "finalBadness": 26,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-sym-03",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1701,
+   "nodesExpanded": 234145,
+   "workSpent": 2005210,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 327689,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1701,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2005210,
+     "nodesExpanded": 234145,
+     "timedOut": true,
+     "finalBadness": 26,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-sym-04",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1707,
+   "nodesExpanded": 234145,
+   "workSpent": 2004950,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589829,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1706,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2004950,
+     "nodesExpanded": 234145,
+     "timedOut": true,
+     "finalBadness": 25,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-sym-05",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1693,
+   "nodesExpanded": 234145,
+   "workSpent": 2004982,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 131078,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1693,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2004982,
+     "nodesExpanded": 234145,
+     "timedOut": true,
+     "finalBadness": 26,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-sym-06",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1590,
+   "nodesExpanded": 234145,
+   "workSpent": 2005258,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 393225,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1589,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2005258,
+     "nodesExpanded": 234145,
+     "timedOut": true,
+     "finalBadness": 26,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-sym-07",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1592,
+   "nodesExpanded": 234145,
+   "workSpent": 2005210,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 327682,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1592,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2005210,
+     "nodesExpanded": 234145,
+     "timedOut": true,
+     "finalBadness": 26,
+     "stageId": "main-search"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,341 @@
+{
+ "corpus": "../pathfinder-variant-research/data/families/corpus2/family-R02094-cs.json",
+ "only": [
+  "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+ ],
+ "budgetMs": 120000,
+ "workBudget": 20000000,
+ "nodeBudget": null,
+ "levels": [
+  {
+   "id": "F02094-cs-01",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3778,
+   "nodesExpanded": 430413,
+   "workSpent": 3999144,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3778,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3999144,
+     "nodesExpanded": 430413,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-02",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 2908,
+   "nodesExpanded": 383851,
+   "workSpent": 3407259,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 2908,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3407259,
+     "nodesExpanded": 383851,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-03",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3047,
+   "nodesExpanded": 405505,
+   "workSpent": 3665446,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3047,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3665446,
+     "nodesExpanded": 405505,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-04",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3281,
+   "nodesExpanded": 434242,
+   "workSpent": 3855795,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3281,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3855795,
+     "nodesExpanded": 434242,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-05",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3953,
+   "nodesExpanded": 501123,
+   "workSpent": 5571663,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3953,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 5571663,
+     "nodesExpanded": 501123,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-06",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3359,
+   "nodesExpanded": 458946,
+   "workSpent": 4297870,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3358,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 4297870,
+     "nodesExpanded": 458946,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-07",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 2822,
+   "nodesExpanded": 398243,
+   "workSpent": 3519908,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 2821,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3519908,
+     "nodesExpanded": 398243,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-08",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3076,
+   "nodesExpanded": 404294,
+   "workSpent": 3705210,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3076,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3705210,
+     "nodesExpanded": 404294,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-09",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3031,
+   "nodesExpanded": 421833,
+   "workSpent": 3755354,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3031,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3755354,
+     "nodesExpanded": 421833,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-cs-10",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 3275,
+   "nodesExpanded": 443555,
+   "workSpent": 4399745,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 3275,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 4399745,
+     "nodesExpanded": 443555,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  }
+ ]
+}

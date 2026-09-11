@@ -20,6 +20,11 @@ const outFile = args.get('--out') ?? 'reports/stress/census-repair-rollback-wind
 // show slack" ask) -- the original pilot only ever took the first N file-order levels.
 const sampleSize = args.has('--sample') ? Number(args.get('--sample')) : null;
 const seedStr = args.get('--seed') ?? 'repair-rollback-census-pilot';
+// Explicit id selection (2026-09-11, WS2/repair-side first-loss coverage), same convention as
+// repair-elite-path-dump.mjs's own --only=<ids>: lets a caller resolve this census against a
+// specific frozen population (e.g. an existing first-loss phenotyping sample) instead of a fresh
+// stratified/first-N draw. Overrides --limit-levels/--sample entirely when present.
+const onlyIds = args.has('--only') ? new Set(args.get('--only').split(',').map(s => s.trim()).filter(Boolean)) : null;
 function hashSeed(str) {
     let h = 0x811c9dc5;
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
@@ -52,9 +57,11 @@ const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/so
 const { repairSearchFromGate } = await import('../../modules/solver/repair-search.ts');
 const Solver = createSolver();
 const hintBearing = readLevelsWithHints(levelsFile).filter(level => level.hints?.length > 0);
-const selected = sampleSize != null
-    ? sampleDeterministic(hintBearing, sampleSize, hashSeed(seedStr))
-    : hintBearing.slice(0, levelLimit);
+const selected = onlyIds
+    ? hintBearing.filter(level => onlyIds.has(level.id))
+    : sampleSize != null
+        ? sampleDeterministic(hintBearing, sampleSize, hashSeed(seedStr))
+        : hintBearing.slice(0, levelLimit);
 const levels = [];
 for (const raw of selected) {
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
@@ -90,7 +97,8 @@ for (const raw of selected) {
 const allRows = levels.flatMap(level => level.census.rows);
 const sortedFractions = allRows.map(row => row.rollbackFractionReqLen).sort((a, b) => a - b);
 const document = { schemaVersion: 1, generatedAt: new Date().toISOString(), levelsFile,
-    sampling: sampleSize != null ? { mode: 'stratified', sampleSize, seed: seedStr } : { mode: 'first-n', limit: levelLimit },
+    sampling: onlyIds ? { mode: 'explicit-ids', ids: [...onlyIds] }
+        : sampleSize != null ? { mode: 'stratified', sampleSize, seed: seedStr } : { mode: 'first-n', limit: levelLimit },
     meaning: 'longest-common-prefix distance from observed elite to any known-valid trajectory; not minimum causal edit distance',
     summary: { levels: levels.length, elites: allRows.length,
         medianRollbackSteps: allRows.length ? [...allRows].sort((a, b) => a.rollbackSteps - b.rollbackSteps)[Math.floor(allRows.length / 2)].rollbackSteps : null,

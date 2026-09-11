@@ -1,0 +1,249 @@
+{
+ "corpus": "../pathfinder-variant-research/data/families/corpus2/family-R02094-sym.json",
+ "only": [
+  "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain"
+ ],
+ "budgetMs": 120000,
+ "workBudget": 2000000,
+ "nodeBudget": null,
+ "levels": [
+  {
+   "id": "F02094-sym-01",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 2130,
+   "nodesExpanded": 229677,
+   "workSpent": 2000200,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 458762,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 2130,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2000200,
+     "nodesExpanded": 229677,
+     "timedOut": true,
+     "finalBadness": 74,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-sym-02",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1952,
+   "nodesExpanded": 229933,
+   "workSpent": 2001687,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 655367,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1952,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2001687,
+     "nodesExpanded": 229933,
+     "timedOut": true,
+     "finalBadness": 75,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-sym-03",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1968,
+   "nodesExpanded": 229677,
+   "workSpent": 2000198,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 458756,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1968,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2000198,
+     "nodesExpanded": 229677,
+     "timedOut": true,
+     "finalBadness": 74,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-sym-04",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1913,
+   "nodesExpanded": 229933,
+   "workSpent": 2001687,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 262151,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1913,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2001687,
+     "nodesExpanded": 229933,
+     "timedOut": true,
+     "finalBadness": 75,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-sym-05",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1915,
+   "nodesExpanded": 229933,
+   "workSpent": 2001687,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 655367,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1914,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2001687,
+     "nodesExpanded": 229933,
+     "timedOut": true,
+     "finalBadness": 75,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-sym-06",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1982,
+   "nodesExpanded": 229677,
+   "workSpent": 2000198,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 458756,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 1982,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2000198,
+     "nodesExpanded": 229677,
+     "timedOut": true,
+     "finalBadness": 74,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02094-sym-07",
+   "ok": false,
+   "status": "work-budget-reached",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 2020,
+   "nodesExpanded": 229677,
+   "workSpent": 2000200,
+   "workBudget": 2000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=intersectionHarvest|bias=none|width=5000|retention=plain",
+     "gateKey": 458762,
+     "scoringProfileId": "intersectionHarvest",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "timed-out",
+     "elapsedMs": 2019,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 2000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2000200,
+     "nodesExpanded": 229677,
+     "timedOut": true,
+     "finalBadness": 74,
+     "stageId": "main-search"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,341 @@
+{
+ "corpus": "../pathfinder-variant-research/data/families/corpus2/family-R02687-cs.json",
+ "only": [
+  "beam|score=objectiveFirst|bias=none|width=5000|retention=plain"
+ ],
+ "budgetMs": 120000,
+ "workBudget": 20000000,
+ "nodeBudget": null,
+ "levels": [
+  {
+   "id": "F02687-cs-01",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1804,
+   "nodesExpanded": 243463,
+   "workSpent": 2263439,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 1804,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2263439,
+     "nodesExpanded": 243463,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-02",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 2156,
+   "nodesExpanded": 306919,
+   "workSpent": 3529109,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 2156,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3529109,
+     "nodesExpanded": 306919,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-03",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 2142,
+   "nodesExpanded": 305117,
+   "workSpent": 3834277,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 2142,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3834277,
+     "nodesExpanded": 305117,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-04",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1728,
+   "nodesExpanded": 279817,
+   "workSpent": 2965725,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 1728,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2965725,
+     "nodesExpanded": 279817,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-05",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1850,
+   "nodesExpanded": 270969,
+   "workSpent": 2999944,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 1850,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2999944,
+     "nodesExpanded": 270969,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-06",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1842,
+   "nodesExpanded": 280835,
+   "workSpent": 2972472,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 1842,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2972472,
+     "nodesExpanded": 280835,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-07",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1537,
+   "nodesExpanded": 267738,
+   "workSpent": 2744385,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 1537,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2744385,
+     "nodesExpanded": 267738,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-08",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 2257,
+   "nodesExpanded": 301031,
+   "workSpent": 3540032,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 2257,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3540032,
+     "nodesExpanded": 301031,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-09",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1956,
+   "nodesExpanded": 284470,
+   "workSpent": 3270254,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 1956,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 3270254,
+     "nodesExpanded": 284470,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  },
+  {
+   "id": "F02687-cs-10",
+   "ok": false,
+   "status": "exhausted",
+   "winningConfigKey": null,
+   "winningGate": null,
+   "solution": null,
+   "totalMs": 1549,
+   "nodesExpanded": 249285,
+   "workSpent": 2536606,
+   "workBudget": 20000000,
+   "deadlineTruncated": false,
+   "validDeterministicEvidence": true,
+   "attempts": [
+    {
+     "configKey": "beam|score=objectiveFirst|bias=none|width=5000|retention=plain",
+     "gateKey": 589830,
+     "scoringProfileId": "objectiveFirst",
+     "orderingBiasId": null,
+     "beamWidth": 5000,
+     "ok": false,
+     "outcome": "exhausted",
+     "elapsedMs": 1549,
+     "allocatedBudgetMs": 120000,
+     "allocatedWorkCeiling": 20000000,
+     "allocatedNodeCeiling": null,
+     "workSpent": 2536606,
+     "nodesExpanded": 249285,
+     "timedOut": false,
+     "stageId": "main-search"
+    }
+   ]
+  }
+ ]
+}

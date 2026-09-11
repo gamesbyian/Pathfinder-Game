@@ -19,7 +19,7 @@ Current dispositions:
 
 | Area | Premise status | Disposition |
 |---|---|---|
-| Mechanic-composition transfer / generator expansion | **EARNED, bounded pilot available** | The promoted must-cross x visited-portal-terminal obligation prune supplies a concrete within-corpus intervention whose mechanism is inherently composition-specific. Controlled generator/family expansion may now be used to test transfer and adjacent coupled-obligation boundaries. Do not launch broad generator expansion. |
+| Mechanic-composition transfer / generator expansion | **EARNED, pilot designed, one static check confirmed (2026-09-11)** | The promoted must-cross x visited-portal-terminal obligation prune supplies a concrete within-corpus intervention whose mechanism is inherently composition-specific. A zero-solver-compute static check (portal-terminal relocation on `R00726`) confirms the decoupling edit cleanly and precisely flips the targeted obligation cluster's existence without touching an unrelated cluster on the same level — see [`pilot design report`](2026-09-11-mechanic-composition-transfer-pilot-design-001.md). The dynamic, matched-work solver-side pilot is the next earned step, not yet run. Do not launch broad generator expansion. |
 | WS5 exact/reference adjudication | **EARNED, use on demand now** | The active first-loss program supplies prespecified adjudication questions: whether nominated prefixes/states are genuinely live, whether apparently equivalent residual states differ in future feasibility, and whether a proposed repair-reachability edit actually admits completion. This does not justify broad CP-SAT acquisition. |
 | WS4 state-equivalence / retention | **PREMISE GENERATOR ACTIVE** | R01273 proves one real residual-history equivalence failure but does not establish recurrence. Reopen only if independent class-4/5 first-loss evidence finds the same kind of future-relevant merge/retention loss, or yields a materially new bounded residual-state descriptor. |
 | WS6 repair reachability | **PREMISE GENERATOR ACTIVE** | Reopen if first-loss/family evidence repeatedly shows that a live rescue requires revising an interior/early commitment outside current repair-operator reachability. This would be operator-topology work, not seed/score/dose retuning. |
@@ -69,6 +69,10 @@ Escalate only if controlled structural flips reproducibly change observer/prune 
 ### Stop gate
 
 Stop if controlled siblings do not track the proposed coupled-obligation distinction, if effects reduce to generic difficulty, or if the generator cannot isolate the semantic contrast without changing many confounders at once.
+
+### Progress (2026-09-11)
+
+Design complete and one static (zero-solver-compute) check executed: see [`pilot design report`](2026-09-11-mechanic-composition-transfer-pilot-design-001.md). A single-portal-terminal relocation on an existing rescued level (`R00726`) cleanly removes exactly the targeted obligation cluster while leaving an unrelated cluster on the same level untouched, confirming the edit instrument is precisely scoped. The dynamic matched-work observer/prune A/B on original-vs-decoupled siblings is the next earned step; not yet run.
 
 ### Legal production path
 
