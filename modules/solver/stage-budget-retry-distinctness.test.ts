@@ -19,6 +19,15 @@ function cfg(overrides: Record<string, boolean>) {
     return { ...defaultConfig(), ...overrides };
 }
 
+test('budget planner treats null and explicit production defaults identically', () => {
+    const nullPlan = computeStageBudgetPlan({ ...baseInput, cfg: null });
+    const explicitPlan = computeStageBudgetPlan({ ...baseInput, cfg: defaultConfig() });
+    assert.deepEqual(nullPlan, explicitPlan,
+        'budget allocation must not depend on whether production defaults arrived as null or an explicit config');
+    assert.equal(nullPlan.goalAttractionDisabledRetryNodeReserveEligible, true,
+        'the promoted default-on node reserve must be active on the null production path');
+});
+
 test('budget planner suppresses behavior-identical whole-ladder retry capacity', () => {
     const control = computeStageBudgetPlan({ ...baseInput, cfg: defaultConfig() });
     assert.equal(control.diversityTierWillRun, true);
