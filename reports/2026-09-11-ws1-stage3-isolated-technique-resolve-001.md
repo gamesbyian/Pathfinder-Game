@@ -61,6 +61,10 @@ The **direction reverses between parents**: `plain` wins 31-19 on `R02687`, `mec
 
 Each parent also has one family mode sitting at a ceiling with zero discriminating power at this budget (`constrained-shuffle` for `R02687`, `symmetry` for `R02094`) — these modes are not informative for this specific question at 20M work units and should not be read as "no effect"; they are simply uninformative here (one all-zero, one all-solved).
 
+## First mediator check: static object counts (negative, as expected)
+
+Cross-tabbed each per-sibling flip against the variant's own static portal/must-cross counts and `requiredLength`/`requiredIntersections` (zero new solver compute — a direct read of each variant's own JSON, already on disk in the worktree). Every flip on both parents shares **identical** counts with its own non-flipped siblings (`gr`/`lm`/`swap`/`sym`/`cs` transforms permute or locally perturb existing objects; they do not add/remove portals or must-cross cells). This rules out object-count confounding as the mediator by construction — it was never a live hypothesis given how these transform modes work, but it is worth recording so a future pass does not re-derive it. **This confirms the real mediator must be positional/order-based** (portal-use/order diversity, must-cross order rigidity, or a solution-path-structure property), consistent with the extension audit's own candidate list. Extracting that signal needs source-stratified solution-path analysis (which portals/must-cross cells each solved path actually crosses and in what order) — genuinely the next stage's own work, not attempted in this report.
+
 ## What this does and does not establish
 
 - **Establishes:** the plain-vs-mechanic-buckets structural association from the original discovery census is not an artifact of aggregate whole-ladder bookkeeping — it reproduces as genuine per-sibling behavior on existing, controlled family material for both frozen pairs.
