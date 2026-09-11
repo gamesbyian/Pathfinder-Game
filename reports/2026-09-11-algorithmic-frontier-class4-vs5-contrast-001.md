@@ -3,7 +3,7 @@
 > **Status:** active-offline
 > **Last evidence:** 2026-09-11 — post-1,029 residual atlas, 671 current Corpus-2 misses: class 4 = 200 zero-T1-winner levels with another historical/provenance rescuer; class 5 = 388 no-known-rescuer levels after cross-evidence reconciliation.
 > **Decision:** use class 4 as the primary control for frontier characterization, with classes 1-4 combined only as a secondary operational comparison. Run existing-data/static contrast before source-controlled solution-profile and representative-basin extinction work. Do not buy broad new solver compute for this gate.
-> **Remaining gate:** rerun the extended residual-atlas analyzer to emit the full static/production contrast, then join source-controlled solution-space/profile evidence and representative-basin survival/extinction evidence where coverage permits.
+> **Remaining gate:** execute the steps in [`2026-09-11-algorithmic-frontier-execution-handoff-001.md`](2026-09-11-algorithmic-frontier-execution-handoff-001.md): rerun the extended residual-atlas analyzer for the full static/production contrast, then join source-controlled solution-space/profile evidence, existing variant-family boundary evidence, and representative-basin survival/extinction evidence where coverage permits.
 > **Evidence role:** development characterization / mechanism nomination; offline labels are not production routing inputs.
 
 ## Why class 4 is the primary control
@@ -49,7 +49,7 @@ The important next question is therefore whether class 5 differs in **continuous
 1. `primaryClass5VsClass4` — the scientific near-control;
 2. `secondaryClass5VsAllOtherResidual` — the operational remainder comparison.
 
-The contrast uses the existing `scripts/stress/features.mjs` extractor rather than inventing another feature vocabulary. It records:
+The contrast uses the existing `scripts/stress/features.mjs` extractor rather than inventing another feature vocabulary. The pure contrast math is isolated in `scripts/stress/frontier-contrast-lib.mjs` with a focused unit test. It records:
 
 - standardized differences for the existing scalar static features (`area`, `reqLen`, `reqInt`, path-coverage ratio, blocks, mechanics counts, etc.);
 - presence-rate and odds-ratio contrasts for mechanic-bearing flags;
@@ -123,6 +123,7 @@ This program should begin with existing assets and bounded replay. No new broad 
 ## Sources
 
 - [`2026-09-11-post-1029-residual-atlas-001.md`](2026-09-11-post-1029-residual-atlas-001.md)
+- [`2026-09-11-algorithmic-frontier-execution-handoff-001.md`](2026-09-11-algorithmic-frontier-execution-handoff-001.md)
 - [`docs/solver-research-data-assets.md`](../docs/solver-research-data-assets.md)
 - [`docs/solver-solution-profile.md`](../docs/solver-solution-profile.md)
 - [`2026-09-09-hint-provenance-evidence-layer-upgrade-001.md`](2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
