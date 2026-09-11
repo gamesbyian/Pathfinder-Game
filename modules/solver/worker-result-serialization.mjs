@@ -8,7 +8,10 @@
  * second whitelist that can drift whenever SolveResult grows.
  *
  * `techniqueLifecycle` and `portfolio` are historical internal aliases. If present, normalize them
- * onto the current public field names rather than exposing both dialects across the worker seam. */
+ * onto the current public field names rather than exposing both dialects across the worker seam.
+ * @param {string | number} id
+ * @param {Record<string, any>} result
+ */
 export function buildSolveWorkerResult(id, result) {
   const {
     totalMs,
