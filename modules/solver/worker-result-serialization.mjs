@@ -14,8 +14,14 @@
  *
  * `techniqueLifecycle` and `portfolio` are historical internal aliases. If present, normalize them
  * onto the current public field names rather than exposing both dialects across the worker seam.
+ *
+ * The return type is intentionally open-ended. This transport's defining invariant is that future
+ * plain enumerable SolveResult fields cross without a serializer edit; narrowing the inferred
+ * object literal back to today's known keys would make TypeScript disagree with that runtime
+ * contract and would discourage the future-field regression sentinel that protects it.
  * @param {string | number} id
  * @param {Record<string, any>} result
+ * @returns {Record<string, any>}
  */
 export function buildSolveWorkerResult(id, result) {
   const {
