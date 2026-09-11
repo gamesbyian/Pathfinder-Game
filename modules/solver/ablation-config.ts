@@ -62,7 +62,7 @@ export const FEATURES: Record<string, string> = {
     PRUNE_MC_FORCED_FIRST_MOVE: 'Force the first move out of a gate that is orthogonally adjacent to exactly one must-cross cell onto that cell (the gate can never be re-entered, so this is its only chance to serve that cell\'s pass)',
     PRUNE_MC_NEIGHBOR_BUDGET:   'Production default-ON: dynamic must-cross/intersection propagation. Excluded from repair randomized survivor selection; retained for DFS/beam and deterministic repair sub-searches. Disposition: docs/solver-opt-in-experiment-ledger.md.',
     PRUNE_MC_NEIGHBOR_BUDGET_PORTAL: 'Production default-ON (promoted 2026-09-09): lets PRUNE_MC_NEIGHBOR_BUDGET evaluate on portal-bearing levels instead of unconditionally passing them. Correctness gates clean; frozen matched-work A/B on the 530-level portal+must-cross Corpus-2 population found 52 gains / 0 losses (net +52), all 52 referee-valid. See docs/solver-opt-in-experiment-ledger.md.',
-    PRUNE_MC_PORTAL_FORCED_NEIGHBOR: 'Production default-OFF; NEW unvalidated experiment (2026-09-11): prune once a pending must-cross cell\'s still-open axis forces a neighbor that is a visited portal terminal — categorically unenterable again per search-state.ts\'s portal-revisit rule, a case mustCrossForcedNeighborDeadlocked/mustCrossNeighborBudgetDeadlocked do not close (see joint-obligation-propagation.ts and reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md\'s observer pilot: 0 false rejects across the oracle atlas, a full 3-corpus known-solution replay, and a class-4/class-5 real-search run). Do not promote without a frozen matched-work A/B.',
+    PRUNE_MC_PORTAL_FORCED_NEIGHBOR: 'Production default-ON (promoted 2026-09-11): prune once a pending must-cross cell\'s still-open axis forces a neighbor that is a visited portal terminal — categorically unenterable again per search-state.ts\'s portal-revisit rule, a case mustCrossForcedNeighborDeadlocked/mustCrossNeighborBudgetDeadlocked do not close (see joint-obligation-propagation.ts and reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md\'s observer pilot). Frozen matched-work A/B on the 219-level structural-predicate Corpus-2 population found 21 gains / 0 losses (net +21), all 21 independently referee-valid on local reproduction. See docs/solver-opt-in-experiment-ledger.md and reports/2026-09-11-joint-obligation-mc-portal-ab-001-preflight.md.',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',
@@ -163,7 +163,6 @@ export const OPT_IN_FEATURES = new Set([
     'STRATEGY_MUSTCROSS_RESERVE_WIDEN_BEAM_EXPOSURE',
     'STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_BEAM_EXPOSURE',
     'STRATEGY_HIGHINT_STANDARD_INTERSECTION_HARVEST_RESERVE_PRESERVING_EXPOSURE',
-    'PRUNE_MC_PORTAL_FORCED_NEIGHBOR',
 ]);
 
 
