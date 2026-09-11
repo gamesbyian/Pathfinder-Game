@@ -29,6 +29,20 @@ The recovered branch already contained the complete 23-area campaign, the Audit 
 
 CI is not a sequencing gate for this recovery. Completed CI/review evidence may still reopen the corresponding item under the parent ledger's existing follow-up rule.
 
+## Documentation reconciliation
+
+Current authorities were reconciled after the campaign:
+
+- `solver-budget-determinism.md`: promoted fresh-work semantics and behavior-distinct retry funding.
+- `solver-search-resumability.md`: exact ownership, pooled-state detachment, and cross-policy resume contract.
+- `solver-evaluation-evidence.md`: tri-state baseline provenance, indeterminate truncation/error handling, exact protocol reuse, parallel contention integrity, and fingerprint schema boundaries.
+- `solver-research-data-assets.md`: fingerprint-v2, tri-state census, and protocol-aware reuse guidance.
+- `solver-future-work.md`: frontier provenance gate and closed/simple resumability forms.
+- `solver-optimization-workstreams.md`: priority order preserved; the class-1 candidate now explicitly uses the current 26-level population under fixed total work, not the stale 8/9 menu.
+- `solver-architecture.md`: portal restorations, fresh-work retry policy, continuation hardening, and benchmark reuse reconciled to current behavior.
+
+`solver-research-data-assets.json` remains structurally valid; tightening individual caveat strings there is optional maintenance rather than a blocker or priority change.
+
 ## Sole remaining branch-local action
 
 Audit 8 is cleanup debt, not an unresolved runtime defect. The canonical executor already owns the promoted default-ON fresh-work-start decision for `goal-attraction-disabled-retry`; the old caller still contains the pre-promotion `freshWorkPoolEnabled` calculation and a long stale default-OFF explanation. Remove that duplicated decision/comment while preserving the explicit-false control behavior and the tier's intended work-budget sizing. Then the post-closeout branch checklist can be considered fully implemented, subject to ordinary review/CI evidence.
