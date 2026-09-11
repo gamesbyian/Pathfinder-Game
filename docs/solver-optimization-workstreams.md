@@ -37,7 +37,7 @@ Production repricing dispositions:
 1. **Post-1,029 residual atlas: DONE, provenance-audited rerun.** Full per-level five-class rejoin of the 671 misses. Result: not-offered 26 (3.9%), offered-unreached/starved 21 (3.1%), reached-comparable-work-failed 36 (5.4%), no-T1-winner-but-explicit historical production-context candidate 143 (21.3%), no known admissible historical or T1 candidate 445 (66.3%). Legacy absence of `isolatedTechnique` is unknown, not modern `false`; 57,497 strict-cold events lack that field. Randomized repair remains eligible when its production context is explicit. The 143 are longitudinal nominations, not evidence current production can rescue those levels. [`atlas report`](../reports/2026-09-11-post-1029-residual-atlas-001.md), [`provenance audit`](../reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md)
 2. **Portal coarse-state salvage: DONE, CLOSED NEGATIVE (2026-09-11).** Exact `R01273` reproduction localized the true first-loss collision (depth 17) to trailing visited-cell identity omitted from the key. Bounded second-survivor retention and a predecessor-identity subkey (1/2/4-hop) each only delayed the failure (death depth 17 -> 20 -> 40 -> 41 -> 43) with no convergence — closed per the prespecified rule; the 12-loss/158-gain ladder never reached; no salvage code retained. [`R01273 collision forensic`](../reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md)
 3. **Admissible-order repricing: DEFERRED.** Atlas classes 2+3 (allocation/exposure) are only 8.5% of the residual, materially smaller than the 66.3% no-known-rescuer class — do not spend the next population-scale run here. If ever run, use the tier-scoped enforcement path and prove target-stage participation first.
-4. **No-known-rescuer residue (445/671, 66.3%): observer pilot DONE, hard-prune PROMOTED (2026-09-11).** A must-cross-forced-neighbor x visited-portal-terminal obligation cluster (unenterable again per `search-state.ts`'s portal-revisit rule, a gap `mustCrossNeighborBudgetDeadlocked` left open) cleared all four observer promotion gates (0 false rejects: oracle atlas, 3-corpus replay, class-4-vs-5 real-search run). Its flag `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` then ran a frozen matched-work A/B on the 219-level opportunity population (structural predicate, unaffected by the later provenance-taxonomy class shift): control 0/219, treatment 21/219, **21 gains / 0 losses**, all referee-valid — PROMOTED. **NEXT:** bounded first-loss work should classify remaining evidence via the capability map's roles; cross-action recurrence gates a shared-capability claim, else keep technique/config research primary. [`observer pilot`](../reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md), [`A/B preflight/result`](../reports/2026-09-11-joint-obligation-mc-portal-ab-001-preflight.md), [`capability map`](../reports/2026-09-11-future-feasibility-capability-map-001.md)
+4. **No-known-rescuer residue (445/671, 66.3%): observer pilot DONE, hard-prune PROMOTED (2026-09-11).** A must-cross-forced-neighbor x visited-portal-terminal obligation cluster (unenterable again per `search-state.ts`'s portal-revisit rule) cleared all four observer promotion gates (0 false rejects: oracle atlas, 3-corpus replay, class-4-vs-5 real-search run). Its flag `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` then ran a frozen matched-work A/B on the 219-level opportunity population (structural predicate, unaffected by the later provenance-taxonomy shift): control 0/219, treatment 21/219, **21 gains / 0 losses**, all referee-valid — PROMOTED. **NEXT:** bounded first-loss work should classify remaining evidence via the capability map's roles; cross-action recurrence gates a shared-capability claim, else keep technique/config research primary. [`observer pilot`](../reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md), [`A/B preflight/result`](../reports/2026-09-11-joint-obligation-mc-portal-ab-001-preflight.md), [`capability map`](../reports/2026-09-11-future-feasibility-capability-map-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -49,13 +49,13 @@ Stored paths, provenance, profile/family labels and same-level outcomes are offl
 
 **Frontier + structural-response characterization: ACTIVE / OFFLINE SUPPORT.** Use class 4 as the primary control for class 5, and screen broader technique niches for temporal stability plus generic-difficulty confounding before escalating to existing-family flips, source-controlled profiles or traces. Structural-response work has two exits: stable technique-relative evidence remains WS1; the same known-live extinction mechanism recurring across materially distinct actions becomes a shared-capability hypothesis and hands off to WS2/the earned specialist owner. [`structural-response audit`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md), [`capability map`](../reports/2026-09-11-future-feasibility-capability-map-001.md)
 
-The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing only. Recomputed by the post-1,029 residual atlas: 232/671 (34.6%) triple-overlap, still the largest structural concentration. The broader T1/provenance capability join and per-level five-class rescuer breakdown is done. [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md), [`residual atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
+The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing only. Recomputed by the post-1,029 atlas: 232/671 (34.6%) triple-overlap, still the largest structural concentration. The broader T1/provenance join and per-level five-class breakdown is done. [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md), [`residual atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Joint-obligation hard-prune promoted; next is bounded class-4/class-5 first-loss phenotyping. Route only recurring cross-action mechanisms to generic capability work. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Joint-obligation hard-prune promoted; next is bounded class-4/5 first-loss phenotyping. Route only recurring cross-action mechanisms to generic capability work. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Run frontier + temporal/difficulty-controlled response screening; distinguish technique-relative advantage from shared extinction. The 26-level never-offered beam cohort remains a small parallel candidate. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen for operator reachability only if first-loss/family evidence shows valid continuations require revising interior/early commitments; otherwise keep current CP-SAT/static evidence boundaries. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen only for an earned mechanism with measured runtime cost or a newly measured hotspot. |
@@ -68,20 +68,19 @@ The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solve
 ## Standing research rules
 
 - Use `workSpent` for cross-technique allocation; raw nodes are within-technique diagnostics.
-- New actions/configurations expand the menu, not the default total budget.
+- New actions/configs expand the menu, not the default total budget.
 - Level-blindness is not generalization; confirmation strength scales with tuning pressure.
 - Clear negatives close tested forms absent materially new evidence.
 - Hold out independent units, including whole variant parents/families where applicable.
 - Audit low-multiplicity retention against reconciled current evidence, not a stale census label; nominal stage reach is not participation.
 - Baseline provenance is tri-state: missing stays `unknown`, not unsolved.
-- Reusable benchmark/census rows need matching protocol identity; no partial reuse under changed contention.
-- A no-op retry buys nothing.
+- Reusable benchmark/census rows need matching protocol identity; no partial reuse under changed contention. A no-op retry buys nothing.
 - After a material capability promotion, refresh the production residual before treating old family counts or attribution shares as current.
 - A validated hint prefix proves that prefix live, not that alternatives are dead.
-- Hint provenance must be queried for an explicit evidence purpose. Variant replay, witnesses, external solves, guided/randomized runs and old solver regimes remain valid atlas/oracle/history evidence but do not establish current production capability; raw event count is not independent support.
-- Before escalating a persistent residual through routing/config/retention/restart/budget, ask whether materially different actions lose known-live material at the same residual-state future-feasibility boundary. Shared recurrence nominates capability work; idiosyncratic loss stays technique-level.
-- Reconcile old questions against newer evidence before new compute; prefer the smallest value-of-information test.
-- Do not wait on expensive jobs when independent offline analysis, source diagnosis, test hardening, or documentation reconciliation can advance a separate gate.
+- Hint provenance must be queried for an explicit evidence purpose. Variant replay, witnesses, external solves, guided/randomized runs and old solver regimes remain valid atlas/oracle/history evidence but do not establish current production capability; raw event count is not support.
+- Before escalating a persistent residual, ask whether materially different actions lose known-live material at the same residual-state boundary. Shared recurrence nominates capability work; idiosyncratic loss stays technique-level.
+- Reconcile old questions against newer evidence before new compute; prefer the smallest info-value test.
+- Do not wait on expensive jobs when offline analysis, source diagnosis, test hardening, or docs reconciliation can advance a separate gate.
 
 ## Cheap evidence routing
 
