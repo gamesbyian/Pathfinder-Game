@@ -1,11 +1,12 @@
 # Known-solution hard-prune soundness audit
 
-> **Status:** concluded-negative for generic default-prune unsoundness
-> **Date:** 2026-09-11
-> **Evidence run:** GitHub Actions `34561615468`
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-11 — GitHub Actions run `34561615468` replayed 207,900 referee-valid stored paths and 20,127,497 path steps across corpus 1 and corpus 2 with zero violations; corrected throwaway-runner reproduction `34562841905` also completed successfully.
+> **Decision:** demote a broad shared default hard-prune false-positive bug as an explanation for the current frontier. Keep first-loss, missing-inference and residual-feasibility work active.
+> **Remaining gate:** none for the current default prune stack on the stored-solution population; reopen for a concrete newly introduced or opt-in rule, or a known-live counterexample.
+> **Evidence role:** forensic
 > **Solver ref:** `44a88d3622743e640ab8313a746a6499946b7ad2`
 > **Production behavior:** unchanged
-> **Decision:** demote a broad shared hard-prune false-positive bug as an explanation for the current frontier. Keep first-loss, missing-inference and residual-feasibility work active. Reopen prune soundness only for a concrete newly introduced rule, an untested opt-in rule, or a known-live counterexample.
 
 ## Question
 
