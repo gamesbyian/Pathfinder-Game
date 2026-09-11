@@ -1,6 +1,6 @@
 // Single AttemptConfig → search primitive dispatcher, shared by production orchestration and
 // offline workers so config routing and threaded arguments cannot drift.
-import { beamSearchFromGate, dfsFromGateLDS } from './search.js';
+import { beamSearchFromGate, dfsFromGateLDS, type BeamContinuation } from './search.js';
 import { repairSearchFromGate } from './repair-search.js';
 import { admissibleOrderSearch, admissibleOrderSearchLDS } from './admissible-order-search.js';
 import type { NormalizedLevel } from '../domain/types.js';
@@ -14,6 +14,7 @@ export type AttemptSearchOut = {
   timedOut?: boolean;
   bestBadness?: number;
   finalBadness?: number;
+  pausedContinuation?: BeamContinuation;
 } | null;
 
 export function runAttemptSearch(
@@ -37,6 +38,13 @@ export function runAttemptSearch(
   // Only orchestration.ts's admissible-order-non-default-retry call site (the one tier this flag is
   // actually validated for) may pass true, explicitly, for that one call.
   enforceAdmissibleOrderWorkCap = false,
+  // Resumable-portfolio residual pass (2026-09-10, reports/2026-09-05-static-portfolio-resumable-
+  // tranche-salvage-preflight.md): both default undefined/false, so every existing caller is
+  // byte-for-byte unaffected — only runStaticPortfolio's own resumable-residual-pass path may pass
+  // these, and only for beamWidth-bearing configs (the params are otherwise ignored below, matching
+  // every other search primitive's own indifference to arguments it doesn't accept).
+  beamResumeFrom?: BeamContinuation,
+  captureBeamContinuationOnBudgetExit = false,
 ): Promise<number[] | null> {
   const { beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
   const orderingBias = attemptConfig.orderingBias ?? null;
@@ -52,6 +60,6 @@ export function runAttemptSearch(
     : repair
     ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed)
     : beamWidth
-    ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, beamWidth, yieldFn, mechanicBucketRetention, out, nodeBudget)
+    ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, beamWidth, yieldFn, mechanicBucketRetention, out, nodeBudget, beamResumeFrom, undefined, captureBeamContinuationOnBudgetExit)
     : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, out, nodeBudget);
 }

@@ -3423,3 +3423,114 @@ test('static-portfolio: perTechniqueWorkCapByKey overrides the flat cap for one 
     assert.equal(calls[0], 3_000_000, 'config A has its own per-key override, not the flat cap');
     assert.equal(calls[1], 10_000_020, 'config B falls back to the flat cap, unaffected by A\'s narrower per-key cap');
 });
+
+// staticPortfolio.resumableResidualPass (2026-09-10, reports/2026-09-05-static-portfolio-resumable-
+// tranche-salvage-preflight.md): a richer fixture than makeLineLevel is needed so a beam attempt can
+// genuinely get CAPPED (not solve, not naturally exhaust) at a modest work budget — same shape as
+// beam-resumability-pilot.test.ts's own SOLVED_LEVEL (24 steps of slack over a Manhattan distance of
+// 16 forces real multi-phase beam work before it finds a solution).
+function makeMultiPhaseBeamLevel() {
+    return {
+        grid: { w: 9, h: 9 }, requiredLength: 40, requiredIntersections: 0,
+        goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)], blockSet: new Set(), gooseSet: new Set(),
+        falseGoalKeys: new Set(), mustPassKeys: [], mustCrossKeys: [], filterMap: new Map(),
+        flippingFilterMap: new Map(), portalMap: new Map(),
+    } as unknown as NormalizedLevel;
+}
+const BEAM_CONFIG = { scoringProfileId: 'default', orderingBias: null, beamWidth: 16 };
+
+test('static-portfolio: resumableResidualPass left false/undefined (default) leaves existing behavior byte-for-byte unaffected', async () => {
+    const level = makeMultiPhaseBeamLevel();
+    const withoutFlag = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: { techniqueConfigs: [BEAM_CONFIG], workBudget: 3000 },
+    });
+    const explicitFalse = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: { techniqueConfigs: [BEAM_CONFIG], workBudget: 3000, resumableResidualPass: false },
+    });
+    assert.equal(withoutFlag.ok, false);
+    assert.equal(withoutFlag.attempts.length, 1, 'no residual pass without opting in');
+    assert.equal(withoutFlag.resumableResidualPass, undefined, 'no telemetry block without opting in');
+    assert.deepEqual(explicitFalse.workSpent, withoutFlag.workSpent);
+    assert.equal(explicitFalse.attempts.length, 1);
+    assert.equal(explicitFalse.resumableResidualPass, undefined);
+});
+
+test('static-portfolio: resumableResidualPass solves via the residual tranche and reproduces an uninterrupted single-shot run\'s cumulative work exactly (no repayment)', async () => {
+    const level = makeMultiPhaseBeamLevel();
+    // Reference: an uninterrupted single-shot static-portfolio run with the full combined budget,
+    // no cap narrower than the whole budget -- this is what "no work was repaid" must match exactly.
+    const reference = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: { techniqueConfigs: [BEAM_CONFIG], workBudget: 12_000 },
+    });
+    assert.equal(reference.ok, true, 'sanity: the reference run must solve within the combined budget');
+
+    const staged = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: {
+            techniqueConfigs: [BEAM_CONFIG], workBudget: 12_000, perTechniqueWorkCap: 6000,
+            resumableResidualPass: true,
+        },
+    });
+    assert.equal(staged.ok, true, 'the residual tranche must reach the same solve the reference run finds');
+    assert.equal(staged.workSpent, reference.workSpent, 'cumulative work must match the uninterrupted reference exactly -- no repaid work');
+    assert.equal(staged.attempts.length, 2, 'first-pass capped attempt + one residual-pass resume');
+    assert.equal(staged.attempts[0].outcome, 'budget-starved', 'a captured exit reports budget-starved, not timed-out -- see runStaticPortfolio\'s own captureEligible comment');
+    assert.equal(staged.attempts[1].resumableResidualTranche, true);
+    assert.ok(staged.resumableResidualPass);
+    assert.equal(staged.resumableResidualPass!.eligibleContinuationCount, 1);
+    assert.equal(staged.resumableResidualPass!.residualDispatchCount, 1);
+    assert.ok(staged.resumableResidualPass!.residualIncrementalWork > 0, 'the residual pass must have done real, nonzero work');
+    // Bounded-overshoot capture (search.ts) can spend a little more than perTechniqueWorkCap during
+    // the first pass before the top-of-loop check catches it -- assert it's genuinely bounded
+    // (a small fraction of the per-technique cap), not unbounded runaway.
+    assert.ok(staged.resumableResidualPass!.firstPassCaptureOvershoot >= 0);
+    assert.ok(staged.resumableResidualPass!.firstPassCaptureOvershoot < 6000 * 0.5, 'overshoot must stay a small fraction of the per-technique cap');
+});
+
+test('static-portfolio: resumableResidualPass with still-insufficient combined budget stays unsolved but dispatches the residual tranche with real incremental work', async () => {
+    const level = makeMultiPhaseBeamLevel();
+    const staged = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: {
+            techniqueConfigs: [BEAM_CONFIG], workBudget: 6000, perTechniqueWorkCap: 3000,
+            resumableResidualPass: true,
+        },
+    });
+    assert.equal(staged.ok, false, 'sanity: this combined budget must still be short of what solving requires');
+    assert.equal(staged.resumableResidualPass!.eligibleContinuationCount, 1);
+    assert.equal(staged.resumableResidualPass!.residualDispatchCount, 1, 'the mechanism must still engage even though it does not end up solving');
+    assert.ok(staged.resumableResidualPass!.residualIncrementalWork > 0, 'must not be a silent no-op');
+    assert.ok(staged.workSpent! <= 6000 + 6000 * 0.5, 'total spend must stay close to the declared workBudget, not run away');
+});
+
+test('static-portfolio: resumableResidualPass never captures a non-beam (DFS/repair) config -- no eligible continuation, no residual dispatch', async () => {
+    const level = makeRepairGatedInfeasibleLevel();
+    const dfsConfig = { scoringProfileId: 'default', orderingBias: null };
+    const staged = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: { techniqueConfigs: [dfsConfig], workBudget: 5000, resumableResidualPass: true },
+    });
+    assert.equal(staged.attempts.length, level.gateKeys.length, 'no residual attempts appended for a non-beam config');
+    assert.equal(staged.resumableResidualPass!.eligibleContinuationCount, 0);
+    assert.equal(staged.resumableResidualPass!.residualDispatchCount, 0);
+    assert.equal(staged.resumableResidualPass!.firstPassCaptureOvershoot, 0);
+});
+
+test('static-portfolio: resumableResidualPass does not capture a beam attempt that naturally exhausts (width-1 greedy dead end)', async () => {
+    // width=1 greedy beam on this same multi-phase fixture hits real dead ends and collapses to an
+    // empty frontier well within budget -- natural exhaustion (timedOut: false), not a capped exit --
+    // see beam-resumability-pilot.test.ts's own identical width-1 fixture note.
+    const level = makeMultiPhaseBeamLevel();
+    const greedyConfig = { scoringProfileId: 'default', orderingBias: null, beamWidth: 1 };
+    const staged = await solveLevel(level, {
+        schedulerMode: 'static-portfolio',
+        staticPortfolio: { techniqueConfigs: [greedyConfig], workBudget: 10_000_000, resumableResidualPass: true },
+    });
+    assert.equal(staged.ok, false, 'sanity: width-1 greedy must not solve this fixture');
+    assert.equal(staged.attempts.length, 1, 'natural exhaustion produces no residual attempt');
+    assert.equal(staged.resumableResidualPass!.eligibleContinuationCount, 0, 'a naturally-exhausted attempt is not an eligible continuation');
+    assert.equal(staged.resumableResidualPass!.residualDispatchCount, 0);
+});

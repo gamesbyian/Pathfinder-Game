@@ -48,6 +48,7 @@ export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   repairElitePrefixDfsRetry: true,
   mcNeighborBudgetRetry: true,
   repairLateProbe: true,
+  resumableResidualTranche: true,
   admissibleOrder: true,
   admissibleOrderNoTieBreak: true,
   admissibleOrderLds: true,

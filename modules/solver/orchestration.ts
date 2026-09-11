@@ -6,6 +6,7 @@ import { getConfiguredAttemptConfigs, GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_F
 import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { runAttemptSearch } from './attempt-dispatch.js';
+import type { BeamContinuation } from './search.js';
 import { repairPrimarySeed } from './repair-search.js';
 import { normalizeSolverStageId, withSolverStage } from './stage-policy.js';
 import type { SolverStageId } from './stage-policy.js';
@@ -145,6 +146,12 @@ export interface Attempt {
      *  connectivityAxisExhaustedRetry/repairElitePrefixDfsRetry/mcNeighborBudgetRetry above. Not
      *  read by any solving logic. */
     repairLateProbe?: boolean;
+    /** True only for attempts run by runStaticPortfolio's own 2026-09-10 resumable-tranche residual
+     *  pass (see SolveOpts.staticPortfolio.resumableResidualPass) — same diagnostic-only shape as
+     *  goalAttractionDisabledRetry above, so external tooling can tell a residual-pass resume apart
+     *  from an ordinary first-pass attempt on the same stageId='static-portfolio' without
+     *  re-deriving it from attempt order/count. Not read by any solving logic. */
+    resumableResidualTranche?: boolean;
     /** Diagnostic-only passthrough for the admissible-order-fallback-search.ts prototype (see
      *  AttemptConfig.admissibleOrder) — not read by any solving logic, purely so external tooling
      *  (scripts/method-probe.mjs) can tell it apart from an ordinary DFS attempt. */
@@ -305,6 +312,16 @@ export interface SolveOpts {
         /** Per-attempt wall-safety deadline; non-binding relative to the work-based allocation
          *  above. Defaults to STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS (600,000ms) when omitted. */
         attemptBudgetMs?: number;
+        /** Opt-in, default false/undefined (existing callers byte-for-byte unaffected): the
+         *  resumable-tranche residual pass from reports/2026-09-05-static-portfolio-resumable-
+         *  tranche-salvage-preflight.md. When true, runStaticPortfolio captures a continuation for
+         *  every beamWidth-bearing first-pass attempt that ends CAPPED (its own tranche ceiling hit,
+         *  `timedOut: true`) rather than naturally exhausted (`timedOut: false`), then — only if the
+         *  whole first pass ends unsolved — resumes each eligible continuation, in original portfolio
+         *  order, for at most one additional tranche equal to its own original per-technique cap,
+         *  bounded by whatever of `workBudget` remains shared across the whole level. See that
+         *  function's own header comment for the full contract. */
+        resumableResidualPass?: boolean;
     };
     /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
     attemptSearchForTesting?: AttemptSearchDispatch;
@@ -576,6 +593,18 @@ interface SolveResult { ok: boolean; status: string; solution: number[] | null; 
      *  convenience mirror of technique-census-cell.mjs's own winningConfigKey field so tooling
      *  built against that shape needs minimal adaptation. */
     staticPortfolioWinningConfigKey?: string;
+    /** schedulerMode === 'static-portfolio' with staticPortfolio.resumableResidualPass only — see
+     *  that option's own doc comment. `firstPassCaptureOvershoot` is real extra work the bounded-
+     *  overshoot capture mechanism spent during the (otherwise frozen) first pass; report it
+     *  alongside workSpent rather than describing the first pass as identical to a non-resumable
+     *  control run — see docs/solver-evaluation-evidence.md's "if treatment buys additive work,
+     *  report the larger envelope" rule. */
+    resumableResidualPass?: {
+        eligibleContinuationCount: number;
+        residualDispatchCount: number;
+        residualIncrementalWork: number;
+        firstPassCaptureOvershoot: number;
+    };
 }
 
 function hasAttemptError(attempts: readonly Attempt[]): boolean {
@@ -627,7 +656,7 @@ export function getActiveGates(level: NormalizedLevel, gateKeys: number[], cfg: 
 export async function runAttempt(
     gateKey: number, level: NormalizedLevel, prep: PrepLevel,
     attemptConfig: AttemptConfig, attBudget: number, attStart: number, yieldFn: YieldFn,
-    nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; finalBadness?: number } | null = null,
+    nodeBudget = Infinity, nodesOut: { nodesExpanded?: number; timedOut?: boolean; bestBadness?: number; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null,
     // Repair-only (see runEarlyRepairSearch's multi-seed retry) — additively XORed into
     // repairSearchFromGate's own gate-derived PRNG seed (repair-search.ts), so a retry round
     // samples a genuinely different randomized search trajectory over the exact same level/gate
@@ -642,6 +671,11 @@ export async function runAttempt(
     // sibling admissible-order-fallback tier (a different call site, same shared runAttempt/
     // runAttemptSearch dispatcher) must never receive this.
     enforceAdmissibleOrderWorkCap = false,
+    // Resumable-portfolio residual pass passthrough (see attempt-dispatch.ts's runAttemptSearch,
+    // which this ultimately reaches). Both default undefined/false; only runStaticPortfolio's own
+    // resumable-residual-pass path may pass these, for beamWidth-bearing configs only.
+    beamResumeFrom?: BeamContinuation,
+    captureBeamContinuationOnBudgetExit = false,
 ): Promise<AttemptResult> {
     const { scoringProfileId, orderingBias, beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
     const profile = SCORING_PROFILES[scoringProfileId] ?? SCORING_PROFILES.default;
@@ -658,7 +692,7 @@ export async function runAttempt(
     let attemptError: Attempt['error'] | undefined;
     try {
         const dispatch = testAttemptDispatches.get(prep) ?? runAttemptSearch;
-        path = await dispatch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt, enforceAdmissibleOrderWorkCap);
+        path = await dispatch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt, enforceAdmissibleOrderWorkCap, beamResumeFrom, captureBeamContinuationOnBudgetExit);
     } catch (err) {
         if (isSolverCancellation(err)) throw err;
         const thrown = err as { name?: unknown; message?: unknown } | null;
@@ -1710,12 +1744,30 @@ async function runStaticPortfolio(level: NormalizedLevel, opts: SolveOpts): Prom
     const configs = staticPortfolio.techniqueConfigs.map(config => ({ key: attemptConfigKey(config), config }));
     const attemptBudgetMs = staticPortfolio.attemptBudgetMs ?? STATIC_PORTFOLIO_ATTEMPT_BUDGET_MS;
     const workBudget = staticPortfolio.workBudget;
+    // Default false/undefined: every existing caller (technique-census-cell.mjs, portfolio-solve-
+    // sweep.mjs's ordinary static-portfolio mode, the closed one-shot production A/B) is
+    // byte-for-byte unaffected — see this flag's own SolveOpts doc comment.
+    const resumableResidualPass = !!staticPortfolio.resumableResidualPass;
 
     const attempts: Attempt[] = [];
     let solution: number[] | null = null;
     let winningKey: string | null = null;
     let deadlineTruncated = false;
     const spentUnits = () => prep._workMeter.units - workStart;
+
+    // First-pass beam attempts that ended CAPPED (out.pausedContinuation set) rather than naturally
+    // exhausted, in original portfolio-menu order — see this file's SolveOpts.staticPortfolio.
+    // resumableResidualPass doc comment for the exact eligibility/ordering contract.
+    interface EligibleContinuation { gateKey: number; key: string; config: AttemptConfig; continuation: BeamContinuation; originalCap: number; }
+    const eligibleContinuations: EligibleContinuation[] = [];
+    // Bounded-overshoot capture (search.ts, 2026-09-10) can spend slightly more than a first-pass
+    // attempt's own nominal attemptRemaining slice before the top-of-loop check catches it (see
+    // reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md's measured 4.9%-
+    // 9.1% overshoot at production widths). This is real work, already reflected in workSpent/
+    // spentUnits() and therefore already correctly deducted from every later gate/technique's own
+    // remaining-budget arithmetic below — tracked here ONLY so the caller can report it honestly
+    // rather than silently describing the first pass as unchanged from the non-resumable control.
+    let firstPassCaptureOvershoot = 0;
 
     outer:
     for (let gi = 0; gi < activeGates.length; gi++) {
@@ -1737,14 +1789,54 @@ async function runStaticPortfolio(level: NormalizedLevel, opts: SolveOpts): Prom
             prep._workCap = attemptWorkCap;
             prep._strictWorkCap = attemptWorkCap;
             const spentBeforeAttempt = spentUnits();
-            const r = await runAttempt(gateKey, level, prep, config, attemptBudgetMs, Date.now(), opts.yieldFn ?? null, Infinity);
+            // Only beamWidth-bearing configs can ever produce a continuation (search.ts); requesting
+            // capture for a non-beam config would simply be ignored by attempt-dispatch.ts, but
+            // gating it here keeps intent explicit and avoids the (currently harmless) mislabeling
+            // capture causes in Attempt.outcome (a captured exit reports 'budget-starved', not
+            // 'timed-out' — see attempt-dispatch.ts's own out.timedOut semantics — so this file's own
+            // captureOut.pausedContinuation is the only reliable eligibility signal, not r.attempt).
+            const captureEligible = resumableResidualPass && !!config.beamWidth;
+            const captureOut: { nodesExpanded?: number; timedOut?: boolean; pausedContinuation?: BeamContinuation } = {};
+            const r = await runAttempt(gateKey, level, prep, config, attemptBudgetMs, Date.now(), opts.yieldFn ?? null, Infinity, captureEligible ? captureOut : null, 0, false, undefined, captureEligible);
             attempts.push(withSolverStage({ configKey: key, ...r.attempt }, 'static-portfolio'));
             if (r.path) { solution = r.path; winningKey = key; break outer; }
             const spentThisAttempt = spentUnits() - spentBeforeAttempt;
-            if (r.attempt.outcome === 'timed-out' && spentThisAttempt < attemptRemaining) {
+            if (captureOut.pausedContinuation) {
+                eligibleContinuations.push({ gateKey, key, config, continuation: captureOut.pausedContinuation, originalCap: attemptRemaining });
+                if (spentThisAttempt > attemptRemaining) firstPassCaptureOvershoot += spentThisAttempt - attemptRemaining;
+            } else if (r.attempt.outcome === 'timed-out' && spentThisAttempt < attemptRemaining) {
                 deadlineTruncated = true;
                 break outer;
             }
+        }
+    }
+
+    // Resumable-tranche residual pass: only if the frozen first pass ended fully unsolved (matching
+    // the preflight's own "stop at the first solve as usual" rule — a mid-first-pass solve never
+    // reaches here) and there is shared work left. Processes eligible continuations in the exact
+    // order their first-pass attempts ran (not re-sorted by any outcome-derived priority), giving
+    // each at most one additional tranche equal to its own original per-technique cap, bounded by
+    // whatever of the same 67M-shaped workBudget remains — see the SolveOpts doc comment.
+    let residualDispatchCount = 0;
+    let residualIncrementalWork = 0;
+    if (!solution && resumableResidualPass) {
+        for (const elig of eligibleContinuations) {
+            const remainingShared = Math.max(0, workBudget - spentUnits());
+            if (remainingShared <= 0) break;
+            const residualBudget = Math.min(elig.originalCap, remainingShared);
+            if (residualBudget <= 0) continue;
+            const resumeWorkCap = prep._workMeter.units + residualBudget;
+            prep._workCap = resumeWorkCap;
+            prep._strictWorkCap = resumeWorkCap;
+            const spentBeforeResume = spentUnits();
+            // No further captureContinuationOnBudgetExit here: "at most one additional tranche" per
+            // the preflight's own design — a continuation that caps again in this residual pass is
+            // simply retired, not chained into a second resume.
+            const r = await runAttempt(elig.gateKey, level, prep, elig.config, attemptBudgetMs, Date.now(), opts.yieldFn ?? null, Infinity, null, 0, false, elig.continuation, false);
+            residualDispatchCount++;
+            residualIncrementalWork += spentUnits() - spentBeforeResume;
+            attempts.push(withSolverStage({ configKey: elig.key, ...r.attempt, resumableResidualTranche: true }, 'static-portfolio'));
+            if (r.path) { solution = r.path; winningKey = elig.key; break; }
         }
     }
 
@@ -1774,6 +1866,12 @@ async function runStaticPortfolio(level: NormalizedLevel, opts: SolveOpts): Prom
         deadlineTruncated,
         schedulerMode: 'static-portfolio',
         ...(winningKey ? { staticPortfolioWinningConfigKey: winningKey } : {}),
+        ...(resumableResidualPass ? { resumableResidualPass: {
+            eligibleContinuationCount: eligibleContinuations.length,
+            residualDispatchCount,
+            residualIncrementalWork,
+            firstPassCaptureOvershoot,
+        } } : {}),
     };
 }
 

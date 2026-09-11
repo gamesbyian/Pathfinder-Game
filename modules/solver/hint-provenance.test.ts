@@ -20,7 +20,7 @@ const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([
   // Consulted by orchestration.ts's classifyAttemptTier to derive the single retryTier field
   // (below), not copied onto provenance 1:1 under their own attempt-field names.
   'coarseStateNearTieRetentionRetry', 'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
-  'mcNeighborBudgetRetry', 'repairElitePrefixDfsRetry', 'repairLateProbe',
+  'mcNeighborBudgetRetry', 'repairElitePrefixDfsRetry', 'repairLateProbe', 'resumableResidualTranche',
 ]);
 
 test('maximal Attempt has an explicit, complete provenance projection contract', () => {
