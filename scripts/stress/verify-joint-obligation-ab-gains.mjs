@@ -33,7 +33,17 @@ for (const id of GAIN_IDS) {
     const raw = byId.get(id);
     if (!raw) { console.log(`${id}: MISSING FROM CORPUS`); failed.push(id); continue; }
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
-    const result = await Solver.solveLevel(level, { nodeBudget: 50000000, timeBudgetMs: 300000, ablation: cfg });
+    // Match the dispatched workflow's actual solve options exactly (solver-level-blind-targeted-
+    // sweep.yml derives work-budget = node-budget * 1.34 when --work-budget is left blank, and
+    // uses the 24h non-binding budget-ms default). An earlier version of this script omitted
+    // workBudget entirely, which is a genuine configuration mismatch (not a looser one) --
+    // per-tier budget pacing elsewhere in orchestration.ts references workBudget, so its absence
+    // changed which attempts got how much of the node budget, not just whether a bound existed.
+    // That falsely failed to reproduce 2/21 gains before this fix.
+    const result = await Solver.solveLevel(level, {
+        nodeBudget: 50000000, workBudget: 67000000, timeBudgetMs: 86400000,
+        schedulerMode: 'production', ablation: cfg,
+    });
     if (!result.ok || !Array.isArray(result.solution)) {
         console.log(`${id}: NOT SOLVED locally (status=${result.status}) -- ab gain NOT reproduced`);
         failed.push(id);
