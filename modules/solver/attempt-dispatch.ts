@@ -3,8 +3,9 @@
 import { beamSearchFromGate, dfsFromGateLDS, type BeamContinuation } from './search.js';
 import { repairSearchFromGate } from './repair-search.js';
 import { admissibleOrderSearch, admissibleOrderSearchLDS } from './admissible-order-search.js';
+import { SCORING_PROFILES, STRUCTURAL_ORDERING_BIASES } from './policy.js';
 import type { NormalizedLevel } from '../domain/types.js';
-import type { AttemptConfig, PrepLevel, ScoringProfile } from './types.js';
+import type { AttemptConfig, PrepLevel, ScoringProfile, StructuralOrderingBias } from './types.js';
 
 type YieldFn = (() => Promise<void>) | null;
 
@@ -16,6 +17,93 @@ export type AttemptSearchOut = {
   finalBadness?: number;
   pausedContinuation?: BeamContinuation;
 } | null;
+
+function sameOrderingBias(actual: StructuralOrderingBias, canonical: StructuralOrderingBias): boolean {
+  const actualKeys = Object.keys(actual).sort();
+  const canonicalKeys = Object.keys(canonical).sort();
+  if (actualKeys.length !== canonicalKeys.length) return false;
+  for (let i = 0; i < actualKeys.length; i++) {
+    if (actualKeys[i] !== canonicalKeys[i]) return false;
+    const key = actualKeys[i] as keyof StructuralOrderingBias;
+    if (actual[key] !== canonical[key]) return false;
+  }
+  return true;
+}
+
+/**
+ * Runtime contract for an executable AttemptConfig.
+ *
+ * Attempt identity deliberately has one canonical vocabulary. A structurally-permissive TS object
+ * used to be able to request a different behavior shape than that vocabulary could name: e.g. an
+ * unknown scoring profile silently fell back to `default`; repair could carry a non-repair profile
+ * even though its identity always says `score=repair`; beam-only retention could be attached to DFS;
+ * and family-specific subflags could be silently ignored without their parent family. Those are
+ * dangerous experiment failures, not friendly coercions: provenance/census can then say technique X
+ * ran while dispatch actually executed Y. Reject malformed programmatic configs at the one shared
+ * dispatch boundary. Policy-built and policy-aware parsed configs already satisfy these rules.
+ */
+export function validateAttemptConfigContract(attemptConfig: AttemptConfig): void {
+  const {
+    scoringProfileId, orderingBias, beamWidth, mechanicBucketRetention,
+    repair, repairMustTurnBiased, repairTurnBiased,
+    admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds,
+  } = attemptConfig;
+
+  const familyCount = Number(!!repair) + Number(!!admissibleOrder) + Number(beamWidth != null);
+  if (familyCount > 1) {
+    throw new Error('AttemptConfig search families are mutually exclusive: choose exactly one of beamWidth, repair, or admissibleOrder (or none for DFS).');
+  }
+
+  if (beamWidth != null && (!Number.isSafeInteger(beamWidth) || beamWidth <= 0)) {
+    throw new Error(`AttemptConfig beamWidth must be a positive safe integer; got ${String(beamWidth)}.`);
+  }
+  if (mechanicBucketRetention && beamWidth == null) {
+    throw new Error('AttemptConfig mechanicBucketRetention is only meaningful on a beam attempt.');
+  }
+
+  if ((repairMustTurnBiased || repairTurnBiased) && !repair) {
+    throw new Error('AttemptConfig repair guidance flags require repair: true.');
+  }
+  if (repairMustTurnBiased && repairTurnBiased) {
+    throw new Error('AttemptConfig repairMustTurnBiased and repairTurnBiased are mutually exclusive attempt techniques.');
+  }
+  if (repair) {
+    if (scoringProfileId !== 'repair') {
+      throw new Error(`Repair AttemptConfig must use scoringProfileId "repair"; got "${scoringProfileId}".`);
+    }
+    if (orderingBias) {
+      throw new Error('Repair AttemptConfig cannot carry orderingBias because repair identity does not encode it.');
+    }
+  }
+
+  if ((admissibleOrderNoTieBreak || admissibleOrderLds) && !admissibleOrder) {
+    throw new Error('AttemptConfig admissible-order subflags require admissibleOrder: true.');
+  }
+  if (admissibleOrder) {
+    if (orderingBias) {
+      throw new Error('Admissible-order AttemptConfig cannot carry orderingBias because that family does not use or identify it.');
+    }
+    if (admissibleOrderNoTieBreak) {
+      if (scoringProfileId !== 'none') {
+        throw new Error('Admissible-order no-tie-break AttemptConfig must use canonical scoringProfileId "none".');
+      }
+    } else if (!SCORING_PROFILES[scoringProfileId]) {
+      throw new Error(`AttemptConfig references unknown admissible-order tie-break profile "${scoringProfileId}".`);
+    }
+  } else if (!SCORING_PROFILES[scoringProfileId]) {
+    throw new Error(`AttemptConfig references unknown scoring profile "${scoringProfileId}".`);
+  }
+
+  if (orderingBias) {
+    const canonical = STRUCTURAL_ORDERING_BIASES[orderingBias.id];
+    if (!canonical) {
+      throw new Error(`AttemptConfig references unknown structural ordering bias "${orderingBias.id}".`);
+    }
+    if (!sameOrderingBias(orderingBias, canonical)) {
+      throw new Error(`AttemptConfig ordering bias "${orderingBias.id}" does not match the canonical policy definition; identity cannot represent custom same-id behavior.`);
+    }
+  }
+}
 
 export function runAttemptSearch(
   attemptConfig: AttemptConfig,
@@ -46,15 +134,8 @@ export function runAttemptSearch(
   beamResumeFrom?: BeamContinuation,
   captureBeamContinuationOnBudgetExit = false,
 ): Promise<number[] | null> {
+  validateAttemptConfigContract(attemptConfig);
   const { beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
-  // These are separate, canonical repair action identities and separate mechanisms inside
-  // repairSearchFromGate. Running both at once would create a hybrid action the identity grammar
-  // cannot represent (it used to be mislabeled as must-turn-biased), contaminating provenance and
-  // technique-census evidence. Policy/parser code never constructs this shape; fail loudly if a
-  // programmatic caller does rather than silently executing an unidentifiable fifth repair family.
-  if (repairMustTurnBiased && repairTurnBiased) {
-    throw new Error('runAttemptSearch: repairMustTurnBiased and repairTurnBiased are mutually exclusive attempt techniques.');
-  }
   const orderingBias = attemptConfig.orderingBias ?? null;
   const admissibleOrderProfile = admissibleOrderNoTieBreak ? null : profile;
   // These repair mechanisms are explicit opt-ins; absence/false must not activate them.
