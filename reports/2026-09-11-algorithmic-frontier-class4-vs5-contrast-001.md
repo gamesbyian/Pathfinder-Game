@@ -1,6 +1,6 @@
 # Algorithmic frontier class-4 vs class-5 contrast 001
 
-> **Status:** active-offline
+> **Status:** active
 > **Last evidence:** 2026-09-11 — post-1,029 residual atlas: class 4 = 200 zero-T1-winner levels with a historical/provenance rescuer; class 5 = 388 no-known-rescuer levels after reconciliation.
 > **Decision:** use class 4 as the primary near-control for frontier characterization. Use classes 1-4 combined only as a secondary operational comparison. Feed the contrast into the active observer-only joint-obligation propagation gate so it must demonstrate a frontier-specific mechanism, not merely common mechanic structure.
 > **Remaining gate:** execute [`2026-09-11-algorithmic-frontier-execution-handoff-001.md`](2026-09-11-algorithmic-frontier-execution-handoff-001.md).
