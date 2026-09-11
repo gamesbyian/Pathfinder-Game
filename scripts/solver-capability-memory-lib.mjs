@@ -48,7 +48,7 @@ export function hashIds(ids) {
 }
 
 export function solvedIds(rows) {
-  return rows.filter(isSolvedRow).map(rowId).filter(Boolean).sort();
+  return rows.filter(row => isConclusiveRow(row) && isSolvedRow(row)).map(rowId).filter(Boolean).sort();
 }
 
 export function populationIds(rows) {
@@ -148,11 +148,13 @@ function normalizeSignature(candidate, baselineSolvedSet, baselineResidualSet) {
 
 export function buildCapabilityMemory({ baselineId = 'baseline', baselineRows, candidates }) {
   const baseRows = reportRows(baselineRows);
-  const baseSolvedIds = solvedIds(baseRows);
   const basePopulationIds = populationIds(baseRows);
+  const conclusiveBaseRows = baseRows.filter(isConclusiveRow);
+  const baseSolvedIds = solvedIds(conclusiveBaseRows);
+  const baseResidualIds = conclusiveBaseRows.filter(row => !isSolvedRow(row)).map(rowId).filter(Boolean).sort();
+  const baseUnknownIds = baseRows.filter(row => !isConclusiveRow(row)).map(rowId).filter(Boolean).sort();
   const baseSolvedSet = new Set(baseSolvedIds);
-  const basePopulationSet = new Set(basePopulationIds);
-  const baseResidualSet = new Set([...basePopulationSet].filter(id => !baseSolvedSet.has(id)));
+  const baseResidualSet = new Set(baseResidualIds);
 
   const normalizedCandidates = candidates.map(candidate => {
     if (!candidate?.id) throw new Error('Every capability-memory candidate needs an id');
@@ -251,15 +253,18 @@ export function buildCapabilityMemory({ baselineId = 'baseline', baselineRows, c
     interpretation: {
       productionBoundary: 'Offline only. Exact-level historical/candidate outcomes are forbidden runtime steering inputs.',
       historicalSignatures: 'Nomination evidence only until reconciled/rerun under current code, population, and budget semantics.',
-      rowReports: 'Gain/loss comparisons are valid only for actually observed rows whose baseline and candidate outcomes are both conclusive.',
+      rowReports: 'Gain/loss comparisons are valid only for actually observed, conclusive baseline and candidate rows.',
     },
     baseline: {
       id: baselineId,
       population: basePopulationIds.length,
+      conclusive: conclusiveBaseRows.length,
       solved: baseSolvedIds.length,
-      residual: baseResidualSet.size,
+      residual: baseResidualIds.length,
+      unknown: baseUnknownIds.length,
       populationIdHash: hashIds(basePopulationIds),
       solvedIdHash: hashIds(baseSolvedIds),
+      unknownIdHash: hashIds(baseUnknownIds),
     },
     candidates: normalizedCandidates,
     pairwiseCurrentResidualNominationOverlap: pairwise,
