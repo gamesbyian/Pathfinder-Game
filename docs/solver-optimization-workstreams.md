@@ -47,7 +47,7 @@ Use capability, lifecycle, provenance, profile, variant, census, trace and accep
 
 Stored paths, provenance, profile/family labels and same-level outcomes are offline diagnostics, not production routing inputs. [`evidence-layer upgrade`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
 
-**Frontier characterization: ACTIVE / OFFLINE SUPPORT.** Use class 4 (200 zero-T1 historical-rescuer levels) as the primary control for class 5 (388 no-known-rescuer levels). Run static/production contrast, source-controlled profiles, existing family-boundary joins, and bounded all-known-basin extinction analysis to de-risk and interpret the joint-obligation observer. [`plan`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md), [`handoff`](../reports/2026-09-11-algorithmic-frontier-execution-handoff-001.md)
+**Frontier + structural-response characterization: ACTIVE / OFFLINE SUPPORT.** Use class 4 as the primary control for class 5, and screen broader technique niches for temporal stability plus generic-difficulty confounding before escalating to existing-family flips, source-controlled profiles or traces. [`frontier plan`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md), [`structural-response audit`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md)
 
 The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing only. Recomputed by the post-1,029 residual atlas: 232/671 (34.6%) triple-overlap, still the largest structural concentration. The broader T1/provenance capability join and per-level five-class rescuer breakdown is done. [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md), [`residual atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
 
@@ -56,7 +56,7 @@ The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solve
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Observer-only joint-obligation propagation on the 388-level no-known-rescuer residue, with class-4 near-control evidence required before promotion. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Frontier class-5-vs-class-4 characterization supports the observer; the 26-level never-offered `width=5000`/`mechanic-buckets` beam cohort remains a small parallel menu-expansion candidate. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Run frontier + temporal/difficulty-controlled technique-response screening; escalate only surviving distinctions. The 26-level never-offered beam cohort remains a small parallel menu-expansion candidate. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Static block count is exploratory only (AUC 0.69, n=8 vs 22). Fresh prespecified CP-SAT confirmation only if worth buying. `bestBadnessTechnique` is not a valid substitute signal (beam/DFS rarely populate `bestProgress` the way repair does). |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen only for a materially different mechanism or newly measured hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Concrete methodological failure. |
@@ -86,6 +86,8 @@ The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solve
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
 - hint/provenance audit: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all`
 - frontier contrast: `node scripts/stress/analyze-frontier-contrast.mjs --out=tmp/post-1029-frontier-contrast.json`
+- structural niche stability: `node scripts/analyze-technique-niche-stability.mjs`
+- difficulty-controlled niches: `node scripts/analyze-difficulty-stratified-relative-advantage.mjs`
 - current missing-exposure rejoin: `node scripts/run-bundled.mjs scripts/stress/analyze-current-missing-attempt-exposure.mjs -- --baseline=reports/stress/capability-runs/34531412380/per-level-corpus2.json --census=reports/stress/technique-census/33717910218/combined-cells.json --out=tmp/post-1029-missing-attempt-exposure.json`
 
 Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for evidence topology. Search named mechanisms through `research-status-index --compact`; chronology belongs in matched reports or frozen snapshots.
