@@ -29,7 +29,7 @@ test('formatAttemptIdentityKey emits the canonical structured grammar for every 
     assert.throws(() => formatAttemptIdentityKey({
         scoringProfileId: 'repair', orderingBiasId: null, repair: true,
         repairMustTurnBiased: true, repairTurnBiased: true,
-    }), /mutually exclusive/,
+    }), /cannot represent both|mutually exclusive/,
     'the formatter must reject the hybrid repair behavior that has no canonical identity');
 });
 
