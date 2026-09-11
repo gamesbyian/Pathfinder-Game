@@ -1,9 +1,9 @@
 # Solver capability-memory integration
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-11 — capability-memory analyzer, protocol-aware zero-compute health churn, evidence-topology registration, current-authority reconciliation/compaction, censoring hardening, and report-header normalization are implemented on `chatgpt/capability-memory-research-loop-2026-09-11`.
+> **Last evidence:** 2026-09-11 — capability-memory analyzer, protocol-aware zero-compute health churn, evidence-topology registration, current-authority reconciliation/compaction, censoring hardening, report-header normalization, and full repository CI are complete on `chatgpt/capability-memory-research-loop-2026-09-11`.
 > **Decision:** retain this as durable research/evidence infrastructure. It adds no production solver policy and does not authorize historical exact-level steering; future capability-memory descendants remain subject to the ordinary level-blind matched-work and confirmation gates.
-> **Remaining gate:** repository CI only. No solver-side experimental gate remains for this tooling integration itself.
+> **Remaining gate:** none for this tooling integration. CI run `34655997709` completed successfully on the reconciled implementation tip before this closeout-only documentation update.
 > **Evidence role:** research-process/tooling integration; no solver-policy promotion and no solve-count claim.
 > **Production impact:** none. The cold solver, attempt ladder, budgets, scoring, pruning, routing, and level-blind runtime information boundary are unchanged.
 
@@ -116,7 +116,7 @@ The incremental documentation gate exposed four other September 11 investigation
 9. historical-signature nomination versus confirmed-current-gain separation;
 10. capability-memory JSON and human-summary materialization, including censored-baseline visibility.
 
-The first PR CI attempt reached deep verification successfully but the fast gate stopped on the repository's agent-context budget checker because the two touched live solver authority docs were already over their hard size limits. The branch fixed this by compacting those authorities rather than weakening the limits; a subsequent run explicitly passed the package/tooling/context-budget checker and then exposed the stale report-header metadata described above. Full repository CI remains the integration authority.
+CI recovery exercised the repository's own guardrails rather than weakening them. The first PR run passed deep verification but exposed two touched live authorities already over their agent-context hard caps; those docs were compacted instead of raising limits. The next run explicitly passed the package/tooling/context-budget checker and exposed the stale report-header metadata described above. After normalizing those headers, CI run `34655997709` passed end to end: deep verification, non-lint repository checks, lint, Node/CLI contract tests, solver capability canary, and production bundle build all succeeded.
 
 ## What this deliberately does not do
 
