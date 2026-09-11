@@ -12,7 +12,7 @@ Method: [`solver-research-operating-model.md`](solver-research-operating-model.m
 
 ### 1. Workstream 2: residual capability and fixed-work allocation
 
-**State:** active. The 671-miss residual atlas is done and confirms portal coarse-state salvage as the highest-value next target (portal-bearing structure is 74.1% of the residual, concentrated in the classes with a demonstrated-but-lost or reconciled-but-uncensused rescuer); pursue that forensic now. Allocation/exposure is only 8.5% of the residual, so admissible-order repricing stays bounded/lower-priority until gate 2 resolves. The simple same-policy resumable-tranche salvage is closed NULL and is no longer active queue work.
+**State:** active. The 671-miss residual atlas is done and confirms portal coarse-state salvage as the highest-value next production-facing target (portal-bearing structure is 74.1% of the residual, concentrated in the classes with a demonstrated-but-lost or reconciled-but-uncensused rescuer); pursue that forensic now. Allocation/exposure is only 8.5% of the residual, so admissible-order repricing stays bounded/lower-priority until gate 2 resolves. Frontier characterization may proceed in parallel as offline WS1 existing-data work and does not reorder this gate. The simple same-policy resumable-tranche salvage is closed NULL and is no longer active queue work.
 
 #### Current production boundary
 
@@ -44,13 +44,17 @@ Use **algorithmic frontier** for the reconciled current-residual cohort with no 
 
 A substantial frontier cohort is the trigger to shift research emphasis from merely allocating the existing repertoire toward explaining and creating missing capability. Use the funnel in [`solver-future-work.md`](solver-future-work.md): phenotype/family grouping -> solution/provenance comparison -> first-divergence or representation-loss localization -> minimal counterexample where useful -> smallest generic level-blind capability -> bounded frontier pilot -> independent/whole-family validation. Do not create a separate frontier workstream until the active queue has a concrete recurring mechanism or intervention that deserves ownership beyond WS1/WS2.
 
+The first active characterization gate is the **class-5 vs class-4 frontier contrast**. Class 4 is the primary near-control because both populations have zero isolated T1 winners; class 4 differs by having a historical strict cold-capability Pathfinder rescuer. The existing coarse atlas already shows that class 5 is *less* portal-bearing (69.3% vs 86.5%) and has less portal+must-cross+intersection-heavy triple overlap (33.5% vs 43.5%), while being modestly more intersection-heavy (83.8% vs 77.0%). So frontier status should not be modeled as simply “more portal/mechanic complexity.” Continue with richer static/production-response contrast, source-controlled solution-space comparison, controlled variant-family flips, and representative-basin extinction before proposing heavyweight new algorithms. [`frontier contrast`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md)
+
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** active for parallel existing-data analysis; production routing changes remain downstream of the residual atlas and specialist-protected evidence.
+**State:** active for parallel existing-data analysis. Two cheap lines may advance without blocking WS2: frontier characterization of the 388 class-5 candidate levels, and the atlas's 26-level never-offered menu-expansion candidate. Production routing changes remain downstream of specialist-protected evidence.
 
 Use capability, lifecycle, provenance, profile, variant, census, trace and accepted-path evidence. For hinted failures, audit provenance/dedup, select structurally diverse basins, locate where all known-live basins disappear, and classify loss as allocation/exposure, search policy, prune/state merge/representation, or other reasoning failure. Cross policies with lifecycle/census exposure so `exposed-and-failed` remains distinct from `not exposed`.
 
 Stored paths, provenance, profile/family labels and same-level outcomes are offline diagnostics, not production routing inputs. [`evidence-layer upgrade`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
+
+**Frontier characterization: ACTIVE / OFFLINE.** Treat class 4 (200 zero-T1-winner levels with historical cold rescues) as the primary control for class 5 (388 zero-T1-winner levels with no known rescuer); keep classes 1-4 combined as a secondary operational comparator. The residual-atlas analyzer now emits both contrasts using the existing static-feature vocabulary plus production work/attempt telemetry. Rerun it first, then use source-controlled solution-profile evidence and representative-basin survival/extinction where coverage permits. Do not compare combined hint profiles without provenance/source control, because class 4 contains Pathfinder cold-capability provenance by definition. No broad new solver compute is justified by this gate yet. [`contrast plan`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md)
 
 The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing only. Recomputed inside the current 671 misses by the post-1,029 residual atlas: 232/671 (34.6%) triple-overlap, still the largest single structural concentration in the residual. Current lifecycle classification is refreshed against run `34531412380`; the broader T1/provenance capability join and per-level five-class rescuer breakdown is now also done. [`exposure classification`](../reports/2026-09-10-ws1-existing-data-exposure-classification-001.md), [`residual atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
 
@@ -59,7 +63,7 @@ The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solve
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Atlas done, portal-confirmed -> R01273 coarse-state forensic and 12-loss salvage gate -> bounded repricing only if still highest-value after gate 2. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL ANALYSIS** | Atlas's 26-level never-offered `width=5000`/`mechanic-buckets` beam cohort is the next small, cheap, well-evidenced menu-expansion candidate; protect low-multiplicity capability before routing changes. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL OFFLINE** | Rerun extended atlas for class-5-vs-class-4 static/production contrast -> source-controlled solution-space comparison -> representative-basin extinction; separately retain the 26-level never-offered `width=5000`/`mechanic-buckets` beam menu candidate. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Static block count is an exploratory signal only (AUC 0.69 on 8 vs 22 cases). Run a fresh prespecified confirmation only if current residual evidence makes that non-cheap test worth buying. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen only for a materially different mechanism or newly measured hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Concrete methodological failure. |
@@ -88,6 +92,7 @@ The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solve
 - research assets: `node scripts/research-asset-query.mjs --query=<term>`
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
 - hint/provenance audit: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all`
+- current residual atlas + frontier contrast: `node scripts/run-bundled.mjs scripts/stress/analyze-post-1029-residual-atlas.mjs -- --baseline=reports/stress/capability-runs/34531412380/per-level-corpus2.json --lifecycle=reports/stress/capability-runs/34531412380/lifecycle-failure-map-corpus2.json --census=reports/stress/technique-census/33717910218/combined-cells.json --hints-dir=data/stress/hints-random --out=tmp/post-1029-residual-atlas.json`
 - current missing-exposure rejoin: `node scripts/run-bundled.mjs scripts/stress/analyze-current-missing-attempt-exposure.mjs -- --baseline=reports/stress/capability-runs/34531412380/per-level-corpus2.json --census=reports/stress/technique-census/33717910218/combined-cells.json --out=tmp/post-1029-missing-attempt-exposure.json`
 
 Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for evidence topology. Search named mechanisms through `research-status-index --compact`; chronology belongs in matched reports or frozen snapshots.
