@@ -1,9 +1,9 @@
 # Solver system audit — 2026-09-10
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-11 — CI run 4165 is green on the recovered branch tip: fast-gate, ordinary deep verification, and heavyweight implementation proofs all passed after the retry-contract assertion repairs.
-> **Decision:** All 23 source-audit areas and the recovery/CI follow-up are closed. Later evidence may still reopen the relevant row under the follow-up rule below.
-> **Remaining gate:** None for this audit campaign.
+> **Status:** concluded-positive; post-closeout hardening active
+> **Last evidence:** 2026-09-11 — CI run 4170 completed successfully on the final closeout tip after the 23-area campaign. Post-closeout hardening below is intentionally narrower than reopening the campaign wholesale.
+> **Decision:** All 23 source-audit areas remain closed as audits. A small set of explicitly-scoped hardening and research follow-ups is now active where the closeout review found an opportunity to replace manual confidence with executable evidence or to consume a concrete audit finding.
+> **Remaining gate:** Finish the post-closeout follow-up checklist below. Later evidence may still reopen an individual audit row under the follow-up rule.
 
 This is the compact ledger for the cross-cutting solver audit requested on 2026-09-10. Canonical design, correctness, and priority changes still belong in their owning docs; this report records what was actually inspected, concrete fixes, and only the follow-up that remains.
 
@@ -34,6 +34,19 @@ This is the compact ledger for the cross-cutting solver audit requested on 2026-
 | 21 | Solver integration / experimental harness | done | Revisited public facade/worker boundaries, portfolio sweep persistence, experiment preflight/manifests, canary discipline, and action/config identity after Audits 1–2 and 15–17. Unsupported raced options fail loudly through `toRaceLevelOpts`; experiment preflight resolves production defaults and checks treatment/workflow drift; persisted attempts share the canonical identity projector. No additional integration path was found that silently changes requested technique/config semantics. Benchmark resume/reuse provenance is a benchmark-specific exception owned by Audit 19. |
 | 22 | Parallel / batch execution | done | Audited raced option projection, persistent worker-pool lifetime, worker prep reuse, result projection, hard cancellation/replacement, and sequential-vs-raced scope. Reused prep/cache/state buffers remain scoped to one level's raced solve, matching their intended per-solve lifetime; per-attempt metrics/config are reset. The raced engine explicitly implements a narrower stage set and rejects unsupported deterministic-work/node/config options instead of masquerading as full-ladder parity. No new cross-level mutable-state leak or silent nested-pool path was found. Raced winning-attempt timing/credit remains intentionally non-deterministic and is documented as such. Audit 19 additionally forbids partial result reuse under across-level parallelism because contention is part of that execution regime. |
 | 23 | Research-data utilization | done | Audited the machine asset registry, human topology guide, research operating model, frontier handoff, and current workstream's cheap-evidence routing. Existing evidence is explicitly queried before generation; high-value joins and independent-unit rules are documented; stale/latest and mixed-era identity caveats are explicit; the large variant-family resource is correctly registered as off-main and the frontier handoff instructs reuse rather than regeneration. The current frontier plan reuses census/lifecycle/provenance/profile/family/trace/exact-label assets and adds only the missing representative-basin selector when earned. No material "available evidence ignored in favor of fresh compute" gap was found. |
+
+## Post-closeout hardening checklist
+
+These items do **not** reopen the 23-area campaign. They are deliberately small follow-ups selected because they either convert a manual correctness argument into executable evidence or consume a concrete audit finding without another broad sweep.
+
+- [ ] **Audit 8 cleanup:** remove the now-redundant pre-executor fresh-work calculation/comment in `orchestration.ts`; retain one canonical fresh/shared-work decision at the whole-ladder retry executor.
+- [ ] **Audit 18 impact check:** quantify whether tri-state production-baseline classification changes any retained decision-bearing census/frontier populations; rebuild only artifacts actually affected.
+- [ ] **Audit 17 migration check:** inventory active fingerprint consumers/baselines for schema-v1 assumptions after fingerprint-v2 adoption; update only live consumers that would otherwise fail or silently compare the wrong schema.
+- [ ] **Audits 4/9/13 executable semantics hardening:** add a bounded micro-level reference/exhaustive harness that can independently exercise successor legality, known-winning-prefix hard-prune survival, and termination/exhaustion semantics. Keep the state space intentionally tiny; this is a semantic oracle, not a corpus-scale benchmark.
+- [ ] **Audit 6 research handoff:** turn the four-beam missed-rescuer menu (`objectiveFirst@5000`, `perimeterSweep` CW/CCW @2000, `intersectionHarvest@2000`) into a fixed-total-work population experiment before any production-menu promotion.
+- [ ] **Audit 20 research handoff:** continue the class-5 frontier program using near-controls and recurrence across materially distinct actions; preserve `unknown` until evidence justifies a shared mechanism.
+
+Commit and document each item independently where practical. CI is checked only opportunistically after jobs are already complete; do not poll or monitor workflow runs while this work proceeds.
 
 ## Follow-up rule
 
