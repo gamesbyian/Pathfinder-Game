@@ -19,9 +19,11 @@ export function renderTechniqueNicheStabilityMarkdown(result, { oldPath, freshPa
     const lines = [
         '# Technique structural-niche temporal stability',
         '',
-        '> **Evidence role:** observational-development temporal holdout over two already-collected technique censuses.',
+        '> **Evidence role:** observational-development extension of `reports/2026-09-05-relative-advantage-pairs-temporal-drift-001.md`.',
         `> **Compared:** \`${oldPath}\` -> \`${freshPath}\`.`,
         `> **Persistent threshold:** same effect direction with |standardized difference| >= ${result.persistentThreshold.toFixed(2)} in both snapshots.`,
+        '',
+        'The Sep-5 report already established that 5/8 pairs changed their single leading structural feature while divergence counts stayed fairly stable. This extension asks the stricter follow-up: whether any material same-direction separator persists anywhere in the stored top-eight effect set.',
         '',
         `Compared ${result.comparedPairCount} frozen action pairs; ${result.persistentPairCount} retain at least one material same-direction structural separator among the top-eight effects stored in both summaries.`,
         '',
