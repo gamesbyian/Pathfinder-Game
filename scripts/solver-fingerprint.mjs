@@ -27,8 +27,9 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { parseLevelPositions } from './level-data-io.mjs';
-import { attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
+import { attemptActionKey, attemptConfigKey } from './portfolio-solve-sweep-lib.mjs';
 
+const FINGERPRINT_SCHEMA_VERSION = 2;
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
     const eq = a.indexOf('=');
@@ -70,13 +71,16 @@ function applyOrder(levels) {
 
 const hashJson = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 
-// Use the same canonical key as persisted sweep reports. Hand-maintained label copies previously
-// collapsed turn-biased repair and every admissible-order attempt onto unrelated configurations,
-// allowing a fingerprint comparison to miss a real attempt-ladder change.
+// Config-family identity is retained for human-compatible winner labels. Fingerprint schema v2 also
+// records canonical action identity, because stage + repair seed are behaviorally meaningful even
+// when two attempts share the same config family.
 const attemptLabel = attempt => attempt ? attemptConfigKey(attempt) : null;
+const actionLabel = attempt => attempt ? attemptActionKey(attempt) : null;
 
 function normalizeAttempt(attempt) {
     return {
+        stageId: attempt?.stageId ?? null,
+        actionKey: actionLabel(attempt),
         gateKey: attempt?.gateKey ?? null,
         scoringProfileId: attempt?.scoringProfileId ?? attempt?.profile ?? null,
         orderingBiasId: attempt?.orderingBiasId ?? attempt?.template ?? null,
@@ -85,6 +89,7 @@ function normalizeAttempt(attempt) {
         status: attempt?.status ?? null,
         elapsedMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
         nodesExpanded: Number.isFinite(attempt?.nodesExpanded) ? attempt.nodesExpanded : null,
+        workSpent: Number.isFinite(attempt?.workSpent) ? attempt.workSpent : null,
         mechanicBucketRetention: !!(attempt?.mechanicBucketRetention ?? attempt?.diverseBeam),
         repair: !!attempt?.repair,
         repairMustTurnBiased: !!attempt?.repairMustTurnBiased,
@@ -92,6 +97,7 @@ function normalizeAttempt(attempt) {
         admissibleOrder: !!attempt?.admissibleOrder,
         admissibleOrderNoTieBreak: !!attempt?.admissibleOrderNoTieBreak,
         admissibleOrderLds: !!attempt?.admissibleOrderLds,
+        seedSalt: attempt?.seedSalt ?? (attempt?.repair ? 0 : null),
         label: attemptLabel(attempt),
     };
 }
@@ -149,7 +155,9 @@ for (const levelNumber of levelOrder) {
             attemptCount: attempts.length,
             winnerIndex,
             winningStrategy: winnerIndex >= 0 ? attempts[winnerIndex].label : null,
+            winningActionKey: winnerIndex >= 0 ? attempts[winnerIndex].actionKey : null,
             failedStrategies: attempts.filter(a => !a.ok).map(a => a.label),
+            failedActionKeys: attempts.filter(a => !a.ok).map(a => a.actionKey).filter(Boolean),
             attemptHash: hashJson(attempts.map(a => ({ ...a, elapsedMs: null }))),
             attempts,
             solutionLength: Array.isArray(result?.solution) ? result.solution.length : null,
@@ -167,7 +175,9 @@ for (const levelNumber of levelOrder) {
             attemptCount: null,
             winnerIndex: -1,
             winningStrategy: null,
+            winningActionKey: null,
             failedStrategies: [],
+            failedActionKeys: [],
             attemptHash: null,
             attempts: [],
             solutionLength: null,
@@ -185,6 +195,7 @@ const solved = results.filter(r => r.ok).map(r => r.level);
 const failed = results.filter(r => !r.ok).map(r => r.level);
 
 const output = {
+    fingerprintSchemaVersion: FINGERPRINT_SCHEMA_VERSION,
     generatedAt: new Date().toISOString(),
     commit: getCommitSha(),
     corpus: 'data/levels.json',

@@ -86,20 +86,20 @@ The ladder is hand-tuned. Historical corpus1 analysis found 79% of solved-level 
   The older fixed-width numeric packing was removed after real Corpus-2 masks exceeded four bits and corrupted adjacent fields. The 2026-08-23 design replaced it with per-level mixed-radix bases plus a string fallback; the later schema-boundary correction preserved that design. Exact beam-state deduplication was separately measured at only ~0.019% true-duplicate slots; removing the coarse mechanism cost real solves. See [`../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md) and [`../reports/2026-08-23-beam-dedup-numeric-key-arena.md`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md).
 - **Mechanic-bucket retention:** `_mechanicBucketSelect` buckets by `(flipperUsedMask, mustCrossMask)` and guarantees `floor(beamWidth/numBuckets)` per bucket before filling globally. Its positional numeric fast path uses the same corrected flipper radix; see [`solver-correctness-hardening.md`](solver-correctness-hardening.md).
 - Must-cross+flipper fallback uses mechanic-bucket retention at width 5000.
-- **Resumability research:** production beam attempts still discard their live frontier when a work cap ends (this is unchanged). An opt-in `resumeFrom`/`pauseAfterPhases` mechanism on `beamSearchFromGate` (default off, no effect on any production call site) now exists and is confirmed, in-memory only, to reproduce an uninterrupted `W+Δ` run's solve/solution/cumulative-work exactly when pausing at `W` and resuming for `Δ` — see [`solver-search-resumability.md`](solver-search-resumability.md) and its linked 2026-09-03 pilot report. This is a working primitive research artifact, not current production scheduling behavior.
+- **Resumability research:** production beam attempts still discard their live frontier when a work cap ends (this is unchanged). An opt-in `resumeFrom`/`pauseAfterPhases` mechanism on `beamSearchFromGate` (default off, no effect on any production call site) now exists and is confirmed, in-memory only, to reproduce an uninterrupted `W+Δ` run's solve/solution/cumulative-work exactly when pausing at `W` and resuming for `Δ`. Continuations are owned by their exact start key/level/prep instance and retained continuations detach pooled mutable beam storage before later attempts can reuse it. See [`solver-search-resumability.md`](solver-search-resumability.md). This is a working primitive research artifact, not current production scheduling behavior.
 
-## Portal carve-outs
+## Portal-specific policy
 
-Four production mechanisms are disabled outright when `level.portalMap.size > 0`, so a portal level searches with a materially smaller rule set than a portal-free one:
+Portal levels no longer simply lose four production mechanisms. Current policy is mixed and evidence-backed:
 
-| Mechanism | Site |
+| Mechanism | Current portal behavior |
 |---|---|
-| Beam coarse-state merge (and its near-tie runner-up retention) | `search.ts` `useCoarseStateMerge` |
-| Connectivity volume check | `topology.ts`, `isConnected` tail |
-| Must-cross neighbour-budget propagation (`PRUNE_MC_NEIGHBOR_BUDGET`) | `lower-bounds.ts` |
-| Parity prune and parity gate filter | `hard-prune-pipeline.ts`, `orchestration.ts` |
+| Beam coarse-state merge / near-tie runner-up | Disabled on portal levels; global restoration and bounded capability-safe salvage are CLOSED NEGATIVE. |
+| Connectivity volume check | Restored for portal levels and PROMOTED after +2/-0 evidence on the portal population. |
+| Must-cross neighbour-budget propagation (`PRUNE_MC_NEIGHBOR_BUDGET`) | Restored for portal+must-cross levels and PROMOTED after +52/-0 evidence. |
+| Parity prune / parity gate filter | Enabled only for the proved same-parity/no-TWIST portal case; broader restoration is not assumed. |
 
-A fifth exclusion (the reserved-intersection wall) was removed in 2026-07-31 after its rationale proved inherited rather than derived. Current exposure measurement and the open restoration gates: [`../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md).
+The reserved-intersection-wall exclusion was removed in 2026-07-31. Current authority and dispositions live in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); historical carve-out inventory: [`../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md`](../reports/2026-09-09-portal-carveout-and-additive-tier-solve-rate-catalog-001.md).
 
 ## Key state
 
@@ -223,7 +223,7 @@ Complete-mode Find-all alone uses this pool; targeted tiers stay main-thread. Se
 | `portfolio-solve-sweep.mjs` | configurable/resumable | repeated hard-population iteration |
 | `run-repair-search.mjs` | direct repair | repair-only; bypasses ladder |
 
-Across-level `--parallel` may beat within-level racing for mostly-fast levels; do not combine them in `stress:measure-solver`. Long batch tools must persist per-level progress: benchmark partial output/`--skip-existing-dir`; portfolio JSONL/`--resume`. Use the cheapest population/budget that decides the gate; do not time competing CPU-bound arms concurrently.
+Across-level `--parallel` may beat within-level racing for mostly-fast levels; do not combine them in `stress:measure-solver`. Long batch tools must persist per-level progress: benchmark partial output/`--skip-existing-dir`; portfolio JSONL/`--resume`. Reused benchmark rows must match the current protocol identity; under across-level parallelism do not splice partial historical reuse into a fresh run when that would change the contention regime. Use the cheapest population/budget that decides the gate; do not time competing CPU-bound arms concurrently.
 
 For isolated method research, prefer `method-probe.mjs --work-budget=<units>` with a generously non-binding `--budget-ms`. The work ceiling is cumulative across the level just like its node ceiling; a row whose wall deadline binds first is marked `deadlineTruncated` and the work-bounded run exits non-zero. Omit `--work-budget` only when the question is deliberately about historical wall-bounded behavior.
 
@@ -267,7 +267,9 @@ Solver allocation's target currency is machine-independent work `applyMove + 12 
 
 - `goalAttractionDisabledRetryBudgetFractionOverride` (`attractionDiversityBudgetFractionOverride` is a deprecated compatibility alias, dual-read only); interactive UIs set 0 along with repair extra budget.
 - Gate: `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY`; zero cost to earlier solves.
-- Historical validation: 4/4 predicted rescues, 2/2 controls unchanged, 3/30 gain in `dfs-plain` sample. See [`reports/2026-07-16-phase-d-attraction-diversity-implementation.md`](../reports/2026-07-16-phase-d-attraction-diversity-implementation.md).
+- Fresh work is the promoted default. `runWholeLadderRetryTier` normalizes promoted default polarity; only explicit `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL: false` selects the historical shared/depleted-pool control.
+- A forced retry whose override does not change effective behavior is skipped centrally rather than buying a behavior-identical second pass.
+- Historical validation: 4/4 predicted rescues, 2/2 controls unchanged, 3/30 gain in `dfs-plain` sample; fresh-pool promotion later confirmed +3/-0. Current disposition: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
 ## Admissible-order node reserve
 

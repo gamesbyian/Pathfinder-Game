@@ -26,6 +26,7 @@
  * OBJECT the run recorded is self-consistent, not that the config object itself is complete (that
  * is effectiveConfig's own producer's job) or that any config value is scientifically appropriate.
  */
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
@@ -53,6 +54,10 @@ function stableStringify(value) {
     return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
 }
 
+function effectiveConfigDigest(effectiveConfig) {
+    return createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
+}
+
 function loadEffectiveConfig(file) {
     const parsed = JSON.parse(readFileSync(file, 'utf8'));
     const summary = parsed?.summary;
@@ -63,8 +68,11 @@ function loadEffectiveConfig(file) {
     if (typeof summary.effectiveConfigDigest !== 'string' || !summary.effectiveConfigDigest) {
         throw new Error(`${file}: summary.effectiveConfigDigest is missing or empty`);
     }
-    const recomputed = stableStringify(summary.effectiveConfig);
-    return { file, effectiveConfig: summary.effectiveConfig, effectiveConfigDigest: summary.effectiveConfigDigest, recomputed };
+    const recomputed = effectiveConfigDigest(summary.effectiveConfig);
+    if (summary.effectiveConfigDigest !== recomputed) {
+        throw new Error(`${file}: summary.effectiveConfigDigest does not match SHA-256 of the canonical summary.effectiveConfig -- report provenance is stale or malformed`);
+    }
+    return { file, effectiveConfig: summary.effectiveConfig, effectiveConfigDigest: summary.effectiveConfigDigest };
 }
 
 /** Field-level diff between two effectiveConfig objects (shallow keys, deep stableStringify per

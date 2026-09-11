@@ -154,12 +154,11 @@ test('attemptConfigKey emits turn-biased repair guidance for a repairTurnBiased 
     assert.equal(key, 'repair|score=repair|guidance=turn-biased');
 });
 
-test('attemptConfigKey prefers must-turn-biased guidance when both repair bias flags are set', () => {
-    // Mirrors orchestration.ts's own precedence (repairMustTurnBiased checked first) -- the two are
-    // mutually exclusive in practice (repair-search.ts never sets both on the same attempt), but the
-    // key derivation must still agree with the source of truth on which one wins if it ever happened.
-    const key = attemptConfigKey({ profile: 'default', repair: true, repairMustTurnBiased: true, repairTurnBiased: true });
-    assert.equal(key, 'repair|score=repair|guidance=must-turn-biased');
+test('attemptConfigKey rejects a hybrid repair guidance identity', () => {
+    assert.throws(
+        () => attemptConfigKey({ profile: 'default', repair: true, repairMustTurnBiased: true, repairTurnBiased: true }),
+        /cannot represent both must-turn-biased and turn-biased guidance at once/i,
+    );
 });
 
 // ── admissible-order-search tier telemetry ───────────────────────────────────
@@ -266,6 +265,10 @@ test('maximal Attempt round-trips completely through attemptRecord and buildRow'
     }, 'legacy-latency-portfolio');
     for (const projected of [direct, row.attempts[0]]) {
         for (const field of PERSISTENT_ATTEMPT_FIELDS) {
+            if (field === 'repairTurnBiased' && MAXIMALLY_POPULATED_SOLVER_ATTEMPT[field] === false) {
+                assert.ok(!(field in projected), 'compact attempt projection intentionally omits false optional guidance flags');
+                continue;
+            }
             assert.deepEqual(projected[field], MAXIMALLY_POPULATED_SOLVER_ATTEMPT[field], `${field} changed during projection`);
         }
         for (const field of INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS) {

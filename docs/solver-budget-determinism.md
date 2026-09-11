@@ -56,7 +56,7 @@ The old pattern in which additive tiers re-converted `timeBudgetMs` into fresh w
 Current exceptions are different in kind:
 
 - **`admissible-order-fallback`:** installs no fresh soft `_workCap`, but the dispatched `admissibleOrderSearch` does not consult that soft cap outside the opt-in equal-work research harness. This was verified harmless; no migration/fix is pending.
-- **`goal-attraction-disabled-retry`:** deliberately shares the already-depleting outer work pool rather than owning a fresh pool. This is not ms-to-work debt. Existing evidence shows the shared work dimension can starve otherwise eligible attempts, so changing it would be a genuine allocation-policy experiment, not cleanup. It is not automatically the current Workstream-2 priority.
+- **`goal-attraction-disabled-retry`:** fresh work is the promoted production default. `runWholeLadderRetryTier` owns the default polarity so `ablation: null` and normalized sparse configs agree; only an explicit `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL: false` selects the historical shared-pool control. Future edits must keep fresh/shared start marks and budget amounts in one decision path rather than recomputing one half at the caller.
 
 `scripts/check-solver-budget-boundaries.mjs` is the ratchet. New time-derived allocation sites are forbidden. The only approved direct ms→work conversion is the centralized boundary resolution used when no explicit work budget exists.
 
@@ -89,6 +89,7 @@ Detailed scheduling policy lives in [`solver-scheduling-policy.md`](solver-sched
 - adding an action/configuration does not grant free aggregate work;
 - protected minima/tranches must be visible inside the shared envelope;
 - retries/tails must displace weaker work, be conditionally routed, or explicitly justify a larger envelope;
+- a retry whose forced override does not change effective behavior must not receive a second funded pass or reserve work merely because it has a distinct stage name;
 - scheduler decisions cannot depend on live host speed or wall-derived throughput;
 - during matched scheduler A/Bs, prefer `strictTotalWorkBudget` when legacy additive semantics would otherwise make total treatment cost differ;
 - if strict containment is intentionally not used, report the actual total-work difference as part of the treatment.

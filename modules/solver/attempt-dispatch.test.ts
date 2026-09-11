@@ -135,6 +135,68 @@ test('enforceAdmissibleOrderWorkCap threads through to admissibleOrderSearch and
   assert.ok(onPrep._workMeter.units >= cappedWorkCap);
 });
 
+test('retained beam continuation survives another beam dispatch that reuses the prep buffer pool', async () => {
+  // Static portfolio can pause beam A, run beam B on the SAME prep, then resume A later. Before
+  // detachBeamContinuationForRetention(), A's continuation pointed directly at prep's pooled beam
+  // state arrays, so B's createState() clear/reuse silently rewrote A's supposedly-paused state.
+  // Existing beam-resumability tests pause and immediately resume one beam and therefore cannot
+  // expose this lifetime bug.
+  const level = makeLevel({
+    grid: { w: 9, h: 9 }, requiredLength: 40,
+    goalKey: PACK(8, 8), gateKeys: [PACK(0, 0)],
+  });
+  const cfg: AttemptConfig = { scoringProfileId: 'default', orderingBias: null, beamWidth: 16 };
+
+  const referencePrep = prepFor(level);
+  const reference = await runAttemptSearch(cfg, PACK(0, 0), level, referencePrep, SCORING_PROFILES.default, 60_000, Date.now(), null);
+  assert.ok(reference, 'sanity: the uninterrupted reference beam must solve');
+
+  const prep = prepFor(level);
+  prep._workCap = Math.max(1, Math.floor(referencePrep._workMeter.units / 3));
+  const paused: NonNullable<Parameters<typeof runAttemptSearch>[9]> = {};
+  const first = await runAttemptSearch(
+    cfg, PACK(0, 0), level, prep, SCORING_PROFILES.default, 60_000, Date.now(), null,
+    Infinity, paused, 0, false, undefined, true,
+  );
+  assert.equal(first, null, 'the capped first dispatch must pause before solving');
+  assert.ok(paused.pausedContinuation, 'capture-on-budget-exit must retain beam A');
+  const retained = paused.pausedContinuation;
+
+  // Snapshot every mutable array detached by the dispatcher, including the nested landmark restore
+  // data. The intervening beam deliberately uses the same prep so the old implementation would
+  // clear/reuse the exact backing arrays retained points at.
+  const before = {
+    path: retained.ws.path.slice(),
+    visited: retained.ws.visited.slice(),
+    edgeUsage: retained.ws.edgeUsage.slice(),
+    crossCounts: retained.ws.crossCounts.slice(),
+    surroundNeighborRemainingMasks: retained.ws.surroundNeighborRemainingMasks.slice(),
+    liveUndo: retained.liveUndo.map(token => ({
+      ...token,
+      surroundNbrRestores: token.surroundNbrRestores
+        ? token.surroundNbrRestores.map(({ i, prevMask }) => ({ i, prevMask }))
+        : token.surroundNbrRestores,
+    })),
+  };
+
+  prep._workCap = Infinity;
+  const interveningCfg: AttemptConfig = { scoringProfileId: 'default', orderingBias: null, beamWidth: 8 };
+  await runAttemptSearch(interveningCfg, PACK(0, 0), level, prep, SCORING_PROFILES.default, 60_000, Date.now(), null);
+
+  assert.deepEqual(retained.ws.path, before.path, 'beam B must not mutate beam A path');
+  assert.deepEqual(retained.ws.visited, before.visited, 'beam B must not mutate beam A visited bitmap');
+  assert.deepEqual(retained.ws.edgeUsage, before.edgeUsage, 'beam B must not mutate beam A edge-use state');
+  assert.deepEqual(retained.ws.crossCounts, before.crossCounts, 'beam B must not mutate beam A crossing state');
+  assert.deepEqual(retained.ws.surroundNeighborRemainingMasks, before.surroundNeighborRemainingMasks, 'beam B must not mutate beam A surround state');
+  assert.deepEqual(retained.liveUndo, before.liveUndo, 'beam B must not mutate beam A nested undo restore data');
+
+  const resumed = await runAttemptSearch(
+    cfg, PACK(0, 0), level, prep, SCORING_PROFILES.default, 60_000, Date.now(), null,
+    Infinity, {}, 0, false, retained, false,
+  );
+  assert.deepEqual(resumed, reference, 'beam A must still resume to the same solution after beam B reused the pool');
+});
+
 test('the race worker routes through the shared dispatcher instead of re-forking it', () => {
   // Structural drift guard: worker-source.mjs must call runAttemptSearch(), not re-hand-roll the
   // repair/beam/DFS branch by calling the individual search functions directly (the exact fork

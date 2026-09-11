@@ -26,13 +26,11 @@ const canonicalCases = [
 
 test('formatAttemptIdentityKey emits the canonical structured grammar for every family', () => {
     for (const [fields, key] of canonicalCases) assert.equal(formatAttemptIdentityKey(fields), key);
-    assert.equal(
-        formatAttemptIdentityKey({
-            scoringProfileId: 'repair', orderingBiasId: null, repair: true,
-            repairMustTurnBiased: true, repairTurnBiased: true,
-        }),
-        'repair|score=repair|guidance=must-turn-biased',
-    );
+    assert.throws(() => formatAttemptIdentityKey({
+        scoringProfileId: 'repair', orderingBiasId: null, repair: true,
+        repairMustTurnBiased: true, repairTurnBiased: true,
+    }), /cannot represent both|mutually exclusive/,
+    'the formatter must reject the hybrid repair behavior that has no canonical identity');
 });
 
 test('canonical attempt identities parse and format deterministically', () => {

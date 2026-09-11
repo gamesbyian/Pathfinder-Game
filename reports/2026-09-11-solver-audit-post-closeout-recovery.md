@@ -1,0 +1,50 @@
+# Solver audit post-closeout recovery — 2026-09-11
+
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-11 — Audit 8's redundant `orchestration.ts` fresh-work-start calculation/comment removed; `npx tsc --noEmit`, `modules/solver/` vitest suite (620 tests), and `modules/solver/production-default-equivalence.test.ts` all pass after the edit.
+> **Decision:** all six post-closeout hardening items are now closed. Audit 8's redundant `orchestration.ts` pre-executor fresh-work calculation/comment has been removed; the canonical executor's `retryTierEffectiveWorkStart` was already the sole source of truth for the work-start decision, so the call site now passes `workStart` through unmodified and only retains its own (still-needed) work-budget-size branch.
+> **Remaining gate:** none — the post-closeout branch checklist is fully implemented, subject to ordinary review/CI evidence.
+> **Parent ledger:** `reports/2026-09-10-solver-system-audit.md`
+> **Recovered branch:** `chatgpt/solver-audit-campaign-2026-09-10`
+
+This note exists because the stalled session left the parent ledger's checkboxes behind the actual branch state. It does not replace that ledger and does not reopen the 23-area source audit.
+
+## Recovered checklist state
+
+| Item | Recovered state | Evidence / disposition |
+|---|---|---|
+| Audit 8 cleanup | **closed** | Runtime semantics were already correct at `runWholeLadderRetryTier`; the old goal-attraction call-site's redundant fresh-vs-shared work-START calculation/comment (stale "opt-in, default OFF" framing of an already-promoted default-ON flag) has been removed from `orchestration.ts`, passing `workStart` straight through to the canonical executor. The work-BUDGET-SIZE branch (`freshWorkPoolEnabled`/`diversityWorkBudget`) is retained and its null-cfg check aligned with the same promoted-default polarity the executor already uses, so a null `ablation` and a normalized non-null config now size the fresh pool identically. |
+| Audit 18 impact check | **closed** | `reports/2026-09-11-technique-census-tristate-impact-check.md`. The retained canonical census has a real 1,074 solved / 888 unsolved frozen-baseline split, so it was not generated through the broken no-baseline fallback. No retained decision-bearing rebuild is justified. |
+| Audit 17 migration check | **closed** | `reports/2026-09-11-fingerprint-v2-migration-check.md`. Active writer/comparator behavior is schema-aware; no committed live fingerprint baseline or workflow consumer requires a v1 migration. |
+| Audits 4/9/13 executable semantics hardening | **closed, implementation awaiting ordinary CI evidence** | `modules/solver/executable-semantics-reference.test.ts` plus `reports/2026-09-11-executable-semantics-reference-harness.md`. Tiny independent simple-path oracle cross-checks production successors, hard-prune survival for every oracle winner, and solve-vs-genuine-exhaustion behavior. |
+| Audit 6 research handoff | **closed as handoff; experiment remains live Workstream 1 work** | `reports/2026-09-11-audit6-action-selection-handoff-reconciliation.md`. The branch ledger's old 8/9 four-beam target is stale relative to the merged post-1,029 class-1 report. Use the current 26-level / 50-missed-winner evidence and its nominated compact menu after active orchestration work reconciles. Do not launch the stale experiment merely to satisfy this branch checklist. |
+| Audit 20 research handoff | **closed as handoff; frontier program remains live** | `reports/2026-09-11-audit20-frontier-handoff-check.md`. Current Workstream authority already preserves class-4 near-controls, `unknown`, all-known-basin first-loss classification, and cross-action recurrence before a shared-capability claim. No duplicate audit-branch frontier mechanism is warranted. |
+
+## Recovery chronology
+
+The recovered branch already contained the complete 23-area campaign, the Audit 17 fingerprint-v2 migration inventory, and the Audit 18 tri-state census code fix. Recovery then added:
+
+1. Audit 18 retained-artifact impact determination, closing without a rebuild.
+2. Audit 6 handoff reconciliation against newer merged class-1 evidence.
+3. Audit 20 handoff integrity check against the current frontier authority.
+4. The independent Audits 4/9/13 executable-semantics micro-oracle and its scope note.
+
+CI is not a sequencing gate for this recovery. Completed CI/review evidence may still reopen the corresponding item under the parent ledger's existing follow-up rule.
+
+## Documentation reconciliation
+
+Current authorities were reconciled after the campaign:
+
+- `solver-budget-determinism.md`: promoted fresh-work semantics and behavior-distinct retry funding.
+- `solver-search-resumability.md`: exact ownership, pooled-state detachment, and cross-policy resume contract.
+- `solver-evaluation-evidence.md`: tri-state baseline provenance, indeterminate truncation/error handling, exact protocol reuse, parallel contention integrity, and fingerprint schema boundaries.
+- `solver-research-data-assets.md`: fingerprint-v2, tri-state census, and protocol-aware reuse guidance.
+- `solver-future-work.md`: frontier provenance gate and closed/simple resumability forms.
+- `solver-optimization-workstreams.md`: priority order preserved; the class-1 candidate now explicitly uses the current 26-level population under fixed total work, not the stale 8/9 menu.
+- `solver-architecture.md`: portal restorations, fresh-work retry policy, continuation hardening, and benchmark reuse reconciled to current behavior.
+
+`solver-research-data-assets.json` remains structurally valid. Its individual asset caveat strings have not been duplicated with these cross-asset rules because the human guide and `solver-evaluation-evidence.md` now own them; update the JSON only when an asset-specific field/location/join contract changes.
+
+## Audit 8 cleanup (completed)
+
+Audit 8 was cleanup debt, not an unresolved runtime defect. The canonical executor already owned the promoted default-ON fresh-work-start decision for `goal-attraction-disabled-retry` via `retryTierEffectiveWorkStart`; the old `orchestration.ts` caller still contained the pre-promotion `freshWorkPoolEnabled`-gated `diversityWorkStart` calculation and a long stale default-OFF explanation. That duplicated decision/comment has been removed — the call site now passes `workStart` straight through — while preserving the explicit-false control behavior and the tier's intended work-budget sizing (kept as its own, still-necessary branch, since the executor does not own budget *size*, only *start*). The post-closeout branch checklist is now fully implemented, subject to ordinary review/CI evidence.

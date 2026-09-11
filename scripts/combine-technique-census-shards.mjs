@@ -39,7 +39,13 @@ const CORPUS_FILES = {
     corpus2: 'data/stress/stress-levels-random.json',
 };
 
-let wasSolvedBaseline = () => false;
+// Production-baseline membership is deliberately tri-state. `null` means the baseline provenance
+// is unavailable, not "production failed this level". The old fallback returned false while logging
+// that the population was unknown; downstream `!wasSolved(...)` then silently promoted every unknown
+// stress row into the production-unsolved/oracle population. Published levels remain a known solved
+// reference population by contract; stress rows require the frozen baseline supplied by --plan.
+let wasSolvedBaseline = corpus => corpus === 'published' ? true : null;
+let baselineStatus = PLAN_FILE ? 'unavailable' : 'not-provided';
 if (PLAN_FILE) {
     try {
         const plan = JSON.parse(readFileSync(path.resolve(PLAN_FILE), 'utf8'));
@@ -48,9 +54,10 @@ if (PLAN_FILE) {
             corpus1: new Set(baseline.corpus1?.solvedIds ?? []),
             corpus2: new Set(baseline.corpus2?.solvedIds ?? []),
         };
-        wasSolvedBaseline = (corpus, levelId) => corpus === 'published' || (solvedIds[corpus]?.has(levelId) ?? false);
+        wasSolvedBaseline = (corpus, levelId) => corpus === 'published' ? true : (corpus in solvedIds ? solvedIds[corpus].has(levelId) : null);
+        baselineStatus = 'loaded';
     } catch (err) {
-        console.error(`combine: could not load baseline via --plan (${PLAN_FILE}); treating levels as unknown (${err?.message ?? err}).`);
+        console.error(`combine: could not load baseline via --plan (${PLAN_FILE}); preserving stress-level production status as unknown (${err?.message ?? err}).`);
     }
 }
 
@@ -102,6 +109,9 @@ if (!DERIVED_ONLY) {
 
 function identityKey(r) { return techniqueCensusIdentityKey(r); }
 function wasSolved(r) { return wasSolvedBaseline(r.corpus, r.levelId); }
+const isKnownSolved = r => wasSolved(r) === true;
+const isKnownUnsolved = r => wasSolved(r) === false;
+const isUnknownBaseline = r => wasSolved(r) == null;
 function techniqueStats(tier, filterFn = () => true) {
     const byKey = new Map();
     for (const r of allResults) {
@@ -157,25 +167,26 @@ function statsTable(byKey, uniqueSolveCounts) {
     ].join('\n');
 }
 
-const t1StatsUnsolved = techniqueStats('T1', r => !wasSolved(r));
-const t1StatsSolved = techniqueStats('T1', r => wasSolved(r));
-const t1SolversByLevelUnsolved = solversByLevel(r => !wasSolved(r));
-const t1SolversByLevelSolved = solversByLevel(r => wasSolved(r));
+const t1StatsUnsolved = techniqueStats('T1', isKnownUnsolved);
+const t1StatsSolved = techniqueStats('T1', isKnownSolved);
+const t1SolversByLevelUnsolved = solversByLevel(isKnownUnsolved);
+const t1SolversByLevelSolved = solversByLevel(isKnownSolved);
 const uniqueSolveCountsUnsolved = uniqueCounts(t1SolversByLevelUnsolved);
 const uniqueSolveCountsSolved = uniqueCounts(t1SolversByLevelSolved);
-const unsolvedLevelKeys = new Set(allResults.filter(r => r.tier === 'T1' && !wasSolved(r)).map(r => `${r.corpus}/${r.levelPos}`));
+const unsolvedLevelKeys = new Set(allResults.filter(r => r.tier === 'T1' && isKnownUnsolved(r)).map(r => `${r.corpus}/${r.levelPos}`));
+const unknownBaselineLevelKeys = new Set(allResults.filter(r => r.tier === 'T1' && isUnknownBaseline(r)).map(r => `${r.corpus}/${r.levelPos}`));
 const oracleSolved = t1SolversByLevelUnsolved.size;
-const oracleLine = `**Oracle union**: of ${unsolvedLevelKeys.size} levels currently unsolved by the production ladder at the frozen baseline, ${oracleSolved} (${unsolvedLevelKeys.size ? (100 * oracleSolved / unsolvedLevelKeys.size).toFixed(1) : '0.0'}%) are solved by at least one T1 isolated technique at the full 50,000,000-node budget.`;
-const solvedLevelKeys = new Set(allResults.filter(r => r.tier === 'T1' && wasSolved(r)).map(r => `${r.corpus}/${r.levelPos}`));
+const oracleLine = `**Oracle union**: of ${unsolvedLevelKeys.size} levels known unsolved by the production ladder at the frozen baseline, ${oracleSolved} (${unsolvedLevelKeys.size ? (100 * oracleSolved / unsolvedLevelKeys.size).toFixed(1) : '0.0'}%) are solved by at least one T1 isolated technique at the full 50,000,000-node budget. Production status is unknown for ${unknownBaselineLevelKeys.size} additional T1 level(s); they are excluded from this claim.`;
+const solvedLevelKeys = new Set(allResults.filter(r => r.tier === 'T1' && isKnownSolved(r)).map(r => `${r.corpus}/${r.levelPos}`));
 const solvedWithZeroIsolatedSolvers = [...solvedLevelKeys].filter(lk => !t1SolversByLevelSolved.has(lk));
-const regressionLine = `**Regression check**: of ${solvedLevelKeys.size} levels the production ladder currently solves, ${solvedWithZeroIsolatedSolvers.length} have literally ZERO T1 isolated-technique solvers at the full budget — worth investigating directly if nonzero (see level-technique-coverage.json for which).`;
+const regressionLine = `**Regression check**: of ${solvedLevelKeys.size} levels known solved by the production ladder, ${solvedWithZeroIsolatedSolvers.length} have literally ZERO T1 isolated-technique solvers at the full budget — worth investigating directly if nonzero (see level-technique-coverage.json for which). Unknown-baseline levels are excluded.`;
 writeFileSync(path.join(OUT_DIR, 'technique-capability-summary.md'), [
     '# Technique capability census — technique summary', '',
-    `Cross-matrix: ${allResults.length} unique cells (${deduped.duplicatesRemoved} duplicate cell result(s) removed). Missing shards: ${missing.length ? missing.join(', ') : 'none'}.`, '',
+    `Cross-matrix: ${allResults.length} unique cells (${deduped.duplicatesRemoved} duplicate cell result(s) removed). Missing shards: ${missing.length ? missing.join(', ') : 'none'}. Production baseline: ${baselineStatus}.`, '',
     oracleLine, '', regressionLine, '',
-    '## T1 — previously-unsolved population (the capability-gap read)', '',
+    '## T1 — known production-unsolved population (the capability-gap read)', '',
     statsTable(t1StatsUnsolved, uniqueSolveCountsUnsolved), '',
-    '## T1 — previously-solved population (the regression-safety read)', '',
+    '## T1 — known production-solved population (the regression-safety read)', '',
     statsTable(t1StatsSolved, uniqueSolveCountsSolved), '',
 ].join('\n'));
 
@@ -263,7 +274,7 @@ for (const r of allResults) {
 }
 const coverageRows = [...coverage.values()].map(c => ({ ...c, solvedByT1: [...c.solvedByT1] }));
 writeFileSync(path.join(OUT_DIR, 'level-technique-coverage.json'), JSON.stringify(coverageRows));
-const zeroIsolatedSolves = coverageRows.filter(c => !c.wasSolvedByProduction && c.solvedByT1.length === 0);
+const zeroIsolatedSolves = coverageRows.filter(c => c.wasSolvedByProduction === false && c.solvedByT1.length === 0);
 
 const t1ByLevelTechnique = new Map();
 for (const r of allResults) {
@@ -311,7 +322,7 @@ function variantRows() {
         if (r.ok && !baselineOk) s.flippedOn++;
         if (!r.ok && baselineOk) {
             s.regressed++;
-            if (wasSolved(r)) s.regressedOnSolvedLevel++;
+            if (isKnownSolved(r)) s.regressedOnSolvedLevel++;
         }
     }
     for (const r of allResults) {
@@ -332,7 +343,7 @@ function variantRows() {
         if (r.ok && !baselineOk) s.flippedOn++;
         if (!r.ok && baselineOk) {
             s.regressed++;
-            if (wasSolved(r)) s.regressedOnSolvedLevel++;
+            if (isKnownSolved(r)) s.regressedOnSolvedLevel++;
         }
     }
     return byLabel;
@@ -379,10 +390,11 @@ const topLine = [
     '# Technique capability census — run summary', '',
     `Total cells: ${allResults.length} unique (${deduped.duplicatesRemoved} duplicate result(s) removed; missing shards: ${missing.length ? missing.join(', ') : 'none'}; still-partial shards: ${partial.length ? partial.join(', ') : 'none'})`,
     `Solved: ${solvedTotal}`,
+    `Production baseline: ${baselineStatus}; unknown T1 level statuses: ${unknownBaselineLevelKeys.size}.`,
     oracleLine,
     regressionLine,
     `Variant/flag regressions on a previously-solved level: ${totalRegressedOnSolvedLevel} — see flag-sensitivity.md.`,
-    `Previously-unsolved levels with zero isolated-technique solves anywhere: ${zeroIsolatedSolves.length}`,
+    `Known production-unsolved levels with zero isolated-technique solves anywhere: ${zeroIsolatedSolves.length}`,
     `Hint files changed: ${hintFilesChanged}`,
     '', `Plan: \`${PLAN_FILE ?? '(not recorded)'}\``,
 ].join('\n');

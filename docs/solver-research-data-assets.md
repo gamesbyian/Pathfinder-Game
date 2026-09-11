@@ -79,9 +79,9 @@ Do not collapse these:
 
 1. **Structural level fingerprint** (`modules/domain/level-fingerprint.ts`): versioned puzzle-structure identity/deduplication.
 2. **Solution-space profile/fingerprint** (`solver-solution-profile.md`): offline summary of known accepted paths.
-3. **Solver determinism fingerprint** (`scripts/solver-fingerprint.mjs`): execution/search-behavior regression signature.
+3. **Solver determinism fingerprint** (`scripts/solver-fingerprint.mjs`): versioned execution/search-behavior regression signature.
 
-Only the first is a structural identity primitive. None permits per-level production steering from historical results.
+Solver determinism fingerprints are schema-bound evidence. Schema v2 includes canonical action/stage/seed identity; v1 and v2 are not interchangeable baselines. Only the first fingerprint family is a structural identity primitive. None permits per-level production steering from historical results.
 
 ## Scientific boundaries
 
@@ -97,9 +97,15 @@ A policy can be level-blind and still be overfit to repeatedly mined Corpus 2 or
 
 Variant siblings, common generator batches, repeated hint rediscoveries, and multiple rows from one level are not automatically independent. Hold out whole families/parents where family dependence matters.
 
-### Freshness is evidence-specific
+### Missing provenance is unknown
+
+Do not infer a negative from an absent join. In particular, technique-census production-baseline status is tri-state: `true`, `false`, or `unknown`. A missing/failing baseline join must remain `unknown`; it cannot populate a “production-unsolved” or frontier cohort. The retained canonical census affected by the 2026-09-10 audit had a valid frozen baseline and required no regeneration.
+
+### Freshness and reuse are evidence-specific
 
 `latest` files are convenience pointers, not proof that the underlying evidence matches current code. Inspect commit/protocol metadata. Technique capability can drift under heuristic changes; rebuild/rejoin the capability map after meaningful solver changes before relying on old support classes.
+
+Reusable benchmark/census rows need compatible meaning-changing provenance, not merely the same level id: solver/fingerprint schema, corpus/content identity, scheduler/config/flags, deterministic budget semantics, and relevant execution mode. Across-level parallel runs must not mix partially reused rows with newly executed rows when that would change the contention regime.
 
 ### Normalize historical identities
 

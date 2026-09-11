@@ -114,6 +114,8 @@ export function parseAttemptIdentityKey(key) {
 
 /** @param {AttemptIdentityFields} fields @returns {string} */
 export function formatAttemptIdentityKey(fields) {
+    if (fields.repairMustTurnBiased && fields.repairTurnBiased)
+        throw new Error('Repair attempt identity cannot represent both must-turn-biased and turn-biased guidance at once.');
     if (fields.admissibleOrder) {
         const tieBreak = fields.admissibleOrderNoTieBreak ? 'none' : fields.scoringProfileId;
         return 'admissible-order|tieBreak=' + tieBreak + '|lds=' + (fields.admissibleOrderLds ? 'on' : 'off');

@@ -5,6 +5,7 @@
 // must-cross, surround/turn landmarks, and exact length/intersection targets.
 
 import { validateCandidatePath } from './domain/path-validator.js';
+import { validateRawLevel } from './domain/level-schema.js';
 import { normalizeRawLevel } from './solver/normalization.js';
 import { prepLevel } from './solver/prep.js';
 import { createVarietySearch as makeVarietySearch } from './solver/variety-search.js';
@@ -50,7 +51,18 @@ function createSolver(): SolverApi {
         if (!rawLevel || typeof rawLevel !== 'object') throw new Error('Solver: missing level');
         const candidate = rawLevel as Record<string, unknown>;
         // Raw normalisation — applied when opts.source === 'raw' or the level is in raw wire format.
+        // This is a public runtime boundary accepting `unknown`, so enforce the canonical raw schema
+        // before translating into solver bitmasks/typed arrays. One content-authoring rule is
+        // deliberately exempted here: published Pathfinder levels are square, but the solver itself
+        // supports rectangles and its synthetic mechanic/research fixtures rely on that capability.
+        // Square-ness is therefore not a representation-safety invariant; bounds, cardinality,
+        // occupancy, coordinate validity, etc. still are and remain enforced below.
         if ((opts.source === 'raw') || (candidate.goal && Array.isArray(candidate.gates) && !Array.isArray(candidate.gateKeys))) {
+            const validation = validateRawLevel(rawLevel);
+            const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
+            if (solverBoundaryErrors.length > 0) {
+                throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
+            }
             return normalizeRawLevel(rawLevel, opts.levelNumber ?? opts.level ?? null);
         }
         return rawLevel as NormalizedLevel;

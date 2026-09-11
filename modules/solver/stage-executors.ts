@@ -18,6 +18,26 @@ type LadderRunner = (
     earlyConfigNodeBudget?: number, lateConfigStart?: number,
 ) => Promise<{ solution: number[] | null; attempts: Attempt[]; earlyNodeBudgetReached?: boolean }>;
 
+function effectiveFeatureValue(cfg: AblationConfig | null | undefined, feature: string): boolean {
+    if (cfg && Object.prototype.hasOwnProperty.call(cfg, feature)) return cfg[feature] === true;
+    // A normalized config Proxy also resolves implicit defaults on direct property reads, but the
+    // explicit registry fallback keeps this helper correct for null and for sparse raw test/tooling
+    // configs passed directly to the executor.
+    if (cfg && cfg[feature] !== undefined) return cfg[feature] === true;
+    return !OPT_IN_FEATURES.has(feature);
+}
+
+/** True only when at least one forced retry treatment actually changes the caller's behavior. */
+export function retryTierOverridesChangeBehavior(
+    cfg: AblationConfig | null | undefined,
+    overrides: Readonly<Record<string, boolean>>,
+): boolean {
+    for (const [feature, forcedValue] of Object.entries(overrides)) {
+        if (effectiveFeatureValue(cfg, feature) !== forcedValue) return true;
+    }
+    return false;
+}
+
 /** Forced flags win; other explicit settings pass through; unset opt-ins default false and all
  * other unset flags true, matching solver sparse-config semantics. */
 export function buildRetryTierAblationOverride(originalCfg: AblationConfig | null | undefined, overrides: Readonly<Record<string, boolean>>): AblationConfig {
@@ -30,6 +50,34 @@ export function buildRetryTierAblationOverride(originalCfg: AblationConfig | nul
             return true;
         },
     });
+}
+
+/**
+ * Canonical work-pool start for whole-ladder retry execution.
+ *
+ * `STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL` was promoted to production-default ON
+ * on 2026-09-10, but its orchestration call site retained the old opt-in-only
+ * `cfg && cfg.FLAG === true` read. That made `ablation: null` use the depleted solve-wide pool while
+ * any normalized non-null config used a fresh pool. Enforce the promoted polarity here as a
+ * runtime safety net at the one executor that owns the retry: null/unset means ON, only explicit
+ * false means shared. This also keeps sparse normalized configs and the null production fast path
+ * behaviorally aligned instead of letting mere config-object presence change scheduling.
+ *
+ * The caller still supplies the stage work-budget amount. Today the promoted tier's production
+ * fraction is 1.0, so changing the start mark is the entire default-path fix. A future non-1.0
+ * production fraction must keep the caller's amount and this start-mark rule in lockstep.
+ */
+export function retryTierEffectiveWorkStart(
+    stageId: SolverStageId,
+    cfg: AblationConfig | null | undefined,
+    requestedWorkStart: number,
+    currentWork: number,
+): number {
+    if (stageId === 'goal-attraction-disabled-retry'
+        && cfg?.STRATEGY_GOAL_ATTRACTION_DISABLED_RETRY_FRESH_WORK_POOL !== false) {
+        return currentWork;
+    }
+    return requestedWorkStart;
 }
 
 export interface WholeLadderRetryTierInput {
@@ -48,7 +96,7 @@ export interface WholeLadderRetryTierInput {
     totalBudgetMs: number;
     /** Absolute cumulative node ceiling. */
     nodeCeiling: number;
-    /** Stage policy chooses shared or fresh work pool; this adapter does not infer it. */
+    /** Stage policy chooses shared or fresh work pool; this adapter normalizes promoted default polarity. */
     workBudget: number;
     workStart: number;
     /** Subdivide node ceiling into cumulative per-config staircase steps. */
@@ -59,18 +107,31 @@ export interface WholeLadderRetryTierResult {
     solution: number[] | null;
 }
 
-/** Run one forced-ablation whole-ladder retry and always restore `prep._cfg`. */
+/**
+ * Run one forced-ablation whole-ladder retry and always restore `prep._cfg`.
+ *
+ * A retry whose forced treatment is already the caller's effective setting is behavior-identical
+ * to the failed ladder it follows. Running it again with additive/fresh budget corrupts ablation
+ * attribution ("feature X rescued this" can really mean "the same X-off ladder got a second funded
+ * pass") and wastes compute. Skip such retries centrally. Budget-plan eligibility is audited
+ * separately because an earlier reserve may still need to be suppressed before this executor is
+ * reached; this guard guarantees at least that no duplicate search work is dispatched.
+ */
 export async function runWholeLadderRetryTier(input: WholeLadderRetryTierInput): Promise<WholeLadderRetryTierResult> {
     const { stageId, proxyOverrides, activeGates, mainConfigs, level, prep, yieldFn, runLadder,
         totalBudgetMs, nodeCeiling, workBudget, workStart, staircase } = input;
     const originalCfg = prep._cfg;
+    if (!retryTierOverridesChangeBehavior(originalCfg, proxyOverrides)) {
+        return { attempts: [], solution: null };
+    }
+    const effectiveWorkStart = retryTierEffectiveWorkStart(stageId, originalCfg, workStart, prep._workMeter.units);
     prep._cfg = buildRetryTierAblationOverride(originalCfg, proxyOverrides);
     try {
         const start = Date.now();
         const staircaseEntry = staircase ? (prep._metrics ? prep._metrics.nodesExpanded : 0) : undefined;
         const staircaseStart = staircase ? 0 : undefined;
         const raw = await runLadder(activeGates, mainConfigs, level, prep, totalBudgetMs, start, yieldFn,
-            nodeCeiling, workBudget, workStart, staircaseEntry, staircaseStart);
+            nodeCeiling, workBudget, effectiveWorkStart, staircaseEntry, staircaseStart);
         const attempts = raw.attempts.map(attempt => withSolverStage(attempt, stageId));
         // Staircase reuses lateConfigStart=0, which makes runners set this unrelated main-search tag.
         if (staircase) for (const attempt of attempts) delete attempt.mainSearchLateReserve;
