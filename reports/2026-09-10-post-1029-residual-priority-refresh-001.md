@@ -46,6 +46,12 @@ The output needed for prioritization is small: current counts for (a) missing ex
 
 `STRATEGY_PORTAL_COARSE_STATE_MERGE` remains correctly **default-OFF**. Its global promotion failed the specialist-retention gate: the frozen 954-level portal A/B produced **158 gains / 12 losses (net +146)**, and `R01273`'s sole isolated beam winner still failed under treatment at 10x the matched-work envelope. That is a real capability regression, not a budget/order artifact.
 
+The development cohorts are now frozen separately so follow-up work does not need to reconstruct them from report prose:
+
+- all 12 treatment losses: [`data/stress/portal-coarse-state-merge-loss-salvage-001-ids.txt`](../data/stress/portal-coarse-state-merge-loss-salvage-001-ids.txt);
+- six losses with a sole known isolated-T1 beam winner: [`data/stress/portal-coarse-state-merge-specialist-loss-salvage-001-ids.txt`](../data/stress/portal-coarse-state-merge-specialist-loss-salvage-001-ids.txt);
+- the original 158 treatment gains remain frozen at [`data/stress/portal-coarse-state-merge-gain-referee-check-001-ids.txt`](../data/stress/portal-coarse-state-merge-gain-referee-check-001-ids.txt).
+
 However, a mechanism with 158 referee-valid gross gains is too large to classify as low-value merely because the unconditional form is unsafe. The next question is now **salvage**, not promotion:
 
 - use the frozen 158-gain / 12-loss flip set as the development population;
