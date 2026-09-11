@@ -105,7 +105,44 @@ export function validateAttemptConfigContract(attemptConfig: AttemptConfig): voi
   }
 }
 
-export function runAttemptSearch(
+/**
+ * Detach a beam continuation from the per-prep STATE_BUF_BEAM backing arrays before retaining it
+ * beyond this dispatch call.
+ *
+ * `beamSearchFromGate` deliberately captures its live execution state without copying: direct
+ * pause/resume immediately hands that state back to the same search and pays no snapshot cost.
+ * Static-portfolio resumability has a different lifetime, though. It can retain beam A, dispatch
+ * beam B on the same `prep`, and only resume A after the whole first pass. `createState` reuses and
+ * clears the same per-prep beam buffer for B, which otherwise mutates A's captured `visited` and
+ * `edgeUsage` arrays behind its back. The same principle applies to the other mutable state arrays
+ * and the landmark restore arrays nested in undo tokens.
+ *
+ * The frontier/parent-pointer tree is immutable after capture, so it is intentionally shared. Owner
+ * sentinels also stay unchanged: the detached snapshot still belongs to the exact same
+ * startKey/level/prep and resumes against the same cumulative work meter. This allocation occurs
+ * only when a caller explicitly requested continuation capture; ordinary production beam search
+ * remains allocation-identical.
+ */
+export function detachBeamContinuationForRetention(continuation: BeamContinuation): BeamContinuation {
+  const ws = continuation.ws;
+  const detachedWs = {
+    ...ws,
+    path: ws.path.slice(),
+    visited: ws.visited.slice(),
+    edgeUsage: ws.edgeUsage.slice(),
+    crossCounts: ws.crossCounts.slice(),
+    surroundNeighborRemainingMasks: ws.surroundNeighborRemainingMasks.slice(),
+  };
+  const detachedUndo = continuation.liveUndo.map(token => ({
+    ...token,
+    surroundNbrRestores: token.surroundNbrRestores
+      ? token.surroundNbrRestores.map(({ i, prevMask }) => ({ i, prevMask }))
+      : token.surroundNbrRestores,
+  }));
+  return { ...continuation, ws: detachedWs, liveUndo: detachedUndo };
+}
+
+export async function runAttemptSearch(
   attemptConfig: AttemptConfig,
   gateKey: number,
   level: NormalizedLevel,
@@ -142,13 +179,21 @@ export function runAttemptSearch(
   const cfg = prep._cfg;
   const enableElitePrefixDfs = cfg && cfg.STRATEGY_REPAIR_ELITE_PREFIX_DFS === true;
   const enableBeamSeed = cfg && cfg.STRATEGY_REPAIR_BEAM_SEED === true;
-  return admissibleOrder
-    ? admissibleOrderLds
+
+  if (admissibleOrder) {
+    return admissibleOrderLds
       ? admissibleOrderSearchLDS(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile)
-      : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile, Infinity, enforceAdmissibleOrderWorkCap)
-    : repair
-    ? repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed)
-    : beamWidth
-    ? beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, beamWidth, yieldFn, mechanicBucketRetention, out, nodeBudget, beamResumeFrom, undefined, captureBeamContinuationOnBudgetExit)
-    : dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, out, nodeBudget);
+      : admissibleOrderSearch(gateKey, level, prep, budgetMs, startTime, yieldFn, out, nodeBudget, admissibleOrderProfile, Infinity, enforceAdmissibleOrderWorkCap);
+  }
+  if (repair) {
+    return repairSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, !!repairMustTurnBiased, nodeBudget, out, seedSalt, false, false, false, !!repairTurnBiased, !!enableElitePrefixDfs, !!enableBeamSeed);
+  }
+  if (beamWidth) {
+    const path = await beamSearchFromGate(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, beamWidth, yieldFn, mechanicBucketRetention, out, nodeBudget, beamResumeFrom, undefined, captureBeamContinuationOnBudgetExit);
+    if (out?.pausedContinuation) {
+      out.pausedContinuation = detachBeamContinuationForRetention(out.pausedContinuation);
+    }
+    return path;
+  }
+  return dfsFromGateLDS(gateKey, level, prep, profile, budgetMs, startTime, orderingBias, yieldFn, out, nodeBudget);
 }
