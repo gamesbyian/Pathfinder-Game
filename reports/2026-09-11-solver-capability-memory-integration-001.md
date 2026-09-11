@@ -11,9 +11,9 @@ A solver experiment has two separable outputs:
 1. its **promotion disposition** under the tested product/evidence contract; and
 2. the **capability it demonstrated, displaced, or exposed**.
 
-Pathfinder already had strong machinery for the first. The second survived unevenly across dated reports, experiment prose, opt-in code, old benchmarks, and human memory. That created a blind spot: a treatment could be correctly closed as production-negative while still showing a large, distinct search basin that current production did not cover.
+Pathfinder already had strong machinery for the first. The second survived unevenly across reports, experiment prose, opt-in code, old benchmarks, and human memory. That can erase useful information when a treatment is correctly production-negative but still reaches a distinct search basin.
 
-The September 11 review made this concrete. `STRATEGY_PORTAL_COARSE_STATE_MERGE` is correctly CLOSED NEGATIVE because its +158/-12 frozen A/B contains a genuine capability regression, yet the 158 gains are still valuable evidence that this alternate survivor policy reaches a large basin. Similar, smaller examples exist in rejected scorer/guidance/repair/restart forms and in capability displaced by accepted changes. The useful scientific question is not “should the rejected policy be resurrected?” It is “what generic property explains the complementary capability, and can current production capture it level-blindly under a fair work contract?”
+The September 11 review made this concrete. `STRATEGY_PORTAL_COARSE_STATE_MERGE` is correctly CLOSED NEGATIVE because its +158/-12 frozen A/B contains a genuine capability regression, yet the 158 gains remain useful evidence about an alternate survivor policy. Similar smaller examples exist in rejected scorer/guidance/repair/restart forms and capability displaced by accepted changes. The scientific follow-up is to explain complementary capability generically, not resurrect the rejected policy by identity.
 
 ## Durable rule
 
@@ -21,7 +21,7 @@ Added to [`solver-research-operating-model.md`](../docs/solver-research-operatin
 
 > A promotion verdict and a capability signature are separate facts. A negative promotion verdict does not erase demonstrated complementary capability; preserve the evidence, not necessarily the implementation.
 
-This does **not** weaken the rule against retaining failed code for posterity and does **not** weaken [`solver-level-blindness.md`](../docs/solver-level-blindness.md). Exact historical winners, gain/loss membership, old solver outcomes, and capability-memory membership remain forbidden production routing inputs.
+Exact historical winners, gain/loss membership, old solver outcomes, and capability-memory membership remain forbidden production-routing inputs.
 
 ## Implementation
 
@@ -32,59 +32,43 @@ New:
 - `scripts/solver-capability-memory-lib.mjs`
 - `scripts/solver-capability-memory.mjs`
 
-The CLI takes a manifest naming one baseline plus candidate evidence and emits a rebuildable JSON/Markdown view. It deliberately creates no new standing truth database.
+The CLI takes a manifest naming one baseline plus candidate evidence and emits a rebuildable JSON/Markdown view. It creates no new standing truth database.
 
-Candidate evidence can be either:
-
-- a **row report**, joined directly to the supplied baseline; or
-- a **historical signature** containing explicit historical gain/loss IDs from an owning report.
+Candidate evidence can be either a **row report** or an explicit historical **gain/loss signature**.
 
 For row reports the analyzer:
 
-- joins only IDs actually observed in both arms;
-- treats missing candidate rows as unknown;
-- treats errors/deadline truncation as inconclusive, never ordinary failure;
-- computes gains, losses, residual denominator, work/nodes/wall aggregates, and work per gain where fields exist;
-- computes unique capability, pairwise overlap/Jaccard, and greedy residual-union coverage.
+- joins only IDs actually observed in both baseline and candidate;
+- requires both baseline and candidate rows to be conclusive before calling a gain/loss;
+- treats missing rows, errors and deadline truncation as unknown/inconclusive, never ordinary failure;
+- reports baseline conclusive/residual/unknown counts and hashes;
+- computes gains, losses, residual denominator, work/nodes/wall aggregates, work per gain, unique capability, pairwise overlap/Jaccard, and greedy residual-union coverage.
 
 For historical signatures it:
 
 - preserves demonstrated historical gains/losses;
-- intersects historical gains with the named current residual as **nominations**;
-- reports **zero current-baseline confirmed gains** by construction;
+- intersects gains only with the named **conclusive** current residual as nominations;
+- reports zero current-baseline confirmed gains by construction;
 - carries an explicit warning that old same-level outcomes cannot steer production.
 
 This keeps historical archaeology useful without laundering it into current capability.
 
 ### 2. Capability composition in solver health
 
-Updated `scripts/append-solver-health-record.mjs` using data the existing `solver-stress-refresh.yml` workflow already materializes.
+Updated `scripts/append-solver-health-record.mjs` using artifacts the existing `solver-stress-refresh.yml` workflow already produces. No solver compute is added.
 
-New health fields require **zero additional solver compute**:
+New health fields include:
 
-- population-ID hash per corpus;
-- solved-ID hash per corpus;
-- per-stage `workSpent` alongside existing reach/attempts/solves/nodes;
-- `capabilityChurn` against the most recent protocol-compatible tracked capability run:
-  - gained count plus gain-set hash;
-  - lost count plus loss-set hash;
-  - retained count;
-  - comparison run ID.
+- population-ID hash and solved-ID hash per corpus;
+- per-stage `workSpent` alongside reach/attempts/solves/nodes;
+- compact normalized protocol object plus protocol hash;
+- `capabilityChurn` against the most recent compatible tracked run: gained/lost/retained counts, gain/loss set hashes, and comparison run ID.
 
-The timeline deliberately does not duplicate exact churn IDs. The comparison run ID plus the current run ID identify the existing per-level snapshots whose solved sets can be diffed for forensic follow-up.
+The timeline deliberately does not duplicate exact churn IDs. The current/comparison run IDs point to existing per-level snapshots whose solved sets can be diffed for forensic follow-up.
 
-A prior run is eligible only when the retained summary/per-level snapshot establishes matching:
+For ordinary workflow-dispatch runs, protocol identity is derived directly from `GITHUB_EVENT_PATH`: the complete dispatch-input map is normalized with current workflow defaults filled for omitted inputs. Callers may alternatively provide `summary.protocol`. This avoids changing solver execution or adding workflow plumbing merely to reserialize inputs.
 
-- level-blind mode;
-- deterministic mode;
-- enabled flag set;
-- disabled flag set;
-- corpus presence/totals;
-- exact population-ID hash.
-
-Thus an experimental flag run cannot silently become the comparator for ordinary production health. If no compatible retained snapshot exists, churn is `null`, not `0`.
-
-This lets a scalar move such as `1029 -> 1041` be distinguished from `+12/-0`, `+27/-15`, or another capability exchange without launching any extra solve.
+A prior run is eligible only when protocol hash, level-blind/deterministic mode, flag sets, corpus presence/totals, and exact population-ID hashes match. Legacy timeline rows without protocol identity abstain instead of comparing. Thus a differently budgeted or experimental run cannot silently become the production-health comparator.
 
 ### 3. Evidence topology and discovery
 
@@ -94,82 +78,54 @@ Updated:
 - [`solver-research-data-assets.json`](../docs/solver-research-data-assets.json)
 - [`tooling-catalog.md`](../docs/tooling-catalog.md)
 
-The machine registry now has `solver-capability-memory` as a `generated-interface` asset with joins to:
-
-- production benchmarks;
-- raw/historical evidence;
-- experiment manifests;
-- technique census;
-- lifecycle telemetry;
-- operational traces;
-- variant families;
-- static descriptors.
-
-Two explicit relationship families were added:
-
-- capability memory ↔ current residual/provenance;
-- capability memory ↔ mechanism/trace/family/descriptor evidence.
-
-The structured caveats preserve freshness, missing-row, selection-pressure, and runtime-leakage boundaries.
+The machine registry now exposes `solver-capability-memory` as a generated interface joined to production benchmarks, raw/historical evidence, manifests, technique census, lifecycle telemetry, traces, variant families and static descriptors. Structured caveats preserve freshness, missing-row, selection-pressure and runtime-leakage boundaries.
 
 ### 4. Workstream routing, not a new workstream
 
-Updated [`solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md) and [`solver-future-work.md`](../docs/solver-future-work.md).
+Updated [`solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md) and [`solver-future-work.md`](../docs/solver-future-work.md). Capability memory feeds existing WS2/WS1/WS4/WS6/WS0/WS3 responsibilities; it is not a parallel queue and lowers no reopen gate.
 
-Capability memory feeds existing owners:
-
-- WS2: overlap, unique capability, residual headroom and work economics;
-- WS1: generic selector/mechanism premise nomination;
-- WS4: cross-policy recurrence of retention/representation loss;
-- WS6: producer/consumer complementarity after exposure/operator evidence;
-- WS0: restart premise nomination only under existing reopen rules;
-- WS3: selection pressure from mining many historical policies.
-
-It is not a parallel queue and does not lower any reopen gate.
+During CI recovery those two live authority docs were also compacted back toward their declared **current-state only** role instead of raising agent-context limits. Chronology remains in the linked dated reports.
 
 ### 5. Residual/freshness reconciliation
 
-The implementation pass found a concrete stale-authority problem: `solver-future-work.md` still described the pre-provenance-audit class split as class 4 = 200 / class 5 = 388 even though the canonical post-1,029 workstream authority had already reconciled it to class 4 = **143** / class 5 = **445**.
+The pass found a concrete stale-authority problem: `solver-future-work.md` still used the pre-provenance-audit class split (class 4 = 200 / class 5 = 388). It now matches the canonical post-1,029 split: class 4 = **143**, class 5 = **445**.
 
-The stale counts are corrected. The docs now explicitly require residual-derived views/current-state counts to be reconciled after a material capability promotion or provenance reinterpretation.
+The canonical production boundary remains **1,029/1,700 Corpus 2** from run `34531412380`. The later +21 joint-obligation promotion is not silently added; a full refresh must establish the next headline count.
 
-The canonical production boundary remains **1,029/1,700 Corpus 2** from run `34531412380`. The later +21 joint-obligation promotion is not silently added to that baseline; a full refreshed production boundary must establish the next headline count.
-
-### 6. Current-state consistency repair
-
-The workstream state table still said repair operator reachability was an open WS2 sub-question although the detailed gate already recorded the 28-level repair exposure/operator study as complete (4/28 reconstructable if seeded, 24/28 operator-incapable). The summary is reconciled to the detailed gate. The four reconstructable cases remain a Card-E handoff nomination, not an implemented or proven mechanism.
+The workstream summary also no longer calls repair operator reachability open after the detailed 28-level study resolved it (4/28 reconstructable if seeded, 24/28 operator-incapable). The four reconstructable cases remain a Card-E nomination, not an implemented mechanism.
 
 ## Validation
 
-`append-solver-health-record-node-test.mjs` was expanded to cover the new capability-memory/health contracts. The synthetic test suite checks:
+`append-solver-health-record-node-test.mjs` now covers:
 
 1. per-stage work accounting;
 2. solved/population hashes and compact +gain/-loss churn hashes;
-3. rejection of protocol/flag-incompatible prior health snapshots;
-4. CLI longitudinal append/churn behavior without duplicating exact IDs into the timeline;
-5. row-report capability comparison with errors/truncation kept inconclusive;
-6. historical-signature nomination versus confirmed-current-gain separation;
-7. capability-memory CLI materialization from a manifest.
+3. explicit-summary protocol identity;
+4. workflow-event protocol derivation with default filling;
+5. rejection of protocol/flag-incompatible prior snapshots;
+6. abstention on legacy timeline rows without protocol identity;
+7. CLI longitudinal append/churn without duplicating exact IDs;
+8. baseline-side and candidate-side censoring/unknown semantics;
+9. historical-signature nomination versus confirmed-current-gain separation;
+10. capability-memory manifest/CLI materialization.
 
-Local Node execution of the combined test file completed with all tests passing before the branch documentation integration. Repository CI remains the integration authority for the full tree.
+The first PR CI attempt reached deep verification successfully but the fast gate stopped on the repository's agent-context budget checker because the two touched live solver authority docs were already over their hard size limits. The branch fixes this by compacting those authorities rather than weakening the limits. Full repository CI remains the integration authority.
 
 ## What this deliberately does not do
 
-- No production fallback cascade was added.
-- No historical solver ensemble was added to the cold solver.
-- No experiment was reopened.
-- No failed implementation was retained solely for history.
-- No new stress corpus or expensive batch was generated.
-- No old gain set is claimed as current gain.
-- No current solve count is inferred from the +21 promotion without a full refresh.
-- No dynamic/ML scheduler is justified by the capability-memory union.
+- No production fallback cascade or historical solver ensemble.
+- No search/routing/scoring/pruning/budget change.
+- No experiment reopened solely because its capability signature is interesting.
+- No failed implementation retained solely for history.
+- No new stress corpus or expensive batch.
+- No old gain set claimed as current gain.
+- No inferred headline solve count from the +21 promotion.
+- No dynamic/ML scheduler justified by an offline union.
 
 ## Intended use
 
-The next time a research question asks whether production is missing already-demonstrated capability, first build the smallest capability-memory view from existing current rows and historically explicit signatures. If the resulting complementarity is material, use trace/family/static/exact evidence to identify a **generic** cause. Only that generic descendant enters the normal shadow → matched-work → independent-confirmation pipeline.
+For a question about already-demonstrated capability, first build the smallest capability-memory view from current rows and explicit historical signatures. If complementarity is material, use trace/family/static/exact evidence to identify a **generic** cause. Only that generic descendant enters the normal shadow -> matched-work -> independent-confirmation pipeline.
 
-The resulting loop is:
-
-> experiment verdict → preserve material capability signature → join against named current residual → measure overlap/uniqueness/freshness → explain recurring complementarity generically → test a new level-blind premise
+> experiment verdict -> preserve material capability signature -> join against named current residual -> measure overlap/uniqueness/freshness -> explain recurring complementarity generically -> test a new level-blind premise
 
 This makes rejected and displaced capability scientifically reusable without turning the production solver into a museum of old policies.
