@@ -8,6 +8,10 @@ import {
     originsForHint,
     facetsForHint,
     summarizeProvenanceEvidence,
+    classifyEvidenceApplicability,
+    provenanceDependencyStratum,
+    hasApplicableEvidence,
+    isDeterministicProductionContextEvidence,
 } from './provenance-source-taxonomy.mjs';
 
 const entry = (overrides = {}) => ({
@@ -45,6 +49,76 @@ const entry = (overrides = {}) => ({
         ...overrides.context,
     },
     foundAt: '2026-09-09T00:00:00Z',
+});
+
+test('evidence applicability is purpose-dependent rather than a global useful flag', () => {
+    const variant = entry({
+        solver: { id: 'variant-corpus-diagnostic', technique: 'variant-parent-replay:F1:P1:V7', version: 'v1' },
+    });
+    assert.equal(classifyEvidenceApplicability(variant, 'positive-oracle').applicability, 'admissible');
+    assert.equal(classifyEvidenceApplicability(variant, 'solution-atlas').applicability, 'admissible');
+    assert.equal(classifyEvidenceApplicability(variant, 'current-production-capability', {
+        currentSolverVersion: 'v1',
+    }).applicability, 'inadmissible');
+    assert.equal(classifyEvidenceApplicability(variant, 'technique-performance').applicability, 'inadmissible');
+    assert.equal(provenanceDependencyStratum(variant), 'variant-family:F1:parent:P1');
+});
+
+test('current capability requires an explicit matching regime and strict cold context', () => {
+    const cold = entry({ solver: { version: 'v2' } });
+    assert.equal(classifyEvidenceApplicability(cold, 'current-production-capability').applicability, 'context-bound');
+    assert.equal(classifyEvidenceApplicability(cold, 'current-production-capability', {
+        currentSolverVersion: 'v2',
+    }).applicability, 'admissible');
+    assert.equal(classifyEvidenceApplicability(cold, 'current-production-capability', {
+        currentSolverVersion: 'v3',
+    }).applicability, 'context-bound');
+    const contaminated = entry({ solver: { version: 'v2' }, context: { usedExistingHints: true } });
+    assert.equal(classifyEvidenceApplicability(contaminated, 'current-production-capability', {
+        currentSolverVersion: 'v2',
+    }).applicability, 'inadmissible');
+    const randomized = entry({ solver: { version: 'v2' }, search: { randomSeed: 7 } });
+    assert.equal(classifyEvidenceApplicability(randomized, 'current-production-capability', {
+        currentSolverVersion: 'v2',
+    }).reason, 'randomized-research-context');
+    const enumeration = entry({ solver: { version: 'v2' }, search: { termination: 'exhaustive' } });
+    assert.equal(classifyEvidenceApplicability(enumeration, 'current-production-capability', {
+        currentSolverVersion: 'v2',
+    }).reason, 'enumeration-context');
+    assert.equal(isDeterministicProductionContextEvidence(cold), true);
+    assert.equal(isDeterministicProductionContextEvidence(randomized), false);
+    assert.equal(isDeterministicProductionContextEvidence(enumeration), false);
+    assert.equal(isDeterministicProductionContextEvidence(contaminated), false);
+});
+
+test('technique performance requires isolated Pathfinder work evidence', () => {
+    const isolated = entry({ solver: { version: 'v2' }, context: { isolatedTechnique: true } });
+    assert.equal(classifyEvidenceApplicability(isolated, 'technique-performance').applicability, 'context-bound');
+    assert.equal(classifyEvidenceApplicability(isolated, 'technique-performance', {
+        comparableSolverVersions: ['v2'],
+    }).applicability, 'context-bound');
+    assert.equal(classifyEvidenceApplicability(isolated, 'technique-performance', {
+        comparableSolverVersions: ['v2'],
+    }).reason, 'positive-only-success-needs-run-denominator');
+    assert.equal(classifyEvidenceApplicability(isolated, 'technique-performance', {
+        comparableSolverVersions: ['v3'],
+    }).applicability, 'context-bound');
+    const noWork = entry({
+        solver: { version: 'v2' }, context: { isolatedTechnique: true }, search: { workSpent: null },
+    });
+    assert.equal(classifyEvidenceApplicability(noWork, 'technique-performance').applicability, 'context-bound');
+});
+
+test('unknown evidence purposes fail closed', () => {
+    assert.throws(() => classifyEvidenceApplicability(entry(), 'generic-useful'), /unknown evidence purpose/);
+});
+
+test('hint-level applicability preserves unattributed atlas paths and rejects them for capability', () => {
+    const hint = { path: [1, 2], provenance: [] };
+    assert.equal(hasApplicableEvidence(hint, 'solution-atlas'), true);
+    assert.equal(hasApplicableEvidence(hint, 'current-production-capability', {
+        comparableSolverVersions: ['v1'],
+    }), false);
 });
 
 test('origin taxonomy keeps genuinely different producers distinct', () => {

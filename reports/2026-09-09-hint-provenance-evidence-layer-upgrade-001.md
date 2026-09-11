@@ -1,9 +1,9 @@
 # Hint/provenance evidence-layer upgrade
 
 > **Status:** active
-> **Last evidence:** 2026-09-09 — persistence semantics, provenance taxonomy, representative-hint selection, and path/replay audit were reviewed against the current repository surfaces.
+> **Last evidence:** 2026-09-11 — the query-dependent evidence audit measured all 1,962 levels / 266,923 hints, unified the profile classifier, and made representative selection dependency-aware.
 > **Decision:** Treat the accumulated hint store as a solution-space atlas, a one-sided positive oracle, and a longitudinal discovery log; exhaust existing-data and bounded replay evidence before broad new solver compute.
-> **Remaining gate:** Run the all-corpus evidence/dedup audit, unify the legacy solution-profile classifier, validate replay witness identity, and execute the promoted basin/exposure/replay analyses in a full checkout.
+> **Remaining gate:** Validate replay witness identity and execute the promoted basin/exposure/replay analyses; the all-corpus evidence/dedup and classifier-unification gates are complete.
 
 **Date:** 2026-09-09  
 **Scope:** persistence semantics and fuller exploitation of the accumulated hint/provenance store for solver research.
@@ -197,12 +197,14 @@ Before launching new solver compute on a hinted failure cohort:
 
 This does not make hints legal production features. It makes them a much better offline microscope.
 
+## 2026-09-11 completion note
+
+The all-corpus audit and consumer fixes are recorded in [`2026-09-11-hint-provenance-evidence-relevance-audit-001.md`](2026-09-11-hint-provenance-evidence-relevance-audit-001.md). The audit found zero semantic duplicate events, but large context/dependency effects: 348,784/675,233 events are variant-parent replay, and no historical event matches the current revision. The durable classifier now asks an explicit evidence purpose and the representative selector ranks admissible dependency strata rather than raw event clouds.
+
 ## What still requires repository execution
 
 A full checkout should:
 
-- run the new provenance evidence report on all corpora and inspect any reported semantic duplicates before applying `scripts/dedupe-hint-provenance.mjs`;
-- unify `solution-profile-lib.mjs` with the shared origin/facet/admissibility model;
 - generate a Corpus-2 origin/facet-stratified profile summary with artifact-size discipline;
 - audit path-aware tools for first-hint/single-witness assumptions and add a shared representative-basin selector where useful;
 - build a bounded known-live-prefix regression/observer corpus from diverse provenance/basins, starting with the active portal cohort;

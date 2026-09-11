@@ -12,9 +12,13 @@ const levelsPath = value('levels') ?? 'data/levels.json';
 const id = value('id');
 const standard = value('standard') ?? 'strict';
 const limit = Number(value('limit') ?? 20);
+const evidencePurpose = value('purpose') ?? null;
+const evidenceApplicability = value('applicability') ?? null;
+const comparableSolverVersions = (value('comparable-solver-versions') ?? value('solver-version') ?? '')
+    .split(',').map(item => item.trim()).filter(Boolean);
 
 if (!id) {
-    console.error('Usage: npx tsx scripts/hint-query.mjs --id=P00001 [--levels=data/levels.json] [--summary] [--class=cold-capability] [--source=production-solver] [--solver=pathfinder-solver] [--technique=repair] [--retry-tier=late-repair-search] [--query=text] [--standard=strict|narrow] [--limit=20] [--full]');
+    console.error('Usage: npx tsx scripts/hint-query.mjs --id=P00001 [--levels=data/levels.json] [--summary] [--purpose=solution-atlas] [--applicability=admissible] [--solver-version=<sha>|--comparable-solver-versions=<sha,...>] [--class=cold-capability] [--source=pathfinder-solver] [--solver=pathfinder-solver] [--technique=repair] [--retry-tier=late-repair-search] [--query=text] [--standard=strict|narrow] [--limit=20] [--full]');
     process.exit(2);
 }
 if (!['strict', 'narrow'].includes(standard)) {
@@ -36,11 +40,18 @@ const filters = {
     technique: value('technique'),
     retryTier: value('retry-tier'),
     query: value('query'),
+    evidencePurpose,
+    evidenceApplicability,
+    comparableSolverVersions,
 };
-const hasFilter = Object.entries(filters).some(([key, v]) => key !== 'standard' && v);
+const hasFilter = Object.entries(filters).some(([key, v]) => key !== 'standard' && (Array.isArray(v) ? v.length : v));
 
 if (has('summary') || !hasFilter) {
-    console.log(JSON.stringify({ levelId: id, levels: levelsPath, ...summarizeHintRecords(hints, { standard }) }, null, 2));
+    const summary = summarizeHintRecords(hints, { standard });
+    const evidence = evidencePurpose ? queryHintRecords(hints, {
+        evidencePurpose, comparableSolverVersions,
+    }).map(({ compact }) => compact.evidence) : null;
+    console.log(JSON.stringify({ levelId: id, levels: levelsPath, ...summary, ...(evidence ? { evidence } : {}) }, null, 2));
 } else {
     const matches = queryHintRecords(hints, filters);
     const selected = matches.slice(0, limit);

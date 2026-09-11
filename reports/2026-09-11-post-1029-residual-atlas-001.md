@@ -20,7 +20,7 @@ Per-level classification logic (`scripts/stress/analyze-post-1029-residual-atlas
 
 - **beam/dfs wins:** offered-ness is literal `getAttemptConfigs()` ladder-plan membership (matches production's actual static-config menu). Offered + dispatched (found in `failedStrategies`) but still failed -> class 3. Offered but never dispatched this run -> class 2. Not on the ladder at all -> class 1.
 - **repair/admissible-order wins:** offered-ness uses the matching lifecycle `reachedTechniques`/`starvedTechniques` stage set (`repair-fallback`, `early-repair-search`, `late-repair-search`, `late-repair-multiseed-retry`, `repair-elite-prefix-dfs-retry` for repair; `admissible-order-fallback`, `admissible-order-alternate-tiebreak-retry` for admissible-order), since these retry tiers dispatch many seed/tiebreak variants under one stage rather than one fixed identity.
-- **no T1 winner:** cross-checked against the level's hint store for any `cold-capability`-admissible provenance entry (a genuine non-isolated, non-hint-guided Pathfinder solve recorded at some point, under any config). Present -> class 4. Absent -> class 5.
+- **no T1 winner:** cross-checked against the level's hint store for any deterministic historical production-context provenance entry: strict-cold Pathfinder, non-randomized, non-enumeration. Present -> class 4. Absent -> class 5. This is a longitudinal candidate class, not current-revision capability.
 - Each level gets one **primary class** by priority 1 > 2 > 3 > 4 > 5 (a level with any never-offered rescuer is always counted there first), plus non-exclusive "any-rescuer membership" counts since a level can carry multiple winning configs in different states.
 
 An initial version of the script mapped beam/dfs offered-ness to the same lifecycle-stage-reach test used for repair/admissible-order. That collapsed class 1 to zero, because `main-ladder` is reached on essentially every miss — reach of the *general* ladder stage is not evidence that a *specific* static beam/dfs config was ever planned. Switching beam/dfs to literal ladder-plan membership (the same test `analyze-current-missing-attempt-exposure.mjs` already uses) fixed this; the final run recovers 26 genuine never-offered cases. This is recorded so a future rerun does not reintroduce the same collapse.
@@ -32,10 +32,10 @@ An initial version of the script mapped beam/dfs offered-ness to the same lifecy
 | 1 | known rescuer not offered | **26** | 26 |
 | 2 | known rescuer offered but not reached or materially starved | **21** | 24 |
 | 3 | known rescuer reached with comparable work but failed | **36** | 52 |
-| 4 | no T1 winner but another historical/provenance rescuer exists | **200** | 200 |
-| 5 | no known rescuer after cross-evidence reconciliation | **388** | 388 |
+| 4 | no T1 winner but a deterministic historical production-context candidate exists | **169** | 169 |
+| 5 | no known rescuer after cross-evidence reconciliation | **419** | 419 |
 
-Class 4's provenance-rescuer technique families: beam 108, repair 72, admissible-order 10, admissible-order-fallback-labelled 5, dfs 5 — i.e. production-context evidence (different seeds/gates/tiebreaks/widths than the frozen T1 matrix tests) accounts for nearly a third of the residual once reconciled, exactly the failure mode the workstream authority warned not to miscount as "no known rescuer."
+Class 4's historical provenance-candidate technique families after excluding randomized research contexts: beam 132, repair 16, admissible-order 10, admissible-order-fallback-labelled 6, dfs 5. The earlier 200-row class admitted 31 randomized discoveries and is superseded. Retained events show that a deterministic production-context run once found a path under some recorded regime; they do not show that current production can still do so.
 
 68/671 misses (10.1%) have low-multiplicity T1 capability (<=2 isolated winners); these cluster in classes 1-3 disproportionately (repricing/exposure fixes on a thin-margin winner) and deserve protection in any future specialist-retention or repricing decision.
 
@@ -46,13 +46,13 @@ Class 4's provenance-rescuer technique families: beam 108, repair 72, admissible
 | 1 | 26 | 13 (50%) | 4 | 22 | 2 | 1 | 0 |
 | 2 | 21 | 15 (71%) | 8 | 15 | 0 | 5 | 5 |
 | 3 | 36 | 27 (75%) | 19 | 29 | 5 | 2 | 10 |
-| 4 | 200 | 173 (86.5%) | 126 | 154 | 22 | 23 | 87 |
-| 5 | 388 | 269 (69.3%) | 224 | 325 | 23 | 34 | 130 |
+| 4 | 169 | 150 (88.8%) | 108 | 131 | 19 | 18 | 79 |
+| 5 | 419 | 292 (69.7%) | 242 | 348 | 26 | 39 | 138 |
 | **all** | **671** | **497 (74.1%)** | **381** | **545** | **52** | **65** | **232** |
 
 \* triple-overlap = portal-bearing AND must-cross-bearing AND `intersection-heavy` routing regime — the same cohort predicate used by the 2026-09-09 joint-obligation handoff, recomputed at the current 671-miss boundary (was 278/725 pre-restoration; now 232/671, 34.6%, still the single largest structural concentration in the residual).
 
-Portal-bearing levels are the dominant structural signature of the residual at every class, and are especially concentrated in class 3 (75%) and class 4 (86.5%) — the two classes where a genuine capability/attempt exists but production either loses it in search or never captures it under the tested config identity. This is exactly the population the portal coarse-state-merge mechanism acts on, and it materially strengthens (does not merely fail to contradict) the case for gate 2 as the next-highest-value target: **the atlas does not reveal a clearly better opportunity**, so the workstream's default ordering (gate 2 before gate 3) stands.
+Portal-bearing levels remain dominant, including class 3 (75%), corrected class 4 (88.8%), and class 5 (69.7%). The provenance correction does not reopen the now-closed portal coarse-state salvage; it strengthens the current observer-first focus by moving 31 randomized-only cases into the no-known-rescuer population.
 
 ## Class 1 detail: 26 "known rescuer not offered" levels
 
