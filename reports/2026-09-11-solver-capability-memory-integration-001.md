@@ -66,10 +66,12 @@ New health fields require **zero additional solver compute**:
 - solved-ID hash per corpus;
 - per-stage `workSpent` alongside existing reach/attempts/solves/nodes;
 - `capabilityChurn` against the most recent protocol-compatible tracked capability run:
-  - gained count and IDs;
-  - lost count and IDs;
+  - gained count plus gain-set hash;
+  - lost count plus loss-set hash;
   - retained count;
   - comparison run ID.
+
+The timeline deliberately does not duplicate exact churn IDs. The comparison run ID plus the current run ID identify the existing per-level snapshots whose solved sets can be diffed for forensic follow-up.
 
 A prior run is eligible only when the retained summary/per-level snapshot establishes matching:
 
@@ -142,9 +144,9 @@ The workstream state table still said repair operator reachability was an open W
 `append-solver-health-record-node-test.mjs` was expanded to cover the new capability-memory/health contracts. The synthetic test suite checks:
 
 1. per-stage work accounting;
-2. solved/population hashes and explicit +gain/-loss churn;
+2. solved/population hashes and compact +gain/-loss churn hashes;
 3. rejection of protocol/flag-incompatible prior health snapshots;
-4. CLI longitudinal append/churn behavior;
+4. CLI longitudinal append/churn behavior without duplicating exact IDs into the timeline;
 5. row-report capability comparison with errors/truncation kept inconclusive;
 6. historical-signature nomination versus confirmed-current-gain separation;
 7. capability-memory CLI materialization from a manifest.
