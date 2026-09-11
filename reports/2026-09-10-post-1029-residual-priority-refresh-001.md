@@ -110,7 +110,7 @@ The resumable portfolio mechanism has passed its solver-internal production-widt
 1. `portfolio-solve-sweep`'s persisted attempt projection dropped `resumableResidualTranche`, and its row projection dropped result-level `resumableResidualPass` accounting. This PR now preserves both and adds contract tests.
 2. the `portfolio-solve-sweep` CLI does not currently expose a switch that sets `staticPortfolio.resumableResidualPass`, so the normal batch runner cannot yet activate treatment explicitly.
 
-The remaining engineering gate is small but real: add one explicit CLI treatment switch, thread it into `staticPortfolioConfig`, cover sequential and worker transport, and record the arm in the output summary. Do not dispatch the development A/B until the runner proves treatment participation rather than merely accepting a nominal arm label.
+The remaining engineering gate belongs with the coding/runtime handoff because it touches the monolithic batch CLI and should be verified through its sequential and worker execution contracts, not inserted as an unexercised argument parse: add one explicit CLI treatment switch, thread it into `staticPortfolioConfig`, cover sequential and worker activation, and record the arm in the output summary. Do not dispatch the development A/B until the runner proves treatment participation rather than merely accepting a nominal arm label.
 
 ## Recommended near-term order
 
