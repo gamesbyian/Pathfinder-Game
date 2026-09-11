@@ -10,7 +10,7 @@ This is not a second queue or experiment diary. Before promotion, state the curr
 
 The post-1,029 atlas leaves **388 current class-5 misses with no known rescuer**. Treat them as the algorithmic-frontier candidate cohort, not proof of absolute unsolvability. Class 4 (200 zero-T1 levels with historical cold rescues) is the preferred near-control.
 
-Use: **class4/class5 contrast -> source-controlled profile/family comparison -> all-known-basin first loss -> smallest generic capability -> bounded frontier pilot -> independent/whole-family validation**. If no common distinction survives, split class 5 by failure/extinction phenotype. Heavy frameworks require a recurring bounded mechanism, not frontier membership alone. See [`2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md).
+Use: **class4/class5 contrast -> source-controlled profile/family comparison -> all-known-basin first loss -> smallest generic capability -> bounded frontier pilot -> independent/whole-family validation**. If no common distinction survives, split class 5 by failure/extinction phenotype. Heavy frameworks require a recurring bounded mechanism, not frontier membership alone. A row whose production-baseline status is missing remains `unknown`; it cannot enter a production-unsolved/frontier class by default. See [`2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md) and [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 ## Structural technique-response extension ladder
 
@@ -27,6 +27,7 @@ Extend existing structural/census insight by evidence quality, not feature count
 | **Stability-aware portfolios** | Reopen only if WS1 basin-complementarity work finds a compact held-out decision signal beyond current work/coverage evidence. Basin diversity alone is not a production selector. |
 | **Latent response dimensions / biclusters** | Reopen only if simpler pair/cohort analysis leaves stable unexplained structure after temporal and generic-difficulty controls. |
 | **Repair restart allocation in the near-miss band** | Keep the unchanged 150M restart/continuation form closed. Preserve the independently replicated 64M fully-spent bestBadness<=6 restart signal; reopen only on a fresh legal population with the same texture or a changed allocation contract. |
+| **Beam continuation / cross-policy handoff** | Same-policy portfolio residual tranches are closed null; simple beam→DFS handoff and repeated/staged switching are closed in tested forms. Reopen only for a materially new premise such as a distinct future beam policy with credible complementarity or an earned state-selection mechanism. Preserve continuation ownership and pooled-state-detachment invariants. |
 | **Generator/editor-envelope technique niches** | Corpus1-vs-corpus2 ease, repertoire, regime composition, and structural risk are characterized; richer topology did not improve prediction. Reopen only with a joinable finer envelope or an envelope-specific mechanism claim. |
 | **Minimal technique-niche counterexamples** | Use reducer + exact/reference validation when a temporally/difficulty-robust niche needs causal isolation. Exact paths should adjudicate known-live loss, not justify broad CP-SAT acquisition. |
 | **Typed producer → consumer search artifacts** | Require a demonstrated consumer limitation, novel timely information, bounded production/storage/replay cost, independent control, and matched-work benefit. Do not build a general blackboard. |
@@ -38,7 +39,7 @@ The census cross-evidence plan is a standing evidence map, not an active sequenc
 
 Do not reopen unchanged without materially new evidence:
 
-- whole-ladder retries, global seed fan-out, nearby-threshold widening, or broad extra repair work that mainly buys dose;
+- whole-ladder retries, global seed fan-out, nearby-threshold widening, or broad extra repair work that mainly buys dose; a behavior-identical forced retry is not a distinct treatment and must not receive a second funded pass;
 - hand-authored scorer proliferation, universal beam-width increases, or large novelty/MAP-Elites/DPP machinery before a simple descriptor-aware treatment earns it;
 - broad ZDD/DD/frontier, representative-set, automaton, CEGAR/interpolation, RCSP/label-setting, CDCL/LCG, or backdoor frameworks before a bounded residual mechanism demonstrates value;
 - exact/approximate caching without new sound recurrence/sufficiency evidence;
