@@ -1,10 +1,10 @@
 # Static-portfolio resumable-tranche salvage preflight
 
-> **Status:** active
-> **Last evidence:** 2026-09-10 — implemented and validated the bounded-overshoot approximation for production-width continuation capture (single-digit-percent measured overshoot at widths 2000/5000 on real corpus levels); see "Option 2 implemented and validated" below. Prior evidence: 2026-09-05 — the real production A/B closed one-shot `portfolio-18-tranche-v2` as a replacement scheduler (14/40 vs production 18/40), but postmortem attribution found 3/4 losses were already-present beam configs stopped only ~2–12% short in node count; same-policy beam continuation now exists and preserves cumulative canonical work.
-> **Decision:** keep the failed one-shot static scheduler closed, but reopen its cheap first-pass idea as a materially different WS2B candidate: frozen `portfolio-18-tranche-v2` first tranches plus same-policy continuation of capped beam attempts inside the same total work envelope.
-> **Remaining gate:** the engineering-feasibility gate is now met in bounded-overshoot form (2026-09-10) — production-width capture is implemented, equivalence-tested, and its real overshoot measured (single-digit percent). The next gate is to run the fixed-work development A/B below on a fresh population, reporting the bounded-overshoot amount honestly per continuation. A positive result earns residual-lane design; a null/negative closes this salvage form.
-> **Evidence role:** development preflight for a new scheduler shape nominated by the failure mechanism of the 2026-09-04 production A/B.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-11 — ran the fixed-work development A/B itself (see "Development A/B result" below): 120 fresh Corpus-2 levels, control 52/120 vs. treatment 52/120, zero losses, zero treatment-exclusive gains, despite real continuation participation (120 eligible, 64 dispatched). Simple salvage form closed per its own frozen decision rule. Prior evidence: 2026-09-10 — implemented and validated the bounded-overshoot approximation for production-width continuation capture (single-digit-percent measured overshoot at widths 2000/5000 on real corpus levels); see "Option 2 implemented and validated" below. Prior evidence: 2026-09-05 — the real production A/B closed one-shot `portfolio-18-tranche-v2` as a replacement scheduler (14/40 vs production 18/40), but postmortem attribution found 3/4 losses were already-present beam configs stopped only ~2–12% short in node count; same-policy beam continuation now exists and preserves cumulative canonical work.
+> **Decision:** keep the failed one-shot static scheduler closed. Its cheap first-pass idea was reopened as a materially different WS2B candidate (frozen `portfolio-18-tranche-v2` first tranches plus same-policy continuation of capped beam attempts inside the same total work envelope), and that candidate is now also closed NULL: continuation participation was real but produced no net coverage gain at this envelope/population.
+> **Remaining gate:** none — this salvage form is closed. Per the frozen decision rule's own guidance, do not respond by changing tranche sizes, switching beam policies, or growing the portfolio menu. A later candidate built around genuinely missing residual capability (see "What a successful next stage would look like") remains a distinct, unstarted premise.
+> **Evidence role:** development preflight, now closed, for a new scheduler shape nominated by the failure mechanism of the 2026-09-04 production A/B.
 
 ## Why this is a new premise rather than retuning a failed scheduler
 
@@ -126,6 +126,26 @@ Report at minimum:
 - errors, truncation, failed captures, and asymmetric censoring.
 
 Also report how many treatment gains would have been missed if all capped beam attempts had simply been retired. This is the direct value of the salvage mechanism.
+
+## Development A/B result (2026-09-11)
+
+Ran locally (development-tier screening, not GHA-dispatched; see rationale below) against a fresh, disjoint 120-level Corpus-2 population (`data/stress/resumable-tranche-development-ab-001-population.json`, seed `resumable-tranche-development-ab-2026-09-11`, excluded against 1,012 level IDs from 8 prior static-portfolio populations). Both arms: `portfolio-18-tranche-v2` menu, `portfolio-18-specialists-tranche-cap-map-v2.json` caps, 67,000,000 work-unit envelope. Raw outputs and the machine-generated summary: `reports/portfolio/resumable-tranche-development-ab-001/{control,treatment,result}.{json,md}`.
+
+| | control | treatment |
+|---|---:|---:|
+| solved | 52/120 | 52/120 |
+| aggregate `workSpent` | 4,560,762,994 | 4,563,768,944 |
+
+- **Gains (treatment-exclusive):** 0. **Losses (control-exclusive):** 0. Both solved: 52.
+- **Eligible continuations** (capped, not naturally exhausted, beam attempts): 120. **Residual dispatches actually run:** 64. **Naturally-exhausted beam attempts:** 645.
+- **Solves first obtained during the residual pass:** 0.
+- **Aggregate residual incremental work:** 1,007,215. **Aggregate first-pass bounded-overshoot work:** 2,979,941 (0.065% of control's aggregate work) — real, honestly counted against the envelope rather than treated as exactly matched.
+- **Censoring:** 0 errors, 0 deadline truncation in either arm.
+- Treatment gains that would have been missed by simply retiring capped beam attempts: 0 (none occurred).
+
+**Verdict: NULL.** Continuation participation was real and substantial (120/120 levels produced an eligible continuation; 64 were actually dispatched with real incremental work), so this is not a non-informative run — the mechanism was genuinely exercised and found nothing to salvage. Zero credible losses also rules out an accounting/implementation problem (NEGATIVE). Per the frozen decision rule: close this simple salvage form; do not respond by changing tranche sizes, switching beam policies, or growing the portfolio menu.
+
+**Why local rather than GHA:** this is a one-off development-tier screen (not the "large matrices or many shards" case GHA canary-gated fan-out is reserved for), and the comparison dimension (a boolean residual-pass toggle on one fixed menu) doesn't fit `static-portfolio-confirmation.yml`'s named-arm-vs-arm dispatch shape without first extending that workflow. Given the NULL result, that extension is not needed now; a future candidate reaching the POSITIVE branch's next gate (residual-capability lane vs. the real production ladder) is the point where proper GHA wiring would be worth building.
 
 ## Frozen decision rule
 

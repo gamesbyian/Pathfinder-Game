@@ -56,7 +56,7 @@ The resulting WS2B candidate is deliberately narrow:
 
 This does **not** reopen the closed one-shot static scheduler or the cold `static -> production` fallback. It tests whether already-paid first-pass work can be reused to recover dose-truncation losses cheaply.
 
-Engineering gate status (2026-09-10): production-width capture is now reliable via a bounded-overshoot approximation (the mid-phase budget check defers to the next phase boundary instead of exiting early when capturing), validated for pause/resume equivalence and measured at single-digit-percent overshoot on real corpus levels at widths 2000/5000. True mid-phase-exact capture remains unimplemented but is not required to proceed. The next gate is the fixed-work A/B itself, in [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md), reporting each continuation's real overshoot honestly.
+**Closed NULL (2026-09-11).** Production-width capture was implemented via a bounded-overshoot approximation (2026-09-10; validated for pause/resume equivalence, single-digit-percent measured overshoot at widths 2000/5000) and `runStaticPortfolio` gained an opt-in `resumableResidualPass` mode using it. The fixed-work development A/B (120 fresh Corpus-2 levels, same 67M envelope) then found real continuation participation (120/120 levels eligible, 64 dispatched, 0 errors/truncation) but zero net coverage gain: control 52/120, treatment 52/120, 0 losses, 0 treatment-exclusive gains. Per the candidate's own frozen decision rule this closes the simple salvage form — do not retry with different tranche sizes, beam policies, or a larger portfolio menu. Full result: [`../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md`](../reports/2026-09-05-static-portfolio-resumable-tranche-salvage-preflight.md).
 
 ## Tested policy-switch forms
 
@@ -105,7 +105,7 @@ That can matter for racing/dynamic allocation, but a useful continuation primiti
 
 Do not generalize resumability merely because the primitive exists. Additional work needs a current workstream premise and should isolate one of these distinct questions:
 
-- same search, later tranche value — **currently instantiated by the portfolio-18 resumable-tranche candidate above**;
+- same search, later tranche value — **tested by the portfolio-18 resumable-tranche candidate above; closed NULL, no further work on this form without a new premise**;
 - same frontier, materially different future beam policy;
 - selected-state cross-method handoff;
 - memory/runtime overhead of retained continuations;

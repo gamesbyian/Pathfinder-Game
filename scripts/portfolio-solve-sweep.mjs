@@ -81,6 +81,11 @@ const staticPortfolioArmName = argMap.get('--static-portfolio-arm') || null;
 const staticPortfolioPerTechniqueWorkCap = argMap.has('--per-technique-work-cap') ? Number(argMap.get('--per-technique-work-cap')) : undefined;
 const staticPortfolioPerTechniqueWorkCapMapPath = argMap.get('--per-technique-work-cap-map') || null;
 const staticPortfolioAttemptBudgetMs = argMap.has('--static-portfolio-attempt-budget-ms') ? Number(argMap.get('--static-portfolio-attempt-budget-ms')) : undefined;
+// Opt-in resumable-tranche residual pass (2026-09-10, reports/2026-09-05-static-portfolio-
+// resumable-tranche-salvage-preflight.md) — see orchestration.ts's SolveOpts.staticPortfolio.
+// resumableResidualPass doc comment for the exact contract. Omitted/false preserves the ordinary
+// static-portfolio scheduler byte-for-byte.
+const staticPortfolioResumableResidualPass = flags.has('--resumable-residual-pass');
 if (schedulerMode === 'static-portfolio') {
     if (!staticPortfolioArmsPath || !staticPortfolioArmName) {
         console.error('--scheduler-mode=static-portfolio requires both --static-portfolio-arms=<path.json> and --static-portfolio-arm=<armName>.');
@@ -332,6 +337,7 @@ if (schedulerMode === 'static-portfolio') {
         ...(Number.isFinite(staticPortfolioPerTechniqueWorkCap) ? { perTechniqueWorkCap: staticPortfolioPerTechniqueWorkCap } : {}),
         ...(perTechniqueWorkCapByKey ? { perTechniqueWorkCapByKey } : {}),
         ...(Number.isFinite(staticPortfolioAttemptBudgetMs) ? { attemptBudgetMs: staticPortfolioAttemptBudgetMs } : {}),
+        ...(staticPortfolioResumableResidualPass ? { resumableResidualPass: true } : {}),
     };
 }
 // readLevelsWithHints attaches .hints/.hintRecords per level from the on-disk hint artifact
