@@ -1,9 +1,9 @@
 # Replay witness identity closeout 001
 
 > **Status:** concluded-positive
-> **Date:** 2026-09-11
-> **Scope:** close the replay-witness identity gate left open by the hint-provenance evidence-relevance audit.
+> **Last evidence:** 2026-09-11 — closes the replay-witness identity gate left open by the hint-provenance evidence-relevance audit.
 > **Decision:** CP-SAT prune-gap labels are path-bound evidence. New artifacts must stamp the exact witness identity, and offline replay must match that identity before using the labels.
+> **Remaining gate:** none.
 > **Compute:** existing-code/source audit only; no CP-SAT relabelling campaign and no solver sweep.
 
 ## Why this follow-up existed
