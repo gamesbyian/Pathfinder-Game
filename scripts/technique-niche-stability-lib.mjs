@@ -1,22 +1,7 @@
-const LEGACY_ACTION_ALIASES = new Map([
-    ['ida:default', 'admissible-order|tieBreak=default|lds=off'],
-    ['ida:mustCrossFirst', 'admissible-order|tieBreak=mustCrossFirst|lds=off'],
-    ['dfs:harvestThenFinish', 'dfs|score=harvestThenFinish|bias=none'],
-    ['dfs:portalFirstTransfer', 'dfs|score=portalFirstTransfer|bias=none'],
-    ['beam:objectiveFirst@beam2000', 'beam|score=objectiveFirst|bias=none|width=2000|retention=plain'],
-    ['beam:objectiveFirst@beam5000', 'beam|score=objectiveFirst|bias=none|width=5000|retention=plain'],
-    ['beam:intersectionHarvest@beam2000', 'beam|score=intersectionHarvest|bias=none|width=2000|retention=plain'],
-    ['beam:intersectionHarvest@beam5000', 'beam|score=intersectionHarvest|bias=none|width=5000|retention=plain'],
-    ['beam:objectiveFirst@beam5000(diverse)', 'beam|score=objectiveFirst|bias=none|width=5000|retention=mechanic-buckets'],
-    ['beam:intersectionHarvest@beam5000(diverse)', 'beam|score=intersectionHarvest|bias=none|width=5000|retention=mechanic-buckets'],
-    ['beam:perimeterSweep/perimeterCW@beam2000', 'beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain'],
-    ['beam:perimeterSweep/perimeterCCW@beam2000', 'beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain'],
-    ['dfs:perimeterSweep/perimeterCW', 'dfs|score=perimeterSweep|bias=perimeterCW'],
-    ['dfs:perimeterSweep/perimeterCCW', 'dfs|score=perimeterSweep|bias=perimeterCCW'],
-]);
+import { normalizeAttemptIdentityKey } from '../modules/solver/attempt-identity.mjs';
 
 export function canonicalAction(action) {
-    return LEGACY_ACTION_ALIASES.get(action) ?? action;
+    return normalizeAttemptIdentityKey(action);
 }
 
 export function canonicalPairKey(leftAction, rightAction) {
@@ -106,13 +91,13 @@ export function compareTechniqueNicheSummaries(oldSummary, freshSummary, options
 
     return {
         schemaVersion: 1,
-        evidenceRole: 'observational-development-temporal-holdout',
+        evidenceRole: 'observational-development-temporal-holdout-extension',
         persistentThreshold: options.persistentThreshold ?? 0.30,
         comparedPairCount: comparisons.length,
         persistentPairCount: comparisons.filter((row) => row.persistentFeatures.length).length,
         comparisons,
         unmatchedFreshPairs,
         unmatchedOldPairs,
-        interpretationBoundary: 'A temporally persistent structural separator is stronger nomination evidence than a one-snapshot association, but remains correlational and outcome-selected. It must still earn family/mechanism/held-out evidence before production steering.',
+        interpretationBoundary: 'Extends the existing 2026-09-05 leading-feature temporal-drift result across the stored top-eight effects. A persistent separator is stronger nomination evidence than a one-snapshot association, but remains correlational and outcome-selected; it must still earn family/mechanism/held-out evidence before production steering.',
     };
 }
