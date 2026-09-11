@@ -162,7 +162,7 @@ This is a **counterfactual regression bank** conceptually, not necessarily a new
 - solved-ID hash;
 - per-stage `workSpent` in addition to nodes;
 - gain/loss/retained solved-set churn against the most recent protocol-compatible tracked run with the same population;
-- gained/lost IDs for forensic follow-up.
+- gain/loss set hashes plus the comparison run ID, while exact IDs remain recoverable by diffing the existing per-level snapshots for those two run IDs.
 
 Protocol compatibility requires matching level-blind/deterministic mode, enabled/disabled flag sets, corpus totals, and population-ID hashes. Experimental flag runs therefore do not silently become the comparison baseline for ordinary production health.
 
