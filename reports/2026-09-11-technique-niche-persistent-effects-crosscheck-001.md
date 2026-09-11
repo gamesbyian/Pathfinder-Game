@@ -1,9 +1,11 @@
 # Technique-niche persistent-effects cross-check 001
 
-> **Status:** concluded-positive existing-data cross-check; analyzer reproduction pending checkout execution
-> **Evidence role:** observational-development extension of `2026-09-05-relative-advantage-pairs-temporal-drift-001.md`; no new solver dispatch
-> **Inputs:** the committed Sep-1 and Sep-3 `relative-advantage-summary.json` artifacts for the same eight frozen action pairs
-> **Threshold:** a feature counts as persistent here only when it appears in both stored top-eight lists, keeps the same sign, and has `|standardizedDifference| >= 0.30` in both snapshots
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-11 — direct cross-read of the committed Sep-1 and Sep-3 `relative-advantage-summary.json` artifacts for the same eight frozen action pairs.
+> **Decision:** 5/8 pairs retain at least one visible same-direction material effect at `|standardizedDifference| >= 0.30`; prioritize the two 5K plain-vs-mechanic-bucket pairs for difficulty control, then family/profile evidence if they survive.
+> **Remaining gate:** none for this manual cross-check; `scripts/analyze-technique-niche-stability.mjs` should mechanically reproduce it before downstream decision use.
+> **Evidence role:** observational-development extension of `2026-09-05-relative-advantage-pairs-temporal-drift-001.md`; no new solver dispatch.
+> **Threshold:** a feature counts as persistent here only when it appears in both stored top-eight lists, keeps the same sign, and has `|standardizedDifference| >= 0.30` in both snapshots.
 
 ## Result
 
