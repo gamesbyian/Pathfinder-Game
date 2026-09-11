@@ -22,7 +22,7 @@ const PERSISTENT_ATTEMPT_FIELDS = new Set([
     'mainSearchLateReserve', 'earlyRepairSearch', 'repairShrinkRecovery',
     'allocatedWorkCeiling', 'allocatedNodeCeiling', 'workSpent', 'coarseStateNearTieRetentionRetry',
     'admissibleOrderNonDefaultRetry', 'connectivityAxisExhaustedRetry',
-    'repairElitePrefixDfsRetry', 'mcNeighborBudgetRetry', 'repairLateProbe',
+    'repairElitePrefixDfsRetry', 'mcNeighborBudgetRetry', 'repairLateProbe', 'resumableResidualTranche',
 ]);
 const INTENTIONALLY_TRANSIENT_ATTEMPT_FIELDS = new Set([]);
 
@@ -77,6 +77,7 @@ test('buildRow defaults attempts/refereeValid safely when result has neither', (
     assert.equal(row.winningActionKey, null);
     assert.equal(row.refereeValid, null);
     assert.equal(row.elapsedMs, null);
+    assert.equal(row.resumableResidualPass, null);
 });
 
 test('failedStrategies only lists non-winning attempts, using the same key as winningConfig', () => {
@@ -205,9 +206,30 @@ test('attemptRecord preserves allocatedBudgetMs, randomSeed and seedSalt', () =>
     assert.equal(rec.seedSalt, 3);
 });
 
+test('attemptRecord preserves the resumable residual-tranche marker', () => {
+    const rec = attemptRecord({
+        stageId: 'static-portfolio', gateKey: 1, profile: 'default', beamWidth: 2000,
+        ok: false, elapsedMs: 5, resumableResidualTranche: true,
+    });
+    assert.equal(rec.resumableResidualTranche, true);
+});
+
+test('buildRow preserves resumable residual-pass accounting', () => {
+    const resumableResidualPass = {
+        eligibleContinuationCount: 3,
+        residualDispatchCount: 2,
+        residualIncrementalWork: 12345,
+        firstPassCaptureOvershoot: 678,
+    };
+    const row = buildRow(1, 'R00001', {
+        ok: false, status: 'unsolved', attempts: [], resumableResidualPass,
+    }, 'static-portfolio');
+    assert.deepEqual(row.resumableResidualPass, resumableResidualPass);
+});
+
 test('attemptRecord omits absent optional fields rather than emitting undefined', () => {
     const rec = attemptRecord({ gateKey: 1, profile: 'default', template: null, beamWidth: null, ok: true, elapsedMs: 5 });
-    for (const k of ['stageId', 'actionKey', 'allocatedBudgetMs', 'admissibleOrder', 'randomSeed', 'seedSalt', 'repair', 'timedOut']) {
+    for (const k of ['stageId', 'actionKey', 'allocatedBudgetMs', 'admissibleOrder', 'randomSeed', 'seedSalt', 'repair', 'timedOut', 'resumableResidualTranche']) {
         assert.ok(!(k in rec), `${k} should be absent, not undefined`);
     }
 });
