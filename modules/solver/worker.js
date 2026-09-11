@@ -176,11 +176,13 @@ export async function handleWorkerMessage(data, { postBack, cancelledIds }) {
 
     try {
         // SOLVE is a raw-wire public boundary just like createSolver().prepareLevelForSolver().
-        // Enforce the canonical schema before translating into solver bitmasks/typed arrays so the
-        // worker cannot bypass cardinality, bounds, occupancy, or representation-safety invariants.
+        // Enforce representation-safety invariants before translating into solver bitmasks/typed
+        // arrays. Published levels are square, but the solver itself deliberately supports
+        // rectangular synthetic fixtures, so the content-authoring square-grid rule is exempted.
         const validation = validateRawLevel(levelRaw);
-        if (!validation.ok) {
-            throw new Error(`Solver: invalid raw level: ${validation.errors.join('; ')}`);
+        const solverBoundaryErrors = validation.errors.filter(error => !error.startsWith('grid must be square '));
+        if (solverBoundaryErrors.length > 0) {
+            throw new Error(`Solver: invalid raw level: ${solverBoundaryErrors.join('; ')}`);
         }
         const level = normalizeRawLevel(levelRaw);
         const yieldFn = () => {
