@@ -52,10 +52,19 @@ test('normalizeRawLevel builds bidirectional portal and axis maps', () => {
   assert.equal(level.flippingFilterMap.get(PACK(4, 2)), 1);
 });
 
-test('Solver prepareLevelForSolver delegates raw levels to extracted normalization', () => {
+test('Solver prepareLevelForSolver delegates valid raw levels to extracted normalization', () => {
+  const publicRaw = {
+    grid: { w: 5, h: 5 },
+    goal: { x: 5, y: 5 },
+    gates: [{ x: 1, y: 1 }],
+    reqLen: 8,
+    reqInt: 0,
+    blocks: [{ x: 3, y: 3 }],
+    mustPass: [{ x: 2, y: 2 }],
+  };
   const solver = createSolver();
-  const viaPublicApi = solver.prepareLevelForSolver(rawLevel, { source: 'raw', levelNumber: 11 });
-  const viaModule = normalizeRawLevel(rawLevel, 11);
+  const viaPublicApi = solver.prepareLevelForSolver(publicRaw, { source: 'raw', levelNumber: 11 });
+  const viaModule = normalizeRawLevel(publicRaw, 11);
   assert.deepEqual(viaPublicApi, viaModule);
   assert.equal(SOLVER_TESTING_API.normalizeRawLevel, normalizeRawLevel);
 });
