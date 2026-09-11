@@ -1,6 +1,9 @@
 # Technique census tri-state baseline impact check — 2026-09-11
 
 > **Status:** concluded-negative
+> **Last evidence:** 2026-09-11 — inspection of the retained canonical census's committed run summary (`reports/stress/technique-census/33717910218/`) and its 1,074/888 production-solved/unsolved split.
+> **Decision:** the retained canonical census population is unaffected by the tri-state baseline fix; no artifact regeneration is justified.
+> **Remaining gate:** none — reopen only if another decision-bearing census artifact is found whose generation provenance lacks a successfully loaded frozen baseline.
 > **Audit area:** 18 — Technique census methodology
 > **Question:** Did preserving unknown production-baseline state change any retained decision-bearing census/frontier population, requiring artifact regeneration?
 

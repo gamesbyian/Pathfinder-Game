@@ -29,7 +29,8 @@ import { readLevelsWithHints, parseLevelSelector } from '../level-data-io.mjs';
 import { PACK } from '../../modules/domain/cell-key.ts';
 import {
     buildBucketProfile, buildSinglePathProfile, extractObjectives, nearestProfiles,
-    computeHintSignature, regenerateCorpusProfile,
+    computeHintSignature, regenerateCorpusProfile, SOLUTION_PROFILE_TAXONOMY,
+    hasCurrentSolutionProfileTaxonomy,
 } from './solution-profile-lib.mjs';
 import { mustCrossKeysOf, requiredPathCoverageRatio } from '../../modules/domain/hint-novelty.ts';
 import { NEAR_HAMILTONIAN_COVERAGE_THRESHOLD } from '../../modules/domain/path-features.ts';
@@ -64,10 +65,13 @@ function ensureFreshLibrary(fullPath, fileLabel) {
 
     const levels = readLevelsWithHints(sourceAbsPath);
     const currentSignature = computeHintSignature(levels);
-    if (parsed.hintSignature?.hash === currentSignature.hash) return parsed; // fresh
+    const taxonomyCurrent = hasCurrentSolutionProfileTaxonomy(parsed);
+    if (parsed.hintSignature?.hash === currentSignature.hash && taxonomyCurrent) return parsed; // fresh
 
-    console.warn(`[solution-profile] ${fileLabel} is stale relative to ${parsed.source} ` +
-        `(${parsed.hintSignature?.totalHints ?? '?'} -> ${currentSignature.totalHints} hints) — regenerating...`);
+    const reason = taxonomyCurrent
+        ? `${parsed.hintSignature?.totalHints ?? '?'} -> ${currentSignature.totalHints} hints`
+        : `taxonomy ${parsed.provenanceTaxonomy ?? 'legacy/unknown'} -> ${SOLUTION_PROFILE_TAXONOMY}`;
+    console.warn(`[solution-profile] ${fileLabel} is stale relative to ${parsed.source} (${reason}) — regenerating...`);
     const { output } = regenerateCorpusProfile({
         levelsJsonAbsPath: sourceAbsPath,
         levelsJsonLabel: parsed.source,

@@ -1,9 +1,11 @@
 # Solver audit post-closeout recovery — 2026-09-11
 
-> **Status:** active; one mechanical cleanup remains
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-11 — Audit 8's redundant `orchestration.ts` fresh-work-start calculation/comment removed; `npx tsc --noEmit`, `modules/solver/` vitest suite (620 tests), and `modules/solver/production-default-equivalence.test.ts` all pass after the edit.
+> **Decision:** all six post-closeout hardening items are now closed. Audit 8's redundant `orchestration.ts` pre-executor fresh-work calculation/comment has been removed; the canonical executor's `retryTierEffectiveWorkStart` was already the sole source of truth for the work-start decision, so the call site now passes `workStart` through unmodified and only retains its own (still-needed) work-budget-size branch.
+> **Remaining gate:** none — the post-closeout branch checklist is fully implemented, subject to ordinary review/CI evidence.
 > **Parent ledger:** `reports/2026-09-10-solver-system-audit.md`
 > **Recovered branch:** `chatgpt/solver-audit-campaign-2026-09-10`
-> **Decision:** five of six post-closeout hardening items are now substantively closed or handed off to their current owning research authority. Audit 8's redundant `orchestration.ts` pre-executor fresh-work calculation/comment is the only branch-local checklist item still requiring a code edit.
 
 This note exists because the stalled session left the parent ledger's checkboxes behind the actual branch state. It does not replace that ledger and does not reopen the 23-area source audit.
 
@@ -11,7 +13,7 @@ This note exists because the stalled session left the parent ledger's checkboxes
 
 | Item | Recovered state | Evidence / disposition |
 |---|---|---|
-| Audit 8 cleanup | **open** | Runtime semantics are already correct at `runWholeLadderRetryTier`, but the old goal-attraction call-site still computes/comments on fresh-vs-shared work before the executor. Remove that redundant block only; do not alter the promoted default or retry allocation semantics. |
+| Audit 8 cleanup | **closed** | Runtime semantics were already correct at `runWholeLadderRetryTier`; the old goal-attraction call-site's redundant fresh-vs-shared work-START calculation/comment (stale "opt-in, default OFF" framing of an already-promoted default-ON flag) has been removed from `orchestration.ts`, passing `workStart` straight through to the canonical executor. The work-BUDGET-SIZE branch (`freshWorkPoolEnabled`/`diversityWorkBudget`) is retained and its null-cfg check aligned with the same promoted-default polarity the executor already uses, so a null `ablation` and a normalized non-null config now size the fresh pool identically. |
 | Audit 18 impact check | **closed** | `reports/2026-09-11-technique-census-tristate-impact-check.md`. The retained canonical census has a real 1,074 solved / 888 unsolved frozen-baseline split, so it was not generated through the broken no-baseline fallback. No retained decision-bearing rebuild is justified. |
 | Audit 17 migration check | **closed** | `reports/2026-09-11-fingerprint-v2-migration-check.md`. Active writer/comparator behavior is schema-aware; no committed live fingerprint baseline or workflow consumer requires a v1 migration. |
 | Audits 4/9/13 executable semantics hardening | **closed, implementation awaiting ordinary CI evidence** | `modules/solver/executable-semantics-reference.test.ts` plus `reports/2026-09-11-executable-semantics-reference-harness.md`. Tiny independent simple-path oracle cross-checks production successors, hard-prune survival for every oracle winner, and solve-vs-genuine-exhaustion behavior. |
@@ -43,6 +45,6 @@ Current authorities were reconciled after the campaign:
 
 `solver-research-data-assets.json` remains structurally valid. Its individual asset caveat strings have not been duplicated with these cross-asset rules because the human guide and `solver-evaluation-evidence.md` now own them; update the JSON only when an asset-specific field/location/join contract changes.
 
-## Sole remaining branch-local action
+## Audit 8 cleanup (completed)
 
-Audit 8 is cleanup debt, not an unresolved runtime defect. The canonical executor already owns the promoted default-ON fresh-work-start decision for `goal-attraction-disabled-retry`; the old caller still contains the pre-promotion `freshWorkPoolEnabled` calculation and a long stale default-OFF explanation. Remove that duplicated decision/comment while preserving the explicit-false control behavior and the tier's intended work-budget sizing. Then the post-closeout branch checklist can be considered fully implemented, subject to ordinary review/CI evidence.
+Audit 8 was cleanup debt, not an unresolved runtime defect. The canonical executor already owned the promoted default-ON fresh-work-start decision for `goal-attraction-disabled-retry` via `retryTierEffectiveWorkStart`; the old `orchestration.ts` caller still contained the pre-promotion `freshWorkPoolEnabled`-gated `diversityWorkStart` calculation and a long stale default-OFF explanation. That duplicated decision/comment has been removed — the call site now passes `workStart` straight through — while preserving the explicit-false control behavior and the tier's intended work-budget sizing (kept as its own, still-necessary branch, since the executor does not own budget *size*, only *start*). The post-closeout branch checklist is now fully implemented, subject to ordinary review/CI evidence.

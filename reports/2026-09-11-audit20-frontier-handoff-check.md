@@ -1,9 +1,10 @@
 # Audit 20 frontier handoff check — 2026-09-11
 
 > **Status:** concluded-positive
-> **Audit area:** 20 — Algorithmic frontier post-closeout handoff
+> **Last evidence:** 2026-09-11 — reconciliation against the live `docs/solver-optimization-workstreams.md` authority and its linked post-1,029 residual atlas/frontier-contrast reports.
 > **Decision:** the live solver research authority already carries the audit's required class-5 discipline: class-4 near-controls, all-known-basin first-loss classification, cross-action recurrence before a shared-capability claim, and explicit `unknown`. No parallel audit-branch mechanism or duplicate population run is warranted.
 > **Remaining gate:** execute the already-owned observer/first-loss gates in the live Workstream 2/1 program; reopen this audit handoff only if that authority drops one of the evidence constraints below.
+> **Audit area:** 20 — Algorithmic frontier post-closeout handoff
 
 ## Required handoff from Audit 20
 

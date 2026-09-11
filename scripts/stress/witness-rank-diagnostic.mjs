@@ -45,6 +45,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
+import { solvedIdsFromBenchmarkReport } from './benchmark-report-lib.mjs';
 
 installBrowserStubs();
 const { normalizeRawLevel } = await import('../../modules/solver/normalization.js');
@@ -94,7 +95,11 @@ let solvedIds = null;
 const reportPath = args.get('--report');
 if (reportPath) {
     const rep = JSON.parse(readFileSync(path.join(root, reportPath), 'utf8'));
-    solvedIds = new Set((rep.levels || []).filter(r => r.ok).map(r => r.id));
+    solvedIds = solvedIdsFromBenchmarkReport(rep);
+}
+if ((flags.has('--unsolved-only') || flags.has('--solved-only')) && !solvedIds) {
+    console.error('--unsolved-only/--solved-only requires --report=<benchmark-report>');
+    process.exit(2);
 }
 
 /** Known solutions as packed-key arrays. Witness coords are 1-indexed [x,y]; hints already packed. */

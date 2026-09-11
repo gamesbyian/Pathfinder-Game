@@ -1,6 +1,9 @@
 # Fingerprint v2 migration check — 2026-09-11
 
 > **Status:** concluded-negative
+> **Last evidence:** 2026-09-11 — inventory of `scripts/solver-fingerprint.mjs`, `scripts/compare-solver-fingerprints.mjs`, `package.json` entry points, GitHub Actions workflows, and the repository's retained `logs/` material.
+> **Decision:** no live migration defect exists; close the post-closeout Audit 17 migration item with no code change.
+> **Remaining gate:** none — reopen only if a future workflow or durable baseline begins consuming fingerprint JSON directly.
 > **Audit area:** 17 — Fingerprint / capability classification
 > **Question:** Did the schema-v2 fingerprint change strand any live consumer or retained baseline that would now fail unexpectedly or silently compare unlike schemas?
 

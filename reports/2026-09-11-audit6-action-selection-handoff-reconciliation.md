@@ -1,9 +1,10 @@
 # Audit 6 action-selection handoff reconciliation — 2026-09-11
 
 > **Status:** concluded-positive
-> **Audit area:** 6 — Technique / action selection post-closeout handoff
+> **Last evidence:** 2026-09-11 — the current post-1,029 residual atlas report and its class-1 never-offered population, which superseded this branch's stale 8/9 four-beam nomination.
 > **Decision:** preserve the fixed-total-work menu-validation requirement, but do not launch the stale 8/9 four-beam experiment named in this branch's closeout checklist. Newer merged evidence rebuilt the current class-1 population at the post-1,029 boundary and nominates a different compact beam menu.
 > **Remaining gate:** after the active joint-obligation/orchestration work is reconciled, run the current class-1 report's prespecified bounded, level-blind treatment under a fixed total-work envelope before any production-menu promotion.
+> **Audit area:** 6 — Technique / action selection post-closeout handoff
 
 ## Recovery finding
 

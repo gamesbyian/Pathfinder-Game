@@ -450,7 +450,7 @@ const COARSE_STATE_NEAR_TIE_RETENTION_MARGIN = 0.01;
 // budget check and the final unbounded pass's own out) — a probe wave hitting ITS OWN smaller
 // probeCapMs is not by itself a level-wide timeout (plenty of levelBudgetMs may remain for the
 // final pass), so probe-internal timedOut flags are deliberately not surfaced here.
-export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, orderingBias: StructuralOrderingBias | null, yieldFn?: YieldFn, out: { timedOut?: boolean; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
+export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, levelBudgetMs: number, levelStartTime: number, orderingBias: StructuralOrderingBias | null, yieldFn?: YieldFn, out: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } | null = null, nodeBudget = Infinity): Promise<number[] | null> {
     const cfg = prep._cfg;
     // nodeBudget (default Infinity => inert): a caller-supplied cumulative-remaining node cap for
     // this whole LDS invocation (offline batch tooling only). dfsFromGate's own nodeBudget param is
@@ -459,9 +459,9 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
     // total within nodeBudget rather than letting the final unbounded wave run to the time limit.
     // When STRATEGY_LDS is disabled, skip probe waves and run plain best-first DFS directly.
     if (cfg && !cfg.STRATEGY_LDS) {
-        const bypassOut: { timedOut?: boolean; finalBadness?: number } = {};
+        const bypassOut: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } = {};
         const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, orderingBias, Infinity, yieldFn, bypassOut, nodeBudget);
-        if (out) { out.timedOut = !!bypassOut.timedOut; out.finalBadness = bypassOut.finalBadness; }
+        if (out) { out.timedOut = !!bypassOut.timedOut; out.nodesExpanded = bypassOut.nodesExpanded; out.finalBadness = bypassOut.finalBadness; }
         return path;
     }
     // probeCapMs used to bound the probe ladder before it falls through to the unbounded wave.
@@ -488,13 +488,13 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
     // No dfsFromGate call runs here (probes alone exhausted levelBudgetMs) — no search state to
     // sample, so finalBadness is left unset for this specific (rare) exit rather than reported
     // from stale probe data.
-    if (Date.now() - levelStartTime >= levelBudgetMs) { if (out) out.timedOut = true; return null; }
+    if (Date.now() - levelStartTime >= levelBudgetMs) { if (out) { out.timedOut = true; out.nodesExpanded = probeNodesUsed; } return null; }
     const finalNodeBudget = nodeBudget === Infinity ? Infinity : Math.max(0, nodeBudget - probeNodesUsed);
-    if (finalNodeBudget <= 0) { if (out) out.timedOut = true; return null; }
+    if (finalNodeBudget <= 0) { if (out) { out.timedOut = true; out.nodesExpanded = probeNodesUsed; } return null; }
     if (yieldFn) await yieldFn();
-    const finalOut: { timedOut?: boolean; finalBadness?: number } = {};
+    const finalOut: { timedOut?: boolean; nodesExpanded?: number; finalBadness?: number } = {};
     const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, orderingBias, Infinity, yieldFn, finalOut, finalNodeBudget);
-    if (out) { out.timedOut = !!finalOut.timedOut; out.finalBadness = finalOut.finalBadness; }
+    if (out) { out.timedOut = !!finalOut.timedOut; out.nodesExpanded = probeNodesUsed + (finalOut.nodesExpanded ?? 0); out.finalBadness = finalOut.finalBadness; }
     if (_LDS_DEBUG) console.error(`    [lds] k=Inf ${path?'SOLVED':'-'}`);
     return path;
 }

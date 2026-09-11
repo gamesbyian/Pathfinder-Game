@@ -1,6 +1,6 @@
 # Solver system audit — 2026-09-10
 
-> **Status:** concluded-positive; post-closeout hardening active
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-11 — CI run 4170 completed successfully on the final closeout tip after the 23-area campaign. Post-closeout hardening below is intentionally narrower than reopening the campaign wholesale.
 > **Decision:** All 23 source-audit areas remain closed as audits. A small set of explicitly-scoped hardening and research follow-ups is now active where the closeout review found an opportunity to replace manual confidence with executable evidence or to consume a concrete audit finding.
 > **Remaining gate:** Finish the post-closeout follow-up checklist below. Later evidence may still reopen an individual audit row under the follow-up rule.

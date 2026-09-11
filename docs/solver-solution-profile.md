@@ -14,7 +14,7 @@ Offline analysis tooling that summarizes how accepted solutions behave so an uns
 | Landmark roles/turn requirements | `modules/domain/landmark-rules.ts` |
 | Provenance fields | `modules/domain/hint-types.ts` |
 
-`scripts/stress/solution-profile-lib.mjs` adds aggregate turn distributions, objective-satisfaction depth, prefix diversity, pairwise-distinctiveness summaries, provenance buckets, and discovery-saturation curves. It stores only a top-20 cell table plus a normalized footprint, not another full heatmap.
+`scripts/stress/solution-profile-lib.mjs` adds aggregate turn distributions, objective-satisfaction depth, prefix diversity, pairwise-distinctiveness summaries, provenance buckets, and discovery-saturation curves. Its compatibility exports now delegate to the shared origin taxonomy rather than maintaining the former mutually-exclusive modality classifier. It stores only a top-20 cell table plus a normalized footprint, not another full heatmap.
 
 ## Provenance resolution
 
@@ -31,10 +31,16 @@ This matters because producer identity and search modality are not alternatives.
 ```sh
 node scripts/run-bundled.mjs scripts/stress/source-stratified-solution-profile.mjs -- \
   --corpus=stress2 \
+  --purpose=solution-atlas \
   --out=reports/stress/solution-profile-corpus2-granular.json
 ```
 
-The older classifier embedded in `solution-profile-lib.mjs` remains for compatibility with checked-in profile artifacts until the next full regeneration/unification pass. Do not compare legacy bucket names with the new origin/facet schema as if they meant the same thing.
+The default purpose is explicitly `solution-atlas`. Capability-oriented profile subsets must pass
+`--purpose=current-production-capability` and `--comparable-solver-versions=<audited-sha-list>`;
+the artifact records both the pre-filter and applicable hint counts. A technique-performance
+request yields no hint-only paths by design because positive-only successes lack a run denominator.
+
+Legacy profile artifacts retain their historical bucket labels, but regenerated profiles use the shared origin vocabulary and stamp `schemaVersion: 2` plus `provenanceTaxonomy: origin-facet-applicability-v2`. The comparison tool treats an unstamped legacy library as stale even when its hint-count signature matches; otherwise a newly unified consumer would silently read old bucket semantics as current. Do not compare old modality-shaped buckets with origin/facet output as if they meant the same thing.
 
 ## Fingerprint contents
 
@@ -77,6 +83,14 @@ Coverage differs by corpus, origin, facet and capability class; do not assume `c
 node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all
 ```
 
+For a level-level forensic query, request the purpose rather than filtering on existence alone:
+
+```sh
+npx tsx scripts/hint-query.mjs --id=P00001 \
+  --purpose=current-production-capability --applicability=admissible \
+  --comparable-solver-versions=<audited-sha-list>
+```
+
 Additional rules:
 
 - a profile derived from saved solutions/hints cannot be read by production policy for that level;
@@ -87,6 +101,9 @@ Additional rules:
 - split variant-derived comparisons by parent family;
 - guard against normalized footprints or high-dimensional descriptors becoming accidental level/family identifiers;
 - do not report correlation between profile axes and solver success as causal without a controlled/shadow follow-up.
+- every analytical consumer making an applicability claim must name its evidence purpose. Use `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process` through the shared taxonomy; capability/performance queries must also name the compared solver version or an audited comparable-version set.
+- aggregate rediscovery through `provenanceDependencyStratum`; event count is retention/history volume, not independent support.
+- a matching isolated hint event remains positive-only success evidence; technique-performance claims require the originating run's attempted-level denominator and failures, not just comparable version/config/work fields.
 
 See [`solver-level-blindness.md`](solver-level-blindness.md) and [`solver-research-operating-model.md`](solver-research-operating-model.md).
 

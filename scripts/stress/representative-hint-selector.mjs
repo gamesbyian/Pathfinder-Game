@@ -8,6 +8,8 @@ import {
     originsForHint,
     facetsForHint,
     provenanceTechniqueKey,
+    provenanceDependencyStratum,
+    classifyEvidenceApplicability,
 } from './provenance-source-taxonomy.mjs';
 import { classifyProvenanceClass } from './provenance-classes.mjs';
 
@@ -26,7 +28,10 @@ function compareTupleDesc(a, b) {
     return 0;
 }
 
-export function describeHintEvidence(hint, { mcKeys = [], useCrossings = false } = {}) {
+export function describeHintEvidence(hint, {
+    mcKeys = [], useCrossings = false, evidencePurpose = 'solution-atlas', currentSolverVersion = null,
+    comparableSolverVersions = currentSolverVersion ? [currentSolverVersion] : [],
+} = {}) {
     const provenance = hint?.provenance || [];
     const origins = originsForHint(hint);
     const facets = facetsForHint(hint);
@@ -34,6 +39,15 @@ export function describeHintEvidence(hint, { mcKeys = [], useCrossings = false }
     const versions = new Set(provenance.map(entry => entry?.solver?.version).filter(Boolean));
     const strictClasses = new Set(provenance.map(entry => classifyProvenanceClass(entry, { standard: 'strict' })));
     const narrowClasses = new Set(provenance.map(entry => classifyProvenanceClass(entry, { standard: 'narrow' })));
+    const evidenceObservations = provenance.length ? provenance : [null];
+    const applicableEntries = evidenceObservations.filter(entry => classifyEvidenceApplicability(
+        entry, evidencePurpose, { comparableSolverVersions },
+    ).applicability === 'admissible');
+    const attributedApplicableEntries = applicableEntries.filter(Boolean);
+    const applicableOrigins = new Set(attributedApplicableEntries.map(entry => [...originsForHint({ provenance: [entry] })][0]));
+    const applicableTechniques = new Set(attributedApplicableEntries.map(provenanceTechniqueKey));
+    const applicableVersions = new Set(attributedApplicableEntries.map(entry => entry?.solver?.version).filter(Boolean));
+    const dependencyStrata = new Set(attributedApplicableEntries.map(provenanceDependencyStratum));
     const path = hint?.path || [];
     return {
         hint,
@@ -48,6 +62,11 @@ export function describeHintEvidence(hint, { mcKeys = [], useCrossings = false }
         strictClasses,
         narrowClasses,
         provenanceEntries: provenance.length,
+        applicableEntries: applicableEntries.length,
+        applicableOrigins,
+        applicableTechniques,
+        applicableVersions,
+        dependencyStrata,
         useCrossings,
     };
 }
@@ -65,36 +84,46 @@ export function selectRepresentativeHints(hints, {
     limit = 4,
     mcKeys = [],
     useCrossings = false,
+    evidencePurpose = 'solution-atlas',
+    currentSolverVersion = null,
+    comparableSolverVersions = currentSolverVersion ? [currentSolverVersion] : [],
 } = {}) {
     if (!Number.isFinite(limit) || limit <= 0) return [];
 
     const unique = new Map();
     for (const hint of hints || []) {
         if (!Array.isArray(hint?.path) || hint.path.length === 0) continue;
-        const descriptor = describeHintEvidence(hint, { mcKeys, useCrossings });
+        const descriptor = describeHintEvidence(hint, {
+            mcKeys, useCrossings, evidencePurpose, comparableSolverVersions,
+        });
         const existing = unique.get(descriptor.signature);
-        if (!existing || descriptor.provenanceEntries > existing.provenanceEntries) {
+        if (!existing || descriptor.dependencyStrata.size > existing.dependencyStrata.size ||
+            (descriptor.dependencyStrata.size === existing.dependencyStrata.size &&
+                descriptor.applicableEntries > existing.applicableEntries)) {
             unique.set(descriptor.signature, descriptor);
         }
     }
-    const candidates = [...unique.values()];
+    const requiresAdmissibleEvidence = evidencePurpose === 'current-production-capability' ||
+        evidencePurpose === 'technique-performance';
+    const candidates = [...unique.values()].filter(descriptor =>
+        !requiresAdmissibleEvidence || descriptor.applicableEntries > 0);
     if (candidates.length <= limit) return candidates.map(d => d.hint);
 
     const firstScore = d => [
-        d.origins.size,
-        d.techniques.size,
-        d.versions.size,
-        d.strictClasses.has('cold-capability') ? 1 : 0,
-        d.provenanceEntries,
+        d.applicableEntries > 0 ? 1 : 0,
+        d.dependencyStrata.size,
+        d.applicableOrigins.size,
+        d.applicableTechniques.size,
+        d.applicableVersions.size,
     ];
     candidates.sort((a, b) => compareTupleDesc(firstScore(a), firstScore(b)) || a.signature.localeCompare(b.signature));
 
     const selected = [candidates.shift()];
     while (selected.length < limit && candidates.length) {
         const selectedFamilies = new Set(selected.map(d => d.structuralFamily));
-        const selectedOrigins = new Set(selected.flatMap(d => [...d.origins]));
-        const selectedTechniques = new Set(selected.flatMap(d => [...d.techniques]));
-        const selectedVersions = new Set(selected.flatMap(d => [...d.versions]));
+        const selectedOrigins = new Set(selected.flatMap(d => [...d.applicableOrigins]));
+        const selectedTechniques = new Set(selected.flatMap(d => [...d.applicableTechniques]));
+        const selectedVersions = new Set(selected.flatMap(d => [...d.applicableVersions]));
 
         let bestIndex = 0;
         let bestScore = null;
@@ -104,11 +133,11 @@ export function selectRepresentativeHints(hints, {
             const score = [
                 selectedFamilies.has(d.structuralFamily) ? 0 : 1,
                 minDistance,
-                setDifferenceSize(d.origins, selectedOrigins),
-                setDifferenceSize(d.techniques, selectedTechniques),
-                setDifferenceSize(d.versions, selectedVersions),
-                d.strictClasses.has('cold-capability') ? 1 : 0,
-                d.provenanceEntries,
+                d.applicableEntries > 0 ? 1 : 0,
+                setDifferenceSize(d.applicableOrigins, selectedOrigins),
+                setDifferenceSize(d.applicableTechniques, selectedTechniques),
+                setDifferenceSize(d.applicableVersions, selectedVersions),
+                setDifferenceSize(d.dependencyStrata, new Set(selected.flatMap(s => [...s.dependencyStrata]))),
             ];
             if (bestScore === null || compareTupleDesc(score, bestScore) < 0 ||
                 (compareTupleDesc(score, bestScore) === 0 && d.signature.localeCompare(candidates[bestIndex].signature) < 0)) {

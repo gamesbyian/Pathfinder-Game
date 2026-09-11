@@ -1,9 +1,11 @@
 # Executable semantics reference harness — 2026-09-11
 
 > **Status:** concluded-positive
+> **Last evidence:** 2026-09-11 — the oracle's own `complete DFS agrees with the oracle on solve versus genuine exhaustion` test caught a real instrumentation gap: `dfsFromGateLDS` (`modules/solver/search.ts`) never forwarded `nodesExpanded` from its inner `dfsFromGate` calls to its own `out` parameter, so `runAttemptSearch`'s DFS branch always reported `nodesExpanded: undefined` regardless of real search work performed. Fixed by forwarding `probeNodesUsed + finalOut.nodesExpanded` (and the bypass branch's `nodesExpanded`) into `out`; all 44 tests in the affected files pass after the fix. The gap was narrow — production's own budget/exhaustion accounting reads `prep._metrics.nodesExpanded`, which `dfsFromGate` already incremented correctly on every exit path — so no production solve-count or budget behavior was affected, only the `out.nodesExpanded` field read directly by this test and any other direct caller of `runAttemptSearch`/`dfsFromGateLDS`.
+> **Decision:** add one intentionally tiny independent oracle rather than another corpus-scale solver check. The reference side enumerates its own path space and is then compared with production successor, hard-prune and complete-search behavior.
+> **Remaining gate:** none — the oracle is in place, its own regression already found and fixed the `dfsFromGateLDS` nodesExpanded gap above, and all three cross-checked contracts (successor legality, oracle-winning-prefix survival, solve-vs-exhaustion) now pass.
 > **Audit areas:** 4 — Successor generation / search actions; 9 — Pruning / rejection; 13 — Termination / exhaustion
 > **Implementation:** `modules/solver/executable-semantics-reference.test.ts`
-> **Decision:** add one intentionally tiny independent oracle rather than another corpus-scale solver check. The reference side enumerates its own path space and is then compared with production successor, hard-prune and complete-search behavior.
 
 ## Why this exists
 
