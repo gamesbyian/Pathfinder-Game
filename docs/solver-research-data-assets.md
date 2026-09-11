@@ -101,6 +101,12 @@ Variant siblings, common generator batches, repeated hint rediscoveries, and mul
 
 Do not infer a negative from an absent join. In particular, technique-census production-baseline status is tri-state: `true`, `false`, or `unknown`. A missing/failing baseline join must remain `unknown`; it cannot populate a “production-unsolved” or frontier cohort. The retained canonical census affected by the 2026-09-10 audit had a valid frozen baseline and required no regeneration.
 
+### Hint provenance is query-dependent
+
+The same hint/provenance record can be strong evidence for one research question and inadmissible for another. Declare the purpose before consuming it: `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process`. Use the shared applicability and dependency-stratum helpers exposed by `hint-query --purpose=...` and the provenance evidence report rather than inventing a local “trusted hint” predicate.
+
+A referee-valid path remains useful oracle/atlas material regardless of producer. Variant replay, witnesses, external/guided/isolated discoveries and old solver regimes may be excellent history or basin evidence while providing no proof of current cold capability. Missing legacy booleans remain unknown; solver age alone does not prove staleness; and raw rediscovery-event count is not independent support. Technique performance requires the originating attempted population and comparable work, not a success-selected sidecar event. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) and the [`hint-provenance relevance audit`](../reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md).
+
 ### Freshness and reuse are evidence-specific
 
 `latest` files are convenience pointers, not proof that the underlying evidence matches current code. Inspect commit/protocol metadata. Technique capability can drift under heuristic changes; rebuild/rejoin the capability map after meaningful solver changes before relying on old support classes.
