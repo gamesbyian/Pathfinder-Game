@@ -9,14 +9,19 @@
 import type { SolverSearchState } from './types.js';
 
 /** Fine-grained repair-state signature used for within-call experience matching. `ints` is required
- * because identical edgeUsage can encode paths with different intersection counts. Full strings
- * avoid hash collisions, but equality here should not be read as a proof of future-state equivalence.
+ * because identical edgeUsage can encode paths with different intersection counts. `path.length`
+ * is required because exact-length feasibility depends on how much counted path has already been
+ * consumed, and `prev` is required because native successor legality / turn chirality reads the
+ * immediately previous cell (not merely the current position and edgeUsage). Full strings avoid
+ * hash collisions, but equality here should not be read as a proof of future-state equivalence.
  * Exported for topology.ts's research-only ConnectivityRejectionObserver (see docs/solver-
  * optimization-current-queue.md item #0 and reports/2026-08-24-learned-failure-certificate-audit.md's
  * Stage A) — a second, unrelated observational consumer of the same "exact-state fingerprint"
  * concept. Not a production search dependency in either caller. */
 export function stateSignature(ws: SolverSearchState): string {
-    const pos = ws.path[ws.path.length - 1];
+    const pathLen = ws.path.length;
+    const pos = ws.path[pathLen - 1];
+    const prev = pathLen >= 2 ? ws.path[pathLen - 2] : -1;
     const seen = new Set<number>();
     let visitedPart = '';
     for (const k of ws.path) {
@@ -24,7 +29,7 @@ export function stateSignature(ws: SolverSearchState): string {
         seen.add(k);
         visitedPart += `${k}:${ws.edgeUsage[k]},`;
     }
-    return `${pos}|${visitedPart}|${ws.portalJumps}|${ws.ints}|${ws.mpVisitedMask}|${ws.mustCrossMask}|${ws.crossCounts.join('.')}`
+    return `${pos}|${prev}|${pathLen}|${visitedPart}|${ws.portalJumps}|${ws.ints}|${ws.mpVisitedMask}|${ws.mustCrossMask}|${ws.crossCounts.join('.')}`
          + `|${ws.surroundMask}|${ws.surroundNeighborRemainingMasks.join('.')}|${ws.mustTurnMask}|${ws.adjTurnMask}`
          + `|${ws.flipperUsedMask}|${ws.lastWasPortalJump ? 1 : 0}`;
 }
