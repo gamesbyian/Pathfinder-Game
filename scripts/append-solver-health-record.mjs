@@ -1,16 +1,12 @@
 #!/usr/bin/env node
 /**
- * Compact, standardized longitudinal solver-health record. Appends ONE JSONL line per completed
- * capability run to reports/stress/solver-health-timeline.jsonl, derived entirely from data an
- * EXISTING dispatched run (solver-stress-refresh.yml) already produced in the same job -- the
- * per-run summary.json its own "Regenerate derived stress metadata" step already writes, plus the
- * corpus1/corpus2 combined reports that step already read. No new solver compute.
+ * Compact longitudinal solver-health record. Appends one JSONL line per completed capability run
+ * from artifacts the existing solver-stress-refresh workflow already produced. No solver compute.
  *
- * In addition to scalar solve/work health, this records capability composition: population/solved
- * set hashes plus gain/loss churn against the most recent protocol-compatible tracked capability
- * run whose per-level snapshot is still available. The timeline keeps only compact churn counts and
- * set hashes; exact IDs remain recoverable from the referenced per-level run snapshots. Churn is
- * research/health evidence only and may not steer production by level identity.
+ * Capability churn is compared only with the most recent protocol-compatible tracked run whose
+ * per-level snapshots still exist. Exact changed IDs stay in those snapshots; the timeline stores
+ * counts and hashes. Historical health information is research evidence only and may not steer
+ * production by level identity.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, appendFileSync, mkdirSync } from 'node:fs';
@@ -18,6 +14,25 @@ import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
 import { diffIdSets, hashIds, populationIds, reportRows, solvedIds } from './solver-capability-memory-lib.mjs';
+
+const WORKFLOW_PROTOCOL_DEFAULTS = Object.freeze({
+    corpus2_budget_ms: '86400000',
+    corpus2_node_budget: '50000000',
+    strict_total_work_budget: 'false',
+    corpus2_workers: '4',
+    enable_flags: '',
+    disable_flags: '',
+    main_loop_late_reserve_fraction: '',
+    main_loop_late_reserve_config_count: '',
+    repair_late_probe_node_budget: '',
+    corpus1_budget_ms: '86400000',
+    corpus1_node_budget: '50000000',
+    corpus1_workers: '4',
+    deterministic: 'false',
+    lifecycle_telemetry: 'false',
+    shard_count: '60',
+    max_parallel: '20',
+});
 
 function parseArgs(argv) {
     return new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -38,8 +53,7 @@ function normalizedBoolean(value) {
     return value ?? null;
 }
 
-function normalizeProtocol(summary) {
-    const protocol = summary?.protocol;
+function normalizeProtocolObject(protocol) {
     if (!protocol || typeof protocol !== 'object' || Array.isArray(protocol)) return null;
     return Object.fromEntries(
         Object.entries(protocol)
@@ -48,8 +62,24 @@ function normalizeProtocol(summary) {
     );
 }
 
-function protocolHash(summary) {
-    const protocol = normalizeProtocol(summary);
+function protocolFromEvent() {
+    const eventPath = process.env.GITHUB_EVENT_PATH;
+    if (!eventPath || !existsSync(eventPath)) return null;
+    try {
+        const event = JSON.parse(readFileSync(eventPath, 'utf8'));
+        const inputs = event?.inputs;
+        if (!inputs || typeof inputs !== 'object' || Array.isArray(inputs)) return null;
+        return normalizeProtocolObject({ ...WORKFLOW_PROTOCOL_DEFAULTS, ...inputs });
+    } catch {
+        return null;
+    }
+}
+
+function resolveProtocol(summary) {
+    return normalizeProtocolObject(summary?.protocol) ?? protocolFromEvent();
+}
+
+function hashProtocol(protocol) {
     if (!protocol) return null;
     return createHash('sha256').update(JSON.stringify(protocol)).digest('hex');
 }
@@ -91,20 +121,15 @@ export function summarizeStageParticipation(levels) {
     return Object.fromEntries(stats);
 }
 
-function protocolMatches(currentSummary, priorSummary) {
-    if (!priorSummary) return false;
-    if (normalizedBoolean(currentSummary?.levelBlind) !== normalizedBoolean(priorSummary?.levelBlind)) return false;
-    if (normalizedBoolean(currentSummary?.deterministic) !== normalizedBoolean(priorSummary?.deterministic)) return false;
-    if (JSON.stringify(normalizeFlagList(currentSummary?.enableFlags)) !== JSON.stringify(normalizeFlagList(priorSummary?.enableFlags))) return false;
-    if (JSON.stringify(normalizeFlagList(currentSummary?.disableFlags)) !== JSON.stringify(normalizeFlagList(priorSummary?.disableFlags))) return false;
-    const currentProtocol = normalizeProtocol(currentSummary);
-    const priorProtocol = normalizeProtocol(priorSummary);
-    // Legacy summaries do not establish enough budget/execution identity for solved-set churn.
-    if (!currentProtocol || !priorProtocol) return false;
-    if (JSON.stringify(currentProtocol) !== JSON.stringify(priorProtocol)) return false;
+function healthRecordMatchesProtocol(currentSummary, currentProtocolHash, record) {
+    if (!record || !currentProtocolHash || record.protocolHash !== currentProtocolHash) return false;
+    if (normalizedBoolean(currentSummary?.levelBlind) !== normalizedBoolean(record?.levelBlind)) return false;
+    if (normalizedBoolean(currentSummary?.deterministic) !== normalizedBoolean(record?.deterministic)) return false;
+    if (JSON.stringify(normalizeFlagList(currentSummary?.enableFlags)) !== JSON.stringify(normalizeFlagList(record?.enableFlags))) return false;
+    if (JSON.stringify(normalizeFlagList(currentSummary?.disableFlags)) !== JSON.stringify(normalizeFlagList(record?.disableFlags))) return false;
     for (const corpus of ['corpus1', 'corpus2']) {
         const current = currentSummary?.[corpus];
-        const prior = priorSummary?.[corpus];
+        const prior = record?.[corpus];
         if (!!current !== !!prior) return false;
         if (current && Number(current.total) !== Number(prior.total)) return false;
     }
@@ -134,21 +159,22 @@ function populationMatches(currentRowsByCorpus, priorRowsByCorpus) {
 
 export function findPreviousCompatibleRun({ timelineFile, currentSummary, currentCombinedByCorpus, capabilityRunsDir }) {
     if (!existsSync(timelineFile)) return null;
+    const currentProtocolHash = hashProtocol(resolveProtocol(currentSummary));
+    if (!currentProtocolHash) return null;
     const lines = readFileSync(timelineFile, 'utf8').split('\n').map(s => s.trim()).filter(Boolean);
     const currentRowsByCorpus = normalizeCombinedByCorpus(currentCombinedByCorpus);
     for (let i = lines.length - 1; i >= 0; i--) {
         let record;
         try { record = JSON.parse(lines[i]); } catch { continue; }
         if (!record?.runId || String(record.runId) === String(currentSummary?.runId)) continue;
-        const priorSummary = readJsonIfPresent(path.join(capabilityRunsDir, String(record.runId), 'summary.json'));
-        if (!protocolMatches(currentSummary, priorSummary)) continue;
+        if (!healthRecordMatchesProtocol(currentSummary, currentProtocolHash, record)) continue;
         const priorRowsByCorpus = {};
         for (const corpus of ['corpus1', 'corpus2']) {
             const rows = snapshotRowsForRun(capabilityRunsDir, record.runId, corpus);
             if (rows) priorRowsByCorpus[corpus] = rows;
         }
         if (!populationMatches(currentRowsByCorpus, priorRowsByCorpus)) continue;
-        return { runId: String(record.runId), summary: priorSummary, rowsByCorpus: priorRowsByCorpus };
+        return { runId: String(record.runId), rowsByCorpus: priorRowsByCorpus };
     }
     return null;
 }
@@ -192,6 +218,7 @@ export function buildHealthRecord(summary, combinedByCorpus, previousCompatible 
             lostIdHash: hashIds(churn.lostIds),
         };
     }
+    const protocol = resolveProtocol(summary);
     return {
         recordedAt: new Date().toISOString(),
         runId: summary?.runId ?? null,
@@ -200,7 +227,8 @@ export function buildHealthRecord(summary, combinedByCorpus, previousCompatible 
         deterministic: normalizedBoolean(summary?.deterministic),
         enableFlags: summary?.enableFlags || null,
         disableFlags: summary?.disableFlags || null,
-        protocolHash: protocolHash(summary),
+        protocol,
+        protocolHash: hashProtocol(protocol),
         corpus1: corpusSummary('corpus1'),
         corpus2: corpusSummary('corpus2'),
         capabilityChurn,
