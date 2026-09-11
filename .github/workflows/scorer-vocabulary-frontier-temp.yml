@@ -1,0 +1,83 @@
+name: TEMP scorer-vocabulary frontier evidence
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/scorer-vocabulary-frontier-temp.yml'
+      - 'scripts/stress/witness-scoring-vocabulary-diagnostic.mjs'
+      - 'scripts/stress/analyze-scoring-vocabulary-frontier.mjs'
+      - 'scripts/stress/scoring-vocabulary-lib.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  scorer-frontier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the PR merge commit
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run prespecified witness-only scorer-vocabulary diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          node scripts/run-bundled.mjs scripts/stress/witness-scoring-vocabulary-diagnostic.mjs -- \
+            --corpus=corpus2 \
+            --unsolved-only \
+            --report=reports/stress/capability-runs/34531412380/per-level-corpus2.json \
+            --sources=witness \
+            --scoring-profile=default \
+            --out=tmp/scorer-vocabulary-witness-only.json
+
+          node scripts/stress/analyze-scoring-vocabulary-frontier.mjs \
+            --diagnostic=tmp/scorer-vocabulary-witness-only.json \
+            --atlas=reports/stress/residual-atlas/2026-09-11-post-1029-671/atlas.json \
+            --out=tmp/scorer-vocabulary-frontier.json
+
+      - name: Print compact decision evidence
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const diagnostic = JSON.parse(readFileSync('tmp/scorer-vocabulary-witness-only.json', 'utf8'));
+          const frontier = JSON.parse(readFileSync('tmp/scorer-vocabulary-frontier.json', 'utf8'));
+          const preferred = diagnostic.weightInvariantExamples
+            .flatMap(row => (row.weightInvariantPairs || [])
+              .filter(pair => pair.relation === 'alternative-preferred')
+              .map(pair => ({ levelId: row.levelId, depth: row.depth, pos: row.pos, ...pair })))
+            .slice(0, 50);
+          const topLevels = diagnostic.levels
+            .filter(row => (row.weightInvariantAlternativePreferredDecisions || 0) > 0)
+            .sort((a, b) => (b.weightInvariantAlternativePreferredDecisions - a.weightInvariantAlternativePreferredDecisions)
+              || String(a.id).localeCompare(String(b.id)))
+            .slice(0, 50)
+            .map(row => ({
+              id: row.id,
+              branchingDecisions: row.branchingDecisions,
+              invariantDecisions: row.weightInvariantDecisions,
+              alternativePreferredDecisions: row.weightInvariantAlternativePreferredDecisions,
+              alternativePreferredPairs: row.weightInvariantAlternativePreferredPairs,
+              collisions: row.exactVocabularyCollisionDecisions,
+            }));
+          console.log('__SCORER_FRONTIER_EVIDENCE_BEGIN__');
+          console.log(JSON.stringify({
+            diagnosticTotals: diagnostic.totals,
+            skippedLevels: diagnostic.skippedLevels,
+            frontier,
+            firstAlternativePreferredPairs: preferred,
+            topAlternativePreferredLevels: topLevels,
+          }, null, 2));
+          console.log('__SCORER_FRONTIER_EVIDENCE_END__');
+          NODE
