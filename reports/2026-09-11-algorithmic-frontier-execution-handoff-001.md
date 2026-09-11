@@ -1,9 +1,9 @@
 # Algorithmic frontier execution handoff 001
 
 > **Status:** ready-for-execution
-> **Last evidence:** 2026-09-11 — post-1,029 residual atlas plus class-4/class-5 coarse contrast.
+> **Last evidence:** 2026-09-11 — post-1,029 residual atlas, class-4/class-5 coarse contrast, and closure of portal coarse-state salvage as negative.
 > **Decision:** exhaust the already-available static, provenance/profile, family, and bounded replay evidence before proposing a new algorithm family or broad solve campaign.
-> **Owner:** WS1 parallel offline frontier characterization; WS2 portal coarse-state salvage remains the first production-facing gate.
+> **Owner:** WS1 parallel offline frontier characterization; bounded WS2 admissible-order repricing and the 26-level WS1 menu-expansion candidate are the current production-facing neighbors after portal salvage closed negative.
 
 ## Question
 
@@ -18,6 +18,7 @@ Class 4 is the primary control because both groups already sit beyond the frozen
 - `scripts/stress/analyze-post-1029-residual-atlas.mjs` now rebuilds the atlas with a `frontierContrast` section using the existing `scripts/stress/features.mjs` vocabulary plus production work/attempt telemetry.
 - The contrast math lives in `scripts/stress/frontier-contrast-lib.mjs` with a focused unit test.
 - Coarse evidence already rejects a simple “frontier = more portal/mechanic complexity” story: class 5 is less portal-bearing and has less portal+must-cross+intersection-heavy overlap than class 4, while being modestly more intersection-heavy.
+- Portal coarse-state salvage has independently closed negative after exact `R01273` localization and bounded salvage attempts. Do not make frontier characterization wait on that line or reopen its tested subkey/retention shapes.
 
 ## Execute first: full static + production-response contrast
 
