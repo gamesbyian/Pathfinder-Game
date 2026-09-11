@@ -123,6 +123,7 @@ export function attemptRecord(a) {
         ...(a.repairElitePrefixDfsRetry ? { repairElitePrefixDfsRetry: true } : {}),
         ...(a.mcNeighborBudgetRetry ? { mcNeighborBudgetRetry: true } : {}),
         ...(a.repairLateProbe ? { repairLateProbe: true } : {}),
+        ...(a.resumableResidualTranche ? { resumableResidualTranche: true } : {}),
         ...(a.allocatedWorkCeiling !== undefined ? { allocatedWorkCeiling: a.allocatedWorkCeiling } : {}),
         ...(a.allocatedNodeCeiling !== undefined ? { allocatedNodeCeiling: a.allocatedNodeCeiling } : {}),
         ...(a.workSpent !== undefined ? { workSpent: a.workSpent } : {}),
@@ -161,6 +162,9 @@ export function buildRow(levelNumber, id, result, schedulerMode) {
         workSpent: result?.workSpent ?? null,
         deadlineTruncated: !!result?.deadlineTruncated,
         stageLifecycle: result?.stageLifecycle ?? result?.techniqueLifecycle ?? null,
+        // Preserve the scheduler's own resumable-pass accounting so a persisted A/B can distinguish
+        // actual continuation participation and incremental work from a nominally enabled no-op.
+        resumableResidualPass: result?.resumableResidualPass ?? null,
         refereeValid: result?.refereeValid ?? null,
         solvedBeforeFallback,
         solvedByFallback,
