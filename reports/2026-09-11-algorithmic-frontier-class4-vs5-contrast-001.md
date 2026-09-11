@@ -1,6 +1,6 @@
 # Algorithmic frontier class-4 vs class-5 contrast 001
 
-> **Status:** historical — cohort sizing superseded by final provenance audit
+> **Status:** superseded
 > **Last evidence:** 2026-09-11 — this report used the pre-final split class 4 = 200 / class 5 = 388. The final provenance audit subsequently corrected legacy missing context booleans from implicit `false` to `unknown`, yielding 143 explicit historical candidates / 445 no-admissible-rescuer rows in the live post-1,029 atlas.
 > **Decision:** retain this report for method and hypothesis history only. Do not reuse its class membership, denominators, percentages, odds ratios, or prevalence as current frontier evidence. Rebuild any new class-4/class-5 contrast from the provenance-audited atlas.
 > **Remaining gate:** none owned here. Current execution lives in [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md); the former joint-obligation gate has since been resolved and promoted.
