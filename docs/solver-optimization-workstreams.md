@@ -33,7 +33,7 @@ Method: [`solver-research-operating-model.md`](solver-research-operating-model.m
 
 **Repair-side follow-up is complete:** natural repair search does not approach the known-live beam trajectories even at 10x the small matched-work probe. When repair is seeded exactly at the beam-cull state, **4/28 are reconstructable and 24/28 operator-incapable**. The four reconstructable cases nominate a Card-E continuation/handoff question; n=4 is too small to size or justify a mechanism. [`report`](../reports/2026-09-11-repair-side-first-loss-exposure-001.md)
 
-**Next gate:** before spending on more allocation, use the named current residual plus capability-memory evidence to measure genuinely complementary capability and its overlap/freshness/work economics. Historical signatures can nominate a premise; current comparable rows are required to claim current capability. Cross-action recurrence, not more dose of the same action, remains the bar for shared-capability escalation.
+**Next gate:** run the bounded current-residual capability-memory census before more allocation work. Use existing provenance-bearing rows/signatures first; measure confirmed current gains separately from historical nominations, pairwise overlap/unique capability, work economics where comparable, and displaced winners from accepted changes. Start only with materially distinct, already-understood evidence sources; do not create a permanent policy panel or rerun campaign. Advance only if the census earns a shared basin, policy-specific basin, allocation opportunity, or recurring displacement premise; otherwise close it as low-yield. [`prespecification`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -51,7 +51,7 @@ The old `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` 
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Measure current-residual complementary capability/overlap before more allocation work. Card-E remains nomination-only. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Execute the bounded current-residual capability-memory census; advance only an earned complementarity/allocation/displacement premise. Card-E remains nomination-only. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Continue temporal/difficulty-controlled structural response; next earned stage is solution-space mediation for the two stage-3 pairs. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when first-loss/family evidence shows a live continuation needs repair-side interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or a new hotspot. |
