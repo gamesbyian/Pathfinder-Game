@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -19,13 +20,17 @@ function stableStringify(value) {
     return `{${keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',')}}`;
 }
 
+function digest(effectiveConfig) {
+    return createHash('sha256').update(stableStringify(effectiveConfig)).digest('hex');
+}
+
 const dir = mkdtempSync(path.join(tmpdir(), 'effective-config-agreement-test-'));
 function writeReport(name, effectiveConfig) {
     const file = path.join(dir, name);
     writeFileSync(file, JSON.stringify({
         summary: {
             effectiveConfig,
-            effectiveConfigDigest: stableStringify(effectiveConfig),
+            effectiveConfigDigest: digest(effectiveConfig),
         },
         levels: [],
     }));
@@ -51,12 +56,12 @@ test('checkAgreement rejects a stale or malformed effectiveConfigDigest', () => 
     writeFileSync(file, JSON.stringify({
         summary: {
             effectiveConfig: { nodeBudget: 100, ablation: { X: true } },
-            effectiveConfigDigest: '{"nodeBudget":100}',
+            effectiveConfigDigest: digest({ nodeBudget: 100 }),
         },
         levels: [],
     }));
     const other = writeReport('stale-digest-peer.json', { nodeBudget: 100, ablation: { X: true } });
-    assert.throws(() => checkAgreement([file, other]), /does not match the canonical serialization/);
+    assert.throws(() => checkAgreement([file, other]), /does not match SHA-256 of the canonical/);
 });
 
 test('checkAgreement requires at least 2 result files', () => {
@@ -92,7 +97,7 @@ test('checkCompare with requireActualDiff fails on a control-vs-control dispatch
 
 test('checkCompare without requireActualDiff tolerates an identical pair (a caller not asserting a real difference)', () => {
     const control = writeReport('control4.json', { nodeBudget: 100 });
-    const treatment = writeReport('treatment4.json', { nodeBudget: 100 });
+    const treatment = writeReport('control4-peer.json', { nodeBudget: 100 });
     const result = checkCompare(control, treatment, ['ablation'], false);
     assert.deepEqual(result.differing, []);
 });
