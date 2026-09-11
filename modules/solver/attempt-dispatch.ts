@@ -95,12 +95,16 @@ export function validateAttemptConfigContract(attemptConfig: AttemptConfig): voi
   }
 
   if (orderingBias) {
-    const canonical = STRUCTURAL_ORDERING_BIASES[orderingBias.id];
+    const orderingBiasId = orderingBias.id;
+    if (!orderingBiasId) {
+      throw new Error('AttemptConfig structural ordering bias requires a canonical id.');
+    }
+    const canonical = STRUCTURAL_ORDERING_BIASES[orderingBiasId];
     if (!canonical) {
-      throw new Error(`AttemptConfig references unknown structural ordering bias "${orderingBias.id}".`);
+      throw new Error(`AttemptConfig references unknown structural ordering bias "${orderingBiasId}".`);
     }
     if (!sameOrderingBias(orderingBias, canonical)) {
-      throw new Error(`AttemptConfig ordering bias "${orderingBias.id}" does not match the canonical policy definition; identity cannot represent custom same-id behavior.`);
+      throw new Error(`AttemptConfig ordering bias "${orderingBiasId}" does not match the canonical policy definition; identity cannot represent custom same-id behavior.`);
     }
   }
 }
