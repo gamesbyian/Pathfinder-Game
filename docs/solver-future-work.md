@@ -8,7 +8,7 @@ This is not a second queue or experiment diary. Carry forward only the smallest 
 
 Closed work reopens only for a changed causal premise/treatment, not renewed interest. The current premise map distinguishes mechanic-composition transfer, narrow WS5 questions, and WS4/WS6/WS0/handoff/selector premises still gated on recurrence. [`new-premise map`](../reports/2026-09-11-new-premise-reopen-map-001.md)
 
-Capability memory is another **premise source, not a reopen exemption**. Complementary gains/losses, displaced winners and old regimes may nominate generic mechanisms, but historical same-level outcomes remain offline evidence until reconciled to current code/protocol. Descendants still owe the owning reopen gate plus normal level-blind evidence requirements.
+Capability memory is another **premise source, not a reopen exemption**. Complementary gains/losses, displaced winners and old regimes may nominate generic mechanisms, but historical same-level outcomes remain offline evidence until reconciled to current code/protocol. Descendants still owe the owning reopen gate plus normal level-blind evidence requirements. [`capability-memory closeout`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
 
 ## Algorithmic frontier
 
@@ -36,6 +36,8 @@ Stages 1-2 leave 2/8 credible frozen pairs. Stage 3 succeeds for both: matched i
 | **Latent response dimensions / biclusters** | Only if simpler pair/cohort analysis leaves stable unexplained structure after temporal/difficulty controls. |
 | **Repair restart allocation in the near-miss band** | Keep the unchanged 150M form closed. Preserve the replicated 64M fully-spent bestBadness<=6 signal; reopen on a fresh legal population with the same texture or a changed allocation contract. |
 | **Beam continuation / cross-policy handoff** | Same-policy residual tranches, simple beam→DFS handoff and repeated/staged switching are closed. Reopen for a distinct complementary policy or an earned first-loss/state-selection mechanism with live futures. Preserve continuation ownership/detachment invariants. |
+| **Temporal anchor diversity** | Do not maintain or routinely rerun an old-solver ensemble. Reopen after a material production-boundary change when existing compatible historical rows suggest a behaviorally distinct old regime still owns a stable basin and the decision-specific question cannot be answered without replay. |
+| **Counterfactual displaced-capability recurrence** | Ordinary solved-set churn is already retained in solver health; no hand-maintained regression bank. Reopen only when losses from multiple unrelated accepted changes recur in the same failure/mechanism phenotype, then nominate the smallest generic repair. |
 | **Generator/editor-envelope technique niches** | Reopen only with a joinable finer envelope or an envelope-specific mechanism claim; broad corpus ease/repertoire/regime questions are already characterized. |
 | **Minimal technique-niche counterexamples** | Use reducer + exact/reference validation when a temporally/difficulty-robust niche needs causal isolation. Exact paths adjudicate known-live loss, not broad solver acquisition. |
 | **Typed producer -> consumer search artifacts** | Require measured consumer limitation, novel timely producer information, bounded production/storage/replay cost, independent control and matched-work benefit. No general blackboard. |
