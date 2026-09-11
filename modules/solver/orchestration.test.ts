@@ -2410,7 +2410,7 @@ test('a sparse config that already disables near-tie retention suppresses the be
     });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false,
-        'retry must not rerun when its forced treatment is already the caller's effective setting');
+        "retry must not rerun when its forced treatment is already the caller's effective setting");
 });
 
 test('coarseStateNearTieRetentionRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
@@ -2738,7 +2738,7 @@ test('a sparse config that already disables connectivity-axis pruning suppresses
     });
     assert.equal(result.ok, false);
     assert.equal(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false,
-        'retry must not rerun when its forced treatment is already the caller's effective setting');
+        "retry must not rerun when its forced treatment is already the caller's effective setting");
 });
 
 test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
