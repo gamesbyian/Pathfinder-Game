@@ -2,84 +2,16 @@
 /**
  * Stress-corpus solver benchmark.
  *
- * Solves the stress corpus with the witness metadata stripped (the solver never sees
- * witnessSolution or any stressMeta), records per-level runtime, node expansions,
- * attempt ladders, winning/failed strategies, and referee-validates every returned
- * solution. This is an EXPLORATORY/ITERATION tool, not the regression gate — that's
- * `npm run solver:regression` (scripts/solver-bench.mjs), which stays strictly sequential
- * for production-parity and is never touched by the engine choice here.
+ * Solves the stress corpus with witness metadata stripped and referee-validates returned paths.
+ * This is an exploratory/iteration tool, not the production-parity regression gate.
  *
- * Run via the esbuild wrapper (imports the TS solver):
- *   node scripts/run-bundled.mjs scripts/stress/benchmark.mjs
- *       [--corpus=data/stress/stress-levels.json] [--budget-ms=20000]
- *       [--out=reports/stress/benchmark-latest.json] [--levels=S001,S005|id:1-20]
- *       [--engine=raced|sequential] [--pool-size=N] [--parallel[=N]]
- *       [--filter-mechanic=mustCross,portalPairs] [--sample=N] [--seed=<value>]
- *       [--repair-budget-fraction=<n>] [--goal-attraction-disabled-retry-budget-fraction=<n>]
- *
- * --repair-budget-fraction=<n> overrides REPAIR_ADDITIVE_BUDGET_MULTIPLIER (default 6x, the repair
- * fallback's extra wall-clock allowance ON TOP of --budget-ms) via SolveOpts.
- * repairAdditiveBudgetMultiplierOverride for this whole run. Solver-TESTING workflows (this tool's usual
- * job) should pass 0 here — a full corpus-1 sweep measured the default 6x costing ~2.8x the total
- * wall time (51min -> 18min at fraction=0) for solves that only ever land at 35-115s anyway (well
- * past any interactive-use threshold), while previously-multi-minute failures resolve just as
- * correctly, only much faster. The extension is still worth keeping for actual hint-DISCOVERY
- * runs (--save-hints elsewhere, e.g. portfolio-solve-sweep.mjs/hint-workbench.mjs) where a
- * slow-but-eventual find becomes a permanent hint — leave this flag unset there. Omit entirely to
- * keep the default 6x (matches this tool's historical behavior exactly).
- *
- * --goal-attraction-disabled-retry-budget-fraction=<n> (legacy alias:
- * --attraction-diversity-budget-fraction) overrides GOAL_ATTRACTION_DISABLED_RETRY_BUDGET_FRACTION
- * (default 1.0x, the 2026-07-16 fragile-group last-resort pass's own separate extra wall-clock
- * allowance) via SolveOpts.goalAttractionDisabledRetryBudgetFractionOverride — a DEDICATED override, NOT
- * the same flag as --repair-budget-fraction above, specifically so a sweep can isolate one
- * extension's cost from the other's (see orchestration.ts's SolveOpts comment on why they're
- * separate). Same solver-testing-vs-hint-discovery guidance as --repair-budget-fraction: pass 0
- * here for ordinary solver-testing sweeps, leave unset for hint-discovery runs. Takes effect under
- * both --engine=sequential and the default --engine=raced (race.mjs's own single-queue phase 2,
- * added the same day as the sequential pass — see race.mjs's module comment).
- *
- * --filter-mechanic=<name>[,<name>...] (docs/solver-dev-tooling-plan.md Component C): keeps only
- * levels where stressMeta.mechanicCounts[<name>] > 0 for ANY of the given names (OR, not AND) —
- * both stress corpora already carry this metadata, so this is a pure filter over existing data,
- * never a new computation. Composes with --levels (applied after it). NOT a substitute for a
- * full run when the change touches shared orchestration/scoring/pruning code that every level
- * exercises regardless of mechanics — see docs/testing.md's "Solver stress tiers" table for which
- * tier a given change actually needs.
- *
- * --sample=N: deterministic rotating sample of N levels (Fisher-Yates, seeded), applied AFTER
- * --levels/--filter-mechanic — this is Tier 3's "100 levels per change, different deterministic
- * shard per commit" from the original regression-testing brainstorm: run a repeatable subset of a
- * huge corpus instead of the full sweep every time, without ever losing reproducibility. Default
- * seed is the current commit SHA (or $GITHUB_SHA under CI), so two runs on the same commit sample
- * the same levels; pass --seed=<any string> explicitly to pin or vary the sample independent of
- * the commit (e.g. --seed=daily-2026-07-10 for a once-a-day rotating shard). Omit --sample to run
- * every selected level, as before.
- *
- * --engine (default: raced) selects which engine solves each level:
- *   - raced: worker-thread attempt racing via a persistent pool shared across the whole
- *     run (scripts/solver-parallel/race.mjs's createRacePool) — races the SAME
- *     policy-selected attempts a sequential solveLevel() would run, just scheduled
- *     concurrently across --pool-size workers (default availableParallelism()-1).
- *     Faster in aggregate for a full-corpus run (see docs/solver-architecture.md's
- *     "Making racing the default for batch runs" for the measured numbers), but a
- *     winning strategy under racing is "whichever config's worker finished first", not
- *     "first in ladder order that succeeded" — treat winningStrategy/attempt timings as
- *     approximate, and use --engine=sequential when you need exact production numbers
- *     (e.g. before comparing against solver:regression).
- *   - sequential: the exact single-threaded PRODUCTION solveLevel(), one level at a time.
- *
- * --parallel runs levels across N worker threads (default: availableParallelism-1) for
- * ITERATION SPEED ONLY — parallelizes ACROSS levels, orthogonal to --engine=raced's
- * within-level racing. The two are not combined (nested worker pools would oversubscribe
- * CPU): passing both forces --engine=sequential inside each outer worker. Per-level
- * timings under parallel mode are inflated by CPU contention and MUST NOT be compared
- * against sequential runs or committed as benchmark-latest.json. The output is stamped
- * with `parallel: N`; canonical Corpus 1/2 inputs use their corpus-number live paths,
- * while custom corpora default to solver-parallel-latest.json so they cannot masquerade as
- * either maintained corpus. Solve/fail results (the solved set) are
- * budget-dependent and can flip near the budget edge under contention; treat parallel
- * failures as "re-check sequentially".
+ * `--skip-existing-dir` may reuse rows only from reports carrying an exact matching
+ * `benchmarkProtocol`. Legacy reports without that protocol are intentionally ignored rather than
+ * guessed compatible: reusing a row changes the evidence just as surely as executing a row, so its
+ * solver ref, corpus, budgets, execution engine, parallelism and additive-budget overrides must all
+ * match the current run. Across-level `--parallel` runs cannot safely reuse rows because executing
+ * only the remainder changes CPU contention even when the nominal worker count matches; that
+ * combination fails loudly instead of mixing contention regimes.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { formatAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
@@ -113,8 +45,6 @@ const cfg = isMainThread
     ? {
         corpusFile: argMap.get('--corpus') || 'data/stress/stress-levels.json',
         budgetMs: Number(argMap.get('--budget-ms') || 20000),
-        // The machine-independent bound (modules/solver/work-meter.ts). Pass it for a run whose
-        // solved set must be reproducible; without it one is derived from budgetMs.
         workBudget: argMap.has('--work-budget') ? Number(argMap.get('--work-budget')) : undefined,
         levelSpec: argMap.get('--levels') || null,
         filterMechanic: argMap.get('--filter-mechanic') || null,
@@ -132,17 +62,12 @@ installBrowserStubs();
 const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
-/** Keeps only levels touching ANY of the named mechanics (see stressMeta.mechanicCounts) — a
- *  pure filter over metadata every stress-corpus level already carries, no new computation. */
 function filterByMechanic(levels, spec) {
     if (!spec) return levels;
     const names = spec.split(',').map(s => s.trim()).filter(Boolean);
     return levels.filter(l => names.some(name => (l.stressMeta?.mechanicCounts?.[name] ?? 0) > 0));
 }
 
-/** FNV-1a: derives a 32-bit numeric seed from an arbitrary string (a commit SHA by default, or
- *  any --seed value) for mulberry32 below — same seeded-PRNG convention as repair-search.ts /
- *  scripts/solver-oracle/generate.mjs. */
 function hashSeed(str) {
     let h = 0x811c9dc5;
     for (let i = 0; i < str.length; i++) {
@@ -162,10 +87,6 @@ function mulberry32(seed) {
     };
 }
 
-/** Deterministic rotating sample (docs/solver-dev-tooling-plan.md tail item "seeded sampling"):
- *  Fisher-Yates partial shuffle seeded from `seedStr` (default: the current commit SHA), so a
- *  Tier-3 "N levels of the 1700-level corpus" run is reproducible from the seed alone — rerun the
- *  same --seed to replay exactly the same sample, or omit --sample entirely to run the full set. */
 function sampleDeterministic(levels, n, seedStr) {
     if (!Number.isFinite(n) || n >= levels.length) return levels;
     const rng = mulberry32(hashSeed(String(seedStr)));
@@ -179,32 +100,44 @@ function sampleDeterministic(levels, n, seedStr) {
     return picked;
 }
 
-function loadExistingRecords(logDir) {
+function protocolsEqual(a, b) {
+    if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+    const aKeys = Object.keys(a).sort();
+    const bKeys = Object.keys(b).sort();
+    if (aKeys.length !== bKeys.length || aKeys.some((key, i) => key !== bKeys[i])) return false;
+    return aKeys.every(key => Object.is(a[key], b[key]));
+}
+
+function loadExistingRecords(logDir, benchmarkProtocol) {
     const records = new Map();
     if (!logDir) return records;
     const absDir = path.resolve(ROOT, logDir);
     if (!existsSync(absDir)) return records;
+    let ignoredIncompatible = 0;
     for (const name of readdirSync(absDir)) {
         if (!name.endsWith('.json')) continue;
         let parsed;
         try { parsed = JSON.parse(readFileSync(path.join(absDir, name), 'utf8')); }
         catch { continue; }
         if (!Array.isArray(parsed?.levels)) continue;
+        if (!protocolsEqual(parsed.benchmarkProtocol, benchmarkProtocol)) {
+            ignoredIncompatible++;
+            continue;
+        }
         for (const record of parsed.levels) {
             if (typeof record?.id === 'string' && !records.has(record.id)) records.set(record.id, record);
         }
+    }
+    if (ignoredIncompatible > 0) {
+        console.log(`  skip-existing: ignored ${ignoredIncompatible} report(s) without an exact benchmarkProtocol match.`);
     }
     return records;
 }
 
 const corpus = JSON.parse(readFileSync(path.resolve(ROOT, cfg.corpusFile), 'utf8'));
-// A bare-array corpus (e.g. family-generate.mjs's own output, which has no {levels: [...]}
-// wrapper) has no `.levels` property -- fall back to the parsed value itself, matching
-// level-data-io.mjs's readers.
 const corpusLevels = Array.isArray(corpus) ? corpus : corpus.levels;
 let levels = sampleDeterministic(filterByMechanic(selectLevelsBySpec(corpusLevels, cfg.levelSpec), cfg.filterMechanic), cfg.sample, cfg.seed);
 
-// Current console/summary output uses the same canonical config identity as persisted reports.
 const attemptLabel = a => formatAttemptIdentityKey({
     scoringProfileId: a.scoringProfileId ?? a.profile ?? 'unknown',
     orderingBiasId: a.orderingBiasId ?? a.template ?? null,
@@ -218,7 +151,6 @@ const attemptLabel = a => formatAttemptIdentityKey({
     admissibleOrderLds: a.admissibleOrderLds,
 });
 
-/** Sequential engine: the exact single-threaded PRODUCTION solveLevel(). */
 const solveSequential = (raw, level) => Solver.solveLevel(level, {
     timeBudgetMs: cfg.budgetMs,
     ...(cfg.workBudget !== undefined ? { workBudget: cfg.workBudget } : {}),
@@ -226,14 +158,7 @@ const solveSequential = (raw, level) => Solver.solveLevel(level, {
     ...(Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction) ? { goalAttractionDisabledRetryBudgetFractionOverride: cfg.goalAttractionDisabledRetryBudgetFraction } : {}),
 });
 
-/** Solve one corpus entry and build its report record + console line. Shared verbatim by the
- *  sequential loop, the raced-pool loop, and the across-levels worker-pool path so all modes
- *  measure/report the same shape. `solve(raw, level)` is the pluggable engine adapter — sequential
- *  ignores `raw` (needs the already-normalized `level`), raced ignores `level` (createRacePool's
- *  solveLevel() does its own prepareLevelForSolver internally, matching production's own path). */
 async function solveEntry(entry, solve) {
-    // Strip everything the solver must not see: the id and the entire stressMeta
-    // (which contains the hidden witness). What remains is plain wire format.
     const { id, stressMeta, ...raw } = entry;
     const batch = stressMeta?.generationBatch ?? '?';
 
@@ -257,21 +182,12 @@ async function solveEntry(entry, solve) {
     const elapsedMs = Date.now() - t0;
     const ok = !!result?.ok;
 
-    // Referee check: the solver's own solution must satisfy PLAY rules. The solver
-    // intentionally ignores geese/false goals (MoveContext.SOLVER), so a refereeValid=false
-    // on a hazard-padded level is a *finding*, not a bug in the benchmark.
     let refereeValid = null;
     if (ok && Array.isArray(result.solution)) {
         const check = Solver.validateCandidatePath(level, result.solution);
         refereeValid = check.ok;
     }
 
-    // Shared with portfolio-solve-sweep-lib.mjs rather than duplicated here. This file kept its own
-    // hand-maintained copy of the same field whitelist, and the two drifted TWICE: it never carried
-    // repairTurnBiased/randomSeed/seedSalt (so a stress:measure-solver repair winner was not replayable,
-    // and a turn-biased repair winner was indistinguishable from an ordinary one), and neither copy
-    // ever carried the admissible-order flags. One projection, one place to update when the solver
-    // gains a new diagnostic field.
     const attempts = (result.attempts || []).map(attemptRecord);
     const winner = attempts.find(a => a.ok) || null;
     const record = {
@@ -281,12 +197,9 @@ async function solveEntry(entry, solve) {
         refereeValid,
         elapsedMs,
         nodesExpanded: result.nodesExpanded ?? null,
-        // Machine-independent cost (modules/solver/work-meter.ts) — comparable across techniques
-        // and across hosts, unlike nodesExpanded/elapsedMs.
         workSpent: result.workSpent ?? null,
-        // A run the wall-clock deadline cut short while work budget remained is INDETERMINATE, not
-        // a reproducible negative. Recorded explicitly so downstream analysis can exclude it rather
-        // than bank a host-dependent "unsolved". See docs/solver-budget-determinism.md.
+        // A wall-deadline truncation while deterministic work remains is indeterminate. It is
+        // persisted separately and deliberately excluded from the aggregate `failed` count below.
         deadlineTruncated: result.deadlineTruncated ?? false,
         attemptCount: attempts.length,
         winningStrategy: winner ? attemptLabel(winner) : null,
@@ -298,12 +211,7 @@ async function solveEntry(entry, solve) {
     return { record, line };
 }
 
-// ---------------------------------------------------------------------------
-// Worker mode: solve indices the main thread hands us, one at a time.
-// ---------------------------------------------------------------------------
 if (!isMainThread) {
-    // --engine=raced is not combined with --parallel (see header comment) — an across-levels
-    // worker always solves sequentially, regardless of the main thread's --engine choice.
     parentPort.on('message', async msg => {
         if (msg?.type !== 'solve') return;
         const { record, line } = await solveEntry(levels[msg.index], solveSequential);
@@ -315,34 +223,46 @@ if (!isMainThread) {
 
 async function main() {
     const targetLevels = levels;
-    const recordById = loadExistingRecords(cfg.skipExistingDir);
-    levels = cfg.skipExistingDir ? targetLevels.filter(level => !recordById.has(level.id)) : targetLevels;
-    cfg.levelSpec = levels.map(level => level.id).join(',');
-
     const parallelArg = argMap.has('--parallel')
         ? (argMap.get('--parallel') === '' ? Math.max(1, (os.availableParallelism?.() ?? os.cpus().length) - 1) : Number(argMap.get('--parallel')))
         : 1;
-    const parallel = Math.max(1, Math.min(parallelArg, levels.length));
-    // Parallel runs must not silently replace the official sequential report, and a custom
-    // corpus must not inherit a maintained corpus-number filename merely because --parallel is on.
-    const defaultOut = defaultStressMeasurementOutput(cfg.corpusFile, parallel > 1);
-    const outFile = argMap.get('--out') || defaultOut;
-
-    // --engine=raced (within-level worker-thread attempt racing, via a pool shared across the
-    // WHOLE run) is the default — see header comment. Not combined with --parallel (across-level
-    // worker threads spawning their own nested racing pools would oversubscribe CPU).
+    const parallel = Math.max(1, Math.min(parallelArg, targetLevels.length));
+    if (cfg.skipExistingDir && parallel > 1) {
+        console.error('--skip-existing-dir cannot be combined with across-level --parallel: executing only the unreused remainder changes CPU contention, so nominally matching worker counts do not make old and new rows comparable. Re-run without --parallel or without --skip-existing-dir.');
+        process.exit(2);
+    }
     const requestedEngine = argMap.get('--engine') || 'raced';
     const engine = parallel > 1 ? 'sequential' : requestedEngine;
     const poolSizeArg = argMap.get('--pool-size') ? Number(argMap.get('--pool-size')) : undefined;
-    const racePool = engine === 'raced' ? createRacePool({ poolSize: poolSizeArg }) : null;
-    // --work-budget used to be threaded straight into the raced dispatch below (with an accidental
-    // duplicate-line copy-paste on top of that) even though race.mjs's createRacePool has no
-    // workBudget concept at all -- it was silently ignored under the DEFAULT --engine=raced while
-    // this file's own header comment promises --work-budget makes a run's solved set reproducible,
-    // and writeReport() below recorded the REQUESTED cfg.workBudget regardless of whether it took
-    // effect. toRaceLevelOpts (scripts/solver-parallel/race-opts.mjs) now fails loudly instead: a
-    // caller combining --work-budget with the (default) raced engine gets a clear error up front,
-    // rather than a report that misdescribes what actually ran.
+    const resolvedRacePoolSize = engine === 'raced'
+        ? Math.max(1, poolSizeArg ?? ((os.availableParallelism?.() ?? os.cpus().length) - 1))
+        : null;
+    const commitSha = getCommitSha();
+    const benchmarkProtocol = Object.freeze({
+        schemaVersion: 1,
+        commitSha,
+        corpus: cfg.corpusFile,
+        corpusGeneratedAt: corpus.generatedAt ?? null,
+        generatorVersion: corpus.generatorVersion ?? null,
+        budgetMs: cfg.budgetMs,
+        workBudget: cfg.workBudget ?? null,
+        engine,
+        parallel,
+        racePoolSize: resolvedRacePoolSize,
+        repairBudgetFraction: Number.isFinite(cfg.repairBudgetFraction) ? cfg.repairBudgetFraction : null,
+        goalAttractionDisabledRetryBudgetFraction: Number.isFinite(cfg.goalAttractionDisabledRetryBudgetFraction)
+            ? cfg.goalAttractionDisabledRetryBudgetFraction
+            : null,
+    });
+
+    const recordById = loadExistingRecords(cfg.skipExistingDir, benchmarkProtocol);
+    levels = cfg.skipExistingDir ? targetLevels.filter(level => !recordById.has(level.id)) : targetLevels;
+    cfg.levelSpec = levels.map(level => level.id).join(',');
+
+    const defaultOut = defaultStressMeasurementOutput(cfg.corpusFile, parallel > 1);
+    const outFile = argMap.get('--out') || defaultOut;
+
+    const racePool = engine === 'raced' ? createRacePool({ poolSize: resolvedRacePoolSize }) : null;
     const raceLevelOpts = racePool
         ? (() => {
             try {
@@ -363,7 +283,7 @@ async function main() {
         : solveSequential;
 
     console.log(`Stress benchmark: ${levels.length} level(s) to solve, budget ${cfg.budgetMs}ms, corpus ${cfg.corpusFile} (v${corpus.generatorVersion}), engine ${engine}` +
-        (cfg.skipExistingDir ? `; ${targetLevels.length - levels.length}/${targetLevels.length} target result(s) already present in ${cfg.skipExistingDir}` : '') +
+        (cfg.skipExistingDir ? `; ${targetLevels.length - levels.length}/${targetLevels.length} target result(s) safely reused from ${cfg.skipExistingDir}` : '') +
         (parallel > 1 ? `, ${parallel} workers` : '') + '.');
     if (parallel > 1) {
         console.log('  !! parallel mode: timings are CPU-contended — for iteration only, not comparable to sequential runs.');
@@ -379,19 +299,20 @@ async function main() {
         const completedRecords = targetLevels.map(level => recordById.get(level.id)).filter(Boolean);
         const totalMs = Date.now() - runStart;
         const solved = completedRecords.filter(r => r.ok).length;
-        // Deadline-truncated failures are indeterminate, not negatives — surfaced so a run whose
-        // "unsolved" set is partly host-dependent can't be mistaken for a clean one.
         const truncated = completedRecords.filter(r => !r.ok && r.deadlineTruncated).length;
         const errors = completedRecords.filter(r => r.status === 'error').length;
-        const failed = completedRecords.length - solved - errors;
+        const failed = completedRecords.length - solved - errors - truncated;
         const out = {
             timestamp: new Date().toISOString(),
-            commitSha: getCommitSha(),
+            commitSha,
             corpus: cfg.corpusFile,
             corpusGeneratedAt: corpus.generatedAt,
             generatorVersion: corpus.generatorVersion,
             budgetMs: cfg.budgetMs,
             workBudget: cfg.workBudget ?? null,
+            repairBudgetFraction: benchmarkProtocol.repairBudgetFraction,
+            goalAttractionDisabledRetryBudgetFraction: benchmarkProtocol.goalAttractionDisabledRetryBudgetFraction,
+            benchmarkProtocol,
             witnessAccess: 'none — stressMeta stripped before prepareLevelForSolver',
             engine,
             ...(engine === 'raced' ? { engineWarning: 'worker-thread attempt racing — winningStrategy/attempt timings reflect scheduling, not sequential ladder order; use --engine=sequential for exact production numbers' } : {}),
@@ -415,8 +336,6 @@ async function main() {
     process.once('SIGINT', handleAbort);
     process.once('SIGTERM', handleAbort);
 
-    // Create the output file before the first long solve attempt so CI/artifact
-    // upload has a partial report even if the run is killed before any level finishes.
     writeReport({ partial: true });
 
     if (parallel === 1) {
@@ -460,10 +379,10 @@ async function main() {
     process.removeListener('SIGTERM', handleAbort);
 
     const out = writeReport();
-    console.log(`\nDone: ${out.solved} solved, ${out.failed} failed, ${out.errors} errors / ${targetLevels.length} — ${Math.round(out.totalMs / 1000)}s`);
+    console.log(`\nDone: ${out.solved} solved, ${out.failed} failed, ${out.errors} errors, ${out.deadlineTruncated} indeterminate deadline-truncated / ${targetLevels.length} — ${Math.round(out.totalMs / 1000)}s`);
     if (out.deadlineTruncated > 0) {
-        console.log(`  [!] ${out.deadlineTruncated} of those failures were DEADLINE-TRUNCATED with work budget remaining — indeterminate, not reproducible negatives.`);
-        console.log(`      Re-run with --work-budget=<n> and a generous --budget-ms to get a host-independent result.`);
+        console.log(`  [!] ${out.deadlineTruncated} row(s) were DEADLINE-TRUNCATED with work budget remaining — indeterminate, not reproducible negatives.`);
+        console.log('      Re-run with --work-budget=<n> and a generous --budget-ms to get a host-independent result.');
     }
     console.log(`Results → ${outFile}`);
 }

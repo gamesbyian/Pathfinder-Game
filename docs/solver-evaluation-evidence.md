@@ -206,6 +206,18 @@ as the independent unit.
 Roles are claim-relative. A population can be untouched for one candidate and development data for a
 descendant after its results influence redesign.
 
+## Evidence integrity and reuse
+
+Decision-bearing populations and reusable rows require explicit provenance, not plausible defaults.
+
+- Missing production-baseline provenance is **unknown**, never implicitly “production-unsolved.” A census/frontier class that depends on production status must preserve the tri-state distinction until a real baseline is joined.
+- Timeout/deadline truncation and execution errors are indeterminate buckets, never ordinary failures.
+- Reuse benchmark/census rows only when the meaning-changing protocol identity matches: code/fingerprint schema, corpus/content identity, scheduler/config/flags, deterministic budgets and relevant execution mode.
+- Under across-level parallel execution, do not partially reuse old rows when doing so would mix contention regimes that the original run cannot reproduce exactly; rerun the affected comparison coherently instead.
+- Versioned solver fingerprints are regression evidence only within their declared schema. Schema-v1 and schema-v2 fingerprints are different evidence contracts, not interchangeable strings.
+
+These rules were hardened by the 2026-09-10 solver audit; see [`../reports/2026-09-10-solver-system-audit.md`](../reports/2026-09-10-solver-system-audit.md).
+
 ## Promotion and claim rules
 
 All production-facing solver-policy treatments still require level-blind execution, comparable arms,

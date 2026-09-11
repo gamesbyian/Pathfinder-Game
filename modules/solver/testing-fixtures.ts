@@ -4,6 +4,10 @@ import type { Attempt } from './orchestration.js';
  * One deliberately over-specified solver Attempt.  Keep this in lockstep with orchestration.ts's
  * Attempt interface: projection tests use its own keys as a tripwire when a new field is added.
  * The error outcome is intentional; provenance tests turn the same record into a successful win.
+ *
+ * Every field is populated, but mutually-exclusive behavioral flags must still describe a valid
+ * identity. In particular, repairMustTurnBiased and repairTurnBiased cannot both be true: the
+ * canonical attempt-identity contract rejects that hybrid rather than silently choosing one.
  */
 export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   // Matches the `repairLateProbe: true` legacy flag below — classifyAttemptTier (orchestration.ts)
@@ -34,7 +38,7 @@ export const MAXIMALLY_POPULATED_SOLVER_ATTEMPT = Object.freeze({
   mechanicBucketRetention: true,
   repair: true,
   repairMustTurnBiased: true,
-  repairTurnBiased: true,
+  repairTurnBiased: false,
   seedSalt: 7,
   randomSeed: 4272716209,
   nodesExpanded: 4567,

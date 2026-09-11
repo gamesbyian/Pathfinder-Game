@@ -73,6 +73,9 @@ The former `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solve
 - Clear negatives close tested forms absent materially new evidence.
 - Hold out independent units, including whole variant parents/families where applicable.
 - Audit low-multiplicity retention against reconciled current evidence, not a stale census label; nominal stage reach is not participation.
+- Baseline provenance is tri-state: missing stays `unknown`, not unsolved.
+- Reusable benchmark/census rows need matching protocol identity; no partial reuse under changed contention.
+- A no-op retry buys nothing.
 - After a material capability promotion, refresh the production residual before treating old family counts or attribution shares as current.
 - A validated hint prefix proves that prefix live, not that alternatives are dead.
 - Hint provenance must be queried for an explicit evidence purpose. Variant replay, witnesses, external solves, guided/randomized runs and old solver regimes remain valid atlas/oracle/history evidence but do not establish current production capability; raw event count is not independent support.

@@ -17,6 +17,14 @@ if (files.length < 2) {
 
 const load = file => ({ file, data: JSON.parse(readFileSync(file, 'utf8')) });
 const [base, ...others] = files.map(load);
+const schemaVersion = run => run.data.fingerprintSchemaVersion ?? 1;
+for (const run of others) {
+    if (schemaVersion(run) !== schemaVersion(base)) {
+        console.error(`fingerprint schema mismatch: ${base.file}=v${schemaVersion(base)} vs ${run.file}=v${schemaVersion(run)}; regenerate both sides with the same solver-fingerprint schema before comparing`);
+        process.exit(2);
+    }
+}
+
 const byLevel = run => new Map((run.data.results || []).map(r => [r.level, r]));
 const baseLevels = byLevel(base);
 
@@ -27,6 +35,7 @@ const comparableFields = [
     'solutionHash',
     'solutionLength',
     'winningStrategy',
+    'winningActionKey',
     'winnerIndex',
     'attemptCount',
     'attemptHash',
@@ -46,7 +55,7 @@ function diffRun(run) {
             if (baseRecord[field] !== now[field]) {
                 const severity = ['ok', 'status', 'refereeValid', 'solutionHash'].includes(field)
                     ? 'critical'
-                    : ['winningStrategy', 'winnerIndex', 'attemptCount', 'attemptHash'].includes(field)
+                    : ['winningStrategy', 'winningActionKey', 'winnerIndex', 'attemptCount', 'attemptHash'].includes(field)
                         ? 'strong'
                         : 'medium';
                 diffs.push({ severity, level, field, base: baseRecord[field], now: now[field] });
@@ -66,14 +75,14 @@ const summarize = diffs => {
 };
 
 console.log(`Base: ${base.file}`);
-console.log(`  ${base.data.summary?.solved}/${base.data.summary?.total} solved, ${(base.data.summary?.totalMs / 1000).toFixed(3)}s, nodes=${base.data.summary?.totalNodesExpanded}`);
+console.log(`  schema=v${schemaVersion(base)} ${base.data.summary?.solved}/${base.data.summary?.total} solved, ${(base.data.summary?.totalMs / 1000).toFixed(3)}s, nodes=${base.data.summary?.totalNodesExpanded}`);
 
 let exitCode = 0;
 for (const run of others) {
     const diffs = diffRun(run);
     const counts = summarize(diffs);
     console.log(`\nCompare: ${run.file}`);
-    console.log(`  ${run.data.summary?.solved}/${run.data.summary?.total} solved, ${(run.data.summary?.totalMs / 1000).toFixed(3)}s, nodes=${run.data.summary?.totalNodesExpanded}`);
+    console.log(`  schema=v${schemaVersion(run)} ${run.data.summary?.solved}/${run.data.summary?.total} solved, ${(run.data.summary?.totalMs / 1000).toFixed(3)}s, nodes=${run.data.summary?.totalNodesExpanded}`);
     console.log(`  diffs: critical=${counts.critical}, strong=${counts.strong}, medium=${counts.medium}`);
     if (diffs.length) {
         const bySeverity = {

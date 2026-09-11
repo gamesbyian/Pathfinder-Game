@@ -807,7 +807,10 @@ test('a nodeBudget exhausted by the main loop alone suppresses the diversity pas
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
-        nodeBudget: 200, // < 288 (main loop's own total) -- budget runs out before the pass's own gate check
+        // Deliberately below the ordinary ladder's current demand. The exact historical
+        // per-config total is not a contract; the invariant is that a genuinely exhausted finite
+        // early-tier ceiling must not manufacture headroom for this retry.
+        nodeBudget: 100,
     });
     assert.equal(result.ok, false);
     assert.equal(result.status, 'node-budget-reached');
@@ -2394,13 +2397,10 @@ test('coarse-state-near-tie-retention-disabled-retry pass also stays off under t
         'legacy and canonical spellings must normalize to identical runtime behavior');
 });
 
-test('a sparse unrelated ablation object leaves the promoted default-ON pass active (the normalizeAblationConfig sparse-default fix this promotion now depends on)', async () => {
-    // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
-    // so a sparse config that only touches a DIFFERENT flag (STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION here)
-    // must still leave THIS one active — the opposite assertion from the pre-promotion opt-in test
-    // this replaces, and exactly the normalizeAblationConfig sparse-default behavior CLAUDE.md's own
-    // gotcha describes (an under-registered opt-in flag silently defaulting to true; here the flag is
-    // correctly registered as default-ON so a sparse object must NOT silently disable it either).
+test('a sparse config that already disables near-tie retention suppresses the behavior-identical retry', async () => {
+    // Audit 12 requires a funded retry to change effective behavior. This sparse config already
+    // applies the exact treatment the retry would force, so rerunning it would only buy the same
+    // search a second dose and corrupt rescue attribution.
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2409,7 +2409,8 @@ test('a sparse unrelated ablation object leaves the promoted default-ON pass act
         admissibleOrderBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), 'expected the promoted tier to still run: only an unrelated flag was set');
+    assert.equal(result.attempts.some(a => a.stageId === 'coarse-state-near-tie-retention-disabled-retry'), false,
+        "retry must not rerun when its forced treatment is already the caller's effective setting");
 });
 
 test('coarseStateNearTieRetentionRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
@@ -2723,12 +2724,9 @@ test('connectivity-axis-prune-disabled-retry pass stays off under an explicit { 
     assert.equal(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false);
 });
 
-test('a sparse unrelated ablation object leaves the promoted default-ON connectivity-axis-prune-disabled-retry pass active', async () => {
-    // Since promotion, this flag is unset-means-true (the standard `!cfg || cfg.FLAG` convention),
-    // so a sparse config that only touches a DIFFERENT flag (PRUNE_CONNECTIVITY_AXIS_EXHAUSTED here,
-    // the mechanism this tier disables INTERNALLY once it starts, not the tier's own on/off switch)
-    // must still leave THIS one active — same check as the coarse-state-near-tie-retention-disabled-retry/admissible-order-fallback-
-    // non-default-retry suites' own equivalent tests.
+test('a sparse config that already disables connectivity-axis pruning suppresses the behavior-identical retry', async () => {
+    // Audit 12 applies the same distinctness rule here: the mechanism flag is the retry treatment,
+    // not an unrelated setting. If it is already false, the retry has no behavioral delta to fund.
     const result = await solveLevel(makeGoalAttractionDisabledRetryGatedInfeasibleLevel(), {
         timeBudgetMs: 1000,
         repairLateProbeNodeBudgetOverride: 0,
@@ -2739,7 +2737,8 @@ test('a sparse unrelated ablation object leaves the promoted default-ON connecti
         admissibleOrderNonDefaultRetryBudgetFractionOverride: 0,
     });
     assert.equal(result.ok, false);
-    assert.ok(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), 'expected the promoted tier to still run: only an unrelated flag was set');
+    assert.equal(result.attempts.some(a => a.stageId === 'connectivity-axis-prune-disabled-retry'), false,
+        "retry must not rerun when its forced treatment is already the caller's effective setting");
 });
 
 test('connectivityAxisExhaustedRetryBudgetFractionOverride: 0 suppresses the pass even with the flag on', async () => {
