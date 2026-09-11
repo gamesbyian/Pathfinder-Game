@@ -47,6 +47,14 @@ export function runAttemptSearch(
   captureBeamContinuationOnBudgetExit = false,
 ): Promise<number[] | null> {
   const { beamWidth, mechanicBucketRetention, repair, repairMustTurnBiased, repairTurnBiased, admissibleOrder, admissibleOrderNoTieBreak, admissibleOrderLds } = attemptConfig;
+  // These are separate, canonical repair action identities and separate mechanisms inside
+  // repairSearchFromGate. Running both at once would create a hybrid action the identity grammar
+  // cannot represent (it used to be mislabeled as must-turn-biased), contaminating provenance and
+  // technique-census evidence. Policy/parser code never constructs this shape; fail loudly if a
+  // programmatic caller does rather than silently executing an unidentifiable fifth repair family.
+  if (repairMustTurnBiased && repairTurnBiased) {
+    throw new Error('runAttemptSearch: repairMustTurnBiased and repairTurnBiased are mutually exclusive attempt techniques.');
+  }
   const orderingBias = attemptConfig.orderingBias ?? null;
   const admissibleOrderProfile = admissibleOrderNoTieBreak ? null : profile;
   // These repair mechanisms are explicit opt-ins; absence/false must not activate them.
