@@ -173,7 +173,7 @@
       "queryEntryPoints": ["node scripts/analyze-technique-census.mjs reports/stress/technique-census/33717910218", "node scripts/analyze-technique-niches.mjs"],
       "joinKeys": ["corpus", "levelId", "canonical technique/configuration identity"],
       "evidenceRoles": ["development", "capability-map", "routing-nomination"],
-      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "solution-space-profiles", "variant-family-data", "operational-traces", "static-level-descriptors"],
+      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "solution-space-profiles", "variant-family-data", "operational-traces", "static-level-descriptors", "solver-capability-memory"],
       "affordances": [
         "Expose rare/exclusive capability, substitutions, inversions, multiplicity, cap/tranche economics, and oracle-frontier headroom.",
         "Define response vectors that can be joined to solution structure, provenance, geometry, variants, or live production behavior.",
@@ -199,7 +199,7 @@
       "queryEntryPoints": ["npm run stress:measure-solver", "npm run solver:regression -- --check", "npm run stress:classify-stability"],
       "joinKeys": ["corpus", "levelId", "solver commit/ref", "attempt/configuration identity", "run identity"],
       "evidenceRoles": ["development", "confirmation", "regression", "forensic"],
-      "relatedAssets": ["technique-census", "lifecycle-telemetry", "experiment-manifests", "raw-logs-and-baselines", "static-level-descriptors", "hint-provenance"],
+      "relatedAssets": ["technique-census", "lifecycle-telemetry", "experiment-manifests", "raw-logs-and-baselines", "static-level-descriptors", "hint-provenance", "solver-capability-memory"],
       "affordances": [
         "Provide the actual product-objective solve/work outcome that offline diagnostics must eventually explain or improve.",
         "Support solved/unsolved, budget-edge, stability, regression, and cost-drift joins.",
@@ -208,6 +208,33 @@
       "caveats": [
         "A latest pointer is a convenience, not timeless authority; inspect embedded commit/protocol metadata.",
         "Historical results must be reconciled to current code, budget semantics, and identity vocabulary before decision-bearing use."
+      ]
+    },
+    {
+      "id": "solver-capability-memory",
+      "name": "Derived solver capability-memory view and health churn",
+      "status": "generated-interface",
+      "grain": ["baseline solver run", "candidate policy/evidence source", "level"],
+      "locations": [
+        { "kind": "generated", "path": "outputs selected by scripts/solver-capability-memory.mjs" },
+        { "kind": "tracked", "path": "reports/stress/solver-health-timeline.jsonl" },
+        { "kind": "pattern", "path": "reports/stress/capability-runs/<run_id>/{summary.json,per-level-corpus1.json,per-level-corpus2.json}" }
+      ],
+      "authorities": ["docs/solver-capability-memory.md", "scripts/solver-capability-memory.mjs", "scripts/solver-capability-memory-lib.mjs", "scripts/append-solver-health-record.mjs"],
+      "queryEntryPoints": ["node scripts/solver-capability-memory.mjs --manifest=<manifest.json>", "reports/stress/solver-health-timeline.jsonl"],
+      "joinKeys": ["levelId", "baseline population/solved-set hash", "solver run/ref", "candidate evidence provenance"],
+      "evidenceRoles": ["development", "capability-map", "historical-nomination", "regression-churn"],
+      "relatedAssets": ["production-benchmarks", "raw-logs-and-baselines", "experiment-manifests", "technique-census", "lifecycle-telemetry", "operational-traces", "variant-family-data", "static-level-descriptors"],
+      "affordances": [
+        "Preserve complementary gain/loss capability separately from an experiment's promotion disposition.",
+        "Measure overlap, unique current-residual nominations, confirmed current-baseline gains, and capability churn without adding solver compute.",
+        "Turn rejected/promoted policy diversity into generic premise nominations for routing, retention, representation, restart, or handoff research."
+      ],
+      "caveats": [
+        "Historical signature intersections with a current residual are nomination evidence only; they are not current-code/current-budget capability.",
+        "Exact historical level outcomes and capability-memory membership are forbidden production routing inputs.",
+        "Candidate rows omitted from a report are unknown, not failures; errors/truncation are inconclusive.",
+        "Mining many policies/signatures creates selection pressure and descendant treatments require proportionate independent confirmation."
       ]
     },
     {
@@ -222,7 +249,7 @@
       "queryEntryPoints": ["npm run stress:lifecycle-failure-map", "solver-stress-refresh.yml with lifecycle_telemetry=true"],
       "joinKeys": ["corpus", "levelId", "stage/action identity", "attempt/configuration identity", "run/solver ref"],
       "evidenceRoles": ["routing", "allocation", "forensic"],
-      "relatedAssets": ["technique-census", "production-benchmarks", "operational-traces", "experiment-manifests"],
+      "relatedAssets": ["technique-census", "production-benchmarks", "operational-traces", "experiment-manifests", "solver-capability-memory"],
       "affordances": [
         "Show which actions were reached, skipped, starved, exhausted, or continued and how much comparable work they received.",
         "Separate routing/allocation failures from true isolated search-quality failures.",
@@ -268,7 +295,7 @@
       "queryEntryPoints": ["scripts/method-probe.mjs", "node scripts/run-bundled.mjs scripts/paired-deterministic-trace.mjs", "node scripts/compare-operational-beam-traces.mjs"],
       "joinKeys": ["levelId", "attempt/configuration identity", "state/decision depth", "solver ref"],
       "evidenceRoles": ["mechanism", "forensic", "operational-similarity"],
-      "relatedAssets": ["technique-census", "lifecycle-telemetry", "known-solution-prefix-survival", "exact-reference-labels", "solver-determinism-fingerprints", "variant-family-data"],
+      "relatedAssets": ["technique-census", "lifecycle-telemetry", "known-solution-prefix-survival", "exact-reference-labels", "solver-determinism-fingerprints", "variant-family-data", "solver-capability-memory"],
       "affordances": [
         "Explain why two configurations with similar outcomes are operationally different or vice versa.",
         "Locate first deterministic divergence in ordering, pruning, retention, dedup, or branch choice.",
@@ -342,7 +369,7 @@
       "queryEntryPoints": ["npm run family:index -- --variant-family-dataset-root=<worktree>", "npm run family:show", "npm run family:query", "npm run family:coverage"],
       "joinKeys": ["parentCorpus", "parentId", "mode", "variantId", "normalized evidence payload", "run manifest"],
       "evidenceRoles": ["causal-discovery", "family-confirmation", "forensic"],
-      "relatedAssets": ["stress-corpora", "technique-census", "solution-space-profiles", "operational-traces", "exact-reference-labels", "experiment-manifests"],
+      "relatedAssets": ["stress-corpora", "technique-census", "solution-space-profiles", "operational-traces", "exact-reference-labels", "experiment-manifests", "solver-capability-memory"],
       "affordances": [
         "Use controlled transformations to localize structural causes of solver cliffs.",
         "Study orientation, density, mechanic, repair, retention, and action-value changes while holding ancestry comparatively fixed.",
@@ -366,7 +393,7 @@
       "queryEntryPoints": ["npm run solver:experiment-preflight", "validateExperimentManifest(...)"],
       "joinKeys": ["experimentId", "runId", "solverRef/commit", "levelSelectionHash", "arm", "output artifact paths"],
       "evidenceRoles": ["provenance", "comparability", "selection-audit"],
-      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "variant-family-data", "solver-determinism-fingerprints", "raw-logs-and-baselines"],
+      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "variant-family-data", "solver-determinism-fingerprints", "raw-logs-and-baselines", "solver-capability-memory"],
       "affordances": [
         "Recover exactly what code, population, flags, workflow inputs, seeds, budgets, and output produced a result.",
         "Detect invalid A/B comparisons where non-treatment dimensions changed.",
@@ -392,7 +419,7 @@
       "queryEntryPoints": ["npm run check:audit-artifacts", "npm run stress:diff-baseline"],
       "joinKeys": ["embedded source commit/run id", "corpus", "levelId", "artifact selector/role"],
       "evidenceRoles": ["forensic", "regression", "historical-source"],
-      "relatedAssets": ["production-benchmarks", "experiment-manifests", "research-status-index"],
+      "relatedAssets": ["production-benchmarks", "experiment-manifests", "research-status-index", "solver-capability-memory"],
       "affordances": [
         "Recover raw evidence behind dated reports and compare current behavior to historical baselines.",
         "Distinguish current pointers, compatibility baselines, historical snapshots, and source evidence using machine-readable classification.",
@@ -416,7 +443,7 @@
       "queryEntryPoints": ["node scripts/research-status-index.mjs --compact --query=<term>", "npm run research:index"],
       "joinKeys": ["topicId", "workstreamId", "experimentId", "report path", "normalized historical stage/routing/attempt identity"],
       "evidenceRoles": ["discovery", "history-routing", "status"],
-      "relatedAssets": ["raw-logs-and-baselines", "experiment-manifests", "production-benchmarks", "technique-census"],
+      "relatedAssets": ["raw-logs-and-baselines", "experiment-manifests", "production-benchmarks", "technique-census", "solver-capability-memory"],
       "affordances": [
         "Find prior experiments, current decisions, remaining gates, and linked artifacts before rerunning work.",
         "Search historical naming-era stage/routing/attempt vocabulary through current identity normalizers.",
@@ -440,7 +467,7 @@
       "queryEntryPoints": ["node scripts/stress/feature-solvability-analysis.mjs", "node scripts/corpus-query.mjs", "npm run levels:heatmap-report"],
       "joinKeys": ["corpus", "levelId", "level structure"],
       "evidenceRoles": ["discovery", "stratification", "descriptor-nomination"],
-      "relatedAssets": ["stress-corpora", "production-benchmarks", "technique-census", "solution-space-profiles", "variant-family-data"],
+      "relatedAssets": ["stress-corpora", "production-benchmarks", "technique-census", "solution-space-profiles", "variant-family-data", "solver-capability-memory"],
       "affordances": [
         "Stratify solver outcomes and technique-response cohorts by legal static puzzle descriptors.",
         "Translate offline labels such as solution-profile or census associations into candidate level-blind descriptors.",
@@ -464,7 +491,7 @@
       "queryEntryPoints": ["npm run stress:failure-inbox", "npm run stress:curate-dev-benchmark"],
       "joinKeys": ["corpus", "levelId", "selection artifact/report"],
       "evidenceRoles": ["triage", "targeted-discovery", "forensic"],
-      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "research-status-index", "operational-traces"],
+      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "research-status-index", "operational-traces", "solver-capability-memory"],
       "affordances": [
         "Preserve which failures were already inspected or selected for a bounded investigation.",
         "Recover selection provenance for targeted cohorts so they are not later misrepresented as random samples.",
@@ -548,31 +575,45 @@
       "boundary": "Observational feature correlations nominate hypotheses; selected thresholds require held-out confirmation."
     },
     {
+      "id": "capability-memory-to-current-residual",
+      "assets": ["solver-capability-memory", "production-benchmarks", "raw-logs-and-baselines", "experiment-manifests"],
+      "join": "levelId against a named baseline population/solved-set plus candidate evidence provenance",
+      "questions": ["Which current production misses were solved by a materially different candidate or historical policy?", "How much complementary capability remains unique after overlap and freshness are made explicit?", "Which accepted production changes displaced previously observed capability?"],
+      "boundary": "Historical gain intersections are nominations only; current capability requires a comparable current row-level observation. Exact same-level history may not steer production."
+    },
+    {
+      "id": "capability-memory-to-mechanism",
+      "assets": ["solver-capability-memory", "operational-traces", "variant-family-data", "static-level-descriptors", "technique-census"],
+      "join": "nominated policy-response contrast by levelId, then mechanism-specific trace/family/descriptor evidence",
+      "questions": ["Do complementary policies repeatedly preserve different live basins?", "Can a historical policy contrast be translated into a compact legal structural/current-solve descriptor or a shared representation/retention premise?"],
+      "boundary": "Capability-memory membership may select offline research cases but cannot be a runtime feature. A descendant selected from many historical policies is development evidence and needs proportionate confirmation."
+    },
+    {
       "id": "manifests-to-results",
-      "assets": ["experiment-manifests", "production-benchmarks", "lifecycle-telemetry", "variant-family-data", "raw-logs-and-baselines"],
+      "assets": ["experiment-manifests", "production-benchmarks", "lifecycle-telemetry", "variant-family-data", "raw-logs-and-baselines", "solver-capability-memory"],
       "join": "runId/experimentId/output artifact plus solver ref and level selection hash",
       "questions": ["Are two purported A/B arms actually comparable?", "Which code/data/protocol produced this result?", "Can a historical artifact be safely joined to current evidence?"],
       "boundary": "Provenance/comparability is necessary but does not establish statistical independence or efficacy."
     },
     {
       "id": "research-index-to-evidence",
-      "assets": ["research-status-index", "raw-logs-and-baselines", "production-benchmarks", "technique-census", "failure-triage"],
+      "assets": ["research-status-index", "raw-logs-and-baselines", "production-benchmarks", "technique-census", "failure-triage", "solver-capability-memory"],
       "join": "report/artifact paths plus normalized topic/stage/routing/attempt terminology",
       "questions": ["Has this premise already been tested under an older name?", "Which raw artifact or remaining gate sits behind a current decision?"],
       "boundary": "Use the index to discover evidence, then read the owning report/artifact before acting."
     },
     {
       "id": "determinism-to-benchmark-drift",
-      "assets": ["solver-determinism-fingerprints", "production-benchmarks", "operational-traces"],
+      "assets": ["solver-determinism-fingerprints", "production-benchmarks", "operational-traces", "solver-capability-memory"],
       "join": "level + solver ref/config",
-      "questions": ["Did a solve/work regression accompany a deterministic search-order change?", "Is a performance change semantic or merely implementation latency?"],
-      "boundary": "Fingerprint differences localize change; they do not by themselves determine whether the change is good or general."
+      "questions": ["Did a solve/work regression accompany a deterministic search-order change?", "Is a performance change semantic or merely implementation latency?", "Did a net-positive production change exchange one solved-set basin for another?"],
+      "boundary": "Fingerprint differences and churn localize change; they do not by themselves determine whether the change is good or general."
     },
     {
       "id": "failure-triage-to-mechanism",
-      "assets": ["failure-triage", "lifecycle-telemetry", "operational-traces", "exact-reference-labels", "variant-family-data"],
+      "assets": ["failure-triage", "lifecycle-telemetry", "operational-traces", "exact-reference-labels", "variant-family-data", "solver-capability-memory"],
       "join": "selected corpus + levelId with recorded selection provenance",
-      "questions": ["What is the cheapest next instrument for a recurring failure class?", "Can a selected anomaly be converted into a controlled family, trace, or exact-label question?"],
+      "questions": ["What is the cheapest next instrument for a recurring failure class?", "Can a selected anomaly or displaced capability be converted into a controlled family, trace, or exact-label question?"],
       "boundary": "Preserve the selected nature of the cohort; do not use it as prevalence evidence."
     }
   ]

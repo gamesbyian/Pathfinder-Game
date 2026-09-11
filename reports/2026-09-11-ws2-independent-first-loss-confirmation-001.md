@@ -1,6 +1,6 @@
 # WS2 independent first-loss confirmation 001
 
-> **Status:** concluded-positive (recurrence confirmed; cross-action recurrence still not established)
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-11 — a second, independent 14-level sample (7 class-4 + 7 class-5), disjoint from both the dev sample and the `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` excluded gains, run through the identical beam known-solution-prefix survival + DFS-greedy rank cross-check pipeline as [`2026-09-11-bounded-class4-class5-first-loss-phenotyping-001.md`](2026-09-11-bounded-class4-class5-first-loss-phenotyping-001.md).
 > **Decision:** the `rank-retention-loss` phenotype (beam score-width cull, width-insensitive, DFS-falsified shared-scorer hypothesis) recurs 14/14 on the independent sample, identical in shape to the dev sample. This is now a **doubled, sample-independent result** (28/28 across two disjoint samples). Cross-action recurrence remains not established — DFS and beam still share too much machinery to count as materially distinct actions per the operational taxonomy. Repair coverage is addressed separately ([`2026-09-11-repair-side-first-loss-exposure-001.md`](2026-09-11-repair-side-first-loss-exposure-001.md)).
 > **Remaining gate:** cross-action recurrence needs a materially distinct action (repair) or a materially new bounded retention mechanism before WS4 reopens. Do not re-run this same design a third time absent a new premise.

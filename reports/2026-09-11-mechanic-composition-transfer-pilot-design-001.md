@@ -1,6 +1,6 @@
 # Controlled mechanic-composition transfer pilot: design + first static check 001
 
-> **Status:** design complete; one bounded static (zero-solver-compute) check executed and confirmed; full solver-side pilot not yet run
+> **Status:** active
 > **Last evidence:** 2026-09-11 — a concrete worked decoupling example on `R00726` (one of the 21 levels `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` already rescues), using the mechanism's own level-static predicate (`findStaticObligationClusters`, `scripts/stress/lib/joint-obligation-mc-portal.mjs`) with zero search compute.
 > **Decision:** the new-premise map's Card A is executable with the existing single-portal-relocation edit primitive. A 1-cell relocation of one portal terminal cleanly removes exactly the targeted obligation cluster while leaving an unrelated second cluster on the same level untouched — confirming the edit is precisely scoped to the intended coupled-obligation boundary, not a confound. This derisks the full solver-side pilot; that pilot itself was not run this session (see "Not yet run" below).
 > **Remaining gate:** run the actual solver-side matched-work observer/prune A/B on an original-vs-decoupled sibling pair (and, time permitting, the alternative-interface and slack contrasts) before claiming the premise resolved either way.
