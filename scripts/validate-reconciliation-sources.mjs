@@ -70,7 +70,7 @@ export function validateReconciliationSources(sources) {
     }
   }
 
-  const sourcesForProvenance = normalized.map(({ contract, ...source }) => source);
+  const sourcesForProvenance = normalized.map(({ contract: _contract, ...source }) => source);
   const sourceExperiment = {
     workflowFamily: reference.experiment.workflowFamily,
     producer: reference.experiment.producer,
