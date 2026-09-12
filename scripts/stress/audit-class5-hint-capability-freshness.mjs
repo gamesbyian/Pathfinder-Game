@@ -16,6 +16,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { formatAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
     const [key, ...rest] = x.split('='); return [key, rest.join('=')];
@@ -44,15 +45,47 @@ const isColdIsolatedCapability = provenance => {
         && context.hintGuided === false
         && context.isolatedTechnique === true;
 };
-const techniqueIdentity = provenance => {
+
+// Hint provenance's `solver.technique` is only a coarse family label for modern isolated runs
+// (`beam`, `repair`, etc.). Preserve a canonical attempt identity wherever the structured fields
+// make that possible; otherwise keep the raw family plus the full relevant structured fields below.
+const canonicalAttemptIdentity = provenance => {
     const solver = provenance?.solver ?? {};
-    if (typeof solver.technique === 'string' && solver.technique.length) return solver.technique;
-    const parts = [];
-    if (solver.scoringProfileId) parts.push(`score=${solver.scoringProfileId}`);
-    if (solver.orderingBiasId) parts.push(`bias=${solver.orderingBiasId}`);
-    if (solver.beamWidth != null) parts.push(`width=${solver.beamWidth}`);
-    if (solver.mechanicBucketRetention != null) parts.push(`mechanicBucketRetention=${solver.mechanicBucketRetention}`);
-    return parts.length ? parts.join('|') : null;
+    const forcing = solver.forcing ?? {};
+    try {
+        if (solver.technique === 'repair' || solver.scoringProfileId === 'repair') {
+            return formatAttemptIdentityKey({
+                scoringProfileId: 'repair', orderingBiasId: null, repair: true,
+                repairMustTurnBiased: forcing.repairMustTurnBiased === true,
+                repairTurnBiased: forcing.repairTurnBiased === true,
+            });
+        }
+        if (String(solver.technique ?? '').startsWith('admissible-order')) {
+            const scoringProfileId = solver.scoringProfileId ?? 'none';
+            return formatAttemptIdentityKey({
+                scoringProfileId, orderingBiasId: null, admissibleOrder: true,
+                admissibleOrderNoTieBreak: scoringProfileId === 'none',
+                admissibleOrderLds: solver.admissibleOrderLds === true || forcing.admissibleOrderLds === true,
+            });
+        }
+        if (solver.beamWidth != null) {
+            return formatAttemptIdentityKey({
+                scoringProfileId: solver.scoringProfileId ?? 'default',
+                orderingBiasId: solver.orderingBiasId ?? null,
+                beamWidth: Number(solver.beamWidth),
+                mechanicBucketRetention: solver.mechanicBucketRetention === true,
+            });
+        }
+        if (solver.technique === 'dfs') {
+            return formatAttemptIdentityKey({
+                scoringProfileId: solver.scoringProfileId ?? 'default',
+                orderingBiasId: solver.orderingBiasId ?? null,
+            });
+        }
+    } catch {
+        return null;
+    }
+    return null;
 };
 const iso = value => {
     if (!value) return null;
@@ -74,34 +107,46 @@ for (const atlasRow of class5) {
             const provenanceRows = Array.isArray(hints[hintIndex]?.provenance) ? hints[hintIndex].provenance : [];
             for (const provenance of provenanceRows) {
                 if (!isColdIsolatedCapability(provenance)) continue;
+                const solver = provenance.solver ?? {};
                 const foundAt = iso(provenance.foundAt);
                 const foundMs = foundAt ? Date.parse(foundAt) : null;
                 evidence.push({
                     hintIndex,
                     foundAt,
                     afterRequestedCutoff: afterMs == null ? null : (Number.isFinite(foundMs) && foundMs > afterMs),
-                    solverVersion: provenance.solver?.version ?? null,
-                    technique: techniqueIdentity(provenance),
-                    scoringProfileId: provenance.solver?.scoringProfileId ?? null,
-                    orderingBiasId: provenance.solver?.orderingBiasId ?? null,
-                    beamWidth: provenance.solver?.beamWidth ?? null,
-                    mechanicBucketRetention: provenance.solver?.mechanicBucketRetention ?? null,
-                    gateKey: provenance.solver?.gateKey ?? null,
+                    solverVersion: solver.version ?? null,
+                    techniqueFamily: solver.technique ?? null,
+                    attemptIdentity: canonicalAttemptIdentity(provenance),
+                    scoringProfileId: solver.scoringProfileId ?? null,
+                    orderingBiasId: solver.orderingBiasId ?? null,
+                    beamWidth: solver.beamWidth ?? null,
+                    mechanicBucketRetention: solver.mechanicBucketRetention ?? null,
+                    admissibleOrderLds: solver.admissibleOrderLds ?? null,
+                    forcing: solver.forcing ?? null,
+                    gateKey: solver.gateKey ?? null,
+                    attemptIndex: solver.attemptIndex ?? null,
                     nodesExpanded: provenance.search?.nodesExpanded ?? null,
                     workSpent: provenance.search?.workSpent ?? null,
+                    workBudget: provenance.search?.workBudget ?? null,
+                    budgetMs: provenance.search?.budgetMs ?? null,
                     termination: provenance.search?.termination ?? null,
+                    randomSeed: provenance.search?.randomSeed ?? null,
+                    seedSalt: provenance.search?.seedSalt ?? null,
                     levelRevision: provenance.context?.levelRevision ?? null,
                 });
             }
         }
     }
-    evidence.sort((a, b) => String(a.foundAt).localeCompare(String(b.foundAt)) || String(a.technique).localeCompare(String(b.technique)));
+    evidence.sort((a, b) => String(a.foundAt).localeCompare(String(b.foundAt))
+        || String(a.attemptIdentity ?? a.techniqueFamily).localeCompare(String(b.attemptIdentity ?? b.techniqueFamily)));
     const filtered = afterMs == null ? evidence : evidence.filter(item => item.afterRequestedCutoff === true);
+    const identities = [...new Set(evidence.map(item => item.attemptIdentity ?? item.techniqueFamily).filter(Boolean))].sort();
     rows.push({
         levelId,
         routingRegime: atlasRow.routingRegime ?? null,
         hintCount,
         isolatedColdCapabilityEvidenceCount: evidence.length,
+        isolatedColdAttemptIdentities: identities,
         matchingRequestedCutoffCount: filtered.length,
         latestFoundAt: evidence.at(-1)?.foundAt ?? null,
         evidence,
@@ -110,11 +155,18 @@ for (const atlasRow of class5) {
 
 const nominated = rows.filter(row => row.isolatedColdCapabilityEvidenceCount > 0);
 const cutoffNominated = afterMs == null ? nominated : rows.filter(row => row.matchingRequestedCutoffCount > 0);
-const techniqueCounts = new Map();
+const identityStats = new Map();
 for (const row of nominated) for (const item of row.evidence) {
-    const key = item.technique ?? '(unknown-technique)';
-    techniqueCounts.set(key, (techniqueCounts.get(key) ?? 0) + 1);
+    const key = item.attemptIdentity ?? item.techniqueFamily ?? '(unknown-technique)';
+    if (!identityStats.has(key)) identityStats.set(key, { evidenceRows: 0, levels: new Set() });
+    const stat = identityStats.get(key);
+    stat.evidenceRows++;
+    stat.levels.add(row.levelId);
 }
+const topAttemptIdentities = [...identityStats.entries()]
+    .map(([identity, stat]) => ({ identity, levels: stat.levels.size, evidenceRows: stat.evidenceRows }))
+    .sort((a, b) => b.levels - a.levels || b.evidenceRows - a.evidenceRows || a.identity.localeCompare(b.identity))
+    .slice(0, 50);
 const summary = {
     atlasGeneratedAt: atlas.generatedAt ?? null,
     atlasFile,
@@ -123,13 +175,13 @@ const summary = {
     class5RowsWithAnyIsolatedColdHintEvidence: nominated.length,
     requestedAfter: afterRaw,
     class5RowsWithEvidenceAfterRequestedCutoff: afterMs == null ? null : cutoffNominated.length,
-    uniqueTechniqueIdentities: techniqueCounts.size,
-    topTechniqueIdentities: [...techniqueCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-        .slice(0, 30).map(([technique, evidenceRows]) => ({ technique, evidenceRows })),
+    uniqueAttemptIdentities: identityStats.size,
+    topAttemptIdentities,
     interpretation: 'Nominations only. Reconcile each row against current protocol/T1 admissibility before changing atlas class or production policy.',
 };
-const result = { schemaVersion: 1, generatedAt: new Date().toISOString(), summary, nominatedRows: nominated, rows };
+const result = { schemaVersion: 2, generatedAt: new Date().toISOString(), summary, nominatedRows: nominated, rows };
 mkdirSync(path.dirname(path.resolve(outFile)), { recursive: true });
 writeFileSync(path.resolve(outFile), `${JSON.stringify(result, null, 2)}\n`);
 console.log(JSON.stringify(summary, null, 2));
+console.log(`NOMINATED_LEVELS=${nominated.map(row => row.levelId).join(',')}`);
 console.log(`Wrote ${outFile}`);
