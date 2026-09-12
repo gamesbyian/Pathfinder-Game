@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "workflow": "ci.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "repository operations",
+      "retirementTrigger": "retire when the owning operational surface is removed"
+    },
+    {
+      "workflow": "collect-prune-gap-labels.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "joint-obligation and hard-prune research",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "collect-variant-family-dataset.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "cpsat-explicit-prefix-reference.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "active exact/reference-model investigations",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "cpsat-hint-harvest-sweep.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "CP-SAT hint discovery for Corpus 2 and published levels",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "deploy-firestore-rules.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "repository operations",
+      "retirementTrigger": "retire when the owning operational surface is removed"
+    },
+    {
+      "workflow": "deploy-pages.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "repository operations",
+      "retirementTrigger": "retire when the owning operational surface is removed"
+    },
+    {
+      "workflow": "harvest-solver-evidence.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "repository operations",
+      "retirementTrigger": "retire when the owning operational surface is removed"
+    },
+    {
+      "workflow": "method-probe-sweep.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-broad-confirmation.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-combine-sweep-runs.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "gap-fill and cross-run reconciliation",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-diagnostics.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "repository operations",
+      "retirementTrigger": "retire when the owning operational surface is removed"
+    },
+    {
+      "workflow": "solver-highbudget-unsolved-sweep.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-level-blind-targeted-sweep.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-production-replay-baseline.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-residual-confirmation.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-routing-regime-sample-ab.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "solver-stress-refresh.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "static-portfolio-confirmation.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    },
+    {
+      "workflow": "technique-census.yml",
+      "role": "evidence-producing",
+      "status": "maintained",
+      "currentConsumer": "solver research program",
+      "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
+    }
+  ],
+  "retiredWorkflows": [
+    {
+      "workflow": "solver-early-repair-search-adaptive-sample-ab.yml",
+      "reason": "superseded by generalized routing-regime experiment"
+    },
+    {
+      "workflow": "mitm-frontier-sweep.yml",
+      "reason": "one-off MITM frontier question closed"
+    },
+    {
+      "workflow": "firestore-level-fingerprint-boundary.yml",
+      "reason": "emulator proof migrated to ordinary PR CI"
+    },
+    {
+      "workflow": "cpsat-hint-harvest-sweep-published.yml",
+      "reason": "published corpus mode consolidated into cpsat-hint-harvest-sweep.yml"
+    },
+    {
+      "workflow": "solver-typical-budget-baseline.yml",
+      "reason": "renamed to history-aware solver-production-replay-baseline.yml"
+    }
+  ]
+}

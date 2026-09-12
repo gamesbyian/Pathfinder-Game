@@ -113,7 +113,7 @@ try {
   });
   const published = JSON.parse(readFileSync(path.join(dir, 'logs/solver-sweep-result/manifest.json'), 'utf8'));
   assert.equal(published.status, 'published');
-  assert.equal(published.shardCompleteness?.complete, true);
+  assert.equal(published.artifactCoverage?.complete, true);
   assert.equal(published.sourceArtifact, 'cpsat-explicit-prefix-reference-fixture');
 
   console.log('CP-SAT explicit-prefix reference pipeline contract passed.');

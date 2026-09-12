@@ -75,7 +75,7 @@ const sourceRun = path.join(temp, 'reports/families/variant-family-dataset-sourc
 assert.ok(existsSync(sourceRun), 'workflow publication harness must write the canonical source-run path');
 const sourceRunDoc = JSON.parse(readFileSync(sourceRun, 'utf8'));
 assert.equal(sourceRunDoc.workflow, 'collect-variant-family-dataset.yml');
-assert.equal(sourceRunDoc.shardCompleteness?.complete, true);
+assert.equal(sourceRunDoc.artifactCoverage?.complete, true);
 assert.equal(existsSync(path.join(temp, 'reports/families/2026-08-07-wide-trove-source-run.json')), false,
     'workflow publication harness must not manufacture the retired dated provenance path');
 const standardManifest = JSON.parse(readFileSync(path.join(temp, 'logs/solver-sweep-result/manifest.json'), 'utf8'));

@@ -790,7 +790,35 @@ jobs:
           node scripts/validate-solver-sweep-integrity.mjs \
             --expected-ids=artifact-staging/plan/ids.txt \
             --result=logs/solver-targeted-sweep/combined.json \
+            --integrity-out=logs/solver-targeted-sweep/population-integrity.json \
             "${extra[@]}"
+
+      - name: Declare the native v3 experiment contract
+        if: always()
+        shell: bash
+        env:
+          CORPUS: ${{ inputs.corpus }}
+          NODE_BUDGET: ${{ inputs.node_budget }}
+          NODE_BUDGET_ADVISORY_ONLY: ${{ inputs.node_budget_advisory_only }}
+          WORK_BUDGET: ${{ inputs.work_budget }}
+          BUDGET_MS: ${{ inputs.budget_ms }}
+          STRICT_TOTAL_WORK_BUDGET: ${{ inputs.strict_total_work_budget }}
+          ENABLE_FLAGS: ${{ inputs.enable_flags }}
+          DISABLE_FLAGS: ${{ inputs.disable_flags }}
+        run: |
+          node_ceiling=null; [ "$NODE_BUDGET_ADVISORY_ONLY" = true ] || node_ceiling="${NODE_BUDGET:-null}"
+          work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" != true ] || work_ceiling="${WORK_BUDGET:-null}"
+          cat > logs/solver-targeted-sweep/experiment-contract-spec.json <<SPEC
+          {"configuration": {"corpus": "$CORPUS", "nodeBudget": ${NODE_BUDGET:-null}, "nodeBudgetAdvisoryOnly": $NODE_BUDGET_ADVISORY_ONLY, "workBudget": ${WORK_BUDGET:-null}, "budgetMs": ${BUDGET_MS:-null}, "strictTotalWorkBudget": $STRICT_TOTAL_WORK_BUDGET, "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS"},
+          "workflowFamily": "level-blind-targeted-sweep", "producer": "solver-level-blind-targeted-sweep.yml", "entrypoint": "scripts/level-blind-capability-sweep.mjs",
+          "population": {"kind": "explicit-ids", "identityBasis": "stable-level-id"},
+          "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $STRICT_TOTAL_WORK_BUDGET, "producerFamily": "level-blind-targeted-sweep", "schedulerMode": "level-blind-capability"},
+          "limits": {"cumulativeNodeCeiling": $node_ceiling, "initialWorkAllocation": ${WORK_BUDGET:-null}, "totalWorkCeiling": $work_ceiling, "wallSafetyDeadlineMs": ${BUDGET_MS:-null}, "wallDeadlineBinding": false},
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          SPEC
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/solver-targeted-sweep/experiment-contract-spec.json \
+            --out=logs/solver-targeted-sweep/experiment-contract.json
 
       - name: Print a solved-count summary to the job log
         # Runs even when the population-completeness check above fails: that's exactly the
@@ -845,6 +873,8 @@ jobs:
             --primary="logs/solver-targeted-sweep/combined.json" \
             --include="artifact-staging/plan/ids.txt" \
             --include="artifact-staging/plan/shard-plan.json" \
+            --integrity-file="logs/solver-targeted-sweep/population-integrity.json" \
+            --contract-file="logs/solver-targeted-sweep/experiment-contract.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
             --shards-observed="$(find logs/solver-targeted-sweep -maxdepth 1 -name 'batch-*.json' -o -name 'recovery-batch-*.json' | wc -l | tr -d ' ')" \
             --shards-basis="exact expected population validated separately" \

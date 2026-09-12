@@ -1,4 +1,4 @@
-# Produces a FRESH typical-budget baseline over BOTH stress corpora and diffs it against the
+# Produces a FRESH history-aware production replay baseline over BOTH stress corpora and diffs it against the
 # baseline currently on main, so a batch of solver changes can be judged corpus-wide in one run.
 #
 # How this differs from the two workflows next to it:
@@ -40,8 +40,8 @@
 # wrapper on each sweep step is the only real wall-clock bound in this workflow. The truncation check
 # in the combine job stays because a truncated level IS indeterminate rather than unsolved when it
 # does happen — it is just not the cost control it was originally written as.
-name: Solver typical-budget baseline (corpus-1 + corpus-2)
-run-name: "Typical baseline · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shards }}"
+name: Solver history-aware production replay baseline (corpus-1 + corpus-2)
+run-name: "Production replay · flags=${{ inputs.enable_flags || 'control' }} · shards=${{ inputs.shards }}"
 
 on:
   workflow_dispatch:
@@ -108,7 +108,7 @@ on:
         default: 'true'
 
 concurrency:
-  group: solver-typical-budget-baseline
+  group: solver-production-replay-baseline
   cancel-in-progress: false
 
 jobs:
@@ -132,7 +132,7 @@ jobs:
           # so an A/B of a branch-only flag compared main against main. Caught 2026-07-31 only
           # because the ablated arm named a flag main does not define and failed loudly; the other
           # arm had "succeeded" while measuring the wrong commit.
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
@@ -165,7 +165,7 @@ jobs:
       - name: Check out main
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref }}      # see the plan job's note — must follow the dispatch
+          ref: ${{ github.sha }}      # see the plan job's note — must follow the dispatch
 
       - uses: actions/setup-node@v7
         with:
@@ -182,7 +182,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p logs/typical-budget-baseline
+          mkdir -p logs/production-replay-baseline
           write_placeholder () {
             cat > "$1" <<JSON
           {
@@ -193,17 +193,17 @@ jobs:
           JSON
           }
           if [ -n "${{ matrix.c2 }}" ]; then
-            write_placeholder "logs/typical-budget-baseline/batch-${{ matrix.shard }}.json" "data/stress/stress-levels-random.json"
-            touch "logs/typical-budget-baseline/batch-${{ matrix.shard }}.console.log"
+            write_placeholder "logs/production-replay-baseline/batch-${{ matrix.shard }}.json" "data/stress/stress-levels-random.json"
+            touch "logs/production-replay-baseline/batch-${{ matrix.shard }}.console.log"
           fi
           if [ -n "${{ matrix.c1 }}" ]; then
-            write_placeholder "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.json" "data/stress/stress-levels.json"
-            touch "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
+            write_placeholder "logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}.json" "data/stress/stress-levels.json"
+            touch "logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
           fi
 
       # --node-budget is the cumulative ceiling that actually stops a level; --work-budget shapes
       # allocation between attempts; --budget-ms sizes attempt tiers and bounds nothing overall.
-      # --prime-winner is kept to match solver-stress-refresh.yml so the diff is apples-to-apples;
+      # --prime-winner is kept to match solver-stress-refresh.yml so the diff is protocol continuity;
       # note it reads the recorded baseline, so this is a warm re-solve, not a cold-solve measurement.
       # --baseline-budget is deliberately NOT passed (it caused a 503->473 corpus-2 regression when
       # tried in the refresh workflow — see that file's comment).
@@ -229,9 +229,9 @@ jobs:
             --prime-winner \
             $ENABLE_FLAGS_ARG \
             --save-hints \
-            --out="logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.json" \
-            --summary-out="logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}-summary.md" \
-            2>&1 | tee -a "logs/typical-budget-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
+            --out="logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}.json" \
+            --summary-out="logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}-summary.md" \
+            2>&1 | tee -a "logs/production-replay-baseline/corpus1-batch-${{ matrix.shard }}.console.log"
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
           exit 0
         env:
@@ -263,9 +263,9 @@ jobs:
             --prime-winner \
             $ENABLE_FLAGS_ARG \
             --save-hints \
-            --out="logs/typical-budget-baseline/batch-${{ matrix.shard }}.json" \
-            --summary-out="logs/typical-budget-baseline/batch-${{ matrix.shard }}-summary.md" \
-            2>&1 | tee -a "logs/typical-budget-baseline/batch-${{ matrix.shard }}.console.log"
+            --out="logs/production-replay-baseline/batch-${{ matrix.shard }}.json" \
+            --summary-out="logs/production-replay-baseline/batch-${{ matrix.shard }}-summary.md" \
+            2>&1 | tee -a "logs/production-replay-baseline/batch-${{ matrix.shard }}.console.log"
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
           exit 0
         env:
@@ -281,11 +281,11 @@ jobs:
         run: |
           set -euo pipefail
           stage="artifact-staging/typical-shard-${{ matrix.shard }}"
-          mkdir -p "${stage}/logs/typical-budget-baseline" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
-          cp logs/typical-budget-baseline/*batch-${{ matrix.shard }}*.json \
-             logs/typical-budget-baseline/*batch-${{ matrix.shard }}*.md \
-             logs/typical-budget-baseline/*batch-${{ matrix.shard }}*.log \
-             "${stage}/logs/typical-budget-baseline/" 2>/dev/null || true
+          mkdir -p "${stage}/logs/production-replay-baseline" "${stage}/data/stress/hints" "${stage}/data/stress/hints-random"
+          cp logs/production-replay-baseline/*batch-${{ matrix.shard }}*.json \
+             logs/production-replay-baseline/*batch-${{ matrix.shard }}*.md \
+             logs/production-replay-baseline/*batch-${{ matrix.shard }}*.log \
+             "${stage}/logs/production-replay-baseline/" 2>/dev/null || true
           # Shard level-ranges are disjoint per corpus, so a git-status diff against the fresh
           # checkout is a precise list of the hint files THIS shard changed.
           git status --porcelain -- data/stress/hints/ data/stress/hints-random/ | awk '{print $2}' | while read -r f; do
@@ -328,7 +328,7 @@ jobs:
       - name: Check out main
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref }}      # see the plan job's note — must follow the dispatch
+          ref: ${{ github.sha }}      # see the plan job's note — must follow the dispatch
           fetch-depth: 0
 
       - uses: actions/setup-node@v7
@@ -376,8 +376,8 @@ jobs:
           # this way: "Mismatched budgetMs: corpus1-batch-003.json used 225000ms,
           # corpus1-batch-043.json used 20000ms", where 225000 was run #1's deadline default.
           # Starting clean means the combine can only ever see THIS run's results.
-          rm -rf logs/typical-budget-baseline
-          mkdir -p logs/typical-budget-baseline
+          rm -rf logs/production-replay-baseline
+          mkdir -p logs/production-replay-baseline
           cp -a artifact-staging/downloaded/. ./
           # NEVER pipe into `head` here. This step runs under `set -o pipefail`, so when `head`
           # closes the pipe early `ls` dies with SIGPIPE (exit 2) and takes the whole combine job
@@ -385,7 +385,7 @@ jobs:
           # "ls: write error: Broken pipe". Run #1 survived the identical line only because a
           # partial run had few enough files to fit the pipe buffer before `head` exited, which
           # makes this a bug that appears only at full scale. Count, do not paginate.
-          echo "batch files present: $(ls logs/typical-budget-baseline/batch-*.json 2>/dev/null | wc -l) corpus-2, $(ls logs/typical-budget-baseline/corpus1-batch-*.json 2>/dev/null | wc -l) corpus-1"
+          echo "batch files present: $(ls logs/production-replay-baseline/batch-*.json 2>/dev/null | wc -l) corpus-2, $(ls logs/production-replay-baseline/corpus1-batch-*.json 2>/dev/null | wc -l) corpus-1"
 
       # THE combine-gets-stuck guard. The combiner hard-throws on a budgetMs mismatch, and a
       # placeholder carries budgetMs: null — so a single shard that died before its first level
@@ -406,13 +406,13 @@ jobs:
           set -euo pipefail
           node --input-type=commonjs -e "$(cat <<'NODE'
           const { readFileSync, readdirSync, existsSync, writeFileSync, mkdirSync, appendFileSync } = require('node:fs');
-          const dir = 'logs/typical-budget-baseline';
+          const dir = 'logs/production-replay-baseline';
           const all = existsSync(dir) ? readdirSync(dir) : [];
           // Localise any loss to download vs copy: count what actually arrived in the download
           // staging area alongside what survived into the working tree. Shard 001's own job log
           // proves its artifact contains batch-001.json, yet 41 shards' files are absent after the
           // copy -- so one of these two numbers is where they vanish.
-          const dl = 'artifact-staging/downloaded/logs/typical-budget-baseline';
+          const dl = 'artifact-staging/downloaded/logs/production-replay-baseline';
           const downloaded = existsSync(dl) ? readdirSync(dl).filter(f => f.endsWith('.json')) : [];
           const audit = { generatedAt: new Date().toISOString(), dirEntryCount: all.length,
                           downloadedJsonCount: downloaded.length,
@@ -478,7 +478,7 @@ jobs:
           # set -e, every downstream step skipped). Plain mv, not git mv, so an untracked file is
           # not a fatal error either — everything is `git add`ed at commit time regardless.
           stamp="$(date -u +%Y-%m-%dT%H%M%SZ)"
-          dest="logs/typical-budget-baseline/archive/${stamp}"
+          dest="logs/production-replay-baseline/archive/${stamp}"
           mkdir -p "${dest}"
           for f in logs/stress-corpus1-baseline.json logs/stress-corpus2-baseline.json \
                    reports/stress/solver-corpus1-latest.json reports/stress/solver-corpus2-latest.json; do
@@ -503,6 +503,33 @@ jobs:
           else
             echo "::warning::No usable corpus-2 shard reports — skipping its combine."
           fi
+
+      - name: Validate exact replay populations
+        id: integrity
+        shell: bash
+        env:
+          ALLOW_PARTIAL: ${{ inputs.allow_partial }}
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('node:fs');
+          for (const [corpus, out] of [['data/stress/stress-levels.json', 'logs/production-replay-baseline/expected-corpus1-ids.txt'], ['data/stress/stress-levels-random.json', 'logs/production-replay-baseline/expected-corpus2-ids.txt']]) {
+            const parsed = JSON.parse(fs.readFileSync(corpus));
+            fs.writeFileSync(out, `${(Array.isArray(parsed) ? parsed : parsed.levels).map(level => level.id).join('\n')}\n`);
+          }
+          NODE
+          node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --expected-ids=logs/production-replay-baseline/expected-corpus1-ids.txt --result=reports/stress/typical-budget-corpus1.json --integrity-out=logs/production-replay-baseline/corpus1-integrity.json
+          node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --expected-ids=logs/production-replay-baseline/expected-corpus2-ids.txt --result=reports/stress/typical-budget-corpus2.json --integrity-out=logs/production-replay-baseline/corpus2-integrity.json
+          node scripts/combine-population-integrity.mjs \
+            --input=corpus-1:logs/production-replay-baseline/corpus1-integrity.json \
+            --input=corpus-2:logs/production-replay-baseline/corpus2-integrity.json \
+            --kind=whole-replay-corpora \
+            --identity-basis=corpus-and-stable-level-id \
+            --out=logs/production-replay-baseline/population-integrity.json
+          complete=$(node -e "process.stdout.write(String(require('./logs/production-replay-baseline/population-integrity.json').complete))")
+          echo "complete=${complete}" >> "$GITHUB_OUTPUT"
+          if [ "$complete" != true ] && [ -z "$ALLOW_PARTIAL" ]; then exit 1; fi
+          if [ "$complete" != true ]; then echo '::warning::Partial replay is artifact-only and cannot produce a diff or continuity update.'; fi
 
       # A truncated level is indeterminate, not unsolved. If the deadline bound anywhere, this run
       # is not reproducible and its numbers must not be read as a solvability change.
@@ -588,11 +615,12 @@ jobs:
           done
 
       - name: Diff the new baseline against the one currently on main
+        if: ${{ steps.integrity.outputs.complete == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p reports/stress
-          out="reports/stress/typical-budget-baseline-${stamp}.md"
+          out="reports/stress/production-replay-baseline-${stamp}.md"
           {
             echo "# Typical-budget baseline — ${stamp}"
             echo
@@ -642,24 +670,43 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: typical-budget-baseline-combined
+          name: production-replay-baseline-combined
           path: |
             reports/stress/typical-budget-*
-            logs/typical-budget-baseline/
+            logs/production-replay-baseline/
           if-no-files-found: warn
           retention-days: 90
 
       - name: Publish standard solver sweep result
         if: always()
         shell: bash
+        env:
+          C1_NODE_BUDGET: ${{ inputs.corpus1_node_budget }}
+          C2_NODE_BUDGET: ${{ inputs.corpus2_node_budget }}
+          C1_WORK_BUDGET: ${{ inputs.corpus1_work_budget }}
+          C2_WORK_BUDGET: ${{ inputs.corpus2_work_budget }}
         run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
+          const configuration = { corpus1NodeBudget: Number(process.env.C1_NODE_BUDGET), corpus2NodeBudget: Number(process.env.C2_NODE_BUDGET), corpus1WorkBudget: Number(process.env.C1_WORK_BUDGET), corpus2WorkBudget: Number(process.env.C2_WORK_BUDGET), schedulerMode: 'production' };
+          fs.writeFileSync('logs/production-replay-baseline/experiment-contract.json', `${JSON.stringify({
+            experiment: { workflowFamily: 'history-aware-production-replay', producer: 'solver-production-replay-baseline.yml', entrypoint: 'scripts/portfolio-solve-sweep.mjs', configurationHash: hashConfiguration(configuration) },
+            population: { kind: 'whole-canonical-corpora', identityBasis: 'corpus-and-stable-level-id' },
+            execution: { levelBlind: false, historyAware: true, historicalInputs: ['continuity baseline', 'prime winner', 'saved hints'], reproducibilityExpected: null, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: true },
+            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'none', reports: 'report-write' },
+          }, null, 2)}\n`);
+          NODE
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/typical-budget-corpus1.json" \
             --include="reports/stress/typical-budget-corpus2.json" \
             --shards-expected="${{ inputs.shards }}" \
-            --shards-observed="$(find logs/typical-budget-baseline -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --shards-observed="$(find logs/production-replay-baseline -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
+            --integrity-file="logs/production-replay-baseline/population-integrity.json" \
+            --contract-file="logs/production-replay-baseline/experiment-contract.json" \
             --provenance-out="reports/stress/typical-budget-source-run-${{ github.run_id }}.json" \
-            --source-artifact="typical-budget-baseline-combined"
+            --source-artifact="production-replay-baseline-combined"
 
       - name: Upload standard solver sweep result
         if: always()
@@ -674,7 +721,7 @@ jobs:
         # Also gated on the ref: now that shards follow the dispatch, a branch run produces numbers
         # from branch code, and committing those to main's continuity baseline would silently corrupt
         # the series.
-        if: ${{ inputs.commit_results == 'true' && inputs.deterministic != 'true' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.commit_results == 'true' && inputs.deterministic != 'true' && github.ref == 'refs/heads/main' && steps.integrity.outputs.complete == 'true' }}
         shell: bash
         run: |
           set -euo pipefail

@@ -23,7 +23,7 @@ For a matched A/B pair that must reduce concurrent footprint, lower `max_paralle
 
 For matched capability A/B arms, use `deterministic=true`. Hint capture remains enabled because it is output-only and cannot influence either arm's solve. Deterministic runs keep changed hint files in immutable shard artifacts rather than eagerly committing them from the source run; `harvest-solver-evidence.yml` merges those discoveries onto canonical `main` afterward. This preserves both matched-A/B concurrency and evidence retention.
 
-This differs from `solver-typical-budget-baseline.yml`, whose ordinary wall-clock deadlines intentionally bind. Worker-count changes there can change experimental outcomes and must be measured rather than treated as plumbing.
+This differs from `solver-production-replay-baseline.yml`, whose ordinary wall-clock deadlines intentionally bind. Worker-count changes there can change experimental outcomes and must be measured rather than treated as plumbing.
 
 ## Completion guarantees
 

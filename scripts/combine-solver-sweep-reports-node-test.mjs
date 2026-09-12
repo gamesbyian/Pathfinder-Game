@@ -55,14 +55,30 @@ async function main() {
         assert.equal(combined.corpus, 'data/stress/stress-levels-random.json');
         assert.equal(combined.levels.length, 2);
         assert.equal(combined.solved, 1);
-        assert.equal(combined.failed, 1);
-        assert.equal(combined.total, 2);
+        assert.equal(combined.outcomes.deadlineTruncated, 1);
+        assert.equal(combined.outcomes.harnessError, 0);
+        assert.equal(combined.populationIntegrity.complete, false, 'observed rows alone cannot establish intended-population completeness');
+        assert.equal(combined.populationIntegrity.expectedCount, null);
+        assert.equal(combined.total, null, 'unknown intended population must not use observed rows as the denominator');
         console.log('  ✓ merges two batches into one flat, budgetMs-bearing report');
+
+        const expectedFile = path.join(tempDir, 'expected.txt');
+        const exactOut = path.join(tempDir, 'combined-exact.json');
+        await writeFile(expectedFile, 'R00002\nR00001\n');
+        await run([`--in=${batch1},${batch2}`, `--expected-ids=${expectedFile}`, `--out=${exactOut}`]);
+        const exactCombined = JSON.parse(await readFile(exactOut, 'utf8'));
+        assert.equal(exactCombined.populationIntegrity.complete, true);
+        assert.equal(exactCombined.expectedCount, 2);
+        assert.match(exactCombined.population.identityHash, /^sha256:[0-9a-f]{64}$/);
+        console.log('  ✓ intended ID input makes exact completeness and denominator explicit');
 
         const exact = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002'], levels: combined.levels });
         assert.equal(exact.complete, true);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels }), /missing results: R00003/);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001'], levels: combined.levels }), /unexpected results: R00002/);
+        const partial = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels, allowIncomplete: true });
+        assert.equal(partial.complete, false);
+        assert.deepEqual(partial.missingIds, ['R00003']);
         console.log('  ✓ exact-population validator rejects missing and unexpected result ids');
 
         const participatingLevels = [
@@ -254,6 +270,16 @@ async function main() {
         await writeFile(batch3, JSON.stringify(batchReport({ summary: { budgetMs: 20000 }, levels: [{ level: 3, id: 'R00003', ok: true }] })));
         await assert.rejects(() => run([`--in=${batch1},${batch3}`, `--out=${outFile}`]), /Mismatched budgetMs/);
         console.log('  ✓ rejects mismatched budgetMs across batches');
+
+        const batchWrongRef = path.join(tempDir, 'batch-wrong-ref.json');
+        await writeFile(batchWrongRef, JSON.stringify(batchReport({ summary: { commit: 'def456' }, levels: [{ level: 4, id: 'R00004', ok: true }] })));
+        await assert.rejects(() => run([`--in=${batch1},${batchWrongRef}`, `--out=${outFile}`]), /Mismatched commit \(wrong-ref exposure\)/);
+        console.log('  ✓ rejects shards that ran at different commits (a mutable ref moved mid-dispatch)');
+
+        const batchLocalCommit = path.join(tempDir, 'batch-local-commit.json');
+        await writeFile(batchLocalCommit, JSON.stringify(batchReport({ summary: { commit: 'local' }, levels: [{ level: 5, id: 'R00005', ok: true }] })));
+        await run([`--in=${batch1},${batchLocalCommit}`, `--out=${outFile}`]);
+        console.log('  ✓ exempts local/unknown commit provenance from the wrong-ref check');
 
         const batch1Again = path.join(tempDir, 'batch-01-again.json');
         await writeFile(batch1Again, JSON.stringify(batchReport({

@@ -396,6 +396,23 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Download the sealed cohort and derive its exact expected-id population
+        uses: actions/download-artifact@v8
+        with:
+          name: broad-confirmation-cohort
+          path: artifact-staging/cohort
+
+      - name: Write the exact expected-id population from the sealed cohort
+        shell: bash
+        run: |
+          mkdir -p logs/solver-broad-confirmation
+          node -e "
+          const fs = require('node:fs');
+          const parsed = JSON.parse(fs.readFileSync('artifact-staging/cohort/${{ inputs.cohort_id }}.json', 'utf8'));
+          const levels = Array.isArray(parsed) ? parsed : parsed.levels;
+          fs.writeFileSync('logs/solver-broad-confirmation/expected-ids.txt', levels.map(level => level.id).join('\n') + '\n');
+          "
+
       - name: Download control shard artifacts
         id: download_control
         uses: actions/download-artifact@v8
@@ -426,7 +443,7 @@ jobs:
             # solver-residual-confirmation.yml's identical fix (found when confirm-residual-003's
             # combine step failed outright the first time it ran against the fix).
             FILES=$(ls logs/solver-broad-confirmation-${arm}/batch-*.json 2>/dev/null | grep -v -- '-flags\.json$' | paste -sd, -)
-            [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --in="${FILES}" --out="reports/stress/broad-confirmation-${arm}.json"
+            [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --expected-ids=logs/solver-broad-confirmation/expected-ids.txt --in="${FILES}" --out="reports/stress/broad-confirmation-${arm}.json"
           done
 
       - name: Verify complete coverage, both arms
@@ -443,6 +460,50 @@ jobs:
           }
           console.log(\`both arms complete: \${expectedTotal}/\${expectedTotal}\`);
           "
+
+      - name: Validate exact population integrity, both arms, and declare the native v3 contract
+        if: always()
+        shell: bash
+        env:
+          COHORT_ID: ${{ inputs.cohort_id }}
+          GENERATOR: ${{ inputs.generator }}
+          MASTER_SEED: ${{ inputs.master_seed }}
+          ID_PREFIX: ${{ inputs.id_prefix }}
+          ENVELOPE_CAPS: ${{ inputs.envelope_caps }}
+          ENABLE_FLAGS: ${{ inputs.enable_flags }}
+          DISABLE_FLAGS: ${{ inputs.disable_flags }}
+          NODE_BUDGET: ${{ inputs.node_budget }}
+          STRICT_TOTAL_WORK_BUDGET: ${{ inputs.strict_total_work_budget }}
+          BUDGET_MS: ${{ inputs.budget_ms }}
+          DETERMINISTIC: ${{ inputs.deterministic }}
+        run: |
+          for arm in control treatment; do
+            [ -f "reports/stress/broad-confirmation-${arm}.json" ] || continue
+            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete \
+              --expected-ids=logs/solver-broad-confirmation/expected-ids.txt \
+              --result="reports/stress/broad-confirmation-${arm}.json" \
+              --integrity-out="logs/solver-broad-confirmation/${arm}-integrity.json"
+          done
+          if [ -f logs/solver-broad-confirmation/control-integrity.json ] && [ -f logs/solver-broad-confirmation/treatment-integrity.json ]; then
+            node scripts/combine-paired-arm-integrity.mjs \
+              --left=logs/solver-broad-confirmation/control-integrity.json \
+              --right=logs/solver-broad-confirmation/treatment-integrity.json \
+              --out=logs/solver-broad-confirmation/paired-integrity.json
+          fi
+          work_allocation=$(( NODE_BUDGET * 134 / 100 ))
+          work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" = true ] && work_ceiling=$work_allocation
+          wall_binding=true; [ "$DETERMINISTIC" = true ] && wall_binding=false
+          cat > logs/solver-broad-confirmation/experiment-contract-spec.json <<SPEC
+          {"configuration": {"cohortId": "$COHORT_ID", "generator": "$GENERATOR", "masterSeed": "$MASTER_SEED", "idPrefix": "$ID_PREFIX", "envelopeCaps": $ENVELOPE_CAPS, "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS},
+          "workflowFamily": "broad-confirmation", "producer": "solver-broad-confirmation.yml", "entrypoint": "scripts/level-blind-capability-sweep.mjs",
+          "population": {"kind": "sealed-generated-cohort", "identityBasis": "stable-level-id"},
+          "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "broad-confirmation", "schedulerMode": "paired-control-treatment"},
+          "limits": {"cumulativeNodeCeiling": $NODE_BUDGET, "initialWorkAllocation": $work_allocation, "totalWorkCeiling": $work_ceiling, "wallSafetyDeadlineMs": $BUDGET_MS, "wallDeadlineBinding": $wall_binding},
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          SPEC
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/solver-broad-confirmation/experiment-contract-spec.json \
+            --out=logs/solver-broad-confirmation/experiment-contract.json
 
       - name: Print the frozen confirmation verdict inputs
         id: verdict
@@ -501,6 +562,8 @@ jobs:
             --primary="reports/stress/broad-confirmation-control.json" \
             --include="reports/stress/broad-confirmation-treatment.json" \
             --outcome-file="reports/stress/broad-confirmation-outcome.json" \
+            --integrity-file="logs/solver-broad-confirmation/paired-integrity.json" \
+            --contract-file="logs/solver-broad-confirmation/experiment-contract.json" \
             --shards-expected="$(( ( ${{ inputs.shard_count }} < ${{ needs.generate.outputs.total_levels }} ? ${{ inputs.shard_count }} : ${{ needs.generate.outputs.total_levels }} ) * 2 ))" \
             --shards-observed="$(find logs/solver-broad-confirmation-control logs/solver-broad-confirmation-treatment -maxdepth 1 -name 'batch-*.json' ! -name '*-flags.json' | wc -l | tr -d ' ')" \
             --source-artifact="broad-confirmation-combined"

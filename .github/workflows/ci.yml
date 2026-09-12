@@ -173,3 +173,13 @@ jobs:
           SOLVER_R02560_PROOF_SKIP: '1'
       - name: Run heavyweight implementation proofs
         run: npm run test:deep-proofs
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Exercise level-fingerprint repository identity through Firestore emulator
+        run: >-
+          npx --yes firebase-tools@15.28.2
+          emulators:exec --only firestore
+          --project demo-pathfinder-fingerprint-boundary
+          "npm run test:firestore-level-fingerprint-boundary"

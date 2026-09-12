@@ -275,10 +275,35 @@ jobs:
         if: always()
         shell: bash
         run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const plan = JSON.parse(fs.readFileSync('plan/technique-census-plan.json'));
+          fs.writeFileSync('plan/expected-cell-ids.txt', `${plan.cells.map(cell => cell.cellId).join('\n')}\n`);
+          NODE
+          if [ -f "reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" ]; then
+            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --rows-field=results \
+              --expected-ids=plan/expected-cell-ids.txt \
+              --result="reports/stress/technique-census/${{ github.run_id }}/combined-cells.json" \
+              --integrity-out="reports/stress/technique-census/${{ github.run_id }}/population-integrity.json"
+          fi
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
+          const plan = JSON.parse(fs.readFileSync('plan/technique-census-plan.json'));
+          fs.writeFileSync('plan/experiment-contract.json', `${JSON.stringify({
+            experiment: { workflowFamily: 'isolated-technique-census', producer: 'technique-census.yml', entrypoint: 'scripts/technique-census.mjs', configurationHash: hashConfiguration(plan) },
+            population: { kind: 'technique-census-cells', identityBasis: 'sealed-plan-cell-id' },
+            execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'technique-census', schedulerMode: 'isolated-techniques' },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: false },
+            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'none', reports: 'report-write' },
+          }, null, 2)}\n`);
+          NODE
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/technique-census/${{ github.run_id }}" \
             --shards-expected="120" \
             --shards-observed="$(find artifact-staging -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
+            --integrity-file="reports/stress/technique-census/${{ github.run_id }}/population-integrity.json" \
+            --contract-file="plan/experiment-contract.json" \
             --provenance-out="reports/stress/technique-census/${{ github.run_id }}/gha-source-run.json" \
             --source-artifact="technique-census-combined"
 

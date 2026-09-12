@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
+import { EXPERIMENT_RESULT_KIND, EXPERIMENT_SCHEMA_VERSION, buildPopulationIntegrity, hashPopulation } from './solver-experiment-contract.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -28,6 +29,17 @@ const shardsObserved = numberArg('shards-observed');
 const shardsBasis = values.get('shards-basis') || null;
 const provenanceOut = values.get('provenance-out') || null;
 const outcomeFile = values.get('outcome-file') || null;
+const integrityFile = values.get('integrity-file') || null;
+const contractFile = values.get('contract-file') || null;
+let declaredContract = null;
+if (contractFile) {
+  try {
+    declaredContract = JSON.parse(fs.readFileSync(contractFile, 'utf8'));
+  } catch (error) {
+    console.error(`publish-solver-sweep-result: invalid --contract-file=${contractFile}: ${error.message}`);
+    process.exit(2);
+  }
+}
 let researchOutcome = null;
 if (outcomeFile) {
   try {
@@ -53,6 +65,10 @@ function copyRequested(source, role) {
 }
 
 const entries = [copyRequested(primary, 'primary'), ...includes.map(p => copyRequested(p, 'include'))];
+let primaryDocument = null;
+if (!entries[0].missing && entries[0].published?.endsWith('.json')) {
+  try { primaryDocument = JSON.parse(fs.readFileSync(path.join(outDir, entries[0].published), 'utf8')); } catch { /* Non-JSON evidence still gets a manifest. */ }
+}
 
 function collectJsonFiles(root, limit = 24) {
   const found = [];
@@ -78,28 +94,14 @@ function buildStageStats(levels) {
       const stageId = attempt?.stageId;
       if (!stageId) continue;
       if (!byStage.has(stageId)) {
-        byStage.set(stageId, {
-          stageId,
-          reach: 0,
-          attempts: 0,
-          solves: 0,
-          nodes: 0,
-          work: 0,
-          workReported: 0,
-        });
+        byStage.set(stageId, { stageId, reach: 0, attempts: 0, solves: 0, nodes: 0, work: 0, workReported: 0 });
       }
       const stage = byStage.get(stageId);
-      if (!seen.has(stageId)) {
-        stage.reach += 1;
-        seen.add(stageId);
-      }
+      if (!seen.has(stageId)) { stage.reach += 1; seen.add(stageId); }
       stage.attempts += 1;
       stage.solves += attempt?.ok ? 1 : 0;
       stage.nodes += Number(attempt?.nodesExpanded) || 0;
-      if (Number.isFinite(attempt?.workSpent)) {
-        stage.work += attempt.workSpent;
-        stage.workReported += 1;
-      }
+      if (Number.isFinite(attempt?.workSpent)) { stage.work += attempt.workSpent; stage.workReported += 1; }
     }
   }
   return [...byStage.values()].sort((a, b) => b.attempts - a.attempts || a.stageId.localeCompare(b.stageId));
@@ -107,9 +109,6 @@ function buildStageStats(levels) {
 
 function levelStats(file) {
   try {
-    // Full production reports can exceed the old 25 MiB guard once attempt/stage telemetry is
-    // included. Parsing one bounded result in the final GHA job is cheap and is exactly where the
-    // work/stage observability is needed when artifact downloads are unavailable to an agent.
     if (fs.statSync(file).size > 128 * 1024 * 1024) return null;
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     const levels = Array.isArray(parsed?.levels) ? parsed.levels : null;
@@ -119,7 +118,7 @@ function levelStats(file) {
       file,
       levels,
       solved: levels.filter(row => row?.ok).length,
-      total: levels.length,
+      observed: levels.length,
       work: workRows.reduce((n, row) => n + row.workSpent, 0),
       workReported: workRows.length,
       nodes: levels.reduce((n, row) => n + (Number(row?.nodesExpanded) || 0), 0),
@@ -128,6 +127,17 @@ function levelStats(file) {
   } catch {
     return null;
   }
+}
+
+function isDecisionValidIntegrity(integrity) {
+  if (!integrity || typeof integrity !== 'object') return false;
+  if (integrity.decisionValidComplete != null) return integrity.decisionValidComplete === true;
+  if (integrity.complete !== true || !integrity.outcomes || typeof integrity.outcomes !== 'object') return false;
+  return (integrity.outcomes.deadlineTruncated ?? 0) === 0
+    && (integrity.outcomes.harnessError ?? 0) === 0
+    && (integrity.outcomes.malformed ?? 0) === 0
+    && (integrity.outcomes.missing ?? 0) === 0
+    && (integrity.outcomes.unknown ?? 0) === 0;
 }
 
 const stats = collectJsonFiles(outDir).map(levelStats).filter(Boolean);
@@ -144,7 +154,16 @@ if (control && treatment) {
   const idOf = row => row?.id ?? row?.level;
   const a = new Set(control.levels.filter(x => x?.ok).map(idOf));
   const b = new Set(treatment.levels.filter(x => x?.ok).map(idOf));
+  const controlParsed = JSON.parse(fs.readFileSync(control.file, 'utf8'));
+  const treatmentParsed = JSON.parse(fs.readFileSync(treatment.file, 'utf8'));
+  const controlHash = controlParsed?.population?.identityHash ?? null;
+  const treatmentHash = treatmentParsed?.population?.identityHash ?? null;
+  const controlDecisionValid = isDecisionValidIntegrity(controlParsed?.populationIntegrity);
+  const treatmentDecisionValid = isDecisionValidIntegrity(treatmentParsed?.populationIntegrity);
+  const compatible = Boolean(controlHash && controlHash === treatmentHash && controlDecisionValid && treatmentDecisionValid);
   comparison = {
+    decisionBearing: compatible,
+    reason: compatible ? 'matched population hashes and decision-valid population integrity' : 'population identity or decision-valid integrity is absent/incompatible',
     gained: [...b].filter(id => !a.has(id)).sort(),
     lost: [...a].filter(id => !b.has(id)).sort(),
     workDeltaPct: control.work ? 100 * (treatment.work - control.work) / control.work : null,
@@ -164,18 +183,81 @@ try {
   console.warn('publish-solver-sweep-result: could not read dispatch inputs:', error.message);
 }
 
-const shardCompleteness = Number.isFinite(shardsExpected) && Number.isFinite(shardsObserved)
-  ? {
-      expected: shardsExpected,
-      observed: shardsObserved,
-      complete: shardsExpected === shardsObserved,
-      basis: shardsBasis,
-    }
+const artifactCoverage = Number.isFinite(shardsExpected) && Number.isFinite(shardsObserved)
+  ? { expected: shardsExpected, observed: shardsObserved, complete: shardsExpected === shardsObserved, basis: shardsBasis }
   : null;
 
+let populationIntegrity = null;
+if (integrityFile && fs.existsSync(integrityFile)) populationIntegrity = JSON.parse(fs.readFileSync(integrityFile, 'utf8'));
+else if (integrityFile) console.warn(`publish-solver-sweep-result: integrity file is missing; publishing non-decision-bearing evidence: ${integrityFile}`);
+if (!populationIntegrity && !entries[0].missing && entries[0].published?.endsWith('.json')) {
+  const parsed = primaryDocument;
+  populationIntegrity = parsed?.populationIntegrity ?? null;
+  if (!populationIntegrity && Array.isArray(parsed?.levels)) {
+    const observedIds = parsed.levels.map(row => row?.id ?? row?.levelId ?? row?.level).filter(id => id != null).map(String);
+    populationIntegrity = { ...buildPopulationIntegrity(observedIds, parsed.levels), inferredExpectedPopulation: true };
+  }
+}
+const populationIdentity = populationIntegrity?.populationIdentityHash ?? (populationIntegrity
+  ? hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: [
+      ...(populationIntegrity.expectedIds ?? []),
+      ...(!populationIntegrity.expectedIds ? (populationIntegrity.missingIds ?? []) : []),
+    ].length ? [...(populationIntegrity.expectedIds ?? []), ...(populationIntegrity.missingIds ?? [])] : stats.flatMap(s => s.levels.map(row => row?.id ?? row?.levelId ?? row?.level).filter(x => x != null).map(String)) }).identityHash
+  : null);
+const outcomeDecisionBearing = researchOutcome && ['completed-positive', 'completed-negative'].includes(researchOutcome.outcome);
+const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
+const contract = {
+  experiment: {
+    experimentId: declaredContract?.experiment?.experimentId ?? process.env.GITHUB_RUN_ID ?? null,
+    workflowFamily: declaredContract?.experiment?.workflowFamily ?? primaryDocument?.workflowFamily ?? process.env.GITHUB_WORKFLOW ?? null,
+    producer: declaredContract?.experiment?.producer ?? primaryDocument?.producer ?? null,
+    entrypoint: declaredContract?.experiment?.entrypoint ?? primaryDocument?.entrypoint ?? null,
+    requestedRef: declaredContract?.experiment?.requestedRef ?? process.env.GITHUB_REF ?? null,
+    resolvedSha: declaredContract?.experiment?.resolvedSha ?? process.env.GITHUB_SHA ?? null,
+    workflowRunId: process.env.GITHUB_RUN_ID ?? null,
+    workflowRunAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
+    sourceRuns: declaredContract?.experiment?.sourceRuns ?? [],
+    reconciliationRun: declaredContract?.experiment?.reconciliationRun ?? null,
+    configurationHash: declaredContract?.experiment?.configurationHash ?? primaryDocument?.configurationHash ?? null,
+  },
+  population: {
+    kind: declaredContract?.population?.kind ?? primaryDocument?.population?.kind ?? null,
+    identityBasis: declaredContract?.population?.identityBasis ?? primaryDocument?.population?.identityBasis ?? null,
+    identityHash: populationIdentity,
+    expectedCount: populationIntegrity?.expectedCount ?? null,
+    observedCount: populationIntegrity?.observedCount ?? null,
+    duplicateIds: populationIntegrity?.duplicateIds ?? [],
+    unexpectedIds: populationIntegrity?.unexpectedIds ?? [],
+    missingIds: populationIntegrity?.missingIds ?? [],
+  },
+  execution: {
+    levelBlind: declaredContract?.execution?.levelBlind ?? primaryDocument?.execution?.levelBlind ?? null,
+    historyAware: declaredContract?.execution?.historyAware ?? primaryDocument?.execution?.historyAware ?? null,
+    historicalInputs: declaredContract?.execution?.historicalInputs ?? [],
+    reproducibilityExpected: declaredContract?.execution?.reproducibilityExpected ?? null,
+    producerFamily: declaredContract?.execution?.producerFamily ?? null,
+    schedulerMode: declaredContract?.execution?.schedulerMode ?? primaryDocument?.execution?.schedulerMode ?? null,
+  },
+  limits: {
+    cumulativeNodeCeiling: declaredContract?.limits?.cumulativeNodeCeiling ?? null,
+    initialWorkAllocation: declaredContract?.limits?.initialWorkAllocation ?? null,
+    totalWorkCeiling: declaredContract?.limits?.totalWorkCeiling ?? null,
+    wallSafetyDeadlineMs: declaredContract?.limits?.wallSafetyDeadlineMs ?? null,
+    wallDeadlineBinding: declaredContract?.limits?.wallDeadlineBinding ?? null,
+  },
+  outcomes: populationIntegrity?.outcomes ?? null,
+  coverage: { artifact: artifactCoverage, populationIntegrity },
+  sideEffects: {
+    hints: declaredContract?.sideEffects?.hints ?? 'unknown',
+    canonicalBaseline: declaredContract?.sideEffects?.canonicalBaseline ?? 'unknown',
+    telemetry: declaredContract?.sideEffects?.telemetry ?? 'unknown',
+    reports: declaredContract?.sideEffects?.reports ?? 'unknown',
+  },
+};
+
 const manifest = {
-  schemaVersion: 2,
-  kind: 'pathfinder-solver-sweep-result',
+  schemaVersion: EXPERIMENT_SCHEMA_VERSION,
+  kind: EXPERIMENT_RESULT_KIND,
   status: entries[0].missing ? 'missing-primary' : 'published',
   workflow: process.env.GITHUB_WORKFLOW || null,
   runId: process.env.GITHUB_RUN_ID || null,
@@ -188,7 +270,11 @@ const manifest = {
   runUrl,
   sourceArtifact,
   dispatchInputs,
-  shardCompleteness,
+  artifactCoverage,
+  populationIntegrity,
+  populationIdentityHash: populationIdentity,
+  decisionBearing: Boolean(integrityDecisionValid && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
+  ...contract,
   researchOutcome,
   entries,
 };
@@ -197,18 +283,9 @@ fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, nu
 if (provenanceOut) {
   fs.mkdirSync(path.dirname(provenanceOut), { recursive: true });
   fs.writeFileSync(provenanceOut, JSON.stringify({
-    kind: 'pathfinder-gha-source-run',
-    workflow: manifest.workflow,
-    runId: manifest.runId,
-    runAttempt: manifest.runAttempt,
-    runUrl: manifest.runUrl,
-    sha: manifest.sha,
-    ref: manifest.ref,
-    refName: manifest.refName,
-    event: manifest.event,
-    dispatchInputs,
-    shardCompleteness,
-    researchOutcome,
+    kind: 'pathfinder-gha-source-run', workflow: manifest.workflow, runId: manifest.runId,
+    runAttempt: manifest.runAttempt, runUrl: manifest.runUrl, sha: manifest.sha, ref: manifest.ref,
+    refName: manifest.refName, event: manifest.event, dispatchInputs, artifactCoverage, populationIntegrity, researchOutcome,
   }, null, 2) + '\n');
 }
 
@@ -218,13 +295,15 @@ if (manifest.runId) lines.push(`- Run: ${runUrl ? `[${manifest.runId}](${runUrl}
 if (manifest.sha) lines.push(`- Commit: \`${manifest.sha}\``);
 if (manifest.refName) lines.push(`- Ref: \`${manifest.refName}\``);
 if (sourceArtifact) lines.push(`- Legacy/specialized artifact: \`${sourceArtifact}\``);
-if (researchOutcome) {
-  lines.push(`- Research outcome: **${researchOutcome.outcome}** — ${researchOutcome.reason}`);
-} else {
-  lines.push('- Research outcome: not declared (this publisher never infers a scientific verdict)');
-}
+if (researchOutcome) lines.push(`- Research outcome: **${researchOutcome.outcome}** — ${researchOutcome.reason}`);
+else lines.push('- Research outcome: not declared (this publisher never infers a scientific verdict)');
 if (Object.keys(dispatchInputs).length) lines.push('- Dispatch inputs: recorded in `manifest.json`');
-if (shardCompleteness) lines.push(`- Shards: ${shardCompleteness.observed}/${shardCompleteness.expected} ${shardCompleteness.complete ? 'complete' : '**INCOMPLETE**'}${shardCompleteness.basis ? ` (${shardCompleteness.basis})` : ''}`);
+if (artifactCoverage) lines.push(`- Artifact coverage: ${artifactCoverage.observed}/${artifactCoverage.expected} shard artifacts ${artifactCoverage.complete ? 'present' : '**INCOMPLETE**'}${artifactCoverage.basis ? ` (${artifactCoverage.basis})` : ''}`);
+if (populationIntegrity) {
+  const coverageComplete = populationIntegrity.coverageComplete ?? populationIntegrity.complete ?? false;
+  lines.push(`- Population coverage: ${populationIntegrity.observedCount}/${populationIntegrity.expectedCount} observed; ${populationIntegrity.missingIds?.length ?? populationIntegrity.outcomes?.missing ?? 0} missing-indeterminate; ${coverageComplete ? 'complete' : '**INCOMPLETE**'}`);
+  lines.push(`- Decision-valid observations: ${integrityDecisionValid ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
+} else lines.push('- Population integrity: **unknown / non-decision-bearing** (no validated intended population supplied)');
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
 
@@ -237,30 +316,19 @@ if (stats.length) {
   lines.push('', '## Result summary', '');
   for (const s of stats.slice(0, 12)) {
     const rel = path.relative(outDir, s.file).replaceAll('\\', '/');
-    lines.push(`- \`${rel}\`: ${s.solved}/${s.total} solved, work=${s.work} (${s.workReported}/${s.total} levels reported), nodes=${s.nodes}`);
+    const expected = populationIntegrity?.expectedCount ?? 'unknown';
+    lines.push(`- \`${rel}\`: ${s.solved} solved / ${s.observed} observed / ${expected} expected, work=${s.work} (${s.workReported}/${s.observed} rows reported), nodes=${s.nodes}`);
   }
 }
 
-// Solved rows already carry a full path (portfolio-solve-sweep-lib.mjs's buildRow), but only the
-// artifact -- not this printed summary -- previously exposed it. An agent whose egress policy
-// blocks the GH Actions artifact host (Azure Blob Storage, which every artifact download redirects
-// to regardless of workflow config) had no way to referee-check a claimed solve without re-solving
-// it from scratch. Bounded to keep this printed summary (which also lands in $GITHUB_STEP_SUMMARY)
-// well under GitHub's size limits even for a large population; the cap only ever bites when most of
-// a large population solved, which is not the "bounded miss/gain population" case this tooling is
-// mainly dispatched for.
 const MAX_PRINTED_SOLUTION_PATHS = 300;
 const solvedRows = stats.flatMap(s => s.levels.filter(row => row?.ok && Array.isArray(row?.solution))
   .map(row => ({ source: path.relative(outDir, s.file).replaceAll('\\', '/'), id: row.id ?? row.level, solution: row.solution })));
 if (solvedRows.length) {
   lines.push('', '## Solved level paths', '');
   lines.push('Packed-key paths, one per solved level, so a referee/re-check can proceed without the artifact.');
-  for (const row of solvedRows.slice(0, MAX_PRINTED_SOLUTION_PATHS)) {
-    lines.push(`- \`${row.source}\` ${row.id}: ${JSON.stringify(row.solution)}`);
-  }
-  if (solvedRows.length > MAX_PRINTED_SOLUTION_PATHS) {
-    lines.push(`- ... ${solvedRows.length - MAX_PRINTED_SOLUTION_PATHS} more solved level(s) omitted (see the artifact for the full set).`);
-  }
+  for (const row of solvedRows.slice(0, MAX_PRINTED_SOLUTION_PATHS)) lines.push(`- \`${row.source}\` ${row.id}: ${JSON.stringify(row.solution)}`);
+  if (solvedRows.length > MAX_PRINTED_SOLUTION_PATHS) lines.push(`- ... ${solvedRows.length - MAX_PRINTED_SOLUTION_PATHS} more solved level(s) omitted (see the artifact for the full set).`);
 }
 
 const stagedStats = stats.filter(s => s.stages.length).slice(0, 12);
@@ -274,12 +342,13 @@ if (stagedStats.length) {
     lines.push('|---|---:|---:|---:|---:|---:|');
     for (const stage of s.stages) {
       const work = stage.workReported ? `${stage.work} (${stage.workReported}/${stage.attempts})` : 'n/a';
-      lines.push(`| \`${stage.stageId}\` | ${stage.reach}/${s.total} | ${stage.attempts} | ${stage.solves} | ${stage.nodes} | ${work} |`);
+      lines.push(`| \`${stage.stageId}\` | ${stage.reach}/${s.observed} | ${stage.attempts} | ${stage.solves} | ${stage.nodes} | ${work} |`);
     }
   }
 }
 if (comparison) {
   lines.push('', '## Control/treatment comparison', '');
+  lines.push(`- Decision-bearing: **${comparison.decisionBearing ? 'yes' : 'no'}** — ${comparison.reason}`);
   lines.push(`- Gained: ${comparison.gained.length}${comparison.gained.length ? ` (\`${comparison.gained.join(', ')}\`)` : ''}`);
   lines.push(`- Lost: ${comparison.lost.length}${comparison.lost.length ? ` (\`${comparison.lost.join(', ')}\`)` : ''}`);
   if (comparison.workDeltaPct != null) lines.push(`- Work delta: ${comparison.workDeltaPct.toFixed(2)}%`);

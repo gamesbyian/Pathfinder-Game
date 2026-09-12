@@ -316,10 +316,35 @@ jobs:
             fi
             node scripts/research-workflow-outcome.mjs --out=logs/static-portfolio-confirmation/outcome.json --outcome="$outcome" --reason="$reason"
           fi
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const plan = JSON.parse(fs.readFileSync('logs/static-portfolio-confirmation/plan.json'));
+          fs.writeFileSync('logs/static-portfolio-confirmation/expected-cell-ids.txt', `${plan.cells.map(cell => cell.cellId).join('\n')}\n`);
+          NODE
+          if [ -f logs/static-portfolio-confirmation/combined.json ]; then
+            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete --rows-field=results \
+              --expected-ids=logs/static-portfolio-confirmation/expected-cell-ids.txt \
+              --result=logs/static-portfolio-confirmation/combined.json \
+              --integrity-out=logs/static-portfolio-confirmation/population-integrity.json
+          fi
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
+          const plan = JSON.parse(fs.readFileSync('logs/static-portfolio-confirmation/plan.json'));
+          fs.writeFileSync('logs/static-portfolio-confirmation/experiment-contract.json', `${JSON.stringify({
+            experiment: { workflowFamily: 'static-portfolio-confirmation', producer: 'static-portfolio-confirmation.yml', entrypoint: 'scripts/technique-census.mjs', configurationHash: hashConfiguration(plan) },
+            population: { kind: 'static-portfolio-cells', identityBasis: 'sealed-plan-cell-id' },
+            execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'static-portfolio', schedulerMode: 'isolated-techniques' },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: false },
+            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
+          }, null, 2)}\n`);
+          NODE
           node scripts/publish-solver-sweep-result.mjs \
             --primary="logs/static-portfolio-confirmation/combined.json" \
             --include="logs/static-portfolio-confirmation/combined-summary.md" \
             --outcome-file="logs/static-portfolio-confirmation/outcome.json" \
+            --integrity-file="logs/static-portfolio-confirmation/population-integrity.json" \
+            --contract-file="logs/static-portfolio-confirmation/experiment-contract.json" \
             --shards-expected="${{ inputs.shards }}" \
             --shards-observed="$(find logs/static-portfolio-confirmation -maxdepth 1 -name 'shard-*.json' | wc -l | tr -d ' ')" \
             --source-artifact="static-portfolio-combined"
