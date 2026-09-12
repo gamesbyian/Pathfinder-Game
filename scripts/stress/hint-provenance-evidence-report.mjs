@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { provenanceEventIdentity } from '../../modules/domain/hint-runtime.mjs';
+import { auditCrossHintEventCollisions } from './hint-provenance-relations.mjs';
 import {
     EVIDENCE_PURPOSES,
     classifyEvidenceApplicability,
@@ -129,12 +130,13 @@ function auditLegacyAmbiguity(hints) {
 
 const report = {
     generatedAt: new Date().toISOString(),
-    schemaVersion: 2,
+    schemaVersion: 3,
     evidenceAxes: {
         origin: 'mutually-exclusive producer identity',
         facets: 'overlapping search/run properties',
         admissibility: 'strict and narrow production cold-capability classification',
         purposeApplicability: 'query-dependent applicability with within-hint dependency strata',
+        crossHintRelations: 'same-level canonical event identity reuse across distinct accepted paths',
     },
     corpora: {},
 };
@@ -155,6 +157,7 @@ for (const [label, corpusPath] of corpora) {
         solverRegimeAudit: auditVersions(hints, currentSolverVersion),
         legacyAmbiguityAudit: auditLegacyAmbiguity(hints),
         semanticDedupAudit: dedupAudit,
+        crossHintEventCollisionAudit: auditCrossHintEventCollisions(levels),
     };
 }
 
@@ -183,6 +186,37 @@ function combinePurposeAudits(corpora) {
         }];
     }));
 }
+
+function combineCollisionAudits(corpora) {
+    const origins = new Map();
+    const facets = new Map();
+    const examples = [];
+    for (const corpus of corpora) {
+        const row = corpus.crossHintEventCollisionAudit;
+        for (const [origin, count] of Object.entries(row.identitiesByOrigin)) {
+            origins.set(origin, (origins.get(origin) || 0) + count);
+        }
+        for (const [facet, count] of Object.entries(row.identitiesByFacet)) {
+            facets.set(facet, (facets.get(facet) || 0) + count);
+        }
+        for (const example of row.examples) {
+            if (examples.length >= 50) break;
+            examples.push(example);
+        }
+    }
+    return {
+        levelsWithCollisions: corpora.reduce((sum, corpus) =>
+            sum + corpus.crossHintEventCollisionAudit.levelsWithCollisions, 0),
+        collisionIdentities: corpora.reduce((sum, corpus) =>
+            sum + corpus.crossHintEventCollisionAudit.collisionIdentities, 0),
+        pathMemberships: corpora.reduce((sum, corpus) =>
+            sum + corpus.crossHintEventCollisionAudit.pathMemberships, 0),
+        identitiesByOrigin: Object.fromEntries([...origins].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+        identitiesByFacet: Object.fromEntries([...facets].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+        examples,
+    };
+}
+
 report.total = {
     levels: totals.reduce((n, c) => n + c.levels, 0),
     hints: totals.reduce((n, c) => n + c.hints, 0),
@@ -191,6 +225,7 @@ report.total = {
     multiOriginHints: totals.reduce((n, c) => n + c.multiOriginHints, 0),
     duplicateEvents: totals.reduce((n, c) => n + c.semanticDedupAudit.duplicateEvents, 0),
     hintsWithDuplicates: totals.reduce((n, c) => n + c.semanticDedupAudit.hintsWithDuplicates, 0),
+    crossHintEventCollisionAudit: combineCollisionAudits(totals),
     evidencePurposeAudit: combinePurposeAudits(totals),
     legacyAmbiguityAudit: {
         entriesMissingAnyCapabilityContext: totals.reduce((sum, corpus) =>
