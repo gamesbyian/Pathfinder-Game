@@ -23,12 +23,13 @@ These rules remain current through the method authorities and executable checks:
 - Missing, truncated, malformed, infrastructure-error, and unknown observations are indeterminate rather than ordinary negatives.
 - A referee-valid positive solution survives defects in the surrounding experiment unless independent referee validation fails.
 - Decision-bearing evidence requires intended-population integrity, compatible scientific protocol, and immutable execution provenance. Same row count is not same population or same experiment.
+- Cross-SHA paired evidence requires content-addressed subject identity; stable level IDs alone do not prove identical puzzle content across refs.
 - Artifact/shard arrival is transport coverage only. It cannot establish scientific completeness.
 - Intended populations, not observed rows, define experiment identity and denominators.
 - History-aware and level-blind are independent dimensions.
 - Partial or indeterminate evidence must not silently mutate canonical baselines, telemetry, or other future-research inputs.
 - Paired comparisons require a sealed common population and compatible non-treatment protocol dimensions.
-- Composite/reconciled evidence retains source-run provenance rather than substituting the reconciliation job's identity.
+- Composite/reconciled evidence retains the source scientific protocol and source-run provenance; reconciliation identity is recorded separately rather than substituted for the experiment that produced the observations.
 - Historical evidence that cannot reconstruct protocol, population, or provenance remains unknown or observational rather than receiving optimistic normalization.
 - Rerun the smallest unresolved decision-bearing question. Do not buy broad recomputation merely to make old metadata prettier.
 
