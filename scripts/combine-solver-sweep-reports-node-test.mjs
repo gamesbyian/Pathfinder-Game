@@ -55,14 +55,30 @@ async function main() {
         assert.equal(combined.corpus, 'data/stress/stress-levels-random.json');
         assert.equal(combined.levels.length, 2);
         assert.equal(combined.solved, 1);
-        assert.equal(combined.failed, 1);
-        assert.equal(combined.total, 2);
+        assert.equal(combined.outcomes.deadlineTruncated, 1);
+        assert.equal(combined.outcomes.harnessError, 0);
+        assert.equal(combined.populationIntegrity.complete, false, 'observed rows alone cannot establish intended-population completeness');
+        assert.equal(combined.populationIntegrity.expectedCount, null);
+        assert.equal(combined.total, null, 'unknown intended population must not use observed rows as the denominator');
         console.log('  ✓ merges two batches into one flat, budgetMs-bearing report');
+
+        const expectedFile = path.join(tempDir, 'expected.txt');
+        const exactOut = path.join(tempDir, 'combined-exact.json');
+        await writeFile(expectedFile, 'R00002\nR00001\n');
+        await run([`--in=${batch1},${batch2}`, `--expected-ids=${expectedFile}`, `--out=${exactOut}`]);
+        const exactCombined = JSON.parse(await readFile(exactOut, 'utf8'));
+        assert.equal(exactCombined.populationIntegrity.complete, true);
+        assert.equal(exactCombined.expectedCount, 2);
+        assert.match(exactCombined.population.identityHash, /^sha256:[0-9a-f]{64}$/);
+        console.log('  ✓ intended ID input makes exact completeness and denominator explicit');
 
         const exact = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002'], levels: combined.levels });
         assert.equal(exact.complete, true);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels }), /missing results: R00003/);
         assert.throws(() => validateSweepIntegrity({ expectedIds: ['R00001'], levels: combined.levels }), /unexpected results: R00002/);
+        const partial = validateSweepIntegrity({ expectedIds: ['R00001', 'R00002', 'R00003'], levels: combined.levels, allowIncomplete: true });
+        assert.equal(partial.complete, false);
+        assert.deepEqual(partial.missingIds, ['R00003']);
         console.log('  ✓ exact-population validator rejects missing and unexpected result ids');
 
         const participatingLevels = [

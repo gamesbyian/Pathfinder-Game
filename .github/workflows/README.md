@@ -71,14 +71,13 @@ Workflow `run-name` values also include the inputs most useful for distinguishin
 ## Core capability
 
 - `solver-stress-refresh.yml` — canonical level-blind full refresh over Corpus 1 + Corpus 2. Default 60 shards / 20 lanes / 4 workers; node/work ceilings normally bind. Hint capture is always on; deterministic runs defer canonical hint persistence to the harvester.
-- `solver-typical-budget-baseline.yml` — typical-budget baseline. Already heavily oversharded; its ordinary wall deadlines are semantically meaningful, so worker-count changes require matched measurement.
+- `solver-production-replay-baseline.yml` — history-aware/warm production replay; never compare it as cold capability evidence. Already heavily oversharded; its ordinary wall deadlines are semantically meaningful, so worker-count changes require matched measurement.
 - `solver-highbudget-unsolved-sweep.yml` — high-budget unsolved sweep with runtime-weighted bin packing and dedicated slow-level handling.
 - `solver-level-blind-targeted-sweep.yml` — targeted level-blind sweep using the weighted planner.
 
 ## Sample A/B
 
 - `solver-routing-regime-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
-- `solver-early-repair-search-adaptive-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
 
 These use non-binding deterministic deadlines by default, so node/work budgets remain the comparison basis while cross-level parallelism changes calendar time. Their artifact/report evidence is still harvested even though they do not eagerly mutate canonical hints during the experiment.
 
@@ -97,18 +96,15 @@ Both share `scripts/plan-ab-corpus-shards.mjs` for the mandatory Corpus 1 + publ
 
 ## CP-SAT / reference-model work
 
-- `cpsat-hint-harvest-sweep.yml` — 60 shards / 20 lanes for highly variable per-level runtime.
-- `cpsat-hint-harvest-sweep-published.yml` — smaller published-level matrix.
+- `cpsat-hint-harvest-sweep.yml` — Corpus 2 or published-corpus mode in one entrypoint; 60 shards / 20 lanes for highly variable per-level runtime.
 - `cpsat-explicit-prefix-reference.yml` — independent prefix cases sharded across 20 runners, then coverage-checked and combined.
 - `collect-prune-gap-labels.yml` — 60 fixed interleaved buckets behind 20 lanes; smaller trials select a literal subset rather than repartitioning.
-- `mitm-frontier-sweep.yml` — curated per-level MITM frontier experiments.
 
 Do not infer that CP-SAT search workers should equal runner vCPUs; compare representative runs because those workers also diversify search.
 
 ## Other batch research
 
 - `collect-variant-family-dataset.yml` — native solver work already defaults to 4 workers per runner; its hints belong to generated variants under `data/families`, not canonical levels.
-- `firestore-level-fingerprint-boundary.yml` — narrow emulator-backed persistence proof for level-fingerprint identity: rating document IDs, submission fields/legacy duplicate fallback, and local-hint path keys through real Firestore rules/repositories.
 - `solver-combine-sweep-runs.yml` — cross-run reconciliation utility: merges N sibling dispatches of a workflow that publishes the `solver-sweep-result` artifact (e.g. an original population dispatch plus one or more gap-fill dispatches for ids that individually timed out) into one combined/validated report. Thin `gh run download` + `combine-solver-sweep-reports.mjs`/`validate-solver-sweep-integrity.mjs`/`publish-solver-sweep-result.mjs` glue; no new combining logic.
 
 ## Repository / diagnostic workflows

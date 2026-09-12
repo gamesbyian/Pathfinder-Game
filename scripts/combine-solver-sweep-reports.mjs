@@ -34,6 +34,7 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { buildPopulationIntegrity, hashConfiguration, hashPopulation } from './solver-experiment-contract.mjs';
 
 const EXECUTION_CONFIG_FIELDS = [
     'levelBlind',
@@ -81,6 +82,20 @@ function collectExecutionConfig(reports) {
     return config;
 }
 
+function consistentMetadata(reports, fields) {
+    const result = {};
+    for (const field of fields) {
+        const values = reports.map(r => r.summary[field] ?? r[field]).filter(v => v != null);
+        if (!values.length) continue;
+        const first = JSON.stringify(values[0]);
+        if (values.some(value => JSON.stringify(value) !== first)) {
+            throw new Error(`Mismatched ${field}: source reports do not describe one coherent experiment.`);
+        }
+        result[field] = values[0];
+    }
+    return result;
+}
+
 function main() {
     const ROOT = process.cwd();
     const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => {
@@ -91,6 +106,7 @@ function main() {
     const inDir = args.get('--in-dir');
     const inList = args.get('--in');
     const outFile = args.get('--out');
+    const expectedIdsFile = args.get('--expected-ids');
     const allowMixedCorpora = args.has('--allow-mixed-corpora');
     if ((!inDir && !inList) || !outFile) {
         console.error('Usage: node scripts/combine-solver-sweep-reports.mjs (--in=<file1>,<file2>,... | --in-dir=<dir>) --out=<combined.json>');
@@ -144,6 +160,7 @@ function main() {
         }
     }
     const executionConfig = collectExecutionConfig(reports);
+    const producerMetadata = consistentMetadata(reports, ['producer', 'entrypoint', 'workflowFamily', 'levelBlind', 'historyAware', 'schedulerMode']);
 
     const seenIds = new Map();
     const seenPositions = new Map();
@@ -167,6 +184,20 @@ function main() {
 
     const solved = levels.filter(l => l.ok).length;
     const totalMs = levels.reduce((sum, l) => sum + (l.totalMs ?? l.elapsedMs ?? 0), 0);
+    const levelIds = levels.map(l => l.id ?? l.levelId ?? l.level).map(String);
+    const populationDescriptor = hashPopulation({
+        kind: 'observed-level-ids',
+        identityBasis: allowMixedCorpora ? 'corpus-and-level-id' : 'stable-level-id',
+        identities: levelIds,
+        corpusIdentity: allowMixedCorpora ? [...new Set(reports.map(r => r.summary.corpus))].sort() : first.corpus,
+    });
+    const expectedIds = expectedIdsFile
+        ? readFileSync(path.resolve(ROOT, expectedIdsFile), 'utf8').split(/[\s,]+/).map(value => value.trim()).filter(Boolean)
+        : reports.flatMap(r => r.summary.expectedIds ?? r.population?.expectedIds ?? []);
+    const integrity = expectedIds.length
+        ? buildPopulationIntegrity(expectedIds, levels)
+        : { ...buildPopulationIntegrity(levelIds, levels), complete: false, expectedCount: null,
+            missingIds: [], intendedPopulationKnown: false };
 
     // Carry the NODE-budget context through. Every shard report records nodeBudget/
     // repairBudgetFraction/adaptiveBudget, but the combined report -- which is what becomes an
@@ -196,14 +227,25 @@ function main() {
         ...(repairFractions.length ? { repairBudgetFraction: repairFractions.length === 1 ? repairFractions[0] : repairFractions } : {}),
         ...(adaptive.length ? { adaptiveBudget: adaptive[0], adaptiveBudgetShards: adaptive.length } : {}),
         ...(Object.keys(executionConfig).length ? { executionConfig } : {}),
-        witnessAccess: 'none — see scripts/portfolio-solve-sweep.mjs (same Solver.solve() call as scripts/stress/benchmark.mjs)',
-        engine: `legacy-scheduler (portfolio-solve-sweep, combined from ${reports.length} batch report(s))`,
+        ...(producerMetadata.entrypoint ? { entrypoint: producerMetadata.entrypoint } : {}),
+        ...(producerMetadata.producer ? { producer: producerMetadata.producer } : {}),
+        ...(producerMetadata.workflowFamily ? { workflowFamily: producerMetadata.workflowFamily } : {}),
         sourceReports: inputPaths,
+        sourceRuns: reports.flatMap(r => r.sourceRuns ?? r.summary.sourceRuns ?? []).filter((value, index, all) => all.indexOf(value) === index),
         solved,
-        failed: levels.length - solved,
-        errors: 0,
-        completed: levels.length,
-        total: levels.length,
+        outcomes: integrity.outcomes,
+        observedCount: integrity.observedCount,
+        expectedCount: integrity.expectedCount,
+        completed: integrity.observedCount,
+        total: integrity.expectedCount,
+        populationIntegrity: integrity,
+        population: { kind: 'observed-level-ids', identityBasis: 'stable-level-id', identityHash: populationDescriptor.identityHash },
+        execution: {
+            levelBlind: producerMetadata.levelBlind ?? executionConfig.levelBlind ?? null,
+            historyAware: producerMetadata.historyAware ?? null,
+            schedulerMode: producerMetadata.schedulerMode ?? first.schedulerMode ?? null,
+        },
+        configurationHash: hashConfiguration({ budgetMs: first.budgetMs, nodeBudget: nodeBudgets, workBudget: workBudgets, repairFractions, executionConfig }),
         totalMs,
         levels,
     };

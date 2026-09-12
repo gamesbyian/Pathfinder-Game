@@ -62,7 +62,7 @@ const TIME_BUDGET_MS = Number(args.get('--time-budget-ms') || 30000);
 // reports/2026-08-06-near-twin-starvation-fix.md). That under-tests most techniques before this
 // tool accepts a "still reproduces" verdict, which can shrink a level to something that merely
 // stayed unsolved because most of the ladder never got a turn, not because it's genuinely minimal.
-// 1.34x matches the same validated ratio used elsewhere (solver-typical-budget-baseline.yml's
+// 1.34x matches the same validated ratio used elsewhere (solver-production-replay-baseline.yml's
 // 26,800,000/20,000,000 and 67,000,000/50,000,000, itself DEFAULT_WORK_PER_MS x 8000ms/20,000,000
 // nodes) rather than a new number invented for this tool.
 const WORK_BUDGET = args.has('--work-budget') ? Number(args.get('--work-budget')) : Math.round(NODE_BUDGET * 1.34);

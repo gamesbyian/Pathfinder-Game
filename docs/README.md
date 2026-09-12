@@ -25,6 +25,9 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) | **Active remediation plan for solver/research workflows, sweep-result integrity, workflow retirement, and historical evidence repair** |
 | [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md) | Settled lifecycle decisions, implementation boundary, historical-audit order, and closeout handoff for the active remediation |
 | [`solver-evidence-integrity-index.schema.json`](solver-evidence-integrity-index.schema.json) | Machine-readable contract for the rebuildable historical solver-evidence integrity index |
+| [`solver-experiment-result.schema.json`](solver-experiment-result.schema.json) | Version 3 shared solver experiment publication contract |
+| [`solver-workflow-lifecycle.json`](solver-workflow-lifecycle.json) | Maintained workflow inventory, consumers, and retirement triggers |
+| [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) | Implementation-tranche completion and hostile-review queue |
 | [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary |
 | [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational technique/configuration meaning |
 | [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Current profile-led speed gates/dispositions |

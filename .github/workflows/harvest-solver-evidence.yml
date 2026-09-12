@@ -4,17 +4,15 @@ on:
   workflow_run:
     workflows:
       - 'Solver stress-corpus refresh (level-blind capability)'
-      - 'Solver typical-budget baseline (corpus-1 + corpus-2)'
+      - 'Solver history-aware production replay baseline (corpus-1 + corpus-2)'
       - 'Solver high-budget sweep (unsolved-only, both corpora)'
       - 'Solver level-blind targeted sweep'
       - 'Solver routing-regime-gated routing sample A/B'
-      - 'Solver early-repair-search adaptive-budget sample A/B'
       - 'Solver repair-fallback node-reserve sample A/B'
       - 'Solver elite-prefix-dfs-retry local validation'
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
-      - 'cpsat-hint-harvest-sweep-published (broaden CP-SAT hint coverage for published levels)'
     types: [completed]
   workflow_dispatch:
     inputs:
