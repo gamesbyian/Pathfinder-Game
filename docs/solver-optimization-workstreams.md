@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, workstream state, and next gates.
-> **Reconciled:** 2026-09-11.
+> **Reconciled:** 2026-09-12.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness and generalization.
 
 Keep this file **current-state only**. Detailed evidence belongs in reports; historical snapshots live under `docs/archive/snapshots/`.
@@ -63,7 +63,7 @@ The bounded 5-parent Stage A/B/C pilot ran to completion: 2/5 parents show the p
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Refresh production/residual state, then capability-memory census; use union/headroom to choose composition/allocation vs acquisition. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Refresh/atlas/census cycle complete, no material complementarity found; advance class-5-targeted first-loss/family/reference acquisition work. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Stage 4 solution-space mediation closed negative for both pairs; next is bounded operational first divergence (needs new small instrumentation). |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or new hotspot. |
