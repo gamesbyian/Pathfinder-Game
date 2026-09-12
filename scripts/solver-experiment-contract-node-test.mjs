@@ -4,6 +4,7 @@ import {
   buildPopulationIntegrity,
   classifyRow,
   decisionContractIssues,
+  declaredDecisionContractIssues,
   hashConfiguration,
   hashPopulation,
   isImmutableCommitSha,
@@ -66,8 +67,13 @@ const common = {
 };
 const clone = value => JSON.parse(JSON.stringify(value));
 assert.deepEqual(decisionContractIssues(common), []);
+assert.deepEqual(declaredDecisionContractIssues(common), []);
 assert.ok(decisionContractIssues({ ...clone(common), experiment: { ...common.experiment, resolvedSha: 'main' } }).includes('experiment.resolvedSha'));
 assert.ok(decisionContractIssues({ ...clone(common), limits: { ...common.limits, totalWorkCeiling: undefined } }).includes('limits.totalWorkCeiling'));
+const declaredWithoutLimit = clone(common);
+delete declaredWithoutLimit.limits.totalWorkCeiling;
+assert.ok(declaredDecisionContractIssues(declaredWithoutLimit).includes('limits.totalWorkCeiling'));
+assert.equal(declaredDecisionContractIssues(declaredWithoutLimit).includes('population.identityHash'), false, 'raw declarations may defer population identity to validated result integrity');
 
 const pairedCommon = clone(common);
 delete pairedCommon.experiment.resolvedSha;
