@@ -11,15 +11,25 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+function assertSameCount(field, left, right) {
+  const a = left?.[field] ?? null;
+  const b = right?.[field] ?? null;
+  if (a !== b) throw new Error(`paired arms disagree on ${field}: ${a} vs ${b}`);
+  return a;
+}
+
 export function combinePairedArmIntegrity(left, right) {
-  if (left.populationIdentityHash !== right.populationIdentityHash) {
-    throw new Error(`paired arms observed different populations: ${left.populationIdentityHash} vs ${right.populationIdentityHash}`);
+  if (!left?.populationIdentityHash || left.populationIdentityHash !== right?.populationIdentityHash) {
+    throw new Error(`paired arms observed different populations: ${left?.populationIdentityHash ?? '(missing)'} vs ${right?.populationIdentityHash ?? '(missing)'}`);
   }
+  const expectedCount = assertSameCount('expectedCount', left, right);
+  const observedCount = assertSameCount('observedCount', left, right);
   const coverageComplete = Boolean(left.coverageComplete) && Boolean(right.coverageComplete);
   const decisionValidComplete = Boolean(left.decisionValidComplete) && Boolean(right.decisionValidComplete);
   return {
     populationIdentityHash: left.populationIdentityHash,
-    expectedCount: left.expectedCount,
+    expectedCount,
+    observedCount,
     coverageComplete,
     decisionValidComplete,
     complete: coverageComplete,
