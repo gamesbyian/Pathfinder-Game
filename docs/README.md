@@ -22,12 +22,12 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer and holdout discipline |
 | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection and fixed-work allocation research |
 | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline semantics |
-| [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) | **Active remediation plan for solver/research workflows, sweep-result integrity, workflow retirement, and historical evidence repair** |
-| [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md) | Settled lifecycle decisions, implementation boundary, historical-audit order, and closeout handoff for the active remediation |
+| [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) | **Completed PR #1740 workflow/evidence-remediation program; retained historical route and durable-rule summary** |
+| [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md) | Historical implementation contract used by the completed remediation |
 | [`solver-evidence-integrity-index.schema.json`](solver-evidence-integrity-index.schema.json) | Machine-readable contract for the rebuildable historical solver-evidence integrity index |
 | [`solver-experiment-result.schema.json`](solver-experiment-result.schema.json) | Version 3 shared solver experiment publication contract |
 | [`solver-workflow-lifecycle.json`](solver-workflow-lifecycle.json) | Maintained workflow inventory, consumers, and retirement triggers |
-| [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) | Implementation-tranche completion and hostile-review queue |
+| [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) | Completed remediation closeout and hostile-review conclusions |
 | [`solver-residual-state-representation.md`](solver-residual-state-representation.md) | Residual/future representation vocabulary |
 | [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md) | Operational technique/configuration meaning |
 | [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) | Current profile-led speed gates/dispositions |
@@ -74,7 +74,7 @@ Default orientation:
 
 Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence.
 
-For the active solver-workflow/evidence cleanup, use [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md) plus [`solver-workflow-remediation-implementation-handoff.md`](solver-workflow-remediation-implementation-handoff.md); the plan owns the remediation sequence, while the handoff locks settled lifecycle decisions and the mechanical-vs-scientific review boundary. Neither replaces the ordinary solver-priority authority.
+The September 11 workflow/evidence remediation is complete. For current workflow/evidence maintenance, start from [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), the maintained workflow lifecycle/indexes, and the workflow/scripts being changed. Use [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) for the completed program's conclusions; the remediation plan and implementation handoff are historical records, not active queues.
 
 ### Research instruments
 
