@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build the frozen three-case class-5 microscope input from an existing
+ * Build a frozen three-case class-5 microscope input from an existing
  * collect-known-solution-prefix-survival.mjs artifact that retained full ranked-pool details.
  *
  * This is deliberately a postprocessor, not new beam instrumentation. It follows the proven B2
@@ -13,9 +13,9 @@
  *
  * Example:
  *   node scripts/run-bundled.mjs scripts/stress/build-class5-microscope-cases.mjs -- \
- *     --survival=tmp/r03351-microscope-survival.json \
- *     --level-id=R03351 \
- *     --out=tmp/r03351-microscope-cases.json
+ *     --survival=tmp/<level>-microscope-survival.json \
+ *     --level-id=<LEVEL_ID> \
+ *     --out=tmp/<level>-microscope-cases.json
  */
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -32,7 +32,7 @@ const required = key => {
     return value;
 };
 const survivalFile = required('--survival');
-const levelId = args.get('--level-id') ?? 'R03351';
+const levelId = required('--level-id');
 const outFile = args.get('--out') ?? `tmp/${levelId.toLowerCase()}-microscope-cases.json`;
 const metaFile = args.get('--meta-out') ?? outFile.replace(/\.json$/, '.meta.json');
 
