@@ -57,6 +57,18 @@ jobs:
           fs.writeFileSync('tmp/preclaude/collision-summary.json',JSON.stringify(r.total.crossHintEventCollisionAudit,null,2));
           console.log(JSON.stringify(r.total.crossHintEventCollisionAudit,null,2));
           NODE
+      - name: Capture convenience-label semantic-predicate sites
+        run: |
+          {
+            echo '# variantLabel';
+            grep -RIn --include='*.mjs' --include='*.js' --include='*.ts' --exclude-dir=node_modules 'variantLabel' scripts modules || true;
+            echo '# pairLabel';
+            grep -RIn --include='*.mjs' --include='*.js' --include='*.ts' --exclude-dir=node_modules 'pairLabel' scripts modules || true;
+            echo '# isolatedTechnique';
+            grep -RIn --include='*.mjs' --include='*.js' --include='*.ts' --exclude-dir=node_modules 'isolatedTechnique' scripts modules || true;
+            echo '# origin / arm labels';
+            grep -RInE --include='*.mjs' --include='*.js' --include='*.ts' --exclude-dir=node_modules '(originLabel|armLabel|sourceLabel|treatmentLabel|controlLabel)' scripts modules || true;
+          } > tmp/preclaude/semantic-label-sites.txt
       - uses: actions/upload-artifact@v4
         with:
           name: preclaude-cheap-evidence
