@@ -57,10 +57,11 @@ However, **221 residual misses are outside class 5**. Their existence should rem
 
 Scheduling rule: periodically ask whether classes 1-3 contain a newly exposed, already-legal, low-cost batch after material production/provenance changes. Do not divert primary research from class 5 merely because these rows are easier to explain.
 
-## Routing
+## Routing and completion state
 
-- Active future-feasibility work should absorb sections 1-3 as controls/lenses without expanding its frozen 2-4 descriptor budget.
-- Research-integrity work should retain section 4 as a bounded static audit, preferably piggybacked on existing provenance/evidence maintenance.
-- WS1/WS2 scheduling should retain section 5 as a cheap-harvest check after material boundary changes, not as a standing parallel campaign.
+- **Done directly:** sections 1-3 are now wired into the active future-feasibility handoff without expanding its frozen 2-4 descriptor budget.
+- **Done directly:** the known three `variantLabel` consumers were spot-audited and are consistent with the repaired semantics.
+- **Retained follow-up:** broader semantic-label review remains bounded and should piggyback on future provenance/evidence maintenance rather than becoming a new campaign.
+- **Retained follow-up:** classes 1-3 receive a cheap-harvest check after material boundary/provenance changes; no standing parallel solve campaign is created.
 
 No additional workstream is created by this report.
