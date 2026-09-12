@@ -8,9 +8,10 @@ permissions:
   contents: read
 
 # PR CI remains the pre-merge gate. This is a secondary safety net for the repository's currently
-# unprotected main branch. Ordinary merge commits have already exercised the PR merge-ref gate, so
-# skip their duplicate compute; a single-parent direct push still gets the fast repository/test
-# contract and tiny solver capability canary.
+# unprotected main branch. Validate every push, including merge commits: parent count cannot prove
+# that a merge actually came through a successfully checked PR, and an unprotected branch permits a
+# manually pushed merge commit just as readily as a single-parent commit. The duplicated fast gate is
+# intentionally small compared with the cost of allowing one main-update shape to bypass validation.
 concurrency:
   group: main-push-validation
   cancel-in-progress: false
@@ -20,35 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 2
-      - name: Classify main update
-        id: push-kind
-        shell: bash
-        run: |
-          parent_count=$(git rev-list --parents -n 1 HEAD | awk '{print NF - 1}')
-          if [ "$parent_count" -eq 1 ]; then
-            echo 'direct=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'direct=false' >> "$GITHUB_OUTPUT"
-            echo "Merge commit detected ($parent_count parents); PR CI already validated its merge ref."
-          fi
       - uses: actions/setup-node@v7
-        if: steps.push-kind.outputs.direct == 'true'
         with:
           node-version: '20'
           cache: npm
       - name: Install dependencies
-        if: steps.push-kind.outputs.direct == 'true'
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Run fast repository and contract validation
-        if: steps.push-kind.outputs.direct == 'true'
         run: npm run ci:fast
       - name: Build production bundle
-        if: steps.push-kind.outputs.direct == 'true'
         run: npm run build
       - name: Solver capability canary
-        if: steps.push-kind.outputs.direct == 'true'
         run: |
           node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
             --baseline=logs/solver-canary-baseline.json \
