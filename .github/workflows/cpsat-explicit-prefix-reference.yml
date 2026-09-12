@@ -171,6 +171,43 @@ jobs:
             --shards="${{ inputs.shard_count }}" \
             --out="reports/stress/cpsat-explicit-prefix-reference-${{ github.run_id }}.json"
 
+      - name: Validate exact case-population integrity and declare the native v3 contract
+        if: always()
+        shell: bash
+        env:
+          CASES_FILE: ${{ inputs.cases_file }}
+          CASE_FORMAT: ${{ inputs.case_format }}
+          CORPUS: ${{ inputs.corpus }}
+          MAX_CASES: ${{ inputs.max_cases }}
+          TIME_LIMIT: ${{ inputs.time_limit }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { extractExplicitPrefixCases } from './scripts/stress/cpsat-explicit-prefix-reference-lib.mjs';
+          const document = JSON.parse(fs.readFileSync(process.env.CASES_FILE, 'utf8'));
+          const cases = extractExplicitPrefixCases(document, { format: process.env.CASE_FORMAT, corpus: process.env.CORPUS || null })
+            .slice(0, Number(process.env.MAX_CASES));
+          fs.writeFileSync('reports/stress/cpsat-explicit-prefix-reference-expected-ids.txt', `${cases.map(c => c.id).join('\n')}\n`);
+          NODE
+          RESULT="reports/stress/cpsat-explicit-prefix-reference-${{ github.run_id }}.json"
+          if [ -f "$RESULT" ]; then
+            node scripts/cpsat-prefix-reference-integrity.mjs \
+              --expected-ids=reports/stress/cpsat-explicit-prefix-reference-expected-ids.txt \
+              --result="$RESULT" \
+              --out=reports/stress/cpsat-explicit-prefix-reference-integrity.json
+          fi
+          cat > reports/stress/cpsat-explicit-prefix-reference-contract-spec.json <<SPEC
+          {"configuration": {"casesFile": "$CASES_FILE", "caseFormat": "$CASE_FORMAT", "corpus": "$CORPUS", "maxCases": $MAX_CASES, "timeLimitSec": $TIME_LIMIT},
+          "workflowFamily": "cpsat-explicit-prefix-reference", "producer": "cpsat-explicit-prefix-reference.yml", "entrypoint": "scripts/stress/cpsat-explicit-prefix-reference.mjs",
+          "population": {"kind": "explicit-cpsat-prefix-cases", "identityBasis": "stable-case-id"},
+          "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": false, "producerFamily": "cpsat-reference-probe", "schedulerMode": "isolated-reference-model"},
+          "limits": {"cumulativeNodeCeiling": null, "initialWorkAllocation": null, "totalWorkCeiling": null, "wallSafetyDeadlineMs": $(( TIME_LIMIT * 1000 )), "wallDeadlineBinding": true},
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          SPEC
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=reports/stress/cpsat-explicit-prefix-reference-contract-spec.json \
+            --out=reports/stress/cpsat-explicit-prefix-reference-contract.json
+
       - name: Upload combined reference result
         if: always()
         uses: actions/upload-artifact@v7
@@ -186,6 +223,8 @@ jobs:
         run: |
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/cpsat-explicit-prefix-reference-${{ github.run_id }}.json" \
+            --integrity-file="reports/stress/cpsat-explicit-prefix-reference-integrity.json" \
+            --contract-file="reports/stress/cpsat-explicit-prefix-reference-contract.json" \
             --shards-expected="${{ inputs.shard_count }}" \
             --shards-observed="$(find artifact-staging -maxdepth 1 -name 'cpsat-explicit-prefix-reference-shard-*.json' | wc -l | tr -d ' ')" \
             --source-artifact="cpsat-explicit-prefix-reference-${{ github.run_id }}"
