@@ -1,0 +1,37 @@
+name: Solver evidence integrity guard
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/solver-evidence-integrity-audit.mjs'
+      - 'scripts/solver-experiment-contract.mjs'
+      - 'scripts/publish-solver-sweep-result.mjs'
+      - 'scripts/combine-solver-sweep-reports.mjs'
+      - 'scripts/combine-population-integrity.mjs'
+      - 'scripts/combine-paired-arm-integrity.mjs'
+      - '.github/workflows/solver-*.yml'
+      - 'logs/solver-stress-refresh/**'
+      - 'reports/stress/solver-evidence-integrity-index.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# The historical integrity audit needs evidence omitted by ordinary sparse PR CI. Run it only when
+# evidence semantics or its material inputs change, then require the tracked generated authority to
+# be exactly what the current audit implementation produces.
+jobs:
+  integrity-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Rebuild solver evidence integrity index
+        run: npm run solver:evidence-integrity-audit
+      - name: Require checked-in audit authority to be fresh
+        run: git diff --exit-code -- reports/stress/solver-evidence-integrity-index.json
