@@ -45,9 +45,9 @@ Two same-day evidence-integrity failures share a pattern:
 - `variantLabel` was used as a proxy for a non-base/experimental condition even though the actual causal distinction lived in `ablation`;
 - `isolatedTechnique: true` did not preserve which technique-census source cell actually produced the success.
 
-Retained bounded audit question: **where do research scripts infer semantic/casual meaning from convenience labels, names, or summary booleans when an explicit causal/provenance field exists or should exist?**
+A bounded spot audit of the three known `isBaseT1`/T1-join consumers (`analyze-post-1029-residual-atlas.mjs`, `analyze-current-missing-attempt-exposure.mjs`, `analyze-equal-work-census.mjs`) confirms the `variantLabel` misuse is repaired consistently: all now ignore `variantLabel`, rely on the explicit `ablation` field for modified-condition semantics, and carry comments documenting why. No additional demonstrated bug was found in that known consumer set.
 
-The audit should be static and narrow first. Candidate fields include `variantLabel`, `pairLabel`, `isolatedTechnique`, origin labels, arm names, and similar research-only summaries. Findings should repair only demonstrated semantic ambiguity; do not launch a schema redesign.
+Retained audit question beyond those repaired consumers: **where else do research scripts infer semantic/causal meaning from convenience labels, names, or summary booleans when an explicit causal/provenance field exists or should exist?** Candidate fields include `pairLabel`, `isolatedTechnique`, origin labels, arm names, and similar research-only summaries. Repair only demonstrated semantic ambiguity; do not launch a schema redesign.
 
 ## 5. Non-class-5 residual solve harvest remains a secondary lane
 
