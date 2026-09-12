@@ -20,7 +20,7 @@ September 12 provenance reconciliation found the suspicious same-revision class-
 
 Funnel: **freshness reconcile -> class4/class5 contrast -> source-controlled profile/family comparison -> all-known-basin first loss -> single-level microscope when premise-starved -> smallest generic capability -> bounded pilot -> independent/whole-family validation**. Missing baseline/provenance stays `unknown`; capability-memory membership is premise evidence, not current capability.
 
-The naive family/reference rung is closed: whole-ladder `swap`/`cs` rescue is confound-dominated, so a future family probe needs an explicit decoupled control. [`family comparison`](../reports/2026-09-12-class5-family-reference-comparison-001.md) The broad scorer-vocabulary discriminator is also closed negative; do not resume generic weight/profile tuning from class-5 membership alone. [`scorer vocabulary`](../reports/2026-09-11-scorer-vocabulary-frontier-witness-only-001.md)
+The naive family/reference rung is closed: whole-ladder `swap`/`cs` rescue is confound-dominated, so a future family probe needs an explicit decoupled control. [`family comparison`](../reports/2026-09-12-class5-family-reference-comparison-001.md) Diffuse perturbation susceptibility may still be used as an **offline corroborative phenotype** for an independently chosen future-feasibility descriptor, with no new family generation and no causal interpretation. [`cross-line closeout`](../reports/2026-09-12-cross-line-unharvested-residue-closeout-001.md) The broad scorer-vocabulary discriminator is also closed negative; do not resume generic weight/profile tuning from class-5 membership alone. [`scorer vocabulary`](../reports/2026-09-11-scorer-vocabulary-frontier-witness-only-001.md)
 
 ### Single-level microscope method
 
@@ -34,10 +34,15 @@ This method has direct precedent: the August B1/B2 extinction-adjacent CP-SAT pr
 
 **CLOSED.** The full temporal-persistence -> difficulty-control -> family-flip -> solution-space-mediation -> operational-first-divergence ladder completed for `R02687`/objectiveFirst and `R02094`/intersectionHarvest. n=2 licenses no selector. Reopen only for a new pair/premise, not another variant of this question. [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
 
+## Secondary solve-harvest check
+
+The corrected residual also contains **221 non-class-5 misses** across classes 1-4. Class 5 remains the first research priority, but after a material production-boundary or provenance change, cheaply re-check classes 1-3 for newly exposed already-legal capability before assuming every near-term solve must come from acquisition work. This is a periodic existing-data check, not a standing campaign. The repair-turn-biased class-2 rows are already priced by a matched-work closed-negative result and do not reopen on classification alone. [`cross-line closeout`](../reports/2026-09-12-cross-line-unharvested-residue-closeout-001.md)
+
 ## Deferred questions
 
 | Question | Reopen condition / boundary |
 |---|---|
+| **Research-label semantic audit** | Run a bounded static review when evidence plumbing is next touched: find places where `variantLabel`, `pairLabel`, `isolatedTechnique`, origin/arm names, or similar convenience fields are used as semantic predicates. Repair only demonstrated ambiguity; explicit causal/provenance fields own meaning. No schema redesign without a concrete failure. |
 | **Richer static graph/placement selectors** | Reopen for one mechanism-specific descriptor from recurring solution/family/trace/first-loss evidence. The prior 18-feature bundle added no held-out value; no generic feature accretion. |
 | **Stability-aware portfolios** | Reopen only if WS1 finds a compact held-out decision signal beyond current work/coverage evidence. Capability-memory union may nominate the contrast, not the selector. |
 | **Latent response dimensions / biclusters** | Only if simpler pair/cohort analysis leaves stable unexplained structure after temporal/difficulty controls. |
