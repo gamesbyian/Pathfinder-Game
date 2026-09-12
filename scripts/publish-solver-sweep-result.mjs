@@ -123,9 +123,6 @@ function buildStageStats(levels) {
 
 function levelStats(file) {
   try {
-    // Full production reports can exceed the old 25 MiB guard once attempt/stage telemetry is
-    // included. Parsing one bounded result in the final GHA job is cheap and is exactly where the
-    // work/stage observability is needed when artifact downloads are unavailable to an agent.
     if (fs.statSync(file).size > 128 * 1024 * 1024) return null;
     const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
     const levels = Array.isArray(parsed?.levels) ? parsed.levels : null;
@@ -164,11 +161,16 @@ if (control && treatment) {
   const treatmentParsed = JSON.parse(fs.readFileSync(treatment.file, 'utf8'));
   const controlHash = controlParsed?.population?.identityHash ?? null;
   const treatmentHash = treatmentParsed?.population?.identityHash ?? null;
-  const compatible = Boolean(controlHash && controlHash === treatmentHash
-    && controlParsed?.populationIntegrity?.complete && treatmentParsed?.populationIntegrity?.complete);
+  const controlDecisionValid = controlParsed?.populationIntegrity?.decisionValidComplete
+    ?? controlParsed?.populationIntegrity?.complete
+    ?? false;
+  const treatmentDecisionValid = treatmentParsed?.populationIntegrity?.decisionValidComplete
+    ?? treatmentParsed?.populationIntegrity?.complete
+    ?? false;
+  const compatible = Boolean(controlHash && controlHash === treatmentHash && controlDecisionValid && treatmentDecisionValid);
   comparison = {
     decisionBearing: compatible,
-    reason: compatible ? 'matched population hashes and complete population integrity' : 'population identity or integrity is absent/incompatible',
+    reason: compatible ? 'matched population hashes and decision-valid population integrity' : 'population identity or decision-valid integrity is absent/incompatible',
     gained: [...b].filter(id => !a.has(id)).sort(),
     lost: [...a].filter(id => !b.has(id)).sort(),
     workDeltaPct: control.work ? 100 * (treatment.work - control.work) / control.work : null,
@@ -215,6 +217,10 @@ const populationIdentity = populationIntegrity?.populationIdentityHash ?? (popul
     ].length ? [...(populationIntegrity.expectedIds ?? []), ...(populationIntegrity.missingIds ?? [])] : stats.flatMap(s => s.levels.map(row => row?.id ?? row?.levelId ?? row?.level).filter(x => x != null).map(String)) }).identityHash
   : null);
 const outcomeDecisionBearing = researchOutcome && ['completed-positive', 'completed-negative'].includes(researchOutcome.outcome);
+const integrityDecisionValid = populationIntegrity?.decisionValidComplete
+  ?? (populationIntegrity?.complete && (populationIntegrity?.outcomes?.deadlineTruncated ?? 0) === 0
+    && (populationIntegrity?.outcomes?.harnessError ?? 0) === 0
+    && (populationIntegrity?.outcomes?.unknown ?? 0) === 0);
 const contract = {
   experiment: {
     experimentId: declaredContract?.experiment?.experimentId ?? process.env.GITHUB_RUN_ID ?? null,
@@ -230,8 +236,8 @@ const contract = {
     configurationHash: declaredContract?.experiment?.configurationHash ?? primaryDocument?.configurationHash ?? null,
   },
   population: {
-    kind: declaredContract?.population?.kind ?? null,
-    identityBasis: declaredContract?.population?.identityBasis ?? null,
+    kind: declaredContract?.population?.kind ?? primaryDocument?.population?.kind ?? null,
+    identityBasis: declaredContract?.population?.identityBasis ?? primaryDocument?.population?.identityBasis ?? null,
     identityHash: populationIdentity,
     expectedCount: populationIntegrity?.expectedCount ?? null,
     observedCount: populationIntegrity?.observedCount ?? null,
@@ -279,10 +285,10 @@ const manifest = {
   runUrl,
   sourceArtifact,
   dispatchInputs,
-  artifactCoverage: artifactCoverage,
+  artifactCoverage,
   populationIntegrity,
   populationIdentityHash: populationIdentity,
-  decisionBearing: Boolean(populationIntegrity?.complete && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
+  decisionBearing: Boolean(integrityDecisionValid && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
   ...contract,
   researchOutcome,
   entries,
@@ -302,7 +308,7 @@ if (provenanceOut) {
     refName: manifest.refName,
     event: manifest.event,
     dispatchInputs,
-    artifactCoverage: artifactCoverage,
+    artifactCoverage,
     populationIntegrity,
     researchOutcome,
   }, null, 2) + '\n');
@@ -322,7 +328,10 @@ if (researchOutcome) {
 if (Object.keys(dispatchInputs).length) lines.push('- Dispatch inputs: recorded in `manifest.json`');
 if (artifactCoverage) lines.push(`- Artifact coverage: ${artifactCoverage.observed}/${artifactCoverage.expected} shard artifacts ${artifactCoverage.complete ? 'present' : '**INCOMPLETE**'}${artifactCoverage.basis ? ` (${artifactCoverage.basis})` : ''}`);
 if (populationIntegrity) {
-  lines.push(`- Population integrity: ${populationIntegrity.observedCount}/${populationIntegrity.expectedCount} observed; ${populationIntegrity.missingIds?.length ?? populationIntegrity.outcomes?.missing ?? 0} missing-indeterminate; ${populationIntegrity.complete ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
+  const coverageComplete = populationIntegrity.coverageComplete ?? populationIntegrity.complete ?? false;
+  const decisionValidComplete = populationIntegrity.decisionValidComplete ?? integrityDecisionValid ?? false;
+  lines.push(`- Population coverage: ${populationIntegrity.observedCount}/${populationIntegrity.expectedCount} observed; ${populationIntegrity.missingIds?.length ?? populationIntegrity.outcomes?.missing ?? 0} missing-indeterminate; ${coverageComplete ? 'complete' : '**INCOMPLETE**'}`);
+  lines.push(`- Decision-valid observations: ${decisionValidComplete ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
 } else lines.push('- Population integrity: **unknown / non-decision-bearing** (no validated intended population supplied)');
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
@@ -341,14 +350,6 @@ if (stats.length) {
   }
 }
 
-// Solved rows already carry a full path (portfolio-solve-sweep-lib.mjs's buildRow), but only the
-// artifact -- not this printed summary -- previously exposed it. An agent whose egress policy
-// blocks the GH Actions artifact host (Azure Blob Storage, which every artifact download redirects
-// to regardless of workflow config) had no way to referee-check a claimed solve without re-solving
-// it from scratch. Bounded to keep this printed summary (which also lands in $GITHUB_STEP_SUMMARY)
-// well under GitHub's size limits even for a large population; the cap only ever bites when most of
-// a large population solved, which is not the "bounded miss/gain population" case this tooling is
-// mainly dispatched for.
 const MAX_PRINTED_SOLUTION_PATHS = 300;
 const solvedRows = stats.flatMap(s => s.levels.filter(row => row?.ok && Array.isArray(row?.solution))
   .map(row => ({ source: path.relative(outDir, s.file).replaceAll('\\', '/'), id: row.id ?? row.level, solution: row.solution })));
