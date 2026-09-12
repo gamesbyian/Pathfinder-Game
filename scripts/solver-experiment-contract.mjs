@@ -3,6 +3,9 @@ import { createHash } from 'node:crypto';
 export const EXPERIMENT_SCHEMA_VERSION = 3;
 export const EXPERIMENT_RESULT_KIND = 'pathfinder-solver-experiment-result';
 
+const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
+const COMMIT_SHA_RE = /^[0-9a-f]{40}$/iu;
+
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
   if (value && typeof value === 'object') {
@@ -13,6 +16,14 @@ function stable(value) {
 
 export function stableHash(value) {
   return `sha256:${createHash('sha256').update(JSON.stringify(stable(value))).digest('hex')}`;
+}
+
+export function isImmutableCommitSha(value) {
+  return typeof value === 'string' && COMMIT_SHA_RE.test(value.trim());
+}
+
+function hasOwn(value, key) {
+  return Boolean(value && Object.prototype.hasOwnProperty.call(value, key));
 }
 
 export function canonicalizeIdentities(ids, { rejectDuplicates = true } = {}) {
@@ -41,6 +52,57 @@ export function hashPopulation({ kind, identityBasis, identities, corpusIdentity
 
 export function hashConfiguration(configuration) {
   return stableHash(configuration ?? {});
+}
+
+/**
+ * Return the reasons a normalized v3 contract is not strong enough to support a scientific
+ * decision. Presence of a result schema alone is deliberately insufficient: decision-bearing
+ * evidence must establish immutable execution identity, intended population identity, scientific
+ * execution semantics, limits, and side-effect posture.
+ */
+export function decisionContractIssues(contract) {
+  const issues = [];
+  const experiment = contract?.experiment;
+  const population = contract?.population;
+  const execution = contract?.execution;
+  const limits = contract?.limits;
+  const sideEffects = contract?.sideEffects;
+
+  for (const field of ['workflowFamily', 'producer', 'entrypoint']) {
+    if (!experiment?.[field]) issues.push(`experiment.${field}`);
+  }
+  if (!SHA256_RE.test(String(experiment?.configurationHash ?? ''))) issues.push('experiment.configurationHash');
+
+  const arms = experiment?.arms;
+  if (arms != null) {
+    const entries = arms && typeof arms === 'object' && !Array.isArray(arms) ? Object.entries(arms) : [];
+    if (entries.length < 2) issues.push('experiment.arms');
+    for (const [name, arm] of entries) {
+      if (!isImmutableCommitSha(arm?.resolvedSha)) issues.push(`experiment.arms.${name}.resolvedSha`);
+    }
+  } else if (!isImmutableCommitSha(experiment?.resolvedSha)) {
+    issues.push('experiment.resolvedSha');
+  }
+
+  for (const field of ['kind', 'identityBasis']) {
+    if (!population?.[field]) issues.push(`population.${field}`);
+  }
+  if (!SHA256_RE.test(String(population?.identityHash ?? ''))) issues.push('population.identityHash');
+
+  for (const field of ['levelBlind', 'historyAware', 'reproducibilityExpected', 'schedulerMode']) {
+    if (!hasOwn(execution, field) || execution[field] == null) issues.push(`execution.${field}`);
+  }
+  if (!Array.isArray(execution?.historicalInputs)) issues.push('execution.historicalInputs');
+
+  for (const field of ['cumulativeNodeCeiling', 'initialWorkAllocation', 'totalWorkCeiling', 'wallSafetyDeadlineMs', 'wallDeadlineBinding']) {
+    if (!hasOwn(limits, field)) issues.push(`limits.${field}`);
+  }
+
+  for (const field of ['hints', 'canonicalBaseline', 'telemetry', 'reports']) {
+    if (!sideEffects?.[field] || sideEffects[field] === 'unknown') issues.push(`sideEffects.${field}`);
+  }
+
+  return issues;
 }
 
 export function rowIdentity(row) {
@@ -103,11 +165,23 @@ export function buildPopulationIntegrity(expectedIds, rows) {
 
 export function assertCompatibleExperiments(left, right, { paired = false } = {}) {
   const mismatches = [];
-  for (const field of ['workflowFamily', 'producer']) {
+  for (const field of ['workflowFamily', 'producer', 'entrypoint']) {
     if (left?.experiment?.[field] !== right?.experiment?.[field]) mismatches.push(`experiment.${field}`);
   }
-  for (const field of ['levelBlind', 'historyAware', 'schedulerMode']) {
-    if (left?.execution?.[field] !== right?.execution?.[field]) mismatches.push(`execution.${field}`);
+  if (!paired && left?.experiment?.configurationHash !== right?.experiment?.configurationHash) {
+    mismatches.push('experiment.configurationHash');
+  }
+  for (const field of ['kind', 'identityBasis', 'corpusIdentity']) {
+    if ((left?.population?.[field] ?? null) !== (right?.population?.[field] ?? null)) mismatches.push(`population.${field}`);
+  }
+  for (const field of ['levelBlind', 'historyAware', 'reproducibilityExpected', 'producerFamily', 'schedulerMode']) {
+    if ((left?.execution?.[field] ?? null) !== (right?.execution?.[field] ?? null)) mismatches.push(`execution.${field}`);
+  }
+  if (stableHash(left?.execution?.historicalInputs ?? null) !== stableHash(right?.execution?.historicalInputs ?? null)) {
+    mismatches.push('execution.historicalInputs');
+  }
+  for (const field of ['cumulativeNodeCeiling', 'initialWorkAllocation', 'totalWorkCeiling', 'wallSafetyDeadlineMs', 'wallDeadlineBinding']) {
+    if ((left?.limits?.[field] ?? null) !== (right?.limits?.[field] ?? null)) mismatches.push(`limits.${field}`);
   }
   if (paired && left?.population?.identityHash !== right?.population?.identityHash) mismatches.push('population.identityHash');
   if (mismatches.length) throw new Error(`incompatible experiment contracts: ${mismatches.join(', ')}`);
