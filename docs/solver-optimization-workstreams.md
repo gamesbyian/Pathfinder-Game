@@ -40,6 +40,8 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 
 Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path and capability-memory evidence to distinguish `not exposed` from `exposed-and-failed`, and technique-relative response from shared-capability failure. Historical IDs/outcomes/hints remain offline diagnostics. Any production selector needs a legal generic current-level/current-solve signal plus confirmation proportional to mining/configuration space. [`evidence layer`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
 
+**Cross-hint provenance relation audit active as cheap existing-data work.** The September 11 semantic duplicate audit was intra-hint only; it did not ask whether one canonical discovery-event identity is attached to multiple distinct paths on the same level. The evidence report now measures that relation by origin/facets before any near-collision or determinism replay. Classify exact collisions by producer multiplicity contract first; only unexplained cases may nominate provenance-schema repair or bounded determinism checks. [`report`](../reports/2026-09-12-cross-hint-provenance-relations-001.md)
+
 **Structural-response extension closed for both frozen pairs (`R02687`/objectiveFirst, `R02094`/intersectionHarvest).** Stage 3 found real plain-vs-mechanic-bucket family response flips; stage 4's prespecified solution-space mediators were non-separating/inapplicable; stage 5 located operational first divergence immediately after mechanic-progress creates a minority bucket. n=2 licenses no selector; no third pair or variant of this same question. [`stage 3`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md), [`stage 4`](../reports/2026-09-12-ws1-stage4-solution-space-mediation-result-001.md), [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
 
 ### 3. Parallel capability-acquisition probe
@@ -53,7 +55,7 @@ The bounded mechanic-composition Stage A/B/C pilot produced 2/5 clean predicted 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | R03229 microscope closed as B1/B2 recurrence; derive a materially new mechanism-specific runtime-legal discriminator or architectural limitation before another class-5 treatment/specimen. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL** | Structural-response ladder closed for both frozen pairs; reopen only for a new pair/premise. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL** | Run/classify the exact cross-hint provenance collision audit; structural-response ladder otherwise closed pending a new pair/premise. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or new hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
@@ -85,6 +87,7 @@ The bounded mechanic-composition Stage A/B/C pilot produced 2/5 clean predicted 
 - research assets: `node scripts/research-asset-query.mjs --query=<term>`
 - capability memory: `node scripts/solver-capability-memory.mjs --manifest=<manifest.json> --out=tmp/capability-memory.json --summary-out=tmp/capability-memory.md`
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
+- provenance relations: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all --out=tmp/hint-provenance-evidence.json`
 - microscope boundary (historical/completed example): `node scripts/run-bundled.mjs scripts/stress/collect-known-solution-prefix-survival.mjs -- --level-ids=R03229 --beam-width=2000 --node-budget=3000000 --include-stages --retain-all-removal-details --retain-ranked-pool-details --out=tmp/r03229-microscope-survival.json`
 - microscope cases (historical/completed example): `node scripts/run-bundled.mjs scripts/stress/build-class5-microscope-cases.mjs -- --survival=tmp/r03229-microscope-survival.json --level-id=R03229 --out=tmp/r03229-microscope-cases.json`
 - structural niche stability: `node scripts/analyze-technique-niche-stability.mjs`
