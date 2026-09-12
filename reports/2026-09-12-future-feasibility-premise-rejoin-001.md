@@ -37,6 +37,8 @@ At exact-labelled extinction states that already pass current hard pruning:
 
 The goal is not arbitrary-state solvability prediction. It is to identify whether one compact piece of future information is systematically absent at extinction decisions.
 
+A useful conceptual lens is **remaining viable optionality**: how much genuinely feasible continuation space remains, rather than how much visible mechanic progress has already occurred or how many structural buckets are represented. This wording does not create a fourth descriptor family. The three families below are candidate cheap approximations to that latent quantity.
+
 ## Prespecified descriptor families
 
 Keep this small; no feature buffet. The same-day perturbation-confound results make capacity/slack and topology-scarcity summaries especially informative first candidates, but do not justify adding candidates beyond this frozen family set.
@@ -65,6 +67,13 @@ Preserve search-policy context rather than collapsing to live/dead only. Where e
 The strongest candidate separates feasibility inside the same search-status stratum or explains `DEAD retained` versus `LIVE culled` without simply rediscovering rank. `R03229` contributes that latter contrast; B2 supplies recurrence and live/live controls.
 
 Treat mechanic-progress state as a negative control where available: because bucket retention can preserve fresh progress without solving the class-5 first-loss population, a candidate that merely tracks progress-mask rarity or “just made progress” has not added the required information.
+
+Two additional same-day controls are available at effectively zero solver-compute cost:
+
+- **Diffuse perturbation susceptibility:** existing `swap`/`cs` rescue density may be used only as an offline corroborative phenotype for a descriptor chosen independently. A parent rescued by many unrelated edits may lie near a broad feasibility boundary, but rescue density is neither a runtime feature nor causal evidence for any moved object.
+- **Joint-obligation calibration:** if a joint-obligation descriptor is among the prespecified 2-4 summaries, reuse mechanic-composition parents `R01274` and `R01882` as positive mechanism controls and `R01849` and `R02036` as confound controls. The latter became solvable through unrelated routes after relocation, so a descriptor that treats all four relocations as equivalent support for the targeted mechanism is suspect.
+
+These controls do not expand the descriptor budget, replace the B1/B2 + `R03229` exact labels, or reopen either closed perturbation line. See [`cross-line residue closeout`](2026-09-12-cross-line-unharvested-residue-closeout-001.md).
 
 ## Execution discipline
 
