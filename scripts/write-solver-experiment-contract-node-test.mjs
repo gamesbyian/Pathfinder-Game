@@ -35,16 +35,24 @@ assert.equal(paired.experiment.resolvedSha, undefined, 'paired contracts must no
 assert.equal(paired.experiment.arms.control.resolvedSha, 'b'.repeat(40));
 assert.notEqual(paired.experiment.configurationHash, contract.experiment.configurationHash);
 
+const populationIdentity = `sha256:${'9'.repeat(64)}`;
 const inferredPaired = buildContract({
   configuration: { baselineRef: 'd'.repeat(40), treatmentRef: 'e'.repeat(40), nodeBudget: 1 },
   workflowFamily: 'routing-regime-sample-ab', producer: 'solver-routing-regime-sample-ab.yml', entrypoint: 'solver.mjs',
-}, { resolvedSha });
+  population: { kind: 'sealed-stratified-sample', identityBasis: 'stable-level-id' },
+}, { resolvedSha, populationSeal: { identityHash: populationIdentity, count: 3 } });
 assert.equal(inferredPaired.experiment.resolvedSha, undefined);
 assert.equal(inferredPaired.experiment.arms.control.resolvedSha, 'd'.repeat(40));
 assert.equal(inferredPaired.experiment.arms.treatment.resolvedSha, 'e'.repeat(40));
+assert.equal(inferredPaired.population.corpusIdentity, populationIdentity);
 assert.throws(() => buildContract({
   configuration: { baselineRef: 'main', treatmentRef: 'e'.repeat(40) },
   workflowFamily: 'routing-regime-sample-ab', producer: 'solver-routing-regime-sample-ab.yml', entrypoint: 'solver.mjs',
 }, { resolvedSha }), /immutable 40-character commit SHAs/);
+assert.throws(() => buildContract({
+  configuration: { baselineRef: 'd'.repeat(40), treatmentRef: 'e'.repeat(40) },
+  workflowFamily: 'routing-regime-sample-ab', producer: 'solver-routing-regime-sample-ab.yml', entrypoint: 'solver.mjs',
+  population: { kind: 'sealed-stratified-sample', identityBasis: 'stable-level-id', corpusIdentity: `sha256:${'8'.repeat(64)}` },
+}, { resolvedSha, populationSeal: { identityHash: populationIdentity } }), /disagrees with population seal/);
 
 console.log('write solver experiment contract tests passed');
