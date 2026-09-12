@@ -37,6 +37,8 @@ The causal follow-up starts from the 21 treatment-exclusive gains of the origina
 
 `R00726` is calibration-only. The remaining 20 form the frozen candidate inference pool. No parent may enter or leave that pool because of sibling solve results.
 
+> **Correction (2026-09-12):** the ID list immediately above does not actually match this report's own cited source — [`the A/B preflight's real 21 gains`](2026-09-11-joint-obligation-mc-portal-ab-001-preflight.md) are `R00726`, `R01274`, `R01489`, `R01849`, `R01882`, `R02036`, `R02060`, `R02162`, `R02389`, `R02479`, `R02546`, `R02654`, `R02707`, `R02823`, `R02832`, `R02864`, `R02932`, `R03097`, `R03106`, `R03254`, `R03336`. Only 4 IDs (`R00726`, `R01274`, `R01489`, `R03336`) overlap between the two lists; six of this report's own IDs (`R01046`, `R01616`, `R01885`, `R01893`, `R01919`, `R03427`, `R03465`) do not exist in any corpus at all. This report's frozen text is left as originally written per the archive-is-git convention, but any execution of this design must use the preflight's verbatim gain list (minus calibration-only `R00726`) as the actual 20-parent inference pool, not the corrupted list above. See [`the Stage A/B/C pilot result`](2026-09-12-mechanic-composition-pilot-001-result.md) for the corrected execution.
+
 Parent/family is the independent unit. Generated sibling identity is research-only and must never become a production routing signal.
 
 ## Deterministic parent and edit selection
