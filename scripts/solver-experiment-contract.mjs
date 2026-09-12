@@ -55,10 +55,11 @@ export function hashConfiguration(configuration) {
 }
 
 /**
- * Return the reasons a normalized v3 contract is not strong enough to support a scientific
- * decision. Presence of a result schema alone is deliberately insufficient: decision-bearing
- * evidence must establish immutable execution identity, intended population identity, scientific
- * execution semantics, limits, and side-effect posture.
+ * Return the reasons a v3 contract is not strong enough to support a scientific decision.
+ * Presence of the result schema alone is deliberately insufficient: decision-bearing evidence must
+ * establish immutable execution identity, intended population identity, scientific execution
+ * semantics, limits, and side-effect posture. Explicit null is allowed for limit fields where
+ * "there is no such ceiling" is meaningful; omission/undefined is not.
  */
 export function decisionContractIssues(contract) {
   const issues = [];
@@ -99,7 +100,7 @@ export function decisionContractIssues(contract) {
   if (!Array.isArray(execution?.historicalInputs)) issues.push('execution.historicalInputs');
 
   for (const field of ['cumulativeNodeCeiling', 'initialWorkAllocation', 'totalWorkCeiling', 'wallSafetyDeadlineMs', 'wallDeadlineBinding']) {
-    if (!hasOwn(limits, field)) issues.push(`limits.${field}`);
+    if (!hasOwn(limits, field) || limits[field] === undefined) issues.push(`limits.${field}`);
   }
 
   for (const field of ['hints', 'canonicalBaseline', 'telemetry', 'reports']) {
@@ -107,6 +108,19 @@ export function decisionContractIssues(contract) {
   }
 
   return issues;
+}
+
+/**
+ * Validate the producer's raw declaration before the publisher fills derived population identity or
+ * normalizes absent optional-looking values to null. This prevents a forgotten field from becoming
+ * indistinguishable from an explicit "none" declaration during publication.
+ */
+export function declaredDecisionContractIssues(contract) {
+  const placeholderIdentity = `sha256:${'0'.repeat(64)}`;
+  return decisionContractIssues({
+    ...contract,
+    population: { ...(contract?.population ?? {}), identityHash: placeholderIdentity },
+  }).filter(issue => issue !== 'population.identityHash');
 }
 
 export function rowIdentity(row) {
@@ -141,10 +155,6 @@ export function buildPopulationIntegrity(expectedIds, rows) {
   };
   for (const row of rows ?? []) outcomes[classifyRow(row)] += 1;
 
-  // Coverage completeness answers only whether every intended subject has exactly one
-  // structurally usable row. It deliberately says nothing about whether every row is
-  // scientifically interpretable. Deadline truncation, harness errors, and unknown
-  // statuses are present observations but remain indeterminate evidence.
   const coverageComplete = missingIds.length === 0 && unexpectedIds.length === 0
     && actual.duplicates.length === 0 && outcomes.malformed === 0;
   const decisionValidComplete = coverageComplete
@@ -160,8 +170,6 @@ export function buildPopulationIntegrity(expectedIds, rows) {
     missingIds,
     coverageComplete,
     decisionValidComplete,
-    // Compatibility alias for callers whose gate is exact population coverage. New
-    // decision-bearing logic must use decisionValidComplete explicitly.
     complete: coverageComplete,
     outcomes,
   };
