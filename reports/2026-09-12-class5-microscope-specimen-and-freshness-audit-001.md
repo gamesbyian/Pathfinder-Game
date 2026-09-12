@@ -1,9 +1,9 @@
 # Class-5 microscope specimen and freshness audit 001
 
-> **Status:** active / corrective audit
-> **Last evidence:** 2026-09-12 — re-read the source first-loss cohort assignments, current corrected atlas semantics, current hint provenance, the B1/B2 extinction-adjacent exact program, and the existing collector/reference tooling.
-> **Decision:** the single-level microscope method is still warranted, but the first implementation named the wrong specimen and skipped an evidence-freshness gate. `R03351` is class 4, not class 5, so its class-5 preflight/notes were removed. `R02302` is a frozen-atlas class-5 row but already has repeated isolated cold-solver capability in the current hint store, so it is not a clean acquisition specimen. Before selecting a specimen, audit all current class-5 rows against the latest isolated hint provenance and reconcile any nominations as composition/exposure candidates.
-> **Remaining gate:** regenerate the corrected current atlas, run `audit-class5-hint-capability-freshness.mjs`, reconcile nominated rows against current protocol/T1 admissibility, then choose a class-5 row with no known current isolated capability. `R03229` is the leading provisional specimen from the original class-5 first-loss sample because it has the deepest ordinary known-support survival among that seven-level class-5 half and no isolated `pathfinder-solver` provenance was found in its current hint file; do not freeze it as the specimen until the freshness audit clears it.
+> **Status:** superseded
+> **Last evidence:** 2026-09-12 — the freshness reconciliation and `R03229` exact microscope were completed in the branch-reconciliation report.
+> **Decision:** this report remains the historical corrective audit that invalidated R03351 and established the freshness gate; final specimen selection, provenance reconciliation, and microscope disposition now live in `2026-09-12-class5-microscope-branch-reconciliation-001.md`.
+> **Remaining gate:** none in this report. Follow the canonical WS2 authority and the branch-reconciliation report for the current acquisition gate.
 
 ## What the audit corrected
 
