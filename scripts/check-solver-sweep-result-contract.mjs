@@ -29,16 +29,24 @@ for (const file of workflows) {
   if (artifactCount !== 1) failures.push(`${file}: expected exactly one solver-sweep-result artifact, found ${artifactCount}`);
   if (publisherCount !== 1) failures.push(`${file}: expected exactly one publisher invocation, found ${publisherCount}`);
   if (runNameCount !== 1) failures.push(`${file}: expected exactly one top-level run-name, found ${runNameCount}`);
-  if (expectedCount !== 1 || observedCount !== 1) failures.push(`${file}: expected exactly one shard-completeness pair, found expected=${expectedCount} observed=${observedCount}`);
+  if (expectedCount !== 1 || observedCount !== 1) failures.push(`${file}: expected exactly one artifact-coverage pair, found expected=${expectedCount} observed=${observedCount}`);
 }
 const helper = fs.readFileSync('scripts/publish-solver-sweep-result.mjs', 'utf8');
 if (!helper.includes('GITHUB_STEP_SUMMARY')) failures.push('publisher must append to GITHUB_STEP_SUMMARY');
 if (!helper.includes('GITHUB_EVENT_PATH')) failures.push('publisher must capture dispatch inputs from GITHUB_EVENT_PATH');
 if (!helper.includes('artifactCoverage')) failures.push('publisher must emit artifact coverage');
 if (!helper.includes('populationIntegrity')) failures.push('publisher must emit population integrity');
+if (!helper.includes('decisionValidComplete')) failures.push('publisher must distinguish decision-valid integrity from structural coverage');
 if (!helper.includes('EXPERIMENT_RESULT_KIND')) failures.push('publisher manifest kind is missing');
 if (!helper.includes('researchOutcome')) failures.push('publisher must emit the declared research outcome');
 if (!helper.includes('outcome-file')) failures.push('publisher must accept an explicit outcome file');
+
+const contractHelper = fs.readFileSync('scripts/solver-experiment-contract.mjs', 'utf8');
+for (const required of ['coverageComplete', 'decisionValidComplete']) {
+  if (!contractHelper.includes(required)) failures.push(`experiment contract must expose ${required}`);
+}
+const combiner = fs.readFileSync('scripts/combine-solver-sweep-reports.mjs', 'utf8');
+if (!combiner.includes("intendedPopulationKnown ? expectedIds : levelIds")) failures.push('combiner population identity must use intended IDs when an expected population is supplied');
 
 for (const file of [
   '.github/workflows/solver-broad-confirmation.yml',
