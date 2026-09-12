@@ -94,28 +94,14 @@ function buildStageStats(levels) {
       const stageId = attempt?.stageId;
       if (!stageId) continue;
       if (!byStage.has(stageId)) {
-        byStage.set(stageId, {
-          stageId,
-          reach: 0,
-          attempts: 0,
-          solves: 0,
-          nodes: 0,
-          work: 0,
-          workReported: 0,
-        });
+        byStage.set(stageId, { stageId, reach: 0, attempts: 0, solves: 0, nodes: 0, work: 0, workReported: 0 });
       }
       const stage = byStage.get(stageId);
-      if (!seen.has(stageId)) {
-        stage.reach += 1;
-        seen.add(stageId);
-      }
+      if (!seen.has(stageId)) { stage.reach += 1; seen.add(stageId); }
       stage.attempts += 1;
       stage.solves += attempt?.ok ? 1 : 0;
       stage.nodes += Number(attempt?.nodesExpanded) || 0;
-      if (Number.isFinite(attempt?.workSpent)) {
-        stage.work += attempt.workSpent;
-        stage.workReported += 1;
-      }
+      if (Number.isFinite(attempt?.workSpent)) { stage.work += attempt.workSpent; stage.workReported += 1; }
     }
   }
   return [...byStage.values()].sort((a, b) => b.attempts - a.attempts || a.stageId.localeCompare(b.stageId));
@@ -143,6 +129,17 @@ function levelStats(file) {
   }
 }
 
+function isDecisionValidIntegrity(integrity) {
+  if (!integrity || typeof integrity !== 'object') return false;
+  if (integrity.decisionValidComplete != null) return integrity.decisionValidComplete === true;
+  if (integrity.complete !== true || !integrity.outcomes || typeof integrity.outcomes !== 'object') return false;
+  return (integrity.outcomes.deadlineTruncated ?? 0) === 0
+    && (integrity.outcomes.harnessError ?? 0) === 0
+    && (integrity.outcomes.malformed ?? 0) === 0
+    && (integrity.outcomes.missing ?? 0) === 0
+    && (integrity.outcomes.unknown ?? 0) === 0;
+}
+
 const stats = collectJsonFiles(outDir).map(levelStats).filter(Boolean);
 function statsForSource(re) {
   const e = entries.find(x => !x.missing && re.test(x.source));
@@ -161,12 +158,8 @@ if (control && treatment) {
   const treatmentParsed = JSON.parse(fs.readFileSync(treatment.file, 'utf8'));
   const controlHash = controlParsed?.population?.identityHash ?? null;
   const treatmentHash = treatmentParsed?.population?.identityHash ?? null;
-  const controlDecisionValid = controlParsed?.populationIntegrity?.decisionValidComplete
-    ?? controlParsed?.populationIntegrity?.complete
-    ?? false;
-  const treatmentDecisionValid = treatmentParsed?.populationIntegrity?.decisionValidComplete
-    ?? treatmentParsed?.populationIntegrity?.complete
-    ?? false;
+  const controlDecisionValid = isDecisionValidIntegrity(controlParsed?.populationIntegrity);
+  const treatmentDecisionValid = isDecisionValidIntegrity(treatmentParsed?.populationIntegrity);
   const compatible = Boolean(controlHash && controlHash === treatmentHash && controlDecisionValid && treatmentDecisionValid);
   comparison = {
     decisionBearing: compatible,
@@ -191,12 +184,7 @@ try {
 }
 
 const artifactCoverage = Number.isFinite(shardsExpected) && Number.isFinite(shardsObserved)
-  ? {
-      expected: shardsExpected,
-      observed: shardsObserved,
-      complete: shardsExpected === shardsObserved,
-      basis: shardsBasis,
-    }
+  ? { expected: shardsExpected, observed: shardsObserved, complete: shardsExpected === shardsObserved, basis: shardsBasis }
   : null;
 
 let populationIntegrity = null;
@@ -217,10 +205,7 @@ const populationIdentity = populationIntegrity?.populationIdentityHash ?? (popul
     ].length ? [...(populationIntegrity.expectedIds ?? []), ...(populationIntegrity.missingIds ?? [])] : stats.flatMap(s => s.levels.map(row => row?.id ?? row?.levelId ?? row?.level).filter(x => x != null).map(String)) }).identityHash
   : null);
 const outcomeDecisionBearing = researchOutcome && ['completed-positive', 'completed-negative'].includes(researchOutcome.outcome);
-const integrityDecisionValid = populationIntegrity?.decisionValidComplete
-  ?? (populationIntegrity?.complete && (populationIntegrity?.outcomes?.deadlineTruncated ?? 0) === 0
-    && (populationIntegrity?.outcomes?.harnessError ?? 0) === 0
-    && (populationIntegrity?.outcomes?.unknown ?? 0) === 0);
+const integrityDecisionValid = isDecisionValidIntegrity(populationIntegrity);
 const contract = {
   experiment: {
     experimentId: declaredContract?.experiment?.experimentId ?? process.env.GITHUB_RUN_ID ?? null,
@@ -298,19 +283,9 @@ fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, nu
 if (provenanceOut) {
   fs.mkdirSync(path.dirname(provenanceOut), { recursive: true });
   fs.writeFileSync(provenanceOut, JSON.stringify({
-    kind: 'pathfinder-gha-source-run',
-    workflow: manifest.workflow,
-    runId: manifest.runId,
-    runAttempt: manifest.runAttempt,
-    runUrl: manifest.runUrl,
-    sha: manifest.sha,
-    ref: manifest.ref,
-    refName: manifest.refName,
-    event: manifest.event,
-    dispatchInputs,
-    artifactCoverage,
-    populationIntegrity,
-    researchOutcome,
+    kind: 'pathfinder-gha-source-run', workflow: manifest.workflow, runId: manifest.runId,
+    runAttempt: manifest.runAttempt, runUrl: manifest.runUrl, sha: manifest.sha, ref: manifest.ref,
+    refName: manifest.refName, event: manifest.event, dispatchInputs, artifactCoverage, populationIntegrity, researchOutcome,
   }, null, 2) + '\n');
 }
 
@@ -320,18 +295,14 @@ if (manifest.runId) lines.push(`- Run: ${runUrl ? `[${manifest.runId}](${runUrl}
 if (manifest.sha) lines.push(`- Commit: \`${manifest.sha}\``);
 if (manifest.refName) lines.push(`- Ref: \`${manifest.refName}\``);
 if (sourceArtifact) lines.push(`- Legacy/specialized artifact: \`${sourceArtifact}\``);
-if (researchOutcome) {
-  lines.push(`- Research outcome: **${researchOutcome.outcome}** — ${researchOutcome.reason}`);
-} else {
-  lines.push('- Research outcome: not declared (this publisher never infers a scientific verdict)');
-}
+if (researchOutcome) lines.push(`- Research outcome: **${researchOutcome.outcome}** — ${researchOutcome.reason}`);
+else lines.push('- Research outcome: not declared (this publisher never infers a scientific verdict)');
 if (Object.keys(dispatchInputs).length) lines.push('- Dispatch inputs: recorded in `manifest.json`');
 if (artifactCoverage) lines.push(`- Artifact coverage: ${artifactCoverage.observed}/${artifactCoverage.expected} shard artifacts ${artifactCoverage.complete ? 'present' : '**INCOMPLETE**'}${artifactCoverage.basis ? ` (${artifactCoverage.basis})` : ''}`);
 if (populationIntegrity) {
   const coverageComplete = populationIntegrity.coverageComplete ?? populationIntegrity.complete ?? false;
-  const decisionValidComplete = populationIntegrity.decisionValidComplete ?? integrityDecisionValid ?? false;
   lines.push(`- Population coverage: ${populationIntegrity.observedCount}/${populationIntegrity.expectedCount} observed; ${populationIntegrity.missingIds?.length ?? populationIntegrity.outcomes?.missing ?? 0} missing-indeterminate; ${coverageComplete ? 'complete' : '**INCOMPLETE**'}`);
-  lines.push(`- Decision-valid observations: ${decisionValidComplete ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
+  lines.push(`- Decision-valid observations: ${integrityDecisionValid ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
 } else lines.push('- Population integrity: **unknown / non-decision-bearing** (no validated intended population supplied)');
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
@@ -356,12 +327,8 @@ const solvedRows = stats.flatMap(s => s.levels.filter(row => row?.ok && Array.is
 if (solvedRows.length) {
   lines.push('', '## Solved level paths', '');
   lines.push('Packed-key paths, one per solved level, so a referee/re-check can proceed without the artifact.');
-  for (const row of solvedRows.slice(0, MAX_PRINTED_SOLUTION_PATHS)) {
-    lines.push(`- \`${row.source}\` ${row.id}: ${JSON.stringify(row.solution)}`);
-  }
-  if (solvedRows.length > MAX_PRINTED_SOLUTION_PATHS) {
-    lines.push(`- ... ${solvedRows.length - MAX_PRINTED_SOLUTION_PATHS} more solved level(s) omitted (see the artifact for the full set).`);
-  }
+  for (const row of solvedRows.slice(0, MAX_PRINTED_SOLUTION_PATHS)) lines.push(`- \`${row.source}\` ${row.id}: ${JSON.stringify(row.solution)}`);
+  if (solvedRows.length > MAX_PRINTED_SOLUTION_PATHS) lines.push(`- ... ${solvedRows.length - MAX_PRINTED_SOLUTION_PATHS} more solved level(s) omitted (see the artifact for the full set).`);
 }
 
 const stagedStats = stats.filter(s => s.stages.length).slice(0, 12);
