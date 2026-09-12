@@ -25,6 +25,17 @@
 # (--save-hints, same mechanism as every other batch tool) and shows up in the combined report;
 # merging newly-solved ids into the official baseline is a separate, explicit step (see
 # scripts/patch-benchmark-with-sweep.mjs) run after reviewing a round's results.
+#
+# GAP-FILL DISPATCH: gap_fill_corpus1_ids/gap_fill_corpus2_ids narrow a round to an explicit
+# id subset -- for re-running ids an earlier round left missing to an infrastructure timeout
+# (never a genuine solver outcome) without repaying the full frozen cohort's cost. An id outside
+# the frozen cohort is rejected (scripts/select-highbudget-gap-fill-ids.mjs), so gap-fill can only
+# narrow the population, never grow it. A gap-fill round still solves, seals, and publishes
+# normally, but does NOT commit the aggregate reports/telemetry to main -- those represent the
+# FULL frozen cohort as one semantic unit, and this round only observed a subset. Newly-solved
+# hints are still committed (safe, per-id evidence). Reconcile a gap-fill round's published
+# solver-sweep-result artifact with the prior full round via solver-combine-sweep-runs.yml before
+# merging its results into the canonical committed report.
 name: Solver high-budget sweep (unsolved-only, both corpora)
 run-name: "High-budget unsolved · node=${{ inputs.node_budget }} · workers=${{ inputs.workers }}"
 
@@ -53,6 +64,14 @@ on:
         default: '2.5'
       seed:
         description: "Shard-packing tie-break shuffle seed (blank = derived from this run's id, so each dispatch reshuffles which similarly-weighted ids share a shard)"
+        required: false
+        default: ''
+      gap_fill_corpus1_ids:
+        description: 'Gap-fill only: comma/whitespace-separated Corpus 1 ids to re-run (e.g. after a prior round left some ids missing to an infrastructure timeout, never a genuine solver outcome). MUST be a subset of the frozen corpus1-unsolved-highbudget-2026-07-24.txt cohort -- an id outside it is rejected, never silently added. Blank (default) runs the full frozen cohort.'
+        required: false
+        default: ''
+      gap_fill_corpus2_ids:
+        description: 'Gap-fill only: comma/whitespace-separated Corpus 2 ids to re-run. Same frozen-subset requirement as gap_fill_corpus1_ids, against corpus2-unsolved-highbudget-2026-07-24.txt. Blank (default) runs the full frozen cohort.'
         required: false
         default: ''
 
@@ -130,14 +149,26 @@ jobs:
             --summary-out=logs/solver-highbudget-sweep/canary-summary.md
           node scripts/verify-canary-cell.mjs --result=logs/solver-highbudget-sweep/canary.json
 
+      - name: Resolve this round's effective population (full frozen cohort, or a validated gap-fill subset)
+        shell: bash
+        run: |
+          mkdir -p logs/solver-highbudget-sweep
+          node scripts/select-highbudget-gap-fill-ids.mjs \
+            --frozen-ids-file=logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt \
+            --override="${{ inputs.gap_fill_corpus1_ids }}" \
+            --out=logs/solver-highbudget-sweep/expected-corpus1-ids.txt
+          node scripts/select-highbudget-gap-fill-ids.mjs \
+            --frozen-ids-file=logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt \
+            --override="${{ inputs.gap_fill_corpus2_ids }}" \
+            --out=logs/solver-highbudget-sweep/expected-corpus2-ids.txt
+
       - name: Run the shard planner
         id: plan
         shell: bash
         run: |
-          mkdir -p logs/solver-highbudget-sweep
           node scripts/plan-highbudget-shards.mjs \
-            --ids-file=logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt \
-            --corpus1-ids-file=logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt \
+            --ids-file=logs/solver-highbudget-sweep/expected-corpus2-ids.txt \
+            --corpus1-ids-file=logs/solver-highbudget-sweep/expected-corpus1-ids.txt \
             --corpus2=data/stress/stress-levels-random.json \
             --corpus1=data/stress/stress-levels.json \
             --telemetry=logs/solver-stress-refresh/corpus2-runtime-telemetry.json \
@@ -148,8 +179,6 @@ jobs:
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-highbudget-sweep/shard-plan.json
-          cp logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt logs/solver-highbudget-sweep/expected-corpus1-ids.txt
-          cp logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt logs/solver-highbudget-sweep/expected-corpus2-ids.txt
           # {shard: [...]} ONLY -- see solver-level-blind-targeted-sweep.yml's identical fix for why:
           # the file also carries a top-level `planning` provenance object (plan-highbudget-shards.mjs)
           # that is not itself an array, and spreading the WHOLE file into `strategy.matrix` makes
@@ -446,17 +475,22 @@ jobs:
         env:
           NODE_BUDGET: ${{ inputs.node_budget }}
           BUDGET_MS: ${{ inputs.budget_ms }}
+          GAP_FILL_C1: ${{ inputs.gap_fill_corpus1_ids }}
+          GAP_FILL_C2: ${{ inputs.gap_fill_corpus2_ids }}
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
           const configuration = { nodeBudget: Number(process.env.NODE_BUDGET), budgetMs: Number(process.env.BUDGET_MS), schedulerMode: 'production' };
+          const gapFill = Boolean(process.env.GAP_FILL_C1 || process.env.GAP_FILL_C2);
           fs.writeFileSync('logs/solver-highbudget-sweep/experiment-contract.json', `${JSON.stringify({
             experiment: { workflowFamily: 'history-aware-highbudget', producer: 'solver-highbudget-unsolved-sweep.yml', entrypoint: 'scripts/portfolio-solve-sweep.mjs', configurationHash: hashConfiguration(configuration) },
-            population: { kind: 'explicit-frozen-multi-corpus-cohort', identityBasis: 'corpus-and-stable-level-id' },
+            population: { kind: gapFill ? 'explicit-frozen-multi-corpus-cohort-gap-fill-subset' : 'explicit-frozen-multi-corpus-cohort', identityBasis: 'corpus-and-stable-level-id' },
             execution: { levelBlind: false, historyAware: true, historicalInputs: ['frozen prior-unsolved IDs', 'saved hints', 'production baseline'], reproducibilityExpected: false, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
             limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: null },
-            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'telemetry-update', reports: 'report-write' },
+            sideEffects: gapFill
+              ? { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only-pending-reconciliation' }
+              : { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'telemetry-update', reports: 'report-write' },
           }, null, 2)}\n`);
           NODE
           node scripts/publish-solver-sweep-result.mjs \
@@ -480,10 +514,23 @@ jobs:
 
       - name: Commit newly-solved hints + combined reports + updated telemetry directly to main
         shell: bash
+        env:
+          GAP_FILL_C1: ${{ inputs.gap_fill_corpus1_ids }}
+          GAP_FILL_C2: ${{ inputs.gap_fill_corpus2_ids }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/stress/hints/ data/stress/hints-random/ reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json "reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" logs/solver-highbudget-sweep/ logs/solver-stress-refresh/corpus2-runtime-telemetry.json 2>/dev/null || true
+          if [ -n "$GAP_FILL_C1" ] || [ -n "$GAP_FILL_C2" ]; then
+            # A gap-fill round only ever observed a SUBSET of the frozen cohort. The aggregate
+            # report/telemetry files represent the full cohort as one semantic unit -- committing
+            # this round's partial reports/telemetry over those canonical filenames would silently
+            # corrupt them. Newly-solved hints are still per-id evidence and safe to keep; reconcile
+            # this round's published solver-sweep-result artifact with the prior full round via
+            # solver-combine-sweep-runs.yml before merging results into the canonical report.
+            git add data/stress/hints/ data/stress/hints-random/ 2>/dev/null || true
+          else
+            git add data/stress/hints/ data/stress/hints-random/ reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json "reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" logs/solver-highbudget-sweep/ logs/solver-stress-refresh/corpus2-runtime-telemetry.json 2>/dev/null || true
+          fi
           if git diff --cached --quiet; then
             echo "Nothing changed -- not creating an empty commit."
             exit 0
