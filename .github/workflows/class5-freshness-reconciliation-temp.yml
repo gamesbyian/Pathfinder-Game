@@ -9,6 +9,7 @@ on:
       - 'scripts/stress/audit-class5-hint-capability-freshness.mjs'
       - 'scripts/stress/analyze-post-1029-residual-atlas.mjs'
       - 'scripts/stress/reconcile-class5-freshness-with-t1.mjs'
+      - 'scripts/stress/reconcile-isolated-hint-census-context.mjs'
   workflow_dispatch:
 
 permissions:
@@ -46,18 +47,25 @@ jobs:
             --census=reports/stress/technique-census/33717910218/combined-cells.json \
             --corpus=data/stress/stress-levels-random.json \
             --out=tmp/class5-freshness-t1-reconciliation.json
+      - name: Recover Sep-3 census context behind isolated hint rows
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/reconcile-isolated-hint-census-context.mjs -- \
+            --atlas=tmp/post-1048-residual-atlas-fixed.json \
+            --census=reports/stress/technique-census/33717910218/combined-cells.json \
+            --hints-dir=data/stress/hints-random \
+            --solver-version=277ca21be521bb7e03c268666ad868ad963f2cb5 \
+            --out=tmp/class5-isolated-hint-census-context.json
       - name: Print compact result
         run: |
           node - <<'NODE'
           const fs = require('fs');
           const freshness = JSON.parse(fs.readFileSync('tmp/class5-hint-capability-freshness.json', 'utf8'));
           const reconciliation = JSON.parse(fs.readFileSync('tmp/class5-freshness-t1-reconciliation.json', 'utf8'));
+          const context = JSON.parse(fs.readFileSync('tmp/class5-isolated-hint-census-context.json', 'utf8'));
           console.log('FRESHNESS_SUMMARY=' + JSON.stringify(freshness.summary));
           console.log('NOMINATED_LEVELS=' + freshness.nominatedRows.map(r => r.levelId).join(','));
           console.log('T1_RECONCILIATION_SUMMARY=' + JSON.stringify(reconciliation.summary));
-          console.log('COVERAGE_GAP_LEVELS=' + reconciliation.rows.filter(r => r.hasCoverageGap).map(r => r.levelId).join(','));
-          console.log('DRIFT_LEVELS=' + reconciliation.rows.filter(r => r.hasFrozenFailureNowCurrentSuccess).map(r => r.levelId).join(','));
-          console.log('UNEXPECTED_T1_SUCCESS_LEVELS=' + reconciliation.rows.filter(r => r.hasUnexpectedFrozenT1Success).map(r => r.levelId).join(','));
+          console.log('CENSUS_CONTEXT_SUMMARY=' + JSON.stringify(context.summary));
           NODE
       - uses: actions/upload-artifact@v4
         with:
@@ -66,4 +74,5 @@ jobs:
             tmp/post-1048-residual-atlas-fixed.json
             tmp/class5-hint-capability-freshness.json
             tmp/class5-freshness-t1-reconciliation.json
+            tmp/class5-isolated-hint-census-context.json
           retention-days: 7
