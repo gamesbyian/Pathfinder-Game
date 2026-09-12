@@ -59,7 +59,7 @@ Scheduling rule: periodically ask whether classes 1-3 contain a newly exposed, a
 
 ## Routing and completion state
 
-- **Done directly:** sections 1-3 are now wired into the active future-feasibility handoff without expanding its frozen 2-4 descriptor budget.
+- **Done directly:** sections 1-3 are now wired into the active future-feasibility handoff without expanding its frozen 2-4 descriptor budget or using the calibration evidence to select its own target.
 - **Done directly:** the known three `variantLabel` consumers were spot-audited and are consistent with the repaired semantics.
 - **Retained follow-up:** broader semantic-label review remains bounded and should piggyback on future provenance/evidence maintenance rather than becoming a new campaign.
 - **Retained follow-up:** classes 1-3 receive a cheap-harvest check after material boundary/provenance changes; no standing parallel solve campaign is created.
