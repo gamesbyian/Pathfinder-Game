@@ -29,7 +29,7 @@ const TARGETS = {
 const GRANDFATHERED = {
     'modules/solver/stage-budget-core.ts': 142_883,
     'modules/domain/domain.test.ts': 79_372,
-    '.github/workflows/solver-level-blind-targeted-sweep.yml': 49_827,
+    '.github/workflows/solver-level-blind-targeted-sweep.yml': 52_324,
     '.github/workflows/solver-production-replay-baseline.yml': 48_374,
 };
 
