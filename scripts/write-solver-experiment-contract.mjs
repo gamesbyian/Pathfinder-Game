@@ -11,12 +11,20 @@
  *   {
  *     "configuration": { ... arbitrary, hashed for experiment.configurationHash ... },
  *     "workflowFamily": "...", "producer": "...", "entrypoint": "...",
+ *     "experiment": { ... optional provenance, refs, or paired arms ... },
  *     "population": { ... }, "execution": { ... }, "limits": { ... }, "sideEffects": { ... }
  *   }
+ *
+ * If population-seal.json sits beside --out, its sha256 identity is adopted as
+ * population.corpusIdentity (or checked against an explicit value). This lets planners seal exact
+ * level content once without repeating file-plumbing in every workflow YAML.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { hashConfiguration } from './solver-experiment-contract.mjs';
+import { hashConfiguration, isImmutableCommitSha } from './solver-experiment-contract.mjs';
+
+const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 
 function parseArgs(argv) {
   return new Map(argv.filter(a => a.startsWith('--')).map(a => {
@@ -25,11 +33,54 @@ function parseArgs(argv) {
   }));
 }
 
-export function buildContract(spec) {
-  const { configuration, workflowFamily, producer, entrypoint, population, execution, limits, sideEffects } = spec;
+function currentHeadSha() {
+  try {
+    const sha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+    return isImmutableCommitSha(sha) ? sha : null;
+  } catch {
+    return null;
+  }
+}
+
+function inferredPairedArms(configuration) {
+  const control = configuration?.baselineRef ?? configuration?.controlRef ?? null;
+  const treatment = configuration?.treatmentRef ?? null;
+  if (control == null && treatment == null) return null;
+  if (!isImmutableCommitSha(control) || !isImmutableCommitSha(treatment)) {
+    throw new Error('paired experiment baseline/control and treatment refs must be immutable 40-character commit SHAs');
+  }
   return {
-    experiment: { workflowFamily, producer, entrypoint, configurationHash: hashConfiguration(configuration ?? {}) },
-    population, execution, limits, sideEffects,
+    control: { requestedRef: control, resolvedSha: control },
+    treatment: { requestedRef: treatment, resolvedSha: treatment },
+  };
+}
+
+function populationWithSeal(population, populationSeal) {
+  if (!populationSeal) return population;
+  const identityHash = populationSeal?.identityHash;
+  if (!SHA256_RE.test(String(identityHash ?? ''))) throw new Error('population seal identityHash must be sha256:<64 hex>');
+  if (population?.corpusIdentity && population.corpusIdentity !== identityHash) {
+    throw new Error(`declared population.corpusIdentity disagrees with population seal: ${population.corpusIdentity} vs ${identityHash}`);
+  }
+  return { ...(population ?? {}), corpusIdentity: identityHash };
+}
+
+export function buildContract(spec, { resolvedSha = null, populationSeal = null } = {}) {
+  const { configuration, workflowFamily, producer, entrypoint, experiment = {}, population, execution, limits, sideEffects } = spec;
+  const inferredArms = experiment.arms ?? inferredPairedArms(configuration);
+  const executionIdentity = inferredArms != null
+    ? { arms: inferredArms }
+    : (experiment.resolvedSha == null && resolvedSha ? { resolvedSha } : {});
+  return {
+    experiment: {
+      ...experiment,
+      ...executionIdentity,
+      workflowFamily,
+      producer,
+      entrypoint,
+      configurationHash: hashConfiguration(configuration ?? {}),
+    },
+    population: populationWithSeal(population, populationSeal), execution, limits, sideEffects,
   };
 }
 
@@ -42,9 +93,12 @@ function main() {
     process.exit(2);
   }
   const spec = JSON.parse(fs.readFileSync(specFile, 'utf8'));
-  fs.writeFileSync(out, `${JSON.stringify(buildContract(spec), null, 2)}\n`);
+  const sealFile = path.join(path.dirname(out), 'population-seal.json');
+  const populationSeal = fs.existsSync(sealFile) ? JSON.parse(fs.readFileSync(sealFile, 'utf8')) : null;
+  const contract = buildContract(spec, { resolvedSha: currentHeadSha(), populationSeal });
+  fs.writeFileSync(out, `${JSON.stringify(contract, null, 2)}\n`);
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${path.resolve(process.argv[1])}`).href) {
-  main();
+  try { main(); } catch (error) { console.error(`write-solver-experiment-contract: ${error.message}`); process.exit(2); }
 }

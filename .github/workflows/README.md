@@ -77,7 +77,7 @@ Workflow `run-name` values also include the inputs most useful for distinguishin
 
 ## Sample A/B
 
-- `solver-routing-regime-sample-ab.yml` — 60 shards / 20 lanes / 4 workers.
+- `solver-routing-regime-sample-ab.yml` — 60 shards / 20 lanes / 4 workers. One coordinated dispatch seals the exact C1 + published + sampled-C2 level contents at `baseline_ref` and requires `treatment_ref` to reproduce the same content hash before solve shards launch; shared level IDs alone are not treated as proof of an identical cross-SHA population.
 
 These use non-binding deterministic deadlines by default, so node/work budgets remain the comparison basis while cross-level parallelism changes calendar time. Their artifact/report evidence is still harvested even though they do not eagerly mutate canonical hints during the experiment.
 
@@ -109,7 +109,7 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 
 ## Repository / diagnostic workflows
 
-These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `solver-diagnostics.yml`, `deploy-pages.yml`, and `deploy-firestore-rules.yml`. Completed migration/campaign browser gates belong in Git history and dated evidence, not in the maintained workflow surface.
+These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `solver-diagnostics.yml`, `deploy-pages.yml`, `deploy-firestore-rules.yml`, `main-push-validation.yml`, and `solver-evidence-integrity-guard.yml`. Completed migration/campaign browser gates belong in Git history and dated evidence, not in the maintained workflow surface.
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
 

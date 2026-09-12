@@ -1,0 +1,39 @@
+name: Main push validation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# PR CI remains the pre-merge gate. This is a secondary safety net for the repository's currently
+# unprotected main branch. Validate every push, including merge commits: parent count cannot prove
+# that a merge actually came through a successfully checked PR, and an unprotected branch permits a
+# manually pushed merge commit just as readily as a single-parent commit. The duplicated fast gate is
+# intentionally small compared with the cost of allowing one main-update shape to bypass validation.
+concurrency:
+  group: main-push-validation
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Run fast repository and contract validation
+        run: npm run ci:fast
+      - name: Build production bundle
+        run: npm run build
+      - name: Solver capability canary
+        run: |
+          node scripts/run-bundled.mjs scripts/solver-bench.mjs -- --check \
+            --baseline=logs/solver-canary-baseline.json \
+            --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
+            --budget-ms=15000 --work-budget=5000000
