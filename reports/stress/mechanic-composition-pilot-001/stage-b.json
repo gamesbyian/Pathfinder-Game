@@ -1,0 +1,153 @@
+{
+  "nodeBudget": 5000000,
+  "budgetMs": 60000,
+  "rows": [
+    {
+      "parentId": "R01274",
+      "mcIdx": 0,
+      "targetedAxis": "h",
+      "original": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 6058146,
+          "reject": 6527680,
+          "abstain": 0
+        },
+        "totalClusters": 1
+      },
+      "decoupled": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 0,
+          "reject": 0,
+          "abstain": 0
+        },
+        "totalClusters": 0,
+        "decHasTargetCluster": false
+      },
+      "manipulationValid": true,
+      "note": "clean: targeted cluster rejects on original, structurally absent on decoupled"
+    },
+    {
+      "parentId": "R01489",
+      "mcIdx": 5,
+      "targetedAxis": "h",
+      "original": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 11270287,
+          "reject": 1249794,
+          "abstain": 0
+        },
+        "totalClusters": 3
+      },
+      "decoupled": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 0,
+          "reject": 0,
+          "abstain": 0
+        },
+        "totalClusters": 2,
+        "decHasTargetCluster": false
+      },
+      "manipulationValid": true,
+      "note": "clean: targeted cluster rejects on original, structurally absent on decoupled"
+    },
+    {
+      "parentId": "R01849",
+      "mcIdx": 4,
+      "targetedAxis": "v",
+      "original": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 3629666,
+          "reject": 9907768,
+          "abstain": 0
+        },
+        "totalClusters": 1
+      },
+      "decoupled": {
+        "ok": true,
+        "status": "success",
+        "targetClusterVerdicts": {
+          "pass": 0,
+          "reject": 0,
+          "abstain": 0
+        },
+        "totalClusters": 0,
+        "decHasTargetCluster": false
+      },
+      "manipulationValid": true,
+      "note": "clean: targeted cluster rejects on original, structurally absent on decoupled"
+    },
+    {
+      "parentId": "R01882",
+      "mcIdx": 2,
+      "targetedAxis": "v",
+      "original": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 6117471,
+          "reject": 6327739,
+          "abstain": 0
+        },
+        "totalClusters": 4
+      },
+      "decoupled": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 0,
+          "reject": 0,
+          "abstain": 0
+        },
+        "totalClusters": 3,
+        "decHasTargetCluster": false
+      },
+      "manipulationValid": true,
+      "note": "clean: targeted cluster rejects on original, structurally absent on decoupled"
+    },
+    {
+      "parentId": "R02036",
+      "mcIdx": 2,
+      "targetedAxis": "v",
+      "original": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 6784172,
+          "reject": 3827764,
+          "abstain": 0
+        },
+        "totalClusters": 1
+      },
+      "decoupled": {
+        "ok": false,
+        "status": "node-budget-reached",
+        "targetClusterVerdicts": {
+          "pass": 0,
+          "reject": 0,
+          "abstain": 0
+        },
+        "totalClusters": 0,
+        "decHasTargetCluster": false
+      },
+      "manipulationValid": true,
+      "note": "clean: targeted cluster rejects on original, structurally absent on decoupled"
+    }
+  ],
+  "manipulationValid": [
+    "R01274",
+    "R01489",
+    "R01849",
+    "R01882",
+    "R02036"
+  ]
+}
