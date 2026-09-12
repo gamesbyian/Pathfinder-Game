@@ -2,20 +2,25 @@
 /**
  * Wraps plan-ab-corpus-shards.mjs's single-arm shard plan into the two-arm coordinated shard
  * matrix solver-routing-regime-sample-ab.yml's single dispatch needs: every position-based shard
- * is duplicated once per arm (control, treatment) so both arms search the exact same positions,
- * and the underlying corpus files are read once -- at this job's own checkout, the canonical
- * baseline_ref -- to resolve those positions to actual level ids. That id list becomes the
- * population BOTH arms are later validated against, so any corpus reordering between baseline_ref
- * and treatment_ref surfaces downstream as a population-integrity failure (missing/unexpected
- * ids) instead of silently comparing different levels under the same position numbers.
+ * is duplicated once per arm (control, treatment) so both arms search the exact same positions.
+ * The baseline checkout resolves those positions to persistent level ids, then this planner seals
+ * the complete selected level CONTENT across Corpus 1, sampled Corpus 2, and published levels.
+ * When invoked by workflow_dispatch it also reads treatment_ref from GITHUB_EVENT_PATH and requires
+ * that immutable ref to reproduce the same content seal before any solve shards can launch. Shared
+ * ids alone are insufficient: the same id with changed puzzle content is a different population.
  *
  * Usage: node scripts/plan-routing-regime-ab-shards.mjs --base-output=<file> --ids-out=<file>
  *   [--github-output=<file>] [--corpus1-file=] [--corpus2-file=] [--published-file=]
  * --base-output must be a file plan-ab-corpus-shards.mjs already wrote its own
  * shards=/total_levels= GITHUB_OUTPUT-style lines into (via its own --github-output override).
  */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import {
+  assertMatchingPopulationSeals,
+  buildPopulationSeal,
+  readCorporaFromGitRef,
+} from './seal-routing-regime-population.mjs';
 
 function parseArgs(argv) {
   return new Map(argv.filter(a => a.startsWith('--')).map(a => {
@@ -40,6 +45,14 @@ export function resolveExpectedIds(baseShards, levelsFor) {
     }
   }
   return expectedIds;
+}
+
+function treatmentRefFromEvent() {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  if (!eventPath || !existsSync(eventPath)) return null;
+  const event = JSON.parse(readFileSync(eventPath, 'utf8'));
+  const value = event?.inputs?.treatment_ref;
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
 function main() {
@@ -75,11 +88,24 @@ function main() {
   const expectedIds = resolveExpectedIds(baseShards, levelsFor);
   writeFileSync(idsOut, `${expectedIds.join('\n')}\n`);
 
+  const localCorpora = Object.keys(corpusFiles).map(corpus => [corpus, levelsFor(corpus)]);
+  const seal = buildPopulationSeal(expectedIds, localCorpora);
+  const sealOut = path.join(path.dirname(idsOut), 'population-seal.json');
+  writeFileSync(sealOut, `${JSON.stringify(seal, null, 2)}\n`);
+
+  const treatmentRef = treatmentRefFromEvent();
+  if (treatmentRef) {
+    const treatmentCorpora = readCorporaFromGitRef(treatmentRef, Object.entries(corpusFiles));
+    const treatmentSeal = buildPopulationSeal(expectedIds, treatmentCorpora);
+    assertMatchingPopulationSeals(seal, treatmentSeal);
+    console.log(`Treatment ref ${treatmentRef} reproduces sealed population content ${seal.identityHash}.`);
+  }
+
   const doubled = expandShardsByArm(baseShards);
   writeFileSync(githubOutput, `shards=${JSON.stringify({ shard: doubled })}\nshard_count=${doubled.length}\ntotal_levels=${totalLevels}\n`, { flag: 'a' });
-  console.log(`Expanded ${baseShards.length} shard(s) covering ${totalLevels} level(s)/arm into ${doubled.length} shard(s) across both arms; resolved ${expectedIds.length} expected id(s).`);
+  console.log(`Expanded ${baseShards.length} shard(s) covering ${totalLevels} level(s)/arm into ${doubled.length} shard(s) across both arms; resolved and content-sealed ${expectedIds.length} expected id(s).`);
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${path.resolve(process.argv[1])}`).href) {
-  main();
+  try { main(); } catch (error) { console.error(`plan-routing-regime-ab-shards: ${error.message}`); process.exit(2); }
 }
