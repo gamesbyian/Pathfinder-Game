@@ -31,6 +31,7 @@ const GRANDFATHERED = {
     'modules/domain/domain.test.ts': 79_372,
     '.github/workflows/solver-level-blind-targeted-sweep.yml': 52_324,
     '.github/workflows/solver-production-replay-baseline.yml': 48_374,
+    '.github/workflows/solver-residual-confirmation.yml': 42_089,
 };
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'coverage', 'tmp']);
