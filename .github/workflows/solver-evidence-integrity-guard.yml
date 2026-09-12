@@ -11,7 +11,7 @@ on:
       - 'scripts/combine-paired-arm-integrity.mjs'
       - '.github/workflows/solver-*.yml'
       - 'logs/solver-stress-refresh/**'
-      - 'reports/stress/solver-evidence-integrity-index.json'
+      - 'reports/stress/**'
   workflow_dispatch:
 
 permissions:
