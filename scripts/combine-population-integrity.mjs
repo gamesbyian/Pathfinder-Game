@@ -15,8 +15,18 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
   }
   const expectedIds = inputs.flatMap(({ label, integrity }) => integrity.expectedIds.map(id => `${label}:${id}`));
   const outcomeKeys = [...new Set(inputs.flatMap(({ integrity }) => Object.keys(integrity.outcomes)))].sort();
+  const coverageComplete = inputs.every(({ integrity }) => (integrity.coverageComplete ?? integrity.complete) === true);
+  const decisionValidComplete = inputs.every(({ integrity }) => {
+    if (integrity.decisionValidComplete != null) return integrity.decisionValidComplete === true;
+    return (integrity.coverageComplete ?? integrity.complete) === true
+      && (integrity.outcomes.deadlineTruncated ?? 0) === 0
+      && (integrity.outcomes.harnessError ?? 0) === 0
+      && (integrity.outcomes.unknown ?? 0) === 0;
+  });
   return {
-    complete: inputs.every(({ integrity }) => integrity.complete === true),
+    complete: coverageComplete,
+    coverageComplete,
+    decisionValidComplete,
     expectedCount: inputs.reduce((sum, { integrity }) => sum + integrity.expectedCount, 0),
     observedCount: inputs.reduce((sum, { integrity }) => sum + integrity.observedCount, 0),
     duplicateIds: inputs.flatMap(({ label, integrity }) => integrity.duplicateIds.map(id => `${label}:${id}`)),
@@ -25,8 +35,14 @@ export function combinePopulationIntegrity(inputs, { kind = 'multi-population', 
     expectedIds,
     outcomes: Object.fromEntries(outcomeKeys.map(key => [key, inputs.reduce((sum, { integrity }) => sum + (integrity.outcomes[key] ?? 0), 0)])),
     populationIdentityHash: hashPopulation({ kind, identityBasis, identities: expectedIds }).identityHash,
-    components: inputs.map(({ label, integrity }) => ({ label, populationIdentityHash: integrity.populationIdentityHash ?? null,
-      expectedCount: integrity.expectedCount, observedCount: integrity.observedCount, complete: integrity.complete })),
+    components: inputs.map(({ label, integrity }) => ({
+      label,
+      populationIdentityHash: integrity.populationIdentityHash ?? null,
+      expectedCount: integrity.expectedCount,
+      observedCount: integrity.observedCount,
+      coverageComplete: integrity.coverageComplete ?? integrity.complete ?? false,
+      decisionValidComplete: integrity.decisionValidComplete ?? null,
+    })),
   };
 }
 
@@ -49,7 +65,7 @@ function main() {
   });
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, `${JSON.stringify(combined, null, 2)}\n`);
-  console.log(`Combined ${inputs.length} integrity records: ${combined.observedCount}/${combined.expectedCount} observed; complete=${combined.complete}.`);
+  console.log(`Combined ${inputs.length} integrity records: ${combined.observedCount}/${combined.expectedCount} observed; coverageComplete=${combined.coverageComplete}; decisionValidComplete=${combined.decisionValidComplete}.`);
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${path.resolve(process.argv[1])}`).href) {
