@@ -1,0 +1,64 @@
+name: tmp pre-Claude cheap evidence
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  cheap-evidence:
+    if: github.event.pull_request.head.ref == 'chatgpt/cross-line-research-integration-2026-09-12'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Rebuild corrected residual atlas
+        run: |
+          mkdir -p tmp/preclaude
+          node scripts/run-bundled.mjs scripts/stress/analyze-post-1029-residual-atlas.mjs -- \
+            --baseline=reports/stress/capability-runs/34683011115/per-level-corpus2.json \
+            --lifecycle=reports/stress/capability-runs/34683011115/lifecycle-failure-map-corpus2.json \
+            --census=reports/stress/technique-census/33717910218/combined-cells.json \
+            --hints-dir=data/stress/hints-random \
+            --out=tmp/preclaude/post-1048-atlas.json
+      - name: Summarize class-1/2/3 known capability
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const atlas = JSON.parse(fs.readFileSync('tmp/preclaude/post-1048-atlas.json','utf8'));
+          const rows = atlas.rows.filter(r => r.primaryClass <= 3);
+          const actions = new Map();
+          for (const row of rows) for (const win of row.t1Wins ?? []) {
+            const key = win.identity;
+            const a = actions.get(key) ?? {identity:key, levels:[], classes:{1:0,2:0,3:0}, isolatedNodes:[]};
+            a.levels.push(row.id); a.classes[win.class] = (a.classes[win.class]||0)+1;
+            if (Number.isFinite(win.nodes)) a.isolatedNodes.push(win.nodes);
+            actions.set(key,a);
+          }
+          const out = [...actions.values()].map(a => ({
+            ...a,
+            nLevels:a.levels.length,
+            medianIsolatedNodes:a.isolatedNodes.length ? a.isolatedNodes.sort((x,y)=>x-y)[Math.floor(a.isolatedNodes.length/2)] : null
+          })).sort((a,b)=>b.nLevels-a.nLevels || a.identity.localeCompare(b.identity));
+          fs.writeFileSync('tmp/preclaude/class123-actions.json', JSON.stringify({nRows:rows.length,actions:out,rows},null,2));
+          console.log(JSON.stringify({nRows:rows.length, topActions:out.slice(0,20)},null,2));
+          NODE
+      - name: Run all-corpus provenance relation audit
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- \
+            --corpus=all --out=tmp/preclaude/hint-provenance.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const r=JSON.parse(fs.readFileSync('tmp/preclaude/hint-provenance.json','utf8'));
+          fs.writeFileSync('tmp/preclaude/collision-summary.json',JSON.stringify(r.total.crossHintEventCollisionAudit,null,2));
+          console.log(JSON.stringify(r.total.crossHintEventCollisionAudit,null,2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preclaude-cheap-evidence
+          path: tmp/preclaude
+          if-no-files-found: error
