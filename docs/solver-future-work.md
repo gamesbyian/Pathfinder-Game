@@ -10,7 +10,9 @@ Closed work reopens only for a changed causal premise/treatment, not renewed int
 
 Capability memory is another **premise source, not a reopen exemption**. Complementary gains/losses, displaced winners and old regimes may nominate generic mechanisms, but historical same-level outcomes remain offline evidence until reconciled to current code/protocol. Descendants still owe the owning reopen gate plus normal level-blind evidence requirements. [`capability-memory closeout`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
 
-## Algorithmic frontier
+## Capability-acquisition frontier
+
+This is the acquisition side of the program: explain and create generic capability where current known actions do not suffice. Composition/selection of already-demonstrated capability stays in the live WS1/WS2 queue.
 
 At the provenance-audited post-1,029 boundary, class 5 contains **445** misses with no known admissible/T1 candidate; class 4 contains **143** zero-T1 levels with an explicit historical production-context candidate. The older 388/200 split is pre-audit historical sizing; the report that produced it is retained only for method/hypothesis history, not current cohort membership or odds ratios. See [`historical class4-vs5 contrast`](../reports/2026-09-11-algorithmic-frontier-class4-vs5-contrast-001.md).
 
@@ -22,7 +24,7 @@ The broad scorer-vocabulary discriminator is closed negative: the corrected 671-
 
 Use the evidence ladder **temporal persistence -> difficulty-stratified relative advantage -> existing-family controlled flips -> source-controlled solution-space mediator -> bounded operational first divergence**.
 
-Stages 1-2 leave 2/8 credible frozen pairs. Stage 3 succeeds for both: matched isolated resolves on `R02687`/objectiveFirst and `R02094`/intersectionHarvest show real `plain` vs `mechanic-buckets` sibling-response flips across 4/5 existing transform modes, with opposite net directions. Static object counts and portal-use timing do not mediate them. Next earned stage is must-cross-order/basin-style solution-space mediation or bounded operational first divergence for **these two pairs only**. [`report`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md)
+Stages 1-2 leave 2/8 credible frozen pairs. Stage 3 succeeds for both: matched isolated resolves on `R02687`/objectiveFirst and `R02094`/intersectionHarvest show real `plain` vs `mechanic-buckets` sibling-response flips across 4/5 existing family transform modes, with opposite net directions. Static object counts and portal-use timing do not mediate them. Next earned stage is must-cross-order/basin-style solution-space mediation or bounded operational first divergence for **these two pairs only**. [`report`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md)
 
 ## Deferred questions
 
