@@ -38,10 +38,10 @@
     {
       "id": "solver-workflow-evidence-remediation",
       "description": "Active solver workflow/result-contract/evidence-integrity remediation work.",
-      "required": ["AGENTS.md", "docs/solver-workflow-evidence-remediation-plan.md"],
-      "optional": ["docs/solver-research-operating-model.md", "docs/solver-evaluation-evidence.md", "docs/solver-budget-determinism.md", ".github/workflows/README.md"],
-      "warnBytes": 50000,
-      "maxBytes": 75000
+      "required": ["AGENTS.md", "docs/solver-workflow-evidence-remediation-plan.md", "docs/solver-workflow-remediation-implementation-handoff.md"],
+      "optional": ["docs/solver-evidence-integrity-index.schema.json", "docs/solver-research-operating-model.md", "docs/solver-evaluation-evidence.md", "docs/solver-budget-determinism.md", ".github/workflows/README.md"],
+      "warnBytes": 57000,
+      "maxBytes": 82000
     },
     {
       "id": "solver-scheduler-research",
@@ -122,6 +122,12 @@
       "purpose": "Active implementation plan for solver workflow/result integrity, retirements, and historical evidence repair; archive or mark complete after closeout.",
       "warnBytes": 28000,
       "maxBytes": 38000
+    },
+    {
+      "path": "docs/solver-workflow-remediation-implementation-handoff.md",
+      "purpose": "Compact execution handoff that locks lifecycle decisions, audit schema semantics, and the boundary before final scientific reinterpretation.",
+      "warnBytes": 12000,
+      "maxBytes": 16000
     },
     {
       "path": "docs/tooling-catalog.md",
