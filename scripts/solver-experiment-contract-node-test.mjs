@@ -93,6 +93,9 @@ assert.ok(decisionContractIssues(ambiguousPair).includes('experiment.resolvedSha
 const pairedWithoutContentSeal = clone(pairedCommon);
 delete pairedWithoutContentSeal.population.corpusIdentity;
 assert.ok(decisionContractIssues(pairedWithoutContentSeal).includes('population.corpusIdentity'), 'cross-SHA paired evidence must content-address its subjects');
+const pairedWithContentSeal = clone(pairedWithoutContentSeal);
+pairedWithContentSeal.population.corpusIdentity = `sha256:${'7'.repeat(64)}`;
+assert.equal(decisionContractIssues(pairedWithContentSeal).includes('population.corpusIdentity'), false, 'a content-addressed population seal makes cross-SHA subject identity explicit');
 const sameShaPair = clone(pairedWithoutContentSeal);
 sameShaPair.experiment.arms.treatment.resolvedSha = sameShaPair.experiment.arms.control.resolvedSha;
 assert.equal(decisionContractIssues(sameShaPair).includes('population.corpusIdentity'), false, 'same-SHA flags-only pairs cannot suffer cross-ref corpus drift');
