@@ -62,7 +62,6 @@ function categoryFor(relativePath) {
 }
 
 const failures = [];
-const staleGrandfathers = [];
 const seenGrandfathered = new Set();
 
 for (const absolute of walk(process.cwd())) {
@@ -82,7 +81,10 @@ for (const absolute of walk(process.cwd())) {
                 + `(category: ${category}, target: ${target}B). Shrinking is fine; growing past the frozen size is not.`,
             );
         } else if (size <= target) {
-            staleGrandfathers.push(`${relativePath}: now ${size}B, at/under the ${target}B ${category} target -- remove its GRANDFATHERED entry`);
+            failures.push(
+                `${relativePath}: now ${size}B, at/under the ${target}B ${category} target -- remove its stale GRANDFATHERED entry `
+                + 'so it cannot regrow above the normal target.',
+            );
         }
         continue;
     }
@@ -96,11 +98,6 @@ for (const relativePath of Object.keys(GRANDFATHERED)) {
     if (!seenGrandfathered.has(relativePath)) {
         failures.push(`GRANDFATHERED entry for ${relativePath} no longer resolves to a tracked file -- remove the stale entry.`);
     }
-}
-
-if (staleGrandfathers.length) {
-    console.log('File-size ratchet: grandfathered entries now under target (safe to delete from GRANDFATHERED):');
-    for (const line of staleGrandfathers) console.log(`  - ${line}`);
 }
 
 if (failures.length) {
