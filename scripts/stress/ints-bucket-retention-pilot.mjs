@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 /**
- * Bounded canary for the research-only `intsBucketRetention` beam frontier-selection mode
- * (search.ts's `_intsBucketSelect`, 2026-09-12). Generalizes the existing `mechanicBucketRetention`
- * pattern (`_mechanicBucketSelect`, bucketed by (mustCrossMask, flipperUsedMask)) to bucket by
- * `ints` (required-intersections visited) instead — the one landmark-progress scalar every beam
- * node tracks regardless of routing regime, unlike the mechanic key which collapses to a single
- * bucket (no diversity effect) on most of the intersection-heavy population this pilot targets.
+ * Bounded canary for two research-only/non-default beam frontier-selection modes on the frozen
+ * 28-level first-loss frontier population: `--mode=ints` (default; search.ts's `_intsBucketSelect`,
+ * 2026-09-12, bucketed by `ints`/required-intersections-visited) and `--mode=mechanic` (the
+ * EXISTING, already-promoted `mechanicBucketRetention`/`_mechanicBucketSelect`, bucketed by
+ * (mustCrossMask, flipperUsedMask), applied here purely as a routing-eligibility experiment: all
+ * 28 of these intersection-heavy-regime levels turn out to have nonzero mustCross counts (1-8) —
+ * checked directly, not assumed — so this existing mechanism has real bucket diversity available
+ * on them even though current `ATTEMPT_POLICY` never routes them to a mechanic-bucket-retaining
+ * beam config (that retention mode is reserved for the must-cross-heavy routing regime). No new
+ * code is exercised for `--mode=mechanic`; it is zero-cost evidence about whether an already-live
+ * mechanism, simply never offered to this regime, would help if it were.
  *
+
  * Why now: docs/solver-optimization-workstreams.md's WS2/WS4 gate requires either cross-action
  * recurrence (tested negative — repair's failure mode is exposure, not rank-retention-loss; see
  * reports/2026-09-11-repair-side-first-loss-exposure-001.md) or "a materially new bounded retention
@@ -37,7 +43,9 @@
  *
  * Usage:
  *   node scripts/run-bundled.mjs scripts/stress/ints-bucket-retention-pilot.mjs -- \
- *     --out=reports/stress/ints-bucket-retention-pilot-001.json
+ *     --mode=ints --out=reports/stress/ints-bucket-retention-pilot-001.json
+ *   node scripts/run-bundled.mjs scripts/stress/ints-bucket-retention-pilot.mjs -- \
+ *     --mode=mechanic --out=reports/stress/mechanic-bucket-on-intersection-heavy-pilot-001.json
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -51,6 +59,8 @@ const levelsFile = args.get('--levels') ?? 'data/stress/stress-levels-random.jso
 const beamWidth = Number(args.get('--beam-width') ?? 2000);
 const nodeBudget = Number(args.get('--node-budget') ?? 3000000);
 const outFile = args.get('--out') ?? 'reports/stress/ints-bucket-retention-pilot-001.json';
+const mode = args.get('--mode') ?? 'ints';
+if (mode !== 'ints' && mode !== 'mechanic') throw new Error(`--mode must be 'ints' or 'mechanic', got '${mode}'`);
 
 // Frozen population: dev sample (14) + confirmation sample (14), verbatim from the two source
 // reports' own tables. Do not resample or curate.
@@ -101,8 +111,11 @@ for (const id of POPULATION) {
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
 
     const treatment = runArm('treatment');
-    const treatmentPath = await api.beamSearchFromGate(gateKey, level, treatment.prep, api.SCORING_PROFILES.default,
-        120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget, undefined, undefined, undefined, true);
+    const treatmentPath = mode === 'ints'
+        ? await api.beamSearchFromGate(gateKey, level, treatment.prep, api.SCORING_PROFILES.default,
+            120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget, undefined, undefined, undefined, true)
+        : await api.beamSearchFromGate(gateKey, level, treatment.prep, api.SCORING_PROFILES.default,
+            120000, Date.now(), null, beamWidth, null, true, {}, nodeBudget);
 
     const controlSummary = control.observer.summary(level.requiredLength);
     const treatmentSummary = treatment.observer.summary(level.requiredLength);
@@ -132,8 +145,8 @@ for (const id of POPULATION) {
 
 const document = {
     schemaVersion: 1, generatedAt: new Date().toISOString(), levelsFile,
-    purpose: 'ints-bucket-retention canary on the frozen 28-level first-loss frontier population',
-    beamWidth, nodeBudget, population: POPULATION, rows,
+    purpose: `${mode}-bucket-retention canary on the frozen 28-level first-loss frontier population`,
+    mode, beamWidth, nodeBudget, population: POPULATION, rows,
     summary: {
         levels: rows.length,
         controlSolved: rows.filter(r => r.control.solved).length,
