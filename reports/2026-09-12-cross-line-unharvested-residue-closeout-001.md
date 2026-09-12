@@ -17,7 +17,7 @@ Bounded use only:
 - ask whether high diffuse-rescue parents also show distinctive capacity/slack/topology-scarcity values under a descriptor already chosen for independent reasons;
 - treat any association as development evidence, never as a runtime feature or causal proof.
 
-This does not reopen family/reference causal analysis.
+This does not reopen family/reference causal analysis. To avoid circular validation, perturbation rescue density must not select the descriptor that it is later used to corroborate.
 
 ## 2. Mechanic-composition clean/confounded cases are calibration controls
 
@@ -28,7 +28,7 @@ If the active future-feasibility pass chooses a **joint-obligation compatibility
 - `R01274`, `R01882`: positive mechanism controls;
 - `R01849`, `R02036`: confound controls that a useful descriptor should not naively interpret as proof of the targeted obligation mechanism.
 
-No new Stage-C run is implied. The existing pilot result supplies the labels. This is supplementary calibration only; B1/B2 + `R03229` remain the owning exact-feasibility evidence.
+No new Stage-C run is implied. The existing pilot result supplies the labels. This is supplementary calibration only; B1/B2 + `R03229` remain the owning exact-feasibility evidence. These four cases may challenge a descriptor selected from the owning evidence, not choose that descriptor and then validate it.
 
 ## 3. Useful diversity versus viable optionality
 
