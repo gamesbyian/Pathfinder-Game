@@ -2,7 +2,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readResearchWorkflowOutcome } from './research-workflow-outcome.mjs';
-import { EXPERIMENT_RESULT_KIND, EXPERIMENT_SCHEMA_VERSION, buildPopulationIntegrity, hashPopulation } from './solver-experiment-contract.mjs';
+import {
+  EXPERIMENT_RESULT_KIND,
+  EXPERIMENT_SCHEMA_VERSION,
+  buildPopulationIntegrity,
+  decisionContractIssues,
+  hashPopulation,
+} from './solver-experiment-contract.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -160,10 +166,15 @@ if (control && treatment) {
   const treatmentHash = treatmentParsed?.population?.identityHash ?? null;
   const controlDecisionValid = isDecisionValidIntegrity(controlParsed?.populationIntegrity);
   const treatmentDecisionValid = isDecisionValidIntegrity(treatmentParsed?.populationIntegrity);
-  const compatible = Boolean(controlHash && controlHash === treatmentHash && controlDecisionValid && treatmentDecisionValid);
+  const populationMatched = Boolean(controlHash && controlHash === treatmentHash && controlDecisionValid && treatmentDecisionValid);
   comparison = {
-    decisionBearing: compatible,
-    reason: compatible ? 'matched population hashes and decision-valid population integrity' : 'population identity or decision-valid integrity is absent/incompatible',
+    // This generic publisher can establish matched subjects and valid rows, but it cannot prove that
+    // every non-treatment protocol dimension was held equal. A workflow-specific controlled-contrast
+    // validator must own causal/decision-bearing A/B status.
+    decisionBearing: false,
+    reason: populationMatched
+      ? 'matched population and decision-valid rows; controlled-contrast protocol proof is still required'
+      : 'population identity or decision-valid integrity is absent/incompatible',
     gained: [...b].filter(id => !a.has(id)).sort(),
     lost: [...a].filter(id => !b.has(id)).sort(),
     workDeltaPct: control.work ? 100 * (treatment.work - control.work) / control.work : null,
@@ -213,7 +224,10 @@ const contract = {
     producer: declaredContract?.experiment?.producer ?? primaryDocument?.producer ?? null,
     entrypoint: declaredContract?.experiment?.entrypoint ?? primaryDocument?.entrypoint ?? null,
     requestedRef: declaredContract?.experiment?.requestedRef ?? process.env.GITHUB_REF ?? null,
-    resolvedSha: declaredContract?.experiment?.resolvedSha ?? process.env.GITHUB_SHA ?? null,
+    // Never substitute GITHUB_SHA for a declared experiment's execution identity: custom-checkout
+    // workflows can execute a different ref. The shared contract writer stamps git HEAD instead.
+    resolvedSha: declaredContract?.experiment?.resolvedSha ?? null,
+    arms: declaredContract?.experiment?.arms ?? null,
     workflowRunId: process.env.GITHUB_RUN_ID ?? null,
     workflowRunAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
     sourceRuns: declaredContract?.experiment?.sourceRuns ?? [],
@@ -223,6 +237,8 @@ const contract = {
   population: {
     kind: declaredContract?.population?.kind ?? primaryDocument?.population?.kind ?? null,
     identityBasis: declaredContract?.population?.identityBasis ?? primaryDocument?.population?.identityBasis ?? null,
+    corpusIdentity: declaredContract?.population?.corpusIdentity ?? primaryDocument?.population?.corpusIdentity ?? null,
+    selection: declaredContract?.population?.selection ?? primaryDocument?.population?.selection ?? null,
     identityHash: populationIdentity,
     expectedCount: populationIntegrity?.expectedCount ?? null,
     observedCount: populationIntegrity?.observedCount ?? null,
@@ -254,6 +270,8 @@ const contract = {
     reports: declaredContract?.sideEffects?.reports ?? 'unknown',
   },
 };
+const contractIssues = declaredContract ? decisionContractIssues(contract) : ['missing declared experiment contract'];
+const contractDecisionEligible = contractIssues.length === 0;
 
 const manifest = {
   schemaVersion: EXPERIMENT_SCHEMA_VERSION,
@@ -273,7 +291,8 @@ const manifest = {
   artifactCoverage,
   populationIntegrity,
   populationIdentityHash: populationIdentity,
-  decisionBearing: Boolean(integrityDecisionValid && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
+  decisionContractIssues: contractIssues,
+  decisionBearing: Boolean(contractDecisionEligible && integrityDecisionValid && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
   ...contract,
   researchOutcome,
   entries,
@@ -304,6 +323,7 @@ if (populationIntegrity) {
   lines.push(`- Population coverage: ${populationIntegrity.observedCount}/${populationIntegrity.expectedCount} observed; ${populationIntegrity.missingIds?.length ?? populationIntegrity.outcomes?.missing ?? 0} missing-indeterminate; ${coverageComplete ? 'complete' : '**INCOMPLETE**'}`);
   lines.push(`- Decision-valid observations: ${integrityDecisionValid ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
 } else lines.push('- Population integrity: **unknown / non-decision-bearing** (no validated intended population supplied)');
+lines.push(`- Decision contract: ${contractDecisionEligible ? 'complete' : `**INCOMPLETE / NON-DECISION-BEARING** (${contractIssues.join(', ')})`}`);
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
 
