@@ -1,10 +1,9 @@
 // The legacy-latency-portfolio-experiment scheduler mode: a fixed pass1/pass2/pass3 (+ optional
 // feature-gated conditional passes) portfolio over a shared attempt-config list, falling back to
-// the ordinary production solveLevel() ladder when no pass solves. Falling back through
-// solveLevel (orchestration.ts) makes this module and orchestration.ts mutually referential — safe
-// under ESM because solveLevel is only ever called from inside this async function's body, well
-// after both modules finish loading. See orchestration.ts's header for the split this file is
-// part of.
+// the ordinary production solveLevel() ladder when no pass solves. The fallback solve function is
+// injected by the caller (orchestration.ts passes its own solveLevel) rather than imported
+// directly, so this module has no dependency on orchestration.ts at all — see orchestration.ts's
+// header for the split this file is part of.
 import { LEGACY_LATENCY_PORTFOLIO_EXPERIMENT } from './legacy-latency-portfolio-experiment.js';
 import { getConfiguredAttemptConfigs } from './attempts.js';
 import { prepLevel } from './prep.js';
@@ -14,7 +13,12 @@ import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig } from './types.js';
 import { attemptConfigKey, normalizeAblationConfig, getActiveGates, hasAttemptError } from './orchestration-contracts.js';
 import type { Attempt, AttemptResult, SolveOpts, SolveResult, YieldFn, LegacyLatencyPortfolioExperimentDefinition } from './orchestration-contracts.js';
-import { solveLevel } from './orchestration.js';
+
+/** The production ladder solveLevel() reaches for when every portfolio pass fails — injected
+ *  rather than imported so this module never depends on orchestration.ts (see this file's own
+ *  header). Always solveLevel itself in production; a test-only stand-in would need to reproduce
+ *  the full SolveResult contract. */
+export type ProductionFallbackSolve = (level: NormalizedLevel, opts: SolveOpts) => Promise<SolveResult>;
 
 function legacyLatencyPortfolioFeatureSummary(level: NormalizedLevel): Record<string, number> {
     return {
@@ -50,6 +54,7 @@ async function runAttemptSlice(
 
 export async function runLegacyLatencyPortfolioExperiment(
     level: NormalizedLevel, opts: SolveOpts, timeBudgetMs: number, yieldFn: YieldFn,
+    productionSolve: ProductionFallbackSolve,
 ): Promise<SolveResult> {
     const experiment = opts.legacyLatencyPortfolioExperiment ?? opts.portfolioExperiment ?? LEGACY_LATENCY_PORTFOLIO_EXPERIMENT;
     const portfolioStart = Date.now();
@@ -131,7 +136,7 @@ export async function runLegacyLatencyPortfolioExperiment(
         };
     }
 
-    const fallback = await solveLevel(level, { ...opts, schedulerMode: 'production', timeBudgetMs });
+    const fallback = await productionSolve(level, { ...opts, schedulerMode: 'production', timeBudgetMs });
     const fallbackAttempts = fallback.attempts.map(attempt => ({ ...attempt, schedulerPhase: 'fallback' as const }));
     const combinedAttempts = [...attempts, ...fallbackAttempts];
     const totalMs = Date.now() - portfolioStart;

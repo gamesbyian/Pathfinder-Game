@@ -81,7 +81,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             ? 'production'
             : opts.schedulerMode;
     if (schedulerMode === 'legacy-latency-portfolio-experiment') {
-        return runLegacyLatencyPortfolioExperiment(level, opts, timeBudgetMs, yieldFn);
+        return runLegacyLatencyPortfolioExperiment(level, opts, timeBudgetMs, yieldFn, solveLevel);
     }
     if (schedulerMode === 'static-portfolio') {
         if (!opts.staticPortfolio) throw new Error("solveLevel: schedulerMode 'static-portfolio' requires opts.staticPortfolio");
