@@ -30,7 +30,7 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 - **Freshness reconciliation:** suspicious same-revision `isolatedTechnique` successes were **5/5 T1 variants and 0/5 base T1**, all `coarse-state-near-tie-retention-off`; production already reaches the corresponding retry. Future provenance retains census-cell identity. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 - **Single-level microscope:** `R03229` at its width-2000 first-loss boundary gives **LIVE known culled witness / DEAD rank-1 survivor / DEAD cutoff survivor**. This is recurrence of the August B1/B2 mechanism class, not a new premise. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
-**Current acquisition gate: bounded future-feasibility rejoin.** Rejoin the existing B1/B2 + R03229 exact-labelled states and test at most 2-4 runtime-legal summaries from three families: exact-resource attainable capacity, residual topology scarcity, and joint-obligation compatibility. A candidate must add information beyond current score/rank and hard-prune outcome and recur across unrelated parents. If none survives, close this route and seek a different architectural premise. [`handoff`](../reports/2026-09-12-future-feasibility-premise-rejoin-001.md)
+**Current acquisition gate: bounded future-feasibility rejoin.** Rejoin B1/B2 + `R03229` and test at most 2-4 runtime-legal summaries from exact-resource capacity, residual-topology scarcity, and joint-obligation compatibility. Same-day evidence constrains interpretation: mechanic-bucket retention demonstrably preserves fresh progress on selected solved siblings but both class-5 bucket canaries are solve-null, so progress/bucket rarity is a negative control rather than future-feasibility evidence; independent perturbation probes are also difficulty-confounded, increasing the value of measuring slack/scarcity directly. Require information beyond score/rank/prunes/progress masks and recurrence across unrelated parents; otherwise close the route. [`handoff`](../reports/2026-09-12-future-feasibility-premise-rejoin-001.md)
 
 **Novelty bar:** B1/B2 already established both `dead rank-1 / live known alternative` and `live / live` shapes; `R03229` reproduces the first on a clean class-5 specimen. Advancement requires a recurring mechanism-specific distinction that explains exact future feasibility better than current score/prune information. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md)
 
@@ -40,15 +40,15 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path and capability-memory evidence to distinguish `not exposed` from `exposed-and-failed`, and technique-relative response from shared-capability failure. Historical IDs/outcomes/hints remain offline diagnostics. Production selectors need legal generic current-level/current-solve signals and confirmation proportional to selection pressure. [`evidence layer`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md)
 
-**Cross-hint provenance relation audit active as cheap existing-data work.** Measure whether one canonical discovery-event identity is attached to multiple distinct paths on the same level. Classify exact collisions by producer multiplicity contract before any near-collision or determinism replay; only unexplained cases may nominate schema repair or bounded determinism checks. [`report`](../reports/2026-09-12-cross-hint-provenance-relations-001.md)
+**Cross-hint provenance relation audit active as cheap existing-data work.** Measure whether one canonical discovery-event identity is attached to multiple distinct paths on the same level. Classify exact collisions by producer multiplicity contract before any near-collision or determinism replay; until classified, repeated paths carrying one event identity are dependent evidence, not independent capability discoveries. [`report`](../reports/2026-09-12-cross-hint-provenance-relations-001.md)
 
-**Structural-response extension closed for both frozen pairs (`R02687`/objectiveFirst, `R02094`/intersectionHarvest).** Stage 3 found real family response flips; stages 4-5 found no licensed selector from n=2. Reopen only for a new pair/premise. [`stage 3`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md), [`stage 4`](../reports/2026-09-12-ws1-stage4-solution-space-mediation-result-001.md), [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
+**Structural-response extension closed for both frozen pairs (`R02687`/objectiveFirst, `R02094`/intersectionHarvest).** Stage 3 found real family response flips; stages 4-5 found no licensed selector from n=2. Reopen only for a new pair/premise. Its operational result is still useful cross-workstream evidence: mechanic buckets protect newly created progress modes, which constrains but does not solve WS2's future-feasibility problem. [`stage 3`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md), [`stage 4`](../reports/2026-09-12-ws1-stage4-solution-space-mediation-result-001.md), [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
 
 ### 3. Parallel capability-acquisition probe
 
 **State:** CLOSED — portal-terminal relocation instrument is confounded.
 
-The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 general-difficulty confounds, and one non-reproduced rescue. Reopen only with a materially different manipulation that preserves the coupled cluster without relocating a general-navigation landmark. [`result`](../reports/2026-09-12-mechanic-composition-pilot-001-result.md)
+The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 general-difficulty confounds, and one non-reproduced rescue. Together with population-scale `swap`/`cs` confounding, this is evidence against causal inference from raw perturbation rescue; reopen only with a materially different manipulation that preserves the coupled cluster and proves the specific edit rather than generic loosening caused the effect. [`result`](../reports/2026-09-12-mechanic-composition-pilot-001-result.md)
 
 ## Workstream state
 
@@ -70,6 +70,7 @@ The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 
 - Level-blindness is not generalization. IDs, historical outcomes, hints, family labels and capability-memory membership never become runtime routing inputs.
 - Preserve **disposition** and **capability signature** separately. Closed treatments may remain useful offline evidence.
 - Historical gain/loss intersections with current residual are nominations until reconciled under current code/protocol; missing provenance stays unknown.
+- Provenance multiplicity is dependence unless the producer contract says otherwise: multiple paths carrying one canonical discovery-event identity do not become independent evidence by row count.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
 - Hold out independent units and scale confirmation with tuning/selection pressure.
 - Reusable benchmark/census rows require matching protocol identity; nominal stage reach is not participation.
@@ -78,7 +79,7 @@ The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 
 - A validated hint prefix proves that prefix live, not that alternatives are dead.
 - Before escalating a persistent residual, ask whether materially different actions lose known-live material at the same boundary.
 - A single-level microscope may generate a premise, never a production exception; require an independent phenotype-matched check before scaling.
-- Future-feasibility descriptors must be runtime-legal and incremental to current score/prune information; exact labels are offline truth, never runtime steering.
+- Future-feasibility descriptors must be runtime-legal and incremental to current score/prune/progress information; exact labels are offline truth, never runtime steering.
 - Reconcile old questions against newer evidence before new compute. Prefer the smallest information-value test.
 
 ## Cheap evidence routing
