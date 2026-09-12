@@ -74,6 +74,7 @@ export function makeProvenanceEntry(technique, opts = {}) {
             hintGuided: opts.hintGuided ?? false,
             levelRevision: opts.levelRevision ?? null,
             isolatedTechnique: opts.isolatedTechnique ?? false,
+            techniqueCensusCell: opts.techniqueCensusCell ?? null,
         },
         foundAt: opts.foundAt ?? new Date().toISOString(),
     };
@@ -211,6 +212,14 @@ export function upgradeProvenanceEntry(raw) {
             solver,
             search: legacySolver.technique === WITNESS_GENERATOR_ID && legacySolver.id !== WITNESS_GENERATOR_ID
                 ? { ...raw.search, termination: 'witness' } : raw.search,
+            context: {
+                ...(raw.context || {}),
+                usedExistingHints: raw.context?.usedExistingHints ?? false,
+                hintGuided: raw.context?.hintGuided ?? false,
+                levelRevision: raw.context?.levelRevision ?? null,
+                isolatedTechnique: raw.context?.isolatedTechnique ?? false,
+                techniqueCensusCell: raw.context?.techniqueCensusCell ?? null,
+            },
         };
     }
     const technique = raw?.technique || raw?.solverTechnique || 'unknown';
