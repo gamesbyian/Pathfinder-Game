@@ -105,13 +105,19 @@ export class KnownSolutionPrefixSurvivalObserver implements BeamResearchObserver
     summary(requiredLength: number): Record<string, unknown> {
         // Removal-event records describe what left a population, not the surviving population.
         // Only boundary snapshots participate in extinction accounting.
-        const boundaries = this.stages.filter(s => !['generated', 'hard-pruned', 'coarse-state-merge-removed', 'score-width-culled', 'mechanic-bucket-culled'].includes(s.stage));
+        // 'ints-bucket-culled' (2026-09-12, research-only retention mode — see search.ts's own
+        // comment on `_intsBucketSelect`) is additive here: it is a removal-event stage exactly
+        // like 'score-width-culled'/'mechanic-bucket-culled', so it must be excluded from
+        // `boundaries` and recognized as a loss cause the same way, or a run using this retention
+        // mode would silently misattribute its own extinction point.
+        const removalStages = ['generated', 'hard-pruned', 'coarse-state-merge-removed', 'score-width-culled', 'mechanic-bucket-culled', 'ints-bucket-culled'];
+        const boundaries = this.stages.filter(s => !removalStages.includes(s.stage));
         const supported = boundaries.filter(s => s.supportedCandidates > 0);
         const losses = boundaries.filter((s, i) => i > 0 && boundaries[i - 1].supportedCandidates > 0 && s.supportedCandidates === 0)
             .map(loss => {
                 const lossIndex = this.stages.indexOf(loss);
                 const removal = this.stages.slice(0, lossIndex).reverse().find(s => s.depth === loss.depth &&
-                    s.supportedCandidates > 0 && ['hard-pruned', 'coarse-state-merge-removed', 'score-width-culled', 'mechanic-bucket-culled'].includes(s.stage));
+                    s.supportedCandidates > 0 && (s.stage === 'hard-pruned' || s.stage === 'coarse-state-merge-removed' || s.stage === 'score-width-culled' || s.stage === 'mechanic-bucket-culled' || s.stage === 'ints-bucket-culled'));
                 return { ...loss, lossCause: removal?.stage ?? (loss.stage === 'incoming-frontier' ? 'not-generated' : loss.stage) };
             });
         const last = supported.at(-1) ?? null;

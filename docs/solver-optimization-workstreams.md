@@ -18,7 +18,7 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 
 **Canonical production boundary:** run `34683011115` (first refresh with `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` folded into production default-on, `lifecycle_telemetry=true`; independently reproduced by the earlier `34674256538`) is **100/102 Corpus 1 + 1,048/1,700 Corpus 2**, leaving **652 Corpus-2 misses** (down from 671).
 
-**Residual atlas (rebuilt):** 22 not-offered (3.4%), 17 offered-but-unreached/starved (2.6%), 48 reached/comparable-work-failed (7.4%, up from 5.4% despite the smaller residual), 125 no-T1-winner-but-historical-candidate (19.2%), and **440 no known admissible/T1 candidate (67.5%)**. [`rebuild`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md)
+**Residual atlas (rebuilt, then corrected):** 22 not-offered (3.4%), 39 offered-but-unreached/starved (6.0%), 37 reached/comparable-work-failed (5.7%), 123 no-T1-winner-but-historical-candidate (18.9%), and **431 no known admissible/T1 candidate (66.1%)**. [`rebuild`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md); corrected after a T1-census join bug (`variantLabel` bookkeeping wrongly excluded all `repair|guidance=turn-biased` wins) moved 9 rows from class 5 to class 2 — [`fix`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md). Priority order unchanged.
 
 **Current dispositions** (full evidence in the opt-in ledger and linked reports):
 
@@ -31,15 +31,9 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 - portfolio-18 same-policy resumable residual tranche: **CLOSED NULL**; [`result`](../reports/portfolio/resumable-tranche-development-ab-001/result.md)
 - admissible-order retry `1.0 -> 0.18`: **DEFERRED**; [`methodology`](../reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md)
 
-**First-loss program:** two disjoint 14-level samples reproduce the same beam phenotype (score-width culls, little benefit from wider beams); DFS cross-checks don't establish a shared scorer failure. [`development`](../reports/2026-09-11-bounded-class4-class5-first-loss-phenotyping-001.md), [`confirmation`](../reports/2026-09-11-ws2-independent-first-loss-confirmation-001.md)
+**First-loss program:** two disjoint 14-level samples reproduce the same beam phenotype (score-width culls); DFS falsifies a shared-scorer failure. [`development`](../reports/2026-09-11-bounded-class4-class5-first-loss-phenotyping-001.md), [`confirmation`](../reports/2026-09-11-ws2-independent-first-loss-confirmation-001.md). **Repair-side:** natural repair search barely approaches the same trajectories even at 10x budget; seeded at beam-cull state only 4/28 reconstruct — too small to justify a mechanism. [`report`](../reports/2026-09-11-repair-side-first-loss-exposure-001.md) **Ints-bucket retention canary** (the confirmation report's own earn condition): frontier selection bucketed by `ints` instead of `(mustCrossMask, flipperUsedMask)`, A/B'd on the same population — zero new solves, deltas inside the existing width-insensitivity noise band. **CLOSED NEGATIVE.** [`report`](../reports/2026-09-12-ints-bucket-retention-canary-001.md)
 
-**Repair-side follow-up complete:** natural repair search doesn't approach the known-live beam trajectories even at 10x budget. Seeded at beam-cull state, only 4/28 are reconstructable; n=4 nominates a Card-E continuation question but is too small to justify a mechanism. [`report`](../reports/2026-09-11-repair-side-first-loss-exposure-001.md)
-
-**Refresh/residual rejoin are complete; the bounded capability-memory census is only partially executed.** Its first candidate, the closed-negative portal-coarse-state-merge historical signature, contributes 137 current-residual nominations, 114/137 inside class 4 and **zero** inside class 5. That is strong evidence that this candidate adds no class-5 reach and that 114/125 class-4 rows are substantially one already-diagnosed historical mechanism. It is **not** evidence that materially distinct policies have no complementarity, because the prespecified small multi-mechanism census has not yet been completed. [`census`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md)
-
-**Next gate:** proceed in parallel on two tracks: (1) class-5-targeted first-loss/family/reference acquisition work remains the first-priority solve-oriented line; (2) cheaply recover exact gain/loss IDs for a small number of materially distinct capability-memory sources already named by the census prespecification (goal-attraction guidance, repair turn-bias, compact class-1 beam evidence, protocol-compatible displaced winners), and test whether any reach class 5 or establish genuine cross-policy overlap/uniqueness. Do not launch reruns merely to fill the census and do not create a permanent policy panel.
-
-The production refresh -> residual rejoin sequence is complete for this cycle. Capability-memory completion is now a cheap parallel evidence task, not a serial blocker on class-5 acquisition work.
+**Bounded capability-memory census: CLOSED — no class-5 complementarity.** All 6 prespecified sources nominate 65/652 (10.0%) of the residual, zero in class 5. [`first candidate`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md); [`remaining sources + atlas fix`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md) Do not reopen without a materially new source. Class-5 acquisition work is the sole first-priority line; the atlas fix's 9-level `repair-turn-biased` exposure gap is an independent, non-blocking WS1 question.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -63,14 +57,14 @@ The bounded 5-parent Stage A/B/C pilot ran to completion: 2/5 parents show the p
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Class-5 acquisition work proceeds now; in parallel, finish the bounded capability-memory census only from cheaply recoverable exact evidence for materially distinct sources. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL** | Stage 4 solution-space mediation closed negative for both pairs; next is bounded operational first divergence (needs new small instrumentation). |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Capability-memory census closed (no class-5 reach across 6 sources); class-5 acquisition work (first-loss/family/reference/exact-adjudication) is the sole active line. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL** | Stage 4 solution-space mediation closed negative for both pairs; next is bounded operational first divergence (new small instrumentation). Also: 9 residual levels where `repair-turn-biased` has a real T1 win production's repair family never dispatches. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or new hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
 | 8 | Cheap isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are action-selection evidence, not permanent tail entitlement. |
 | 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence. |
-| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | Reopen only for independent recurrence across materially distinct actions or a new bounded descriptor. |
+| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | Both reopen routes tested and closed: cross-action recurrence (repair's failure is exposure, not rank-retention-loss) and a new bounded descriptor (`intsBucketRetention` canary, closed negative). Reopen only for a materially different retention axis with its own argument for separating the competing pool. |
 | 5 | Exact/reference-model program | **ON DEMAND** | Adjudicate nominated states/prefixes; broad expansion needs a new prespecified question. |
 
 The mechanic-composition probe is an earned bounded experiment, not a new workstream ID.

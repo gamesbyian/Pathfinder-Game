@@ -524,12 +524,15 @@ export async function dfsFromGateLDS(startKey: number, level: NormalizedLevel, p
 // integer through the schema's full 32-filter cap (`2 ** 32` is exact as an ordinary float), so
 // unlike the coarse-state key this needs no per-level overflow fallback — only the sign
 // normalization above.
-function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
+// Shared partition-then-fill primitive behind both bucketed retention modes below: group by an
+// exact numeric bucket key, guarantee floor(beamWidth/numBuckets) slots per bucket (highest-score
+// first within each bucket, since `sorted` is already score-sorted descending), then fill the
+// remainder from the global score order. A single-bucket population degrades to plain top-K,
+// matching `widthSelected`'s own behavior exactly (no diversity axis, no distortion).
+function _bucketSelectByKey(sorted: BeamNode[], beamWidth: number, keyFn: (c: BeamNode) => number): BeamNode[] {
     const buckets = new Map<number, BeamNode[]>();
     for (const c of sorted) {
-        // c.flipperUsedMask >>> 0: same unsigned-normalization reason as beamNumericCoarseStateKey's
-        // own comment — a real 32-flipper-filter level can set bit 31, making the raw int32 negative.
-        const key = c.mustCrossMask * flipperBase + (c.flipperUsedMask >>> 0);
+        const key = keyFn(c);
         let b = buckets.get(key);
         if (!b) { b = []; buckets.set(key, b); }
         b.push(c);
@@ -552,6 +555,49 @@ function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBas
     return result;
 }
 
+// Mechanic-bucket retention selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
+// retains at least floor(beamWidth/numBuckets) candidates. The remaining slots
+// are filled from the global top of the score-sorted list.
+// `sorted` must already be sorted descending by score; bucketed by a numeric stateKey
+// (`mustCrossMask * flipperBase + flipperUsedMask`, `flipperBase` the caller's precomputed
+// `2 ** flipperCount` — always strictly larger than any real UNSIGNED `flipperUsedMask`, so this is
+// an exact, always-collision-free positional encoding, same reasoning as beamNumericCoarseStateKey's
+// own comment; both the base and the composed `flipperUsedMask` need `>>> 0` normalization at the
+// call site below, since `validateRawLevel` permits up to 32 flipping filters and a real 32-filter
+// level's mask legitimately sets bit 31). Used to be `(flipperUsedMask << 4) | (mustCrossMask & 0xF)` — a narrower defect than
+// the coarse-state key's old bug (mustCrossMask's `&0xF` mask sits below flipperUsedMask's shifted
+// range, so it can't corrupt flipperUsedMask's bits the way the old coarse-state key's fields corrupted
+// each other), but still the same root cause: mustCrossMask silently ALIASES (bits above the 4th
+// discarded, not shifted anywhere) on any level with more than 4 must-cross cells (stress-corpus-2
+// raises the cap to 8) — e.g. mustCrossMask=1 and mustCrossMask=17 (a 5th must-cross cell pending)
+// both truncated to the same bucket. Same class of bug, just feeding a soft diversity heuristic
+// rather than a hard merge/discard decision, so it degraded bucketing precision rather than
+// costing solves outright. Fixed alongside the coarse-state key, 2026-08-06 — see
+// reports/2026-08-06-beam-state-dedup-sound-signature-audit.md. `mustCrossMask` is always small
+// (well under 2^16 even at stress-corpus-2's raised 8-cell caps) and `flipperBase` stays a safe
+// integer through the schema's full 32-filter cap (`2 ** 32` is exact as an ordinary float), so
+// unlike the coarse-state key this needs no per-level overflow fallback — only the sign
+// normalization above.
+function _mechanicBucketSelect(sorted: BeamNode[], beamWidth: number, flipperBase: number): BeamNode[] {
+    // c.flipperUsedMask >>> 0: same unsigned-normalization reason as beamNumericCoarseStateKey's
+    // own comment — a real 32-flipper-filter level can set bit 31, making the raw int32 negative.
+    return _bucketSelectByKey(sorted, beamWidth, c => c.mustCrossMask * flipperBase + (c.flipperUsedMask >>> 0));
+}
+
+// Research-only, opt-in, default-off (see `intsBucketRetention` param on `beamSearchFromGate`):
+// buckets purely by `c.ints` (required-intersections visited so far), the one landmark-progress
+// scalar tracked on every beam node regardless of routing regime — unlike mechanic-bucket
+// retention's `(mustCrossMask, flipperUsedMask)` key, which collapses to a single bucket (plain
+// top-K, no diversity effect) on any level without live must-cross/flipper mechanics, i.e. most of
+// the intersection-heavy population the 2026-09-11 first-loss phenotyping/confirmation reports
+// characterized. Reuses `_bucketSelectByKey`'s identical partition-then-fill algorithm; the only
+// difference from `_mechanicBucketSelect` is the bucket key. Not wired into any production
+// `ATTEMPT_POLICY` entry — see `docs/solver-optimization-workstreams.md` WS2/WS4 for the evidence
+// gate this exists to test before any promotion decision.
+function _intsBucketSelect(sorted: BeamNode[], beamWidth: number): BeamNode[] {
+    return _bucketSelectByKey(sorted, beamWidth, c => c.ints);
+}
+
 /** Standalone (extract-only, zero behavior change) composition of the fast numeric coarse-state
  *  key documented in `beamSearchFromGate`'s own comment above the `_flipperBase`/`_mcBase`/etc.
  *  declarations — pulled out of that closure so it is directly unit-testable (see
@@ -570,6 +616,8 @@ function _composeBeamNumericCoarseStateKey(bases: {
 /** Test-only alias, same naming convention as __pruneFirstStepNeighborsForTests/
  *  __reconstructBeamPathForTests below. */
 export const __mechanicBucketSelectForTests = _mechanicBucketSelect;
+/** Test-only alias for the research-only ints-bucket retention mode (see its own comment). */
+export const __intsBucketSelectForTests = _intsBucketSelect;
 /** Test-only alias for _composeBeamNumericCoarseStateKey (see its own comment). */
 export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoarseStateKey;
 
@@ -658,8 +706,14 @@ export const __composeBeamNumericCoarseStateKeyForTests = _composeBeamNumericCoa
 // own production-width equivalence test for the measured overshoot magnitude on a real fixture.
 // True mid-phase-exact capture (preserving the partial `cands`/walk-position state) remains a
 // materially larger, correctness-sensitive change, deliberately not attempted here.
-export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number, captureContinuationOnBudgetExit?: boolean): Promise<number[] | null> {
+export async function beamSearchFromGate(startKey: number, level: NormalizedLevel, prep: PrepLevel, profile: ScoringProfile, budgetMs: number, startTime: number, orderingBias: StructuralOrderingBias | null, beamWidth: number, yieldFn: YieldFn, mechanicBucketRetention?: boolean, out: { timedOut?: boolean; finalBadness?: number; pausedContinuation?: BeamContinuation } | null = null, nodeBudget = Infinity, resumeFrom?: BeamContinuation, pauseAfterPhases?: number, captureContinuationOnBudgetExit?: boolean, intsBucketRetention?: boolean): Promise<number[] | null> {
     if (resumeFrom) assertBeamContinuationOwnership(resumeFrom, startKey, level, prep);
+    // intsBucketRetention (2026-09-12, research-only — see docs/solver-optimization-workstreams.md
+    // WS2/WS4): trailing opt-in param, default undefined/false, so every existing positional caller
+    // is byte-for-byte unaffected. Mutually exclusive with mechanicBucketRetention (both select the
+    // same frontier slot) rather than silently letting one win, matching this module's existing
+    // mutual-exclusivity discipline (attempt-dispatch.ts's AttemptConfig families check).
+    if (mechanicBucketRetention && intsBucketRetention) throw new Error('beamSearchFromGate: mechanicBucketRetention and intsBucketRetention are mutually exclusive.');
     const ws = resumeFrom ? resumeFrom.ws : createState(startKey, level, prep, STATE_BUF_BEAM);
     const cfg = prep._cfg;
     const research = prep._beamResearchObserver;
@@ -679,6 +733,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         : cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE === true;
     // Ablation: STRATEGY_MECHANIC_BUCKET_RETENTION can disable mechanic-bucket retention even when the config requests it.
     const effectiveMechanicBucketRetention = mechanicBucketRetention && (!cfg || cfg.STRATEGY_MECHANIC_BUCKET_RETENTION);
+    // Research-only; no ablation-config gate yet (not wired into any production ATTEMPT_POLICY
+    // entry — see `_intsBucketSelect`'s own comment).
+    const effectiveIntsBucketRetention = !!intsBucketRetention;
     // Fast numeric coarse-state-merge/mechanic-bucket-retention keys, computed once per call (not per candidate/phase) from
     // this level's OWN mechanic cardinalities — never a fixed-width assumption, which is exactly
     // what made the old bit-packed signature silently unsound (see beamStateKey's comment). Each
@@ -1145,14 +1202,20 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             if (_BEAM_DEBUG) { _dbgSortNs += _hrtNow() - _t3; }
             await yieldIfNeeded();
             const widthSelected = pool.slice(0, beamWidth);
-            frontier = effectiveMechanicBucketRetention ? _mechanicBucketSelect(pool, beamWidth, _flipperBase) : widthSelected;
-            // Mechanic-bucket selection is the production retention decision, not a score-width cull
-            // followed by a second chance. Report only candidates absent from the actual result;
-            // otherwise support would falsely disappear at the provisional slice and reappear.
-            const retained = research && effectiveMechanicBucketRetention ? new Set(frontier) : null;
+            frontier = effectiveMechanicBucketRetention ? _mechanicBucketSelect(pool, beamWidth, _flipperBase)
+                : effectiveIntsBucketRetention ? _intsBucketSelect(pool, beamWidth)
+                : widthSelected;
+            // Bucketed selection (mechanic- or ints-keyed) is the retention decision, not a
+            // score-width cull followed by a second chance. Report only candidates absent from the
+            // actual result; otherwise support would falsely disappear at the provisional slice and
+            // reappear.
+            const bucketed = effectiveMechanicBucketRetention || effectiveIntsBucketRetention;
+            const retained = research && bucketed ? new Set(frontier) : null;
             const actuallyCulled = research && pool.length > beamWidth
                 ? (retained ? pool.filter(c => !retained.has(c)) : pool.slice(beamWidth)) : null;
-            if (actuallyCulled) emit(effectiveMechanicBucketRetention ? 'mechanic-bucket-culled' : 'score-width-culled', actuallyCulled, {
+            const culledStage = effectiveMechanicBucketRetention ? 'mechanic-bucket-culled'
+                : effectiveIntsBucketRetention ? 'ints-bucket-culled' : 'score-width-culled';
+            if (actuallyCulled) emit(culledStage, actuallyCulled, {
                 beamWidth, cutoffScore: pool[beamWidth - 1]?.score ?? null,
                 firstCulledScore: pool[beamWidth]?.score ?? null,
                 equalScoreAtCutoff: pool.filter(c => c.score === pool[beamWidth - 1]?.score).length,
@@ -1164,7 +1227,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
                     score: c.score, scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
             });
-            if (research) emit(effectiveMechanicBucketRetention ? 'post-mechanic-bucket-selection' : 'post-score-width-cull', frontier);
+            if (research) emit(effectiveMechanicBucketRetention ? 'post-mechanic-bucket-selection'
+                : effectiveIntsBucketRetention ? 'post-ints-bucket-selection' : 'post-score-width-cull', frontier);
         } else {
             frontier = cands;
             if (research) {
