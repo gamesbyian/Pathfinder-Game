@@ -110,14 +110,18 @@ jobs:
           const provenance = JSON.parse(fs.readFileSync('logs/solver-combined/source-provenance.json'));
           fs.writeFileSync('logs/solver-combined/experiment-contract.json', `${JSON.stringify({
             experiment: {
-              workflowFamily: 'cross-run-reconciliation',
-              producer: 'solver-combine-sweep-runs.yml',
-              entrypoint: 'scripts/combine-solver-sweep-reports.mjs',
+              ...provenance.sourceExperiment,
               resolvedSha: provenance.resolvedSha,
               configurationHash: provenance.configurationHash,
               sourceRuns: provenance.sources,
-              sourceExperiment: provenance.sourceExperiment,
-              reconciliationRun: { runId: process.env.GITHUB_RUN_ID ?? null, runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null },
+              sourceProtocolHash: provenance.protocolHash,
+              reconciliationRun: {
+                runId: process.env.GITHUB_RUN_ID ?? null,
+                runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
+                resolvedSha: process.env.GITHUB_SHA ?? null,
+                producer: 'solver-combine-sweep-runs.yml',
+                entrypoint: 'scripts/combine-solver-sweep-reports.mjs',
+              },
             },
             population: {
               kind: 'explicit-reconciled-population',
