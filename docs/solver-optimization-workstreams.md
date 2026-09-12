@@ -8,6 +8,8 @@ Keep this file **current-state only**. Detailed evidence belongs in reports; his
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Deferred material: [`solver-future-work.md`](solver-future-work.md).
 
+Program lens: **capability composition** exposes/selects/allocates capabilities already demonstrated; **capability acquisition** creates generic capability where no known action currently succeeds. Residual evidence decides which branch deserves work; do not treat more allocation as a substitute for missing capability.
+
 ## Current execution priority
 
 ### 1. Workstream 2: residual capability + fixed-work allocation
@@ -33,7 +35,7 @@ Method: [`solver-research-operating-model.md`](solver-research-operating-model.m
 
 **Repair-side follow-up is complete:** natural repair search does not approach the known-live beam trajectories even at 10x the small matched-work probe. When repair is seeded exactly at the beam-cull state, **4/28 are reconstructable and 24/28 operator-incapable**. The four reconstructable cases nominate a Card-E continuation/handoff question; n=4 is too small to size or justify a mechanism. [`report`](../reports/2026-09-11-repair-side-first-loss-exposure-001.md)
 
-**Next gate:** run the bounded current-residual capability-memory census before more allocation work. Use existing provenance-bearing rows/signatures first; measure confirmed current gains separately from historical nominations, pairwise overlap/unique capability, work economics where comparable, and displaced winners from accepted changes. Start only with materially distinct, already-understood evidence sources; do not create a permanent policy panel or rerun campaign. Advance only if the census earns a shared basin, policy-specific basin, allocation opportunity, or recurring displacement premise; otherwise close it as low-yield. [`prespecification`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
+**Next gate:** first refresh the production boundary to incorporate promoted changes, then rebuild/rejoin the residual atlas and run the bounded capability-memory census against that current residual. Use existing provenance-bearing rows/signatures first; keep confirmed current gains separate from historical nominations, and measure overlap/unique capability, comparable work economics and displaced winners. Treat the result as a strategic fork: material complementary capability supports composition/allocation work; a weak union with a large no-known-candidate residual shifts emphasis toward capability acquisition through mechanisms earned by first-loss/family/reference evidence. Do not create a permanent policy panel or rerun campaign. [`prespecification`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -51,7 +53,7 @@ The old `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` 
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Execute the bounded current-residual capability-memory census; advance only an earned complementarity/allocation/displacement premise. Card-E remains nomination-only. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Refresh production/residual state, then run the bounded capability-memory census; use its union/headroom to choose composition/allocation versus capability-acquisition emphasis. Card-E remains nomination-only. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Continue temporal/difficulty-controlled structural response; next earned stage is solution-space mediation for the two stage-3 pairs. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when first-loss/family evidence shows a live continuation needs repair-side interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or a new hotspot. |
@@ -70,6 +72,7 @@ The old `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` 
 - Clear negatives close tested forms absent a materially new premise. A no-op/behavior-identical retry buys nothing.
 - Hold out independent units, including whole variant parents where applicable, and scale confirmation with tuning/selection pressure.
 - Reusable benchmark/census rows require matching protocol identity; nominal stage reach is not participation.
+- Result identity, intended-population integrity, resolved configuration/provenance and budget semantics are research-control-plane invariants; indeterminate evidence cannot move the queue.
 - After a material capability promotion or provenance reinterpretation, refresh/rejoin the production residual before treating old class/family/attribution/capability-memory counts as current.
 - A validated hint prefix proves that prefix live, not that alternatives are dead. Query provenance for an explicit evidence purpose.
 - Before escalating a persistent residual, ask whether materially different actions lose known-live material at the same boundary. Shared recurrence nominates capability work; idiosyncratic loss stays technique-level.
