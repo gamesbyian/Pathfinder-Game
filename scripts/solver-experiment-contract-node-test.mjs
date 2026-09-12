@@ -15,7 +15,22 @@ assert.deepEqual(integrity.unexpectedIds, ['x']);
 assert.equal(integrity.outcomes.solved, 1);
 assert.equal(integrity.outcomes.deadlineTruncated, 1);
 assert.equal(integrity.outcomes.harnessError, 1);
+assert.equal(integrity.coverageComplete, false);
+assert.equal(integrity.decisionValidComplete, false);
 assert.equal(integrity.complete, false);
+
+const structurallyCompleteButIndeterminate = buildPopulationIntegrity(['a', 'b'], [
+  { id: 'a', ok: true }, { id: 'b', status: 'deadline-truncated' },
+]);
+assert.equal(structurallyCompleteButIndeterminate.coverageComplete, true);
+assert.equal(structurallyCompleteButIndeterminate.complete, true);
+assert.equal(structurallyCompleteButIndeterminate.decisionValidComplete, false);
+
+const decisionValid = buildPopulationIntegrity(['a', 'b', 'c'], [
+  { id: 'a', ok: true }, { id: 'b', status: 'node-budget-exhausted' }, { id: 'c', status: 'exhausted' },
+]);
+assert.equal(decisionValid.coverageComplete, true);
+assert.equal(decisionValid.decisionValidComplete, true);
 assert.equal(classifyRow({ id: 'z', status: 'node-budget-exhausted' }), 'nodeLimited');
 assert.equal(classifyRow({ cellId: 'T1-1', status: 'exhausted' }), 'exhaustedNegative');
 
