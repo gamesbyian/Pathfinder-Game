@@ -30,7 +30,7 @@ const GRANDFATHERED = {
     'modules/solver/stage-budget-core.ts': 142_883,
     'modules/domain/domain.test.ts': 79_372,
     '.github/workflows/solver-level-blind-targeted-sweep.yml': 49_827,
-    '.github/workflows/solver-typical-budget-baseline.yml': 44_134,
+    '.github/workflows/solver-production-replay-baseline.yml': 48_374,
 };
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'coverage', 'tmp']);
