@@ -10,16 +10,20 @@ on:
       - 'scripts/combine-population-integrity.mjs'
       - 'scripts/combine-paired-arm-integrity.mjs'
       - '.github/workflows/solver-*.yml'
+      - 'data/stress/stress-levels*.json'
+      - 'logs/stress-corpus*-baseline.json'
       - 'logs/solver-stress-refresh/**'
-      - 'reports/stress/**'
+      - 'reports/stress/highbudget-unsolved-sweep-corpus*-2026-07-24.json'
+      - 'reports/stress/technique-census/*/combined-cells.json'
+      - 'reports/stress/solver-evidence-integrity-index.*'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 # The historical integrity audit needs evidence omitted by ordinary sparse PR CI. Run it only when
-# evidence semantics or its material inputs change, then require the tracked generated authority to
-# be exactly what the current audit implementation produces.
+# evidence semantics or its exact material input families change, then require the tracked generated
+# authority to be exactly what the current audit implementation produces.
 jobs:
   integrity-index:
     runs-on: ubuntu-latest
