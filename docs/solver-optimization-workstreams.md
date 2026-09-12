@@ -30,9 +30,9 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 - **Freshness reconciliation:** later `isolatedTechnique` provenance initially nominated 36/431 class-5 rows, but exact source-cell reconstruction showed the suspicious same-revision successes were **5/5 T1 variants and 0/5 base T1**, all `coarse-state-near-tie-retention-off`. Production already reaches the corresponding retry, so no cheap missing-exposure batch was established. The provenance producer must retain census-cell identity going forward. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 - **Single-level microscope:** `R03229` was freshness-cleared and frozen at its ordinary width-2000 first-loss boundary, depth 22. Explicit-prefix CP-SAT labels are **LIVE known culled witness / DEAD rank-1 survivor / DEAD width-cutoff survivor**. This is a genuine class-5 recurrence of the August B1/B2 `dead preferred / live alternative` mechanism class, not a new premise. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
-**Current acquisition gate:** the R03229 microscope closes the available bounded premise-generator without producing a novel mechanism. Do **not** serially microscope another hard level, reopen generic scorer tuning, widen beams, or proliferate bucket axes from this recurrence. The next class-5 treatment must first earn a materially new mechanism-specific runtime-legal discriminator or architectural limitation from the existing first-loss/trace/reference evidence. A new specimen is justified only by a changed causal question, not by replacing R03229 with another ID.
+**Current acquisition gate: bounded future-feasibility rejoin.** The R03229 recurrence does not earn another specimen or generic scorer/retention treatment, but it reactivates a narrower premise already supported by August B1/B2: at real extinction decisions, exact future feasibility can disagree sharply with beam preference. Before new solve compute, rejoin the existing B1/B2 + R03229 exact-labelled states and test at most 2-4 prespecified runtime-legal summaries from three families: exact-resource attainable capacity, residual topology scarcity, and joint-obligation compatibility. A candidate must add information beyond current score/rank and hard-prune outcome and recur across unrelated parents. If none survives, close this route and seek a genuinely different architectural premise. [`handoff`](../reports/2026-09-12-future-feasibility-premise-rejoin-001.md)
 
-**Novelty bar:** August B1/B2 already exact-labelled extinction-adjacent beam states and established both `dead rank-1 / live known alternative` and `live / live` shapes. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md) R03229 reproduces the first shape on a clean class-5 specimen. Advancement therefore requires a new mechanism-specific distinction, not another confirmation of the same future-feasibility ordering.
+**Novelty bar:** August B1/B2 already exact-labelled extinction-adjacent beam states and established both `dead rank-1 / live known alternative` and `live / live` shapes. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md) R03229 reproduces the first shape on a clean class-5 specimen. Advancement therefore requires a recurring mechanism-specific distinction that explains exact future feasibility better than current score/prune information, not another confirmation of the ordering or another generic feature sweep.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -52,15 +52,15 @@ The bounded mechanic-composition Stage A/B/C pilot produced 2/5 clean predicted 
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | R03229 microscope closed as B1/B2 recurrence; derive a materially new mechanism-specific runtime-legal discriminator or architectural limitation before another class-5 treatment/specimen. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Rejoin B1/B2 + R03229 exact extinction states; test 2-4 prespecified future-feasibility summaries read-only before any new class-5 treatment. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Structural-response ladder closed for both frozen pairs; reopen only for a new pair/premise. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or new hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
 | 8 | Cheap isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are action-selection evidence, not permanent tail entitlement. |
 | 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence. |
-| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | R03229 independently recurs inside B1/B2; require a materially different mechanism-specific retention axis. |
-| 5 | Exact/reference-model program | **ON DEMAND / SUPPORTING** | R03229 three-case adjudication complete; broad expansion still needs its own prespecified question. |
+| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | Future-feasibility analysis may nominate a new mechanism-specific axis; generic width/bucket/scorer forms remain closed. |
+| 5 | Exact/reference-model program | **ON DEMAND / SUPPORTING** | Use existing B1/B2 + R03229 labels first; expand exact labels only if the bounded descriptor question earns it. |
 
 ## Standing research rules
 
@@ -76,6 +76,7 @@ The bounded mechanic-composition Stage A/B/C pilot produced 2/5 clean predicted 
 - A validated hint prefix proves that prefix live, not that alternatives are dead.
 - Before escalating a persistent residual, ask whether materially different actions lose known-live material at the same boundary. Shared recurrence nominates capability work; idiosyncratic loss stays technique-level.
 - A single-level microscope may generate a premise, never a production exception. Freeze cases before exact labels; compare against prior equivalent evidence; classify mechanism before treatment; require an independent phenotype-matched check before scaling.
+- Future-feasibility descriptors must be runtime-legal and incremental to current score/prune information; exact labels are offline truth for premise discovery, never runtime steering.
 - Reconcile old questions against newer evidence before new compute. Prefer the smallest information-value test.
 
 ## Cheap evidence routing
