@@ -28,6 +28,8 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 - **Family/reference comparison:** reading existing family-census data across all 431 class-5 levels found naive whole-ladder rescue rates confound-dominated (larger `cs` perturbation rescues ~3x more than targeted `swap`; top cases solved by many unrelated edits) — the same general-difficulty confound the mechanic-composition pilot below already diagnosed, now population-scale-confirmed. **CLOSED** without a decoupled-control redesign. [`report`](../reports/2026-09-12-class5-family-reference-comparison-001.md)
 - **Capability-memory census:** all 6 prespecified sources (portal coarse-state-merge, repair-must-turn-biased, beam mechanic-bucket x2, goal-attraction-disabled-retry, displaced-winner churn) nominate 65/652 (10.0%) of the residual, zero in class 5. **CLOSED.** [`reports`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md)/[`atlas fix`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md) (the atlas fix's 9-level `repair-turn-biased` pattern is `STRATEGY_REPAIR_TURN_BIAS`'s already-`CLOSED NEGATIVE` cost, not a new question).
 
+**Active acquisition method: single-level microscope.** With the cheap composition/retention seams above closed, one representative class-5 miss may be used as a tightly bounded premise generator: reconstruct one known-live extinction boundary, freeze a tiny live-vs-survivor comparison set, use WS5 exact/reference adjudication to ask which states actually retain valid futures, then classify the first causal distinction before proposing one generic intervention. The first specimen is `R03351`, chosen because ordinary width-2000 beam preserves accepted-witness support unusually deep (to depth 47) while both tested bucket-retention variants fail to rescue it. A one-level solve is not promotion evidence; success means a runtime-legal generic distinction or a precise architectural limitation that survives a small independent phenotype-matched check. [`preflight`](../reports/2026-09-12-class5-single-level-microscope-r03351-preflight-001.md)
+
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** ACTIVE / PARALLEL ANALYSIS.
@@ -50,7 +52,7 @@ The bounded 5-parent Stage A/B/C pilot ran to completion: 2/5 parents show the p
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Census, first-loss retention canaries x2, and naive family/reference comparison all closed (no class-5 reach); class-5 acquisition work (exact-adjudication, or a genuinely new premise) is the sole open line. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Execute the bounded `R03351` microscope: exact-adjudicate its late known-live extinction boundary and extract one generic causal distinction or explicit null before another broad class-5 treatment. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Structural-response extension ladder closed for both frozen pairs (stage 5: operational first divergence identified, n=2, no selector licensed). Reopen only for a new pair/premise, not a third variant of this same question. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or new hotspot. |
@@ -58,7 +60,7 @@ The bounded 5-parent Stage A/B/C pilot ran to completion: 2/5 parents show the p
 | 8 | Cheap isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are action-selection evidence, not permanent tail entitlement. |
 | 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence. |
 | 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | Both reopen routes tested and closed: cross-action recurrence (repair's failure is exposure, not rank-retention-loss) and a new bounded descriptor (`intsBucketRetention` canary, closed negative). Reopen only for a materially different retention axis with its own argument for separating the competing pool. |
-| 5 | Exact/reference-model program | **ON DEMAND** | Adjudicate nominated states/prefixes; broad expansion needs a new prespecified question. |
+| 5 | Exact/reference-model program | **ON DEMAND / SUPPORTING MICROSCOPE** | Adjudicate the frozen R03351 live-vs-survivor states only; broad expansion still needs a new prespecified question. |
 
 The mechanic-composition probe is an earned bounded experiment, not a new workstream ID.
 
@@ -75,6 +77,7 @@ The mechanic-composition probe is an earned bounded experiment, not a new workst
 - After material capability promotion or provenance reinterpretation, refresh/rejoin the residual before treating old class/family/attribution/capability-memory counts as current.
 - A validated hint prefix proves that prefix live, not that alternatives are dead. Query provenance for an explicit evidence purpose.
 - Before escalating a persistent residual, ask whether materially different actions lose known-live material at the same boundary. Shared recurrence nominates capability work; idiosyncratic loss stays technique-level.
+- A single-level microscope may generate a premise, never a production exception: freeze the boundary/comparison states first, require exact/reference adjudication of future feasibility, classify the mechanism before treatment, and demand an independent phenotype-matched check before scaling.
 - Reconcile old questions against newer evidence before new compute. Prefer the smallest information-value test; advance independent offline work while long jobs run.
 
 ## Cheap evidence routing
