@@ -21,7 +21,7 @@
 - Population integrity now distinguishes `coverageComplete` from `decisionValidComplete`. Deadline truncation, harness errors, and unknown outcomes can coexist with full row coverage but cannot make an experiment decision-bearing. The legacy `complete` field remains only as a compatibility alias for coverage completeness.
 - The generic publisher now gates decision-bearing output and paired comparisons on decision-valid integrity, and its summary explicitly reports population coverage separately from decision-valid observations.
 - The exact-ID validator now emits both completeness concepts so workflows do not need to reconstruct this distinction independently.
-- The v3 schema and regression tests encode these semantics.
+- The v3 schema, contract checker, and regression tests encode these semantics.
 - The historical high-budget audit now uses the surviving frozen July 24 ID files. The intended cohorts were **not** lost: population identity and expected-vs-observed coverage are reconstructable. Old per-level non-solve statuses may still remain scientifically ambiguous, so the audit continues to fail closed where normalization cannot establish a valid terminal class.
 
 ## Historical audit findings
@@ -34,7 +34,7 @@ Historical routing A/B evidence remains invalid as paired evidence because no sh
 
 No referee-valid solution was removed or rewritten. No broad solver run was launched.
 
-**Regeneration note:** `reports/stress/solver-evidence-integrity-index.json` must be regenerated after the audit-tool changes above before this tranche is considered closed; do not cite the pre-regeneration checked-in high-budget classifications.
+**Regeneration note:** `reports/stress/solver-evidence-integrity-index.json` still reflects the pre-hostile-review audit implementation. Run `npm run solver:evidence-integrity-audit` and commit the regenerated file after these corrections before this tranche is considered merge-ready; do not cite the stale checked-in high-budget classifications.
 
 ## Intentionally incomplete / remaining implementation queue
 
