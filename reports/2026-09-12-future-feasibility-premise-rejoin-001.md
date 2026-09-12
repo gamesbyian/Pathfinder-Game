@@ -81,8 +81,9 @@ These controls do not expand the descriptor budget, replace the B1/B2 + `R03229`
 2. **Prespecify 2-4 concrete summaries** from the three families above, preferably quantities already available from current state/prune helpers.
 3. **Require incremental information** beyond score, score margin/rank, existing hard-prune verdict, obvious mechanic counts, and simple progress-bucket identity/rarity.
 4. **Require unrelated-parent recurrence** before advancement.
-5. **Classify the role before implementation:** sound prune candidate, unsound ranking/retention signal, expensive offline diagnostic, or architectural representation gap.
-6. **Run the smallest live test only after offline survival.** Failed descriptors close cheaply.
+5. **Use same-day controls only after descriptor selection.** Perturbation-rescue density and mechanic-composition calibration cases may challenge or corroborate a prespecified descriptor; they must not choose the descriptor that they then appear to validate.
+6. **Classify the role before implementation:** sound prune candidate, unsound ranking/retention signal, expensive offline diagnostic, or architectural representation gap.
+7. **Run the smallest live test only after offline survival.** Failed descriptors close cheaply.
 
 ## Advancement and stop conditions
 
