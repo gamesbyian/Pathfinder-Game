@@ -36,11 +36,25 @@ function currentHeadSha() {
   }
 }
 
+function inferredPairedArms(configuration) {
+  const control = configuration?.baselineRef ?? configuration?.controlRef ?? null;
+  const treatment = configuration?.treatmentRef ?? null;
+  if (control == null && treatment == null) return null;
+  if (!isImmutableCommitSha(control) || !isImmutableCommitSha(treatment)) {
+    throw new Error('paired experiment baseline/control and treatment refs must be immutable 40-character commit SHAs');
+  }
+  return {
+    control: { requestedRef: control, resolvedSha: control },
+    treatment: { requestedRef: treatment, resolvedSha: treatment },
+  };
+}
+
 export function buildContract(spec, { resolvedSha = null } = {}) {
   const { configuration, workflowFamily, producer, entrypoint, experiment = {}, population, execution, limits, sideEffects } = spec;
-  const executionIdentity = experiment.arms == null && experiment.resolvedSha == null && resolvedSha
-    ? { resolvedSha }
-    : {};
+  const inferredArms = experiment.arms ?? inferredPairedArms(configuration);
+  const executionIdentity = inferredArms != null
+    ? { arms: inferredArms }
+    : (experiment.resolvedSha == null && resolvedSha ? { resolvedSha } : {});
   return {
     experiment: {
       ...experiment,
