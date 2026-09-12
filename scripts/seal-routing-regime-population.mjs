@@ -47,13 +47,33 @@ export function buildPopulationSeal(expectedIds, corpora) {
   };
 }
 
+export function assertMatchingPopulationSeals(expected, observed) {
+  if (expected?.count !== observed?.count || expected?.identityHash !== observed?.identityHash) {
+    throw new Error(`population content seal mismatch: expected ${expected?.identityHash}/${expected?.count}, observed ${observed?.identityHash}/${observed?.count}`);
+  }
+  return true;
+}
+
 export function readCorporaFromFiles(specs = DEFAULT_CORPORA) {
   return specs.map(([corpus, file]) => [corpus, parseDocument(readFileSync(file, 'utf8'), file)]);
 }
 
+function gitShow(ref, file) {
+  return execFileSync('git', ['show', `${ref}:${file}`], { encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
+}
+
 export function readCorporaFromGitRef(ref, specs = DEFAULT_CORPORA) {
+  let fetched = false;
   return specs.map(([corpus, file]) => {
-    const text = execFileSync('git', ['show', `${ref}:${file}`], { encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
+    let text;
+    try {
+      text = gitShow(ref, file);
+    } catch (error) {
+      if (fetched) throw error;
+      execFileSync('git', ['fetch', '--no-tags', '--depth=1', 'origin', ref], { stdio: 'pipe' });
+      fetched = true;
+      text = gitShow(ref, file);
+    }
     return [corpus, parseDocument(text, `${ref}:${file}`)];
   });
 }
@@ -77,12 +97,7 @@ function main() {
   const expectedIds = readFileSync(idsFile, 'utf8').split(/\s+/u).map(s => s.trim()).filter(Boolean);
   const corpora = gitRef ? readCorporaFromGitRef(gitRef) : readCorporaFromFiles();
   const seal = buildPopulationSeal(expectedIds, corpora);
-  if (expectFile) {
-    const expected = JSON.parse(readFileSync(expectFile, 'utf8'));
-    if (seal.count !== expected.count || seal.identityHash !== expected.identityHash) {
-      throw new Error(`population content seal mismatch: expected ${expected.identityHash}/${expected.count}, observed ${seal.identityHash}/${seal.count}`);
-    }
-  }
+  if (expectFile) assertMatchingPopulationSeals(JSON.parse(readFileSync(expectFile, 'utf8')), seal);
   writeFileSync(out, `${JSON.stringify(seal, null, 2)}\n`);
   console.log(`Sealed ${seal.count} routing A/B population levels as ${seal.identityHash}${gitRef ? ` at ${gitRef}` : ''}.`);
 }
