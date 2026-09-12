@@ -27,12 +27,43 @@
       "properties": { "cumulativeNodeCeiling": { "$ref": "#/$defs/number" }, "initialWorkAllocation": { "$ref": "#/$defs/number" }, "totalWorkCeiling": { "$ref": "#/$defs/number" }, "wallSafetyDeadlineMs": { "$ref": "#/$defs/number" }, "wallDeadlineBinding": { "type": ["boolean", "null"] } }, "additionalProperties": false
     },
     "outcomes": { "type": ["object", "null"] },
-    "coverage": { "type": "object", "required": ["artifact", "populationIntegrity"], "properties": { "artifact": { "type": ["object", "null"] }, "populationIntegrity": { "type": ["object", "null"] } }, "additionalProperties": false },
+    "coverage": {
+      "type": "object",
+      "required": ["artifact", "populationIntegrity"],
+      "properties": {
+        "artifact": { "type": ["object", "null"] },
+        "populationIntegrity": { "anyOf": [{ "$ref": "#/$defs/populationIntegrity" }, { "type": "null" }] }
+      },
+      "additionalProperties": false
+    },
     "researchOutcome": { "type": ["object", "null"] },
     "sideEffects": { "type": "object", "required": ["hints", "canonicalBaseline", "telemetry", "reports"], "additionalProperties": { "enum": ["unknown", "none", "artifact-only", "harvest-permitted", "canonical-write", "baseline-replace", "telemetry-update", "report-write"] } },
     "decisionBearing": { "type": "boolean" },
     "entries": { "type": "array" }
   },
-  "$defs": { "stringList": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }, "number": { "type": ["number", "null"], "minimum": 0 } },
+  "$defs": {
+    "stringList": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "number": { "type": ["number", "null"], "minimum": 0 },
+    "populationIntegrity": {
+      "type": "object",
+      "required": ["expectedCount", "observedCount", "duplicateIds", "unexpectedIds", "missingIds", "coverageComplete", "decisionValidComplete", "outcomes"],
+      "properties": {
+        "expectedCount": { "type": ["integer", "null"], "minimum": 0 },
+        "observedCount": { "type": ["integer", "null"], "minimum": 0 },
+        "duplicateIds": { "$ref": "#/$defs/stringList" },
+        "unexpectedIds": { "$ref": "#/$defs/stringList" },
+        "missingIds": { "$ref": "#/$defs/stringList" },
+        "coverageComplete": { "type": "boolean", "description": "Every intended subject has exactly one structurally usable row. This does not imply scientific interpretability." },
+        "decisionValidComplete": { "type": "boolean", "description": "Coverage is complete and no row is deadline-truncated, harness-error, malformed, missing, or unknown. Node/work-limited rows remain valid bounded-envelope observations." },
+        "complete": { "type": "boolean", "description": "Compatibility alias for coverageComplete; decision-bearing consumers must use decisionValidComplete." },
+        "outcomes": { "type": "object" },
+        "populationIdentityHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "expectedIds": { "$ref": "#/$defs/stringList" },
+        "inferredExpectedPopulation": { "type": "boolean" },
+        "intendedPopulationKnown": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    }
+  },
   "additionalProperties": true
 }
