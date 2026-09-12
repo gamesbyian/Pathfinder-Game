@@ -16,9 +16,9 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 
 **State:** ACTIVE / FIRST PRIORITY.
 
-**Canonical production boundary:** run `34674256538` (first refresh with `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` folded into production default-on) is **100/102 Corpus 1 + 1,048/1,700 Corpus 2**, leaving **652 Corpus-2 misses** (down from 671). This run did not enable `lifecycle_telemetry`, so the residual atlas cannot yet be rebuilt from it; a `lifecycle_telemetry=true` dispatch is queued as the next gate below.
+**Canonical production boundary:** run `34683011115` (first refresh with `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` folded into production default-on, `lifecycle_telemetry=true`; independently reproduced by the earlier `34674256538`) is **100/102 Corpus 1 + 1,048/1,700 Corpus 2**, leaving **652 Corpus-2 misses** (down from 671).
 
-**Residual atlas:** the existing 5-class breakdown (26 not-offered, 21 offered-but-unreached/starved, 36 reached/comparable-work-failed, 143 no-T1-winner-but-historical-candidate, 445 no-known-admissible/T1-candidate) is keyed to the prior 671-miss boundary and is now stale against the fresh 652-miss boundary; treat it as pre-refresh evidence only until rejoined. [`atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md), [`provenance audit`](../reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md)
+**Residual atlas (rebuilt):** 22 not-offered (3.4%), 17 offered-but-unreached/starved (2.6%), 48 reached/comparable-work-failed (7.4%, up from 5.4% despite the smaller residual), 125 no-T1-winner-but-historical-candidate (19.2%), and **440 no known admissible/T1 candidate (67.5%)**. [`rebuild`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md)
 
 **Current dispositions** (full evidence in the opt-in ledger and linked reports):
 
@@ -35,7 +35,9 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 
 **Repair-side follow-up complete:** natural repair search doesn't approach the known-live beam trajectories even at 10x budget. Seeded at beam-cull state, only 4/28 are reconstructable; n=4 nominates a Card-E continuation question but is too small to justify a mechanism. [`report`](../reports/2026-09-11-repair-side-first-loss-exposure-001.md)
 
-**Next gate:** run `34683011115` (dispatched with `lifecycle_telemetry=true`, needed for the lifecycle-failure-map join the atlas rebuild consumes) is in flight; once complete, rebuild/rejoin the residual atlas against its 652-miss boundary, then run the bounded capability-memory census, separating confirmed current gains from historical nominations. Material complementary capability supports composition/allocation work; a weak union with a large no-known-candidate residual shifts emphasis toward acquisition. No permanent policy panel or rerun campaign. [`prespecification`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
+**Refresh/atlas/census sequence complete for this cycle:** the first bounded capability-memory census (one candidate: the closed-negative portal-coarse-state-merge historical signature) found no material complementarity — its 137 current-residual nominations are 91% already inside class 4 (not new information) and reach **zero** of class 5's 440 levels. Acquisition emphasis on class 5 stands unchanged. [`census`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md)
+
+**Next gate:** advance class-5-targeted first-loss/family/reference acquisition work directly; add another capability-memory candidate only if its exact gain/loss IDs are cheaply recoverable and specifically check class-5 reach. No permanent policy panel or rerun campaign.
 
 The refresh -> residual rejoin -> census sequence is the **primary serial spine**, not a global lock. Independent earned analysis and bounded acquisition work below should proceed while long compute is unavailable or running.
 
