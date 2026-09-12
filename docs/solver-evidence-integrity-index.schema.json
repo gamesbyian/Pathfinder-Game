@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pathfinder://schemas/solver-evidence-integrity-index-v1",
+  "title": "Pathfinder Solver Evidence Integrity Index",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "records"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "generatedAt": { "type": "string" },
+    "generator": { "type": ["string", "null"] },
+    "sourceRevision": { "type": ["string", "null"] },
+    "records": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceRecord" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "count": { "type": ["integer", "null"], "minimum": 0 },
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "evidenceRecord": {
+      "type": "object",
+      "required": [
+        "evidenceId",
+        "sourcePaths",
+        "sourceRunIds",
+        "producer",
+        "population",
+        "execution",
+        "limits",
+        "outcomes",
+        "reliability",
+        "reconstructability",
+        "rerunDisposition",
+        "reasons"
+      ],
+      "properties": {
+        "evidenceId": { "type": "string", "minLength": 1 },
+        "sourcePaths": { "$ref": "#/$defs/stringList" },
+        "sourceRunIds": { "$ref": "#/$defs/stringList" },
+        "intendedRef": { "type": ["string", "null"] },
+        "actualSha": { "type": ["string", "null"] },
+        "producer": {
+          "type": "object",
+          "required": ["workflow", "entrypoint", "family"],
+          "properties": {
+            "workflow": { "type": ["string", "null"] },
+            "entrypoint": { "type": ["string", "null"] },
+            "family": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "population": {
+          "type": "object",
+          "required": [
+            "kind",
+            "identityBasis",
+            "identityHash",
+            "expectedCount",
+            "observedCount",
+            "missingCount",
+            "duplicateCount",
+            "unexpectedCount"
+          ],
+          "properties": {
+            "kind": { "type": ["string", "null"] },
+            "identityBasis": { "type": ["string", "null"] },
+            "identityHash": { "type": ["string", "null"] },
+            "expectedCount": { "$ref": "#/$defs/count" },
+            "observedCount": { "$ref": "#/$defs/count" },
+            "missingCount": { "$ref": "#/$defs/count" },
+            "duplicateCount": { "$ref": "#/$defs/count" },
+            "unexpectedCount": { "$ref": "#/$defs/count" }
+          },
+          "additionalProperties": true
+        },
+        "execution": {
+          "type": "object",
+          "required": ["levelBlind", "historyAware", "reproducibilityExpected"],
+          "properties": {
+            "levelBlind": { "type": ["boolean", "null"] },
+            "historyAware": { "type": ["boolean", "null"] },
+            "reproducibilityExpected": { "type": ["boolean", "null"] },
+            "schedulerMode": { "type": ["string", "null"] },
+            "historicalInputs": { "$ref": "#/$defs/stringList" }
+          },
+          "additionalProperties": true
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "cumulativeNodeCeiling",
+            "initialWorkAllocation",
+            "totalWorkCeiling",
+            "wallSafetyDeadlineMs",
+            "wallDeadlineBinding"
+          ],
+          "properties": {
+            "cumulativeNodeCeiling": { "type": ["number", "null"], "minimum": 0 },
+            "initialWorkAllocation": { "type": ["number", "null"], "minimum": 0 },
+            "totalWorkCeiling": { "type": ["number", "null"], "minimum": 0 },
+            "wallSafetyDeadlineMs": { "type": ["number", "null"], "minimum": 0 },
+            "wallDeadlineBinding": { "type": ["boolean", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "outcomes": {
+          "type": "object",
+          "required": [
+            "solved",
+            "exhaustedNegative",
+            "nodeLimited",
+            "workLimited",
+            "deadlineTruncated",
+            "errors",
+            "malformed",
+            "missing",
+            "unknown"
+          ],
+          "properties": {
+            "solved": { "$ref": "#/$defs/count" },
+            "exhaustedNegative": { "$ref": "#/$defs/count" },
+            "nodeLimited": { "$ref": "#/$defs/count" },
+            "workLimited": { "$ref": "#/$defs/count" },
+            "deadlineTruncated": { "$ref": "#/$defs/count" },
+            "errors": { "$ref": "#/$defs/count" },
+            "malformed": { "$ref": "#/$defs/count" },
+            "missing": { "$ref": "#/$defs/count" },
+            "unknown": { "$ref": "#/$defs/count" }
+          },
+          "additionalProperties": true
+        },
+        "reliability": {
+          "enum": [
+            "valid",
+            "valid-after-normalization",
+            "observational-only",
+            "incomplete",
+            "superseded",
+            "invalid"
+          ]
+        },
+        "reconstructability": {
+          "enum": ["complete", "partial", "unverifiable"]
+        },
+        "replacementEvidence": { "$ref": "#/$defs/stringList" },
+        "rerunDisposition": {
+          "enum": [
+            "none-required",
+            "gap-fill-candidate",
+            "rerun-candidate",
+            "rerun-completed",
+            "superseded-no-rerun",
+            "invalid-no-longer-relevant",
+            "needs-human-review"
+          ]
+        },
+        "decisionBearing": { "type": ["boolean", "null"] },
+        "reasons": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "notes": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    }
+  }
+}
