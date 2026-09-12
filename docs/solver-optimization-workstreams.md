@@ -27,12 +27,12 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 - **First-loss:** 28/28 across two disjoint samples reproduce `score-width-culled`, width-insensitive beam loss; DFS cross-check does not support a shared local-scorer failure. Repair barely approaches the same trajectories even at 10x budget. Two bucket-retention canaries (`ints`; existing `mechanicBucketRetention` applied research-only to this regime) produced zero solves and noise-level survival changes. [`dev`](../reports/2026-09-11-bounded-class4-class5-first-loss-phenotyping-001.md), [`confirmation`](../reports/2026-09-11-ws2-independent-first-loss-confirmation-001.md), [`repair`](../reports/2026-09-11-repair-side-first-loss-exposure-001.md), [`ints`](../reports/2026-09-12-ints-bucket-retention-canary-001.md), [`mechanic`](../reports/2026-09-12-mechanic-bucket-on-intersection-heavy-canary-001.md)
 - **Family/reference comparison:** existing `swap`/`cs` rescue rates across the current 431 class-5 cohort are confound-dominated; naive perturbation/reducer interpretation is closed without a decoupled-control redesign. [`report`](../reports/2026-09-12-class5-family-reference-comparison-001.md)
 - **Capability-memory census:** six prespecified materially distinct sources nominate 65/652 residual misses, **zero in class 5**. Census closed; do not maintain a standing policy panel. [`report`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
+- **Freshness reconciliation:** later `isolatedTechnique` provenance initially nominated 36/431 class-5 rows, but exact source-cell reconstruction showed the suspicious same-revision successes were **5/5 T1 variants and 0/5 base T1**, all `coarse-state-near-tie-retention-off`. Production already reaches the corresponding retry, so no cheap missing-exposure batch was established. The provenance producer must retain census-cell identity going forward. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
+- **Single-level microscope:** `R03229` was freshness-cleared and frozen at its ordinary width-2000 first-loss boundary, depth 22. Explicit-prefix CP-SAT labels are **LIVE known culled witness / DEAD rank-1 survivor / DEAD width-cutoff survivor**. This is a genuine class-5 recurrence of the August B1/B2 `dead preferred / live alternative` mechanism class, not a new premise. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
-**Active acquisition method: R03351 single-level microscope.** Use one representative class-5 miss as a bounded premise generator, not a benchmark. R03351's ordinary width-2000 beam preserves accepted-witness support to depth 47, while both tested bucket-retention variants fail to rescue it. Reconstruct its final score/width support loss, freeze exactly the culled witness prefix plus rank-1 and cutoff survivors, exact-label the survivors, and classify the result before any treatment. [`preflight`](../reports/2026-09-12-class5-single-level-microscope-r03351-preflight-001.md)
+**Current acquisition gate:** the R03229 microscope closes the available bounded premise-generator without producing a novel mechanism. Do **not** serially microscope another hard level, reopen generic scorer tuning, widen beams, or proliferate bucket axes from this recurrence. The next class-5 treatment must first earn a materially new mechanism-specific runtime-legal discriminator or architectural limitation from the existing first-loss/trace/reference evidence. A new specimen is justified only by a changed causal question, not by replacing R03229 with another ID.
 
-**Novelty bar:** August B1/B2 already exact-labelled extinction-adjacent beam states and established both `dead rank-1 / live known alternative` and `live / live` shapes. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md) Therefore a dead R03351 rank-1 with a live witness is **recurrence of an old mechanism class, not a new premise by itself**. Advancement requires either a materially different exact phenotype or a new mechanism-specific runtime-legal discriminator/architectural limitation. Do not reopen generic scorer tuning or generic feature accretion; the broad scorer-vocabulary and 18-feature forms are already closed.
-
-**Execution seam:** reuse `collect-known-solution-prefix-survival.mjs` with ranked-pool/removal detail, then `build-class5-microscope-cases.mjs`, then the existing `cpsat-explicit-prefix-reference.mjs`. No new search/reference framework is needed. The witness case is a positive control because its accepted full continuation already proves liveness; rank-1 and cutoff labels are decision-bearing.
+**Novelty bar:** August B1/B2 already exact-labelled extinction-adjacent beam states and established both `dead rank-1 / live known alternative` and `live / live` shapes. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md) R03229 reproduces the first shape on a clean class-5 specimen. Advancement therefore requires a new mechanism-specific distinction, not another confirmation of the same future-feasibility ordering.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -52,15 +52,15 @@ The bounded mechanic-composition Stage A/B/C pilot produced 2/5 clean predicted 
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Execute R03351 three-case microscope; classify exact survivor futures against B2; require a mechanism-specific new distinction or explicit null before another broad class-5 treatment. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | R03229 microscope closed as B1/B2 recurrence; derive a materially new mechanism-specific runtime-legal discriminator or architectural limitation before another class-5 treatment/specimen. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Structural-response ladder closed for both frozen pairs; reopen only for a new pair/premise. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or new hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
 | 8 | Cheap isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are action-selection evidence, not permanent tail entitlement. |
 | 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence. |
-| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | Cross-action recurrence and two simple bucket axes do not earn reopening; require a materially different mechanism-specific retention axis. |
-| 5 | Exact/reference-model program | **ON DEMAND / SUPPORTING MICROSCOPE** | Label the frozen R03351 witness/top/cutoff cases through the existing seam; broad expansion still needs its own prespecified question. |
+| 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | R03229 independently recurs inside B1/B2; require a materially different mechanism-specific retention axis. |
+| 5 | Exact/reference-model program | **ON DEMAND / SUPPORTING** | R03229 three-case adjudication complete; broad expansion still needs its own prespecified question. |
 
 ## Standing research rules
 
@@ -85,8 +85,8 @@ The bounded mechanic-composition Stage A/B/C pilot produced 2/5 clean predicted 
 - research assets: `node scripts/research-asset-query.mjs --query=<term>`
 - capability memory: `node scripts/solver-capability-memory.mjs --manifest=<manifest.json> --out=tmp/capability-memory.json --summary-out=tmp/capability-memory.md`
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
-- microscope boundary: `node scripts/run-bundled.mjs scripts/stress/collect-known-solution-prefix-survival.mjs -- --level-ids=R03351 --beam-width=2000 --node-budget=3000000 --include-stages --retain-all-removal-details --retain-ranked-pool-details --out=tmp/r03351-microscope-survival.json`
-- microscope cases: `node scripts/run-bundled.mjs scripts/stress/build-class5-microscope-cases.mjs -- --survival=tmp/r03351-microscope-survival.json --level-id=R03351 --out=tmp/r03351-microscope-cases.json`
+- microscope boundary (historical/completed example): `node scripts/run-bundled.mjs scripts/stress/collect-known-solution-prefix-survival.mjs -- --level-ids=R03229 --beam-width=2000 --node-budget=3000000 --include-stages --retain-all-removal-details --retain-ranked-pool-details --out=tmp/r03229-microscope-survival.json`
+- microscope cases (historical/completed example): `node scripts/run-bundled.mjs scripts/stress/build-class5-microscope-cases.mjs -- --survival=tmp/r03229-microscope-survival.json --level-id=R03229 --out=tmp/r03229-microscope-cases.json`
 - structural niche stability: `node scripts/analyze-technique-niche-stability.mjs`
 - difficulty-controlled niches: `node scripts/analyze-difficulty-stratified-relative-advantage.mjs`
 
