@@ -42,6 +42,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 7. Before treating work as push-ready, run the applicable local finish line from [`docs/ci-preflight.md`](docs/ci-preflight.md); ordinary work is `npm run ci:fast && npm run build`, and deep solver work is `npm run ci && npm run build`. GitHub Actions should not be the first discovery point for deterministic repository failures.
 8. Do not weaken validation to pass. Root-cause unexpected invariant, CSP, architecture, referee, or type failures.
 9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
+10. When a file exceeds a hard size limit, do not shave toward the boundary. Make one coherent reduction with margin (default: remove at least `max(2 × excess, 1 KB)`), then re-measure.
 
 ## Solver research invariants
 
