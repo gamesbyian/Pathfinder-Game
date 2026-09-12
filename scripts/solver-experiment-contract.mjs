@@ -80,6 +80,10 @@ export function decisionContractIssues(contract) {
     for (const [name, arm] of entries) {
       if (!isImmutableCommitSha(arm?.resolvedSha)) issues.push(`experiment.arms.${name}.resolvedSha`);
     }
+    const distinctShas = new Set(entries.map(([, arm]) => arm?.resolvedSha).filter(Boolean));
+    if (distinctShas.size > 1 && !SHA256_RE.test(String(population?.corpusIdentity ?? ''))) {
+      issues.push('population.corpusIdentity');
+    }
   } else if (!isImmutableCommitSha(experiment?.resolvedSha)) {
     issues.push('experiment.resolvedSha');
   }
@@ -89,7 +93,7 @@ export function decisionContractIssues(contract) {
   }
   if (!SHA256_RE.test(String(population?.identityHash ?? ''))) issues.push('population.identityHash');
 
-  for (const field of ['levelBlind', 'historyAware', 'reproducibilityExpected', 'schedulerMode']) {
+  for (const field of ['levelBlind', 'historyAware', 'reproducibilityExpected', 'producerFamily', 'schedulerMode']) {
     if (!hasOwn(execution, field) || execution[field] == null) issues.push(`execution.${field}`);
   }
   if (!Array.isArray(execution?.historicalInputs)) issues.push('execution.historicalInputs');
