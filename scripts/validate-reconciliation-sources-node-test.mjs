@@ -44,7 +44,12 @@ assert.equal(result.execution.schedulerMode, 'production');
 assert.equal(result.limits.totalWorkCeiling, 134);
 assert.equal(result.population.corpusIdentity, `sha256:${'c'.repeat(64)}`);
 assert.equal(result.sourceExperiment.producer, 'solver-level-blind-targeted-sweep.yml');
+assert.match(result.protocolHash, /^sha256:[0-9a-f]{64}$/);
 assert.match(result.sourceSetHash, /^sha256:[0-9a-f]{64}$/);
+
+const reversed = validateReconciliationSources([{ runId: '2', manifest: secondManifest }, { runId: '1', manifest }]);
+assert.equal(reversed.protocolHash, result.protocolHash, 'source ordering must not change the protocol identity');
+assert.notEqual(reversed.sourceSetHash, result.sourceSetHash, 'source-set provenance remains order-sensitive to the caller-provided reconciliation sequence');
 
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: {} }]), /resolved SHA/);
 const mismatchedConfiguration = structuredClone(secondManifest);
