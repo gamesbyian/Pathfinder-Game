@@ -9,7 +9,7 @@ test('technique-census result normalization carries source cell into hint proven
         cellId: 'T1:R03229:coarse-off',
         tier: 'T1',
         levelId: 'R03229',
-        techniqueKeys: ['objectiveFirst|beam=2000'],
+        techniqueKeys: ['beam|score=objectiveFirst|bias=none|width=2000|retention=plain'],
         ablation: { enable: [], disable: ['STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION'] },
         attempts: [{
             scoringProfileId: 'objectiveFirst',
