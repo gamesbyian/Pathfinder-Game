@@ -26,6 +26,14 @@ function hasOwn(value, key) {
   return Boolean(value && Object.prototype.hasOwnProperty.call(value, key));
 }
 
+function isNonEmptyString(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isOptionalNonNegativeNumber(value) {
+  return value === null || (Number.isFinite(value) && value >= 0);
+}
+
 export function canonicalizeIdentities(ids, { rejectDuplicates = true } = {}) {
   if (!Array.isArray(ids)) throw new Error('population identities must be an array');
   const normalized = ids.map(id => String(id).trim());
@@ -58,8 +66,8 @@ export function hashConfiguration(configuration) {
  * Return the reasons a v3 contract is not strong enough to support a scientific decision.
  * Presence of the result schema alone is deliberately insufficient: decision-bearing evidence must
  * establish immutable execution identity, intended population identity, scientific execution
- * semantics, limits, and side-effect posture. Explicit null is allowed for limit fields where
- * "there is no such ceiling" is meaningful; omission/undefined is not.
+ * semantics, limits, and side-effect posture. Explicit null is allowed for numeric limit fields
+ * where "there is no such ceiling" is meaningful; omission/undefined is not.
  */
 export function decisionContractIssues(contract) {
   const issues = [];
@@ -70,7 +78,7 @@ export function decisionContractIssues(contract) {
   const sideEffects = contract?.sideEffects;
 
   for (const field of ['workflowFamily', 'producer', 'entrypoint']) {
-    if (!experiment?.[field]) issues.push(`experiment.${field}`);
+    if (!isNonEmptyString(experiment?.[field])) issues.push(`experiment.${field}`);
   }
   if (!SHA256_RE.test(String(experiment?.configurationHash ?? ''))) issues.push('experiment.configurationHash');
 
@@ -78,6 +86,7 @@ export function decisionContractIssues(contract) {
   if (arms != null) {
     const entries = arms && typeof arms === 'object' && !Array.isArray(arms) ? Object.entries(arms) : [];
     if (entries.length < 2) issues.push('experiment.arms');
+    if (experiment?.resolvedSha != null) issues.push('experiment.resolvedSha');
     for (const [name, arm] of entries) {
       if (!isImmutableCommitSha(arm?.resolvedSha)) issues.push(`experiment.arms.${name}.resolvedSha`);
     }
@@ -90,21 +99,31 @@ export function decisionContractIssues(contract) {
   }
 
   for (const field of ['kind', 'identityBasis']) {
-    if (!population?.[field]) issues.push(`population.${field}`);
+    if (!isNonEmptyString(population?.[field])) issues.push(`population.${field}`);
   }
   if (!SHA256_RE.test(String(population?.identityHash ?? ''))) issues.push('population.identityHash');
 
-  for (const field of ['levelBlind', 'historyAware', 'reproducibilityExpected', 'producerFamily', 'schedulerMode']) {
-    if (!hasOwn(execution, field) || execution[field] == null) issues.push(`execution.${field}`);
+  for (const field of ['levelBlind', 'historyAware', 'reproducibilityExpected']) {
+    if (typeof execution?.[field] !== 'boolean') issues.push(`execution.${field}`);
   }
-  if (!Array.isArray(execution?.historicalInputs)) issues.push('execution.historicalInputs');
+  for (const field of ['producerFamily', 'schedulerMode']) {
+    if (!isNonEmptyString(execution?.[field])) issues.push(`execution.${field}`);
+  }
+  if (!Array.isArray(execution?.historicalInputs) || execution.historicalInputs.some(value => !isNonEmptyString(value))) {
+    issues.push('execution.historicalInputs');
+  }
 
-  for (const field of ['cumulativeNodeCeiling', 'initialWorkAllocation', 'totalWorkCeiling', 'wallSafetyDeadlineMs', 'wallDeadlineBinding']) {
-    if (!hasOwn(limits, field) || limits[field] === undefined) issues.push(`limits.${field}`);
+  for (const field of ['cumulativeNodeCeiling', 'initialWorkAllocation', 'totalWorkCeiling', 'wallSafetyDeadlineMs']) {
+    if (!hasOwn(limits, field) || limits[field] === undefined || !isOptionalNonNegativeNumber(limits[field])) {
+      issues.push(`limits.${field}`);
+    }
+  }
+  if (!hasOwn(limits, 'wallDeadlineBinding') || typeof limits?.wallDeadlineBinding !== 'boolean') {
+    issues.push('limits.wallDeadlineBinding');
   }
 
   for (const field of ['hints', 'canonicalBaseline', 'telemetry', 'reports']) {
-    if (!sideEffects?.[field] || sideEffects[field] === 'unknown') issues.push(`sideEffects.${field}`);
+    if (!isNonEmptyString(sideEffects?.[field]) || sideEffects[field] === 'unknown') issues.push(`sideEffects.${field}`);
   }
 
   return issues;
