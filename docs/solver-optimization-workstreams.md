@@ -37,6 +37,8 @@ Program lens: **capability composition** exposes/selects/allocates capabilities 
 
 **Next gate:** first refresh the production boundary to incorporate promoted changes, then rebuild/rejoin the residual atlas and run the bounded capability-memory census against that current residual. Use existing provenance-bearing rows/signatures first; keep confirmed current gains separate from historical nominations, and measure overlap/unique capability, comparable work economics and displaced winners. Treat the result as a strategic fork: material complementary capability supports composition/allocation work; a weak union with a large no-known-candidate residual shifts emphasis toward capability acquisition through mechanisms earned by first-loss/family/reference evidence. Do not create a permanent policy panel or rerun campaign. [`prespecification`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
 
+The refresh -> residual rejoin -> census sequence is the **primary serial spine**, not a global lock. Independent, already-earned analysis and bounded acquisition work below should proceed while long refresh/census compute is unavailable or running.
+
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** ACTIVE / PARALLEL ANALYSIS.
@@ -45,16 +47,26 @@ Use capability, lifecycle, provenance, profile, family, census, trace, accepted-
 
 **Frontier/structural-response path:** class 4 is the preferred near-control for class 5. Screen technique contrasts for temporal persistence and generic-difficulty confounding before family/profile/trace escalation. The same known-live extinction mechanism recurring across materially different actions may hand off to WS2/WS4; technique-specific response stays WS1. Capability-memory policy contrasts may nominate cases but must be reconciled before being treated as current action capability. [`extension audit`](../reports/2026-09-11-structural-technique-response-extension-audit-001.md)
 
-**Stage 3 is complete and positive for both frozen pairs:** isolated matched-work resolves for `R02687`/objectiveFirst and `R02094`/intersectionHarvest show real `plain` vs `mechanic-buckets` sibling-response flips across 4/5 existing transform modes for each pair, with opposite net directions. Static object counts and portal-use timing do not mediate the difference. **Next:** source-controlled solution-space mediation, especially must-cross order/basin descriptors, for these two pairs only; do not add a third pair or generate a broad new family campaign. [`report`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md)
+**Stage 3 is complete and positive for both frozen pairs:** isolated matched-work resolves for `R02687`/objectiveFirst and `R02094`/intersectionHarvest show real `plain` vs `mechanic-buckets` sibling-response flips across 4/5 existing transform modes for each pair, with opposite net directions. Static object counts and simple portal-use timing do not mediate the difference. **Next:** source-controlled solution-space mediation, especially must-cross visitation order / portal-must-cross basin structure, for these two pairs only; if that remains non-separating, use bounded operational first divergence. Do not add a third pair or generate a broad new family campaign. [`report`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md)
 
 The old `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` cohort is historical sizing. At the post-1,029 boundary, the triple overlap is **232/671 (34.6%)**. [`residual atlas`](../reports/2026-09-11-post-1029-residual-atlas-001.md)
+
+### 3. Parallel capability-acquisition probe (no new workstream)
+
+**State:** EARNED / BOUNDED PILOT READY.
+
+The promoted `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` result earned the previously deferred mechanic-composition premise. The static design check on `R00726` already showed that a one-cell portal-terminal relocation can remove exactly the targeted must-cross x visited-portal-terminal obligation cluster while leaving an unrelated cluster intact. This line no longer belongs in the deferred queue. [`design`](../reports/2026-09-11-mechanic-composition-transfer-pilot-design-001.md), [`premise map`](../reports/2026-09-11-new-premise-reopen-map-001.md)
+
+**Next gate:** run the prespecified **small 3-5-parent controlled sibling pilot**, using existing 219-level opportunity-set parents. Start observer-only on original-vs-decoupled siblings; require legal/connectivity checks and a predicted applicability flip before funding matched-work prune on/off comparison. Parent/family is the independent unit. Stop if relocation introduces generic-difficulty/confounding effects or the response does not track the coupled-obligation boundary. Do not expand into a general generator campaign.
+
+This probe is intentionally parallel to the WS2 production refresh/census spine: it tests acquisition of adjacent generic capability and does not depend on current-residual membership, headline solve count, or capability-memory union estimates.
 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Refresh production/residual state, then run the bounded capability-memory census; use its union/headroom to choose composition/allocation versus capability-acquisition emphasis. Card-E remains nomination-only. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL** | Continue temporal/difficulty-controlled structural response; next earned stage is solution-space mediation for the two stage-3 pairs. |
+| 1 | Automatic action selection | **ACTIVE / PARALLEL** | Continue the two stage-3-positive pairs into source-controlled solution-space mediation; use bounded operational first divergence only if cheaper mediators fail. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when first-loss/family evidence shows a live continuation needs repair-side interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or a new hotspot. |
 | 3 | Generalization/holdout discipline | **METHOD COMPLETE** | Keep grouped-family independence and confirmation proportional to selection pressure; capability-memory mining increases that pressure. |
@@ -62,6 +74,8 @@ The old `396 intersection-heavy + must-cross-heavy + multi-portal / 118 solved` 
 | 0 | Restart/randomization + learned-failure search | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence under the existing gates. |
 | 4 | Beam retention at extinction boundaries | **CLOSED IN TESTED FORMS** | Reopen only for independent known-live recurrence across materially distinct actions or a genuinely new bounded descriptor. The 28/28 beam cull alone does not satisfy that bar. |
 | 5 | Exact/reference-model program | **ON DEMAND** | Adjudicate nominated states/prefixes; broad CP-SAT expansion needs a new prespecified question. |
+
+The parallel mechanic-composition acquisition probe is not a new workstream ID; it is an earned bounded experiment routed by the existing acquisition/future-work machinery.
 
 ## Standing research rules
 
