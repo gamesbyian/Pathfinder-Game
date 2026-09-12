@@ -7,6 +7,7 @@ import {
   EXPERIMENT_SCHEMA_VERSION,
   buildPopulationIntegrity,
   decisionContractIssues,
+  declaredDecisionContractIssues,
   hashPopulation,
 } from './solver-experiment-contract.mjs';
 
@@ -270,7 +271,9 @@ const contract = {
     reports: declaredContract?.sideEffects?.reports ?? 'unknown',
   },
 };
-const contractIssues = declaredContract ? decisionContractIssues(contract) : ['missing declared experiment contract'];
+const contractIssues = declaredContract
+  ? [...new Set([...declaredDecisionContractIssues(declaredContract), ...decisionContractIssues(contract)])]
+  : ['missing declared experiment contract'];
 const contractDecisionEligible = contractIssues.length === 0;
 
 const manifest = {
