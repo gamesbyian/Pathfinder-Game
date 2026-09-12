@@ -185,19 +185,23 @@ function main() {
     const solved = levels.filter(l => l.ok).length;
     const totalMs = levels.reduce((sum, l) => sum + (l.totalMs ?? l.elapsedMs ?? 0), 0);
     const levelIds = levels.map(l => l.id ?? l.levelId ?? l.level).map(String);
-    const populationDescriptor = hashPopulation({
-        kind: 'observed-level-ids',
-        identityBasis: allowMixedCorpora ? 'corpus-and-level-id' : 'stable-level-id',
-        identities: levelIds,
-        corpusIdentity: allowMixedCorpora ? [...new Set(reports.map(r => r.summary.corpus))].sort() : first.corpus,
-    });
     const expectedIds = expectedIdsFile
         ? readFileSync(path.resolve(ROOT, expectedIdsFile), 'utf8').split(/[\s,]+/).map(value => value.trim()).filter(Boolean)
         : reports.flatMap(r => r.summary.expectedIds ?? r.population?.expectedIds ?? []);
-    const integrity = expectedIds.length
+    const intendedPopulationKnown = expectedIds.length > 0;
+    const populationIdentities = intendedPopulationKnown ? expectedIds : levelIds;
+    const populationDescriptor = hashPopulation({
+        kind: intendedPopulationKnown ? 'intended-level-ids' : 'observed-level-ids',
+        identityBasis: allowMixedCorpora ? 'corpus-and-level-id' : 'stable-level-id',
+        identities: populationIdentities,
+        corpusIdentity: allowMixedCorpora ? [...new Set(reports.map(r => r.summary.corpus))].sort() : first.corpus,
+    });
+    const integrity = intendedPopulationKnown
         ? buildPopulationIntegrity(expectedIds, levels)
-        : { ...buildPopulationIntegrity(levelIds, levels), complete: false, expectedCount: null,
-            missingIds: [], intendedPopulationKnown: false };
+        : { ...buildPopulationIntegrity(levelIds, levels), complete: false, coverageComplete: false,
+            decisionValidComplete: false, expectedCount: null, missingIds: [], intendedPopulationKnown: false };
+    integrity.populationIdentityHash = populationDescriptor.identityHash;
+    if (intendedPopulationKnown) integrity.expectedIds = populationDescriptor.identities;
 
     // Carry the NODE-budget context through. Every shard report records nodeBudget/
     // repairBudgetFraction/adaptiveBudget, but the combined report -- which is what becomes an
@@ -239,7 +243,11 @@ function main() {
         completed: integrity.observedCount,
         total: integrity.expectedCount,
         populationIntegrity: integrity,
-        population: { kind: 'observed-level-ids', identityBasis: 'stable-level-id', identityHash: populationDescriptor.identityHash },
+        population: {
+            kind: intendedPopulationKnown ? 'intended-level-ids' : 'observed-level-ids',
+            identityBasis: allowMixedCorpora ? 'corpus-and-level-id' : 'stable-level-id',
+            identityHash: populationDescriptor.identityHash,
+        },
         execution: {
             levelBlind: producerMetadata.levelBlind ?? executionConfig.levelBlind ?? null,
             historyAware: producerMetadata.historyAware ?? null,
