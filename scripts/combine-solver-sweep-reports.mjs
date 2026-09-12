@@ -158,6 +158,15 @@ function main() {
         if (r.summary.schedulerMode !== first.schedulerMode) {
             throw new Error(`Mismatched schedulerMode: ${reports[0].path} used ${first.schedulerMode}, ${r.path} used ${r.summary.schedulerMode}.`);
         }
+        // Every shard combined here is expected to have checked out the SAME immutable ref -- a
+        // disagreement means a mutable ref (a branch name/github.ref rather than github.sha) moved
+        // mid-dispatch and different shards silently ran different code, corrupting this as one
+        // coherent experiment. 'local'/'unknown' (no git available, e.g. a local dev invocation)
+        // are exempted since they carry no real provenance to disagree on.
+        const comparableCommit = value => value && value !== 'local' && value !== 'unknown';
+        if (comparableCommit(r.summary.commit) && comparableCommit(first.commit) && r.summary.commit !== first.commit) {
+            throw new Error(`Mismatched commit (wrong-ref exposure): ${reports[0].path} ran at ${first.commit}, ${r.path} ran at ${r.summary.commit}. A mutable ref moved mid-dispatch; re-run pinned to one immutable SHA.`);
+        }
     }
     const executionConfig = collectExecutionConfig(reports);
     const producerMetadata = consistentMetadata(reports, ['producer', 'entrypoint', 'workflowFamily', 'levelBlind', 'historyAware', 'schedulerMode']);

@@ -71,11 +71,11 @@ jobs:
     # job-level `if:` cannot reference `matrix` (see collect-prune-gap-labels.yml's own comment on this) -- the
     # shard_count trial-slice gate is applied per-step below instead.
     steps:
-      - name: Check out the dispatched ref
+      - name: Check out the dispatched commit exactly
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
 
       - name: Setup Node
         if: ${{ matrix.shard <= fromJSON(inputs.shard_count) }}
@@ -153,10 +153,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out the dispatched ref
+      - name: Check out the dispatched commit exactly
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.sha }}
 
       - name: Download all shard artifacts
         uses: actions/download-artifact@v8

@@ -271,6 +271,16 @@ async function main() {
         await assert.rejects(() => run([`--in=${batch1},${batch3}`, `--out=${outFile}`]), /Mismatched budgetMs/);
         console.log('  ✓ rejects mismatched budgetMs across batches');
 
+        const batchWrongRef = path.join(tempDir, 'batch-wrong-ref.json');
+        await writeFile(batchWrongRef, JSON.stringify(batchReport({ summary: { commit: 'def456' }, levels: [{ level: 4, id: 'R00004', ok: true }] })));
+        await assert.rejects(() => run([`--in=${batch1},${batchWrongRef}`, `--out=${outFile}`]), /Mismatched commit \(wrong-ref exposure\)/);
+        console.log('  ✓ rejects shards that ran at different commits (a mutable ref moved mid-dispatch)');
+
+        const batchLocalCommit = path.join(tempDir, 'batch-local-commit.json');
+        await writeFile(batchLocalCommit, JSON.stringify(batchReport({ summary: { commit: 'local' }, levels: [{ level: 5, id: 'R00005', ok: true }] })));
+        await run([`--in=${batch1},${batchLocalCommit}`, `--out=${outFile}`]);
+        console.log('  ✓ exempts local/unknown commit provenance from the wrong-ref check');
+
         const batch1Again = path.join(tempDir, 'batch-01-again.json');
         await writeFile(batch1Again, JSON.stringify(batchReport({
             levels: [{ level: 1, id: 'R00001', ok: false, status: 'timeout', totalMs: 8000, elapsedMs: 8000, attempts: [], attemptCount: 0, failedStrategies: [] }],
