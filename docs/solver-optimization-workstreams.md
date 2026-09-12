@@ -53,7 +53,7 @@ The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
-|---:|---|---|
+|---:|---|---|---|
 | 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Rejoin B1/B2 + R03229 exact extinction states; test 2-4 prespecified future-feasibility summaries read-only before any new class-5 treatment. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Run/classify the exact cross-hint provenance collision audit; structural-response ladder otherwise closed pending a new pair/premise. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
