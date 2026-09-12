@@ -11,6 +11,10 @@
 
 August B1/B2 had already established the same core phenomenon on unrelated levels and nominated the useful abstraction: **future opportunity / future feasibility**, not more generic score tuning. B2 also supplies live/live controls, so the comparison can ask what legal current-state information tracks actual remaining feasibility rather than merely rank or survival.
 
+Two same-day lines sharpen what this question must *not* collapse into. WS1's operational first-divergence result showed mechanic-bucket retention doing its intended job on two solved family siblings: preserving newly created minority mechanic-progress buckets. But the two class-5 bucket-retention canaries produced zero solves on the frozen first-loss population. Therefore **recent mechanic progress / bucket novelty is a useful diversity signal, not established future-feasibility information**. Any descriptor here must distinguish actual residual opportunity beyond progress masks/counts rather than repackaging them.
+
+The mechanic-composition pilot and population-scale class-5 family/reference comparison independently found structural-edit rescue to be strongly confounded by generic difficulty reduction. That does not prove which latent quantity matters, but it raises the value of measuring **slack/capacity/topological scarcity directly** instead of treating perturbation rescue as causal evidence for the moved mechanic. Descriptor selection should use that lesson without promoting “general difficulty” into an unfalsifiable explanation.
+
 ## Existing evidence to rejoin
 
 [`2026-08-12-b2-extinction-adjacent-cpsat-labels.md`](2026-08-12-b2-extinction-adjacent-cpsat-labels.md) exact-labelled retained and culled states at real extinction decisions. After flipping-filter support was added, the evidence included dead-preferred/live-alternative decisions in A- and D-class regimes, live/live weak-margin controls, and width-saturation cases where top-ranked was dead while known-supported and near-cutoff alternatives were live.
@@ -35,7 +39,7 @@ The goal is not arbitrary-state solvability prediction. It is to identify whethe
 
 ## Prespecified descriptor families
 
-Keep this small; no feature buffet.
+Keep this small; no feature buffet. The same-day perturbation-confound results make capacity/slack and topology-scarcity summaries especially informative first candidates, but do not justify adding candidates beyond this frozen family set.
 
 ### A. Exact-resource attainable capacity
 
@@ -60,11 +64,13 @@ Preserve search-policy context rather than collapsing to live/dead only. Where e
 
 The strongest candidate separates feasibility inside the same search-status stratum or explains `DEAD retained` versus `LIVE culled` without simply rediscovering rank. `R03229` contributes that latter contrast; B2 supplies recurrence and live/live controls.
 
+Treat mechanic-progress state as a negative control where available: because bucket retention can preserve fresh progress without solving the class-5 first-loss population, a candidate that merely tracks progress-mask rarity or “just made progress” has not added the required information.
+
 ## Execution discipline
 
 1. **Existing evidence first.** Reuse committed B1/B2 and `R03229` cases; regenerate only cheap state summaries as needed.
 2. **Prespecify 2-4 concrete summaries** from the three families above, preferably quantities already available from current state/prune helpers.
-3. **Require incremental information** beyond score, score margin/rank, existing hard-prune verdict, and obvious mechanic counts.
+3. **Require incremental information** beyond score, score margin/rank, existing hard-prune verdict, obvious mechanic counts, and simple progress-bucket identity/rarity.
 4. **Require unrelated-parent recurrence** before advancement.
 5. **Classify the role before implementation:** sound prune candidate, unsound ranking/retention signal, expensive offline diagnostic, or architectural representation gap.
 6. **Run the smallest live test only after offline survival.** Failed descriptors close cheaply.
@@ -78,9 +84,9 @@ Close when candidates duplicate existing information, separate labels inconsiste
 ## Relationship to current workstreams
 
 - **WS2:** owns this as the next class-5 premise-generation gate.
-- **WS4:** remains closed in tested forms; no generic retention reopening without a surviving descriptor.
+- **WS4:** remains closed in tested forms; no generic retention reopening without a surviving descriptor. The WS1 first-divergence result explains why mechanic buckets can help selected siblings, while the class-5 canaries show that mechanism does not generalize into the missing class-5 capability by itself.
 - **WS5:** supplies existing exact labels first; no broad CP-SAT expansion yet.
-- **WS1:** becomes relevant only if a surviving legal descriptor predicts action/policy choice.
+- **WS1:** becomes relevant only if a surviving legal descriptor predicts action/policy choice; its current bucket-divergence evidence is a mechanism constraint/negative control, not a selector license.
 - **WS7:** becomes relevant only if implementation cost becomes the blocker.
 
 ## Non-goals
