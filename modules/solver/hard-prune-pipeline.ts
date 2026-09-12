@@ -62,7 +62,7 @@ export function evaluatePrunedMove(
     // Shared with the opt-in PRUNE_MC_PORTAL_FORCED_NEIGHBOR check below so an A/B run that also
     // wants observer logging never computes obligation clusters twice for the same node.
     const jointObligationObserver = prep._jointObligationObserver;
-    const jointObligationPruneEnabled = !!(cfg && cfg.PRUNE_MC_PORTAL_FORCED_NEIGHBOR === true);
+    const jointObligationPruneEnabled = !(cfg && cfg.PRUNE_MC_PORTAL_FORCED_NEIGHBOR === false);
     let jointObligationVerdicts: ReturnType<typeof evaluateObligationClusters> | null = null;
     if (jointObligationObserver || jointObligationPruneEnabled) {
         jointObligationVerdicts = evaluateObligationClusters(next, state, level, prep);

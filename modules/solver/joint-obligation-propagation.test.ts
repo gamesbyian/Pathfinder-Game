@@ -154,16 +154,24 @@ function makeLevelWithSlack(): NormalizedLevel {
     return { ...makeLevel(), requiredIntersections: 2 } as unknown as NormalizedLevel;
 }
 
-test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR is opt-in: default (no cfg) never rejects on this mechanism', () => {
+// Promoted 2026-09-11 (21 gains / 0 losses, all referee-valid, see
+// reports/2026-09-11-joint-obligation-mc-portal-ab-001-preflight.md) to production default-on.
+// Same geometry as PRUNE_MC_NEIGHBOR_BUDGET_PORTAL's own promoted tests: no-config and explicit-true
+// are equivalent (both default-ON), and only an explicit false is a research escape hatch.
+test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR rejects by default (no cfg), even with free intersection budget', () => {
     const level = makeLevelWithSlack();
     const prep = prepLevel(level);
     const state = createState(PACK(0, 0), level, prep);
     state.visited[PACK(2, 1)] = 1;
+    const diagnostics: PruneDiagnostics = { reached: {}, rejected: {} };
 
-    assert.equal(evaluatePrunedMove(PACK(1, 2), 1, state, level, prep, null, false), 'pass');
+    const verdict = evaluatePrunedMove(PACK(1, 2), 1, state, level, prep, null, false, { diagnostics });
+
+    assert.equal(verdict, 'reject');
+    assert.equal(diagnostics.rejected.PRUNE_MC_PORTAL_FORCED_NEIGHBOR, 1);
 });
 
-test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR rejects when explicitly enabled, even with free intersection budget', () => {
+test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR: explicit true is equivalent to the default', () => {
     const level = makeLevelWithSlack();
     const prep = prepLevel(level);
     const state = createState(PACK(0, 0), level, prep);
@@ -177,6 +185,18 @@ test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR rejects when explicitly enabled, even with
     assert.equal(diagnostics.rejected.PRUNE_MC_PORTAL_FORCED_NEIGHBOR, 1);
 });
 
+test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR: explicit false suppresses the prune (research escape hatch)', () => {
+    const level = makeLevelWithSlack();
+    const prep = prepLevel(level);
+    const state = createState(PACK(0, 0), level, prep);
+    state.visited[PACK(2, 1)] = 1;
+
+    const verdict = evaluatePrunedMove(PACK(1, 2), 1, state, level, prep,
+        { PRUNE_MC_PORTAL_FORCED_NEIGHBOR: false }, false);
+
+    assert.equal(verdict, 'pass');
+});
+
 test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR + observer share one evaluation, not two', () => {
     const level = makeLevelWithSlack();
     const prep = prepLevel(level);
@@ -185,8 +205,7 @@ test('PRUNE_MC_PORTAL_FORCED_NEIGHBOR + observer share one evaluation, not two',
     const state = createState(PACK(0, 0), level, prep);
     state.visited[PACK(2, 1)] = 1;
 
-    const verdict = evaluatePrunedMove(PACK(1, 2), 1, state, level, prep,
-        { PRUNE_MC_PORTAL_FORCED_NEIGHBOR: true }, false);
+    const verdict = evaluatePrunedMove(PACK(1, 2), 1, state, level, prep, null, false);
 
     assert.equal(verdict, 'reject');
     assert.equal(observed.length, 1, 'the shared verdict computation should still produce exactly one observed record');
