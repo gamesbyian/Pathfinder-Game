@@ -108,6 +108,19 @@ export interface HintSearchProvenance {
     seedSalt: number | null;
 }
 
+/** Source identity of a successful technique-census cell. Kept on hint provenance because
+ * `isolatedTechnique: true` alone cannot distinguish base T1 capability from a variant, pair or
+ * ablation success. */
+export interface HintTechniqueCensusCellContext {
+    cellId: string | null;
+    tier: string | null;
+    variantLabel: string | null;
+    pairLabel: string | null;
+    flagExperiment: string | null;
+    ablation: unknown | null;
+    techniqueKeys: string[];
+}
+
 export interface HintContextProvenance {
     /** Other hints were available to the run, even if this candidate did not use one. */
     usedExistingHints: boolean;
@@ -118,6 +131,8 @@ export interface HintContextProvenance {
     /** One technique ran outside the competitively-budgeted solveLevel ladder. Such finds are not
      * production-solver capability evidence even when solver.id === SOLVER_ID. */
     isolatedTechnique: boolean;
+    /** Exact source cell when the isolated solve came from the technique census; null otherwise. */
+    techniqueCensusCell: HintTechniqueCensusCellContext | null;
 }
 
 export interface HintProvenanceEntry {
@@ -171,6 +186,7 @@ export interface MakeProvenanceEntryOptions {
     hintGuided?: boolean;
     levelRevision?: string | null;
     isolatedTechnique?: boolean;
+    techniqueCensusCell?: HintTechniqueCensusCellContext | null;
     foundAt?: string;
 }
 
