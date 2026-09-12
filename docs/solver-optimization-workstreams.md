@@ -51,11 +51,11 @@ Use capability, lifecycle, provenance, profile, family, census, trace, accepted-
 
 ### 3. Parallel capability-acquisition probe (no new workstream)
 
-**State:** EARNED / BOUNDED PILOT READY.
+**State:** CLOSED — portal-terminal relocation instrument not clean enough to reuse.
 
-The promoted `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` result earned the previously deferred mechanic-composition premise. A static check on `R00726` showed a one-cell portal-terminal relocation can remove exactly the targeted must-cross x visited-portal-terminal obligation cluster while leaving an unrelated cluster intact. [`design`](../reports/2026-09-11-mechanic-composition-transfer-pilot-design-001.md), [`premise map`](../reports/2026-09-11-new-premise-reopen-map-001.md)
+The bounded 5-parent Stage A/B/C pilot ran to completion: 2/5 parents show the predicted mechanism-supporting chain cleanly (rescue disappears on decoupling without a control-side confound), but 2/5 hit the design's own pre-registered stop condition — the relocation itself introduces a general-difficulty confound (decoupled control and treatment solve identically, byte-for-byte, meaning the edit made the level easier through an unrelated route). One parent's original rescue does not reproduce at the pilot's reduced budget. Per the design's own stop rule, this closes the relocation instrument specifically — it does not narrow the underlying `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` promotion and does not license a broader generator campaign. [`result`](../reports/2026-09-12-mechanic-composition-pilot-001-result.md), [`design`](../reports/2026-09-11-mechanic-composition-transfer-pilot-design-001.md)
 
-**Next gate:** run the prespecified **small 3-5-parent controlled sibling pilot**. Start observer-only on original-vs-decoupled siblings; require legal/connectivity checks and a predicted applicability flip before matched-work prune on/off comparison. Parent/family is the independent unit. Stop if relocation introduces generic-difficulty/confounding effects or response does not track the coupled-obligation boundary. Do not expand into a general generator campaign.
+**Reopen condition:** a materially different manipulation that does not relocate a landmark shared with the level's general navigation graph (e.g. adding/removing a viable must-cross axis while keeping the coupled cluster present), with its own frozen edit rule and confound check.
 
 ## Workstream state
 

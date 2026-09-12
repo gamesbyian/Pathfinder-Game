@@ -1,0 +1,202 @@
+{
+  "nodeBudget": 20000000,
+  "budgetMs": 300000,
+  "rows": [
+    {
+      "parentId": "R01274",
+      "original": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 149944121,
+          "nodesExpanded": 63920032,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 133980569,
+          "nodesExpanded": 49836118,
+          "refereeValid": true
+        }
+      },
+      "decoupled": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 146653131,
+          "nodesExpanded": 62983114,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 164247898,
+          "nodesExpanded": 88559818,
+          "refereeValid": null
+        }
+      },
+      "originalRescueConfirmed": true,
+      "decoupledRescuePersists": false,
+      "decoupledRescueDisappears": true
+    },
+    {
+      "parentId": "R01489",
+      "original": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 109338499,
+          "nodesExpanded": 76851359,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 95687892,
+          "nodesExpanded": 57984482,
+          "refereeValid": null
+        }
+      },
+      "decoupled": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 116314508,
+          "nodesExpanded": 90000253,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 107514747,
+          "nodesExpanded": 78144916,
+          "refereeValid": null
+        }
+      },
+      "originalRescueConfirmed": false,
+      "decoupledRescuePersists": false,
+      "decoupledRescueDisappears": false
+    },
+    {
+      "parentId": "R01849",
+      "original": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 189478100,
+          "nodesExpanded": 90000233,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 34368869,
+          "nodesExpanded": 5686980,
+          "refereeValid": true
+        }
+      },
+      "decoupled": {
+        "control": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 217207,
+          "nodesExpanded": 56511,
+          "refereeValid": true
+        },
+        "treatment": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 217207,
+          "nodesExpanded": 56511,
+          "refereeValid": true
+        }
+      },
+      "originalRescueConfirmed": true,
+      "decoupledRescuePersists": false,
+      "decoupledRescueDisappears": true
+    },
+    {
+      "parentId": "R01882",
+      "original": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 169974220,
+          "nodesExpanded": 83694903,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 45122519,
+          "nodesExpanded": 8708742,
+          "refereeValid": true
+        }
+      },
+      "decoupled": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 156623365,
+          "nodesExpanded": 59848920,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 183302873,
+          "nodesExpanded": 90000182,
+          "refereeValid": null
+        }
+      },
+      "originalRescueConfirmed": true,
+      "decoupledRescuePersists": false,
+      "decoupledRescueDisappears": true
+    },
+    {
+      "parentId": "R02036",
+      "original": {
+        "control": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 177775886,
+          "nodesExpanded": 90000091,
+          "refereeValid": null
+        },
+        "treatment": {
+          "ok": false,
+          "status": "node-budget-reached",
+          "workSpent": 176894482,
+          "nodesExpanded": 90000150,
+          "refereeValid": null
+        }
+      },
+      "decoupled": {
+        "control": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 44200931,
+          "nodesExpanded": 14510656,
+          "refereeValid": true
+        },
+        "treatment": {
+          "ok": true,
+          "status": "success",
+          "workSpent": 44200931,
+          "nodesExpanded": 14510656,
+          "refereeValid": true
+        }
+      },
+      "originalRescueConfirmed": false,
+      "decoupledRescuePersists": false,
+      "decoupledRescueDisappears": false
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "originalRescueConfirmed": 3,
+    "decoupledRescuePersists": 0,
+    "decoupledRescueDisappears": 3
+  }
+}
