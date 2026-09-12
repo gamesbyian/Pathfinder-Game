@@ -8,7 +8,7 @@ jobs:
   cheap-evidence:
     if: github.event.pull_request.head.ref == 'chatgpt/cross-line-research-integration-2026-09-12'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -69,6 +69,20 @@ jobs:
             echo '# origin / arm labels';
             grep -RInE --include='*.mjs' --include='*.js' --include='*.ts' --exclude-dir=node_modules '(originLabel|armLabel|sourceLabel|treatmentLabel|controlLabel)' scripts modules || true;
           } > tmp/preclaude/semantic-label-sites.txt
+      - name: Rebuild frozen R03229 microscope cases
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/collect-known-solution-prefix-survival.mjs -- \
+            --level-ids=R03229 --beam-width=2000 --node-budget=3000000 \
+            --include-stages --retain-all-removal-details --retain-ranked-pool-details \
+            --out=tmp/preclaude/r03229-survival.json
+          node scripts/run-bundled.mjs scripts/stress/build-class5-microscope-cases.mjs -- \
+            --survival=tmp/preclaude/r03229-survival.json --level-id=R03229 \
+            --out=tmp/preclaude/r03229-microscope-cases.json
+      - name: Run bounded future-feasibility descriptor rejoin
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/future-feasibility-descriptor-rejoin.mjs -- \
+            --r03229-cases=tmp/preclaude/r03229-microscope-cases.json \
+            --out=tmp/preclaude/future-feasibility-descriptor-rejoin.json
       - uses: actions/upload-artifact@v4
         with:
           name: preclaude-cheap-evidence
