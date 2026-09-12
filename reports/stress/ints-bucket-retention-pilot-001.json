@@ -1,0 +1,723 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-12T20:17:09.646Z",
+  "levelsFile": "data/stress/stress-levels-random.json",
+  "purpose": "ints-bucket-retention canary on the frozen 28-level first-loss frontier population",
+  "beamWidth": 2000,
+  "nodeBudget": 3000000,
+  "population": [
+    "R03101",
+    "R00329",
+    "R03275",
+    "R02530",
+    "R02309",
+    "R03351",
+    "R01190",
+    "R01632",
+    "R03088",
+    "R01097",
+    "R03229",
+    "R03197",
+    "R02185",
+    "R02733",
+    "R02438",
+    "R02590",
+    "R02897",
+    "R03223",
+    "R00786",
+    "R03083",
+    "R01023",
+    "R00139",
+    "R02801",
+    "R02170",
+    "R02210",
+    "R02025",
+    "R01290",
+    "R02324"
+  ],
+  "rows": [
+    {
+      "levelId": "R03101",
+      "gateKey": 65542,
+      "validLabels": 264,
+      "requiredLength": 124,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 155805,
+        "lastSupportDepth": 16,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 168053,
+        "lastSupportDepth": 17,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 1
+    },
+    {
+      "levelId": "R00329",
+      "gateKey": 786442,
+      "validLabels": 40,
+      "requiredLength": 110,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 149629,
+        "lastSupportDepth": 13,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 158022,
+        "lastSupportDepth": 13,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R03275",
+      "gateKey": 458759,
+      "validLabels": 38,
+      "requiredLength": 90,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 96310,
+        "lastSupportDepth": 15,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 98566,
+        "lastSupportDepth": 15,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02530",
+      "gateKey": 131072,
+      "validLabels": 5,
+      "requiredLength": 88,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 93080,
+        "lastSupportDepth": 16,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 97510,
+        "lastSupportDepth": 16,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02309",
+      "gateKey": 720901,
+      "validLabels": 26,
+      "requiredLength": 91,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 76298,
+        "lastSupportDepth": 19,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 80706,
+        "lastSupportDepth": 18,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": -1
+    },
+    {
+      "levelId": "R03351",
+      "gateKey": 196611,
+      "validLabels": 66,
+      "requiredLength": 119,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 194059,
+        "lastSupportDepth": 47,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 178584,
+        "lastSupportDepth": 46,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": -1
+    },
+    {
+      "levelId": "R01190",
+      "gateKey": 720900,
+      "validLabels": 46,
+      "requiredLength": 97,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 65941,
+        "lastSupportDepth": 22,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 90633,
+        "lastSupportDepth": 22,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R01632",
+      "gateKey": 589827,
+      "validLabels": 134,
+      "requiredLength": 118,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 172240,
+        "lastSupportDepth": 10,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 143080,
+        "lastSupportDepth": 10,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R03088",
+      "gateKey": 589828,
+      "validLabels": 8,
+      "requiredLength": 88,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 87319,
+        "lastSupportDepth": 13,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 96996,
+        "lastSupportDepth": 13,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R01097",
+      "gateKey": 10,
+      "validLabels": 12,
+      "requiredLength": 116,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 162708,
+        "lastSupportDepth": 16,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 163173,
+        "lastSupportDepth": 16,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R03229",
+      "gateKey": 262147,
+      "validLabels": 3,
+      "requiredLength": 82,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 92051,
+        "lastSupportDepth": 22,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 97511,
+        "lastSupportDepth": 22,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R03197",
+      "gateKey": 1,
+      "validLabels": 33,
+      "requiredLength": 119,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 163746,
+        "lastSupportDepth": 14,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 168185,
+        "lastSupportDepth": 13,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": -1
+    },
+    {
+      "levelId": "R02185",
+      "gateKey": 393225,
+      "validLabels": 16,
+      "requiredLength": 79,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 105636,
+        "lastSupportDepth": 19,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 105434,
+        "lastSupportDepth": 18,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": -1
+    },
+    {
+      "levelId": "R02733",
+      "gateKey": 589833,
+      "validLabels": 7,
+      "requiredLength": 73,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 84077,
+        "lastSupportDepth": 16,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 84185,
+        "lastSupportDepth": 16,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02438",
+      "gateKey": 131076,
+      "validLabels": 157,
+      "requiredLength": 105,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 153137,
+        "lastSupportDepth": 17,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 151763,
+        "lastSupportDepth": 25,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 8
+    },
+    {
+      "levelId": "R02590",
+      "gateKey": 589829,
+      "validLabels": 4,
+      "requiredLength": 78,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 78088,
+        "lastSupportDepth": 22,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 79775,
+        "lastSupportDepth": 22,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02897",
+      "gateKey": 131078,
+      "validLabels": 12,
+      "requiredLength": 74,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 96071,
+        "lastSupportDepth": 41,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 98774,
+        "lastSupportDepth": 39,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": -2
+    },
+    {
+      "levelId": "R03223",
+      "gateKey": 524292,
+      "validLabels": 76,
+      "requiredLength": 97,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 162203,
+        "lastSupportDepth": 14,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 163801,
+        "lastSupportDepth": 16,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 2
+    },
+    {
+      "levelId": "R00786",
+      "gateKey": 327684,
+      "validLabels": 6,
+      "requiredLength": 92,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 145477,
+        "lastSupportDepth": 21,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 142679,
+        "lastSupportDepth": 21,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R03083",
+      "gateKey": 196618,
+      "validLabels": 59,
+      "requiredLength": 119,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 185574,
+        "lastSupportDepth": 11,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 165926,
+        "lastSupportDepth": 11,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R01023",
+      "gateKey": 196612,
+      "validLabels": 13,
+      "requiredLength": 76,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 83355,
+        "lastSupportDepth": 16,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 84314,
+        "lastSupportDepth": 19,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 3
+    },
+    {
+      "levelId": "R00139",
+      "gateKey": 851981,
+      "validLabels": 21,
+      "requiredLength": 116,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 180718,
+        "lastSupportDepth": 14,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 184584,
+        "lastSupportDepth": 14,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02801",
+      "gateKey": 524291,
+      "validLabels": 1,
+      "requiredLength": 79,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 75924,
+        "lastSupportDepth": 12,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 88612,
+        "lastSupportDepth": 12,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02170",
+      "gateKey": 458757,
+      "validLabels": 47,
+      "requiredLength": 93,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 125144,
+        "lastSupportDepth": 18,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 122997,
+        "lastSupportDepth": 15,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": -3
+    },
+    {
+      "levelId": "R02210",
+      "gateKey": 786437,
+      "validLabels": 30,
+      "requiredLength": 115,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 152529,
+        "lastSupportDepth": 13,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 151421,
+        "lastSupportDepth": 13,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02025",
+      "gateKey": 131073,
+      "validLabels": 35,
+      "requiredLength": 82,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 81575,
+        "lastSupportDepth": 16,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 117864,
+        "lastSupportDepth": 15,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": -1
+    },
+    {
+      "levelId": "R01290",
+      "gateKey": 196613,
+      "validLabels": 8,
+      "requiredLength": 116,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 144771,
+        "lastSupportDepth": 11,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 124972,
+        "lastSupportDepth": 11,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    },
+    {
+      "levelId": "R02324",
+      "gateKey": 589836,
+      "validLabels": 11,
+      "requiredLength": 125,
+      "beamWidth": 2000,
+      "nodeBudget": 3000000,
+      "control": {
+        "solved": false,
+        "nodesExpanded": 173788,
+        "lastSupportDepth": 12,
+        "lossCause": "score-width-culled",
+        "correctnessAlarms": 0
+      },
+      "treatment": {
+        "solved": false,
+        "solveVerdict": null,
+        "nodesExpanded": 177743,
+        "lastSupportDepth": 12,
+        "lossCause": "ints-bucket-culled",
+        "correctnessAlarms": 0
+      },
+      "depthDelta": 0
+    }
+  ],
+  "summary": {
+    "levels": 28,
+    "controlSolved": 0,
+    "treatmentSolved": 0,
+    "newSolves": 0,
+    "regressions": 0,
+    "correctnessAlarms": 0,
+    "depthDeltaMean": 0.14285714285714285,
+    "depthDeltaMax": 8,
+    "depthDeltaMin": -3
+  }
+}

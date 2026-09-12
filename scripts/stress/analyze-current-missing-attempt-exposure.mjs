@@ -79,11 +79,14 @@ if (currentResidual.length !== baselineUnsolved.size) {
     throw new Error(`Residual contains ${missing.length} id(s) absent from corpus: ${missing.slice(0, 10).join(', ')}`);
 }
 
+// See analyze-post-1029-residual-atlas.mjs's own isBaseT1 comment: `variantLabel` alone is not a
+// reliable "non-base cell" signal (T1_PROMOTED_VARIANTS stamps it as bookkeeping even on the
+// clean, unmodified `repair|guidance=turn-biased` dispatch, ablation: null); `ablation` is the
+// real signal and is already checked separately.
 function isBaseT1(row) {
     return row?.corpus === 'corpus2'
         && row.tier === 'T1'
         && row.techniqueKeys?.length === 1
-        && !row.variantLabel
         && !row.flagExperiment
         && !row.pairLabel
         && !row.ablation;

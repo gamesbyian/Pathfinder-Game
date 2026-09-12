@@ -5,7 +5,7 @@ import { KEY_SPACE, PACK } from './encoding.js';
 import { SCORING_PROFILES } from './policy.js';
 import { prepLevel } from './prep.js';
 import { evaluatePrunedMove } from './hard-prune-pipeline.js';
-import { __composeBeamNumericCoarseStateKeyForTests, __mechanicBucketSelectForTests, __pruneFirstStepNeighborsForTests, __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
+import { __composeBeamNumericCoarseStateKeyForTests, __intsBucketSelectForTests, __mechanicBucketSelectForTests, __pruneFirstStepNeighborsForTests, __reconstructBeamPathForTests, beamSearchFromGate, dfsFromGateLDS, getLdsProbeNodeBudget } from './search.js';
 import { applyMove, createState } from './search-state.js';
 import { findTriggerableFalseGoalCells, classifyFalseGoalTriggerability, isParityCompatibleEndpoint } from './false-goal-trigger-search.js';
 import { isConnected } from './topology.js';
@@ -415,6 +415,37 @@ test('_mechanicBucketSelect: a real 32nd-flipper state (bit 31 set, negative int
   const unused = makeBeamNodeFixture({ mustCrossMask: 0, flipperUsedMask: 0, score: 9 });
   const selected = __mechanicBucketSelectForTests([usedSignBit, unused] as any, 2, 2 ** 32);
   assert.equal(selected.length, 2, 'the sign-bit flipper state and the unused state are genuinely distinct and must both survive');
+});
+
+test('_intsBucketSelect: guarantees per-ints-bucket representation instead of collapsing to plain top-K', () => {
+  // Five candidates, three at ints=0 (all outscoring the single ints=1 and ints=2 candidates).
+  // Plain top-K width=3 would keep only the three ints=0 candidates; ints-bucket retention must
+  // reserve at least one slot per distinct `ints` value present.
+  const cands = [
+    makeBeamNodeFixture({ ints: 0, score: 10 }), makeBeamNodeFixture({ ints: 0, score: 9 }),
+    makeBeamNodeFixture({ ints: 0, score: 8 }), makeBeamNodeFixture({ ints: 1, score: 5 }),
+    makeBeamNodeFixture({ ints: 2, score: 1 }),
+  ];
+  const plainTopK = cands.slice(0, 3);
+  assert.ok(plainTopK.every(c => c.ints === 0), 'sanity: plain top-3 by score is all ints=0');
+  const selected = __intsBucketSelectForTests(cands as any, 3);
+  assert.equal(selected.length, 3);
+  const intsPresent = new Set(selected.map((c: any) => c.ints));
+  assert.equal(intsPresent.size, 3, 'each of the three distinct ints buckets (0, 1, 2) must be represented');
+});
+
+test('_intsBucketSelect: a single ints bucket degrades to plain top-K (no diversity axis, no distortion)', () => {
+  const cands = [makeBeamNodeFixture({ ints: 3, score: 10 }), makeBeamNodeFixture({ ints: 3, score: 9 }),
+    makeBeamNodeFixture({ ints: 3, score: 8 })];
+  const selected = __intsBucketSelectForTests(cands as any, 2);
+  assert.deepEqual(selected, cands.slice(0, 2));
+});
+
+test('beamSearchFromGate: mechanicBucketRetention and intsBucketRetention are mutually exclusive', async () => {
+  await assert.rejects(
+    () => beamSearchFromGate(0, {} as any, {} as any, SCORING_PROFILES.default, 0, Date.now(), null, 10,
+      null as any, true, null, Infinity, undefined, undefined, undefined, true),
+    /mutually exclusive/);
 });
 
 test('_composeBeamNumericCoarseStateKey: the OLD base=1 (32-filter wrap) aliased two distinct (surroundMask, flipperUsedMask) states; the fixed base does not', () => {

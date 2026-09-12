@@ -66,11 +66,26 @@ const corpusById = new Map(corpusRows.map((row, index) => [row.id, { row, pos: i
 
 const currentResidual = baselineRows.filter(row => row.ok === false).map(row => row.id).sort();
 
+// `variantLabel` is NOT reliable as a "this cell tests something other than the clean base
+// technique" signal on its own: scripts/build-technique-census-plan.mjs's T1_PROMOTED_VARIANTS
+// stamps every promoted entry with `variantLabel: variant.label` purely as a bookkeeping marker
+// (distinguishing "not in the live-derived default-ladder ALL_TECHNIQUE_KEYS enumeration" from the
+// ordinary per-level loop), independent of whether the cell is actually a modified condition.
+// `repair|score=repair|guidance=turn-biased`'s own promoted-variant entry has `ablation: null` and
+// its `variantLabel` is self-referential (equals its own techniqueKey) — confirmed by that file's
+// own comment ("ablation: null, NOT { enable: [...] } ... the flag is inert here regardless"): it is
+// a clean, unmodified, single-technique T1 dispatch, exactly as eligible to be a "known T1
+// candidate" as `must-turn-biased` (which sits directly in ALL_TECHNIQUE_KEYS and was never
+// affected by this). `ablation` is the actual "this cell tests a non-default condition" signal —
+// every other T1_PROMOTED_VARIANTS entry (the six connectivity/coarse-state-merge/mc-neighbor-
+// budget ablations) carries a real non-null `ablation` and is correctly excluded by that check
+// alone. Excluding on `variantLabel` too silently dropped all 936 corpus-2 turn-biased T1 cells
+// (161 solved) from t1Wins, incorrectly inflating classes 4/5 by 25 current-residual rows (9 of
+// them class 5) — see reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md.
 function isBaseT1(row) {
     return row?.corpus === 'corpus2'
         && row.tier === 'T1'
         && row.techniqueKeys?.length === 1
-        && !row.variantLabel
         && !row.flagExperiment
         && !row.pairLabel
         && !row.ablation;

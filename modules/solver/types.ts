@@ -377,7 +377,8 @@ export interface PrepLevel {
 
 export type BeamResearchStage = 'incoming-frontier' | 'generated' | 'hard-pruned'
     | 'post-hard-prune' | 'coarse-state-merge-removed' | 'post-production-coarse-state-merge'
-    | 'score-width-culled' | 'mechanic-bucket-culled' | 'post-score-width-cull' | 'post-mechanic-bucket-selection';
+    | 'score-width-culled' | 'mechanic-bucket-culled' | 'ints-bucket-culled'
+    | 'post-score-width-cull' | 'post-mechanic-bucket-selection' | 'post-ints-bucket-selection';
 
 export interface BeamResearchRecord {
     stage: BeamResearchStage;

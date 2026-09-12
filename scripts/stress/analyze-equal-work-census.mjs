@@ -28,10 +28,13 @@ const ewDoc = read(EW_FILE);
 const t1Doc = read(T1_FILE);
 const ew = (ewDoc.results ?? []).filter(r =>
     r.tier === 'EW1' && (r.techniqueKeys?.length ?? 0) === 1);
+// See analyze-post-1029-residual-atlas.mjs's own isBaseT1 comment: `variantLabel` alone is not a
+// reliable "non-base cell" signal (T1_PROMOTED_VARIANTS stamps it as bookkeeping even on the
+// clean, unmodified `repair|guidance=turn-biased` dispatch, ablation: null); `ablation` is the
+// real signal and is already checked separately.
 const t1Base = (t1Doc.results ?? []).filter(r =>
     r.tier === 'T1'
     && (r.techniqueKeys?.length ?? 0) === 1
-    && !r.variantLabel
     && !r.flagExperiment
     && !r.pairLabel
     && !r.ablation);
