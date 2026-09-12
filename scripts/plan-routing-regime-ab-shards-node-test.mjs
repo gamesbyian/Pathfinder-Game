@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { expandShardsByArm, resolveExpectedIds } from './plan-routing-regime-ab-shards.mjs';
-import { buildPopulationSeal } from './seal-routing-regime-population.mjs';
+import { assertMatchingPopulationSeals, buildPopulationSeal } from './seal-routing-regime-population.mjs';
 
 const baseShards = [
   { idx: 'corpus1', corpus: 'c1.json', corpus_key: 'corpus1', levels: 'pos:1,2' },
@@ -32,9 +32,12 @@ const seal = buildPopulationSeal(['C2-X', 'P-1', 'C1-A'], corpora);
 const reordered = buildPopulationSeal(['P-1', 'C1-A', 'C2-X'], corpora);
 assert.equal(seal.count, 3);
 assert.equal(seal.identityHash, reordered.identityHash, 'caller id order must not affect the population content seal');
-const changedCorpora = structuredClone(corpora);
+assert.equal(assertMatchingPopulationSeals(seal, reordered), true);
+const changedCorpora = JSON.parse(JSON.stringify(corpora));
 changedCorpora[1][1][0].width = 99;
-assert.notEqual(buildPopulationSeal(['C2-X', 'P-1', 'C1-A'], changedCorpora).identityHash, seal.identityHash, 'same level ids with changed content must not compare as the same population');
+const changedSeal = buildPopulationSeal(['C2-X', 'P-1', 'C1-A'], changedCorpora);
+assert.notEqual(changedSeal.identityHash, seal.identityHash, 'same level ids with changed content must not compare as the same population');
+assert.throws(() => assertMatchingPopulationSeals(seal, changedSeal), /content seal mismatch/);
 assert.throws(() => buildPopulationSeal(['missing'], corpora), /not found/);
 
 console.log('plan routing regime ab shards tests passed');
