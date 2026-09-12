@@ -1,10 +1,11 @@
 # Class-5 microscope branch reconciliation 001
 
-> **Status:** reconciled / completed microscope safety anchor
+> **Status:** concluded-negative
 > **Last evidence:** 2026-09-12 — reconciled the two ChatGPT microscope branches against Claude PR #1751, exact-matched the suspicious isolated-technique provenance against frozen technique-census cells, verified production retry reach, and exact-adjudicated the frozen `R03229` three-case microscope.
 > **Decision:** the R03351 branch is a superseded methodological ancestor, not a merge source. The corrected microscope/freshness implementation is authoritative. `R03229` is a genuine class-5 specimen, but its exact result is recurrence of the already-known B1/B2 mechanism class rather than a new acquisition premise.
+> **Remaining gate:** do not serially microscope another hard level or reopen generic scorer/retention work from this result. WS2 needs a materially new mechanism-specific runtime-legal discriminator or architectural premise before another class-5 treatment.
+
 > **Final microscope result:** at the ordinary width-2000 first-loss boundary, depth 22, the known culled witness prefix is exactly **LIVE** while both the rank-1 retained survivor and the width-2000 cutoff survivor are exactly **DEAD** under explicit-prefix CP-SAT adjudication. This is strong evidence of live information being culled while retained alternatives are nonviable, but it is not novel relative to August B1/B2.
-> **Next gate:** do not serially microscope another hard level or reopen generic scorer/retention work from this result. WS2 needs a materially new mechanism-specific runtime-legal discriminator or architectural premise before another class-5 treatment.
 
 ## Reconciled branch state
 
