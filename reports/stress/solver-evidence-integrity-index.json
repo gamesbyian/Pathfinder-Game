@@ -125,7 +125,8 @@
     {
       "evidenceId": "highbudget-unsolved-2026-07-24-corpus-1",
       "sourcePaths": [
-        "reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json"
+        "reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json",
+        "logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt"
       ],
       "sourceRunIds": [],
       "intendedRef": null,
@@ -137,13 +138,13 @@
       },
       "population": {
         "kind": "historical-frozen-unsolved-cohort",
-        "identityBasis": "observed-level-ids-only",
-        "identityHash": "sha256:c3ff1345d70a25a15d6a86ec2d40354ee8eb3485fa054ff5a9897321b75bf9d0",
-        "expectedCount": null,
+        "identityBasis": "stable-level-id",
+        "identityHash": "sha256:8563453146c735c491c45e66954c8746f79bee32bfbde62c1d1d6d8ea087c378",
+        "expectedCount": 5,
         "observedCount": 5,
-        "missingCount": null,
+        "missingCount": 0,
         "duplicateCount": 0,
-        "unexpectedCount": null
+        "unexpectedCount": 0
       },
       "execution": {
         "levelBlind": false,
@@ -164,30 +165,31 @@
       },
       "outcomes": {
         "solved": 3,
-        "exhaustedNegative": null,
-        "nodeLimited": null,
-        "workLimited": null,
-        "deadlineTruncated": null,
-        "errors": null,
-        "malformed": null,
-        "missing": null,
-        "unknown": 2
+        "exhaustedNegative": 0,
+        "nodeLimited": 2,
+        "workLimited": 0,
+        "deadlineTruncated": 0,
+        "errors": 0,
+        "malformed": 0,
+        "missing": 0,
+        "unknown": 0
       },
       "replacementEvidence": [],
-      "decisionBearing": false,
+      "decisionBearing": true,
       "notes": null,
-      "reliability": "observational-only",
+      "reliability": "valid-after-normalization",
       "reconstructability": "partial",
-      "rerunDisposition": "needs-human-review",
+      "rerunDisposition": "none-required",
       "reasons": [
-        "Observed rows and referee-valid solutions survive, but the intended frozen cohort and missing/error/truncation classes cannot be reconstructed from this aggregate.",
-        "Legacy combiner failed=!ok and errors=0 metadata is not reliable."
+        "The frozen July 24 intended cohort survives in the repo and every intended ID has an observed row.",
+        "Legacy top-level failed/errors/completed metadata is not authoritative; normalized classification is derived from the surviving per-level rows and frozen cohort definition."
       ]
     },
     {
       "evidenceId": "highbudget-unsolved-2026-07-24-corpus-2",
       "sourcePaths": [
-        "reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json"
+        "reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json",
+        "logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt"
       ],
       "sourceRunIds": [],
       "intendedRef": null,
@@ -199,13 +201,13 @@
       },
       "population": {
         "kind": "historical-frozen-unsolved-cohort",
-        "identityBasis": "observed-level-ids-only",
-        "identityHash": "sha256:73a0226988d2a9e62958ccdb15ae868f9f9225b65780b3169b56ca0b22072815",
-        "expectedCount": null,
+        "identityBasis": "stable-level-id",
+        "identityHash": "sha256:d6c5dc422909d504689af7286fb5722915790c1dd302cbe801312a3e44642ecd",
+        "expectedCount": 1095,
         "observedCount": 1095,
-        "missingCount": null,
+        "missingCount": 0,
         "duplicateCount": 0,
-        "unexpectedCount": null
+        "unexpectedCount": 0
       },
       "execution": {
         "levelBlind": false,
@@ -226,14 +228,14 @@
       },
       "outcomes": {
         "solved": 165,
-        "exhaustedNegative": null,
-        "nodeLimited": null,
-        "workLimited": null,
-        "deadlineTruncated": null,
-        "errors": null,
-        "malformed": null,
-        "missing": null,
-        "unknown": 930
+        "exhaustedNegative": 0,
+        "nodeLimited": 853,
+        "workLimited": 0,
+        "deadlineTruncated": 77,
+        "errors": 0,
+        "malformed": 0,
+        "missing": 0,
+        "unknown": 0
       },
       "replacementEvidence": [],
       "decisionBearing": false,
@@ -242,8 +244,9 @@
       "reconstructability": "partial",
       "rerunDisposition": "needs-human-review",
       "reasons": [
-        "Observed rows and referee-valid solutions survive, but the intended frozen cohort and missing/error/truncation classes cannot be reconstructed from this aggregate.",
-        "Legacy combiner failed=!ok and errors=0 metadata is not reliable."
+        "The frozen July 24 intended cohort survives in the repo and every intended ID has an observed row.",
+        "One or more observed non-solve rows remain indeterminate under the normalized outcome vocabulary; do not reinterpret them as ordinary negatives without source evidence.",
+        "Legacy top-level failed/errors/completed metadata is not authoritative; normalized classification is derived from the surviving per-level rows and frozen cohort definition."
       ]
     },
     {
