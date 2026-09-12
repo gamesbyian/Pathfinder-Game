@@ -61,7 +61,7 @@
       "workflow": "main-push-validation.yml",
       "role": "operational",
       "status": "maintained",
-      "currentConsumer": "direct-main-push safety while main is unprotected",
+      "currentConsumer": "all pushes to unprotected main, including merge commits",
       "retirementTrigger": "retire when branch protection mechanically requires equivalent pre-merge checks on every path to main"
     },
     {
