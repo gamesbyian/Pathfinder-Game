@@ -58,6 +58,13 @@
       "retirementTrigger": "retire when the owning operational surface is removed"
     },
     {
+      "workflow": "main-push-validation.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "direct-main-push safety while main is unprotected",
+      "retirementTrigger": "retire when branch protection mechanically requires equivalent pre-merge checks on every path to main"
+    },
+    {
       "workflow": "method-probe-sweep.yml",
       "role": "evidence-producing",
       "status": "maintained",
@@ -84,6 +91,13 @@
       "status": "maintained",
       "currentConsumer": "repository operations",
       "retirementTrigger": "retire when the owning operational surface is removed"
+    },
+    {
+      "workflow": "solver-evidence-integrity-guard.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "historical solver-evidence integrity authority freshness",
+      "retirementTrigger": "retire only if equivalent path-sensitive integrity-index freshness enforcement moves into another maintained check"
     },
     {
       "workflow": "solver-highbudget-unsolved-sweep.yml",
