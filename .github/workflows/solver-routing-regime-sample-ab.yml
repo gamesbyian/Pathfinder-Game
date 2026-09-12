@@ -19,17 +19,35 @@
 # sweep.mjs, never the history-aware research sweep. Never persists hints, never touches
 # logs/stress-corpus2-baseline.json / data/level-heatmaps.json. Artifact-only: never commits to main.
 #
-# Usage: dispatch twice with identical inputs (including routing_regimes and seed) except enable_flags/
-# disable_flags/ref for whatever code change you're A/B testing -- e.g. dispatch control at the
-# pre-change commit and treatment at the post-change commit, both with identical routing_regimes/seed/
-# node_budget -- then compare each run's combined solved count/gains/losses (per-id, from each run's
-# reports/stress/routing-regime-sample-ab.json artifact).
+# COORDINATED SINGLE DISPATCH (redesigned 2026-09; see docs/solver-workflow-remediation-review-
+# handoff.md): earlier revisions asked the caller to dispatch this workflow TWICE (once per arm) and
+# compare the two runs' published results by hand. Nothing tied those two runs to one shared sample:
+# select-routing-regime-sample.mjs's seeded RNG is deterministic given the SAME corpus content, but
+# each dispatch re-ran it independently against whatever ref that dispatch happened to check out, so
+# a corpus edit between the two dispatches (or simply drawing the sample from a different commit)
+# could silently desync the two "identical" populations with no shared population hash to catch it --
+# exactly the failure recorded as invalid historical evidence in the remediation audit. This revision
+# takes baseline_ref and treatment_ref as two immutable SHAs in ONE dispatch: the sample is selected
+# and the whole corpus1+corpus2-sample+published shard plan is resolved to actual level ids exactly
+# ONCE (at baseline_ref), then reused verbatim -- same positions, same expected-id population -- for
+# both arms' shards, which check out their own arm's ref. Any residual corpus drift between the two
+# refs still can't silently pass: the combine step validates each arm's results against that one
+# resolved id list, so a mismatched id shows up as population-integrity failure, not a quiet mismatch.
+# Control always runs baseline_ref with no extra flags; enable_flags/disable_flags/
+# repair_late_probe_node_budget apply to the treatment arm (treatment_ref) only -- matching
+# solver-broad-confirmation.yml/solver-residual-confirmation.yml's control/treatment convention.
 name: Solver routing-regime-gated routing sample A/B
-run-name: "Routing regime sample · ${{ inputs.routing_regimes || inputs.archetypes || 'missing' }} · flags=${{ inputs.enable_flags || 'control' }}"
+run-name: "Routing regime sample · ${{ inputs.routing_regimes || inputs.archetypes || 'missing' }} · flags=${{ inputs.enable_flags || 'none' }}"
 
 on:
   workflow_dispatch:
     inputs:
+      baseline_ref:
+        description: 'Immutable control-arm commit SHA. Also the single ref the shared sample/shard plan and expected-id population are resolved from.'
+        required: true
+      treatment_ref:
+        description: 'Immutable treatment-arm commit SHA (may equal baseline_ref for a flags-only A/B).'
+        required: true
       routing_regimes:
         description: 'Comma-separated classifyRoutingRegime() values the code change under test can affect, e.g. intersection-heavy,must-cross-heavy (see modules/solver/routing-regime.ts for the full vocabulary: sparse-low-intersection, multi-portal, must-cross-heavy, intersection-heavy, general).'
         required: false
@@ -47,11 +65,11 @@ on:
         required: false
         default: '50'
       seed:
-        description: 'Deterministic sample seed. MUST be identical across both arms of a matched A/B -- pick something stable per question (e.g. a short slug for what you are testing) so re-dispatches of the same question stay comparable.'
+        description: 'Deterministic sample seed.'
         required: false
         default: 'routing-regime-sample'
       node_budget:
-        description: 'Corpus-2 base node allocation per level. Matches solver-stress-refresh.yml''s canonical corpus2_node_budget default; additive tiers can exceed it unless strict_total_work_budget=true.'
+        description: 'Corpus-2 base node allocation per level, both arms. Matches solver-stress-refresh.yml''s canonical corpus2_node_budget default; additive tiers can exceed it unless strict_total_work_budget=true.'
         required: false
         default: '50000000'
       strict_total_work_budget:
@@ -67,27 +85,27 @@ on:
         required: false
         default: '4'
       shard_count:
-        description: 'Number of even shards to split the sample into. Default 60 queues finer work behind 20 lanes so fast lanes keep pulling work instead of idling behind a coarse-shard straggler.'
+        description: 'Number of even shards to split the sample into, per arm. Default 60 queues finer work behind 20 lanes so fast lanes keep pulling work instead of idling behind a coarse-shard straggler.'
         required: false
         default: '60'
       max_parallel:
-        description: 'Shards running concurrently. Keep below shard_count for queue-based tail balancing; lower further if a matched A/B pair must share the account job budget.'
+        description: 'Shard jobs (across both arms) running concurrently.'
         required: false
         default: '20'
       enable_flags:
-        description: 'Comma-separated ablation flags to turn ON for this arm.'
+        description: 'Comma-separated ablation flags to turn ON for the treatment arm only.'
         required: false
         default: ''
       disable_flags:
-        description: 'Comma-separated ablation flags to turn OFF for this arm.'
+        description: 'Comma-separated ablation flags to turn OFF for the treatment arm only.'
         required: false
         default: ''
       repair_late_probe_node_budget:
-        description: 'Optional STRATEGY_REPAIR_LATE_PROBE node cap override (production default 2000000, stage-budget.ts REPAIR_LATE_PROBE_NODE_BUDGET); blank for control.'
+        description: 'Optional STRATEGY_REPAIR_LATE_PROBE node cap override for the treatment arm only (production default 2000000, stage-budget.ts REPAIR_LATE_PROBE_NODE_BUDGET).'
         required: false
         default: ''
       deterministic:
-        description: 'true forces a 24h non-binding deadline so this run is reproducible (bit-identical nodes/work). Matched A/B arms should both use true.'
+        description: 'true forces a 24h non-binding deadline so this run is reproducible (bit-identical nodes/work).'
         required: false
         default: 'true'
 
@@ -97,26 +115,23 @@ concurrency:
 
 jobs:
   plan:
-    name: Select stratified sample and plan shards
+    name: Select the one sealed sample and plan both arms' shards
     runs-on: ubuntu-latest
-    # 30, not the planning bookkeeping's own few-second cost: the execution-family canary step
-    # below does one real full-node_budget, single-worker solve under this dispatch's exact
-    # resolved config, and this job's own timeout applies to that solve too. A 10-minute plan-job
-    # budget killed a sibling workflow's real dispatch on 2026-09-10 (solver-level-blind-targeted-
-    # sweep.yml) before its shard planner ever ran. 30 matches the shard planner's own solo-shard
-    # floor (plan-highbudget-shards.mjs: max(30, ...)).
+    # See solver-level-blind-targeted-sweep.yml's identical note: 30, not the planning bookkeeping's
+    # own few-second cost -- the canary step below does one real full-node_budget, single-worker
+    # solve under this dispatch's exact resolved config.
     timeout-minutes: 30
     permissions:
       contents: read
     outputs:
-      shards: ${{ steps.plan.outputs.shards }}
-      shard_count: ${{ steps.plan.outputs.shard_count }}
-      total_levels: ${{ steps.plan.outputs.total_levels }}
+      shards: ${{ steps.expand.outputs.shards }}
+      shard_count: ${{ steps.expand.outputs.shard_count }}
+      total_levels: ${{ steps.expand.outputs.total_levels }}
     steps:
-      - name: Check out the dispatched commit exactly
+      - name: Check out baseline_ref -- the canonical population definition
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ inputs.baseline_ref }}
           sparse-checkout: |
             /*
             !/logs/
@@ -132,7 +147,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Select the deterministic stratified sample
+      - name: Select the deterministic stratified sample exactly once
         shell: bash
         run: |
           mkdir -p logs/solver-routing-regime-sample
@@ -157,28 +172,90 @@ jobs:
             --seed="${{ inputs.seed }}" \
             --out=logs/solver-routing-regime-sample/sample.txt
 
-      - name: 'Execution-family canary: verify the resolved config on one representative level'
+      - name: 'Execution-family canary: verify the resolved control config on one representative level'
         # See scripts/verify-canary-cell.mjs's own header comment and solver-level-blind-targeted-
-        # sweep.yml's identical step for the full rationale (docs/solver-research-operating-
-        # model.md's "before expensive decision-bearing runs" checklist, gate #4), under the exact
-        # resolved flags/budget the real shards will use.
-        #
-        # Deliberately corpus position 1, NOT the first id in the just-selected eligible/control
-        # sample: verify-canary-cell.mjs checks structural sanity only (crash, zero attempts,
-        # malformed fields, unexpected deadline truncation), never stage participation, so using an
-        # "eligible" (and often harder-to-solve) sample level buys no real verification value here
-        # while risking exactly what took down a sibling workflow's real dispatch on 2026-09-10
-        # (solver-level-blind-targeted-sweep.yml, run 34423190297: canary alone ran past 9m28s,
-        # killed by the plan job's own timeout before the shard planner ever ran). Position 1 is one
-        # of the known-fast, known-solvable levels recorded in logs/solver-canary-baseline.json
-        # (solved in ~300ms under production defaults); a config that is fundamentally broken --
-        # the actual thing this canary checks for -- misbehaves on ANY level, not only hard ones.
+        # sweep.yml's identical step for the full rationale. No enable/disable flags: control always
+        # runs the plain baseline_ref config. The treatment config gets its own canary, against
+        # treatment_ref, in the parallel canary-treatment job below.
         shell: bash
         env:
           DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
         run: |
           set -euo pipefail
-          canary_pos=1
+          work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
+          strict=()
+          [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
+          deadlineFlag=()
+          [ "${{ inputs.deterministic }}" = "true" ] && deadlineFlag+=("--expect-no-deadline-truncation=true")
+          node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="pos:1" \
+            --budget-ms="${DEADLINE}" \
+            --node-budget="${{ inputs.node_budget }}" \
+            --work-budget="${work}" \
+            "${strict[@]}" \
+            --workers=1 \
+            --out=logs/solver-routing-regime-sample/canary-control.json \
+            --summary-out=logs/solver-routing-regime-sample/canary-control-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-routing-regime-sample/canary-control.json "${deadlineFlag[@]}"
+
+      - name: Plan the single-arm shard split
+        id: plan
+        shell: bash
+        run: |
+          node scripts/plan-ab-corpus-shards.mjs \
+            --corpus2-sample="logs/solver-routing-regime-sample/sample.txt" \
+            --corpus2-shards="${{ inputs.shard_count }}" \
+            --github-output=logs/solver-routing-regime-sample/base-shards-output.txt
+
+      - name: Expand into both arms and resolve the exact expected-id population
+        id: expand
+        shell: bash
+        run: |
+          node scripts/plan-routing-regime-ab-shards.mjs \
+            --base-output=logs/solver-routing-regime-sample/base-shards-output.txt \
+            --ids-out=logs/solver-routing-regime-sample/expected-ids.txt
+
+      - name: Upload the sample + shard plan + expected-id population for traceability
+        uses: actions/upload-artifact@v7
+        with:
+          name: routing-regime-sample-plan
+          path: logs/solver-routing-regime-sample/
+          retention-days: 90
+
+  canary-treatment:
+    name: 'Execution-family canary: verify the resolved treatment config'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Check out treatment_ref
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.treatment_ref }}
+          sparse-checkout: |
+            /*
+            !/logs/
+            !/reports/
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify the resolved treatment config on one representative level
+        shell: bash
+        env:
+          DEADLINE: ${{ inputs.deterministic == 'true' && '86400000' || inputs.budget_ms }}
+        run: |
+          set -euo pipefail
+          mkdir -p logs/solver-routing-regime-sample
           extra=()
           [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
@@ -190,35 +267,20 @@ jobs:
           [ "${{ inputs.deterministic }}" = "true" ] && deadlineFlag+=("--expect-no-deadline-truncation=true")
           node scripts/run-bundled.mjs scripts/level-blind-capability-sweep.mjs -- \
             --corpus=data/stress/stress-levels-random.json \
-            --levels="pos:${canary_pos}" \
+            --levels="pos:1" \
             --budget-ms="${DEADLINE}" \
             --node-budget="${{ inputs.node_budget }}" \
             --work-budget="${work}" \
             "${strict[@]}" \
             --workers=1 \
             "${extra[@]}" \
-            --out=logs/solver-routing-regime-sample/canary.json \
-            --summary-out=logs/solver-routing-regime-sample/canary-summary.md
-          node scripts/verify-canary-cell.mjs --result=logs/solver-routing-regime-sample/canary.json "${deadlineFlag[@]}"
-
-      - name: Split into even shards
-        id: plan
-        shell: bash
-        run: |
-          node scripts/plan-ab-corpus-shards.mjs \
-            --corpus2-sample="logs/solver-routing-regime-sample/sample.txt" \
-            --corpus2-shards="${{ inputs.shard_count }}"
-
-      - name: Upload the sample + shard plan for traceability
-        uses: actions/upload-artifact@v7
-        with:
-          name: routing-regime-sample-plan
-          path: logs/solver-routing-regime-sample/
-          retention-days: 90
+            --out=logs/solver-routing-regime-sample/canary-treatment.json \
+            --summary-out=logs/solver-routing-regime-sample/canary-treatment-summary.md
+          node scripts/verify-canary-cell.mjs --result=logs/solver-routing-regime-sample/canary-treatment.json "${deadlineFlag[@]}"
 
   solve-shards:
-    name: Sample shard ${{ matrix.shard.idx }}/${{ needs.plan.outputs.shard_count }}
-    needs: [plan]
+    name: ${{ matrix.shard.arm }} shard ${{ matrix.shard.idx }}
+    needs: [plan, canary-treatment]
     runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
@@ -228,10 +290,10 @@ jobs:
       max-parallel: ${{ fromJson(inputs.max_parallel) }}
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
-      - name: Check out the dispatched commit exactly
+      - name: Check out this shard's arm ref exactly
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ matrix.shard.arm == 'control' && inputs.baseline_ref || inputs.treatment_ref }}
           sparse-checkout: |
             /*
             !/logs/
@@ -257,9 +319,11 @@ jobs:
           set +e
           mkdir -p logs/solver-routing-regime-sample
           extra=()
-          [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
-          [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
-          [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
+          if [ "${{ matrix.shard.arm }}" = "treatment" ]; then
+            [ -n "${{ inputs.enable_flags }}" ] && extra+=("--enable-flags=${{ inputs.enable_flags }}")
+            [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
+            [ -n "${{ inputs.repair_late_probe_node_budget }}" ] && extra+=("--repair-late-probe-node-budget=${{ inputs.repair_late_probe_node_budget }}")
+          fi
           work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
           [ "${{ inputs.strict_total_work_budget }}" = "true" ] && strict+=("--strict-total-work-budget")
@@ -296,7 +360,7 @@ jobs:
         run: exit 1
 
   combine:
-    name: Combine sample results
+    name: Combine and compare both arms
     needs: [plan, solve-shards]
     if: always()
     runs-on: ubuntu-latest
@@ -319,57 +383,124 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Download shard artifacts
+      - name: Download the sealed plan (sample + shard plan + expected-id population)
         uses: actions/download-artifact@v8
         with:
-          pattern: 'routing-regime-sample-shard-*'
-          path: artifact-staging/downloaded
+          name: routing-regime-sample-plan
+          path: logs/solver-routing-regime-sample
+
+      - name: Download control shard artifacts
+        id: download_control
+        uses: actions/download-artifact@v8
+        with:
+          pattern: 'routing-regime-sample-shard-control-*'
+          path: artifact-staging/control
           merge-multiple: true
 
-      - name: Combine into one report (subset-shaped -- NEVER the full-corpus baseline)
+      - name: Download treatment shard artifacts
+        id: download_treatment
+        uses: actions/download-artifact@v8
+        with:
+          pattern: 'routing-regime-sample-shard-treatment-*'
+          path: artifact-staging/treatment
+          merge-multiple: true
+
+      - name: Combine each arm (subset-shaped -- NEVER the full-corpus baseline)
         shell: bash
         run: |
-          mkdir -p logs/solver-routing-regime-sample reports/stress
-          cp -a artifact-staging/downloaded/. logs/solver-routing-regime-sample/
-          FILES=$(ls logs/solver-routing-regime-sample/batch-*.json 2>/dev/null | paste -sd, -)
-          [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora --in="${FILES}" --out=reports/stress/routing-regime-sample-ab.json
+          mkdir -p reports/stress
+          for arm in control treatment; do
+            mkdir -p "logs/solver-routing-regime-sample-${arm}"
+            cp -a "artifact-staging/${arm}/." "logs/solver-routing-regime-sample-${arm}/"
+            FILES=$(ls logs/solver-routing-regime-sample-${arm}/batch-*.json 2>/dev/null | paste -sd, -)
+            [ -n "$FILES" ] && node scripts/combine-solver-sweep-reports.mjs --allow-mixed-corpora \
+              --expected-ids=logs/solver-routing-regime-sample/expected-ids.txt \
+              --in="${FILES}" --out="reports/stress/routing-regime-ab-${arm}.json"
+          done
 
-      - name: Verify complete coverage
+      - name: Verify complete coverage, both arms
         id: coverage
         shell: bash
         run: |
           node -e "
           const fs = require('node:fs');
           const expectedTotal = ${{ needs.plan.outputs.total_levels }};
-          const report = JSON.parse(fs.readFileSync('reports/stress/routing-regime-sample-ab.json', 'utf8'));
-          const rows = report.levels ?? [];
-          if (rows.length !== expectedTotal) { console.error(\`incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
-          console.log(\`complete: \${rows.length}/\${expectedTotal}\`);
+          for (const arm of ['control', 'treatment']) {
+            const report = JSON.parse(fs.readFileSync(\`reports/stress/routing-regime-ab-\${arm}.json\`, 'utf8'));
+            const rows = report.levels ?? [];
+            if (rows.length !== expectedTotal) { console.error(\`\${arm} incomplete: \${rows.length}/\${expectedTotal}\`); process.exit(1); }
+          }
+          console.log(\`both arms complete: \${expectedTotal}/\${expectedTotal}\`);
           "
 
-      - name: Print solved-count summary
+      - name: Validate exact population integrity, both arms, and declare the native v3 contract
+        if: always()
+        shell: bash
+        env:
+          ROUTING_REGIMES: ${{ inputs.routing_regimes || inputs.archetypes }}
+          BASELINE_REF: ${{ inputs.baseline_ref }}
+          TREATMENT_REF: ${{ inputs.treatment_ref }}
+          ENABLE_FLAGS: ${{ inputs.enable_flags }}
+          DISABLE_FLAGS: ${{ inputs.disable_flags }}
+          NODE_BUDGET: ${{ inputs.node_budget }}
+          STRICT_TOTAL_WORK_BUDGET: ${{ inputs.strict_total_work_budget }}
+          BUDGET_MS: ${{ inputs.budget_ms }}
+          DETERMINISTIC: ${{ inputs.deterministic }}
+        run: |
+          for arm in control treatment; do
+            [ -f "reports/stress/routing-regime-ab-${arm}.json" ] || continue
+            node scripts/validate-solver-sweep-integrity.mjs --allow-incomplete \
+              --expected-ids=logs/solver-routing-regime-sample/expected-ids.txt \
+              --result="reports/stress/routing-regime-ab-${arm}.json" \
+              --integrity-out="logs/solver-routing-regime-sample/${arm}-integrity.json"
+          done
+          if [ -f logs/solver-routing-regime-sample/control-integrity.json ] && [ -f logs/solver-routing-regime-sample/treatment-integrity.json ]; then
+            node scripts/combine-paired-arm-integrity.mjs \
+              --left=logs/solver-routing-regime-sample/control-integrity.json \
+              --right=logs/solver-routing-regime-sample/treatment-integrity.json \
+              --out=logs/solver-routing-regime-sample/paired-integrity.json
+          fi
+          work_allocation=$(( NODE_BUDGET * 134 / 100 ))
+          work_ceiling=null; [ "$STRICT_TOTAL_WORK_BUDGET" = true ] && work_ceiling=$work_allocation
+          wall_binding=true; [ "$DETERMINISTIC" = true ] && wall_binding=false
+          cat > logs/solver-routing-regime-sample/experiment-contract-spec.json <<SPEC
+          {"configuration": {"routingRegimes": "$ROUTING_REGIMES", "baselineRef": "$BASELINE_REF", "treatmentRef": "$TREATMENT_REF", "enableFlags": "$ENABLE_FLAGS", "disableFlags": "$DISABLE_FLAGS", "nodeBudget": $NODE_BUDGET, "budgetMs": $BUDGET_MS},
+          "workflowFamily": "routing-regime-sample-ab", "producer": "solver-routing-regime-sample-ab.yml", "entrypoint": "scripts/level-blind-capability-sweep.mjs",
+          "population": {"kind": "sealed-stratified-sample", "identityBasis": "stable-level-id"},
+          "execution": {"levelBlind": true, "historyAware": false, "historicalInputs": [], "reproducibilityExpected": $DETERMINISTIC, "producerFamily": "routing-regime-sample-ab", "schedulerMode": "paired-control-treatment"},
+          "limits": {"cumulativeNodeCeiling": $NODE_BUDGET, "initialWorkAllocation": $work_allocation, "totalWorkCeiling": $work_ceiling, "wallSafetyDeadlineMs": $BUDGET_MS, "wallDeadlineBinding": $wall_binding},
+          "sideEffects": {"hints": "none", "canonicalBaseline": "none", "telemetry": "none", "reports": "artifact-only"}}
+          SPEC
+          node scripts/write-solver-experiment-contract.mjs \
+            --spec=logs/solver-routing-regime-sample/experiment-contract-spec.json \
+            --out=logs/solver-routing-regime-sample/experiment-contract.json
+
+      - name: Print solved-count summary, both arms
         shell: bash
         run: |
           node -e "
           const fs = require('node:fs');
-          const r = JSON.parse(fs.readFileSync('reports/stress/routing-regime-sample-ab.json', 'utf8'));
-          const rows = r.levels ?? [];
-          const solved = rows.filter(x => x.ok).length;
-          const nodes = rows.reduce((n,x) => n + (x.nodesExpanded || 0), 0);
-          const work = rows.reduce((n,x) => n + (x.workSpent || 0), 0);
-          console.log('routing_regimes=${{ inputs.routing_regimes || inputs.archetypes }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }} ref=${{ github.sha }}');
-          console.log(\`SOLVED sample: \${solved}/\${rows.length} nodes=\${nodes} work=\${work}\`);
-          console.log('Solved ids: ' + rows.filter(x => x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
-          console.log('Unsolved ids: ' + rows.filter(x => !x.ok).map(x => x.id ?? String(x.level)).sort().join(','));
+          const idOf = row => row?.id ?? String(row?.level);
+          const control = JSON.parse(fs.readFileSync('reports/stress/routing-regime-ab-control.json', 'utf8')).levels ?? [];
+          const treatment = JSON.parse(fs.readFileSync('reports/stress/routing-regime-ab-treatment.json', 'utf8')).levels ?? [];
+          const controlSolved = new Set(control.filter(r => r.ok).map(idOf));
+          const treatmentSolved = new Set(treatment.filter(r => r.ok).map(idOf));
+          const gained = [...treatmentSolved].filter(id => !controlSolved.has(id)).sort();
+          const lost = [...controlSolved].filter(id => !treatmentSolved.has(id)).sort();
+          console.log('routing_regimes=${{ inputs.routing_regimes || inputs.archetypes }} baseline_ref=${{ inputs.baseline_ref }} treatment_ref=${{ inputs.treatment_ref }} enable_flags=${{ inputs.enable_flags }} disable_flags=${{ inputs.disable_flags }}');
+          console.log(\`control solved: \${controlSolved.size}/\${control.length}; treatment solved: \${treatmentSolved.size}/\${treatment.length}\`);
+          console.log(\`gained (\${gained.length}): \${gained.join(',')}\`);
+          console.log(\`lost (\${lost.length}): \${lost.join(',')}\`);
           "
 
       - name: Upload combined results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: routing-regime-sample-ab-combined
+          name: routing-regime-ab-combined
           path: |
-            reports/stress/routing-regime-sample-ab.json
+            reports/stress/routing-regime-ab-control.json
+            reports/stress/routing-regime-ab-treatment.json
             logs/solver-routing-regime-sample/
           if-no-files-found: error
           retention-days: 90
@@ -378,11 +509,29 @@ jobs:
         if: always()
         shell: bash
         run: |
+          if [ "${{ needs.solve-shards.result }}" != success ]; then
+            if [ "${{ needs.solve-shards.result }}" = cancelled ]; then
+              outcome=infrastructure-error
+              reason='The sample solve matrix was cancelled before normal completion.'
+            else
+              outcome=harness-error
+              reason='At least one sample solve shard reported an unexpected execution failure.'
+            fi
+            node scripts/research-workflow-outcome.mjs --out=logs/solver-routing-regime-sample/outcome.json --outcome="$outcome" --reason="$reason"
+          elif [ "${{ steps.coverage.outcome }}" = failure ]; then
+            node scripts/research-workflow-outcome.mjs --out=logs/solver-routing-regime-sample/outcome.json --outcome=invariant-violation --reason='Combined control/treatment coverage was incomplete.'
+          fi
+          outcomeFlag=()
+          [ -s logs/solver-routing-regime-sample/outcome.json ] && outcomeFlag+=("--outcome-file=logs/solver-routing-regime-sample/outcome.json")
           node scripts/publish-solver-sweep-result.mjs \
-            --primary="reports/stress/routing-regime-sample-ab.json" \
+            --primary="reports/stress/routing-regime-ab-control.json" \
+            --include="reports/stress/routing-regime-ab-treatment.json" \
+            "${outcomeFlag[@]}" \
+            --integrity-file="logs/solver-routing-regime-sample/paired-integrity.json" \
+            --contract-file="logs/solver-routing-regime-sample/experiment-contract.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
-            --shards-observed="$(find logs/solver-routing-regime-sample -maxdepth 1 -name 'batch-*.json' | wc -l | tr -d ' ')" \
-            --source-artifact="routing-regime-sample-ab-combined"
+            --shards-observed="$(find logs/solver-routing-regime-sample-control logs/solver-routing-regime-sample-treatment -maxdepth 1 -name 'batch-*.json' 2>/dev/null | wc -l | tr -d ' ')" \
+            --source-artifact="routing-regime-ab-combined"
 
       - name: Upload standard solver sweep result
         if: always()
