@@ -81,7 +81,7 @@ jobs:
             fi
           done
 
-      - name: Validate source-run provenance and configuration compatibility
+      - name: Validate source-run provenance and scientific-protocol compatibility
         run: node scripts/validate-reconciliation-sources.mjs --sources-dir=logs/solver-combined/sources --out=logs/solver-combined/source-provenance.json
 
       - name: Combine every source run's report into one
@@ -109,10 +109,23 @@ jobs:
           import fs from 'node:fs';
           const provenance = JSON.parse(fs.readFileSync('logs/solver-combined/source-provenance.json'));
           fs.writeFileSync('logs/solver-combined/experiment-contract.json', `${JSON.stringify({
-            experiment: { workflowFamily: 'cross-run-reconciliation', producer: 'solver-combine-sweep-runs.yml', entrypoint: 'scripts/combine-solver-sweep-reports.mjs', resolvedSha: provenance.resolvedSha, configurationHash: provenance.configurationHash, sourceRuns: provenance.sources, reconciliationRun: { runId: process.env.GITHUB_RUN_ID ?? null, runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null } },
-            population: { kind: 'explicit-reconciled-population', identityBasis: 'stable-level-id' },
-            execution: { levelBlind: null, historyAware: null, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'cross-run-reconciliation', schedulerMode: null },
-            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: null },
+            experiment: {
+              workflowFamily: 'cross-run-reconciliation',
+              producer: 'solver-combine-sweep-runs.yml',
+              entrypoint: 'scripts/combine-solver-sweep-reports.mjs',
+              resolvedSha: provenance.resolvedSha,
+              configurationHash: provenance.configurationHash,
+              sourceRuns: provenance.sources,
+              sourceExperiment: provenance.sourceExperiment,
+              reconciliationRun: { runId: process.env.GITHUB_RUN_ID ?? null, runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null },
+            },
+            population: {
+              kind: 'explicit-reconciled-population',
+              identityBasis: provenance.population.identityBasis,
+              corpusIdentity: provenance.population.corpusIdentity,
+            },
+            execution: provenance.execution,
+            limits: provenance.limits,
             sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
           }, null, 2)}\n`);
           NODE
