@@ -10,6 +10,8 @@ Closed work reopens only for a changed causal premise/treatment, not renewed int
 
 Capability memory is another **premise source, not a reopen exemption**. Complementary gains/losses, displaced winners and old regimes may nominate generic mechanisms, but historical same-level outcomes remain offline evidence until reconciled to current code/protocol. Descendants still owe the owning reopen gate plus normal level-blind evidence requirements. [`capability-memory closeout`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
 
+The controlled mechanic-composition premise has now **graduated out of this deferred queue**: its static decoupling check succeeded and the bounded 3-5-parent dynamic sibling pilot is live parallel work in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). Likewise, the old variant-family robustness and four-space-triangulation gates were satisfied by the temporal/difficulty screens and positive stage-3 family response experiment; their remaining solution-space mediation belongs to active WS1 rather than future work.
+
 ## Capability-acquisition frontier
 
 This is the acquisition side of the program: explain and create generic capability where current known actions do not suffice. Composition/selection of already-demonstrated capability stays in the live WS1/WS2 queue.
@@ -24,15 +26,12 @@ The broad scorer-vocabulary discriminator is closed negative: the corrected 671-
 
 Use the evidence ladder **temporal persistence -> difficulty-stratified relative advantage -> existing-family controlled flips -> source-controlled solution-space mediator -> bounded operational first divergence**.
 
-Stages 1-2 leave 2/8 credible frozen pairs. Stage 3 succeeds for both: matched isolated resolves on `R02687`/objectiveFirst and `R02094`/intersectionHarvest show real `plain` vs `mechanic-buckets` sibling-response flips across 4/5 existing family transform modes, with opposite net directions. Static object counts and portal-use timing do not mediate them. Next earned stage is must-cross-order/basin-style solution-space mediation or bounded operational first divergence for **these two pairs only**. [`report`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md)
+Stages 1-2 leave 2/8 credible frozen pairs. Stage 3 succeeds for both: matched isolated resolves on `R02687`/objectiveFirst and `R02094`/intersectionHarvest show real `plain` vs `mechanic-buckets` sibling-response flips across 4/5 existing family transform modes, with opposite net directions. Static object counts and simple portal-use timing do not mediate them. The line is now active WS1; its next earned step is must-cross-order / portal-must-cross basin mediation, with bounded operational first divergence only if cheaper source-controlled mediators fail. [`report`](../reports/2026-09-11-ws1-stage3-isolated-technique-resolve-001.md)
 
 ## Deferred questions
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Variant-family capability robustness** | Only after temporal/difficulty screening nominates a contrast. Keep whole parents independent; use existing variants before generating more. |
-| **Four-space triangulation** (geometry, solution structure, response, trajectories) | Per nominated contrast only. Require temporally credible, difficulty-robust response evidence before family/profile/trajectory escalation. |
-| **Mechanic-composition transfer / generator expansion** | **Bounded premise earned; broad expansion still closed.** A small controlled family/generator pilot may vary the promoted must-cross-forced-neighbour x visited-portal-terminal obligation boundary and test predicted response/first-loss flips. |
 | **Richer static graph/placement selectors** | Reopen for one mechanism-specific descriptor from recurring solution/family/trace/first-loss evidence. The prior 18-feature bundle did not add held-out value; no generic feature accretion. |
 | **Stability-aware portfolios** | Reopen only if WS1 finds a compact held-out decision signal beyond current work/coverage evidence. Capability-memory union may nominate the contrast, not the selector. |
 | **Latent response dimensions / biclusters** | Only if simpler pair/cohort analysis leaves stable unexplained structure after temporal/difficulty controls. |
