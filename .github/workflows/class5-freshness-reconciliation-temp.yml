@@ -55,6 +55,23 @@ jobs:
             --hints-dir=data/stress/hints-random \
             --solver-version=277ca21be521bb7e03c268666ad868ad963f2cb5 \
             --out=tmp/class5-isolated-hint-census-context.json
+      - name: Inspect production lifecycle for exact variant-source levels
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const d = JSON.parse(fs.readFileSync('reports/stress/capability-runs/34683011115/lifecycle-failure-map-corpus2.json', 'utf8'));
+          const ids = new Set(['R00180','R01516','R01854','R02772','R03229']);
+          const found = [];
+          function walk(v, parentKey='') {
+            if (!v || typeof v !== 'object') return;
+            if (!Array.isArray(v) && ids.has(String(v.id ?? v.levelId ?? ''))) found.push({parentKey, value:v});
+            if (Array.isArray(v)) v.forEach((x,i)=>walk(x, `${parentKey}[${i}]`));
+            else for (const [k,x] of Object.entries(v)) walk(x, parentKey ? `${parentKey}.${k}` : k);
+          }
+          walk(d);
+          fs.writeFileSync('tmp/class5-variant-source-lifecycle.json', JSON.stringify(found, null, 2) + '\n');
+          for (const row of found) console.log('LIFECYCLE_MATCH=' + JSON.stringify(row));
+          NODE
       - name: Print compact result
         run: |
           node - <<'NODE'
@@ -63,7 +80,6 @@ jobs:
           const reconciliation = JSON.parse(fs.readFileSync('tmp/class5-freshness-t1-reconciliation.json', 'utf8'));
           const context = JSON.parse(fs.readFileSync('tmp/class5-isolated-hint-census-context.json', 'utf8'));
           console.log('FRESHNESS_SUMMARY=' + JSON.stringify(freshness.summary));
-          console.log('NOMINATED_LEVELS=' + freshness.nominatedRows.map(r => r.levelId).join(','));
           console.log('T1_RECONCILIATION_SUMMARY=' + JSON.stringify(reconciliation.summary));
           console.log('CENSUS_CONTEXT_SUMMARY=' + JSON.stringify(context.summary));
           NODE
@@ -75,4 +91,5 @@ jobs:
             tmp/class5-hint-capability-freshness.json
             tmp/class5-freshness-t1-reconciliation.json
             tmp/class5-isolated-hint-census-context.json
+            tmp/class5-variant-source-lifecycle.json
           retention-days: 7
