@@ -71,22 +71,33 @@ export function validateReconciliationSources(sources) {
   }
 
   const sourcesForProvenance = normalized.map(({ contract, ...source }) => source);
+  const sourceExperiment = {
+    workflowFamily: reference.experiment.workflowFamily,
+    producer: reference.experiment.producer,
+    entrypoint: reference.experiment.entrypoint,
+  };
+  const population = {
+    kind: reference.population.kind,
+    identityBasis: reference.population.identityBasis,
+    corpusIdentity: reference.population.corpusIdentity,
+  };
+  const protocol = {
+    sourceExperiment,
+    resolvedSha: reference.experiment.resolvedSha,
+    configurationHash: reference.experiment.configurationHash,
+    population,
+    execution: reference.execution,
+    limits: reference.limits,
+  };
   return {
     sources: sourcesForProvenance,
     resolvedSha: reference.experiment.resolvedSha,
     configurationHash: reference.experiment.configurationHash,
-    sourceExperiment: {
-      workflowFamily: reference.experiment.workflowFamily,
-      producer: reference.experiment.producer,
-      entrypoint: reference.experiment.entrypoint,
-    },
-    population: {
-      kind: reference.population.kind,
-      identityBasis: reference.population.identityBasis,
-      corpusIdentity: reference.population.corpusIdentity,
-    },
+    sourceExperiment,
+    population,
     execution: reference.execution,
     limits: reference.limits,
+    protocolHash: stableHash(protocol),
     sourceSetHash: stableHash(sourcesForProvenance),
   };
 }
@@ -103,7 +114,7 @@ function main() {
   });
   const result = validateReconciliationSources(sources);
   fs.writeFileSync(out, `${JSON.stringify(result, null, 2)}\n`);
-  console.log(`Validated ${sources.length} compatible source run manifests (${result.sourceSetHash}).`);
+  console.log(`Validated ${sources.length} compatible source run manifests (${result.sourceSetHash}; protocol ${result.protocolHash}).`);
 }
 
 if (process.argv[1] && import.meta.url === `file://${path.resolve(process.argv[1])}`) {
