@@ -35,10 +35,6 @@ on:
         description: 'Per-level node-count ceiling'
         required: false
         default: '20000000'
-      total_levels:
-        description: 'Total level count in the chosen corpus (1700 for stress-levels-random.json, 102 for stress-levels.json)'
-        required: false
-        default: '1700'
       shard_count:
         description: 'Fine-grained outer shard count. Default 60 queues three waves behind max_parallel=20, so fast lanes immediately pull another small slice instead of waiting for one unlucky coarse shard.'
         required: false
@@ -106,7 +102,7 @@ jobs:
         shell: bash
         run: |
           nn=$(printf '%03d' "${{ matrix.shard }}")
-          total="${{ inputs.total_levels }}"
+          total=$(node -e 'const d=require("./${{ inputs.corpus }}"); const rows=Array.isArray(d)?d:d.levels; if(!Array.isArray(rows)) process.exit(2); process.stdout.write(String(rows.length))')
           n="${{ inputs.shard_count }}"
           start=$(( ( (${{ matrix.shard }} - 1) * total ) / n + 1 ))
           end=$(( ( ${{ matrix.shard }} * total ) / n ))

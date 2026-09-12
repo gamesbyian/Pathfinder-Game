@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pathfinder://schemas/solver-experiment-result-v3",
+  "title": "Pathfinder solver experiment result",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "experiment", "population", "execution", "limits", "outcomes", "coverage", "researchOutcome", "sideEffects", "decisionBearing", "entries"],
+  "properties": {
+    "schemaVersion": { "const": 3 },
+    "kind": { "const": "pathfinder-solver-experiment-result" },
+    "experiment": {
+      "type": "object",
+      "required": ["experimentId", "workflowFamily", "producer", "entrypoint", "requestedRef", "resolvedSha", "workflowRunId", "workflowRunAttempt", "sourceRuns", "reconciliationRun", "configurationHash"],
+      "properties": {
+        "experimentId": { "type": ["string", "null"] }, "workflowFamily": { "type": ["string", "null"] }, "producer": { "type": ["string", "null"] }, "entrypoint": { "type": ["string", "null"] }, "requestedRef": { "type": ["string", "null"] }, "resolvedSha": { "type": ["string", "null"] }, "workflowRunId": { "type": ["string", "null"] }, "workflowRunAttempt": { "type": ["string", "null"] }, "sourceRuns": { "type": "array" }, "reconciliationRun": { "type": ["object", "null"] }, "configurationHash": { "type": ["string", "null"] }
+      }, "additionalProperties": false
+    },
+    "population": {
+      "type": "object", "required": ["kind", "identityBasis", "identityHash", "expectedCount", "observedCount", "duplicateIds", "unexpectedIds", "missingIds"],
+      "properties": { "kind": { "type": ["string", "null"] }, "identityBasis": { "type": ["string", "null"] }, "identityHash": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" }, "expectedCount": { "type": ["integer", "null"], "minimum": 0 }, "observedCount": { "type": ["integer", "null"], "minimum": 0 }, "duplicateIds": { "$ref": "#/$defs/stringList" }, "unexpectedIds": { "$ref": "#/$defs/stringList" }, "missingIds": { "$ref": "#/$defs/stringList" } }, "additionalProperties": false
+    },
+    "execution": {
+      "type": "object", "required": ["levelBlind", "historyAware", "historicalInputs", "reproducibilityExpected", "producerFamily", "schedulerMode"],
+      "properties": { "levelBlind": { "type": ["boolean", "null"] }, "historyAware": { "type": ["boolean", "null"] }, "historicalInputs": { "$ref": "#/$defs/stringList" }, "reproducibilityExpected": { "type": ["boolean", "null"] }, "producerFamily": { "type": ["string", "null"] }, "schedulerMode": { "type": ["string", "null"] } }, "additionalProperties": false
+    },
+    "limits": {
+      "type": "object", "required": ["cumulativeNodeCeiling", "initialWorkAllocation", "totalWorkCeiling", "wallSafetyDeadlineMs", "wallDeadlineBinding"],
+      "properties": { "cumulativeNodeCeiling": { "$ref": "#/$defs/number" }, "initialWorkAllocation": { "$ref": "#/$defs/number" }, "totalWorkCeiling": { "$ref": "#/$defs/number" }, "wallSafetyDeadlineMs": { "$ref": "#/$defs/number" }, "wallDeadlineBinding": { "type": ["boolean", "null"] } }, "additionalProperties": false
+    },
+    "outcomes": { "type": ["object", "null"] },
+    "coverage": { "type": "object", "required": ["artifact", "populationIntegrity"], "properties": { "artifact": { "type": ["object", "null"] }, "populationIntegrity": { "type": ["object", "null"] } }, "additionalProperties": false },
+    "researchOutcome": { "type": ["object", "null"] },
+    "sideEffects": { "type": "object", "required": ["hints", "canonicalBaseline", "telemetry", "reports"], "additionalProperties": { "enum": ["unknown", "none", "artifact-only", "harvest-permitted", "canonical-write", "baseline-replace", "telemetry-update", "report-write"] } },
+    "decisionBearing": { "type": "boolean" },
+    "entries": { "type": "array" }
+  },
+  "$defs": { "stringList": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }, "number": { "type": ["number", "null"], "minimum": 0 } },
+  "additionalProperties": true
+}

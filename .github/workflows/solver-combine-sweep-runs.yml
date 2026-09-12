@@ -75,7 +75,14 @@ jobs:
               echo "Run $run_id's ${{ inputs.artifact_name }} artifact has no result.json at its root." >&2
               exit 1
             fi
+            if [ ! -f "$dest/manifest.json" ]; then
+              echo "Run $run_id's ${{ inputs.artifact_name }} artifact has no manifest.json; reconciliation provenance is unverifiable." >&2
+              exit 1
+            fi
           done
+
+      - name: Validate source-run provenance and configuration compatibility
+        run: node scripts/validate-reconciliation-sources.mjs --sources-dir=logs/solver-combined/sources --out=logs/solver-combined/source-provenance.json
 
       - name: Combine every source run's report into one
         shell: bash
@@ -85,14 +92,30 @@ jobs:
             echo "No source result.json files found -- check run_ids." >&2
             exit 1
           fi
-          node scripts/combine-solver-sweep-reports.mjs --in="${FILES}" --out=logs/solver-combined/combined.json
+          node scripts/combine-solver-sweep-reports.mjs --in="${FILES}" --expected-ids="${{ inputs.expected_ids_file }}" --out=logs/solver-combined/combined.json
 
       - name: Validate exact population completeness
         shell: bash
         run: |
           node scripts/validate-solver-sweep-integrity.mjs \
             --expected-ids="${{ inputs.expected_ids_file }}" \
-            --result=logs/solver-combined/combined.json
+            --result=logs/solver-combined/combined.json \
+            --integrity-out=logs/solver-combined/population-integrity.json
+
+      - name: Build reconciliation experiment contract
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const provenance = JSON.parse(fs.readFileSync('logs/solver-combined/source-provenance.json'));
+          fs.writeFileSync('logs/solver-combined/experiment-contract.json', `${JSON.stringify({
+            experiment: { workflowFamily: 'cross-run-reconciliation', producer: 'solver-combine-sweep-runs.yml', entrypoint: 'scripts/combine-solver-sweep-reports.mjs', resolvedSha: provenance.resolvedSha, configurationHash: provenance.configurationHash, sourceRuns: provenance.sources, reconciliationRun: { runId: process.env.GITHUB_RUN_ID ?? null, runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null } },
+            population: { kind: 'explicit-reconciled-population', identityBasis: 'stable-level-id' },
+            execution: { levelBlind: null, historyAware: null, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'cross-run-reconciliation', schedulerMode: null },
+            limits: { cumulativeNodeCeiling: null, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: null, wallDeadlineBinding: null },
+            sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
+          }, null, 2)}\n`);
+          NODE
 
       - name: Print a solved-count summary to the job log
         if: always()
@@ -141,6 +164,8 @@ jobs:
             --shards-expected="$(echo '${{ inputs.run_ids }}' | tr ',' '\n' | grep -c .)" \
             --shards-observed="$(find logs/solver-combined/sources -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" \
             --shards-basis="source runs merged; exact expected population validated separately" \
+            --integrity-file="logs/solver-combined/population-integrity.json" \
+            --contract-file="logs/solver-combined/experiment-contract.json" \
             --source-artifact="${{ inputs.label }}-combined"
 
       - name: Upload standard solver sweep result

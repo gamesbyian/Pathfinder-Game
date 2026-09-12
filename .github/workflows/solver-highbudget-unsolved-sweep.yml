@@ -80,10 +80,10 @@ jobs:
       shards: ${{ steps.plan.outputs.shards }}
       shard_count: ${{ steps.plan.outputs.shard_count }}
     steps:
-      - name: Check out main
+      - name: Check out dispatched immutable SHA
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -148,6 +148,8 @@ jobs:
             --seed="${{ inputs.seed || github.run_id }}" \
             --max-shards=250 \
             --out=logs/solver-highbudget-sweep/shard-plan.json
+          cp logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt logs/solver-highbudget-sweep/expected-corpus1-ids.txt
+          cp logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt logs/solver-highbudget-sweep/expected-corpus2-ids.txt
           # {shard: [...]} ONLY -- see solver-level-blind-targeted-sweep.yml's identical fix for why:
           # the file also carries a top-level `planning` provenance object (plan-highbudget-shards.mjs)
           # that is not itself an array, and spreading the WHOLE file into `strategy.matrix` makes
@@ -161,7 +163,10 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: highbudget-shard-plan
-          path: logs/solver-highbudget-sweep/shard-plan.json
+          path: |
+            logs/solver-highbudget-sweep/shard-plan.json
+            logs/solver-highbudget-sweep/expected-corpus1-ids.txt
+            logs/solver-highbudget-sweep/expected-corpus2-ids.txt
           retention-days: 90
 
   # One job instance per planned shard, up to 20 running concurrently -- as a small shard finishes,
@@ -180,10 +185,10 @@ jobs:
       max-parallel: 20
       matrix: ${{ fromJson(needs.plan.outputs.shards) }}
     steps:
-      - name: Check out main
+      - name: Check out dispatched immutable SHA
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -329,10 +334,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out main
+      - name: Check out dispatched immutable SHA
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Setup Node
@@ -369,6 +374,12 @@ jobs:
           path: artifact-staging/downloaded
           merge-multiple: true
 
+      - name: Download the sealed population and shard plan
+        uses: actions/download-artifact@v8
+        with:
+          name: highbudget-shard-plan
+          path: artifact-staging/plan
+
       - name: Lay the downloaded shard results onto the working tree
         shell: bash
         run: |
@@ -379,12 +390,31 @@ jobs:
         run: |
           if ls logs/solver-highbudget-sweep/corpus1-batch-*.json >/dev/null 2>&1; then
             CORPUS1_FILES=$(ls logs/solver-highbudget-sweep/corpus1-batch-*.json | paste -sd, -)
-            npm run solver:combine-sweep-reports -- --in="${CORPUS1_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json
+            npm run solver:combine-sweep-reports -- --in="${CORPUS1_FILES}" --expected-ids=artifact-staging/plan/expected-corpus1-ids.txt --out=reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json
           fi
           if ls logs/solver-highbudget-sweep/corpus2-batch-*.json >/dev/null 2>&1; then
             CORPUS2_FILES=$(ls logs/solver-highbudget-sweep/corpus2-batch-*.json | paste -sd, -)
-            npm run solver:combine-sweep-reports -- --in="${CORPUS2_FILES}" --out=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json
+            npm run solver:combine-sweep-reports -- --in="${CORPUS2_FILES}" --expected-ids=artifact-staging/plan/expected-corpus2-ids.txt --out=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json
           fi
+
+      - name: Validate exact frozen cohorts and write publication integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/validate-solver-sweep-integrity.mjs \
+            --expected-ids=artifact-staging/plan/expected-corpus1-ids.txt \
+            --result=reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json \
+            --integrity-out=logs/solver-highbudget-sweep/corpus1-integrity.json
+          node scripts/validate-solver-sweep-integrity.mjs \
+            --expected-ids=artifact-staging/plan/expected-corpus2-ids.txt \
+            --result=reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json \
+            --integrity-out=logs/solver-highbudget-sweep/corpus2-integrity.json
+          node scripts/combine-population-integrity.mjs \
+            --input=corpus-1:logs/solver-highbudget-sweep/corpus1-integrity.json \
+            --input=corpus-2:logs/solver-highbudget-sweep/corpus2-integrity.json \
+            --kind=explicit-multi-corpus-cohort \
+            --identity-basis=corpus-and-stable-level-id \
+            --out=logs/solver-highbudget-sweep/population-integrity.json
 
       - name: Fold this round's observed timings into the runtime telemetry file
         shell: bash
@@ -405,7 +435,7 @@ jobs:
             try {
               const d = JSON.parse(require('fs').readFileSync(f, 'utf8'));
               const solved = d.levels.filter(l => l.ok).length;
-              console.log(f + ': ' + solved + '/' + d.levels.length + ' newly solved');
+              console.log(f + ': ' + solved + '/' + d.levels.length + ' solved by this run under this envelope');
             } catch (e) { console.log(f + ': not present (' + e.message + ')'); }
           }
           "
@@ -413,12 +443,29 @@ jobs:
       - name: Publish standard solver sweep result
         if: always()
         shell: bash
+        env:
+          NODE_BUDGET: ${{ inputs.node_budget }}
+          BUDGET_MS: ${{ inputs.budget_ms }}
         run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { hashConfiguration } from './scripts/solver-experiment-contract.mjs';
+          const configuration = { nodeBudget: Number(process.env.NODE_BUDGET), budgetMs: Number(process.env.BUDGET_MS), schedulerMode: 'production' };
+          fs.writeFileSync('logs/solver-highbudget-sweep/experiment-contract.json', `${JSON.stringify({
+            experiment: { workflowFamily: 'history-aware-highbudget', producer: 'solver-highbudget-unsolved-sweep.yml', entrypoint: 'scripts/portfolio-solve-sweep.mjs', configurationHash: hashConfiguration(configuration) },
+            population: { kind: 'explicit-frozen-multi-corpus-cohort', identityBasis: 'corpus-and-stable-level-id' },
+            execution: { levelBlind: false, historyAware: true, historicalInputs: ['frozen prior-unsolved IDs', 'saved hints', 'production baseline'], reproducibilityExpected: false, producerFamily: 'portfolio-solve-sweep', schedulerMode: 'production' },
+            limits: { cumulativeNodeCeiling: configuration.nodeBudget, initialWorkAllocation: null, totalWorkCeiling: null, wallSafetyDeadlineMs: configuration.budgetMs, wallDeadlineBinding: null },
+            sideEffects: { hints: 'harvest-permitted', canonicalBaseline: 'none', telemetry: 'telemetry-update', reports: 'report-write' },
+          }, null, 2)}\n`);
+          NODE
           node scripts/publish-solver-sweep-result.mjs \
             --primary="reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json" \
             --include="reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json" \
             --shards-expected="${{ needs.plan.outputs.shard_count }}" \
             --shards-observed="$(find logs/solver-highbudget-sweep -maxdepth 1 -name 'corpus2-batch-*.json' | wc -l | tr -d ' ')" \
+            --integrity-file="logs/solver-highbudget-sweep/population-integrity.json" \
+            --contract-file="logs/solver-highbudget-sweep/experiment-contract.json" \
             --provenance-out="reports/stress/highbudget-unsolved-sweep-source-run-${{ github.run_id }}.json" \
             --source-artifact="committed high-budget combined reports"
 

@@ -19,11 +19,16 @@
 # of write-order, because a level untouched by a given process's run is skipped entirely rather than
 # rewritten from that process's stale corpus snapshot.
 name: cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)
-run-name: "CP-SAT harvest · shards=${{ inputs.shard_count }} · limit=${{ inputs.time_limit }}"
+run-name: "CP-SAT harvest · corpus=${{ inputs.corpus }} · shards=${{ inputs.shard_count }} · limit=${{ inputs.time_limit }}"
 
 on:
   workflow_dispatch:
     inputs:
+      corpus:
+        description: 'Corpus to harvest; published uses data/levels.json and writes data/hints.'
+        type: choice
+        options: [corpus-2, published]
+        default: corpus-2
       time_limit:
         description: 'Per-level baseline (unforced) CP-SAT time limit in seconds'
         required: false
@@ -106,6 +111,7 @@ jobs:
           set +e
           mkdir -p logs/cpsat-hint-harvest-sweep
           timeout -k 30s --preserve-status 340m node scripts/run-bundled.mjs scripts/stress/cpsat-hint-harvest-sweep.mjs -- \
+            ${{ inputs.corpus == 'published' && '--corpus=data/levels.json' || '--corpus=data/stress/stress-levels-random.json' }} \
             --shard-index="${{ matrix.shard }}" --shard-count=60 \
             --time-limit="${{ inputs.time_limit }}" \
             --combo-time-limit="${{ inputs.combo_time_limit }}" \
@@ -121,12 +127,12 @@ jobs:
         shell: bash
         run: |
           stage="artifact-staging/cpsat-hint-harvest-shard-${{ steps.range.outputs.nn }}"
-          mkdir -p "${stage}/data/stress/hints-random" "${stage}/logs"
+          mkdir -p "${stage}/data/stress/hints-random" "${stage}/data/hints" "${stage}/logs"
           while IFS= read -r f; do
             [ -z "$f" ] && continue
             mkdir -p "$(dirname "${stage}/${f}")"
             cp "${f}" "${stage}/${f}"
-          done < <(git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json | awk '{print $2}')
+          done < <(git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json data/hints/ | awk '{print $2}')
           cp -r logs/cpsat-hint-harvest-sweep "${stage}/logs/" 2>/dev/null || true
 
       - name: Upload this shard's results
@@ -189,17 +195,18 @@ jobs:
       - name: Merge new/updated hint files into the working tree and commit
         shell: bash
         run: |
-          mkdir -p data/stress/hints-random
+          mkdir -p data/stress/hints-random data/hints
           find artifact-staging -path '*/data/stress/hints-random/*.json' -exec cp {} data/stress/hints-random/ \;
+          find artifact-staging -path '*/data/hints/*.json' -exec cp {} data/hints/ \;
           # Virtually never fires (writeLevelsWithHints only rewrites the main corpus file if the
           # STRIPPED level array changed, and hint harvesting never touches level data) but handled
           # defensively rather than assumed away.
           found_main=$(find artifact-staging -path '*/data/stress/stress-levels-random.json' | head -1)
           if [ -n "$found_main" ]; then cp "$found_main" data/stress/stress-levels-random.json; fi
-          if git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json | grep -q .; then
+          if git status --porcelain -- data/stress/hints-random/ data/stress/stress-levels-random.json data/hints/ | grep -q .; then
             git config user.name 'github-actions[bot]'
             git config user.email 'github-actions[bot]@users.noreply.github.com'
-            git add data/stress/hints-random/ data/stress/stress-levels-random.json
+            git add data/stress/hints-random/ data/stress/stress-levels-random.json data/hints/
             git commit -m "cpsat-hint-harvest-sweep: broaden CP-SAT hint coverage (run ${{ github.run_id }})"
             git push origin HEAD:"${{ github.ref_name }}"
           else

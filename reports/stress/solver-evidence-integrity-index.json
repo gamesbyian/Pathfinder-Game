@@ -1,0 +1,548 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-12T00:00:00.000Z",
+  "generator": "scripts/solver-evidence-integrity-audit.mjs",
+  "sourceRevision": null,
+  "records": [
+    {
+      "evidenceId": "canonical-stress-refresh-corpus-1",
+      "sourcePaths": [
+        "logs/stress-corpus1-baseline.json",
+        "data/stress/stress-levels.json"
+      ],
+      "sourceRunIds": [],
+      "intendedRef": null,
+      "actualSha": null,
+      "producer": {
+        "workflow": "solver-stress-refresh.yml",
+        "entrypoint": "scripts/stress/compile-baseline.mjs",
+        "family": "cold-capability-refresh"
+      },
+      "population": {
+        "kind": "whole-corpus",
+        "identityBasis": "canonical-corpus-level-ids",
+        "identityHash": "sha256:7b1fc95833d43eacfadf3b08c03c73f2ea66048cc320f99db9de43893523c1ec",
+        "expectedCount": 102,
+        "observedCount": 102,
+        "missingCount": 0,
+        "duplicateCount": 0,
+        "unexpectedCount": 0
+      },
+      "execution": {
+        "levelBlind": true,
+        "historyAware": false,
+        "reproducibilityExpected": true,
+        "schedulerMode": "production",
+        "historicalInputs": []
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": null,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": 99,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": 0,
+        "missing": 0,
+        "unknown": 3
+      },
+      "replacementEvidence": [],
+      "decisionBearing": true,
+      "notes": null,
+      "reliability": "valid-after-normalization",
+      "reconstructability": "partial",
+      "rerunDisposition": "none-required",
+      "reasons": [
+        "Exact current corpus ID coverage is present; historical run/SHA provenance is not embedded in the compiled baseline."
+      ]
+    },
+    {
+      "evidenceId": "canonical-stress-refresh-corpus-2",
+      "sourcePaths": [
+        "logs/stress-corpus2-baseline.json",
+        "data/stress/stress-levels-random.json"
+      ],
+      "sourceRunIds": [],
+      "intendedRef": null,
+      "actualSha": null,
+      "producer": {
+        "workflow": "solver-stress-refresh.yml",
+        "entrypoint": "scripts/stress/compile-baseline.mjs",
+        "family": "cold-capability-refresh"
+      },
+      "population": {
+        "kind": "whole-corpus",
+        "identityBasis": "canonical-corpus-level-ids",
+        "identityHash": "sha256:cf6274077f2523690a2bab800825a8cf24232bf7b977f2b47a46fc580312414f",
+        "expectedCount": 1700,
+        "observedCount": 1700,
+        "missingCount": 0,
+        "duplicateCount": 0,
+        "unexpectedCount": 0
+      },
+      "execution": {
+        "levelBlind": true,
+        "historyAware": false,
+        "reproducibilityExpected": true,
+        "schedulerMode": "production",
+        "historicalInputs": []
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": null,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": 1029,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": 0,
+        "missing": 0,
+        "unknown": 671
+      },
+      "replacementEvidence": [],
+      "decisionBearing": true,
+      "notes": null,
+      "reliability": "valid-after-normalization",
+      "reconstructability": "partial",
+      "rerunDisposition": "none-required",
+      "reasons": [
+        "Exact current corpus ID coverage is present; historical run/SHA provenance is not embedded in the compiled baseline."
+      ]
+    },
+    {
+      "evidenceId": "highbudget-unsolved-2026-07-24-corpus-1",
+      "sourcePaths": [
+        "reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json"
+      ],
+      "sourceRunIds": [],
+      "intendedRef": null,
+      "actualSha": "d0f29e93020c48e04f6e9c390c429e58b6a76223",
+      "producer": {
+        "workflow": "solver-highbudget-unsolved-sweep.yml",
+        "entrypoint": "scripts/combine-solver-sweep-reports.mjs",
+        "family": "history-aware-highbudget"
+      },
+      "population": {
+        "kind": "historical-frozen-unsolved-cohort",
+        "identityBasis": "observed-level-ids-only",
+        "identityHash": "sha256:c3ff1345d70a25a15d6a86ec2d40354ee8eb3485fa054ff5a9897321b75bf9d0",
+        "expectedCount": null,
+        "observedCount": 5,
+        "missingCount": null,
+        "duplicateCount": 0,
+        "unexpectedCount": null
+      },
+      "execution": {
+        "levelBlind": false,
+        "historyAware": true,
+        "reproducibilityExpected": null,
+        "schedulerMode": null,
+        "historicalInputs": [
+          "prior unsolved population",
+          "saved hints/baseline"
+        ]
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": 200000,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": 3,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": null,
+        "missing": null,
+        "unknown": 2
+      },
+      "replacementEvidence": [],
+      "decisionBearing": false,
+      "notes": null,
+      "reliability": "observational-only",
+      "reconstructability": "partial",
+      "rerunDisposition": "needs-human-review",
+      "reasons": [
+        "Observed rows and referee-valid solutions survive, but the intended frozen cohort and missing/error/truncation classes cannot be reconstructed from this aggregate.",
+        "Legacy combiner failed=!ok and errors=0 metadata is not reliable."
+      ]
+    },
+    {
+      "evidenceId": "highbudget-unsolved-2026-07-24-corpus-2",
+      "sourcePaths": [
+        "reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json"
+      ],
+      "sourceRunIds": [],
+      "intendedRef": null,
+      "actualSha": "d0f29e93020c48e04f6e9c390c429e58b6a76223",
+      "producer": {
+        "workflow": "solver-highbudget-unsolved-sweep.yml",
+        "entrypoint": "scripts/combine-solver-sweep-reports.mjs",
+        "family": "history-aware-highbudget"
+      },
+      "population": {
+        "kind": "historical-frozen-unsolved-cohort",
+        "identityBasis": "observed-level-ids-only",
+        "identityHash": "sha256:73a0226988d2a9e62958ccdb15ae868f9f9225b65780b3169b56ca0b22072815",
+        "expectedCount": null,
+        "observedCount": 1095,
+        "missingCount": null,
+        "duplicateCount": 0,
+        "unexpectedCount": null
+      },
+      "execution": {
+        "levelBlind": false,
+        "historyAware": true,
+        "reproducibilityExpected": null,
+        "schedulerMode": null,
+        "historicalInputs": [
+          "prior unsolved population",
+          "saved hints/baseline"
+        ]
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": 200000,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": 165,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": null,
+        "missing": null,
+        "unknown": 930
+      },
+      "replacementEvidence": [],
+      "decisionBearing": false,
+      "notes": null,
+      "reliability": "observational-only",
+      "reconstructability": "partial",
+      "rerunDisposition": "needs-human-review",
+      "reasons": [
+        "Observed rows and referee-valid solutions survive, but the intended frozen cohort and missing/error/truncation classes cannot be reconstructed from this aggregate.",
+        "Legacy combiner failed=!ok and errors=0 metadata is not reliable."
+      ]
+    },
+    {
+      "evidenceId": "method-probe-historical-cardinality",
+      "sourcePaths": [
+        ".github/workflows/method-probe-sweep.yml"
+      ],
+      "sourceRunIds": [],
+      "intendedRef": null,
+      "actualSha": null,
+      "producer": {
+        "workflow": "method-probe-sweep.yml",
+        "entrypoint": "scripts/method-probe-sweep.mjs",
+        "family": "isolated-method-probe"
+      },
+      "population": {
+        "kind": null,
+        "identityBasis": null,
+        "identityHash": null,
+        "expectedCount": null,
+        "observedCount": null,
+        "missingCount": null,
+        "duplicateCount": null,
+        "unexpectedCount": null
+      },
+      "execution": {
+        "levelBlind": null,
+        "historyAware": null,
+        "reproducibilityExpected": null,
+        "schedulerMode": null,
+        "historicalInputs": []
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": null,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": null,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": null,
+        "missing": null,
+        "unknown": null
+      },
+      "replacementEvidence": [],
+      "decisionBearing": false,
+      "notes": null,
+      "reliability": "incomplete",
+      "reconstructability": "unverifiable",
+      "rerunDisposition": "needs-human-review",
+      "reasons": [
+        "Historical dispatches relied on caller-maintained total_levels; committed artifacts do not establish dispatched corpus cardinality."
+      ]
+    },
+    {
+      "evidenceId": "production-replay-baseline-history",
+      "sourcePaths": [
+        ".github/workflows/solver-production-replay-baseline.yml"
+      ],
+      "sourceRunIds": [],
+      "intendedRef": null,
+      "actualSha": null,
+      "producer": {
+        "workflow": "solver-production-replay-baseline.yml",
+        "entrypoint": "scripts/portfolio-solve-sweep.mjs",
+        "family": "history-aware-production-replay"
+      },
+      "population": {
+        "kind": null,
+        "identityBasis": null,
+        "identityHash": null,
+        "expectedCount": null,
+        "observedCount": null,
+        "missingCount": null,
+        "duplicateCount": null,
+        "unexpectedCount": null
+      },
+      "execution": {
+        "levelBlind": false,
+        "historyAware": true,
+        "reproducibilityExpected": true,
+        "schedulerMode": "production",
+        "historicalInputs": [
+          "baseline",
+          "prime-winner",
+          "saved hints"
+        ]
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": null,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": null,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": null,
+        "missing": null,
+        "unknown": null
+      },
+      "replacementEvidence": [],
+      "decisionBearing": false,
+      "notes": null,
+      "reliability": "observational-only",
+      "reconstructability": "partial",
+      "rerunDisposition": "none-required",
+      "reasons": [
+        "This family measures warm/history-aware replay and is not cold capability evidence."
+      ]
+    },
+    {
+      "evidenceId": "routing-regime-historical-paired-runs",
+      "sourcePaths": [
+        ".github/workflows/solver-routing-regime-sample-ab.yml"
+      ],
+      "sourceRunIds": [],
+      "intendedRef": null,
+      "actualSha": null,
+      "producer": {
+        "workflow": "solver-routing-regime-sample-ab.yml",
+        "entrypoint": "scripts/stress/select-routing-regime-sample.mjs",
+        "family": "routing-regime-sample-ab"
+      },
+      "population": {
+        "kind": null,
+        "identityBasis": null,
+        "identityHash": null,
+        "expectedCount": null,
+        "observedCount": null,
+        "missingCount": null,
+        "duplicateCount": null,
+        "unexpectedCount": null
+      },
+      "execution": {
+        "levelBlind": null,
+        "historyAware": null,
+        "reproducibilityExpected": null,
+        "schedulerMode": null,
+        "historicalInputs": []
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": null,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": null,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": null,
+        "missing": null,
+        "unknown": null
+      },
+      "replacementEvidence": [],
+      "decisionBearing": false,
+      "notes": null,
+      "reliability": "invalid",
+      "reconstructability": "unverifiable",
+      "rerunDisposition": "needs-human-review",
+      "reasons": [
+        "Historical two-dispatch arms did not persist a shared sealed population hash; a shared seed cannot prove paired identity across revisions."
+      ]
+    },
+    {
+      "evidenceId": "technique-census-32240161854",
+      "sourcePaths": [
+        "reports/stress/technique-census/32240161854/combined-cells.json"
+      ],
+      "sourceRunIds": [
+        "32240161854"
+      ],
+      "intendedRef": null,
+      "actualSha": null,
+      "producer": {
+        "workflow": "technique-census.yml",
+        "entrypoint": "scripts/combine-technique-census-shards.mjs",
+        "family": "isolated-technique-census"
+      },
+      "population": {
+        "kind": "technique-census-cells",
+        "identityBasis": "observed-cell-ids",
+        "identityHash": "sha256:cd92d3b4154a8b4949eb2df8ef92d846f06a9951ae5769d4fa9a8dfe946a3124",
+        "expectedCount": null,
+        "observedCount": 78553,
+        "missingCount": null,
+        "duplicateCount": 48,
+        "unexpectedCount": null
+      },
+      "execution": {
+        "levelBlind": true,
+        "historyAware": false,
+        "reproducibilityExpected": null,
+        "schedulerMode": "isolated-techniques",
+        "historicalInputs": []
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": null,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": 18860,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": 0,
+        "missing": null,
+        "unknown": 59693
+      },
+      "replacementEvidence": [],
+      "decisionBearing": false,
+      "notes": null,
+      "reliability": "incomplete",
+      "reconstructability": "partial",
+      "rerunDisposition": "needs-human-review",
+      "reasons": [
+        "Dedicated combiner reports partial shards (technique-census-shard-85), missing shards (none), or 48 duplicated cell IDs; observed cells remain useful."
+      ]
+    },
+    {
+      "evidenceId": "technique-census-33717910218",
+      "sourcePaths": [
+        "reports/stress/technique-census/33717910218/combined-cells.json"
+      ],
+      "sourceRunIds": [
+        "33717910218"
+      ],
+      "intendedRef": null,
+      "actualSha": null,
+      "producer": {
+        "workflow": "technique-census.yml",
+        "entrypoint": "scripts/combine-technique-census-shards.mjs",
+        "family": "isolated-technique-census"
+      },
+      "population": {
+        "kind": "technique-census-cells",
+        "identityBasis": "observed-cell-ids",
+        "identityHash": "sha256:cd92d3b4154a8b4949eb2df8ef92d846f06a9951ae5769d4fa9a8dfe946a3124",
+        "expectedCount": 78505,
+        "observedCount": 78505,
+        "missingCount": 0,
+        "duplicateCount": 0,
+        "unexpectedCount": null
+      },
+      "execution": {
+        "levelBlind": true,
+        "historyAware": false,
+        "reproducibilityExpected": null,
+        "schedulerMode": "isolated-techniques",
+        "historicalInputs": []
+      },
+      "limits": {
+        "cumulativeNodeCeiling": null,
+        "initialWorkAllocation": null,
+        "totalWorkCeiling": null,
+        "wallSafetyDeadlineMs": null,
+        "wallDeadlineBinding": null
+      },
+      "outcomes": {
+        "solved": 18820,
+        "exhaustedNegative": null,
+        "nodeLimited": null,
+        "workLimited": null,
+        "deadlineTruncated": null,
+        "errors": null,
+        "malformed": 0,
+        "missing": 0,
+        "unknown": 59685
+      },
+      "replacementEvidence": [],
+      "decisionBearing": true,
+      "notes": null,
+      "reliability": "valid-after-normalization",
+      "reconstructability": "complete",
+      "rerunDisposition": "none-required",
+      "reasons": [
+        "Dedicated combiner reports no missing or partial shards and no duplicate cells; outcome terminology still requires normalization."
+      ]
+    }
+  ]
+}

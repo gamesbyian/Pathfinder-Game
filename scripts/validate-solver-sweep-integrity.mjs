@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import { pathToFileURL } from 'node:url';
+import { buildPopulationIntegrity, hashPopulation } from './solver-experiment-contract.mjs';
 
 function parseArgs(argv) {
   return new Map(argv.filter(arg => arg.startsWith('--')).map(arg => {
@@ -31,22 +32,24 @@ export function idOfRow(row) {
 export function diffPopulation(expectedIds, levels) {
   const actualIds = levels.map(idOfRow);
   const malformed = actualIds.some(id => typeof id !== 'string' || !id);
-  const duplicateActual = actualIds.filter((id, index) => actualIds.indexOf(id) !== index);
+  const seen = new Set();
+  const duplicateActual = new Set();
+  for (const id of actualIds) seen.has(id) ? duplicateActual.add(id) : seen.add(id);
   const expected = new Set(expectedIds);
   const actual = new Set(actualIds);
   const missing = expectedIds.filter(id => !actual.has(id));
   const unexpected = [...actual].filter(id => !expected.has(id)).sort();
-  return { malformed, duplicates: [...new Set(duplicateActual)], missing, unexpected, actualCount: actualIds.length };
+  return { malformed, duplicates: [...duplicateActual], missing, unexpected, actualCount: actualIds.length };
 }
 
-export function validateSweepIntegrity({ expectedIds, levels, requiredStage = null, minParticipatingLevels = 0, minParticipationRate = 0 }) {
+export function validateSweepIntegrity({ expectedIds, levels, requiredStage = null, minParticipatingLevels = 0, minParticipationRate = 0, allowIncomplete = false }) {
   if (!Array.isArray(levels)) throw new Error('result must contain a levels array');
   const idOf = idOfRow;
-  if (levels.some(row => typeof idOf(row) !== 'string' || !idOf(row))) throw new Error('one or more result rows lack a level id');
+  if (!allowIncomplete && levels.some(row => typeof idOf(row) !== 'string' || !idOf(row))) throw new Error('one or more result rows lack a level id');
 
   const { duplicates: duplicateActual, missing, unexpected, actualCount } = diffPopulation(expectedIds, levels);
 
-  if (duplicateActual.length || missing.length || unexpected.length) {
+  if (!allowIncomplete && (duplicateActual.length || missing.length || unexpected.length)) {
     const parts = [];
     if (duplicateActual.length) parts.push(`duplicate results: ${duplicateActual.join(', ')}`);
     if (missing.length) parts.push(`missing results: ${missing.join(', ')}`);
@@ -91,7 +94,13 @@ export function validateSweepIntegrity({ expectedIds, levels, requiredStage = nu
     }
   }
 
-  return { complete: true, expectedLevels: expectedIds.length, observedLevels: actualCount, participation };
+  const normalized = buildPopulationIntegrity(expectedIds, levels);
+  const population = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: expectedIds });
+  const complete = !normalized.outcomes.malformed && duplicateActual.length === 0 && missing.length === 0 && unexpected.length === 0;
+  return { complete, expectedLevels: expectedIds.length, observedLevels: actualCount, participation,
+    expectedCount: normalized.expectedCount, observedCount: normalized.observedCount,
+    duplicateIds: normalized.duplicateIds, unexpectedIds: normalized.unexpectedIds, missingIds: normalized.missingIds,
+    outcomes: normalized.outcomes, populationIdentityHash: population.identityHash, expectedIds: population.identities };
 }
 
 function main() {
@@ -111,7 +120,10 @@ function main() {
     requiredStage: args.get('required-stage') || null,
     minParticipatingLevels,
     minParticipationRate,
+    allowIncomplete: args.has('allow-incomplete'),
   });
+  const integrityOut = args.get('integrity-out');
+  if (integrityOut) fs.writeFileSync(integrityOut, `${JSON.stringify(summary, null, 2)}\n`);
   console.log(`Sweep integrity OK: ${summary.observedLevels}/${summary.expectedLevels} exact level ids present.`);
   if (summary.participation) {
     const p = summary.participation;

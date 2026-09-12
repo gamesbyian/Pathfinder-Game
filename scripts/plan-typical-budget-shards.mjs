@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Shard planner for .github/workflows/solver-typical-budget-baseline.yml.
+ * Shard planner for .github/workflows/solver-production-replay-baseline.yml.
  *
  * Emits the workflow's job matrix as one line of JSON: a contiguous, gap-free, overlap-free split
  * of BOTH stress corpora across N shards. Exists as a script rather than inline workflow bash for
