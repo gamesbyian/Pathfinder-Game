@@ -1,4 +1,11 @@
 #!/usr/bin/env node
+// Reads large historical evidence files (logs/stress-corpus{1,2}-baseline.json,
+// reports/stress/highbudget-unsolved-sweep-corpus{1,2}-2026-07-24.json,
+// reports/stress/technique-census/*/combined-cells.json -- tens of MB each) that both CI jobs'
+// sparse checkouts (.github/workflows/ci.yml) deliberately exclude for speed. test:solver-
+// evidence-integrity is therefore registered standalone in package.json, not part of the test:node
+// aggregate: run it (or npm run solver:evidence-integrity-audit) locally against a full checkout
+// when touching this file or regenerating the committed index.
 import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { buildPopulationIntegrity, hashPopulation } from './solver-experiment-contract.mjs';
