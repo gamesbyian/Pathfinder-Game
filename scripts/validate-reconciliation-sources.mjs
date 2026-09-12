@@ -2,23 +2,93 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { stableHash } from './solver-experiment-contract.mjs';
+import { assertCompatibleExperiments, decisionContractIssues, stableHash } from './solver-experiment-contract.mjs';
+
+function sourceContract(manifest, runId) {
+  const resolvedSha = manifest?.experiment?.resolvedSha ?? manifest?.sha ?? null;
+  const configurationHash = manifest?.experiment?.configurationHash ?? manifest?.configurationHash ?? null;
+  if (!resolvedSha) throw new Error(`source run ${runId} has no actual resolved SHA`);
+  if (!configurationHash) throw new Error(`source run ${runId} has no configuration hash`);
+
+  const contract = {
+    experiment: {
+      workflowFamily: manifest?.experiment?.workflowFamily ?? null,
+      producer: manifest?.experiment?.producer ?? null,
+      entrypoint: manifest?.experiment?.entrypoint ?? null,
+      resolvedSha,
+      configurationHash,
+    },
+    population: {
+      kind: manifest?.population?.kind ?? null,
+      identityBasis: manifest?.population?.identityBasis ?? null,
+      corpusIdentity: manifest?.population?.corpusIdentity ?? null,
+      identityHash: manifest?.population?.identityHash ?? manifest?.populationIdentityHash ?? null,
+    },
+    execution: {
+      levelBlind: manifest?.execution?.levelBlind ?? null,
+      historyAware: manifest?.execution?.historyAware ?? null,
+      historicalInputs: manifest?.execution?.historicalInputs ?? null,
+      reproducibilityExpected: manifest?.execution?.reproducibilityExpected ?? null,
+      producerFamily: manifest?.execution?.producerFamily ?? null,
+      schedulerMode: manifest?.execution?.schedulerMode ?? null,
+    },
+    limits: {
+      cumulativeNodeCeiling: manifest?.limits?.cumulativeNodeCeiling,
+      initialWorkAllocation: manifest?.limits?.initialWorkAllocation,
+      totalWorkCeiling: manifest?.limits?.totalWorkCeiling,
+      wallSafetyDeadlineMs: manifest?.limits?.wallSafetyDeadlineMs,
+      wallDeadlineBinding: manifest?.limits?.wallDeadlineBinding,
+    },
+    sideEffects: manifest?.sideEffects ?? null,
+  };
+
+  const issues = decisionContractIssues(contract).filter(issue => issue !== 'population.identityHash');
+  if (issues.length) throw new Error(`source run ${runId} has incomplete experiment protocol: ${issues.join(', ')}`);
+  return contract;
+}
 
 export function validateReconciliationSources(sources) {
   if (!sources.length) throw new Error('no source manifests supplied');
   const normalized = sources.map(({ runId, manifest }) => {
-    const resolvedSha = manifest?.experiment?.resolvedSha ?? manifest?.sha ?? null;
-    const configurationHash = manifest?.experiment?.configurationHash ?? manifest?.configurationHash ?? null;
-    if (!resolvedSha) throw new Error(`source run ${runId} has no actual resolved SHA`);
-    if (!configurationHash) throw new Error(`source run ${runId} has no configuration hash`);
-    return { runId: String(runId), runAttempt: manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt ?? null,
-      resolvedSha, configurationHash, populationIdentityHash: manifest?.population?.identityHash ?? manifest?.populationIdentityHash ?? null };
+    const contract = sourceContract(manifest, runId);
+    return {
+      runId: String(runId),
+      runAttempt: manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt ?? null,
+      resolvedSha: contract.experiment.resolvedSha,
+      configurationHash: contract.experiment.configurationHash,
+      populationIdentityHash: contract.population.identityHash,
+      contract,
+    };
   });
-  for (const field of ['resolvedSha', 'configurationHash']) {
-    if (new Set(normalized.map(source => source[field])).size !== 1) throw new Error(`source runs disagree on ${field}`);
+
+  const reference = normalized[0].contract;
+  for (const source of normalized.slice(1)) {
+    try {
+      assertCompatibleExperiments(reference, source.contract);
+    } catch (error) {
+      throw new Error(`source run ${source.runId} is not protocol-compatible with source run ${normalized[0].runId}: ${error.message}`);
+    }
   }
-  return { sources: normalized, resolvedSha: normalized[0].resolvedSha, configurationHash: normalized[0].configurationHash,
-    sourceSetHash: stableHash(normalized) };
+
+  const sourcesForProvenance = normalized.map(({ contract, ...source }) => source);
+  return {
+    sources: sourcesForProvenance,
+    resolvedSha: reference.experiment.resolvedSha,
+    configurationHash: reference.experiment.configurationHash,
+    sourceExperiment: {
+      workflowFamily: reference.experiment.workflowFamily,
+      producer: reference.experiment.producer,
+      entrypoint: reference.experiment.entrypoint,
+    },
+    population: {
+      kind: reference.population.kind,
+      identityBasis: reference.population.identityBasis,
+      corpusIdentity: reference.population.corpusIdentity,
+    },
+    execution: reference.execution,
+    limits: reference.limits,
+    sourceSetHash: stableHash(sourcesForProvenance),
+  };
 }
 
 function main() {
