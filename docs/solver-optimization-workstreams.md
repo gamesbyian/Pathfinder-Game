@@ -30,7 +30,7 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 - **Freshness reconciliation:** suspicious same-revision `isolatedTechnique` successes were **5/5 T1 variants and 0/5 base T1**, all `coarse-state-near-tie-retention-off`; production already reaches the corresponding retry. Future provenance retains census-cell identity. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 - **Single-level microscope:** `R03229` at its width-2000 first-loss boundary gives **LIVE known culled witness / DEAD rank-1 survivor / DEAD cutoff survivor**. This is recurrence of the August B1/B2 mechanism class, not a new premise. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
-**Current acquisition gate: bounded future-feasibility rejoin.** Rejoin B1/B2 + `R03229` and test at most 2-4 runtime-legal summaries from exact-resource capacity, residual-topology scarcity, and joint-obligation compatibility. Same-day evidence constrains interpretation: mechanic-bucket retention demonstrably preserves fresh progress on selected solved siblings but both class-5 bucket canaries are solve-null, so progress/bucket rarity is a negative control rather than future-feasibility evidence; independent perturbation probes are also difficulty-confounded, increasing the value of measuring slack/scarcity directly. Require information beyond score/rank/prunes/progress masks and recurrence across unrelated parents; otherwise close the route. [`handoff`](../reports/2026-09-12-future-feasibility-premise-rejoin-001.md)
+**Current acquisition gate: bounded future-feasibility rejoin.** Rejoin B1/B2 + `R03229` and test at most 2-4 runtime-legal summaries from exact-resource capacity, residual-topology scarcity, and joint-obligation compatibility. Same-day evidence constrains interpretation: mechanic-bucket retention demonstrably preserves fresh progress on selected solved siblings but both class-5 bucket canaries are solve-null, so progress/bucket rarity is a negative control rather than future-feasibility evidence; independent perturbation probes are also difficulty-confounded, increasing the value of measuring slack/scarcity directly. Existing perturbation-rescue density and the clean/confounded mechanic-composition parents may serve only as offline calibration for independently chosen descriptors; they do not expand the candidate budget. Require information beyond score/rank/prunes/progress masks and recurrence across unrelated parents; otherwise close the route. [`handoff`](../reports/2026-09-12-future-feasibility-premise-rejoin-001.md), [`cross-line closeout`](../reports/2026-09-12-cross-line-unharvested-residue-closeout-001.md)
 
 **Novelty bar:** B1/B2 already established both `dead rank-1 / live known alternative` and `live / live` shapes; `R03229` reproduces the first on a clean class-5 specimen. Advancement requires a recurring mechanism-specific distinction that explains exact future feasibility better than current score/prune information. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md)
 
@@ -53,7 +53,7 @@ The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
-|---:|---|---|---|
+|---:|---|---|
 | 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Rejoin B1/B2 + R03229 exact extinction states; test 2-4 prespecified future-feasibility summaries read-only before any new class-5 treatment. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Run/classify the exact cross-hint provenance collision audit; structural-response ladder otherwise closed pending a new pair/premise. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
@@ -75,11 +75,12 @@ The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 
 - Hold out independent units and scale confirmation with tuning/selection pressure.
 - Reusable benchmark/census rows require matching protocol identity; nominal stage reach is not participation.
 - Result identity, population integrity, resolved configuration/provenance and budget semantics are research-control-plane invariants.
-- After material capability promotion or provenance reinterpretation, refresh/rejoin residuals before treating old class/family/capability-memory counts as current.
+- After material capability promotion or provenance reinterpretation, refresh/rejoin residuals before treating old class/family/capability-memory counts as current; as part of that cheap rejoin, check whether classes 1-3 expose an already-legal low-cost solve batch before scheduling new acquisition work.
 - A validated hint prefix proves that prefix live, not that alternatives are dead.
 - Before escalating a persistent residual, ask whether materially different actions lose known-live material at the same boundary.
 - A single-level microscope may generate a premise, never a production exception; require an independent phenotype-matched check before scaling.
 - Future-feasibility descriptors must be runtime-legal and incremental to current score/prune/progress information; exact labels are offline truth, never runtime steering.
+- Convenience labels and summary booleans are not causal fields: when research interpretation depends on condition/source identity, prefer explicit provenance/config fields and audit ambiguous proxies before decision-bearing joins.
 - Reconcile old questions against newer evidence before new compute. Prefer the smallest information-value test.
 
 ## Cheap evidence routing
