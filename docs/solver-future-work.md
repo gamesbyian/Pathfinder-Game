@@ -42,7 +42,7 @@ The corrected residual also contains **221 non-class-5 misses** across classes 1
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Research-label semantic audit** | Run a bounded static review when evidence plumbing is next touched: find places where `variantLabel`, `pairLabel`, `isolatedTechnique`, origin/arm names, or similar convenience fields are used as semantic predicates. Repair only demonstrated ambiguity; explicit causal/provenance fields own meaning. No schema redesign without a concrete failure. |
+| **Research-label semantic audit** | The three known `variantLabel` T1-join consumers are already repaired and spot-audited. When provenance/evidence plumbing is next touched, extend the static review only to other convenience fields (`pairLabel`, `isolatedTechnique`, origin/arm names, similar summaries) used as semantic predicates. Repair demonstrated ambiguity only; explicit causal/provenance fields own meaning. No schema redesign without a concrete failure. |
 | **Richer static graph/placement selectors** | Reopen for one mechanism-specific descriptor from recurring solution/family/trace/first-loss evidence. The prior 18-feature bundle added no held-out value; no generic feature accretion. |
 | **Stability-aware portfolios** | Reopen only if WS1 finds a compact held-out decision signal beyond current work/coverage evidence. Capability-memory union may nominate the contrast, not the selector. |
 | **Latent response dimensions / biclusters** | Only if simpler pair/cohort analysis leaves stable unexplained structure after temporal/difficulty controls. |
