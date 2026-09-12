@@ -79,6 +79,16 @@ try {
   assert.equal(incompleteContractManifest.decisionBearing, false);
   assert.ok(incompleteContractManifest.decisionContractIssues.includes('experiment.resolvedSha'));
 
+  const omittedLimitContract = path.join(temp, 'omitted-limit-contract.json');
+  const parsedOmittedLimitContract = JSON.parse(fs.readFileSync(contractFile));
+  delete parsedOmittedLimitContract.limits.totalWorkCeiling;
+  fs.writeFileSync(omittedLimitContract, JSON.stringify(parsedOmittedLimitContract));
+  const omittedLimitOut = path.join(temp, 'omitted-limit-out');
+  execFileSync('node', ['scripts/publish-solver-sweep-result.mjs', `--primary=${primary}`, `--integrity-file=${integrity}`, `--outcome-file=${outcome}`, `--contract-file=${omittedLimitContract}`, `--out=${omittedLimitOut}`], { cwd: root });
+  const omittedLimitManifest = JSON.parse(fs.readFileSync(path.join(omittedLimitOut, 'manifest.json')));
+  assert.equal(omittedLimitManifest.decisionBearing, false, 'omitted limit declaration must not normalize into an explicit null');
+  assert.ok(omittedLimitManifest.decisionContractIssues.includes('limits.totalWorkCeiling'));
+
   console.log('publish solver sweep result tests passed');
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });
