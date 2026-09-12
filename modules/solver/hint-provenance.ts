@@ -2,7 +2,7 @@
 import { makeProvenanceEntry, toHint } from '../domain/hint-types.js';
 import { GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } from './attempts.js';
 import { classifyAttemptTier } from './orchestration.js';
-import type { Hint, HintProvenanceEntry } from '../domain/hint-types.js';
+import type { Hint, HintProvenanceEntry, HintTechniqueCensusCellContext } from '../domain/hint-types.js';
 import type { Attempt } from './orchestration.js';
 
 /** Partial attempts remain typed from orchestration's canonical Attempt contract. */
@@ -15,6 +15,9 @@ type AttemptLike = Omit<Partial<Attempt>, 'stageId'> & {
     diverseBeam?: boolean;
     dedupNearTieRetry?: boolean;
     goalAttractionDisabledRetry?: boolean;
+    /** In-memory carrier attached by technique-census result normalization. Non-enumerable there so
+     * combined-cells.json is not bloated; persisted only on the resulting Hint provenance. */
+    techniqueCensusCell?: HintTechniqueCensusCellContext | null;
 };
 
 interface SolveResultLike {
@@ -43,6 +46,9 @@ export interface ProvenanceContext {
     solverVersion?: string | null;
     /** True for one-technique isolated runs, not the competitively-budgeted production ladder. */
     isolatedTechnique?: boolean;
+    /** Explicit source cell for census-derived solves. Normally supplied by the winning attempt's
+     * in-memory carrier so callers outside the census do not need to know about census structure. */
+    techniqueCensusCell?: HintTechniqueCensusCellContext | null;
 }
 
 interface SolveAttemptInfo {
@@ -65,6 +71,8 @@ interface SolveAttemptInfo {
     goalAttractionDisabledRetry: boolean;
     /** Force-enabled last-resort retry tier, else null. */
     retryTier: string | null;
+    /** Exact source cell for an isolated technique-census winner, when attached in memory. */
+    techniqueCensusCell: HintTechniqueCensusCellContext | null;
 }
 
 /** Retry categories that change normal ladder rules; ordinary tiers and goal-attraction-disabled-retry are excluded. */
@@ -82,7 +90,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
             technique: 'solve-unknown', scoringProfileId: null, orderingBiasId: null, beamWidth: null, mechanicBucketRetention: null,
             gateKey: null, attemptIndex: null, elapsedMs: null, nodesExpanded: null, allocatedBudgetMs: null,
             randomSeed: null, seedSalt: null, repairMustTurnBiased: null, repairTurnBiased: null, goalAttractionDisabledRetry: false,
-            retryTier: null,
+            retryTier: null, techniqueCensusCell: null,
         };
     }
     const technique = winner.repair ? 'repair' : (winner.beamWidth ? 'beam' : (winner.admissibleOrder ? 'admissible-order-fallback' : 'dfs'));
@@ -105,6 +113,7 @@ export function deriveSolveAttemptInfo(attempts: AttemptLike[] | undefined): Sol
         repairTurnBiased: winner.repair ? !!winner.repairTurnBiased : null,
         goalAttractionDisabledRetry: attemptTierLabel === 'goal-attraction-disabled-retry' || winner.goalAttractionDisabledRetry === true,
         retryTier: RETRY_TIER_LABELS.has(attemptTierLabel) ? attemptTierLabel : null,
+        techniqueCensusCell: winner.techniqueCensusCell ?? null,
     };
 }
 
@@ -135,6 +144,7 @@ export function provenanceFromSolveResult(result: SolveResultLike, ctx: Provenan
         hintGuided: false,
         levelRevision: ctx.levelRevision ?? null,
         isolatedTechnique: ctx.isolatedTechnique ?? false,
+        techniqueCensusCell: info.techniqueCensusCell ?? ctx.techniqueCensusCell ?? null,
         ...(info.repairMustTurnBiased !== null ? {
             forcingRepairMustTurnBiased: info.repairMustTurnBiased,
             forcingRepairTurnBiased: info.repairTurnBiased,
