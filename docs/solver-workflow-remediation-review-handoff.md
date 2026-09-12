@@ -1,67 +1,58 @@
-# Solver workflow remediation: implementation-tranche review handoff
+# Solver workflow remediation: completed implementation handoff
 
-> **Status:** hostile review in progress; the overall remediation plan remains active.
+> **Status:** completed by PR #1740; merged 2026-09-11. The remediation tranche is closed.
 > **Audit authority:** [`../reports/stress/solver-evidence-integrity-index.json`](../reports/stress/solver-evidence-integrity-index.json), rebuilt by `npm run solver:evidence-integrity-audit`.
 
-## Completed in this tranche
+## Completed scope
 
-- Added the v3 experiment-result schema and one shared implementation for deterministic population/configuration hashing, row outcome classification, exact population integrity, and paired compatibility assertions.
-- Repaired the generic combiner to preserve producer/source-run metadata, reject semantic disagreement, compute normalized outcomes, and stop manufacturing `failed`, `errors: 0`, legacy-engine, and witness-access claims.
-- Repaired the publisher vocabulary: shard arrival is `artifactCoverage`; intended-population integrity and decision-bearing status are separate; summaries report solved/observed/expected/missing; paired deltas are non-decision-bearing without equal population hashes and valid integrity.
-- Extended exact-ID integrity output with a reusable population hash and normalized outcome record.
-- Retired the settled early-repair A/B, MITM one-off, and Firestore boundary workflow. The Firestore identity boundary now runs in ordinary PR CI through the emulator-backed package test. Consolidated the published CP-SAT corpus into the retained harvest workflow.
-- Renamed the typical-budget workflow to `solver-production-replay-baseline.yml`, labeled it history-aware, and pinned high-budget/replay execution checkout to the dispatched immutable SHA.
-- Removed caller-maintained method-probe cardinality; each shard derives the corpus length from the supplied corpus.
-- Added a complete maintained-workflow lifecycle inventory with consumer/retirement fields and an executable drift check.
-- Migrated method-probe, static-portfolio, technique-census, high-budget, production-replay, reconciliation, and consolidated CP-SAT surfaces far enough to publish explicit contract/integrity metadata rather than relying only on the generic front door.
+- Added the v3 experiment-result contract with deterministic population/configuration hashing, normalized outcome classification, exact population integrity, provenance, limits, side-effect semantics, and paired compatibility checks.
+- Repaired the shared combiner and publisher so transport coverage, intended-population integrity, outcome validity, producer/source provenance, and decision-bearing status remain distinct.
+- Population identity now represents the **intended** population when one is declared; missing observations cannot mutate experiment identity.
+- Population integrity distinguishes `coverageComplete` from `decisionValidComplete`. Deadline truncation, harness errors, malformed/missing rows, and unknown outcomes cannot silently become ordinary negatives or decision-bearing evidence.
+- Legacy integrity records fail closed unless normalized outcome data establish decision validity.
+- Single- and multi-population integrity, reconciliation, publication, schemas, contract checks, and regression tests share those semantics.
+- Retired the settled early-repair A/B, MITM one-off, and Firestore boundary workflows; moved the Firestore identity proof into ordinary CI; consolidated the duplicate published CP-SAT harvest workflow.
+- Renamed the typical-budget workflow to `solver-production-replay-baseline.yml`, made its history-aware semantics explicit, and propagated the rename through consumers/guardrails.
+- Hardened high-budget, production replay, method-probe, static-portfolio, technique-census, targeted/broad/residual confirmation, CP-SAT/reference, reconciliation, and routing-regime experiment surfaces onto the common evidence contract where applicable.
+- Redesigned routing-regime A/B as one coordinated dispatch with one sealed population and two immutable arm SHAs.
+- Added maintained-workflow lifecycle inventory/checking and historical evidence-integrity audit tooling.
+- Added/retained fail-closed behavior for partial, mismatched, wrong-ref, duplicate, unexpected, truncated, and otherwise scientifically indeterminate evidence.
 
-## Hostile-review corrections already applied
+## Hostile-review corrections incorporated
 
-- Population identity now represents the **intended** population when an expected-ID population exists. Missing observations no longer mutate the population hash and thereby masquerade as a different experiment.
-- Population integrity now distinguishes `coverageComplete` from `decisionValidComplete`. Deadline truncation, harness errors, and unknown outcomes can coexist with full row coverage but cannot make an experiment decision-bearing. The legacy `complete` field remains only as a compatibility alias for coverage completeness.
-- The generic publisher now gates decision-bearing output and paired comparisons on decision-valid integrity, and its summary explicitly reports population coverage separately from decision-valid observations.
-- Legacy integrity records fail closed unless they carry enough normalized outcome information to prove decision-validity; `complete: true` by itself is never sufficient.
-- Single- and multi-population integrity combiners now preserve both coverage and decision-valid completeness.
-- The exact-ID validator now emits both completeness concepts so workflows do not need to reconstruct this distinction independently.
-- The v3 schema, contract checker, and regression tests encode these semantics.
-- The historical high-budget audit now uses the surviving frozen July 24 ID files. The intended cohorts were **not** lost: population identity and expected-vs-observed coverage are reconstructable. Old per-level non-solve statuses may still remain scientifically ambiguous, so the audit continues to fail closed where normalization cannot establish a valid terminal class.
-- Retired/renamed workflow residue checks are clean for the settled early-repair, MITM, typical-budget, and published-CP-SAT workflow names.
+The hostile review during implementation found and corrected several issues before merge:
 
-## Historical audit findings
+- intended populations were initially being hashed from observed rows rather than expected IDs;
+- structural row coverage and scientifically interpretable completeness were initially conflated;
+- legacy `complete: true` records could otherwise receive too much benefit of the doubt;
+- multi-population combination initially risked collapsing the new completeness distinction;
+- the historical high-budget audit initially overlooked the surviving frozen July 24 intended-population ID files;
+- the workflow rename initially collided with the repository file-size ratchet until the inherited grandfathered entry was transferred correctly.
 
-The audit covers nine high-value evidence units. Current C1 (102/102) and C2 (1700/1700) canonical compiled baselines have exact present-day corpus ID coverage and are `valid-after-normalization`; embedded original run/SHA provenance remains partial.
+These corrections are encoded in tooling/tests rather than remaining reviewer convention.
 
-The July high-budget aggregates preserve 3 and 165 positive solves respectively. Their frozen intended populations survive in `logs/solver-stress-refresh/*-unsolved-highbudget-2026-07-24.txt`, so the audit now compares the reports to those exact cohorts and assigns a stable intended-population hash. Their legacy top-level `failed/errors/completed` metadata remains non-authoritative; any old non-solve rows that cannot be normalized to a trustworthy terminal class stay observational rather than being silently promoted to ordinary negatives.
+## Historical audit conclusions
 
-Historical routing A/B evidence remains invalid as paired evidence because no shared sealed population hash survives. Warm production replay is explicitly observational rather than cold capability. Historical method-probe cardinality remains incomplete/unverifiable where the needed run artifacts are unavailable. Technique-census run 32240161854 is incomplete because one partial shard also produced duplicated cell IDs; run 33717910218 has no missing, partial, or duplicate cells and is valid after terminology normalization.
+The integrity audit preserves referee-valid positive solutions even when surrounding experiment metadata is downgraded.
 
-No referee-valid solution was removed or rewritten. No broad solver run was launched.
+Current canonical C1/C2 compiled baselines have exact present-day population coverage. Historical evidence with incomplete provenance, ambiguous non-solve semantics, incompatible populations, expired artifacts, or unrecoverable protocol identity remains downgraded or observational rather than being normalized optimistically.
 
-**Regeneration note:** `reports/stress/solver-evidence-integrity-index.json` still reflects the pre-hostile-review audit implementation. Run `npm run solver:evidence-integrity-audit` and commit the regenerated file after these corrections before this tranche is considered merge-ready; do not cite the stale checked-in high-budget classifications.
+In particular:
 
-## Integration fix required before the branch can go green
+- the July high-budget intended populations are reconstructable from the surviving frozen cohort files, while ambiguous legacy non-solve statuses remain non-authoritative;
+- historical routing A/B evidence without a shared sealed population identity remains invalid as paired evidence;
+- warm/history-aware production replay is not cold-capability evidence;
+- missing historical cardinality/provenance remains unknown where artifacts cannot reconstruct it;
+- no referee-valid solution was removed or rewritten merely because its enclosing experiment was downgraded.
 
-PR CI on the hostile-review head passed deep verification, including ordinary tests, heavyweight proofs, and the Firestore emulator boundary proof. The fast gate failed only at the file-size ratchet introduced on `main` after this branch was created.
+## Validation and closeout
 
-Bring current `main` into the branch, then update `scripts/check-file-size-ratchet.mjs` without weakening the ratchet:
+PR #1740 merged after its final head passed repository CI, including the ordinary fast gate, deep verification, contract/integrity tests, and the Firestore emulator boundary proof.
 
-- remove the stale grandfather entry for `.github/workflows/solver-typical-budget-baseline.yml`;
-- add `.github/workflows/solver-production-replay-baseline.yml` at its actual post-remediation byte size as the inherited pre-existing workflow-size debt ceiling;
-- do not raise unrelated ceilings or exempt new growth.
+No broad solver rerun was required to complete this remediation. The program deliberately preferred metadata reconstruction, exact-population validation, selective normalization, and fail-closed historical classification over recomputing whole corpora.
 
-This should be done in a normal checkout/rebase or merge. The connector cannot safely manufacture this change on the pre-ratchet branch without creating an add/add conflict.
+Future workflow/evidence changes should preserve the contracts established here, but ordinary solver research priority remains owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md). This document is now a completion record, not an active implementation queue.
 
-## Intentionally incomplete / remaining implementation queue
+## Rerun policy after closeout
 
-- **Routing-regime remains the largest unfinished implementation item.** It still needs the planned one-dispatch, one-sealed-population, two-immutable-SHA redesign. Existing historical paired claims should not be reused meanwhile.
-- Every maintained evidence workflow still has the standard publishing front door, but not every specialized producer emits a native v3 contract or feeds an exact integrity file to it. These workflows fail closed as non-decision-bearing under the generic publisher, but targeted/broad/residual and CP-SAT/reference families should be brought onto native contract/integrity metadata for full closeout.
-- High-budget now seals and exact-validates both frozen cohorts before telemetry/report mutation and publishes normalized v3 execution, limit, configuration, and side-effect semantics; first-class missing-ID gap-fill dispatch remains to be added.
-- Production replay now exact-validates C1/C2 IDs, prohibits partial continuity diffs/updates, and publishes normalized history-aware v3 semantics.
-- Cross-run reconciliation now requires source manifests, equal immutable SHAs/configuration hashes, exact intended-population integrity, and separate source/reconciliation provenance. Historical wrong-ref and report-dependency audits still require artifact/history review where committed evidence is insufficient.
-- Method-probe now derives and validates the supplied corpus population and publishes its isolated-technique limits/semantics; historical run-by-run cardinality remains unverifiable where artifacts expired. Technique census validates sealed plan cell IDs while preserving partial-cell publication, and static portfolio publishes exact matched-cell integrity before its explicit verdict.
-- CP-SAT/reference outcome adapters remain to be normalized without flattening domain-specific statuses.
-- The generated historical integrity index and any docs quoting it must be refreshed after the hostile-review corrections before merge.
-
-## Smallest justified reruns
-
-None are automatic. After closeout, prefer missing-ID gap fills for important high-budget cohorts and a fresh coordinated routing paired run only if a current decision still depends on it. Do not refresh the full canonical corpus merely to normalize metadata.
+No rerun is automatically owed by this remediation. If a current decision later depends on historically incomplete or invalid evidence, use the smallest decision-bearing rerun that answers that question, such as a missing-ID gap fill or a fresh coordinated paired run. Do not refresh the full canonical corpus merely to normalize historical metadata.
