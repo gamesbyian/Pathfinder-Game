@@ -74,15 +74,29 @@ export function buildPopulationIntegrity(expectedIds, rows) {
     deadlineTruncated: 0, harnessError: 0, malformed: malformedRows, missing: missingIds.length, unknown: 0,
   };
   for (const row of rows ?? []) outcomes[classifyRow(row)] += 1;
-  const complete = missingIds.length === 0 && unexpectedIds.length === 0
+
+  // Coverage completeness answers only whether every intended subject has exactly one
+  // structurally usable row. It deliberately says nothing about whether every row is
+  // scientifically interpretable. Deadline truncation, harness errors, and unknown
+  // statuses are present observations but remain indeterminate evidence.
+  const coverageComplete = missingIds.length === 0 && unexpectedIds.length === 0
     && actual.duplicates.length === 0 && outcomes.malformed === 0;
+  const decisionValidComplete = coverageComplete
+    && outcomes.deadlineTruncated === 0
+    && outcomes.harnessError === 0
+    && outcomes.unknown === 0;
+
   return {
     expectedCount: expected.length,
     observedCount: (rows ?? []).length,
     duplicateIds: actual.duplicates,
     unexpectedIds,
     missingIds,
-    complete,
+    coverageComplete,
+    decisionValidComplete,
+    // Compatibility alias for callers whose gate is exact population coverage. New
+    // decision-bearing logic must use decisionValidComplete explicitly.
+    complete: coverageComplete,
     outcomes,
   };
 }
