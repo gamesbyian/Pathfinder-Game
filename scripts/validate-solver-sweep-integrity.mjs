@@ -20,15 +20,9 @@ export function readExpectedIds(file) {
 }
 
 export function idOfRow(row) {
-  return row?.id ?? row?.level ?? row?.levelId ?? null;
+  return row?.id ?? row?.level ?? row?.levelId ?? row?.cellId ?? null;
 }
 
-// Non-throwing population diff -- the single source of truth validateSweepIntegrity() itself uses
-// below, and also what a timeout-only-recovery caller needs: it must distinguish "some ids never
-// got a result row at all" (potentially recoverable by re-running just those ids) from "duplicate
-// or unexpected rows exist" (a correctness problem no re-run of missing ids can fix, and which must
-// never be silently routed through an auto-recovery path). See
-// scripts/derive-timeout-recovery-population.mjs.
 export function diffPopulation(expectedIds, levels) {
   const actualIds = levels.map(idOfRow);
   const malformed = actualIds.some(id => typeof id !== 'string' || !id);
@@ -81,13 +75,6 @@ export function validateSweepIntegrity({ expectedIds, levels, requiredStage = nu
     if (participating.length < minParticipatingLevels) {
       throw new Error(`target stage ${requiredStage} participated on ${participating.length} level(s), below required minimum ${minParticipatingLevels}`);
     }
-    // --min-participation-rate: minParticipatingLevels alone is an ABSOLUTE floor -- on a large
-    // population its default (0, or a small fixed value like 1) is trivially satisfied even when a
-    // stage barely participated at all, which is exactly the "nominal reach is not participation"
-    // failure mode docs/solver-optimization-workstreams.md's standing research rules warn about.
-    // A rate-based floor scales with population size instead of requiring a caller to compute an
-    // absolute count by hand. Additive with minParticipatingLevels, not a replacement for it: both
-    // default to 0 (no-op), so every existing caller's behavior is unchanged unless it opts in.
     if (participationRate < minParticipationRate) {
       throw new Error(`target stage ${requiredStage} participated on ${participating.length}/${levels.length} level(s) `
         + `(${(100 * participationRate).toFixed(2)}%), below required minimum rate ${(100 * minParticipationRate).toFixed(2)}%`);
@@ -96,11 +83,22 @@ export function validateSweepIntegrity({ expectedIds, levels, requiredStage = nu
 
   const normalized = buildPopulationIntegrity(expectedIds, levels);
   const population = hashPopulation({ kind: 'explicit-ids', identityBasis: 'stable-level-id', identities: expectedIds });
-  const complete = !normalized.outcomes.malformed && duplicateActual.length === 0 && missing.length === 0 && unexpected.length === 0;
-  return { complete, expectedLevels: expectedIds.length, observedLevels: actualCount, participation,
-    expectedCount: normalized.expectedCount, observedCount: normalized.observedCount,
-    duplicateIds: normalized.duplicateIds, unexpectedIds: normalized.unexpectedIds, missingIds: normalized.missingIds,
-    outcomes: normalized.outcomes, populationIdentityHash: population.identityHash, expectedIds: population.identities };
+  return {
+    complete: normalized.coverageComplete,
+    coverageComplete: normalized.coverageComplete,
+    decisionValidComplete: normalized.decisionValidComplete,
+    expectedLevels: expectedIds.length,
+    observedLevels: actualCount,
+    participation,
+    expectedCount: normalized.expectedCount,
+    observedCount: normalized.observedCount,
+    duplicateIds: normalized.duplicateIds,
+    unexpectedIds: normalized.unexpectedIds,
+    missingIds: normalized.missingIds,
+    outcomes: normalized.outcomes,
+    populationIdentityHash: population.identityHash,
+    expectedIds: population.identities,
+  };
 }
 
 function main() {
@@ -125,7 +123,7 @@ function main() {
   });
   const integrityOut = args.get('integrity-out');
   if (integrityOut) fs.writeFileSync(integrityOut, `${JSON.stringify(summary, null, 2)}\n`);
-  console.log(`Sweep integrity OK: ${summary.observedLevels}/${summary.expectedLevels} exact level ids present.`);
+  console.log(`Sweep population coverage: ${summary.observedLevels}/${summary.expectedLevels} exact ids present (${summary.coverageComplete ? 'complete' : 'incomplete'}); decision-valid observations=${summary.decisionValidComplete ? 'complete' : 'incomplete'}.`);
   if (summary.participation) {
     const p = summary.participation;
     console.log(`Target participation: ${p.stageId}: ${p.participatingLevels}/${summary.observedLevels} level(s) (${(100 * p.participationRate).toFixed(2)}%), ${p.attempts} attempt(s), work=${p.workSpent}, nodes=${p.nodesExpanded}.`);
