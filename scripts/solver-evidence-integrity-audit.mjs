@@ -8,6 +8,7 @@ const emptyLimits = { cumulativeNodeCeiling: null, initialWorkAllocation: null, 
 const emptyOutcomes = { solved: null, exhaustedNegative: null, nodeLimited: null, workLimited: null, deadlineTruncated: null, errors: null, malformed: null, missing: null, unknown: null };
 
 function read(path) { return JSON.parse(fs.readFileSync(path, 'utf8')); }
+function readIds(path) { return fs.readFileSync(path, 'utf8').split(/\s+/).map(value => value.trim()).filter(Boolean); }
 function ids(document) { return (document.levels ?? []).map(row => String(row.id ?? row.levelId ?? row.level)); }
 function record(evidenceId, overrides) {
   return {
@@ -33,25 +34,44 @@ function canonicalRecord(corpus, baseline, evidenceId) {
     execution: { levelBlind: true, historyAware: false, reproducibilityExpected: true, schedulerMode: 'production', historicalInputs: [] },
     outcomes: { ...emptyOutcomes, solved: report.solved, missing: integrity.missingIds.length, malformed: integrity.outcomes.malformed,
       unknown: integrity.expectedCount - report.solved - integrity.missingIds.length },
-    reliability: integrity.complete ? 'valid-after-normalization' : 'incomplete', reconstructability: 'partial',
-    rerunDisposition: integrity.complete ? 'none-required' : 'gap-fill-candidate', decisionBearing: integrity.complete,
-    reasons: [integrity.complete ? 'Exact current corpus ID coverage is present; historical run/SHA provenance is not embedded in the compiled baseline.' : 'Current canonical corpus IDs are not completely represented.'],
+    reliability: integrity.coverageComplete ? 'valid-after-normalization' : 'incomplete', reconstructability: 'partial',
+    rerunDisposition: integrity.coverageComplete ? 'none-required' : 'gap-fill-candidate', decisionBearing: integrity.coverageComplete,
+    reasons: [integrity.coverageComplete ? 'Exact current corpus ID coverage is present; historical run/SHA provenance is not embedded in the compiled baseline.' : 'Current canonical corpus IDs are not completely represented.'],
   });
 }
 
-function historicalCombined(path, evidenceId, corpusLabel) {
-  const report = read(path); const rows = report.levels ?? [];
+function historicalCombined(path, expectedIdsPath, evidenceId, corpusLabel) {
+  const report = read(path);
+  const rows = report.levels ?? [];
+  const expected = readIds(expectedIdsPath);
+  const integrity = buildPopulationIntegrity(expected, rows);
+  const identity = hashPopulation({ kind: 'historical-frozen-unsolved-cohort', identityBasis: 'stable-level-id', identities: expected, corpusIdentity: corpusLabel });
+  const solved = integrity.outcomes.solved;
+  const reliability = !integrity.coverageComplete
+    ? 'incomplete'
+    : integrity.decisionValidComplete ? 'valid-after-normalization' : 'observational-only';
+  const rerunDisposition = !integrity.coverageComplete
+    ? 'gap-fill-candidate'
+    : integrity.decisionValidComplete ? 'none-required' : 'needs-human-review';
+  const reasons = [];
+  if (integrity.coverageComplete) reasons.push('The frozen July 24 intended cohort survives in the repo and every intended ID has an observed row.');
+  else reasons.push(`The frozen July 24 intended cohort survives in the repo, but ${integrity.missingIds.length} intended IDs are missing, ${integrity.duplicateIds.length} are duplicated, and ${integrity.unexpectedIds.length} are unexpected.`);
+  if (!integrity.decisionValidComplete) reasons.push('One or more observed non-solve rows remain indeterminate under the normalized outcome vocabulary; do not reinterpret them as ordinary negatives without source evidence.');
+  reasons.push('Legacy top-level failed/errors/completed metadata is not authoritative; normalized classification is derived from the surviving per-level rows and frozen cohort definition.');
   return record(evidenceId, {
-    sourcePaths: [path], actualSha: report.commitSha ?? null,
+    sourcePaths: [path, expectedIdsPath], actualSha: report.commitSha ?? null,
     producer: { workflow: 'solver-highbudget-unsolved-sweep.yml', entrypoint: 'scripts/combine-solver-sweep-reports.mjs', family: 'history-aware-highbudget' },
-    population: { kind: 'historical-frozen-unsolved-cohort', identityBasis: 'observed-level-ids-only',
-      identityHash: hashPopulation({ kind: 'observed-cohort', identityBasis: 'stable-level-id', identities: ids(report), corpusIdentity: corpusLabel }).identityHash,
-      expectedCount: null, observedCount: rows.length, missingCount: null, duplicateCount: 0, unexpectedCount: null },
-    execution: { levelBlind: false, historyAware: true, reproducibilityExpected: null, schedulerMode: null, historicalInputs: ['prior unsolved population', 'saved hints/baseline'] },
+    population: { kind: 'historical-frozen-unsolved-cohort', identityBasis: 'stable-level-id', identityHash: identity.identityHash,
+      expectedCount: integrity.expectedCount, observedCount: integrity.observedCount, missingCount: integrity.missingIds.length,
+      duplicateCount: integrity.duplicateIds.length, unexpectedCount: integrity.unexpectedIds.length },
+    execution: { levelBlind: false, historyAware: true, reproducibilityExpected: null, schedulerMode: report.schedulerMode ?? null, historicalInputs: ['prior unsolved population', 'saved hints/baseline'] },
     limits: { ...emptyLimits, wallSafetyDeadlineMs: report.budgetMs ?? null },
-    outcomes: { ...emptyOutcomes, solved: report.solved ?? null, errors: null, unknown: Math.max(0, rows.length - (report.solved ?? 0)) },
-    reliability: 'observational-only', reconstructability: 'partial', rerunDisposition: 'needs-human-review', decisionBearing: false,
-    reasons: ['Observed rows and referee-valid solutions survive, but the intended frozen cohort and missing/error/truncation classes cannot be reconstructed from this aggregate.', 'Legacy combiner failed=!ok and errors=0 metadata is not reliable.'],
+    outcomes: { ...emptyOutcomes, solved, exhaustedNegative: integrity.outcomes.exhaustedNegative, nodeLimited: integrity.outcomes.nodeLimited,
+      workLimited: integrity.outcomes.workLimited, deadlineTruncated: integrity.outcomes.deadlineTruncated,
+      errors: integrity.outcomes.harnessError, malformed: integrity.outcomes.malformed,
+      missing: integrity.outcomes.missing, unknown: integrity.outcomes.unknown },
+    reliability, reconstructability: 'partial', rerunDisposition, decisionBearing: integrity.decisionValidComplete,
+    reasons,
   });
 }
 
@@ -84,8 +104,8 @@ export function buildIndex() {
   const records = [
     canonicalRecord('data/stress/stress-levels.json', 'logs/stress-corpus1-baseline.json', 'canonical-stress-refresh-corpus-1'),
     canonicalRecord('data/stress/stress-levels-random.json', 'logs/stress-corpus2-baseline.json', 'canonical-stress-refresh-corpus-2'),
-    historicalCombined('reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json', 'highbudget-unsolved-2026-07-24-corpus-1', 'corpus-1'),
-    historicalCombined('reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json', 'highbudget-unsolved-2026-07-24-corpus-2', 'corpus-2'),
+    historicalCombined('reports/stress/highbudget-unsolved-sweep-corpus1-2026-07-24.json', 'logs/solver-stress-refresh/corpus1-unsolved-highbudget-2026-07-24.txt', 'highbudget-unsolved-2026-07-24-corpus-1', 'corpus-1'),
+    historicalCombined('reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json', 'logs/solver-stress-refresh/corpus2-unsolved-highbudget-2026-07-24.txt', 'highbudget-unsolved-2026-07-24-corpus-2', 'corpus-2'),
     record('routing-regime-historical-paired-runs', { sourcePaths: ['.github/workflows/solver-routing-regime-sample-ab.yml'], producer: { workflow: 'solver-routing-regime-sample-ab.yml', entrypoint: 'scripts/stress/select-routing-regime-sample.mjs', family: 'routing-regime-sample-ab' }, reliability: 'invalid', reconstructability: 'unverifiable', rerunDisposition: 'needs-human-review', decisionBearing: false, reasons: ['Historical two-dispatch arms did not persist a shared sealed population hash; a shared seed cannot prove paired identity across revisions.'] }),
     record('production-replay-baseline-history', { sourcePaths: ['.github/workflows/solver-production-replay-baseline.yml'], producer: { workflow: 'solver-production-replay-baseline.yml', entrypoint: 'scripts/portfolio-solve-sweep.mjs', family: 'history-aware-production-replay' }, execution: { levelBlind: false, historyAware: true, reproducibilityExpected: true, schedulerMode: 'production', historicalInputs: ['baseline', 'prime-winner', 'saved hints'] }, reliability: 'observational-only', reconstructability: 'partial', rerunDisposition: 'none-required', decisionBearing: false, reasons: ['This family measures warm/history-aware replay and is not cold capability evidence.'] }),
     record('method-probe-historical-cardinality', { sourcePaths: ['.github/workflows/method-probe-sweep.yml'], producer: { workflow: 'method-probe-sweep.yml', entrypoint: 'scripts/method-probe-sweep.mjs', family: 'isolated-method-probe' }, reliability: 'incomplete', reconstructability: 'unverifiable', rerunDisposition: 'needs-human-review', decisionBearing: false, reasons: ['Historical dispatches relied on caller-maintained total_levels; committed artifacts do not establish dispatched corpus cardinality.'] }),
