@@ -33,9 +33,9 @@ jobs:
           const rows = atlas.rows.filter(r => r.primaryClass <= 3);
           const actions = new Map();
           for (const row of rows) for (const win of row.t1Wins ?? []) {
-            const key = win.identity;
+            const key = [win.techniqueKey ?? win.technique ?? '', win.action ?? '', win.strategyId ?? win.strategy ?? '', win.attempt ?? '', win.seed ?? '', win.ablation ?? ''].join('|');
             const a = actions.get(key) ?? {identity:key, levels:[], classes:{1:0,2:0,3:0}, isolatedNodes:[]};
-            a.levels.push(row.id); a.classes[win.class] = (a.classes[win.class]||0)+1;
+            a.levels.push(row.id ?? row.levelId); a.classes[row.primaryClass] = (a.classes[row.primaryClass]||0)+1;
             if (Number.isFinite(win.nodes)) a.isolatedNodes.push(win.nodes);
             actions.set(key,a);
           }
