@@ -20,6 +20,8 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 **Corrected residual atlas:** 22 not-offered, 39 offered-but-unreached/starved, 37 reached/comparable-work-failed, 123 no-T1-winner-but-historical-candidate, and **431 no known admissible/T1 candidate**. A T1-census `variantLabel` bug had hidden clean `repair|guidance=turn-biased` cells; priority order is unchanged. [`atlas`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md), [`fix`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
 
+**Immediate cheap rejoin due now:** today's census/provenance reinterpretation meets this program's own trigger for rechecking known-capability residuals. Before spending new acquisition compute, inspect the **98 class-1/2/3 rows** (`22+39+37`) for an already-legal, low-cost solve batch under the corrected atlas/current production policy. This is an existing-data composition/exposure pass and may run in parallel with read-only future-feasibility analysis. Class 4 is excluded from this cheap pass because its 123 rows have historical production-context candidates rather than current base-T1 winners; they remain reconciliation/capability-memory nominations until freshly reconciled. The already-priced repair-turn-biased class-2 pattern does not reopen merely because its rows moved class. [`fix`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md), [`cross-line closeout`](../reports/2026-09-12-cross-line-unharvested-residue-closeout-001.md)
+
 **Current dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, and goal-attraction-disabled retry are **PROMOTED**. Portal coarse-state merge, repair late-probe `7->6` seeds, and portfolio-18 resumable tranche are **CLOSED NEGATIVE/NULL**. Admissible-order retry `1.0->0.18` is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
 
 **Class-5-targeted lines closed this cycle:**
@@ -54,7 +56,7 @@ The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Rejoin B1/B2 + R03229 exact extinction states; test 2-4 prespecified future-feasibility summaries read-only before any new class-5 treatment. |
+| 2 | Residual capability + fixed-work allocation | **ACTIVE / FIRST PRIORITY** | Run the due class-1/2/3 existing-data harvest check; in parallel rejoin B1/B2 + R03229 and test 2-4 prespecified future-feasibility summaries read-only before any new class-5 treatment. |
 | 1 | Automatic action selection | **ACTIVE / PARALLEL** | Run/classify the exact cross-hint provenance collision audit; structural-response ladder otherwise closed pending a new pair/premise. |
 | 6 | Repair reachability/reconstructability | **SUPPORTING** | Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed/execution substrate | **SUPPORTING** | Reopen for an earned mechanism with measured runtime cost or new hotspot. |
@@ -75,7 +77,7 @@ The bounded mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 
 - Hold out independent units and scale confirmation with tuning/selection pressure.
 - Reusable benchmark/census rows require matching protocol identity; nominal stage reach is not participation.
 - Result identity, population integrity, resolved configuration/provenance and budget semantics are research-control-plane invariants.
-- After material capability promotion or provenance reinterpretation, refresh/rejoin residuals before treating old class/family/capability-memory counts as current; as part of that cheap rejoin, check whether classes 1-3 expose an already-legal low-cost solve batch before scheduling new acquisition work.
+- After material capability promotion or provenance reinterpretation, refresh/rejoin residuals before treating old class/family/capability-memory counts as current; as part of that cheap rejoin, check whether classes 1-3 expose an already-legal low-cost solve batch before scheduling new acquisition work. Class 4 requires fresh reconciliation of its historical candidates and is not part of that cheap current-capability pass.
 - A validated hint prefix proves that prefix live, not that alternatives are dead.
 - Before escalating a persistent residual, ask whether materially different actions lose known-live material at the same boundary.
 - A single-level microscope may generate a premise, never a production exception; require an independent phenotype-matched check before scaling.
