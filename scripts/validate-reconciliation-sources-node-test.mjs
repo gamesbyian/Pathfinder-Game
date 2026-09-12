@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { validateReconciliationSources } from './validate-reconciliation-sources.mjs';
 
+const clone = value => JSON.parse(JSON.stringify(value));
 const manifest = {
   experiment: {
     resolvedSha: 'a'.repeat(40),
@@ -34,7 +35,7 @@ const manifest = {
   sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
 };
 
-const secondManifest = structuredClone(manifest);
+const secondManifest = clone(manifest);
 secondManifest.population.identityHash = `sha256:${'e'.repeat(64)}`;
 const result = validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: secondManifest }]);
 assert.equal(result.sources.length, 2);
@@ -52,13 +53,13 @@ assert.equal(reversed.protocolHash, result.protocolHash, 'source ordering must n
 assert.notEqual(reversed.sourceSetHash, result.sourceSetHash, 'source-set provenance remains order-sensitive to the caller-provided reconciliation sequence');
 
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: {} }]), /resolved SHA/);
-const mismatchedConfiguration = structuredClone(secondManifest);
+const mismatchedConfiguration = clone(secondManifest);
 mismatchedConfiguration.experiment.configurationHash = `sha256:${'f'.repeat(64)}`;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedConfiguration }]), /configurationHash/);
-const mismatchedProtocol = structuredClone(secondManifest);
+const mismatchedProtocol = clone(secondManifest);
 mismatchedProtocol.limits.cumulativeNodeCeiling = 101;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest }, { runId: '2', manifest: mismatchedProtocol }]), /limits.cumulativeNodeCeiling/);
-const incompleteProtocol = structuredClone(manifest);
+const incompleteProtocol = clone(manifest);
 delete incompleteProtocol.execution.historyAware;
 assert.throws(() => validateReconciliationSources([{ runId: '1', manifest: incompleteProtocol }]), /execution.historyAware/);
 
