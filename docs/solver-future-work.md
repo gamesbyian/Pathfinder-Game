@@ -12,9 +12,9 @@ The earlier mechanic-composition transfer pilot is closed for its portal-termina
 
 ## Capability-acquisition frontier
 
-The corrected post-1,048 boundary has **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical production-context candidates. Older 445/143 and 388/200 splits are historical cohort sizes only. [`current atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
+The current workstream authority owns live residual counts and next gates. For reopen reasoning, the September 12 corrected boundary established **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical production-context candidates; older 445/143 and 388/200 splits are historical cohort sizes only. [`current atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
 
-Treat those counts as a frozen evidence join, not permanent level properties. Hint provenance and other isolated evidence can accumulate outside the census used to build the atlas. Before spending acquisition research on a class-5 row, run the cheap freshness reconciliation in [`the specimen/freshness audit`](../reports/2026-09-12-class5-microscope-specimen-and-freshness-audit-001.md). Any row with newer/unjoined isolated cold capability is a composition/exposure nomination first, not a clean acquisition specimen.
+Treat those counts as a dated evidence join, not permanent level properties. Hint provenance and other isolated evidence can accumulate outside the census used to build the atlas. Before spending acquisition research on a class-5 row, run the cheap freshness reconciliation in [`the specimen/freshness audit`](../reports/2026-09-12-class5-microscope-specimen-and-freshness-audit-001.md). Any row with newer/unjoined isolated cold capability is a composition/exposure nomination first, not a clean acquisition specimen.
 
 September 12 provenance reconciliation found the suspicious same-revision class-5 hint successes were **5/5 T1 variants and 0/5 base T1**, all `coarse-state-near-tie-retention-off`; production already reaches the corresponding retry. Technique-census hint provenance must retain its source cell so `isolatedTechnique` cannot blur base T1 and experimental cells. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
@@ -34,9 +34,11 @@ This method has direct precedent: the August B1/B2 extinction-adjacent CP-SAT pr
 
 **CLOSED.** The full temporal-persistence -> difficulty-control -> family-flip -> solution-space-mediation -> operational-first-divergence ladder completed for `R02687`/objectiveFirst and `R02094`/intersectionHarvest. n=2 licenses no selector. Reopen only for a new pair/premise, not another variant of this question. [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
 
-## Secondary solve-harvest check
+## Secondary solve-harvest trigger
 
-The corrected residual also contains **221 non-class-5 misses** across classes 1-4. Class 5 remains the first research priority, but after a material production-boundary or provenance change, cheaply re-check classes 1-3 for newly exposed already-legal capability before assuming every near-term solve must come from acquisition work. This is a periodic existing-data check, not a standing campaign. The repair-turn-biased class-2 rows are already priced by a matched-work closed-negative result and do not reopen on classification alone. [`cross-line closeout`](../reports/2026-09-12-cross-line-unharvested-residue-closeout-001.md)
+A corrected residual may contain non-class-5 misses worth cheap composition/exposure inspection. The **current** September 12 class-1/2/3 harvest check is due now and is therefore owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md), not deferred here. After that check closes, repeat only after another material production-boundary or provenance reinterpretation.
+
+Class 4 is deliberately outside this cheap pass: those rows have historical production-context candidates rather than current base-T1 winners, so they remain freshness/reconciliation or capability-memory nominations until the candidate is reconciled to current code/protocol. The repair-turn-biased class-2 rows likewise do not reopen their already-priced closed-negative policy merely because their classification changed. [`cross-line closeout`](../reports/2026-09-12-cross-line-unharvested-residue-closeout-001.md)
 
 ## Deferred questions
 
