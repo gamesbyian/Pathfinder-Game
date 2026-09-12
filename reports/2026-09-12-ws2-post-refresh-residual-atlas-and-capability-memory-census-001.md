@@ -1,16 +1,18 @@
 # WS2 post-refresh residual atlas rebuild and first bounded capability-memory census 001
 
-> **Status:** concluded-negative
-> **Last evidence:** 2026-09-12 — production boundary refresh (run `34674256538`, then reconfirmed identically by lifecycle-telemetry run `34683011115`), residual atlas rebuild against the new 652-miss boundary, and the first bounded capability-memory census using the portal-coarse-state-merge closed-negative historical signature as its sole candidate.
-> **Decision:** the census finds **no material complementarity worth escalating**: the one available candidate's 137 current-residual nominations sit almost entirely (114/137, 83%) inside class 4 (already flagged as having *some* historical candidate) and contribute **zero** nominations to class 5, the 440-level (67.5% of residual) no-known-candidate bucket. Cross-referencing further shows this single candidate alone accounts for 114/125 (91%) of class 4's entire membership — class 4 is not diverse evidence, it is substantially *this one* historical experiment. This does not change WS2's existing acquisition-vs-composition emphasis: class 5 remains the real unexplained residual and the priority target for first-loss/family/reference work, not composition of existing capability.
-> **Remaining gate:** add further candidate sources (goal-attraction guidance-distance global-swap, repair turn-bias, class-1 compact beam-menu evidence) only if a cheap, exact gain/loss ID list can be recovered for each; do not manufacture a permanent candidate panel. Otherwise, close this census as low-yield per its own prespecified advancement rule and return to the existing first-priority residual program.
-> **Evidence role:** WS2 next-gate execution (boundary refresh -> atlas rebuild -> bounded census). No solver-policy change; no production routing change.
+> **Status:** active
+> **Last evidence:** 2026-09-12 — production boundary refresh (run `34674256538`, then reconfirmed identically by lifecycle-telemetry run `34683011115`), residual atlas rebuild against the new 652-miss boundary, and the first capability-memory candidate evaluation using the portal-coarse-state-merge closed-negative historical signature.
+> **Decision:** the first candidate contributes **no class-5 reach**: its 137 current-residual nominations include 114/125 class-4 rows and zero of the 440 class-5 rows. That is strong candidate-specific evidence and materially clarifies class 4, but it does **not** establish that the capability-memory census as a whole has no complementarity because only one mechanism has been evaluated so far. Class-5 acquisition work remains first priority while the rest of the bounded census proceeds only from cheap, exact existing evidence.
+> **Remaining gate:** recover exact gain/loss IDs for a small number of materially distinct prespecified sources (goal-attraction guidance, repair turn-bias, compact class-1 beam evidence, protocol-compatible displaced winners) when this can be done from existing artifacts without reruns; measure class-5 reach and cross-policy overlap/uniqueness, then close or escalate the bounded census. Do not create a permanent panel or block class-5 acquisition work on this evidence task.
+> **Evidence role:** WS2 boundary/residual execution plus first candidate in the bounded capability-memory census. No solver-policy change; no production routing change.
 
 ## 1. Production boundary refresh
 
 Dispatched `solver-stress-refresh.yml` on `main` at `51715da5d` (the commit that folds `PRUNE_MC_PORTAL_FORCED_NEIGHBOR` into production default-on — see [`the flag fix`](2026-09-11-joint-obligation-mc-portal-ab-001-preflight.md)). Run [`34674256538`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34674256538) completed clean:
 
-**100/102 Corpus 1 + 1,048/1,700 Corpus 2 — 652 Corpus-2 misses**, down from the prior 671. This run did not collect `lifecycle_telemetry`, which the atlas rebuild's lifecycle-failure-map join requires (confirmed directly: running `scripts/stress/lifecycle-failure-map.mjs` against its `solver-corpus2-latest.json` fails with `missing stageLifecycle ... run the sweep with --lifecycle-telemetry`). Dispatched a second run, [`34683011115`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34683011115), with `lifecycle_telemetry=true`. It reproduced the **identical** boundary (100/102 + 1,048/1,700), confirming the boundary is stable across two independent non-deterministic runs at this commit, and this run's artifacts are what the rest of this report uses.
+**100/102 Corpus 1 + 1,048/1,700 Corpus 2 — 652 Corpus-2 misses**, down from the prior 671. This run did not collect `lifecycle_telemetry`, which the atlas rebuild's lifecycle-failure-map join requires (confirmed directly: running `scripts/stress/lifecycle-failure-map.mjs` against its `solver-corpus2-latest.json` fails with `missing stageLifecycle ... run the sweep with --lifecycle-telemetry`). Dispatched a second run, [`34683011115`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/34683011115), with `lifecycle_telemetry=true`. It reproduced the **identical** boundary (100/102 + 1,048/1,700), and this run's artifacts are what the rest of this report uses.
+
+The duplicate full refresh exposed a workflow-contract defect rather than solver nondeterminism: ordinary canonical refreshes were allowed to omit lifecycle telemetry even though the standard downstream residual-atlas path requires it. The workflow is being hardened separately so future ordinary refreshes default to lifecycle-complete evidence and fail in the cheap planning job before fan-out if that invariant is disabled. Specialized deterministic/A-B runs may still opt out when lifecycle evidence is not part of their question.
 
 ## 2. Residual atlas rebuild
 
@@ -35,9 +37,9 @@ No new solving; this rejoins already-registered evidence exactly as the prior 67
 
 By routing regime (primary class 1-5): `intersection-heavy` 528 total (19/11/38/98/362), `multi-portal` 64 total (1/5/2/12/44), `must-cross-heavy` 51 total (1/0/8/15/27), `general` 9 total (1/1/0/0/7).
 
-Class 3 grew in both absolute count and share (36 -> 48, 5.4% -> 7.4%) despite the overall residual shrinking — a real, if small, shift worth a future look (are these newly-comparable-work-failed levels genuinely harder now, or reclassified from class 4/5 by the same evidence refresh?), but not pursued further in this report.
+Class 3 grew in both absolute count and share (36 -> 48, 5.4% -> 7.4%) despite the overall residual shrinking. That is a real shift worth a bounded follow-up, but it is not interpreted further here.
 
-## 3. First bounded capability-memory census
+## 3. First capability-memory candidate
 
 Per [`the closeout's own prespecification`](2026-09-11-capability-memory-next-gate-closeout-001.md), used the current residual as baseline and started with one of its named candidate-evidence sources: the **portal coarse-state merge** A/B — "a large closed-negative survivor-policy contrast" ([`preflight`](2026-09-09-portal-coarse-state-merge-ab-001-preflight.md), 158 gains / 12 losses, exact IDs already itemized in that report). Built `tmp/capability-memory-manifest.json` (historical-signature mode; not committed — regenerate from the preflight's own ID lists) and ran:
 
@@ -46,9 +48,7 @@ node scripts/solver-capability-memory.mjs --manifest=tmp/capability-memory-manif
   --out=tmp/capability-memory.json --summary-out=tmp/capability-memory.md
 ```
 
-**Result:** 137 of the candidate's 158 historical gains intersect the current 652-level residual — **21.0% union coverage** by this one candidate. Zero confirmed current-baseline gains (expected for a historical-signature candidate with no protocol-compatible current rows; this is nomination evidence only).
-
-**Cross-referencing the 137 nominations against the rebuilt atlas's own class membership** (zero new compute — a direct join of the census's own `currentResidualNominationIds` against the atlas's `rows`):
+**Result:** 137 of the candidate's 158 historical gains intersect the current 652-level residual — **21.0% nomination coverage** by this one candidate. Zero confirmed current-baseline gains are claimed; this is historical nomination evidence only.
 
 | atlas class | nominated by this candidate | class total | coverage |
 |---|---:|---:|---:|
@@ -60,21 +60,28 @@ node scripts/solver-capability-memory.mjs --manifest=tmp/capability-memory-manif
 
 ## Interpretation
 
-Two things follow directly from the cross-reference, without needing a second candidate to compare against:
+Two candidate-specific conclusions are justified:
 
-1. **Class 4 is not diverse evidence.** A class defined as "has *some* historical production-context candidate" turns out to be 91% attributable to a *single* named, already-rejected experiment. Before this census, class 4's 125 levels read as "125 independent pieces of historical promise." After it, they read as "one already-explained mechanism (and a small remainder of ~11 other candidates) that already failed promotion for a real reason (12 known-live losses via merge-key collision)." That does not mean these 114 levels are unsolvable — it means whatever caused them to need this exact policy is now a *specific, named, already-diagnosed* mechanism question, not an open one.
-2. **Class 5 gained nothing.** Zero of the candidate's 137 nominations land in the 440-level (67.5%) no-known-candidate bucket — the class this whole program's acquisition emphasis already targets. A closed-negative composition-side policy contributing zero coverage there is exactly the "no material complementarity" advancement outcome the closeout prespecified, for this specific candidate.
+1. **Class 4 is much less diverse than its raw count suggested.** One already-rejected experiment alone nominates 114/125 rows. Those levels are therefore largely a named historical mechanism basin rather than 125 unrelated pieces of evidence.
+2. **Portal coarse-state merge adds no class-5 reach.** None of its 137 current-residual nominations land in the 440-level no-known-candidate bucket, so this specific closed-negative policy gives no reason to shift effort away from class-5 acquisition.
 
-Per the closeout's own advancement rules, this is closest to **"no material complementarity"** for the tested candidate specifically (not the whole census — only one source was tested) combined with a genuine, incidental **"policy-specific basin, already explained"** finding for class 4. Neither result licenses composition/allocation work from this candidate, and neither changes the acquisition-vs-composition emphasis: **class 5 remains the priority**, exactly as the existing WS2 program already holds.
+What is **not** justified is a census-wide "no material complementarity" conclusion. Complementarity is inherently comparative, and the prespecification called for a small set of materially distinct mechanisms. One candidate can close itself as low-yield for class 5; it cannot close the multi-source census.
 
 ## Advancement
 
-This is not a closed census — it is one candidate out of the closeout's suggested list. The remaining named sources (goal-attraction guidance-distance global-swap, repair turn-bias, class-1 compact beam-menu evidence, displaced winners from accepted changes) were not included here because a cheap, exact, itemized gain/loss ID list was not readily available for each within this pass's scope (the turn-bias thread in particular spans several corrective reports with a non-trivial final attribution, per `reports/2026-07-23-turnbias-corpus2-ab-validation.md`). Per the closeout's own budget discipline ("omit any source whose protocol/current-row meaning is not comparable enough for the question"), this report does not force those in speculatively.
+The bounded census remains open but subordinate. Class-5 acquisition work should continue immediately and must not wait for this evidence task.
 
-**Next gate:** add one further candidate only if its exact gain/loss IDs can be recovered as cheaply as this one was (a direct report grep, not a rerun), and specifically check whether any candidate reaches into class 5 — that is the one result that would change this census's conclusion. Absent that, this line returns to the existing first-priority residual program (first-loss/family/reference work targeting class 5) rather than continuing capability-memory mining for its own sake.
+For capability memory, add only cheaply recoverable, exact existing evidence from materially distinct sources already named by the prespecification: goal-attraction guidance-distance treatment/retry evidence, repair turn-bias, compact class-1 beam-policy evidence, and protocol-compatible displaced winners from accepted changes. For each included source, keep current confirmed gains separate from historical nominations and measure:
+
+- class-5 reach;
+- overlap and unique nominations/gains across sources;
+- work economics where comparable;
+- displaced current-production wins where protocol-compatible.
+
+If no additional source can be reconstructed cheaply and comparably, close the census explicitly as **insufficient cheap comparative evidence**, not as evidence that complementarity does not exist. Do not rerun old policies merely to populate the panel.
 
 ## Artifacts
 
 - `tmp/post-1048-residual-atlas.json` — full rebuilt atlas (not committed; regenerate via the command above against run `34683011115`).
-- `tmp/capability-memory-manifest.json`, `tmp/capability-memory.json`, `tmp/capability-memory.md` — census inputs/outputs (not committed; regenerate from the portal-coarse-state-merge preflight's own itemized IDs).
+- `tmp/capability-memory-manifest.json`, `tmp/capability-memory.json`, `tmp/capability-memory.md` — first-candidate inputs/outputs (not committed; regenerate from the portal-coarse-state-merge preflight's itemized IDs).
 - `reports/stress/capability-runs/34674256538/`, `reports/stress/capability-runs/34683011115/` — the two refresh runs' committed per-level/summary artifacts.
