@@ -81,7 +81,7 @@
       "state": "closed-tested-form",
       "answeredBy": ["reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"],
       "result": "No. Six prespecified summaries overlap LIVE/DEAD across 31 exact-labelled states on 15 levels; joint-obligation rejects are zero throughout.",
-      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-CATEGORICAL-FULL-POOL"],
+      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-HOMOTOPY-COMPLETION-CLASSES"],
       "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
       "calibratedBy": ["WS2-MECHANIC-COMPOSITION-CAUSALITY"],
       "reopensOn": "A materially new mechanism-specific descriptor premise."
@@ -90,53 +90,57 @@
       "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
       "question": "Can a recurring solve-local failure shape be reduced to a small sound dead cause with enough repeated-work value for bounded reason reuse?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "closed-tested-form",
       "answeredBy": [
         "reports/2026-08-28-connectivity-rejection-stage-b-audit.md",
-        "reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md"
+        "reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md",
+        "reports/2026-09-13-class5-dead-cause-current-population-rejoin-result-001.md"
       ],
-      "result": "Recurrence discovery is not blank: August Stage B found strong within-solve recurrence for connectivity failure shapes (83.1% reached-set / 82.2% blocker-set sharing versus 52.6% exact-state sharing) but stopped because cross-level transfer was weak. Current changed scope is solve-local. Rejoin that population on current Class-5 misses, then test sound cause reduction and economics; shape equality alone is not a nogood.",
+      "result": "Historical solve-local structural recurrence is real, and current R03046 still shows strong cross-state reached/boundary recurrence. But the historical decision cluster does not survive broadly enough on the current Class-5 residual: only 1/12 deterministic sampled rows reached the preregistered >=25-record informativeness floor. Current-population cause extraction/reuse is therefore closed before implementation.",
       "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
       "constrainedBy": ["reports/2026-08-24-learned-failure-certificate-audit.md"],
+      "implies": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
       "constrains": [
-        "Do not pay for a fresh generic recurrence census before rejoining the August connectivity population.",
-        "Measure sound cause sufficiency, repeated-work cost, match cost, and shadow counterexamples before any pruning treatment.",
-        "If the current rejoin closes null, advance to WS2-CATEGORICAL-FULL-POOL rather than nearby scalar-feature accretion.",
-        "No CDCL/LCG/global unsound keys without a bounded win."
+        "Do not build a faster compact-cause extractor, memo, nogood, or reason-reuse treatment for the current Class-5 residual.",
+        "Preserve R03046 and R00046 as mechanism evidence only; they do not establish population economics.",
+        "No CDCL/LCG/global unsound keys without a new independently earned population."
       ],
-      "reopensOn": null
+      "reopensOn": "A materially changed residual or independently nominated failure population restores the historical connectivity-rejection cluster at useful prevalence."
     },
     {
       "id": "WS2-CATEGORICAL-FULL-POOL",
       "question": "Do current exact-labelled extinction pools contain a recurring categorical/interface-state distinction that preserves LIVE material even though scalar future-feasibility summaries fail?",
       "owner": "WS2",
-      "state": "deferred-reopen",
-      "answeredBy": [],
-      "result": "Historical August work reached four DEAD-top-ranked/LIVE-alternative parents, rejected pairwise scalar accretion, and prepared full ranked-pool projection tooling, but no committed full-pool projection verdict was found. The experiment is unfinished, not negative.",
+      "state": "closed-tested-form",
+      "answeredBy": [
+        "reports/2026-08-25-beam-full-pool-survivor-projection.md",
+        "reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md"
+      ],
+      "result": "The August full-pool projection was executed over 207 ranked pools. The prespecified low-cardinality fixed-width quota keys did not retain the available exact-LIVE alternatives and showed no recurring advantage over generic reserve/width controls. The September archaeology claim that this experiment was unfinished was incorrect and has been superseded.",
       "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
-      "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY", "docs/solver-archaeology-register.md"],
+      "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
       "implies": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
       "constrains": [
-        "Run read-only on current exact-labelled cases before any quota/crowding policy.",
-        "Require non-redundancy with current exact-labelled evidence and compare against random-reserve/modest-width controls.",
-        "A null/heterogeneous result should prefer a changed representation premise over another scalar descriptor."
+        "Do not rerun the same low-cardinality fixed-width quota projection or fit more fields to the same four historical parents.",
+        "A fresh categorical survivor test requires a materially new independently motivated descriptor or survivor mechanism."
       ],
-      "reopensOn": "The active solve-local dead-cause gate closes null, and the historical categorical/interface keys remain non-redundant on current exact-labelled extinction cases."
+      "reopensOn": "New independent exact-labelled evidence earns a materially different categorical key or survivor mechanism."
     },
     {
       "id": "WS2-HOMOTOPY-COMPLETION-CLASSES",
       "question": "Does topological completion class distinguish exact-LIVE from exact-DEAD frontier material in cases where ordinary represented progress and scalar feasibility overlap?",
       "owner": "WS2",
-      "state": "deferred-reopen",
+      "state": "active-diagnostic",
       "answeredBy": [],
-      "result": "Historical winding-number analysis established a real complete-solution diversity axis: multiple homotopy classes on 12/19 must-cross-heavy published levels, with 16.6% of cross-class hint pairs treated as similar by the older diversity metric. Runtime LIVE/DEAD relevance was never tested, and the old centroid puncture was approximate for concave obstacle clusters.",
-      "triggeredBy": ["WS2-CATEGORICAL-FULL-POOL"],
+      "result": "Historical winding-number analysis established a real complete-solution diversity axis: multiple homotopy classes on 12/19 must-cross-heavy published levels, with 16.6% of cross-class hint pairs treated as similar by the older diversity metric. Runtime LIVE/DEAD relevance was never tested, and the old centroid puncture was approximate for concave obstacle clusters. With the current dead-cause and low-cardinality quota descendants closed, this is now the live Class-5 acquisition gate.",
+      "triggeredBy": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-CATEGORICAL-FULL-POOL"],
       "constrainedBy": ["docs/solver-archaeology-register.md"],
       "constrains": [
         "Reconstruct only a tiny offline winding observer with puncture-robustness checks.",
+        "First ask whether exact-LIVE and exact-DEAD frontier states differ in reachable completion topology.",
         "Complete-solution class diversity does not itself license an in-loop topology feature or retention quota."
       ],
-      "reopensOn": "The categorical full-pool gate is null/heterogeneous or specifically nominates topology on current exact-labelled extinction cases."
+      "reopensOn": null
     },
     {
       "id": "WS2-MECHANIC-COMPOSITION-CAUSALITY",
