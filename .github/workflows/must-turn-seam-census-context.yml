@@ -1,0 +1,29 @@
+name: Must-turn seam census context
+
+on:
+  push:
+    branches:
+      - chatgpt/must-turn-family-contrast-pilot-2026-09-13
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Reconstruct seven-row repair census context
+        run: node scripts/stress/must-turn-seam-census-context.mjs --out=tmp/must-turn-seam-census-context.json
+      - uses: actions/upload-artifact@v6
+        with:
+          name: must-turn-seam-census-context
+          path: tmp/must-turn-seam-census-context.json
+          if-no-files-found: error
