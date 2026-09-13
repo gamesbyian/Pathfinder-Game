@@ -46,15 +46,14 @@
       "id": "WS2-CLASS4-PORTAL-COARSE-FRESHNESS",
       "question": "Does the September 9 portal coarse-state-merge positive basin still reproduce on current class-4 residual rows under current code and production-shaped work semantics?",
       "owner": "WS2",
-      "state": "active-diagnostic",
-      "answeredBy": [],
-      "result": null,
+      "state": "concluded-positive",
+      "answeredBy": ["reports/2026-09-13-class4-portal-coarse-freshness-replay-001.md"],
+      "result": "fresh: 8/8 stratified-sampled class-4 rows solved and referee-valid under current code/production-matched budgets. Successor question is the least-disruptive allocation-form design (dead-last additive whole-ladder retry), not another freshness check.",
       "triggeredBy": ["WS2-KNOWN-CAPABILITY-COMPLEMENTARITY"],
       "constrainedBy": ["reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"],
       "constrains": [
-        "Start with a tiny prespecified freshness sample, not the 113-row nominated class-4 basin.",
         "Do not reopen the globally enabled treatment: its 12 losses and hard R01273 capability regression remain valid controls.",
-        "If capability is fresh, test only a changed-treatment exposure/allocation form that preserves ordinary production capability and explicit work accounting."
+        "The successor allocation-form test must preserve ordinary production capability (structurally, via tier ordering) and explicit work accounting."
       ],
       "reopensOn": null
     },
