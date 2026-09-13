@@ -1,6 +1,6 @@
 /**
  * Unit coverage for scripts/stress/solution-profile-lib.mjs — the pure solution-space fingerprint
- * primitives (see docs/solution-profile.md). Picked up automatically by vitest's
+ * primitives (see docs/solver-solution-profile.md). Picked up automatically by vitest's
  * `scripts/**\/*-unit-tests.mjs` include glob (vitest.config.mjs); no separate npm script needed.
  */
 import { test } from 'vitest';
@@ -10,10 +10,10 @@ import {
     classifyProvenanceSource, sourcesForHint, bucketHintsBySource, extractObjectives, turnEvents,
     objectiveSatisfactionDepths, normalizedFootprint, portalUsageStats, mustCrossOrderStats,
     turnLocationStats, prefixDiversityStats, pairwiseDistinctivenessStats, discoverySaturationCurve,
-    buildBucketProfile, buildLevelSolutionProfile, buildSinglePathProfile, profileDistance,
-    profileDistanceTerms, nearestProfiles, summarizeCorpusProfiles, PROVENANCE_SOURCES,
+    buildBucketProfile, buildLevelSolutionProfile, buildSinglePathProfile, storedLevelProfileForBucket, profileDistance,
+    profileDistanceTerms, profileDistanceWithCoverage, nearestProfiles, summarizeCorpusProfiles, renderSummaryMd, PROVENANCE_SOURCES,
     computeHintSignature,
-    hasCurrentSolutionProfileTaxonomy, SOLUTION_PROFILE_SCHEMA_VERSION, SOLUTION_PROFILE_TAXONOMY,
+    hasCurrentSolutionProfileTaxonomy, SOLUTION_PROFILE_SCHEMA_VERSION, SOLUTION_PROFILE_TAXONOMY, SOLUTION_PROFILE_ALGORITHM_VERSION,
 } from './solution-profile-lib.mjs';
 
 const p = (x, y) => PACK(x, y);
@@ -181,13 +181,14 @@ test('portalUsageStats: counts directed jumps and leaves signature blank for non
     assert.equal(stats.directedJumpFrequency[0].jump, `${p(0, 0)}>${p(9, 9)}`);
 });
 
-test('mustCrossOrderStats: null below 2 must-cross keys; rigid=true when every path agrees', () => {
+test('mustCrossOrderStats: null below 2 must-cross keys; observedSingleOrder describes sample agreement', () => {
     assert.equal(mustCrossOrderStats([[p(0, 0)]], [p(0, 0)]), null);
     const mcKeys = [p(1, 0), p(3, 0)];
     const pathA = [p(0, 0), p(1, 0), p(2, 0), p(3, 0), p(4, 0)];
     const pathB = [p(0, 0), p(1, 0), p(2, 0), p(3, 0), p(4, 0), p(4, 0)]; // same order, extra revisit
     const stats = mustCrossOrderStats([pathA, pathB], mcKeys);
-    assert.equal(stats.rigid, true);
+    assert.equal(stats.observedSingleOrder, true);
+    assert.equal(stats.rigid, true); // compatibility alias only
     assert.equal(stats.distinctFirstEntryOrders, 1);
 });
 
@@ -222,6 +223,17 @@ test('discoverySaturationCurve: walks in foundAt order and reports cumulative gr
     assert.equal(result.curve[0].n, 1);
     // Ordered by foundAt, so the EARLIER hint (found in January) must be processed first.
     assert.deepEqual(result.curve[0], { n: 1, newEdges: 1, newCells: 2, newPortalSignatures: 0, newMustCrossOrders: 0, cumulativeEdges: 1, cumulativeCells: 2 });
+});
+
+test('discoverySaturationCurve: incomplete discovery chronology cannot claim a plateau', () => {
+    const grid = { w: 3, h: 1 };
+    const dated = { path: [p(0, 0), p(1, 0)], provenance: [entry()] };
+    const undatedEntry = entry(); undatedEntry.foundAt = null;
+    const undated = { path: [p(1, 0), p(2, 0)], provenance: [undatedEntry] };
+    const result = discoverySaturationCurve([dated, undated], [], grid);
+    assert.equal(result.chronologyComplete, false);
+    assert.equal(result.chronologyDatedHints, 1);
+    assert.equal(result.plateauFraction, null);
 });
 
 // ── per-level profile assembly + insufficientData gating ──────────────────────
@@ -268,6 +280,22 @@ test('buildSinglePathProfile: degenerates cleanly for a lone witness path', () =
     assert.equal(profile.pairwiseDistinctiveness.pairsCompared, 0);
 });
 
+
+test('storedLevelProfileForBucket resolves sameAsCombined storage references', () => {
+    const combined = { pathCount: 3, marker: 'combined' };
+    const entry_ = {
+        combined,
+        bySource: {
+            other: { pathCount: 3, sameAsCombined: true },
+            witness: { pathCount: 2, marker: 'witness' },
+        },
+    };
+    assert.equal(storedLevelProfileForBucket(entry_, 'other'), combined);
+    assert.equal(storedLevelProfileForBucket(entry_, 'witness').marker, 'witness');
+    assert.equal(storedLevelProfileForBucket(entry_, 'combined'), combined);
+    assert.equal(storedLevelProfileForBucket(entry_, 'missing'), null);
+});
+
 // ── cross-level distance ────────────────────────────────────────────────────────
 
 test('profileDistance: a profile is (near-)identical to itself', () => {
@@ -282,6 +310,47 @@ test('profileDistanceTerms: axes absent on both sides (e.g. no must-cross) are n
     const terms = profileDistanceTerms(profile, profile);
     assert.equal(terms.mustCrossRigidity, null);
     assert.equal(terms.objectiveDepth, null);
+});
+
+test('profileDistanceTerms: one-path distribution axes are unknown rather than synthetic zero evidence', () => {
+    const level = { grid: { w: 3, h: 1 }, mustPass: [], mustCross: [], landmarks: [] };
+    const profile = buildSinglePathProfile([p(0, 0), p(1, 0), p(2, 0)], level);
+    const terms = profileDistanceTerms(profile, profile);
+    assert.equal(terms.prefixDiversity, null);
+    assert.equal(terms.pairwiseDistinctiveness, null);
+    assert.equal(terms.discoverySaturation, null);
+    assert.equal(terms.turnChirality, null);
+});
+
+
+test('profileDistanceTerms: adequate dated no-plateau history is an observed endpoint, not missing evidence', () => {
+    const base = {
+        cellVisitFrequency: { normalizedFootprint: [], entropy: 0 },
+        turnDistribution: { turnRateMean: 0, cwFraction: null },
+        mustCrossOrder: null,
+        portalUsage: { pathsTotal: 5, pathsUsingPortals: 0 },
+        objectiveSatisfaction: [],
+        prefixDiversity: { pathsSampled: 1, meanSharedPrefixFrac: 0 },
+        pairwiseDistinctiveness: { pairsCompared: 0, meanDistance: 0 },
+        discoverySaturation: { chronologyComplete: true, totalHints: 5, plateauFraction: null },
+    };
+    const plateau = {
+        ...base,
+        discoverySaturation: { chronologyComplete: true, totalHints: 5, plateauFraction: 0.4 },
+    };
+    assert.ok(Math.abs(profileDistanceTerms(base, plateau).discoverySaturation - 0.6) < 1e-9);
+    const incomplete = {
+        ...base,
+        discoverySaturation: { chronologyComplete: false, totalHints: 5, plateauFraction: null },
+    };
+    assert.equal(profileDistanceTerms(base, incomplete).discoverySaturation, null);
+});
+
+test('profileDistanceWithCoverage exposes how much nominal distance weight was comparable', () => {
+    const level = { grid: { w: 3, h: 1 }, mustPass: [], mustCross: [], landmarks: [] };
+    const profile = buildSinglePathProfile([p(0, 0), p(1, 0), p(2, 0)], level);
+    const result = profileDistanceWithCoverage(profile, profile);
+    assert.ok(result.comparableWeightFraction > 0 && result.comparableWeightFraction < 1);
 });
 
 test('nearestProfiles: ranks the closer pool entry first and attaches a per-axis breakdown', () => {
@@ -307,6 +376,9 @@ test('summarizeCorpusProfiles: counts insufficientData levels without including 
     assert.equal(summary.levelsTotal, 2);
     assert.equal(summary.levelsWithHints, 1);
     assert.equal(summary.levelsInsufficientData, 1);
+    assert.equal(summary.levelsWithComparablePathwiseDistinctiveness, 0);
+    assert.equal(summary.meanPathwiseDistinctiveness, null);
+    assert.equal(summary.meanCwFraction, null);
 });
 
 // Assembles a bucket profile from raw Hint[] directly (buildLevelSolutionProfile's building
@@ -341,6 +413,13 @@ test('computeHintSignature: a rediscovery (new provenance entry, same hint) also
     assert.equal(computeHintSignature(before).totalHints, computeHintSignature(after).totalHints);
 });
 
+test('computeHintSignature: in-place path/provenance edits change the hash even when counts do not', () => {
+    const before = [{ hints: [[1, 2]], hintRecords: [{ path: [1, 2], provenance: [entry()] }] }];
+    const after = [{ hints: [[1, 3]], hintRecords: [{ path: [1, 3], provenance: [entry({ foundAt: '2026-02-01T00:00:00Z' })] }] }];
+    assert.notEqual(computeHintSignature(before).hash, computeHintSignature(after).hash);
+    assert.equal(computeHintSignature(before).totalHints, computeHintSignature(after).totalHints);
+});
+
 test('computeHintSignature: restricting to a level-number subset only signs those levels', () => {
     const levels = [
         { hints: [[1]], hintRecords: [{ path: [1], provenance: [entry()] }] },
@@ -358,5 +437,28 @@ test('solution-profile taxonomy stamp rejects legacy or partially stamped librar
     assert.equal(hasCurrentSolutionProfileTaxonomy({
         schemaVersion: SOLUTION_PROFILE_SCHEMA_VERSION,
         provenanceTaxonomy: SOLUTION_PROFILE_TAXONOMY,
+        profileAlgorithmVersion: SOLUTION_PROFILE_ALGORITHM_VERSION,
     }), true);
+});
+
+
+test('renderSummaryMd uses current event/order summary fields', () => {
+    const md = renderSummaryMd({
+        levelsTotal: 2,
+        levelsWithHints: 2,
+        levelsInsufficientData: 0,
+        levelsWithExhaustiveSearchEvent: 1,
+        meanHintCount: 3,
+        meanPathwiseDistinctiveness: 0.25,
+        meanTurnRate: 0.4,
+        meanCwFraction: 0.5,
+        levelsWithObservedSingleMustCrossOrder: 1,
+        levelsWithMustCrossOrder: 2,
+        meanDiscoverySaturationPlateauFraction: null,
+        sourceCoverage: Object.fromEntries(PROVENANCE_SOURCES.map(source => [source, 0])),
+    }, 'test', 'data/test.json');
+    assert.match(md, /\*\*1\*\* levels have at least one hint/);
+    assert.match(md, /Must-cross order: \*\*1\*\* \/ \*\*2\*\* support-comparable/);
+    assert.match(md, /across \*\*2\*\* levels with at least one path pair/);
+    assert.doesNotMatch(md, /undefined/);
 });

@@ -1,10 +1,10 @@
-// Solution-space fingerprint primitives for the known-solvable corpora (published + stress-corpus-1).
+// Known-solution sample-profile primitives for the known-solvable corpora (published + stress-corpus-1).
 //
 // A "fingerprint" here is an aggregate description of how a level's ACCEPTED solutions behave —
 // not the level's shape (that's domain/level-fingerprint.ts, a structural dedup hash) and not a
 // solver-determinism hash (that's scripts/solver-fingerprint.mjs). Purpose: turn a solvable level
 // into a reference specimen other levels (esp. the 1,700-level unsolved stress corpus) can be
-// compared against — see docs/solution-profile.md.
+// compared against — see docs/solver-solution-profile.md.
 //
 // Reuses the existing per-path/per-level primitives rather than re-deriving them:
 //   - domain/path-features.ts   → edge/crossing/portal-signature/must-cross-order per path
@@ -37,12 +37,14 @@ import {
 } from './provenance-source-taxonomy.mjs';
 export { PROVENANCE_SOURCES, classifyProvenanceSource, sourcesForHint, bucketHintsBySource };
 
-export const SOLUTION_PROFILE_SCHEMA_VERSION = 2;
+export const SOLUTION_PROFILE_SCHEMA_VERSION = 3;
 export const SOLUTION_PROFILE_TAXONOMY = 'origin-facet-applicability-v2';
+export const SOLUTION_PROFILE_ALGORITHM_VERSION = 'sample-support-v2';
 
 export function hasCurrentSolutionProfileTaxonomy(library) {
     return library?.schemaVersion === SOLUTION_PROFILE_SCHEMA_VERSION &&
-        library?.provenanceTaxonomy === SOLUTION_PROFILE_TAXONOMY;
+        library?.provenanceTaxonomy === SOLUTION_PROFILE_TAXONOMY &&
+        library?.profileAlgorithmVersion === SOLUTION_PROFILE_ALGORITHM_VERSION;
 }
 
 // ─── Provenance-origin compatibility exports ─────────────────────────────────
@@ -238,8 +240,11 @@ export function mustCrossOrderStats(paths, mcKeys) {
         distinctCompletionOrders: fullOrderCounts.size,
         firstEntryOrderFrequency: topRanked(firstOrderCounts).map(({ key, count }) => ({ order: key, count })),
         completionOrderFrequency: topRanked(fullOrderCounts).map(({ key, count }) => ({ order: key, count })),
-        // "Rigid" = every accepted solution used the same entry/completion order — a genuinely
-        // level-forced constraint rather than an artifact of how solutions happened to be found.
+        // Descriptive sample property only. A single observed order is not proof that the level
+        // forces that order unless an independent whole-space completeness contract establishes it.
+        pathsObserved: paths.length,
+        observedSingleOrder: firstOrderCounts.size === 1 && fullOrderCounts.size === 1,
+        // Compatibility alias for schema-v2 consumers. Do not interpret this as level-forced rigidity.
         rigid: firstOrderCounts.size === 1 && fullOrderCounts.size === 1,
     };
 }
@@ -259,7 +264,7 @@ export function turnLocationStats(paths) {
     }
     return {
         turnRateMean: paths.length ? Number((turnRateSum / paths.length).toFixed(4)) : 0,
-        cwFraction: (totalCw + totalCcw) ? Number((totalCw / (totalCw + totalCcw)).toFixed(4)) : 0,
+        cwFraction: (totalCw + totalCcw) ? Number((totalCw / (totalCw + totalCcw)).toFixed(4)) : null,
         distinctTurnCells: cellCounts.size,
         turnCellFrequency: [...cellCounts.entries()]
             .map(([key, c]) => ({ key, cw: c.cw, ccw: c.ccw, total: c.cw + c.ccw }))
@@ -367,10 +372,12 @@ function downsampleCurve(curve) {
  * entry orders) stops appearing as more accepted solutions are found, walked in DISCOVERY order
  * (each hint's earliest recorded `foundAt`). `plateauStartIndex`/`plateauFraction` are a HEURISTIC
  * (first point after which a trailing window contributes zero new edges/cells) — NOT a claim the
- * search is exhaustive. `provablyExhaustive` (computed by the caller from provenance) is the only
- * legitimate "this library is complete" signal; see docs/solution-profile.md's caution.
+ * search is exhaustive. No generic profile field proves the stored library is the complete
+ * solution space; see docs/solver-solution-profile.md for the evidence boundary.
  */
 export function discoverySaturationCurve(hints, mcKeys, grid) {
+    const chronologyDatedHints = hints.filter(h => Number.isFinite(earliestFoundAt(h))).length;
+    const chronologyComplete = chronologyDatedHints === hints.length;
     const ordered = [...hints].sort((a, b) => earliestFoundAt(a) - earliestFoundAt(b));
     const seenEdges = new Set(), seenCells = new Set(), seenPortalSigs = new Set(), seenMcOrders = new Set();
     const curve = ordered.map((hint, i) => {
@@ -398,9 +405,12 @@ export function discoverySaturationCurve(hints, mcKeys, grid) {
     }
     return {
         totalHints: curve.length,
+        chronologyDatedHints,
+        chronologyComplete,
         curve: downsampleCurve(curve),
-        plateauStartIndex,
-        plateauFraction: plateauStartIndex === null ? null : Number((plateauStartIndex / curve.length).toFixed(4)),
+        plateauStartIndex: chronologyComplete ? plateauStartIndex : null,
+        plateauFraction: chronologyComplete && plateauStartIndex !== null
+            ? Number((plateauStartIndex / curve.length).toFixed(4)) : null,
     };
 }
 
@@ -463,7 +473,7 @@ export function buildBucketProfile(hints, level, objectives, mcKeys, useCrossing
         prefixDiversity: prefixDiversityStats(paths, seed),
         pairwiseDistinctiveness: pairwiseDistinctivenessStats(paths, mcKeys, useCrossings, seed),
         discoverySaturation: discoverySaturationCurve(hints, mcKeys, level.grid),
-        provablyExhaustive: hints.some(h => (h.provenance || []).some(p => p.search?.termination === 'exhaustive')),
+        hasExhaustiveSearchEvent: hints.some(h => (h.provenance || []).some(p => p.search?.termination === 'exhaustive')),
     };
 }
 
@@ -518,6 +528,15 @@ export function buildSinglePathProfile(path, level, seed = 20260703) {
     return buildBucketProfile([{ path, provenance: [] }], level, objectives, mcKeys, useCrossings, seed);
 }
 
+/** Resolve one persisted per-level bucket, including storage-deduplication references. */
+export function storedLevelProfileForBucket(levelEntry, bucket = 'combined') {
+    if (!levelEntry) return null;
+    if (bucket === 'combined') return levelEntry.combined || null;
+    const candidate = levelEntry.bySource?.[bucket];
+    if (candidate?.sameAsCombined) return levelEntry.combined || null;
+    return candidate || null;
+}
+
 // ─── Cross-level distance ─────────────────────────────────────────────────────
 //
 // Raw cell/edge keys are packed coordinates — meaningless to compare across two levels with
@@ -525,8 +544,8 @@ export function buildSinglePathProfile(path, level, seed = 20260703) {
 // entropy, rigidity) or the position-NORMALIZED footprint (see normalizedFootprint above).
 
 function mustCrossOrderDist(a, b) {
-    if (!a || !b) return null;
-    return a.rigid === b.rigid ? 0 : 1;
+    if (!a || !b || (a.pathsObserved ?? 0) < 2 || (b.pathsObserved ?? 0) < 2) return null;
+    return a.observedSingleOrder === b.observedSingleOrder ? 0 : 1;
 }
 
 function portalPatternDist(a, b) {
@@ -552,6 +571,14 @@ function objectiveDepthDist(a, b) {
 
 const footprintSet = (fp) => new Set(fp || []);
 
+/** Comparable longitudinal saturation position. A fully dated sample below the heuristic's
+ * minimum five observations cannot measure a plateau. With adequate chronology, null
+ * `plateauFraction` means no plateau was detected, represented as the end of the observed stream. */
+function saturationPosition(stats) {
+    if (!stats?.chronologyComplete || (stats.totalHints ?? 0) < 5) return null;
+    return stats.plateauFraction ?? 1;
+}
+
 /** Named per-axis distance contributions between two bucket profiles, each in [0,1] or `null`
  *  when the axis isn't comparable (a mechanic absent on one or both sides). Exposed separately
  *  from profileDistance so a caller (solution-profile-compare.mjs) can show WHICH axes drove a
@@ -566,14 +593,18 @@ export function profileDistanceTerms(a, b) {
     return {
         cellFootprint: jaccardDistance(footprintSet(a.cellVisitFrequency?.normalizedFootprint), footprintSet(b.cellVisitFrequency?.normalizedFootprint)),
         turnRate: Math.abs((a.turnDistribution?.turnRateMean ?? 0) - (b.turnDistribution?.turnRateMean ?? 0)),
-        turnChirality: Math.abs((a.turnDistribution?.cwFraction ?? 0.5) - (b.turnDistribution?.cwFraction ?? 0.5)),
+        turnChirality: a.turnDistribution?.cwFraction == null || b.turnDistribution?.cwFraction == null
+            ? null : Math.abs(a.turnDistribution.cwFraction - b.turnDistribution.cwFraction),
         mustCrossRigidity: mustCrossOrderDist(a.mustCrossOrder, b.mustCrossOrder),
         portalUsageRate: portalPatternDist(a.portalUsage, b.portalUsage),
         objectiveDepth: objectiveDepthDist(a.objectiveSatisfaction, b.objectiveSatisfaction),
         cellEntropy: Math.abs((a.cellVisitFrequency?.entropy ?? 0) - (b.cellVisitFrequency?.entropy ?? 0)) / 6,
-        prefixDiversity: Math.abs((a.prefixDiversity?.meanSharedPrefixFrac ?? 0) - (b.prefixDiversity?.meanSharedPrefixFrac ?? 0)),
-        pairwiseDistinctiveness: Math.abs((a.pairwiseDistinctiveness?.meanDistance ?? 0) - (b.pairwiseDistinctiveness?.meanDistance ?? 0)),
-        discoverySaturation: Math.abs((a.discoverySaturation?.plateauFraction ?? 1) - (b.discoverySaturation?.plateauFraction ?? 1)),
+        prefixDiversity: (a.prefixDiversity?.pathsSampled ?? 0) < 2 || (b.prefixDiversity?.pathsSampled ?? 0) < 2
+            ? null : Math.abs(a.prefixDiversity.meanSharedPrefixFrac - b.prefixDiversity.meanSharedPrefixFrac),
+        pairwiseDistinctiveness: (a.pairwiseDistinctiveness?.pairsCompared ?? 0) < 1 || (b.pairwiseDistinctiveness?.pairsCompared ?? 0) < 1
+            ? null : Math.abs(a.pairwiseDistinctiveness.meanDistance - b.pairwiseDistinctiveness.meanDistance),
+        discoverySaturation: saturationPosition(a.discoverySaturation) == null || saturationPosition(b.discoverySaturation) == null
+            ? null : Math.abs(saturationPosition(a.discoverySaturation) - saturationPosition(b.discoverySaturation)),
     };
 }
 
@@ -583,29 +614,49 @@ export function profileDistanceTerms(a, b) {
  * different (a level with no must-cross squares isn't "far" from one that has them along THAT
  * axis — it's simply not comparable on it).
  */
-export function profileDistance(a, b) {
+export function profileDistanceWithCoverage(a, b) {
     const terms = profileDistanceTerms(a, b);
-    let d = 0, wsum = 0;
+    let d = 0, comparableWeight = 0, comparableAxes = 0;
+    const totalWeight = Object.values(PROFILE_DISTANCE_WEIGHTS).reduce((sum, value) => sum + value, 0);
     for (const [name, value] of Object.entries(terms)) {
         if (value === null || value === undefined || Number.isNaN(value)) continue;
         d += PROFILE_DISTANCE_WEIGHTS[name] * Math.min(1, value);
-        wsum += PROFILE_DISTANCE_WEIGHTS[name];
+        comparableWeight += PROFILE_DISTANCE_WEIGHTS[name];
+        comparableAxes++;
     }
-    return wsum ? d / wsum : 1;
+    return {
+        distance: comparableWeight ? d / comparableWeight : 1,
+        comparableAxes,
+        comparableWeight,
+        comparableWeightFraction: totalWeight ? comparableWeight / totalWeight : 0,
+        totalWeight,
+    };
+}
+
+export function profileDistance(a, b) {
+    return profileDistanceWithCoverage(a, b).distance;
 }
 
 /** Min distance of `candidate` (a bucket profile) to a pool of {id, solutionProfile} entries, with
  *  the named per-axis breakdown attached to each result. */
 export function nearestProfiles(candidate, pool, topK = 5) {
     return pool
-        .map(entry => ({
+        .map(entry => {
+            const support = profileDistanceWithCoverage(candidate, entry.solutionProfile);
+            return {
             id: entry.id,
-            distance: Number(profileDistance(candidate, entry.solutionProfile).toFixed(4)),
+            distance: Number(support.distance.toFixed(4)),
+            support: {
+                comparableAxes: support.comparableAxes,
+                comparableWeight: Number(support.comparableWeight.toFixed(4)),
+                comparableWeightFraction: Number(support.comparableWeightFraction.toFixed(4)),
+            },
             terms: Object.fromEntries(
                 Object.entries(profileDistanceTerms(candidate, entry.solutionProfile))
                     .map(([name, value]) => [name, value === null || value === undefined ? null : Number(value.toFixed(4))]),
             ),
-        }))
+        };
+        })
         .sort((x, y) => x.distance - y.distance)
         .slice(0, topK);
 }
@@ -618,99 +669,121 @@ function mean(values) {
 
 /** Aggregates a run's per-level profiles (as produced by buildLevelSolutionProfile) into a
  *  corpus-wide summary — counts, central tendencies, and the "how many levels does each
- *  provenance source contribute usefully to" coverage table. Never claims corpus-wide exhaustion;
+ *  provenance origin contribute usefully to" coverage table. Never claims corpus-wide exhaustion;
  *  it only reports what fraction of levels have at least one hint whose OWN termination was
- *  'exhaustive' (provablyExhaustive), which is a per-level fact, not an inference. */
+ *  'exhaustive' (an event-local marker), without promoting that event into a whole-library completeness claim. */
 export function summarizeCorpusProfiles(levelProfiles) {
     const withHints = levelProfiles.filter(p => !p.insufficientData);
     const combined = withHints.map(p => p.combined).filter(Boolean);
+    const withPairwise = combined.filter(c => (c.pairwiseDistinctiveness?.pairsCompared ?? 0) > 0);
+    const chiralityValues = combined.map(c => c.turnDistribution?.cwFraction).filter(Number.isFinite);
     const withMustCrossOrder = combined.filter(c => c.mustCrossOrder);
-    const withSaturation = combined.filter(c => c.discoverySaturation?.plateauFraction !== null);
+    const withComparableMustCrossOrder = withMustCrossOrder.filter(c => (c.mustCrossOrder.pathsObserved ?? 0) >= 2);
+    const withComparableSaturation = combined.filter(c =>
+        c.discoverySaturation?.chronologyComplete === true && (c.discoverySaturation?.totalHints ?? 0) >= 5);
+    const withDetectedSaturation = withComparableSaturation.filter(c => c.discoverySaturation.plateauFraction !== null);
 
-    const sourceCoverage = {};
-    for (const source of PROVENANCE_SOURCES) {
-        sourceCoverage[source] = withHints.filter(p => !p.bySource?.[source]?.insufficientData).length;
+    const originCoverage = {};
+    for (const origin of PROVENANCE_SOURCES) {
+        originCoverage[origin] = withHints.filter(p => !p.bySource?.[origin]?.insufficientData).length;
     }
 
     return {
         levelsTotal: levelProfiles.length,
         levelsWithHints: withHints.length,
         levelsInsufficientData: levelProfiles.length - withHints.length,
-        levelsProvablyExhaustive: combined.filter(c => c.provablyExhaustive).length,
+        levelsWithExhaustiveSearchEvent: combined.filter(c => c.hasExhaustiveSearchEvent).length,
         meanHintCount: Number(mean(withHints.map(p => p.hintCount)).toFixed(2)),
-        meanPathwiseDistinctiveness: Number(mean(combined.map(c => c.pairwiseDistinctiveness.meanDistance)).toFixed(4)),
+        levelsWithComparablePathwiseDistinctiveness: withPairwise.length,
+        meanPathwiseDistinctiveness: withPairwise.length
+            ? Number(mean(withPairwise.map(c => c.pairwiseDistinctiveness.meanDistance)).toFixed(4)) : null,
         meanTurnRate: Number(mean(combined.map(c => c.turnDistribution.turnRateMean)).toFixed(4)),
-        meanCwFraction: Number(mean(combined.map(c => c.turnDistribution.cwFraction)).toFixed(4)),
+        meanCwFraction: chiralityValues.length ? Number(mean(chiralityValues).toFixed(4)) : null,
         levelsWithMustCrossOrder: withMustCrossOrder.length,
-        levelsWithRigidMustCrossOrder: withMustCrossOrder.filter(c => c.mustCrossOrder.rigid).length,
-        meanDiscoverySaturationPlateauFraction: withSaturation.length
-            ? Number(mean(withSaturation.map(c => c.discoverySaturation.plateauFraction)).toFixed(4)) : null,
-        sourceCoverage,
+        levelsWithComparableMustCrossOrder: withComparableMustCrossOrder.length,
+        levelsWithObservedSingleMustCrossOrder: withComparableMustCrossOrder
+            .filter(c => c.mustCrossOrder.observedSingleOrder).length,
+        levelsWithComparableDiscoverySaturation: withComparableSaturation.length,
+        levelsWithDetectedDiscoverySaturationPlateau: withDetectedSaturation.length,
+        meanDiscoverySaturationPlateauFraction: withDetectedSaturation.length
+            ? Number(mean(withDetectedSaturation.map(c => c.discoverySaturation.plateauFraction)).toFixed(4)) : null,
+        originCoverage,
+        // Compatibility alias for schema-v2 consumers. New human-facing output uses origin terminology.
+        sourceCoverage: originCoverage,
     };
 }
 
-// ─── Freshness (see docs/solution-profile.md's Freshness section) ───────────
+// ─── Freshness (see docs/solver-solution-profile.md's Freshness section) ───────────
 //
 // A fingerprint library file is a snapshot of the hint corpus at generation time. It goes stale
 // the moment more hints are found for its source corpus (hint-discovery tooling never touches
-// these files, and mustn't — see docs/solution-profile.md's rationale for why regen is NOT wired
+// these files, and mustn't — see docs/solver-solution-profile.md's rationale for why regen is NOT wired
 // into the hint-writing path). Instead, freshness is checked and repaired lazily at the one place
 // these libraries are actually READ: solution-profile-compare.mjs, right before every comparison.
 
-/** Deterministic signature of a corpus's saved-hint content — hint count + total provenance-entry
- *  count per level, hashed. Cheap enough to compute on every compare run (it reuses the same
- *  readLevelsWithHints() call the comparison needs anyway), and sensitive to any hint
- *  addition/removal or provenance append (e.g. a rediscovery) without hashing full path contents. */
+/** Deterministic content signature of every profile-bearing hint input. Count-only freshness was
+ *  insufficient: in-place path/provenance corrections and discovery-date edits can change a profile
+ *  without changing record counts. */
 export function computeHintSignature(levels, levelNumbers = null) {
     const wanted = levelNumbers || levels.map((_, i) => i + 1);
     let totalHints = 0, totalProvenance = 0;
     const perLevel = wanted.map((n) => {
         const level = levels[n - 1];
-        const hintCount = level?.hints?.length || 0;
-        const provenanceCount = (level?.hintRecords || []).reduce((sum, h) => sum + (h.provenance?.length || 0), 0);
+        const records = level?.hintRecords || [];
+        const hintCount = records.length;
+        const provenanceCount = records.reduce((sum, h) => sum + (h.provenance?.length || 0), 0);
         totalHints += hintCount;
         totalProvenance += provenanceCount;
-        return `${hintCount}:${provenanceCount}`;
+        return records.map(h => ({ path: h.path, provenance: h.provenance || [] }));
     });
-    const hash = createHash('sha1').update(perLevel.join('|')).digest('hex').slice(0, 16);
+    const hash = createHash('sha1').update(JSON.stringify(perLevel)).digest('hex').slice(0, 16);
     return { totalHints, totalProvenance, hash };
 }
 
 
-function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
+export function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
+    const originCoverage = summary.originCoverage || summary.sourceCoverage || {};
+    const comparablePairwise = summary.levelsWithComparablePathwiseDistinctiveness ?? summary.levelsWithHints ?? 0;
+    const comparableMustCross = summary.levelsWithComparableMustCrossOrder ?? summary.levelsWithMustCrossOrder ?? 0;
+    const comparableSaturation = summary.levelsWithComparableDiscoverySaturation ?? 0;
+    const detectedSaturation = summary.levelsWithDetectedDiscoverySaturationPlateau ??
+        (summary.meanDiscoverySaturationPlateauFraction === null ? 0 : comparableSaturation);
     const lines = [
-        `# Solution-space fingerprint summary — ${corpusTag}`,
+        `# Known-solution sample-profile summary — ${corpusTag}`,
         '',
         `Generated from \`${levelsJsonLabel}\` by \`npm run stress:solution-profile\` (or auto-refreshed ` +
         'by solution-profile-compare.mjs when stale). See ' +
-        '[`docs/solution-profile.md`](../../docs/solution-profile.md) for what each field means and ' +
+        '[`docs/solver-solution-profile.md`](../../docs/solver-solution-profile.md) for what each field means and ' +
         'the "saturated, not complete" caution.',
         '',
         `- Levels: **${summary.levelsTotal}** total, **${summary.levelsWithHints}** with hints, ` +
         `**${summary.levelsInsufficientData}** with none.`,
-        `- **${summary.levelsProvablyExhaustive}** levels have at least one hint whose own search ` +
-        'terminated `exhaustive` (a real completeness signal, not the plateau heuristic below).',
+        `- **${summary.levelsWithExhaustiveSearchEvent}** levels have at least one hint whose own search ` +
+        'terminated `exhaustive` (an event-local context marker, not proof the stored library is complete).',
         `- Mean hints/level: **${summary.meanHintCount}**. Mean pairwise distinctiveness: ` +
-        `**${summary.meanPathwiseDistinctiveness}**. Mean turn rate: **${summary.meanTurnRate}** ` +
-        `(cw fraction **${summary.meanCwFraction}**).`,
-        `- Must-cross order: **${summary.levelsWithRigidMustCrossOrder}** / ` +
-        `${summary.levelsWithMustCrossOrder} multi-must-cross levels show a single rigid entry+completion order.`,
-        summary.meanDiscoverySaturationPlateauFraction === null
-            ? '- Discovery-saturation plateau: n/a (no level had enough hints to detect one).'
-            : `- Mean discovery-saturation plateau point: **${summary.meanDiscoverySaturationPlateauFraction}** ` +
-              'of a level\'s hint corpus (heuristic — see doc; not proof of exhaustion).',
+        `${summary.meanPathwiseDistinctiveness === null ? 'n/a' : `**${summary.meanPathwiseDistinctiveness}**`} ` +
+        `across **${comparablePairwise}** levels with at least one path pair. ` +
+        `Mean turn rate: **${summary.meanTurnRate}** (cw fraction ` +
+        `${summary.meanCwFraction === null ? 'n/a' : `**${summary.meanCwFraction}**`}).`,
+        `- Must-cross order: **${summary.levelsWithObservedSingleMustCrossOrder}** / ` +
+        `**${comparableMustCross}** support-comparable multi-must-cross levels show one observed ` +
+        `entry+completion order; **${summary.levelsWithMustCrossOrder}** levels have the mechanic at all.`,
+        `- Discovery saturation: **${detectedSaturation}** / **${comparableSaturation}** chronology-comparable ` +
+        `levels had a detected plateau; mean detected point ` +
+        `${summary.meanDiscoverySaturationPlateauFraction === null ? 'n/a' : `**${summary.meanDiscoverySaturationPlateauFraction}**`} ` +
+        '(heuristic; no-plateau observations stay in the denominator and are not treated as missing).',
         '',
-        '## Provenance-source coverage',
+        '## Provenance-origin coverage',
         '',
-        '| Source | Levels with ≥ min-hints-per-source |',
+        '| Origin | Levels with ≥ min-hints-per-source |',
         '|---|---|',
-        ...PROVENANCE_SOURCES.map(s => `| ${s} | ${summary.sourceCoverage[s]} |`),
+        ...PROVENANCE_SOURCES.map(origin => `| ${origin} | ${originCoverage[origin] ?? 0} |`),
         '',
     ];
     return lines.join('\n');
 }
 
-/** Builds AND WRITES the full solution-space fingerprint library for one corpus — the single
+/** Builds AND WRITES the full known-solution sample-profile library for one corpus — the single
  *  shared core behind both `npm run stress:solution-profile` (explicit CLI regen) and
  *  solution-profile-compare.mjs's automatic staleness repair, so the two can never diverge in
  *  what "fresh" means. `levelsJsonLabel` is the corpus path as it should be recorded in the output
@@ -729,10 +802,11 @@ export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, ou
     const output = {
         schemaVersion: SOLUTION_PROFILE_SCHEMA_VERSION,
         provenanceTaxonomy: SOLUTION_PROFILE_TAXONOMY,
+        profileAlgorithmVersion: SOLUTION_PROFILE_ALGORITHM_VERSION,
         generatedAt: new Date().toISOString(),
         source: levelsJsonLabel,
-        description: 'Per-level solution-space fingerprints (combined + per-provenance-source) for a '
-            + 'known-solvable corpus — see docs/solution-profile.md.',
+        description: 'Per-level known-solution sample profiles (combined + per-provenance-origin) for a '
+            + 'known-solvable corpus — a known-solution sample profile, not a completeness claim; see docs/solver-solution-profile.md.',
         minHintsPerSource,
         seed,
         levelSpec,
@@ -742,7 +816,7 @@ export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, ou
     };
 
     mkdirSync(path.dirname(outAbsPath), { recursive: true });
-    // Compact, not pretty-printed: this is a machine-readable fingerprint library, not a
+    // Compact, not pretty-printed: this is a machine-readable sample-profile library, not a
     // hand-diffed doc (that's what the accompanying -summary.md is for) — at corpus-scale ×
     // multi-bucket scale, indent(1) alone multiplies file size several-fold for no benefit.
     writeFileSync(outAbsPath, `${JSON.stringify(output)}\n`);
