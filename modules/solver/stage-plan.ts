@@ -17,6 +17,8 @@ export interface SolverStagePlanInput {
     mainSearchEligible: boolean;
     /** Known only after repair probe; omission leaves shrink-recovery eligibility undefined. */
     earlyRepairSearchShrunkTierCount?: number;
+    /** Pre-dispatch structural eligibility for the default-off late must-turn retry. */
+    lateRepairMustTurnBiasedRetryEligible?: boolean;
 }
 
 /** Eligibility fields owned by StageBudgetPlan. */
@@ -39,9 +41,12 @@ function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolea
 }
 
 export function buildSolverStagePlan(input: SolverStagePlanInput): SolverStagePlan {
-    const { budgetPlan, mainSearchEligible, earlyRepairSearchShrunkTierCount } = input;
+    const { budgetPlan, mainSearchEligible, earlyRepairSearchShrunkTierCount, lateRepairMustTurnBiasedRetryEligible } = input;
     return SOLVER_STAGE_IDS.map((id): SolverStagePlanEntry => {
         if (id === 'main-search') return { spec: solverStageSpec(id), eligible: mainSearchEligible };
+        if (id === 'late-repair-must-turn-biased-retry') {
+            return { spec: solverStageSpec(id), eligible: !!lateRepairMustTurnBiasedRetryEligible };
+        }
         if (id === 'repair-shrink-recovery') {
             const eligible = earlyRepairSearchShrunkTierCount === undefined
                 ? undefined
