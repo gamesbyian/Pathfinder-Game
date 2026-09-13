@@ -2,16 +2,19 @@
 /**
  * Read-only WS2 future-feasibility descriptor rejoin.
  *
- * Replays the prespecified exact-labelled B1/B2-style extinction cases plus the frozen R03229
- * microscope cases through the real search-state primitives, then measures a tiny fixed descriptor
- * set. This script never influences search. Exact labels are offline truth only.
+ * Replays the prespecified exact-labelled B2 extinction cases plus the frozen R03229 microscope
+ * cases through real search-state primitives, then measures a tiny fixed descriptor set. This
+ * script never influences search. Exact labels are offline truth only.
  *
- * Candidate families are intentionally bounded by
+ * B1 remains the historical precedent for this mechanism class; B2's committed case file plus its
+ * 2026-08-15 flipping-filter rerun provide the reproducible executable label population here.
+ *
+ * Candidate families are bounded by
  * reports/2026-09-12-future-feasibility-premise-rejoin-001.md:
  *   1. exact-resource attainable capacity,
  *   2. residual topology scarcity,
  *   3. joint-obligation compatibility.
- * Progress masks are emitted only as negative controls.
+ * Progress/resource state is emitted only as context/negative control.
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -48,12 +51,33 @@ function roleOf(c) {
     if (String(c.id).includes('retained-near-cutoff')) return 'cutoff-survivor';
     return 'other';
 }
+
+// Decision table from reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md, including the
+// 2026-08-15 flipping-filter rerun. Null/timeout rows are intentionally absent.
+const B2_EXACT = new Map(Object.entries({
+    S00001: { 'top-rank1': 'dead', 'witness-culled': 'live' },
+    S00028: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    S00030: { 'top-rank1': 'dead', 'witness-culled': 'live', 'cutoff-survivor': 'live' },
+    S00035: { 'witness-culled': 'live' },
+    S00048: { 'top-rank1': 'dead', 'witness-culled': 'live', 'cutoff-survivor': 'live' },
+    S00095: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    S00099: { 'witness-culled': 'live' },
+    S00108: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    S00120: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    S00140: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    R00058: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    R00060: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    R00064: { 'top-rank1': 'live', 'witness-culled': 'live' },
+    R00104: { 'top-rank1': 'dead', 'witness-culled': 'live' },
+}));
 function exactLabel(c) {
     const role = roleOf(c);
-    if (c.levelId === 'R03229') return role === 'witness-culled' ? 'live' : (role === 'top-rank1' || role === 'cutoff-survivor' ? 'dead' : null);
-    if (c.levelId === 'S00001' || c.levelId === 'R00104') return role === 'witness-culled' ? 'live' : (role === 'top-rank1' ? 'dead' : null);
-    if (c.levelId === 'R00423' || c.levelId === 'R00700') return (role === 'witness-culled' || role === 'top-rank1') ? 'live' : null;
-    return null;
+    if (c.levelId === 'R03229') {
+        if (role === 'witness-culled') return 'live';
+        if (role === 'top-rank1' || role === 'cutoff-survivor') return 'dead';
+        return null;
+    }
+    return B2_EXACT.get(c.levelId)?.[role] ?? null;
 }
 function keysOf(prefix) {
     if (!Array.isArray(prefix) || prefix.length === 0) throw new Error('empty prefix');
@@ -73,9 +97,8 @@ function replay(raw, prefix) {
     return { level, prep, state, pos: state.path.at(-1) };
 }
 
-// Runtime-legal coarse upper opportunity for future intersections: each non-terminal visited cell
-// with at least one unused axis and no categorical single-use block is counted once. This is an
-// intentionally optimistic capacity summary, not a prune.
+// Optimistic opportunity for future intersections: each non-terminal visited cell with an unused
+// axis and no categorical single-use block counts once. Predictive summary only, never a prune.
 function revisitOpportunityCount(level, prep, state, pos) {
     let n = 0;
     const { w, h } = level.grid;
@@ -85,19 +108,20 @@ function revisitOpportunityCount(level, prep, state, pos) {
         if (state.edgeUsage[k] === 3) continue;
         const fi = prep.flipperIndexMap ? prep.flipperIndexMap[k] - 1 : -1;
         if (fi !== -1 && (state.flipperUsedMask & (1 << fi))) continue;
-        if (level.portalMap.has(k)) continue; // portal terminals are single-visit
+        if (level.portalMap.has(k)) continue;
         n++;
     }
     return n;
 }
 
-// Cheap topology-scarcity proxy: among pending must-pass/must-cross obligations, count how many
-// have <=2 cardinal neighbors that are not categorical hard walls. Predictive only, never a prune.
+// Topology-scarcity proxy: pending must-pass/must-cross cells with few cardinal neighbours that are
+// not categorical hard walls. This is deliberately not a degree prune; prior work showed that form
+// is unsound.
 function pendingLowDegree(level, prep, state, pos) {
     const pending = [];
     for (let i = 0; i < level.mustPassKeys.length; i++) if ((state.mpVisitedMask & (1 << i)) === 0) pending.push(level.mustPassKeys[i]);
     for (let i = 0; i < level.mustCrossKeys.length; i++) if (state.mustCrossMask & (1 << i)) pending.push(level.mustCrossKeys[i]);
-    let low2 = 0, low1 = 0, minDegree = 4;
+    let low2 = 0, minDegree = 4;
     for (const k of pending) {
         const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
         const candidates = [];
@@ -116,17 +140,13 @@ function pendingLowDegree(level, prep, state, pos) {
         }
         minDegree = Math.min(minDegree, degree);
         if (degree <= 2) low2++;
-        if (degree <= 1) low1++;
     }
-    return { pendingCount: pending.length, lowDegree2: low2, lowDegree1: low1, minPendingDegree: pending.length ? minDegree : null };
+    return { pendingCount: pending.length, lowDegree2: low2, minPendingDegree: pending.length ? minDegree : null };
 }
 
 const b2 = load(B2_CASES);
 const r32 = load(R03229_CASES);
-const selected = [
-    ...b2.cases.filter(c => exactLabel(c)),
-    ...r32.cases.filter(c => exactLabel(c)),
-];
+const selected = [...b2.cases.filter(c => exactLabel(c)), ...r32.cases.filter(c => exactLabel(c))];
 const rows = [];
 for (const c of selected) {
     const corpus = c.levelId === 'R03229' ? r32.corpus : b2.corpus;
@@ -141,16 +161,12 @@ for (const c of selected) {
         caseId: c.id, levelId: c.levelId, role: roleOf(c), exact: exactLabel(c),
         depth: state.path.length - 1,
         descriptors: {
-            // family 1: attainable exact-resource capacity
             intersectionCapacitySlack: revisitCapacity - remainingIntersections,
             freeIntersectionSlackAfterMustCross: remainingIntersections - reservedMustCross,
-            // family 2: residual topology scarcity
             pendingLowDegree2: topo.lowDegree2,
             minPendingDegree: topo.minPendingDegree,
-            // family 3: joint-obligation compatibility
             activeJointClusters: joint.length,
             jointRejects: joint.filter(x => x.verdict === 'reject').length,
-            // negative controls / context only
             remainingIntersections,
             pendingMustCross: reservedMustCross,
             pendingMustPass: level.mustPassKeys.length - popcount(state.mpVisitedMask),
@@ -173,9 +189,10 @@ for (const name of descriptorNames) {
     };
 }
 const out = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     evidenceRole: 'read-only future-feasibility premise rejoin',
     sourceCases: [B2_CASES, R03229_CASES],
+    labelAuthority: 'reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md plus R03229 reconciliation',
     selectedCaseCount: rows.length,
     levelCount: new Set(rows.map(r => r.levelId)).size,
     rows,
