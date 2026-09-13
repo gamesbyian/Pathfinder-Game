@@ -28,11 +28,13 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 **Simple future-feasibility route closed null.** Six prespecified summaries over **31 exact-labelled states / 15 levels** all overlap LIVE and DEAD; the joint-obligation observer emits zero rejects. Do not resume with nearby scalar-feature accretion. The next acquisition premise must change represented/reused information. [`result`](../reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md)
 
+**Archaeology-derived acquisition order.** The current solve-local dead-cause rejoin remains the first Class-5 acquisition gate. If it closes null, do not return to scalar scorer/feasibility accretion. The next observer gate is the unfinished August **full-pool categorical-state projection** on current exact-labelled extinction cases. If that is non-discriminating or points specifically to topology, the next representation probe is the historical **homotopy/winding completion-class observer**, reconstructed with puncture-robustness checks. Future-crossing commitments or an arbitrary-target feasibility oracle are later mechanism-specific microscopes only when the exact-labelled evidence nominates the relevant event. Cross-attempt basin overlap, partial-order commutativity, forced-chain compression, and repair descent-shadow remain conditional supporting questions, not ahead of this Class-5 sequence. [`archaeology register`](solver-archaeology-register.md)
+
 **Next WS2 gates, in parallel:**
 
 1. **Class-4 allocation:** implement/validate the dead-last additive whole-ladder retry before population scale. Skip family mining; freshness is established and the question is allocation/collateral.
 2. **Class-2 composition:** existing-family preflight is complete. Across the seven nominated parents, historical whole-ladder `cs`/`gr`/`swap` siblings solve only **8/210**; `R02768` contributes 5/30 while `R02180` is 1/30 and three parents are 0/30. First test the smallest default-off/additive late must-turn-biased repair probe on the deliberate contrast pair `R02768` (family-responsive) + `R02180` (family-rigid), with matched work and no plain-repair theft. If it earns continuation, add at least one 0/30 parent before scaling. [`family preflight`](../reports/2026-09-13-must-turn-biased-family-preflight-001.md)
-3. **Class-5 acquisition:** rejoin the August connectivity-rejection Stage-B population before collecting a fresh generic recurrence census. Historically, reached-set/boundary shapes recurred within a solve far more than literal exact states (83.1% / 82.2% vs 52.6%); that line was closed because cross-level transfer was weak, not because solve-local recurrence was absent. First ask whether the same population survives on current Class-5 misses, then whether repeated shapes reduce to a **small sound cause** with material repeated-work cost and matching cheaper than `isConnected`. Only a positive result earns shadow-testing of the smallest solve-local reason key. No broad CDCL/LCG framework. [`archaeology rejoin`](../reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md), [`Stage B`](../reports/2026-08-28-connectivity-rejection-stage-b-audit.md)
+3. **Class-5 acquisition:** rejoin the August connectivity-rejection Stage-B population before collecting a fresh generic recurrence census. Historically, reached-set/boundary shapes recurred within a solve far more than literal exact states (83.1% / 82.2% vs 52.6%); that line was closed because cross-level transfer was weak, not because solve-local recurrence was absent. First ask whether the same population survives on current Class-5 misses, then whether repeated shapes reduce to a **small sound cause** with material repeated-work cost and matching cheaper than `isConnected`. Only a positive result earns shadow-testing of the smallest solve-local reason key. If this closes null, advance to the categorical full-pool projection described above rather than inventing a sibling scalar descriptor. No broad CDCL/LCG framework. [`archaeology rejoin`](../reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md), [`Stage B`](../reports/2026-08-28-connectivity-rejection-stage-b-audit.md)
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, and goal-attraction-disabled retry are **PROMOTED**. Portal coarse-state merge, repair late-probe `7->6` seeds, and portfolio-18 resumable tranche are **CLOSED NEGATIVE/NULL**. Admissible-order retry `1.0->0.18` is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
 
@@ -58,15 +60,15 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive retry; class-2 contrasted must-turn pilot; rejoined solve-local dead-cause gate. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive retry; class-2 contrasted must-turn pilot; rejoined solve-local dead-cause gate, then categorical full-pool projection if null. |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; use families first when structural. |
-| 6 | Repair reachability | **SUPPORTING** | Reopen when continuation needs interior/early commitment revision. |
-| 7 | Architectural speed | **SUPPORTING** | Reopen for earned mechanism with measured runtime cost/new hotspot. |
+| 6 | Repair reachability | **SUPPORTING** | Reopen when continuation needs interior/early commitment revision; archaeology preserves a bounded descent-shadow observer for that condition. |
+| 7 | Architectural speed | **SUPPORTING** | Reopen for earned mechanism with measured runtime cost/new hotspot; forced-chain macro traversal requires a current one-successor-chain cost census first. |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
 | 8 | Isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not permanent tail entitlement. |
 | 0 | Restart/randomization | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence. |
-| 4 | Beam retention | **CLOSED IN TESTED FORMS** | Generic forms stay closed; controlled relatives can support a changed retention premise. |
-| 5 | Exact/reference model | **ON DEMAND** | Families nominate boundary pairs; exact/reference still supplies labels. |
+| 4 | Beam retention | **CLOSED IN TESTED FORMS** | Generic forms stay closed; exact categorical/topological evidence can support a materially changed retention premise. |
+| 5 | Exact/reference model | **ON DEMAND** | Families nominate boundary pairs; exact/reference still supplies labels and observer truth for the Class-5 acquisition sequence. |
 
 ## Standing research rules
 
@@ -76,6 +78,7 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 - Historical gain/loss intersections with current residual are nominations until reconciled; missing provenance stays unknown.
 - Provenance multiplicity is dependence unless the producer contract says otherwise.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
+- A historical null/revert is not a premise verdict until treatment participation, measurement integrity, and formulation are established. Distinguish clean premise failure from implementation/formulation failure, treatment-never-ran, broken measurement, and incomplete experiment.
 - Hold out independent units and scale confirmation with tuning/selection pressure.
 - Reusable benchmark/census rows require matching protocol identity; nominal stage reach is not participation.
 - Result identity, population integrity, resolved configuration/provenance and budget semantics are research-control-plane invariants.
@@ -83,6 +86,8 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 - A validated hint prefix proves that prefix live, not alternatives dead.
 - A single-level microscope may generate a premise, never a production exception; require independent phenotype-matched confirmation.
 - Exact labels are offline truth, never runtime steering. Failed compact feasibility summaries do not license feature accretion.
+- Compact signatures/fingerprints may nominate recurring states, responses, or interfaces; they do not establish semantic state, basin, or future-equivalence without a sound sufficiency argument.
+- Scheduler fairness/participation is diagnostic, not an objective. Measure marginal action value and displaced capability under fixed work before reallocating merely to equalize participation.
 - Convenience labels/summary booleans are not causal fields; use explicit provenance/config fields for decision-bearing joins.
 - Reconcile old questions before new compute. Prefer the smallest information-value test.
 - For response to a controlled structural change, query existing variant families before new generation/broad compute; skip family mining when a controlled relative cannot change the decision. [`variant resource`](variant-level-research.md)
