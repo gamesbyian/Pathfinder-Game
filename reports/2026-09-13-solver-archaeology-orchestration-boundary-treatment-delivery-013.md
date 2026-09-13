@@ -1,6 +1,6 @@
 # Solver archaeology: orchestration-boundary treatment delivery
 
-> **Status:** concluded-positive archaeology
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — April/May option-propagation, rescue-gate, IDA*, divergence-guard, and HK delivery chains traced through commits and audit history
 > **Decision:** preserve “consumer-observed participation” as a hard experimental requirement. Pathfinder repeatedly configured mechanisms correctly at plan/orchestrator level while dropping their options at intermediate explicit allowlists or attaching them only to attempts that never executed.
 > **Remaining gate:** none for the historical conclusion. Current experiments should verify participation at the final consumer and record nonzero work/effect before interpreting treatment outcomes.
