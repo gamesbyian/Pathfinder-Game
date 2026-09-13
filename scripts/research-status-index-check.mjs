@@ -4,6 +4,12 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { buildResearchStatusIndex, compactResearchStatusIndex, queryResearchStatusIndex } from './research-status-index-lib.mjs';
+import {
+    loadResearchQuestionRegistry,
+    normalizeResearchQuestionStatus,
+    queryResearchQuestions,
+    validateResearchQuestionRegistry,
+} from './research-question-relations-lib.mjs';
 
 const root = mkdtempSync(path.join(tmpdir(), 'research-status-'));
 mkdirSync(path.join(root, 'reports')); mkdirSync(path.join(root, 'docs'));
@@ -20,6 +26,29 @@ writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Led
 |---|---|---|
 | \`FLAG_ONE\` | **CLOSED NEGATIVE** | Historical test rejected it. |
 `);
+writeFileSync(path.join(root, 'docs/solver-research-question-relations.json'), JSON.stringify({
+    schemaVersion: 1,
+    questions: [
+        {
+            id: 'WS2-CURRENT',
+            question: 'Can the current seam solve more levels?',
+            owner: 'WS2',
+            state: 'active-candidate',
+            answeredBy: [],
+            result: null,
+            implies: ['WS2-FOLLOWUP'],
+        },
+        {
+            id: 'WS2-FOLLOWUP',
+            question: 'Did the bounded follow-up close cleanly?',
+            owner: 'WS2',
+            state: 'closed-tested-form',
+            answeredBy: ['reports/2026-08-21-example.md'],
+            result: 'Yes.',
+            triggeredBy: ['WS2-CURRENT'],
+        },
+    ],
+}, null, 2));
 writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example investigation
 
 > **Status:** active
@@ -95,5 +124,20 @@ assert.equal(compact.count, 1);
 assert.equal(compact.entries[0].kind, 'queue');
 assert.equal(compact.entries[0].authority, 'docs/solver-optimization-workstreams.md');
 assert.equal(compact.entries[0].workstreamId, 2, 'workstream ID is identity, not a priority rank');
+
+const questionRegistry = loadResearchQuestionRegistry(root);
+assert.deepEqual(validateResearchQuestionRegistry(questionRegistry), []);
+assert.equal(normalizeResearchQuestionStatus('active-candidate'), 'active');
+assert.equal(normalizeResearchQuestionStatus('closed-tested-form'), 'closed');
+assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'question', status: 'active' }).map(x => x.id), ['WS2-CURRENT']);
+assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow-up' }).map(x => x.id), ['WS2-FOLLOWUP']);
+assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'experiment' }), [],
+    'question query helper must not leak questions into other compact kinds');
+const invalidRelations = structuredClone(questionRegistry);
+invalidRelations.questions[0].implies = ['WS2-MISSING'];
+assert.deepEqual(validateResearchQuestionRegistry(invalidRelations), [
+    'questions[0].implies references unknown question WS2-MISSING',
+]);
+
 await import('./corpus-query-node-test.mjs');
 console.log('research status index check passed');
