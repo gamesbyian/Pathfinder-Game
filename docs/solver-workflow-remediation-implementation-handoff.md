@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=12000 max=16000 -->
 # Solver workflow remediation implementation handoff
 
 > **Status:** completed historical implementation handoff for [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md); remediation merged in PR #1740 on 2026-09-11.
