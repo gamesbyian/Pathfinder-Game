@@ -1,8 +1,10 @@
 # Class-1/2/3 cheap harvest rejoin 001
 
-> **Status:** cheap existing-data harvest closed; one narrower implementation nomination preserved
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-12 — corrected post-1048 atlas joined to current attempt policy and protected-suffix headroom across all 98 class-1/2/3 residual rows.
 > **Boundary:** corrected post-1048 atlas, 98 residual rows: class1 22, class2 39, class3 37.
 > **Decision:** there is no already-legal, no-contention batch to collect directly from classes 1-3. Class 1 is blocked by known menu-allocation contention; class 3 is already exposed-and-failed; class 2 is dominated by already-priced policies/tier starvation. One specific seven-level must-turn-biased exposure seam is not answered by those closures and is retained as a new treatment nomination, not counted as harvested capability.
+> **Remaining gate:** none for the cheap-harvest question. The seven-level must-turn-biased descendant is a separate bounded WS2 treatment question.
 
 ## Class 1: 22 not-offered rows
 
