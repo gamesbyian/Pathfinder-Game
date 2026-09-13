@@ -14,7 +14,7 @@
  * Run via tsx (--target-level accepts a position, or, for a corpus whose levels carry an id like
  * both stress corpora do, the id itself — e.g. --target-level=R00042; see level-data-io.mjs's
  * parseLevelSelector for the shared resolution logic every corpus-capable tool uses):
- *   npx tsx scripts/stress/solution-profile-compare.mjs --target-level=42
+ *   npx tsx scripts/stress/solution-profile-compare.mjs --target-level=pos:42
  *       [--target-levels-json=data/stress/stress-levels-random.json]
  *       [--library=reports/stress/solution-profile-published.json,reports/stress/solution-profile-corpus1.json]
  *       [--bucket=combined] [--top=8]
@@ -126,7 +126,7 @@ function buildTargetProfile(levels, levelNumber) {
 
 function main() {
     if (!TARGET_LEVEL_SPEC) {
-        console.error('Usage: --target-level=<n or id> [--target-levels-json=...] [--library=a.json,b.json] [--bucket=combined] [--top=8]');
+        console.error('Usage: --target-level=<pos:n or full-id> [--target-levels-json=...] [--library=a.json,b.json] [--bucket=combined] [--top=8]');
         process.exit(1);
     }
 

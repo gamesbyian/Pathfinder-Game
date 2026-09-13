@@ -75,7 +75,7 @@ Regenerated legacy-library profiles currently stamp all three identity fields:
 
 - `schemaVersion: 3`;
 - `provenanceTaxonomy: origin-facet-applicability-v2`;
-- `profileAlgorithmVersion: sample-support-v1`.
+- `profileAlgorithmVersion: sample-support-v2`.
 
 The comparison tool treats a library missing any current stamp as stale even when its content signature matches. Old modality-shaped buckets must not be compared with current origin/facet output as if they meant the same thing.
 
@@ -175,7 +175,7 @@ npm run stress:solution-profile -- \
   --levels-json=data/stress/stress-levels.json \
   --out=reports/stress/solution-profile-corpus1.json
 
-npm run stress:solution-profile-compare -- --target-level=42
+npm run stress:solution-profile-compare -- --target-level=pos:42
 
 node scripts/run-bundled.mjs scripts/stress/source-stratified-solution-profile.mjs -- \
   --corpus=stress2 \

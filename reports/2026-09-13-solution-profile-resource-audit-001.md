@@ -1,6 +1,9 @@
 # Solution-profile research-resource audit
 
-Status: hardening implemented on branch; full validation and generated-artifact refresh pending.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — schema-v3 profile regeneration, fast repository CI, type/docs checks, and combined/origin-bucket comparer smoke tests all passed.
+> **Decision:** retain the hardened solution-profile resource as a known-solution sample-profile instrument; sparse-profile similarity remains exploratory research evidence, not a production routing feature.
+> **Remaining gate:** none for this audit; future profile/outcome research must use held-out evidence and the provenance/evidence-purpose controls documented below.
 
 Scope: audit the solution-profile library as a research resource, including what its features actually measure, how sampling/provenance shape those measurements, how stable profiles are as evidence accumulates, how downstream consumers use them, and whether cross-level comparisons remain scientifically honest under sparse or missing axes.
 
@@ -74,7 +77,7 @@ Repair: freshness now hashes the profile-bearing `{path, provenance}` content an
 
 - `schemaVersion: 3`
 - `provenanceTaxonomy: origin-facet-applicability-v2`
-- `profileAlgorithmVersion: sample-support-v1`
+- `profileAlgorithmVersion: sample-support-v2`
 
 ### F8 — generated resource metadata pointed at retired authority
 

@@ -39,7 +39,7 @@ export { PROVENANCE_SOURCES, classifyProvenanceSource, sourcesForHint, bucketHin
 
 export const SOLUTION_PROFILE_SCHEMA_VERSION = 3;
 export const SOLUTION_PROFILE_TAXONOMY = 'origin-facet-applicability-v2';
-export const SOLUTION_PROFILE_ALGORITHM_VERSION = 'sample-support-v1';
+export const SOLUTION_PROFILE_ALGORITHM_VERSION = 'sample-support-v2';
 
 export function hasCurrentSolutionProfileTaxonomy(library) {
     return library?.schemaVersion === SOLUTION_PROFILE_SCHEMA_VERSION &&
@@ -675,12 +675,17 @@ function mean(values) {
 export function summarizeCorpusProfiles(levelProfiles) {
     const withHints = levelProfiles.filter(p => !p.insufficientData);
     const combined = withHints.map(p => p.combined).filter(Boolean);
+    const withPairwise = combined.filter(c => (c.pairwiseDistinctiveness?.pairsCompared ?? 0) > 0);
+    const chiralityValues = combined.map(c => c.turnDistribution?.cwFraction).filter(Number.isFinite);
     const withMustCrossOrder = combined.filter(c => c.mustCrossOrder);
-    const withSaturation = combined.filter(c => c.discoverySaturation?.plateauFraction !== null);
+    const withComparableMustCrossOrder = withMustCrossOrder.filter(c => (c.mustCrossOrder.pathsObserved ?? 0) >= 2);
+    const withComparableSaturation = combined.filter(c =>
+        c.discoverySaturation?.chronologyComplete === true && (c.discoverySaturation?.totalHints ?? 0) >= 5);
+    const withDetectedSaturation = withComparableSaturation.filter(c => c.discoverySaturation.plateauFraction !== null);
 
-    const sourceCoverage = {};
-    for (const source of PROVENANCE_SOURCES) {
-        sourceCoverage[source] = withHints.filter(p => !p.bySource?.[source]?.insufficientData).length;
+    const originCoverage = {};
+    for (const origin of PROVENANCE_SOURCES) {
+        originCoverage[origin] = withHints.filter(p => !p.bySource?.[origin]?.insufficientData).length;
     }
 
     return {
@@ -689,14 +694,22 @@ export function summarizeCorpusProfiles(levelProfiles) {
         levelsInsufficientData: levelProfiles.length - withHints.length,
         levelsWithExhaustiveSearchEvent: combined.filter(c => c.hasExhaustiveSearchEvent).length,
         meanHintCount: Number(mean(withHints.map(p => p.hintCount)).toFixed(2)),
-        meanPathwiseDistinctiveness: Number(mean(combined.map(c => c.pairwiseDistinctiveness.meanDistance)).toFixed(4)),
+        levelsWithComparablePathwiseDistinctiveness: withPairwise.length,
+        meanPathwiseDistinctiveness: withPairwise.length
+            ? Number(mean(withPairwise.map(c => c.pairwiseDistinctiveness.meanDistance)).toFixed(4)) : null,
         meanTurnRate: Number(mean(combined.map(c => c.turnDistribution.turnRateMean)).toFixed(4)),
-        meanCwFraction: Number(mean(combined.map(c => c.turnDistribution.cwFraction).filter(Number.isFinite)).toFixed(4)),
+        meanCwFraction: chiralityValues.length ? Number(mean(chiralityValues).toFixed(4)) : null,
         levelsWithMustCrossOrder: withMustCrossOrder.length,
-        levelsWithObservedSingleMustCrossOrder: withMustCrossOrder.filter(c => c.mustCrossOrder.observedSingleOrder).length,
-        meanDiscoverySaturationPlateauFraction: withSaturation.length
-            ? Number(mean(withSaturation.map(c => c.discoverySaturation.plateauFraction)).toFixed(4)) : null,
-        sourceCoverage,
+        levelsWithComparableMustCrossOrder: withComparableMustCrossOrder.length,
+        levelsWithObservedSingleMustCrossOrder: withComparableMustCrossOrder
+            .filter(c => c.mustCrossOrder.observedSingleOrder).length,
+        levelsWithComparableDiscoverySaturation: withComparableSaturation.length,
+        levelsWithDetectedDiscoverySaturationPlateau: withDetectedSaturation.length,
+        meanDiscoverySaturationPlateauFraction: withDetectedSaturation.length
+            ? Number(mean(withDetectedSaturation.map(c => c.discoverySaturation.plateauFraction)).toFixed(4)) : null,
+        originCoverage,
+        // Compatibility alias for schema-v2 consumers. New human-facing output uses origin terminology.
+        sourceCoverage: originCoverage,
     };
 }
 
@@ -729,8 +742,14 @@ export function computeHintSignature(levels, levelNumbers = null) {
 
 
 export function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
+    const originCoverage = summary.originCoverage || summary.sourceCoverage || {};
+    const comparablePairwise = summary.levelsWithComparablePathwiseDistinctiveness ?? summary.levelsWithHints ?? 0;
+    const comparableMustCross = summary.levelsWithComparableMustCrossOrder ?? summary.levelsWithMustCrossOrder ?? 0;
+    const comparableSaturation = summary.levelsWithComparableDiscoverySaturation ?? 0;
+    const detectedSaturation = summary.levelsWithDetectedDiscoverySaturationPlateau ??
+        (summary.meanDiscoverySaturationPlateauFraction === null ? 0 : comparableSaturation);
     const lines = [
-        `# Solution-space fingerprint summary — ${corpusTag}`,
+        `# Known-solution sample-profile summary — ${corpusTag}`,
         '',
         `Generated from \`${levelsJsonLabel}\` by \`npm run stress:solution-profile\` (or auto-refreshed ` +
         'by solution-profile-compare.mjs when stale). See ' +
@@ -742,26 +761,29 @@ export function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
         `- **${summary.levelsWithExhaustiveSearchEvent}** levels have at least one hint whose own search ` +
         'terminated `exhaustive` (an event-local context marker, not proof the stored library is complete).',
         `- Mean hints/level: **${summary.meanHintCount}**. Mean pairwise distinctiveness: ` +
-        `**${summary.meanPathwiseDistinctiveness}**. Mean turn rate: **${summary.meanTurnRate}** ` +
-        `(cw fraction **${summary.meanCwFraction}**).`,
+        `${summary.meanPathwiseDistinctiveness === null ? 'n/a' : `**${summary.meanPathwiseDistinctiveness}**`} ` +
+        `across **${comparablePairwise}** levels with at least one path pair. ` +
+        `Mean turn rate: **${summary.meanTurnRate}** (cw fraction ` +
+        `${summary.meanCwFraction === null ? 'n/a' : `**${summary.meanCwFraction}**`}).`,
         `- Must-cross order: **${summary.levelsWithObservedSingleMustCrossOrder}** / ` +
-        `${summary.levelsWithMustCrossOrder} multi-must-cross levels show one observed entry+completion order in the stored sample.`,
-        summary.meanDiscoverySaturationPlateauFraction === null
-            ? '- Discovery-saturation plateau: n/a (no comparable fully dated level had a detected plateau).'
-            : `- Mean discovery-saturation plateau point: **${summary.meanDiscoverySaturationPlateauFraction}** ` +
-              'of a level\'s hint corpus (heuristic — see doc; not proof of exhaustion).',
+        `**${comparableMustCross}** support-comparable multi-must-cross levels show one observed ` +
+        `entry+completion order; **${summary.levelsWithMustCrossOrder}** levels have the mechanic at all.`,
+        `- Discovery saturation: **${detectedSaturation}** / **${comparableSaturation}** chronology-comparable ` +
+        `levels had a detected plateau; mean detected point ` +
+        `${summary.meanDiscoverySaturationPlateauFraction === null ? 'n/a' : `**${summary.meanDiscoverySaturationPlateauFraction}**`} ` +
+        '(heuristic; no-plateau observations stay in the denominator and are not treated as missing).',
         '',
         '## Provenance-origin coverage',
         '',
         '| Origin | Levels with ≥ min-hints-per-source |',
         '|---|---|',
-        ...PROVENANCE_SOURCES.map(s => `| ${s} | ${summary.sourceCoverage[s]} |`),
+        ...PROVENANCE_SOURCES.map(origin => `| ${origin} | ${originCoverage[origin] ?? 0} |`),
         '',
     ];
     return lines.join('\n');
 }
 
-/** Builds AND WRITES the full solution-space fingerprint library for one corpus — the single
+/** Builds AND WRITES the full known-solution sample-profile library for one corpus — the single
  *  shared core behind both `npm run stress:solution-profile` (explicit CLI regen) and
  *  solution-profile-compare.mjs's automatic staleness repair, so the two can never diverge in
  *  what "fresh" means. `levelsJsonLabel` is the corpus path as it should be recorded in the output
@@ -783,7 +805,7 @@ export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, ou
         profileAlgorithmVersion: SOLUTION_PROFILE_ALGORITHM_VERSION,
         generatedAt: new Date().toISOString(),
         source: levelsJsonLabel,
-        description: 'Per-level solution-space fingerprints (combined + per-provenance-source) for a '
+        description: 'Per-level known-solution sample profiles (combined + per-provenance-origin) for a '
             + 'known-solvable corpus — a known-solution sample profile, not a completeness claim; see docs/solver-solution-profile.md.',
         minHintsPerSource,
         seed,
@@ -794,7 +816,7 @@ export function regenerateCorpusProfile({ levelsJsonAbsPath, levelsJsonLabel, ou
     };
 
     mkdirSync(path.dirname(outAbsPath), { recursive: true });
-    // Compact, not pretty-printed: this is a machine-readable fingerprint library, not a
+    // Compact, not pretty-printed: this is a machine-readable sample-profile library, not a
     // hand-diffed doc (that's what the accompanying -summary.md is for) — at corpus-scale ×
     // multi-bucket scale, indent(1) alone multiplies file size several-fold for no benefit.
     writeFileSync(outAbsPath, `${JSON.stringify(output)}\n`);

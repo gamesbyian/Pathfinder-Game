@@ -376,6 +376,9 @@ test('summarizeCorpusProfiles: counts insufficientData levels without including 
     assert.equal(summary.levelsTotal, 2);
     assert.equal(summary.levelsWithHints, 1);
     assert.equal(summary.levelsInsufficientData, 1);
+    assert.equal(summary.levelsWithComparablePathwiseDistinctiveness, 0);
+    assert.equal(summary.meanPathwiseDistinctiveness, null);
+    assert.equal(summary.meanCwFraction, null);
 });
 
 // Assembles a bucket profile from raw Hint[] directly (buildLevelSolutionProfile's building
@@ -455,6 +458,7 @@ test('renderSummaryMd uses current event/order summary fields', () => {
         sourceCoverage: Object.fromEntries(PROVENANCE_SOURCES.map(source => [source, 0])),
     }, 'test', 'data/test.json');
     assert.match(md, /\*\*1\*\* levels have at least one hint/);
-    assert.match(md, /Must-cross order: \*\*1\*\* \/ 2 multi-must-cross levels/);
+    assert.match(md, /Must-cross order: \*\*1\*\* \/ \*\*2\*\* support-comparable/);
+    assert.match(md, /across \*\*2\*\* levels with at least one path pair/);
     assert.doesNotMatch(md, /undefined/);
 });
