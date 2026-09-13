@@ -1,0 +1,51 @@
+name: Temporary final solution-profile validation
+
+on:
+  push:
+    branches:
+      - chatgpt/solution-profile-resource-audit-2026-09-13
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Regenerate published profile library
+        run: npm run stress:solution-profile -- --levels-json=data/levels.json --out=reports/stress/solution-profile-published.json
+      - name: Regenerate Corpus-1 profile library
+        run: npm run stress:solution-profile -- --levels-json=data/stress/stress-levels.json --out=reports/stress/solution-profile-corpus1.json
+      - name: Fast repository CI
+        run: npm run ci:fast
+      - name: Type check
+        run: npm run check:types
+      - name: Documentation links
+        run: npm run check:documentation-links
+      - name: Combined-profile comparer smoke
+        run: npm run stress:solution-profile-compare -- --target-level=1 --top=3
+      - name: Origin-bucket comparer smoke
+        run: npm run stress:solution-profile-compare -- --target-level=1 --bucket=pathfinder-solver --top=1
+      - name: Commit regenerated profile artifacts
+        shell: bash
+        run: |
+          git add reports/stress/solution-profile-published.json \
+                  reports/stress/solution-profile-published-summary.md \
+                  reports/stress/solution-profile-corpus1.json \
+                  reports/stress/solution-profile-corpus1-summary.md
+          if git diff --cached --quiet; then
+            echo 'Generated profile artifacts already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'research: regenerate schema-v3 solution profiles'
+          git push origin HEAD:chatgpt/solution-profile-resource-audit-2026-09-13
