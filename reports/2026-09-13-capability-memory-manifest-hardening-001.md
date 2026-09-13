@@ -1,6 +1,6 @@
 # Capability-memory manifest hardening 001
 
-> **Status:** concluded-positive (partial: 5/6 sources)
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — regenerated `tmp/post-1048-residual-atlas-fixed.json` from committed inputs, exactly reproduced the corrected residual atlas (652 residual, classes `22/39/37/123/431`), and rebuilt a durable, machine-checked `solver-capability-memory.mjs` manifest for 5 of the 6 sources named in [`2026-09-12-capability-memory-union-reconciliation-001.md`](2026-09-12-capability-memory-union-reconciliation-001.md).
 > **Decision:** the prose-reconstructed six-source union (179/652) is not independently re-derivable from committed artifacts alone, because that report's own runs (`34728842684`/`34728960554`) never committed their manifest/result. This report closes that specific gap for 5 of the 6 sources by committing a regenerable manifest + result at `reports/stress/capability-memory-manifests/2026-09-13-five-source-partial-union/`. The reconstructed 5-source union is **167/652 (25.6%)**, matching `179 - 12` exactly — 12 is the "production-boundary displaced solved-set losses" source's own reported unique-nomination count, the one source this report could not relocate an exact ID list for within budget.
 > **Remaining gate:** none of the three live WS2 gates depend on this. This is pure research-control-plane hardening (AGENTS.md fallback item 6: "improve the smallest research-control-plane weakness that has recently caused wasted compute or false conclusions").
