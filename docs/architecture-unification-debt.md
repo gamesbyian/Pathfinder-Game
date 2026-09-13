@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=10000 max=13000 -->
 # Architecture unification debt
 
 > **Status:** live structural-debt queue.
