@@ -1,6 +1,6 @@
 # Solver archaeology: turn-landmark sequence structure
 
-> **Status:** concluded-positive archaeology / changed-premise synthesis
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — July turn-landmark-dense diagnosis traced through routing, scoring, lower-bound, deadlock, witness-rank, and transposition descendants
 > **Decision:** the historical turn-landmark-dense failure class should not be reopened as a missing archetype, local scorer, adjacent-turn deadlock prune, or naive MST bound. Its surviving value is evidence for a nonlocal completion-compatibility problem: long sequences of individually reasonable moves fail to preserve a globally coherent turn/geometry completion regime.
 > **Remaining gate:** none for the historical treatment chain. Use this phenotype only as supporting evidence for current categorical completion-regime / joint-obligation microscopy; no new scalar bound or scorer is earned by this report.
