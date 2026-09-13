@@ -21,7 +21,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --prefer-offline --no-audit --fund=false
-      - run: python3 scripts/apply-late-mustturn-tier-patch.py
+      - run: python3 scripts/apply-late-mustturn-tier-patch-v2.py
       - run: npm run check:types
       - run: npx vitest run scripts/late-mustturn-tier-unit-tests.mjs
       - run: npm run check:lint
