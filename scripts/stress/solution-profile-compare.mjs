@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 /**
  * Nearest-neighbor triage: compares one target level (typically an unsolved stress-corpus-2 level,
- * profiled from its hidden witness and/or whatever hints it has) against the solution-space
- * fingerprint library built by solution-profile.mjs, and reports which known-solvable levels its
- * solution behavior most resembles — see docs/solver-solution-profile.md.
+ * profiled from its hidden witness and/or whatever hints it has) against the known-solution sample
+ * profile library built by solution-profile.mjs, and reports which known-solvable levels its
+ * observed solution behavior most resembles — see docs/solver-solution-profile.md.
  *
  * Freshness: before loading each --library file, checks it against its source corpus's CURRENT
- * hint content (see solution-profile-lib.mjs's computeHintSignature) and transparently
- * regenerates it in place if stale — this is the one place these libraries are actually read, so
- * it's the right (and only) place staleness is repaired; see docs/solver-solution-profile.md's Freshness
- * section for why this isn't instead hooked into hint-discovery tooling. A library built from a
- * `--levels=` partial selection is left untouched (can't safely infer "stale" vs "intentionally
- * partial" from a hint-count mismatch alone) — regenerate those by hand if needed.
+ * profile-bearing hint content (see solution-profile-lib.mjs's computeHintSignature) and
+ * transparently regenerates it in place if stale. A library built from a `--levels=` partial
+ * selection is left untouched because a mismatch cannot safely distinguish staleness from an
+ * intentional selection; regenerate those by hand if needed.
  *
  * Run via tsx (--target-level accepts a position, or, for a corpus whose levels carry an id like
  * both stress corpora do, the id itself — e.g. --target-level=R00042; see level-data-io.mjs's
@@ -42,31 +40,25 @@ const args = new Map(process.argv.slice(2).filter(a => a.startsWith('--')).map(a
 }));
 
 const TARGET_LEVELS_JSON = args.get('--target-levels-json') || 'data/stress/stress-levels-random.json';
-// A position number ("42") or, for a corpus whose levels carry an id, the id itself ("R00042") —
-// resolved against the actual corpus in main(), not here, since resolution needs the loaded
-// levels array (see parseLevelSelector in level-data-io.mjs).
 const TARGET_LEVEL_SPEC = args.get('--target-level');
 const LIBRARY_FILES = (args.get('--library') || 'reports/stress/solution-profile-published.json,reports/stress/solution-profile-corpus1.json')
     .split(',').map(s => s.trim()).filter(Boolean);
 const BUCKET = args.get('--bucket') || 'combined';
 const TOP_K = Number(args.get('--top') || 8);
 
-/** Loads one library file, transparently regenerating it first if it's gone stale relative to its
- *  source corpus's current hint content (see module doc). Libraries missing `hintSignature`/
- *  `levelSpec` (files written before this check existed) are treated as stale full-corpus
- *  libraries and upgraded on first use, since the CLI always defaulted to a full-corpus run
- *  before --levels= existed. */
+/** Loads one library file, transparently regenerating it first if stale relative to the current
+ * source corpus. Pre-signature/schema libraries are treated as stale full-corpus libraries. */
 function ensureFreshLibrary(fullPath, fileLabel) {
     const parsed = JSON.parse(readFileSync(fullPath, 'utf8'));
-    if (parsed.levelSpec && parsed.levelSpec !== 'all') return parsed; // intentionally partial — leave it alone
-    if (!parsed.source) return parsed; // no known source corpus to check freshness against
+    if (parsed.levelSpec && parsed.levelSpec !== 'all') return parsed;
+    if (!parsed.source) return parsed;
     const sourceAbsPath = path.resolve(ROOT, parsed.source);
     if (!existsSync(sourceAbsPath)) return parsed;
 
     const levels = readLevelsWithHints(sourceAbsPath);
     const currentSignature = computeHintSignature(levels);
     const taxonomyCurrent = hasCurrentSolutionProfileTaxonomy(parsed);
-    if (parsed.hintSignature?.hash === currentSignature.hash && taxonomyCurrent) return parsed; // fresh
+    if (parsed.hintSignature?.hash === currentSignature.hash && taxonomyCurrent) return parsed;
 
     const reason = taxonomyCurrent
         ? `${parsed.hintSignature?.totalHints ?? '?'} -> ${currentSignature.totalHints} hints/content changed`
@@ -84,6 +76,15 @@ function ensureFreshLibrary(fullPath, fileLabel) {
     return output;
 }
 
+function levelProfileForBucket(levelEntry, bucket) {
+    if (bucket === 'combined') return levelEntry.combined;
+    const bucketProfile = levelEntry.bySource?.[bucket];
+    // A generator-side `sameAsCombined` marker is a storage deduplication reference, not a
+    // profile. Resolve it here before handing the value to distance code.
+    if (bucketProfile?.sameAsCombined) return levelEntry.combined;
+    return bucketProfile;
+}
+
 function loadPool(files, bucket) {
     const pool = [];
     for (const file of files) {
@@ -92,7 +93,7 @@ function loadPool(files, bucket) {
         const parsed = ensureFreshLibrary(fullPath, file);
         const corpusTag = path.basename(file, '.json').replace(/^solution-profile-/, '');
         for (const levelEntry of parsed.levels || []) {
-            const profile = bucket === 'combined' ? levelEntry.combined : levelEntry.bySource?.[bucket];
+            const profile = levelProfileForBucket(levelEntry, bucket);
             if (!profile || profile.insufficientData) continue;
             pool.push({ id: `${corpusTag}#${levelEntry.level}`, solutionProfile: profile });
         }
@@ -100,9 +101,6 @@ function loadPool(files, bucket) {
     return pool;
 }
 
-/** Resolves --target-level's raw spec (a position, or a corpus-level id like "R00042") against
- *  the loaded corpus into a single 1-based position. Errors on zero or more than one match — this
- *  flag names exactly one level, unlike --levels='s multi-level spec elsewhere. */
 function resolveTargetPosition(levels, spec) {
     if (!spec) throw new Error('--target-level is required');
     const matches = [...parseLevelSelector(levels, spec)];
@@ -111,9 +109,8 @@ function resolveTargetPosition(levels, spec) {
     return matches[0];
 }
 
-/** Builds the target's own profile: prefers its mined hints (if any exist on disk for this
- *  corpus), falls back to its hidden witness path (stressMeta.witnessSolution) — the only
- *  solution guaranteed to exist for an as-yet-unsolved-by-the-production-solver level. */
+/** Builds the target's observed-solution profile. Prefer mined hints; otherwise use the hidden
+ * witness path, which is a one-path observation and carries no evidence about population axes. */
 function buildTargetProfile(levels, levelNumber) {
     const level = levels[levelNumber - 1];
     if (!level) throw new Error(`Level ${levelNumber} not found`);
@@ -155,14 +152,16 @@ function main() {
     const results = nearestProfiles(targetProfile, pool, TOP_K);
 
     console.log(`Target: ${TARGET_LEVELS_JSON}#${targetPosition} (--target-level=${TARGET_LEVEL_SPEC}) — profiled from ${source}`);
-    console.log(`Library: ${pool.length} level fingerprints from [${LIBRARY_FILES.join(', ')}] (bucket=${BUCKET})`);
+    console.log(`Library: ${pool.length} level profiles from [${LIBRARY_FILES.join(', ')}] (bucket=${BUCKET})`);
     console.log('');
-    console.log(`Nearest known-solvable levels (lower distance = more similar solution-space behavior):`);
+    console.log('Nearest known-solvable levels (lower distance = more similar observed solution-profile behavior):');
     for (const r of results) {
         const worstAxis = Object.entries(r.terms)
             .filter(([, v]) => v !== null)
             .sort((a, b) => b[1] - a[1])[0];
-        console.log(`  ${r.id.padEnd(24)} distance=${r.distance} support=${Math.round(r.support.comparableWeightFraction * 100)}%` + (worstAxis ? `  (most different on: ${worstAxis[0]}=${worstAxis[1]})` : ''));
+        const nominalCoverage = Math.round(r.support.comparableWeightFraction * 100);
+        console.log(`  ${r.id.padEnd(24)} distance=${r.distance} comparableNominalWeight=${nominalCoverage}%` +
+            (worstAxis ? `  (most different on: ${worstAxis[0]}=${worstAxis[1]})` : ''));
     }
     console.log('');
     console.log('Full per-axis breakdown for the nearest match:');
