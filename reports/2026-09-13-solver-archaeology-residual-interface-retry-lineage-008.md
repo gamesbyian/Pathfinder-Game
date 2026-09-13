@@ -1,6 +1,9 @@
 # Solver archaeology: residual interfaces and retry-signature lineage 008
 
-> **Status:** historical evidence synthesis
+> **Status:** inconclusive
+> **Last evidence:** 2026-09-13 — archaeology cross-checked residual-interface mining, retry-fingerprint identity, repair stagnation, and sound transposition evidence.
+> **Decision:** preserve the unresolved commutativity observer question and response-fingerprint measurement lesson; keep generic gadget mining and compact-equivalence steering closed.
+> **Remaining gate:** only reopen from current authority when exact-labelled or current fixed-work evidence supplies a specific recurring mechanism that these observers can test.
 > **Authority boundary:** this report does not change `docs/solver-optimization-workstreams.md` or `docs/solver-future-work.md`. It preserves archaeology evidence for future premise selection. No production solver behavior changed.
 
 ## Why this seam mattered
