@@ -1,6 +1,6 @@
 # Solver archaeology: dead-cause rejoin and dirty-negative correction
 
-> **Status:** concluded-positive archaeology / current-gate correction
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — July CP-SAT correction chain and August connectivity-rejection Stage B re-read against current WS2 Class-5 acquisition gate
 > **Decision:** rejoin the existing August within-solve connectivity-failure population before any new compact-dead-cause recurrence census. Preserve the July CP-SAT conflict-learning dismissal as a dirty negative caused by a broken reference formulation, not as evidence against reason-producing search. Do not broaden this into CDCL/LCG implementation work.
 > **Remaining gate:** determine whether the recurring within-solve boundary/reached-set shapes can be reduced to a small **sound cause** that is cheaper to match than a fresh connectivity check and accounts for material repeated work. If not, close this descendant.
