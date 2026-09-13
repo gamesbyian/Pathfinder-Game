@@ -1,6 +1,12 @@
 import { hintPathSignature, provenanceEventIdentity } from '../../modules/domain/hint-runtime.mjs';
 import { classifyProvenanceOrigin, provenanceFacets } from './provenance-source-taxonomy.mjs';
 
+function previewPath(path) {
+    const values = path || [];
+    if (values.length <= 24) return values;
+    return [...values.slice(0, 12), '…', ...values.slice(-12)];
+}
+
 /**
  * Find canonical provenance event identities that are attached to more than one distinct hint path
  * on the same level. This is intentionally different from semantic duplicate detection within one
@@ -49,6 +55,7 @@ export function auditCrossHintEventCollisions(levels) {
             techniques.set(technique, (techniques.get(technique) || 0) + 1);
             const producerKey = [origin, row.event?.solver?.version ?? 'unknown', technique].join('|');
             producerKeys.set(producerKey, (producerKeys.get(producerKey) || 0) + 1);
+            const sampledPaths = [...row.paths.values()].slice(0, 2);
             const example = {
                 levelId: level.id ?? level.levelId ?? null,
                 origin,
@@ -56,7 +63,8 @@ export function auditCrossHintEventCollisions(levels) {
                 solverVersion: row.event?.solver?.version ?? null,
                 technique: row.event?.solver?.technique ?? null,
                 pathCount: row.paths.size,
-                paths: [...row.paths.values()],
+                pathLengths: sampledPaths.map(path => path.length),
+                pathPreviews: sampledPaths.map(previewPath),
             };
             if (examples.length < 50) examples.push(example);
             const techniqueExamples = examplesByTechnique.get(technique) ?? [];
