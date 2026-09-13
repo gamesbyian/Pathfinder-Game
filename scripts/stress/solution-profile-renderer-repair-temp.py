@@ -23,9 +23,9 @@ old_import = 'profileDistanceTerms, profileDistanceWithCoverage, nearestProfiles
 new_import = 'profileDistanceTerms, profileDistanceWithCoverage, nearestProfiles, summarizeCorpusProfiles, renderSummaryMd, PROVENANCE_SOURCES,'
 assert old_import in t
 t = t.replace(old_import, new_import)
-marker = "test('summarizeCorpusProfiles: no profiles produces finite zero means', () => {"
-assert marker in t
-regression = """test('renderSummaryMd uses current event/order summary fields', () => {
+regression = """
+
+test('renderSummaryMd uses current event/order summary fields', () => {
     const md = renderSummaryMd({
         levelsTotal: 2,
         levelsWithHints: 2,
@@ -44,7 +44,7 @@ regression = """test('renderSummaryMd uses current event/order summary fields', 
     assert.match(md, /Must-cross order: \\*\\*1\\*\\* \\/ \\*\\*2\\*\\*/);
     assert.doesNotMatch(md, /undefined/);
 });
-
 """
-t = t.replace(marker, regression + marker)
+assert "renderSummaryMd uses current event/order summary fields" not in t
+t += regression
 tests.write_text(t)
