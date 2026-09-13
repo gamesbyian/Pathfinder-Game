@@ -25,6 +25,11 @@ jobs:
             --census=reports/stress/technique-census/33717910218/combined-cells.json \
             --hints-dir=data/stress/hints-random \
             --out=tmp/preclaude/post-1048-atlas.json
+      - name: Rejoin class-1/2/3 against current policy
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/class123-cheap-harvest-rejoin.mjs -- \
+            --atlas=tmp/preclaude/post-1048-atlas.json \
+            --out=tmp/preclaude/class123-harvest-rejoin.json
       - name: Summarize class-1/2/3 known capability
         run: |
           node --input-type=module <<'NODE'
