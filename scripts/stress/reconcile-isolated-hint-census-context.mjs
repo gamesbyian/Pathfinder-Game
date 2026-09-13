@@ -75,10 +75,14 @@ const provenanceIdentity = provenance => {
     return null;
 };
 const classifyCell = row => {
-    const inferredVariant = row.variantLabel || row.flagExperiment || row.ablation;
+    // `variantLabel` is bookkeeping, not a semantic condition. In particular the clean promoted
+    // repair turn-biased T1 cell carries a self-referential variantLabel with ablation:null. This
+    // is the same distinction that the corrected atlas/equal-work/exposure joins enforce. Only
+    // explicit experimental fields (ablation/flagExperiment), tier, pair membership, and technique
+    // multiplicity decide whether the source cell is non-base.
     if (row.tier === 'T3' || row.pairLabel || (row.techniqueKeys?.length ?? 0) > 1) return 't3-pair';
     if (row.tier === 'T4' || row.flagExperiment) return 't4-flag';
-    if (row.tier === 'T1' && inferredVariant) return 't1-variant';
+    if (row.tier === 'T1' && row.ablation) return 't1-variant';
     if (row.tier === 'T1' && (row.techniqueKeys?.length ?? 0) === 1) return 'base-t1';
     return 'other';
 };
