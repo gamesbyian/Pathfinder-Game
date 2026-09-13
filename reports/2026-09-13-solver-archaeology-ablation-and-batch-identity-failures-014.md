@@ -1,6 +1,6 @@
 # Solver archaeology: ablation and batch identity failures
 
-> **Status:** concluded-positive archaeology
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — historical ablation safety-valve/coverage/default-semantics bugs and the July stale-code Corpus-2 refresh reconciled against later corrections
 > **Decision:** treat historical ablation/batch verdicts as valid only when the actual executed configuration/code identity and participation are demonstrable. Several confident historical results were measuring a different treatment than their labels claimed, although later clean reruns can restore the same final verdict.
 > **Remaining gate:** none for these historical corrections. For current experiments, persist resolved configuration, code ancestry, participation, checkpoint freshness, and comparator identity as decision-bearing evidence.
