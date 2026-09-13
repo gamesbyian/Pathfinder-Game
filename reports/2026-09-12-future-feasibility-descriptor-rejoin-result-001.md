@@ -1,6 +1,6 @@
 # Future-feasibility descriptor rejoin result 001
 
-> **Status:** concluded-null
+> **Status:** concluded-negative
 > **Last evidence:** 2026-09-12 — 31 exact-labelled states across 15 levels: every resolved case in the committed B2 extinction set after the flipping-filter rerun plus the frozen `R03229` microscope cases.
 > **Decision:** none of the bounded exact-resource/topology/joint-obligation summaries earns a runtime treatment. Do not expand into post-hoc feature accretion from this result.
 > **Remaining gate:** none for these six summaries. A materially different premise is required; current WS2 diagnostic successor is compact sound dead-cause recurrence before any solve-local nogood implementation.
