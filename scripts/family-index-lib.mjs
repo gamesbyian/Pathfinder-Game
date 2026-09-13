@@ -402,7 +402,11 @@ export function writeFamilyIndex(index, output) {
 }
 
 export function queryFamilyIndex(index, filters = {}) {
-    const matches = value => Object.entries(filters).every(([key, expected]) => expected == null || String(value[key]) === String(expected));
+    const matchesExpected = (actual, expected) => Array.isArray(expected)
+        ? expected.some(candidate => String(actual) === String(candidate))
+        : String(actual) === String(expected);
+    const matches = value => Object.entries(filters)
+        .every(([key, expected]) => expected == null || matchesExpected(value[key], expected));
     const families = index.families.filter(matches);
     const variants = index.variants.filter(matches);
     return {
