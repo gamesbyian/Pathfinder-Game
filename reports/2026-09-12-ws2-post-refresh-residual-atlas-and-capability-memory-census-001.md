@@ -1,10 +1,12 @@
 # WS2 post-refresh residual atlas rebuild and first bounded capability-memory census 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-12 — production boundary refresh (run `34674256538`, then reconfirmed identically by lifecycle-telemetry run `34683011115`), residual atlas rebuild against the new 652-miss boundary, and the first capability-memory candidate evaluation using the portal-coarse-state-merge closed-negative historical signature.
-> **Decision:** the first candidate contributes **no class-5 reach**: its 137 current-residual nominations include 114/125 class-4 rows and zero of the 440 class-5 rows. That is strong candidate-specific evidence and materially clarifies class 4, but it does **not** establish that the capability-memory census as a whole has no complementarity because only one mechanism has been evaluated so far. Class-5 acquisition work remains first priority while the rest of the bounded census proceeds only from cheap, exact existing evidence.
-> **Remaining gate:** recover exact gain/loss IDs for a small number of materially distinct prespecified sources (goal-attraction guidance, repair turn-bias, compact class-1 beam evidence, protocol-compatible displaced winners) when this can be done from existing artifacts without reruns; measure class-5 reach and cross-policy overlap/uniqueness, then close or escalate the bounded census. Do not create a permanent panel or block class-5 acquisition work on this evidence task.
-> **Evidence role:** WS2 boundary/residual execution plus first candidate in the bounded capability-memory census. No solver-policy change; no production routing change.
+> **Status:** superseded
+> **Last evidence:** 2026-09-12 — this first-candidate snapshot was superseded later the same day by the T1-census semantic fix and completed bounded capability-memory census in [`2026-09-12-repair-turn-biased-t1-census-misclassification-001.md`](2026-09-12-repair-turn-biased-t1-census-misclassification-001.md).
+> **Decision:** preserve this report as the historical first-candidate step only. Its `22/17/48/125/440` atlas and open-census interpretation are obsolete. The corrected atlas is `22/39/37/123/431`, and the completed six-source census reaches zero class-5 rows.
+> **Remaining gate:** none here. Current execution priority and any new capability-memory reopen condition live in `docs/solver-optimization-workstreams.md` and the superseding report.
+> **Evidence role:** historical intermediate in the WS2 boundary/residual rebuild and bounded capability-memory census. No solver-policy change; no production routing change.
+
+This report remains useful for the portal-coarse-state-merge first-candidate join and for the workflow lesson that the first 1,048-solve refresh lacked required lifecycle telemetry. Do not use its cohort counts or remaining-gate text as current authority.
 
 ## 1. Production boundary refresh
 
@@ -65,23 +67,14 @@ Two candidate-specific conclusions are justified:
 1. **Class 4 is much less diverse than its raw count suggested.** One already-rejected experiment alone nominates 114/125 rows. Those levels are therefore largely a named historical mechanism basin rather than 125 unrelated pieces of evidence.
 2. **Portal coarse-state merge adds no class-5 reach.** None of its 137 current-residual nominations land in the 440-level no-known-candidate bucket, so this specific closed-negative policy gives no reason to shift effort away from class-5 acquisition.
 
-What is **not** justified is a census-wide "no material complementarity" conclusion. Complementarity is inherently comparative, and the prespecification called for a small set of materially distinct mechanisms. One candidate can close itself as low-yield for class 5; it cannot close the multi-source census.
+What is **not** justified in this historical snapshot is a census-wide "no material complementarity" conclusion. Complementarity is inherently comparative, and at this point only one candidate had been evaluated. The superseding report later completed the bounded multi-source census after correcting the T1 classification semantics.
 
-## Advancement
+## Historical advancement state
 
-The bounded census remains open but subordinate. Class-5 acquisition work should continue immediately and must not wait for this evidence task.
-
-For capability memory, add only cheaply recoverable, exact existing evidence from materially distinct sources already named by the prespecification: goal-attraction guidance-distance treatment/retry evidence, repair turn-bias, compact class-1 beam-policy evidence, and protocol-compatible displaced winners from accepted changes. For each included source, keep current confirmed gains separate from historical nominations and measure:
-
-- class-5 reach;
-- overlap and unique nominations/gains across sources;
-- work economics where comparable;
-- displaced current-production wins where protocol-compatible.
-
-If no additional source can be reconstructed cheaply and comparably, close the census explicitly as **insufficient cheap comparative evidence**, not as evidence that complementarity does not exist. Do not rerun old policies merely to populate the panel.
+At the time of this snapshot the bounded census remained open but subordinate. That gate is now closed by the superseding report. Do not rerun the remaining-source recovery described in earlier revisions of this report.
 
 ## Artifacts
 
-- `tmp/post-1048-residual-atlas.json` — full rebuilt atlas (not committed; regenerate via the command above against run `34683011115`).
-- `tmp/capability-memory-manifest.json`, `tmp/capability-memory.json`, `tmp/capability-memory.md` — first-candidate inputs/outputs (not committed; regenerate from the portal-coarse-state-merge preflight's itemized IDs).
+- `tmp/post-1048-residual-atlas.json` — historical pre-fix atlas output (not committed; the corrected command/result is in the superseding report).
+- `tmp/capability-memory-manifest.json`, `tmp/capability-memory.json`, `tmp/capability-memory.md` — first-candidate inputs/outputs (not committed; regenerate from the portal-coarse-state-merge preflight's itemized IDs if this historical step must be reproduced).
 - `reports/stress/capability-runs/34674256538/`, `reports/stress/capability-runs/34683011115/` — the two refresh runs' committed per-level/summary artifacts.
