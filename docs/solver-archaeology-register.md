@@ -73,11 +73,13 @@ A later descendant reappeared as **intersection blueprint planning**: select loc
 
 **Status:** instrumentation premise; unresolved as a small research primitive.
 
-March briefly generalized search so an arbitrary cell could be treated as a constrained target while retaining puzzle obligations, portal/flipper context, and fast-fail logic. The broad architecture was reverted, but the query shape remains useful.
+March briefly generalized search so an arbitrary cell could be treated as a constrained target while retaining puzzle obligations, portal/flipper context, and fast-fail logic. PR #254 added a per-target search context, target-specific distance/constraint structures, fast distance/parity/must-pass-chain culls, and a `findConstrainedPath` wrapper over the existing constrained DFS. Its stated runtime validation was only an app/page smoke load, not a behavioral solver test. It was merged and then reverted roughly 80 seconds later by PR #255 with no recorded causal failure or substantive review. No later `findConstrainedPath` descendant was found.
+
+That sequence is a **dirty revert, not a negative result**. It tells us the broad trap-search refactor was not retained; it does not establish that target-relative feasibility queries were unsound, too expensive, or uninformative.
 
 **Possible use:** offline microscope for questions such as whether a state can still complete through a candidate crossing region, portal family, missing must-cross axis, chokepoint, or other structural event.
 
-**Boundary:** research instrumentation first, not a second production solver.
+**Boundary:** research instrumentation first, not a second production solver. If revived, expose the smallest read-only query needed by an already-earned microscope question rather than recreating the March trap-search architecture.
 
 ### Cross-attempt basin overlap and anti-redundancy
 
@@ -219,11 +221,15 @@ The same external memo argued against simply lowering a rescue threshold when a 
 
 ### February failed-state memoization / future equivalence
 
-**Status:** obsolete implementation; durable representational warning.
+**Status:** obsolete implementation; durable representational warning strengthened by repeated rediscovery.
 
 The late-February solver introduced failed-state memoization almost immediately. Its early signature omitted the full visited-count map and per-cell axis-usage state. A follow-up had to add those details because states that looked equal under the coarse key could have different legal futures. The same change added a diagnostic warning when the goal remained statically reachable but search returned NO-SOLUTION, explicitly pointing suspicion at pruning/memoization.
 
-**General lesson:** Pathfinder future equivalence has been path-history-sensitive from the beginning. Any compact Class-5 key or coarse representation should be treated as a falsifiable hypothesis about future equivalence, not as an innocent cache optimization.
+The lesson was then partially forgotten. On March 1, PR #201 replaced the richer signature with a compact numeric key over head, remaining steps, intersections, must-mask and parity deficit; it had no runtime solver validation and was reverted within minutes without a causal verdict. PR #203 then merged a near-identical compact-key formulation minutes later. Subsequent March fixes had to add omitted future-relevant state back piecemeal: must-cross visit counts, filter-axis usage, must-pass state, and traversal topology. One Zobrist implementation additionally failed to allocate the vertical-axis slot, so vertical moves did not change the hash and several levels collapsed immediately. By March 28 the code explicitly documented roughly twenty canonical memo-key dimensions to stop this omission cycle.
+
+May supplied a direct semantic counterexample rather than another implementation bug. L135 could reach the same transposition signature with different visited-cell sets and different feasible completions; a doomed branch poisoned the signature and pruned the viable completion. Disabling the transposition memo in the sanity pass solved the level. June SolverV2 then instrumented **sound full-state reconvergence** using head + visited set + edge usage + all constraint counters and reported 0.0% repeats across L79, L139, L92 and L61, with more than 157K unique states per inspected search. In that measured regime, preserving enough history to make equivalence sound removed the DAG-like reuse the memo was supposed to exploit.
+
+**General lesson:** Pathfinder future equivalence has been path-history-sensitive from the beginning. Global coarse memoization should be understood as a capability-altering representation/merge policy, not an innocent cache optimization. A sound full-state memo has little demonstrated collapse value on the measured hard cases; an aggressively compact memo gains reuse precisely by asserting equivalences that require independent validation. Any compact Class-5 key or coarse representation should therefore be tested against exact-live alternatives as a falsifiable retention hypothesis, not justified by cache hit rate alone.
 
 ### Coarse-state merge / near-tie retention
 
@@ -269,11 +275,11 @@ A prior CP-SAT report also misattributed abstentions to high must-cross count; l
 
 ## External research artifact lineage
 
-At least three substantial external solver-research artifacts existed in the repository before cleanup: `claude_report.txt`, `Pathfinder solver research memo.pdf`, and `Gemini Pathfinder Solver Debugging and Research.rtf`. The Gemini RTF was explicitly deleted May 26 but remains as a historical blob; later May commits explicitly cite all three memos.
+At least three substantial external solver-research artifacts existed in the repository before cleanup: `claude_report.txt`, `Pathfinder solver research memo.pdf`, and `Gemini Pathfinder Solver Debugging and Research.rtf`. The Gemini RTF was explicitly deleted May 26 but remains as a historical blob; although ordinary UTF-8 file retrieval made it look unreadable, the blob response preserves recoverable RTF text. Direct archaeology confirms its FOCAL/EES secondary-cost discussion and its broader backward/bidirectional suggestions rather than relying only on later commit paraphrases.
 
-Most high-level recommendations from the readable Claude memo were absorbed: hint-path counterexample replay, side-channel telemetry discipline, joint-obligation/Held-Karp work, staged feature-flagged experiments, and diagnosing gate predicates before threshold changes. Do not treat the deleted memos as a generic untried-ideas menu.
+Most high-level recommendations from the readable Claude memo and the directly inspected Gemini material were absorbed or later superseded: hint-path counterexample replay, side-channel telemetry discipline, joint-obligation/Held-Karp work, staged feature-flagged experiments, diagnosing gate predicates before threshold changes, and broad bidirectional/backward-search ideas. Do not treat the deleted memos as a generic untried-ideas menu.
 
-The two materially less-absorbed ideas found so far are the phenotype-gated final-mile completable-state discriminator and action/gate misclassification framing recorded above.
+The two materially less-absorbed ideas found so far remain the phenotype-gated final-mile completable-state discriminator and action/gate misclassification framing recorded above. The direct Gemini recovery has not yet exposed a third premise strong enough to add to that list.
 
 ## Experimental-integrity failure classes to check during archaeology
 
