@@ -1,9 +1,9 @@
 # Must-turn-biased repair dose pilot 001
 
-> **Status:** concluded-positive
-> **Last evidence:** 2026-09-13 — current matched-node isolated repair rungs on `R02768`, `R02180`, and `R03049`, plus reconstruction of the seven nominated rows from technique census `33717910218`.
-> **Decision:** the family-guided pilot earns a smallest default-off additive late must-turn-biased repair tier at a 7M node cap, after the existing plain late-repair tier. Correct the nominated guidance population from seven rows to six: `R03049` is an allocation/dose case because standard repair already solves it in the census.
-> **Remaining gate:** implement the additive 7M tier without stealing existing repair work, prove the intended action participates, reproduce the two current matched gains through orchestration, then measure bounded collateral/work before any broader exposure or promotion.
+> **Status:** concluded-positive; default-off integration proven
+> **Last evidence:** 2026-09-13 — current matched-node isolated repair rungs on `R02768`, `R02180`, and `R03049`; reconstruction of technique census `33717910218`; and real-orchestration integration run `34740639674` at branch commit `1797066e0b203ed9defba778da139c787581c3fc`.
+> **Decision:** retain the smallest default-off additive late must-turn-biased repair tier at a 7M node cap, after the existing plain late-repair tier. The corrected guidance population is six rows: `R03049` is an allocation/dose case because standard repair already solves it in the census.
+> **Remaining gate:** bounded eligible-population work/collateral economics before any broader exposure or default-on promotion. The integration/correct-placement gate is closed.
 
 ## Why this test existed
 
@@ -79,14 +79,29 @@ The library materially improved the experiment without pretending to answer it:
 
 That is the desired evidence pipeline: family data for cheap causal screening and case selection, current matched solver cells for efficacy, then census reconstruction when results disagree with the premise.
 
+## Real-orchestration integration proof
+
+The default-off integration adds `STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY` immediately after `late-repair-search`. The child tier has its own 7M stage-local node cap and a fresh work scope. It also requires a recorded `late-repair-search` attempt before it may run, so a depleted outer ceiling cannot let the treatment leapfrog a plain control that never actually participated.
+
+Run `34740639674` exercised the full current production ladder with only that opt-in enabled, `nodeBudget=50,000,000`, a nonbinding 300s wall allowance per target, and lifecycle telemetry. Both targets satisfied the predeclared integration contract:
+
+| Parent | Plain late stage | Child must-turn stage | Referee | Result |
+|---|---|---:|---|---|
+| `R02768` | participated, timed out | **success at 1,179,294 nodes** | valid | **PASS** |
+| `R02180` | participated, timed out | **success at 6,206,072 nodes** | valid | **PASS** |
+
+The child wins reproduce the isolated-cell node counts exactly. More importantly, they occur only after the ordinary late-repair attempt has really failed inside the real ladder. The integration therefore preserves the causal shape of the matched experiment instead of silently replacing or shrinking plain repair.
+
+This closes the implementation/participation gate. It does not make the tier production-default. A two-level real-ladder pilot is intentionally expensive because every target must traverse the failed production ladder first; population-scale work economics should therefore be measured separately and only when deciding whether broader exposure or promotion is worth that cost.
+
 ## Decision
 
-A 7M additive must-turn-biased late-repair treatment is earned as the smallest integration test because:
+A 7M additive must-turn-biased late-repair treatment is now retained as a correctly integrated **default-off** capability because:
 
 - it buys two current residual solves in matched isolated cells where plain repair fails at the same dose;
 - the two parents deliberately differ in historical family sensitivity;
 - both current biased results reproduce their historical deterministic node costs exactly;
-- additive placement after the existing plain late tier can avoid stealing its work or regressing earlier solves;
-- the treatment remains default-off until orchestration participation and collateral/work are measured.
+- the real orchestration ladder reproduces both gains only after a failed plain late-repair attempt;
+- additive placement and the explicit participation gate prevent it from stealing the existing plain tier's work.
 
-This does **not** justify a 13M+ broad tier merely because several remaining unique-guidance rows need more work. The high-dose question comes later and must earn either acceptable additive economics or a legal general selector. `R03049` is explicitly excluded from must-turn-guidance gain accounting.
+This does **not** justify a 13M+ broad tier merely because several remaining unique-guidance rows need more work, and it does not yet justify default-on 7M exposure across every eligible must-turn miss. Those are economics/generalization questions. `R03049` remains explicitly excluded from must-turn-guidance gain accounting.
