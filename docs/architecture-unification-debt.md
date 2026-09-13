@@ -6,7 +6,7 @@
 
 Preserve behavior and evidence. Similar representations are not automatically duplicates. Keep structural refactors separate from solver-policy tuning unless a structural defect prevents trustworthy research.
 
-History: [`archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md). Detail: [`../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md`](../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md); its second-pass reconciliation supersedes its initial proposals.
+History: [`archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md).
 
 ## Classification
 
