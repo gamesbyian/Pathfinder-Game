@@ -35,7 +35,7 @@ Tool choice does not determine evidence quality. Decision-bearing solver work st
 | Operational comparison | [`solver-technique-operational-taxonomy.md`](solver-technique-operational-taxonomy.md); query `paired trace`, `method probe`, `beam trace` | Bounded behavioral comparisons after outcome/work screening |
 | Exact/reference | query `cpsat`, `reference`, `prefix survival`, `offline replay` | Feasibility labels, counterexamples, bounded exact diagnostics |
 | Hints/provenance | `npx tsx scripts/hint-query.mjs --id=<ID>`; query `hint` | Hint generation, diversification, provenance/cost forensics |
-| Variant/family | [`variant-level-research.md`](variant-level-research.md); query `family`; mount the off-main dataset with `--variant-family-dataset-root=<worktree>` | Family generation/index/query/coverage, parent replay, controlled transformations |
+| Variant/family | [`variant-level-research.md`](variant-level-research.md); query `family`; mount the off-main dataset with `--variant-family-dataset-root=<worktree>`; run `node scripts/variant-library-evidence-audit.mjs --variant-family-dataset-root=<worktree> --pretty` before decision-bearing whole-trove counts | Family generation/index/query/coverage, parent replay, controlled transformations, mixed-era/content-identity integrity checks |
 | Research status | `node scripts/research-status-index.mjs --compact --query=<term>` | Existing investigations, dispositions, gates, evidence pointers |
 | Research assets | `node scripts/research-asset-query.mjs --query=<term>` | Existing evidence families, joins, boundaries, entry points |
 | Raw artifact metadata | `node scripts/artifact-query.mjs [--query=...] [--role=...]` | Meaning/provenance of tracked raw artifacts |
