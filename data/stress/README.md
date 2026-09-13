@@ -15,7 +15,7 @@ from that snapshot as current capability evidence; use the current solver queue 
 
 | Asset | Purpose |
 |---|---|
-| `stress-levels.json` | **Corpus 1**, 102 hypothesis-driven/generated levels. Contains per-level `stressMeta`, including construction witness and generation metadata. |
+| `stress-levels.json` | **Corpus 1**, 102 retained stress levels with mixed generation ancestry. Contains per-level `stressMeta`, construction witness, and row provenance. |
 | `hints/<id>.json` | Corpus-1 saved hints, keyed by persistent level ID. |
 | `stress-levels-random.json` | **Corpus 2**, 1700 uniform-random/solver-blind stress levels retained after the solvable migration and square-grid cleanup. |
 | `hints-random/<id>.json` | Corpus-2 saved hints. |
@@ -42,18 +42,29 @@ All generated stress levels are intended to be valid and solvable by constructio
 - the production solver does not receive `stressMeta` or the hidden witness when capability is tested.
 
 Per-level authorship/generation provenance lives on `level.provenance`; hint provenance lives in the
-normal hint model. A construction witness proves the puzzle is solvable. It is not cold-solver
-capability evidence and may not guide production solving. See
+normal hint model. Treat top-level corpus headers as generation-time snapshots, not as timeless
+summaries of every retained row or the corpus's current evidence role. When ancestry matters, use
+row provenance and `stressMeta.generationBatch` rather than inferring from the file header. A
+construction witness proves the puzzle is solvable. It is not cold-solver capability evidence and
+may not guide production solving. See
 [`../../docs/solver-level-blindness.md`](../../docs/solver-level-blindness.md).
 
 Static filters are deliberately absent from these generated stress corpora; flipping filters are
 supported. Historical generation defects and their fixes are recorded in the archived README snapshot
 and relevant reports rather than repeated here.
 
-## Corpus 1: hypothesis-driven
+## Corpus 1: mixed retained population
 
-Corpus 1 combines several generation batches with different research intent. The important
-experimental distinction is whether generation was solver-aware.
+Corpus 1 began as a hypothesis-driven corpus, but the current retained 102-row file is not one
+homogeneous A-F population. A 2026-09-13 row-level provenance census found:
+
+- 23 retained generator-1.0.0 rows carrying the older A-F `generationBatch` strata below;
+- 79 retained generator-1.1.0 rows whose provenance reports `random-uniform-v1` and no A-F batch.
+
+Therefore do not apply the file header's generator version or the A-F batch labels to all 102 rows.
+Use `node scripts/corpus-query.mjs --corpus=stress1` and its provenance/batch filters when the
+ancestry distinction matters. The A-F table remains the contract for the rows that actually carry
+those batch identities:
 
 | Batch | Intent | Solver-awareness / overfit risk |
 |---|---|---|
@@ -131,6 +142,8 @@ Use [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) for task-or
 Common local commands:
 
 ```bash
+node scripts/corpus-query.mjs --corpus=stress2
+npx tsx scripts/stress/corpus-evidence-audit.mjs
 npm run stress:generate
 npm run stress:generate-random
 npm run stress:generate-topology
@@ -154,6 +167,9 @@ For expensive current population refreshes use
 For isolated technique capability use `technique-census.yml` only when the current census no longer
 answers the question. Family/variant research has its own canonical resource:
 [`../../docs/variant-level-research.md`](../../docs/variant-level-research.md).
+
+The 2026-09-13 resource audit is recorded at
+[`../../reports/2026-09-13-stress-corpus-research-resource-audit.md`](../../reports/2026-09-13-stress-corpus-research-resource-audit.md).
 
 ## Measurement rules
 

@@ -2,13 +2,12 @@
 /**
  * Enforces the one-record-per-line formatting invariant documented in CLAUDE.md's Repository
  * Layout section, for two families of file:
- *   - the 3 real level corpora (published, stress-corpus-1, stress-corpus-2), one LEVEL per line;
- *   - every hint artifact (data/hints/, data/stress/hints/, data/stress/hints-random/), one HINT
- *     per line.
+ *   - the 4 first-class level corpora (published, stress-corpus-1, stress-corpus-2, envelope), one LEVEL per line;
+ *   - every hint artifact discoverable beside those corpora, one HINT per line.
  * Both must be byte-identical to what stringifyCorpusJson (scripts/level-json-format.mjs) would
  * produce from their parsed contents — levels via its default recordsField='levels', hints via
  * recordsField='hints'. Every writer of these files (scripts/level-data-io.mjs's
- * writeLevelsWithHints/stringifyHints, the two stress generators, scripts/backfill-level-
+ * writeLevelsWithHints/stringifyHints, the stress generators, scripts/backfill-level-
  * provenance.mjs) already goes through that serializer — this check guards against a future
  * writer reformatting a file by hand or via a different JSON.stringify call, which would blow up
  * per-record diffs back to many lines per level/hint.
@@ -27,6 +26,7 @@ const CORPORA = [
     { file: path.join(root, 'data', 'levels.json'), label: 'published' },
     { file: path.join(root, 'data', 'stress', 'stress-levels.json'), label: 'stress-corpus-1' },
     { file: path.join(root, 'data', 'stress', 'stress-levels-random.json'), label: 'stress-corpus-2' },
+    { file: path.join(root, 'data', 'stress', 'stress-levels-envelope.json'), label: 'stress-envelope' },
 ];
 
 const failures = [];

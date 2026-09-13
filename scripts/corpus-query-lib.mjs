@@ -26,10 +26,26 @@ export function loadCorpus(root, source = 'stress2') {
     const raw = JSON.parse(readFileSync(path.resolve(root, relativePath), 'utf8'));
     const levels = Array.isArray(raw) ? raw : raw.levels;
     if (!Array.isArray(levels)) throw new Error(`No levels array in ${relativePath}`);
-    return { source, path: relativePath, levels };
+    return { source, path: relativePath, levels, metadata: Array.isArray(raw) ? null : raw };
 }
 
 const count = (level, key) => Array.isArray(level[key]) ? level[key].length : 0;
+
+function provenanceDescriptor(level) {
+    const provenance = level.provenance ?? {};
+    const history = Array.isArray(provenance.history) ? provenance.history : [];
+    const values = key => [...new Set(history.map(event => event?.detail?.[key]).filter(value => value != null && value !== ''))];
+    const methods = [...new Set(history.map(event => event?.method).filter(Boolean))];
+    const actions = [...new Set(history.map(event => event?.action).filter(Boolean))];
+    return {
+        origin: provenance.origin ?? null,
+        methods,
+        actions,
+        generatorVersions: values('generatorVersion'),
+        corpusNames: values('corpusName'),
+        historyEvents: history.length,
+    };
+}
 
 export function describeLevel(level) {
     const counts = {
@@ -52,6 +68,7 @@ export function describeLevel(level) {
         routingRegime: safeNormalizeRoutingRegime(meta.routingRegime ?? meta.archetype ?? null),
         requiredPathCoverageRatio: meta.requiredPathCoverageRatio ?? meta.navDensity ?? null,
         predictedChallenge: meta.predictedSolverChallenge ?? null,
+        provenance: provenanceDescriptor(level),
     };
 }
 
@@ -60,6 +77,12 @@ function hasMechanic(item, mechanic) {
     if (item.tags.some(tag => tag.toLowerCase().includes(key))) return true;
     if (item.routingRegime?.toLowerCase().includes(key)) return true;
     return Object.entries(item.counts).some(([name, value]) => value > 0 && name.toLowerCase().includes(key));
+}
+
+function containsInsensitive(values, wanted) {
+    if (!wanted) return true;
+    const needle = wanted.toLowerCase();
+    return values.some(value => String(value).toLowerCase().includes(needle));
 }
 
 export function filterLevelDescriptors(items, filters = {}) {
@@ -72,7 +95,13 @@ export function filterLevelDescriptors(items, filters = {}) {
         (filters.minReqInt == null || item.req[1] >= filters.minReqInt) &&
         (filters.maxReqInt == null || item.req[1] <= filters.maxReqInt) &&
         (!tag || item.tags.some(value => value.toLowerCase().includes(tag))) &&
-        (!filters.mechanic || hasMechanic(item, filters.mechanic)));
+        (!filters.mechanic || hasMechanic(item, filters.mechanic)) &&
+        (!filters.batch || String(item.batch ?? '').toLowerCase() === String(filters.batch).toLowerCase()) &&
+        (!filters.origin || String(item.provenance.origin ?? '').toLowerCase() === String(filters.origin).toLowerCase()) &&
+        containsInsensitive(item.provenance.methods, filters.method) &&
+        containsInsensitive(item.provenance.actions, filters.action) &&
+        containsInsensitive(item.provenance.generatorVersions, filters.generatorVersion) &&
+        containsInsensitive(item.provenance.corpusNames, filters.corpusName));
 }
 
 function hash(text) {
@@ -93,6 +122,15 @@ export function summarizeDescriptors(items) {
         const sum = clean.reduce((a, b) => a + b, 0);
         return { min: Math.min(...clean), max: Math.max(...clean), mean: Number((sum / clean.length).toFixed(3)) };
     };
+    const categorical = values => {
+        const out = {};
+        for (const value of values) {
+            const key = value == null || value === '' ? '(missing)' : String(value);
+            out[key] = (out[key] ?? 0) + 1;
+        }
+        return Object.fromEntries(Object.entries(out).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])));
+    };
+    const flatten = arrays => arrays.flatMap(values => values.length ? values : ['(missing)']);
     const mechanics = {};
     for (const item of items) for (const [name, value] of Object.entries(item.counts)) if (value > 0) mechanics[name] = (mechanics[name] ?? 0) + 1;
     return {
@@ -102,5 +140,12 @@ export function summarizeDescriptors(items) {
         area: numeric(items.map(item => item.grid[0] * item.grid[1])),
         objectDensity: numeric(items.map(item => item.objectDensity)),
         mechanics,
+        evidenceAncestry: {
+            origins: categorical(items.map(item => item.provenance.origin)),
+            methods: categorical(flatten(items.map(item => item.provenance.methods))),
+            generatorVersions: categorical(flatten(items.map(item => item.provenance.generatorVersions))),
+            corpusNames: categorical(flatten(items.map(item => item.provenance.corpusNames))),
+            generationBatches: categorical(items.map(item => item.batch)),
+        },
     };
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * Enforces the level-provenance invariant documented in CLAUDE.md's "Provenance"
- * section: every level in each of the 3 real corpora (published, stress-corpus-1,
- * stress-corpus-2) must carry a non-null `provenance` field with at least one
+ * section: every level in each first-class corpus (published, stress-corpus-1,
+ * stress-corpus-2, envelope) must carry a non-null `provenance` field with at least one
  * history entry. New levels get this stamped at creation time (editor
- * createNewLevel, the two stress generators, submission/review approval) — this
+ * createNewLevel, the stress generators, submission/review approval) — this
  * check guards against a future code path silently dropping it, or a new level
  * being added to a corpus file by hand without it.
  *
@@ -24,6 +24,7 @@ const CORPORA = [
     { file: path.join(root, 'data', 'levels.json'), label: 'published' },
     { file: path.join(root, 'data', 'stress', 'stress-levels.json'), label: 'stress-corpus-1' },
     { file: path.join(root, 'data', 'stress', 'stress-levels-random.json'), label: 'stress-corpus-2' },
+    { file: path.join(root, 'data', 'stress', 'stress-levels-envelope.json'), label: 'stress-envelope' },
 ];
 
 let totalChecked = 0;
