@@ -1,7 +1,12 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { buildResearchStatusIndex, compactResearchStatusIndex, writeResearchStatusIndex } from './research-status-index-lib.mjs';
+import {
+    loadResearchQuestionRegistry,
+    queryResearchQuestions,
+    validateResearchQuestionRegistry,
+} from './research-question-relations-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -12,26 +17,14 @@ const kind = value('kind');
 const compact = args.includes('--compact') || query || status || kind;
 const index = buildResearchStatusIndex(process.cwd());
 
-const relationsPath = path.resolve('docs/solver-research-question-relations.json');
-const relationRegistry = existsSync(relationsPath)
-    ? JSON.parse(readFileSync(relationsPath, 'utf8'))
-    : { schemaVersion: 1, questions: [] };
-const questions = Array.isArray(relationRegistry.questions) ? relationRegistry.questions : [];
-const normalizedQuestionStatus = state => {
-    const value = String(state ?? '').toLowerCase();
-    if (value.startsWith('active')) return 'active';
-    if (value.startsWith('closed')) return 'closed';
-    return value;
-};
-const wantedQuery = query.trim().toLowerCase();
-const wantedStatus = status.trim().toLowerCase();
+const relationRegistry = loadResearchQuestionRegistry(process.cwd());
+const relationErrors = validateResearchQuestionRegistry(relationRegistry);
+if (relationErrors.length) {
+    throw new Error(`Invalid solver research question registry:\n- ${relationErrors.join('\n- ')}`);
+}
+const questions = relationRegistry.questions;
+const questionMatches = queryResearchQuestions(relationRegistry, { query, status, kind });
 const wantedKind = kind.trim().toLowerCase();
-const questionMatches = questions.filter(question => {
-    if (wantedKind && wantedKind !== 'question') return false;
-    if (wantedStatus && normalizedQuestionStatus(question.state) !== wantedStatus) return false;
-    if (!wantedQuery) return true;
-    return JSON.stringify(question).toLowerCase().includes(wantedQuery);
-}).map(question => ({ kind: 'question', status: normalizedQuestionStatus(question.state), ...question }));
 
 if (outputArg) {
     const output = path.resolve(outputArg);
