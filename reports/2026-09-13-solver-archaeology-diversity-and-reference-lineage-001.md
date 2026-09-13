@@ -1,6 +1,9 @@
 # Solver archaeology: diversity/portfolio and reference-lineage follow-up
 
-Status: OPEN / in-progress evidence note. Current priority remains `docs/solver-optimization-workstreams.md`; archaeology register: `docs/solver-archaeology-register.md`.
+> **Status:** active
+> **Last evidence:** 2026-09-13 — the diversity/portfolio and reference-lineage archaeology targets were opened and evidence accumulation began.
+> **Decision:** continue the evidence note without changing solver behavior or current workstream priority.
+> **Remaining gate:** complete the stated excavation targets and reconcile durable findings into the archaeology register.
 
 This note records the next excavation targets and accumulates findings as they are verified.
 
