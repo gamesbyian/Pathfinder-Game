@@ -41,7 +41,7 @@ test('renderSummaryMd uses current event/order summary fields', () => {
         sourceCoverage: Object.fromEntries(PROVENANCE_SOURCES.map(source => [source, 0])),
     }, 'test', 'data/test.json');
     assert.match(md, /\\*\\*1\\*\\* levels have at least one hint/);
-    assert.match(md, /Must-cross order: \\*\\*1\\*\\* \\/ \\*\\*2\\*\\*/);
+    assert.match(md, /Must-cross order: \\*\\*1\\*\\* \\/ 2 multi-must-cross levels/);
     assert.doesNotMatch(md, /undefined/);
 });
 """
