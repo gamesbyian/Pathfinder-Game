@@ -40,14 +40,48 @@ Required repair: saturation distance is comparable only when both sides have an 
 
 ### F4 — profile distance currently reports only the blended score, not evidential coverage
 
-`profileDistance()` correctly skips explicit null axes, but callers receive no comparable-weight denominator or count. Two candidates can therefore have similarly low distances while one comparison was supported by almost every axis and another by only a small compatible subset.
+`profileDistance()` skips explicit null axes, but callers receive no comparable-weight denominator or count. Two candidates can therefore have similarly low distances while one comparison was supported by almost every axis and another by only a small compatible subset.
 
 Risk: sparse-mechanic and sparse-evidence matches can look deceptively precise. This matters because the documentation explicitly tells researchers to use rankings for sparse targets.
 
 Required repair: expose comparison coverage (comparable axes / comparable weight, ideally against the maximum applicable weight) beside the distance, and make CLI output show it.
 
+### F5 — tracked human summaries still expose retired provenance semantics
+
+The tracked `solution-profile-published-summary.md` and `solution-profile-corpus1-summary.md` are human-facing “current legacy summaries,” but they still show old mutually-exclusive source/modality labels such as `production-solver` and `prefix-anchored-completion`. Current authority now owns orthogonal **origin + facets + applicability**, and regenerated schema-v2 profiles use that taxonomy.
+
+Risk: a researcher opening the convenient summary can reason in the old vocabulary even though the underlying current code no longer endorses it. This is exactly the sort of semantic drift the provenance audit was intended to eliminate.
+
+Required repair: regenerate or explicitly freeze/label legacy summaries; do not leave retired buckets looking current. Current generated summaries should say “origin coverage,” not generic “source coverage.”
+
+### F6 — `provablyExhaustive` promotes an event-local marker into a library-completeness claim
+
+`buildBucketProfile()` currently sets `provablyExhaustive` when **any stored hint** has **any provenance event** whose `search.termination === 'exhaustive'`. The shared provenance taxonomy explicitly treats `complete-enumeration`, `hint-guided`, `isolated-technique`, and other facets as orthogonal, so an exhaustive event is not by itself proof that the bucket contains the puzzle's complete solution space.
+
+Risk: the resource and generated summary call this a “real completeness signal,” but the implementation does not establish that the exhaustive event enumerated the unrestricted puzzle space, that every path from that enumeration was persisted into this bucket, or that the event applies to the bucket's exact evidence population.
+
+Required repair: rename the current observation to an event-local fact such as `hasExhaustiveSearchEvent`. Reserve any `completeSolutionSpace` / `provablyExhaustive` claim for an explicit whole-space enumeration contract with persisted coverage guarantees. Until such a contract exists, profile conclusions may use exhaustive events as stronger context but not proof of library completeness.
+
+### F7 — freshness signature ignores meaning-changing edits
+
+`computeHintSignature()` hashes only per-level **hint count** and **provenance-entry count**. It does not hash path identity/content, provenance fields, discovery timestamps, termination/context changes, or the profile algorithm/version. `ensureFreshLibrary()` separately checks schema/taxonomy, but there is no profile-algorithm identity.
+
+Risk: changing a stored path while keeping count constant, correcting a provenance event in place, changing discovery order, or fixing a profile metric can all leave the tracked library appearing fresh. Those changes can materially alter the profile while preserving the current signature.
+
+Required repair: make freshness content-sensitive to all profile inputs and stamp an explicit profile algorithm/schema identity. Freshness must answer “would regeneration produce the same scientific object?”, not merely “are there the same number of records?”
+
+### F8 — generated resource metadata still points at the retired doc path
+
+The library description, source comments, and generated summary link refer to `docs/solution-profile.md`; current authority is `docs/solver-solution-profile.md`.
+
+Risk: small individually, but it reduces discoverability and is further evidence that generated artifacts were not fully migrated with the owning research resource.
+
+Required repair: update generator-owned references so regenerated artifacts route to the current authority.
+
 ## Direction
 
 The emerging distinction is important: this asset is usually a **known-solution sample profile**, with a smaller subset of claims promoted to genuine solution-space statements when evidence supports them. The audit should make that distinction machine-visible rather than leaving it as prose caution.
+
+The first repair tranche should be conservative and semantics-preserving: stop scoring unsupported n=1 diversity/saturation axes; expose distance coverage; stop calling observed single must-cross order “level-forced”; remove unsupported completeness language; strengthen freshness identity; and repair generated authority links. A later empirical tranche can then measure convergence and provenance sensitivity on trustworthy inputs.
 
 This report will continue to be updated in small commits as findings are established.
