@@ -1,0 +1,234 @@
+name: class5-dead-cause-rejoin-one-shot
+
+on:
+  push:
+    branches:
+      - chatgpt/class5-dead-cause-rejoin-run-2026-09-13
+
+concurrency:
+  group: class5-dead-cause-rejoin-one-shot
+  cancel-in-progress: false
+
+jobs:
+  rejoin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Check out exact commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Regenerate current residual atlas and freeze 12-row Class-5 sample
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          node scripts/run-bundled.mjs scripts/stress/analyze-post-1029-residual-atlas.mjs -- \
+            --baseline=reports/stress/capability-runs/34683011115/per-level-corpus2.json \
+            --lifecycle=reports/stress/capability-runs/34683011115/lifecycle-failure-map-corpus2.json \
+            --census=reports/stress/technique-census/33717910218/combined-cells.json \
+            --hints-dir=data/stress/hints-random \
+            --out=tmp/class5-atlas.json
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const atlas = JSON.parse(fs.readFileSync('tmp/class5-atlas.json', 'utf8'));
+          const corpusDoc = JSON.parse(fs.readFileSync('data/stress/stress-levels-random.json', 'utf8'));
+          const corpus = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
+          const posById = new Map(corpus.map((row, i) => [row.id, i + 1]));
+          const excluded = new Set(['R03229', 'R00046', 'R02733']);
+          const rows = atlas.rows.filter(r => r.primaryClass === 5 && !excluded.has(r.id))
+            .sort((a, b) => a.id.localeCompare(b.id));
+          if (rows.length < 12) throw new Error(`Need >=12 eligible Class-5 rows, got ${rows.length}`);
+          const selected = [];
+          for (let i = 0; i < 12; i++) {
+            const start = Math.floor(i * rows.length / 12);
+            const end = Math.floor((i + 1) * rows.length / 12);
+            const index = start + Math.floor((end - start - 1) / 2);
+            const row = rows[index];
+            const pos = posById.get(row.id);
+            if (!pos) throw new Error(`Missing corpus position for ${row.id}`);
+            selected.push({ stratum: i + 1, index, id: row.id, pos, routingRegime: row.routingRegime, features: row.features });
+          }
+          const out = {
+            sourceCommit: process.env.GITHUB_SHA,
+            generatedAt: new Date().toISOString(),
+            class5CountBeforeExclusions: atlas.rows.filter(r => r.primaryClass === 5).length,
+            eligibleCount: rows.length,
+            exclusions: [...excluded],
+            selectionRule: 'sort eligible Class-5 rows by id; split into 12 floor-index strata; choose lower midpoint of each stratum',
+            selected,
+          };
+          fs.writeFileSync('tmp/class5-selection.json', JSON.stringify(out, null, 2));
+          const spec = selected.map(r => `pos:${r.pos}`).join(',');
+          fs.appendFileSync(process.env.GITHUB_ENV, `CLASS5_LEVEL_SPEC=${spec}\n`);
+          console.log('CLASS5_SELECTION ' + JSON.stringify(out));
+          NODE
+
+      - name: Run existing boundary-sketch observer at frozen dose
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/connectivity-rejection-audit.mjs \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels="$CLASS5_LEVEL_SPEC" \
+            --work-budget=500000 \
+            --time-budget-ms=30000 \
+            --boundary-sketch \
+            --out=tmp/class5-dead-cause-audit.json \
+            --summary-out=tmp/class5-dead-cause-audit.md
+
+      - name: Evaluate preregistered recurrence gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const selection = JSON.parse(fs.readFileSync('tmp/class5-selection.json', 'utf8'));
+          const audit = JSON.parse(fs.readFileSync('tmp/class5-dead-cause-audit.json', 'utf8'));
+          const dominant = audit.records.filter(r => r.subtype === 'goal' && r.mpVisitedMask === 0
+            && r.mustCrossMask === 0 && !r.reservedWallActive && r.boundarySketch);
+          const selectedIds = selection.selected.map(r => r.id);
+
+          const boundaryKey = r => r.boundarySketch.boundaryBlockers
+            .map(b => `${b.cell}:${b.reason}`).sort().join(',');
+          const reachedKey = r => r.boundarySketch.reachedFingerprint;
+          const exactKey = r => r.stateFingerprint;
+
+          function groupStats(records, keyFn) {
+            const groups = new Map();
+            for (const r of records) {
+              const key = `${r.levelId}|${keyFn(r)}`;
+              let g = groups.get(key);
+              if (!g) groups.set(key, g = { records: [], states: new Set() });
+              g.records.push(r);
+              g.states.add(r.stateFingerprint);
+            }
+            let sharedRecords = 0;
+            let crossStateRecords = 0;
+            const crossStateSpans = [];
+            for (const g of groups.values()) {
+              if (g.records.length > 1) sharedRecords += g.records.length;
+              if (g.states.size > 1) {
+                crossStateRecords += g.records.length;
+                const works = g.records.map(r => r.work ?? 0).sort((a, b) => a - b);
+                crossStateSpans.push((works.at(-1) ?? 0) - (works[0] ?? 0));
+              }
+            }
+            crossStateSpans.sort((a, b) => a - b);
+            const pct = n => records.length ? +(100 * n / records.length).toFixed(2) : 0;
+            const p = q => crossStateSpans.length ? crossStateSpans[Math.min(crossStateSpans.length - 1, Math.floor(q * crossStateSpans.length))] : null;
+            return {
+              records: records.length,
+              distinctGroups: groups.size,
+              sharedRecords,
+              sharingRate: pct(sharedRecords),
+              crossStateRecords,
+              crossStateRecordRate: pct(crossStateRecords),
+              crossStateGroups: crossStateSpans.length,
+              crossStateSpanMin: crossStateSpans[0] ?? null,
+              crossStateSpanP50: p(0.5),
+              crossStateSpanP90: p(0.9),
+              crossStateSpanMax: crossStateSpans.at(-1) ?? null,
+              crossStateGroupsSpanGt100: crossStateSpans.filter(v => v > 100).length,
+              crossStateGroupsSpanGt1000: crossStateSpans.filter(v => v > 1000).length,
+            };
+          }
+
+          const perLevel = selectedIds.map(id => {
+            const records = dominant.filter(r => r.levelId === id);
+            return {
+              id,
+              records: records.length,
+              informative: records.length >= 25,
+              exact: groupStats(records, exactKey),
+              reached: groupStats(records, reachedKey),
+              boundary: groupStats(records, boundaryKey),
+            };
+          });
+          const informative = perLevel.filter(r => r.informative);
+          const pooledExact = groupStats(dominant, exactKey);
+          const pooledReached = groupStats(dominant, reachedKey);
+          const pooledBoundary = groupStats(dominant, boundaryKey);
+
+          function evaluate(label, pooled) {
+            const majorityPositive = informative.filter(r => r[label].sharingRate > r.exact.sharingRate).length;
+            return {
+              label,
+              sharingLiftPp: +(pooled.sharingRate - pooledExact.sharingRate).toFixed(2),
+              majorityPositive,
+              informativeLevels: informative.length,
+              crossStateRecordRate: pooled.crossStateRecordRate,
+              conditions1to4: informative.length >= 6
+                && pooled.sharingRate - pooledExact.sharingRate >= 10
+                && majorityPositive > informative.length / 2
+                && pooled.crossStateRecordRate >= 25,
+              spacing: {
+                groups: pooled.crossStateGroups,
+                min: pooled.crossStateSpanMin,
+                p50: pooled.crossStateSpanP50,
+                p90: pooled.crossStateSpanP90,
+                max: pooled.crossStateSpanMax,
+                gt100: pooled.crossStateGroupsSpanGt100,
+                gt1000: pooled.crossStateGroupsSpanGt1000,
+              },
+            };
+          }
+
+          const reachedGate = evaluate('reached', pooledReached);
+          const boundaryGate = evaluate('boundary', pooledBoundary);
+          const result = {
+            sourceCommit: process.env.GITHUB_SHA,
+            generatedAt: new Date().toISOString(),
+            selected: selection.selected,
+            workBudget: 500000,
+            strictTotalWorkBudget: true,
+            timeBudgetMs: 30000,
+            primaryCluster: 'goal + mpVisitedMask=0 + mustCrossMask=0 + reservedWallActive=false',
+            dominantRecords: dominant.length,
+            informativeLevels: informative.length,
+            exact: pooledExact,
+            reached: pooledReached,
+            boundary: pooledBoundary,
+            reachedGate,
+            boundaryGate,
+            perLevel,
+            gateConditions1to4Pass: reachedGate.conditions1to4 || boundaryGate.conditions1to4,
+            condition5Note: 'Spacing is reported rather than collapsed to a post-hoc threshold; inspect cross-state work-span distribution to rule out almost-entirely adjacent duplicate emission.',
+          };
+          fs.writeFileSync('tmp/class5-dead-cause-gate-summary.json', JSON.stringify(result, null, 2));
+          console.log('CLASS5_GATE_SUMMARY ' + JSON.stringify(result));
+          console.log('\n=== CLASS-5 GATE HUMAN SUMMARY ===');
+          console.log(`Selected: ${selectedIds.join(', ')}`);
+          console.log(`Primary-cluster records: ${dominant.length}; informative levels: ${informative.length}/12`);
+          console.log(`Exact sharing ${pooledExact.sharingRate}%`);
+          console.log(`Reached sharing ${pooledReached.sharingRate}% (lift ${reachedGate.sharingLiftPp}pp; cross-state ${pooledReached.crossStateRecordRate}%; majority ${reachedGate.majorityPositive}/${informative.length})`);
+          console.log(`Boundary sharing ${pooledBoundary.sharingRate}% (lift ${boundaryGate.sharingLiftPp}pp; cross-state ${pooledBoundary.crossStateRecordRate}%; majority ${boundaryGate.majorityPositive}/${informative.length})`);
+          console.log(`Conditions 1-4 pass: ${result.gateConditions1to4Pass}`);
+          console.log(`Reached cross-state span p50/p90/max: ${pooledReached.crossStateSpanP50}/${pooledReached.crossStateSpanP90}/${pooledReached.crossStateSpanMax}`);
+          console.log(`Boundary cross-state span p50/p90/max: ${pooledBoundary.crossStateSpanP50}/${pooledBoundary.crossStateSpanP90}/${pooledBoundary.crossStateSpanMax}`);
+          NODE
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: class5-dead-cause-rejoin-evidence
+          path: |
+            tmp/class5-selection.json
+            tmp/class5-dead-cause-audit.json
+            tmp/class5-dead-cause-audit.md
+            tmp/class5-dead-cause-gate-summary.json
+          retention-days: 30
