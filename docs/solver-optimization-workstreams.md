@@ -1,7 +1,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-12.
+> **Reconciled:** 2026-09-13.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Current-state only. Detailed evidence belongs in reports; history under `docs/archive/snapshots/`.
@@ -31,7 +31,7 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 **Next WS2 gates, in parallel:**
 
 1. **Class-4 allocation:** implement/validate the dead-last additive whole-ladder retry before population scale. Skip family mining; freshness is established and the question is allocation/collateral.
-2. **Class-2 composition:** test the smallest default-off/additive late must-turn-biased repair probe on the seven-level seam without stealing plain-repair work. In parallel, query existing families for controlled must-turn/landmark/obligation relatives around those parents; use response flips only to judge structural versus parent-specific signal. Do not delay the probe or generate new families if absent. Start with `R02768`, `R02180`, then matched-work/collateral confirmation. [`variant routing`](../reports/2026-09-13-variant-library-resource-integration-audit-002.md)
+2. **Class-2 composition:** existing-family preflight is complete. Across the seven nominated parents, historical whole-ladder `cs`/`gr`/`swap` siblings solve only **8/210**; `R02768` contributes 5/30 while `R02180` is 1/30 and three parents are 0/30. First test the smallest default-off/additive late must-turn-biased repair probe on the deliberate contrast pair `R02768` (family-responsive) + `R02180` (family-rigid), with matched work and no plain-repair theft. If it earns continuation, add at least one 0/30 parent before scaling. [`family preflight`](../reports/2026-09-13-must-turn-biased-family-preflight-001.md)
 3. **Class-5 acquisition:** test whether exact/reliable dead detections reduce to a recurring compact sound cause with material repeated-work cost. If absent, close. If present, shadow-test the smallest solve-local reason key. Family evidence is secondary only after a cause exists; raw sibling rescue remains confounded. No broad CDCL/LCG framework. [`excavation`](../reports/2026-09-12-solver-future-work-backlog-excavation-001.md)
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, and goal-attraction-disabled retry are **PROMOTED**. Portal coarse-state merge, repair late-probe `7->6` seeds, and portfolio-18 resumable tranche are **CLOSED NEGATIVE/NULL**. Admissible-order retry `1.0->0.18` is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
@@ -58,7 +58,7 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive retry; class-2 must-turn pilot + family preflight; compact dead-cause recurrence. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive retry; class-2 contrasted must-turn pilot; compact dead-cause recurrence. |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; use families first when structural. |
 | 6 | Repair reachability | **SUPPORTING** | Reopen when continuation needs interior/early commitment revision. |
 | 7 | Architectural speed | **SUPPORTING** | Reopen for earned mechanism with measured runtime cost/new hotspot. |
