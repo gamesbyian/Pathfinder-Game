@@ -1,6 +1,11 @@
 # Solver archaeology: February origins and deleted external research memos
 
-Status: historical-evidence follow-up. This report preserves chronology corrections, early solver-state lessons, and external-research premises. It does not change solver behavior or current workstream priority.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — Timeline and surviving external-memo archaeology corrected the retained-history start date and separated absorbed, superseded, and conditionally unspent premises.
+> **Decision:** Preserve the future-equivalence warning and conditional completable-state/gate-misclassification premises; do not reopen superseded algorithms or treat unread external artifacts as evidence.
+> **Remaining gate:** none
+
+This report preserves chronology corrections, early solver-state lessons, and external-research premises. It does not change solver behavior or current workstream priority.
 
 ## 1. Retained repository history begins on 2026-02-25, not April
 
