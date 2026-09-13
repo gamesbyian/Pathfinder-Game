@@ -150,7 +150,6 @@ export function auditVariantLibrary(root) {
 
     return {
         schemaVersion: 1,
-        datasetRoot: path.resolve(root),
         counts: {
             familyManifests: familyRows.length,
             variantRows: variantRows.length,
