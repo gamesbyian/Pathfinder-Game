@@ -54,6 +54,11 @@ function fixture() {
         parentCorpus: 'source-b.json',
         familyMode: 'symmetry',
         parentContentHash: 'same-parent-content',
+        requestedCount: 2,
+        acceptedCount: 5,
+        generationAttempts: 3,
+        attemptBudget: 8,
+        generationRuns: [{ variantIds: ['W0'] }, { variantIds: ['W1'] }],
         variants: [
             { variantId: 'W1', relation: 'symmetry', variantContentHash: 'shared-variant-content', mutationManifest: { operation: 'transform' } },
         ],
@@ -87,11 +92,19 @@ describe('variant-library evidence audit', () => {
             variantsMissingContentHash: 1,
         });
         expect(audit.generationEvidence).toMatchObject({
-            familiesWithRequestAcceptanceCounts: 2,
-            familiesMissingRequestAcceptanceCounts: 1,
-            familiesWithAttemptBudget: 2,
-            familiesWithGenerationAttempts: 2,
+            singleRunFamiliesWithComparableRequestAcceptanceCounts: 2,
+            multiRunFamiliesWithAmbiguousTopLevelCounters: 1,
+            familiesMissingComparableRequestAcceptanceCounts: 1,
+            familiesWithAttemptBudget: 3,
+            familiesWithGenerationAttempts: 3,
             variantsWithGenerationAttempts: 5,
+        });
+        expect(audit.generationEvidence.byMode.find(row => row.mode === 'symmetry')).toMatchObject({
+            families: 2,
+            singleRunFamiliesWithComparableRequestAcceptanceCounts: 1,
+            multiRunFamiliesWithAmbiguousTopLevelCounters: 1,
+            requested: 5,
+            accepted: 4,
         });
         expect(audit.evaluationEvidence).toMatchObject({
             observations: 1,
@@ -102,6 +115,7 @@ describe('variant-library evidence audit', () => {
             withRecordedBudgetContext: 0,
         });
         expect(audit.evidencePurposes['current-solver-capability']).toMatch(/rechecked on current code/u);
-        expect(audit.evidencePurposes['generation-selectivity']).toMatch(/requested\/attempted\/accepted/u);
+        expect(audit.evidencePurposes['generation-selectivity']).toMatch(/same generation run/u);
+        expect(audit.interpretation.appendedFamilyCounters).toMatch(/ambiguous/u);
     });
 });
