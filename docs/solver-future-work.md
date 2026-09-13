@@ -20,17 +20,16 @@ Use one freshness-cleared hard level only after a recurring frontier phenotype e
 
 ## Archaeology-derived reopen stack
 
-These are successor/reopen questions, not parallel current work. The active Class-5 solve-local dead-cause gate remains first. If it closes null, use this order before inventing fresh scorer/feasibility families:
+These are successor/reopen questions, not parallel current work. The active Class-5 solve-local dead-cause gate remains first. The August low-cardinality full-pool categorical quota projection is **already complete and negative**; it is not the next fallback. [`correction`](../reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md)
 
 | Priority | Question | Reopen condition / boundary |
 |---:|---|---|
-| 1 | **Full-pool categorical-state projection** | Reconcile the unfinished August projection against current exact-labelled extinction cases. Run only if the categorical/interface keys remain non-redundant. Read-only first: bucket structure, singleton share, exact-LIVE survival, random-reserve and modest-width controls. No quota/crowding policy yet. |
-| 2 | **Homotopy / topological completion classes** | If the categorical projection is null/heterogeneous or nominates topology, reconstruct the winding observer with robust puncture choices. Complete-solution diversity alone is not runtime evidence. |
-| 3 | **Future-intersection commitments / arbitrary-target feasibility** | Only when exact-labelled evidence nominates a specific event-feasibility distinction. Historical synthetic-must-cross/blueprint forms were dirty negatives; revive only the smallest read-only query needed. |
-| 4 | **Cross-attempt basin-overlap observer** | Reopen when nominally different current actions/retries appear redundant and allocation depends on whether they explore distinct basins. Canonical action identity and participation checks are mandatory. |
-| 5 | **Dependency-conditioned repair descent shadow** | WS6 evidence implicates an interior/early commitment that append-only continuation cannot revise. Trace coupled commitments before designing another repair operator. |
-| 6 | **Certified forced-chain traversal census** | WS7 finds material cost and an observer shows substantial work inside post-prune one-successor chains. Only then test state-certified macro traversal with exact accounting. |
-| 7 | **Partial-order / commuting excursion replay** | Current exact-labelled or accepted-path evidence points to redundant obligation ordering. First swap/replay and measure legality, future completion and work; same obligation multiset is not equivalence. |
+| 1 | **Homotopy / topological completion classes** | If the dead-cause line closes null, reconstruct the winding observer on current exact-labelled extinction cases with robust puncture choices. Complete-solution diversity alone is not runtime evidence; ask whether LIVE and DEAD states differ in reachable completion topology. |
+| 2 | **Future-intersection commitments / arbitrary-target feasibility** | Only when exact-labelled evidence nominates a specific event-feasibility distinction. Historical synthetic-must-cross/blueprint forms were dirty negatives; revive only the smallest read-only query needed. |
+| 3 | **Cross-attempt basin-overlap observer** | Reopen when nominally different current actions/retries appear redundant and allocation depends on whether they explore distinct basins. Canonical action identity and participation checks are mandatory. |
+| 4 | **Dependency-conditioned repair descent shadow** | WS6 evidence implicates an interior/early commitment that append-only continuation cannot revise. Trace coupled commitments before designing another repair operator. |
+| 5 | **Certified forced-chain traversal census** | WS7 finds material cost and an observer shows substantial work inside post-prune one-successor chains. Only then test state-certified macro traversal with exact accounting. |
+| 6 | **Partial-order / commuting excursion replay** | Current exact-labelled or accepted-path evidence points to redundant obligation ordering. First swap/replay and measure legality, future completion and work; same obligation multiset is not equivalence. |
 
 Historical evidence and dirty-negative distinctions live in [`solver-archaeology-register.md`](solver-archaeology-register.md).
 
@@ -61,6 +60,7 @@ Do not reopen unchanged without materially new evidence:
 
 - whole-ladder retries, global seed fan-out, nearby-threshold widening, broad extra repair dose;
 - scorer proliferation, universal width increases, nearby feasibility scalars, novelty/MAP-Elites/DPP without a mechanism;
+- the August fixed-width low-cardinality full-pool quota keys; reopen only for a materially new independently motivated descriptor or survivor mechanism;
 - broad ZDD/DD/frontier, representative-set, automaton, CEGAR/interpolation, RCSP/label-setting, CDCL/LCG or backdoor frameworks before a bounded mechanism earns them;
 - caching without sound recurrence/sufficiency evidence;
 - rotate/mirror retries or broad symmetry canonicalization instead of first-divergence diagnosis;
