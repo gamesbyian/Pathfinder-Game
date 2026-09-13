@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=10500 max=13000 -->
 # Pathfinder agent guide
 
 Compact router for coding/research agents. Load task-specific material, not accumulated repository history. [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) is optional detail for rare rules, solver gotchas, level facts, or provenance.
@@ -42,7 +43,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 7. Before treating work as push-ready, run the applicable local finish line from [`docs/ci-preflight.md`](docs/ci-preflight.md); ordinary work is `npm run ci:fast && npm run build`, and deep solver work is `npm run ci && npm run build`. GitHub Actions should not be the first discovery point for deterministic repository failures.
 8. Do not weaken validation to pass. Root-cause unexpected invariant, CSP, architecture, referee, or type failures.
 9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
-10. When a file exceeds a hard size limit, do not shave toward the boundary. Make one coherent reduction with margin (default: remove at least `max(2 × excess, 1 KB)`), then re-measure.
+10. Honor visible file-size declarations before editing: stay below `warn` when practical and never cross `max`. If already over a hard limit, make one coherent reduction with margin (default: remove at least `max(2 × excess, 1 KB)`), then re-measure.
 
 ## Solver research invariants
 
@@ -77,7 +78,7 @@ Current documentation should optimize for **decision density**, not historical c
 
 ## Context budget
 
-`docs/agent-context-routes.json` budgets representative required orientation separately from optional drill-down. Run:
+`docs/agent-context-routes.json` budgets representative required orientation separately from optional drill-down. Individual authority documents declare their own `warn` and `max` byte budgets in the opening comment. Run:
 
 ```bash
 node scripts/agent-context-budget.mjs
