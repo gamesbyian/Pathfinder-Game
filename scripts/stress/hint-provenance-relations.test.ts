@@ -58,6 +58,8 @@ describe('cross-hint provenance relations', () => {
         expect(audit.pathMemberships).toBe(2);
         expect(audit.identitiesByOrigin['pathfinder-solver']).toBe(1);
         expect(audit.identitiesByFacet['isolated-technique']).toBe(1);
+        expect(audit.identitiesByTechnique.beam).toBe(1);
+        expect(audit.identitiesByProducerKey['pathfinder-solver|abc123|beam']).toBe(1);
         expect(audit.examples[0].paths).toHaveLength(2);
     });
 
