@@ -12,7 +12,9 @@ Closed work reopens only for a changed causal premise/treatment. Historical outc
 
 September 12's corrected boundary found **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical candidates. Treat these as dated evidence. Freshness-reconcile before acquisition work; newer isolated capability makes a row composition/exposure evidence first. [`atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
 
-Naive `swap`/`cs` rescue is confound-dominated; generic scorer tuning and the six-summary future-feasibility rejoin are closed null. Funnel: **freshness -> controlled contrast -> first loss -> microscope when premise-starved -> smallest generic capability -> bounded pilot -> independent validation**.
+Naive `swap`/`cs` rescue is confound-dominated; generic scorer tuning and the six-summary future-feasibility rejoin are closed null. The current connectivity-derived dead-cause descendant is also closed at population survival: only 1/12 deterministic current Class-5 rows had enough records in the historical decision cluster, despite strong local recurrence inside `R03046`. [`result`](../reports/2026-09-13-class5-dead-cause-current-population-rejoin-result-001.md)
+
+Funnel: **freshness -> controlled contrast -> first loss -> microscope when premise-starved -> smallest generic capability -> bounded pilot -> independent validation**.
 
 ### Single-level microscope
 
@@ -20,11 +22,11 @@ Use one freshness-cleared hard level only after a recurring frontier phenotype e
 
 ## Archaeology-derived reopen stack
 
-These are successor/reopen questions, not parallel current work. The active Class-5 solve-local dead-cause gate remains first. The August low-cardinality full-pool categorical quota projection is **already complete and negative**; it is not the next fallback. [`correction`](../reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md)
+These are successor/reopen questions, not parallel current work. The solve-local connectivity/dead-cause rejoin and the August low-cardinality full-pool categorical quota projection are both closed in their tested forms. The live Class-5 acquisition question is now topological completion structure. [`dead-cause result`](../reports/2026-09-13-class5-dead-cause-current-population-rejoin-result-001.md), [`categorical correction`](../reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md)
 
 | Priority | Question | Reopen condition / boundary |
 |---:|---|---|
-| 1 | **Homotopy / topological completion classes** | If the dead-cause line closes null, reconstruct the winding observer on current exact-labelled extinction cases with robust puncture choices. Complete-solution diversity alone is not runtime evidence; ask whether LIVE and DEAD states differ in reachable completion topology. |
+| 1 | **Homotopy / topological completion classes** | **LIVE CURRENT GATE.** Reconstruct the smallest winding observer on current exact-labelled extinction cases with robust puncture choices. Complete-solution diversity alone is not runtime evidence; ask whether LIVE and DEAD states differ in reachable completion topology. |
 | 2 | **Future-intersection commitments / arbitrary-target feasibility** | Only when exact-labelled evidence nominates a specific event-feasibility distinction. Historical synthetic-must-cross/blueprint forms were dirty negatives; revive only the smallest read-only query needed. |
 | 3 | **Cross-attempt basin-overlap observer** | Reopen when nominally different current actions/retries appear redundant and allocation depends on whether they explore distinct basins. Canonical action identity and participation checks are mandatory. |
 | 4 | **Dependency-conditioned repair descent shadow** | WS6 evidence implicates an interior/early commitment that append-only continuation cannot revise. Trace coupled commitments before designing another repair operator. |
@@ -61,6 +63,7 @@ Do not reopen unchanged without materially new evidence:
 - whole-ladder retries, global seed fan-out, nearby-threshold widening, broad extra repair dose;
 - scorer proliferation, universal width increases, nearby feasibility scalars, novelty/MAP-Elites/DPP without a mechanism;
 - the August fixed-width low-cardinality full-pool quota keys; reopen only for a materially new independently motivated descriptor or survivor mechanism;
+- connectivity-derived solve-local reason reuse on the current Class-5 residual, unless a materially changed population independently restores the historical rejection cluster;
 - broad ZDD/DD/frontier, representative-set, automaton, CEGAR/interpolation, RCSP/label-setting, CDCL/LCG or backdoor frameworks before a bounded mechanism earns them;
 - caching without sound recurrence/sufficiency evidence;
 - rotate/mirror retries or broad symmetry canonicalization instead of first-divergence diagnosis;
