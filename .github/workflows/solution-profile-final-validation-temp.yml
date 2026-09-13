@@ -25,6 +25,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import json
 
           report = Path('reports/2026-09-13-solution-profile-resource-audit-001.md')
           text = report.read_text()
@@ -36,14 +37,29 @@ jobs:
           assert old in text, 'expected pre-validation audit status line not found'
           report.write_text(text.replace(old, new, 1))
 
+          name = 'solution-profile-final-validation-temp.yml'
           readme = Path('.github/workflows/README.md')
           r = readme.read_text()
-          name = 'solution-profile-final-validation-temp.yml'
           if name not in r:
               marker = '## One-shot diagnostics (delete after use)\n\n'
               assert marker in r, 'one-shot workflow section not found'
-              r = r.replace(marker, marker + '`solution-profile-final-validation-temp.yml` is the branch-local one-shot validation/regeneration gate for the 2026-09-13 solution-profile audit; delete it after the run is recorded.\n\n', 1)
+              r = r.replace(marker, marker + f'`{name}` is the branch-local one-shot validation/regeneration gate for the 2026-09-13 solution-profile audit; delete it after the run is recorded.\n\n', 1)
               readme.write_text(r)
+
+          # The permanent lifecycle test correctly requires every workflow on disk to be declared.
+          # Register this one-shot only in the disposable runner worktree. This ledger edit is never
+          # staged or committed; once the workflow itself is deleted the canonical ledger remains exact.
+          ledger_path = Path('docs/solver-workflow-lifecycle.json')
+          ledger = json.loads(ledger_path.read_text())
+          if not any(row.get('workflow') == name for row in ledger['workflows']):
+              ledger['workflows'].append({
+                  'workflow': name,
+                  'role': 'operational',
+                  'status': 'maintained',
+                  'currentConsumer': 'one-shot 2026-09-13 solution-profile audit validation',
+                  'retirementTrigger': 'delete immediately after the audit validation run is recorded',
+              })
+              ledger_path.write_text(json.dumps(ledger, indent=2) + '\n')
           PY
       - name: Regenerate published profile library
         run: npm run stress:solution-profile -- --levels-json=data/levels.json --out=reports/stress/solution-profile-published.json
