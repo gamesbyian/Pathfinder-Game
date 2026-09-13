@@ -1,6 +1,6 @@
 # Representation-sensitivity fresh forensics: the live question starts after mapped rank divergence
 
-> **Status:** concluded-positive diagnostic synthesis; no solver-policy change authorized.
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — clean-room archaeology from March through current `main`, including the 2026-09-03 symmetry first-divergence pilot and current research authorities.
 > **Decision:** the broad semantic/rank first-divergence question has already been tested and closed negative in its known-solution replay form. The smallest materially new symmetry experiment is current matched-search **lineage survival** and, separately, scheduler **exposure** on genuine solve/work cliffs.
 > **Remaining gate:** reopen only with current-code parent/transform pairs where a referee-valid mapped solution exists and either (A) the same isolated action at matched dose loses that live lineage differently, or (B) the production ladder gives the same useful action materially different exposure. Do not rerun the September replay/rank pilot unchanged.
