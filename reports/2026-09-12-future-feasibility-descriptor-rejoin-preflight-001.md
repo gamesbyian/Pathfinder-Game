@@ -1,8 +1,9 @@
 # Future-feasibility descriptor rejoin preflight 001
 
-> **Status:** running / prespecified before result inspection
-> **Purpose:** execute the bounded WS2 gate in `2026-09-12-future-feasibility-premise-rejoin-001.md` without turning it into another open-ended feature search.
-> **Evidence population:** exact-labelled B1/B2 recurrence cases plus the frozen `R03229` three-case microscope. Exact labels are offline truth only.
+> **Status:** superseded
+> **Last evidence:** 2026-09-12 — prespecified six-descriptor pass executed over the expanded exact-labelled B1/B2 + `R03229` set; result is recorded in `2026-09-12-future-feasibility-descriptor-rejoin-result-001.md`.
+> **Decision:** this document remains the frozen pre-result specification proving the candidate set was fixed before empirical inspection.
+> **Remaining gate:** none; the result report owns the disposition.
 
 ## Fixed candidate set
 
