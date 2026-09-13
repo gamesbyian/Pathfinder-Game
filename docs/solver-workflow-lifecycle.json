@@ -37,6 +37,13 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "daily-file-size-ratchet.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "daily repository-wide file-size debt monitoring",
+      "retirementTrigger": "retire when equivalent repository-wide file-size enforcement is owned by another maintained mechanism"
+    },
+    {
       "workflow": "deploy-firestore-rules.yml",
       "role": "operational",
       "status": "maintained",
