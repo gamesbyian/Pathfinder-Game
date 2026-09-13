@@ -1,8 +1,10 @@
-# Solution-space fingerprints
+# Known-solution sample profiles
 
-Offline analysis tooling that summarizes how accepted solutions behave so an unsolved stress level can be compared with known-solvable families. This is distinct from `domain/level-fingerprint.ts` (level-shape dedupe) and `scripts/solver-fingerprint.mjs` (solver determinism).
+Offline analysis tooling that summarizes how **observed accepted solutions** behave so a stress level can be compared with known-solvable examples. This resource is not a measurement of the complete latent solution space unless a separate whole-space proof says so. It is distinct from `domain/level-fingerprint.ts` (level-shape dedupe) and `scripts/solver-fingerprint.mjs` (solver determinism).
 
 > **Research boundary:** solution profiles are labels derived from known solutions. They may generate hypotheses about useful generic puzzle/state descriptors, but they are **not legal direct production-routing features** and are high-risk for family/identity leakage. A nearest known solution/profile is not a cold-solver oracle.
+
+The audit in [`../reports/2026-09-13-solution-profile-resource-audit-001.md`](../reports/2026-09-13-solution-profile-resource-audit-001.md) established that sparse samples are often unstable representations of their eventual stored profile. Treat profile similarity as exploratory evidence, with explicit attention to which axes were actually measurable.
 
 ## Reused primitives
 
@@ -14,7 +16,36 @@ Offline analysis tooling that summarizes how accepted solutions behave so an uns
 | Landmark roles/turn requirements | `modules/domain/landmark-rules.ts` |
 | Provenance fields | `modules/domain/hint-types.ts` |
 
-`scripts/stress/solution-profile-lib.mjs` adds aggregate turn distributions, objective-satisfaction depth, prefix diversity, pairwise-distinctiveness summaries, provenance buckets, and discovery-saturation curves. Its compatibility exports now delegate to the shared origin taxonomy rather than maintaining the former mutually-exclusive modality classifier. It stores only a top-20 cell table plus a normalized footprint, not another full heatmap.
+`scripts/stress/solution-profile-lib.mjs` adds aggregate turn distributions, objective-satisfaction depth, prefix diversity, pairwise-distinctiveness summaries, provenance buckets, and discovery-saturation curves. Its compatibility exports delegate to the shared origin taxonomy rather than maintaining the former mutually-exclusive modality classifier. It stores only a top-20 cell table plus a normalized footprint, not another full heatmap.
+
+## What the axes can legitimately say
+
+Profile fields do not all have the same evidential status.
+
+### Directly observed sample/path descriptors
+
+These can be described from one or more observed valid paths without pretending they characterize unobserved solutions:
+
+- normalized visited-cell footprint and cell/edge entropy over the stored sample;
+- portal-use rate/signatures in the stored sample;
+- objective-satisfaction depth in the stored sample;
+- turn rate and, when at least one turn exists, turn chirality.
+
+They are still sample descriptors. With one witness, for example, the footprint is the footprint of **that witness**, not a level-wide corridor map.
+
+### Multi-path population descriptors
+
+These require at least two observed paths before they exist as measurements:
+
+- prefix diversity;
+- pairwise distinctiveness;
+- whether every observed path shares the same must-cross entry/completion order.
+
+`mustCrossOrder.observedSingleOrder` is deliberately descriptive. The retained `mustCrossOrder.rigid` field is only a schema-compatibility alias and must not be interpreted as proof that the level forces that order. The audit found that early apparent single-order behavior frequently disappeared as more stored solutions accumulated.
+
+### Longitudinal discovery descriptors
+
+Discovery saturation depends on trustworthy discovery chronology. A profile records `chronologyDatedHints` and `chronologyComplete`. Plateau fields are not evidence when chronology is incomplete. Even with complete chronology, a detected plateau only says the observed discovery stream stopped adding certain structural novelty under the heuristic window. It never proves tree or solution-space exhaustion.
 
 ## Provenance resolution
 
@@ -40,40 +71,51 @@ The default purpose is explicitly `solution-atlas`. Capability-oriented profile 
 the artifact records both the pre-filter and applicable hint counts. A technique-performance
 request yields no hint-only paths by design because positive-only successes lack a run denominator.
 
-Legacy profile artifacts retain their historical bucket labels, but regenerated profiles use the shared origin vocabulary and stamp `schemaVersion: 2` plus `provenanceTaxonomy: origin-facet-applicability-v2`. The comparison tool treats an unstamped legacy library as stale even when its hint-count signature matches; otherwise a newly unified consumer would silently read old bucket semantics as current. Do not compare old modality-shaped buckets with origin/facet output as if they meant the same thing.
+Regenerated legacy-library profiles currently stamp all three identity fields:
 
-## Fingerprint contents
+- `schemaVersion: 3`;
+- `provenanceTaxonomy: origin-facet-applicability-v2`;
+- `profileAlgorithmVersion: sample-support-v2`.
+
+The comparison tool treats a library missing any current stamp as stale even when its content signature matches. Old modality-shaped buckets must not be compared with current origin/facet output as if they meant the same thing.
+
+## Profile contents
 
 Each level has a `combined` bucket plus origin and/or facet buckets in the new stratified output. A hint rediscovered by multiple origins can contribute to each relevant origin bucket, and one hint may contribute to several facet buckets.
 
-Each bucket includes:
+A bucket can contain:
 
 - cell/edge and intersection frequency;
 - portal-use and directed-jump signatures;
-- must-cross entry/completion order and rigidity;
+- observed must-cross entry/completion order;
 - objective-satisfaction depth for must-pass/must-cross/must-turn/adjacent-turn/surround;
 - turn rate, direction split, and hot turn cells;
 - prefix diversity;
 - pairwise `featureDistance` summaries;
-- discovery-saturation curves.
+- discovery-saturation curves and chronology coverage;
+- `hasExhaustiveSearchEvent`, an event-local provenance observation.
 
 Large-bucket distribution statistics use deterministic seeded sampling to bound O(n²) comparisons.
 
-## Saturation is not completeness
+## Exhaustive-event and saturation semantics
 
-`discoverySaturation.plateauStartIndex` / `plateauFraction` only show that recent accepted hints stopped adding new edges/cells. They do not prove tree exhaustion.
+`hasExhaustiveSearchEvent` means at least one stored hint has a provenance event whose own `search.termination` was `exhaustive`. It does **not** establish that the persisted bucket contains every valid solution, that the event enumerated the unrestricted puzzle space, or that its context applies to every path in the bucket.
 
-Only `provablyExhaustive` is a completeness signal, derived from stored provenance with `search.termination === 'exhaustive'`.
+There is currently no generic profile field that proves whole-solution-space completeness. If such a claim becomes necessary, it needs an explicit enumeration contract that identifies the searched space and guarantees persistence/coverage of the resulting solutions.
 
-Do not infer "the solution space is rigid" merely because the stored hint set is homogeneous. Search/generation provenance may have sampled one narrow mode repeatedly.
+`discoverySaturation.plateauStartIndex` / `plateauFraction` are accumulation heuristics. They can support statements about the observed discovery stream when chronology is complete. They are not substitutes for exhaustive proof.
 
 ## Cross-level comparison
 
-Raw packed coordinates are not comparable across grids. `profileDistance` / `profileDistanceTerms` use position-independent scalars or `normalizedFootprint`, the downsampled visited-cell analogue of `scripts/stress/features.mjs`'s occupancy grid. Missing axes are skipped.
+Raw packed coordinates are not comparable across grids. `profileDistance` / `profileDistanceTerms` use position-independent scalars or `normalizedFootprint`, the downsampled visited-cell analogue of `scripts/stress/features.mjs`'s occupancy grid.
 
-A target with only one witness uses `buildSinglePathProfile`; n=1 statistics degrade to null/zero-pair values. For sparse targets, use the **ranking and per-axis breakdown**, not raw absolute distance, because many terms are absent.
+Missing or unsupported axes are skipped rather than assigned synthetic zero values. In particular, a one-path target contributes no prefix-diversity, pairwise-distinctiveness, or must-cross population-order term. Chirality is absent when no turn was observed. Longitudinal saturation is absent when the chronology/sample cannot support it.
 
-Similarity is descriptive. A close profile match can reflect shared generator/family ancestry, geometry, or provenance artifacts rather than a causal reason that the same solver technique should work. Treat nearest-neighbor/profile clusters as hypothesis generators, then translate the pattern into legal current-level/current-state descriptors and validate away from the families that nominated it.
+`profileDistanceWithCoverage` and `nearestProfiles` expose the number and nominal weight of axes that participated. The `comparableWeightFraction` denominator is the full configured distance weight, including mechanics that may not apply to a particular pair, so it is best read as **comparable nominal weight**, not as a calibrated confidence probability.
+
+A target with only one witness uses `buildSinglePathProfile`. The comparison tool reports per-axis terms plus comparable nominal weight. Sparse-target rankings remain exploratory: the audit's self-retrieval test found that small solution samples often fail to identify their own eventual stored profile even after unsupported axes are removed.
+
+Similarity is descriptive. A close profile match can reflect shared generator/family ancestry, ordinary geometry, or provenance artifacts rather than a causal reason that the same solver technique should work. Translate any nominated pattern into legal current-level/current-state descriptors and validate away from the families that nominated it.
 
 ## Provenance and leakage caveats
 
@@ -100,25 +142,25 @@ Additional rules:
 - if a profile-derived descriptor was chosen after inspecting outcome correlations, the same levels are discovery/tuning data, not confirmation;
 - split variant-derived comparisons by parent family;
 - guard against normalized footprints or high-dimensional descriptors becoming accidental level/family identifiers;
-- do not report correlation between profile axes and solver success as causal without a controlled/shadow follow-up.
-- every analytical consumer making an applicability claim must name its evidence purpose. Use `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process` through the shared taxonomy; capability/performance queries must also name the compared solver version or an audited comparable-version set.
-- aggregate rediscovery through `provenanceDependencyStratum`; event count is retention/history volume, not independent support.
+- do not report correlation between profile axes and solver success as causal without a controlled/shadow follow-up;
+- every analytical consumer making an applicability claim must name its evidence purpose. Use `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process` through the shared taxonomy; capability/performance queries must also name the compared solver version or an audited comparable-version set;
+- aggregate rediscovery through `provenanceDependencyStratum`; event count is retention/history volume, not independent support;
 - a matching isolated hint event remains positive-only success evidence; technique-performance claims require the originating run's attempted-level denominator and failures, not just comparable version/config/work fields.
 
 See [`solver-level-blindness.md`](solver-level-blindness.md) and [`solver-research-operating-model.md`](solver-research-operating-model.md).
 
 ## Freshness
 
-Default legacy libraries:
+Default legacy-library paths:
 
 - `reports/stress/solution-profile-published.json`
 - `reports/stress/solution-profile-corpus1.json`
 
-`solution-profile-compare.mjs` checks each library's stored `hintSignature` against current hint/provenance counts before comparison. On mismatch it calls `regenerateCorpusProfile`, rewrites the library and `-summary.md`, then compares.
+`solution-profile-compare.mjs` checks each full library against a content-sensitive `hintSignature` derived from the profile-bearing hint paths and provenance. It also checks the schema, provenance taxonomy, and profile algorithm stamp. An in-place path/provenance/timestamp correction therefore invalidates the snapshot even when record counts are unchanged.
 
-Partial libraries (`levelSpec !== 'all'`) are not auto-regenerated because a count mismatch cannot distinguish staleness from intentional selection.
+On mismatch the comparer calls `regenerateCorpusProfile`, rewrites the library and `-summary.md`, then compares. Partial libraries (`levelSpec !== 'all'`) are not auto-regenerated because intentional selection cannot safely be reconstructed from a generic full-corpus comparison.
 
-Use `npm run stress:solution-profile` only to force a rebuild or create a non-default/partial legacy library. Use `source-stratified-solution-profile.mjs` for new origin/facet work, especially Corpus 2.
+Use `npm run stress:solution-profile` to force a rebuild or create a non-default/partial legacy library. Use `source-stratified-solution-profile.mjs` for new origin/facet work, especially Corpus 2.
 
 Fresh profile data does not make historical solver-outcome joins current. Revalidate decision-bearing technique/capability associations against current solver evidence.
 
@@ -133,14 +175,14 @@ npm run stress:solution-profile -- \
   --levels-json=data/stress/stress-levels.json \
   --out=reports/stress/solution-profile-corpus1.json
 
-npm run stress:solution-profile-compare -- --target-level=42
+npm run stress:solution-profile-compare -- --target-level=pos:42
 
 node scripts/run-bundled.mjs scripts/stress/source-stratified-solution-profile.mjs -- \
   --corpus=stress2 \
   --out=reports/stress/solution-profile-corpus2-granular.json
 ```
 
-`solution-profile-compare.mjs` also accepts `--library=a.json,b.json`, `--bucket=<source>` (default `combined`), and `--top=<n>` for the legacy libraries.
+`solution-profile-compare.mjs` also accepts `--library=a.json,b.json`, `--bucket=<origin>` (default `combined`), and `--top=<n>` for the legacy libraries. A storage-level `sameAsCombined` origin bucket is resolved back to the combined profile before comparison.
 
 ## Proper research use
 
@@ -156,7 +198,7 @@ If step 2 cannot produce a legal descriptor, the finding remains diagnostic know
 
 For path-level search diagnosis, profiles are only one view of the hint store. The broader evidence-layer plan in [`../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md`](../reports/2026-09-09-hint-provenance-evidence-layer-upgrade-001.md) also treats validated hint prefixes as a sound positive oracle and provenance as a longitudinal experimental log.
 
-Current legacy summaries:
+Current summaries, regenerated from the stamped libraries:
 - [`reports/stress/solution-profile-published-summary.md`](../reports/stress/solution-profile-published-summary.md)
 - [`reports/stress/solution-profile-corpus1-summary.md`](../reports/stress/solution-profile-corpus1-summary.md)
 
