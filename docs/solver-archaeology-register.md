@@ -17,7 +17,9 @@ Historical conclusions are not trusted from labels alone. Before treating a hist
 5. treat historical branches as evidence, not authority; compare ancestry before assuming a stale branch contains unique work;
 6. preserve corrections and supersessions rather than silently rewriting old evidence;
 7. follow negative-result chains through the next intended experiment instead of inheriting a revert's verdict automatically;
-8. treat dead tooling as a record of an unanswered question until the question itself is shown to have been answered.
+8. treat dead tooling as a record of an unanswered question until the question itself is shown to have been answered;
+9. treat configuration, workflow-arm labels, and plan membership as upstream claims only: verify the resolved runtime arm/config at the final consumer plus nonzero treatment work before assigning an algorithmic verdict;
+10. do not infer absence from `git log` alone for pre-September material. A later consolidation squashed per-file chronology for many files; archived snapshots, embedded evidence dates, manifests, report references, and later reconciliation can preserve ancestry that file history no longer exposes.
 
 Historical vocabulary families currently known to matter include: `archetype -> routing regime`; compact attempt keys -> canonical structured attempt identities; `diverse beam -> mechanic-bucket retention`; `dedup near-tie -> coarse-state near-tie retention`; `atlas/oracle -> labelled branch/reference model`; `trove -> variant family dataset`; `random/randoms -> corpus2`.
 
@@ -42,6 +44,10 @@ July 2026 work progressed from a rejected cell-overlap proxy to actual winding-n
 **Status:** synthesis premise; unresolved.
 
 Several historical lines point toward a common missing abstraction: the solver often represents how much obligation remains, but may poorly represent which qualitatively different completion regimes remain possible. Evidence families include homotopy classes, future-crossing commitments, portal-pair identity, mechanic-bucket retention, coarse-state merge churn, alternate-representation retries, exact extinction cases, and regime-dependent restart value.
+
+The July turn-landmark-dense chain strengthens this interpretation. Existing-technique routing failed even when all 16 configs received dedicated budgets; a real adjacent-turn exit-guidance asymmetry was fixed with 0/6 gains; a natural joint MST lower bound was weaker or negligible at 183 real states; a sound adjacent-turn deadlock predicate fired zero times across about 88.7M evaluations; and withheld-witness controls showed the correct local move was generally already ranked 0-2. The residue was not another urgency weight: long sequences of locally reasonable decisions could still destroy a globally compatible turn/intersection/obligation completion.
+
+An August state-conditioned must-cross-anchoring proposal points the same way. Unconditional stronger early must-cross attraction was already contradicted by cases such as L92, where successful paths deliberately deferred obligations while constructing intersection geometry. No clean descendant implemented the old choose-target/defer classifier, but its scientific question is absorbed here: a pending obligation's correct role can be categorical and phase-dependent rather than monotone urgency.
 
 **Smallest next question:** seek a recurring categorical distinction in exact-labelled LIVE-vs-DEAD states before adding another scalar feasibility feature.
 
@@ -137,7 +143,9 @@ The uploaded CP-LNS/LNS research emphasizes effective neighbourhoods after propa
 
 Exact repair-retreat archaeology later showed why path distance is a poor neighbourhood definition. One population's exact minimum feasible rollback coincided with early known-solution divergence, while a broadened population contained supported elites repairable after only 1–2 rollback steps despite a 27–29-step known-solution proxy. Locality is regime-dependent.
 
-**Smallest next question:** on already exact-labelled repair-retreat cases, derive the set of future-relevant commitments that differ between a dead elite continuation and a rescuing feasible continuation: turn arrival/exit choices, crossing/axis commitments, portal use, visit topology/separators, obligation ordering, and the path history that couples them. Ask whether this causal interface is substantially smaller/more stable than rollback distance and recurs across unrelated levels. No CP-LNS operator, adaptive destroy severity, or bandit until such a compact dependency interface is demonstrated.
+The archived July stagnation plan also left one observer explicitly unattempted after exact relinking, near-solved arming and turn/length-gap treatments all hit the same append-only prefix wall: a **descent-aware shadow probe** that observes which earlier coupled commitments change while repair approaches the terminal near-miss. Later WS6 work classified reconstructability from already-live prefixes, but did not answer which earlier decision made a later residual operator-incapable. Preserve this as a bounded observer that can test the current WS6 reopen condition, not as another repair operator.
+
+**Smallest next question:** on already exact-labelled repair-retreat cases, derive the set of future-relevant commitments that differ between a dead elite continuation and a rescuing feasible continuation: turn arrival/exit choices, crossing/axis commitments, portal use, visit topology/separators, obligation ordering, and the path history that couples them. Ask whether this causal interface is substantially smaller/more stable than rollback distance and recurs across unrelated levels. If current evidence specifically implicates an early/interior commitment, a read-only descent trace is the smallest historical observer to rejoin. No CP-LNS operator, adaptive destroy severity, or bandit until such a compact dependency interface is demonstrated.
 
 ### Scheduler Cartesian-product starvation
 
@@ -145,7 +153,9 @@ Exact repair-retreat archaeology later showed why path distance is a poor neighb
 
 June showed a major gain simply by changing nesting from gate-outer/config-inner to config-outer/gate-inner, preventing one gate from exhausting many configs before another gate received the winning configuration. Later technique-census work independently rediscovered gate-budget starvation and added fair per-gate allocation.
 
-**Current implication:** audit modern nesting/allocation across gate, attempt config, retry tier, seed, search family, and other scheduler axes whenever a capability is known in isolation but absent in production.
+A later retry-tier staircase supplies the necessary negative boundary. It reduced measured later-config starvation from roughly 21-29% to 0% on its sample, yet gained no unsolved case, lost 8/9 real first-config rescues, and increased wall time about 72.7%. Other reserve experiments similarly increased participation without increasing solves. Starvation can therefore be a real plumbing defect while the apparently unfair producer remains load-bearing.
+
+**Current implication:** audit modern nesting/allocation across gate, attempt config, retry tier, seed, search family, and other scheduler axes whenever a capability is known in isolation but absent in production. Do not optimize fairness or participation rate itself; measure recipient marginal value and the capability displaced by redistribution.
 
 ### Frontier snapshots / producer -> receptor handoff
 
@@ -231,11 +241,11 @@ The July axis-reach probe rebuilt historical CP-SAT-labelled branch states and s
 
 July rejected a coarse global nogood signature because the same key could occur on both a dead end and a successful path. August later found high exact dead-end recurrence inside repair and shipped a solve-local exact-state experience cache net-positive, but later archaeology corrected the interpretation: this was **experience memory inside an incomplete randomized search**, not logical UNSAT learning.
 
-A later learned-certificate audit tested generalized connectivity-derived failure reasons. Recurrence existed, but 91.2% remained within one level, tripping the experiment's own stop condition and closing the cross-level certificate form.
+The August learned-certificate programme then measured a much more relevant native failure population. In its dominant connectivity-rejection cluster, exact-state fingerprints repeated across 52.6% of records while reached-set and normalized boundary-blocker shapes repeated across **83.1% / 82.2%**. The experiment stopped because cross-level transfer was weak; roughly **91.2% of recurring-record benefit was level-local**. That is a clean negative for the original cross-level certificate ambition, but positive evidence for the current solve-local recurrence question.
 
-Historical progressive contradiction probes and dead-state reasoning therefore support the current narrow question: do exact/reliable dead detections collapse to recurring compact **solve-local** sound causes with material repeated-work cost? Current workstream correctly limits the next step to the smallest solve-local reason key if such causes actually recur; no broad CDCL/LCG framework is earned.
+Historical progressive contradiction probes and dead-state reasoning therefore support the current narrow gate: first rejoin that August Stage-B population on current Class-5 misses, rather than pay for a fresh generic recurrence census. If the recurrence survives, ask whether repeated shapes reduce to a small **logically sound cause**, whether matching it is cheaper than a fresh connectivity check, and whether material repeated work would actually be avoided. Shape equality is not itself a nogood.
 
-The current diagnostic has found at least one directly verified recurrence instance across structurally different beam states, but population-scale materiality remains unresolved because most prefix bisections abstained. Preserve that as an existence proof, not a rate estimate.
+Only a positive cause-reduction/economic gate earns shadow-testing of the smallest solve-local reason key. No broad CDCL/LCG framework is earned. The current diagnostic's directly verified recurrence instance remains an existence proof, not a rate estimate, because most prefix bisections abstained.
 
 ### Final-mile completable-state discrimination
 
@@ -324,10 +334,13 @@ The two materially less-absorbed ideas found so far remain the phenotype-gated f
 - treatment option dropped by alternate worker/transport;
 - stage nominally present but receives zero real work;
 - stale branch/code used for a supposedly fresh run;
+- stale checkpoint/resume state skips a supposedly fresh run;
+- workflow arm/config label resolves differently at execution, including treatment shards that actually run as control;
 - workflow green while treatment and control are behaviorally identical;
 - analyzer executes but old identity keys match zero rows;
 - mixed-era join/group compares raw strings rather than normalized identities;
 - telemetry fields exist but are trivially constant because upstream identity/state was stripped;
+- hidden wall-clock ceilings contaminate an otherwise canonical work-budget experiment;
 - sample drawn only from unsolved population makes regressions impossible by construction;
 - sound pruning evaluated only on correctness witnesses, not fixed-budget solve-set churn;
 - bundled experiments reverted together, obscuring which premise actually failed;
@@ -336,6 +349,8 @@ The two materially less-absorbed ideas found so far remain the phenotype-gated f
 - consumer receives non-redundant artifacts but cannot exploit them, so producer diversity is mistaken for interoperability;
 - metric aggregation drops an earlier seed/attempt's progress and manufactures an apparent allocation effect;
 - coarse diagnostic identity mistaken for semantic state/basin/interface equivalence.
+
+One August confirmation-workflow bug demonstrates why resolved arm identity belongs on this list: four completed confirmation cohorts were control-vs-control because the workflow read `matrix.arm` while arm identity actually lived at `matrix.shard.arm`. Several later mechanism diagnoses were stories about a treatment that never ran. The repair persisted resolved arm/flag artifacts and added fail-fast checks, which is the right control-plane pattern.
 
 ## Explicitly not resurrected by archaeology alone
 
@@ -352,7 +367,9 @@ The two materially less-absorbed ideas found so far remain the phenotype-gated f
 - the old fast-portfolio scheduler as a production design;
 - old February failed-state memoization;
 - historical intersection blueprint/synthetic-must-cross production implementations;
-- generic reusable detour-gadget libraries from the August residual-interface census alone.
+- generic reusable detour-gadget libraries from the August residual-interface census alone;
+- generic scheduler fairness/participation floors without displaced-capability evidence;
+- standalone adaptive must-cross urgency/anchoring policy absent a changed categorical completion premise.
 
 These require a materially changed causal premise and the current authority's reopen condition, not historical curiosity.
 
@@ -371,5 +388,12 @@ Detailed forensic evidence from the 2026-09-13 pass is preserved in:
 - `reports/2026-09-13-solver-archaeology-residual-interface-retry-lineage-008.md`
 - `reports/2026-09-13-solver-archaeology-uploaded-research-crosswalk-009.md`
 - `reports/2026-09-13-solver-archaeology-uploaded-research-crosswalk-010.md`
+- `reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md`
+- `reports/2026-09-13-solver-archaeology-invalid-populations-and-treatment-delivery-012.md`
+- `reports/2026-09-13-solver-archaeology-orchestration-boundary-treatment-delivery-013.md`
+- `reports/2026-09-13-solver-archaeology-ablation-and-batch-identity-failures-014.md`
+- `reports/2026-09-13-solver-archaeology-turn-landmark-sequence-structure-015.md`
+- `reports/2026-09-13-solver-archaeology-repair-descent-shadow-orphan-016.md`
+- `reports/2026-09-13-solver-archaeology-archive-completeness-and-allocation-controls-017.md`
 
 Use the register for durable premise/disposition memory and the dated reports only when the underlying historical evidence or reasoning is needed.
