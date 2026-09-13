@@ -119,6 +119,26 @@ March-April retry machinery is an earlier ancestor of this question. Telemetry-d
 
 **Smallest next question:** characterize whether current expensive stages continue producing novel/better search states, and whether legal current-solve observables predict marginal continuation value. Treat response fingerprints as observers of structural stasis, not proof of basin identity; join them to incremental outcome and canonical `workSpent` before changing allocation. Do not retest generic restart.
 
+### Forced-chain / certified macro traversal
+
+**Status:** specialized historical implementation positive; modern general-search value unresolved.
+
+The uploaded solver-aware architecture research proposed certified macro transitions through stretches with no genuine choice. Retained history shows this was not merely theoretical: commit `e7d4a4e383ff7b040fa14f7634437203c46f3ff9` changed SolverV2's trap-spot DFS so states with exactly one valid forward neighbour were followed inline, bundling undo records until the next real branching point. The commit described dramatic corridor-heavy stack/search-tree compression. That change also altered connectivity-check frequency, so it is not a clean modern production A/B.
+
+Current `modules/solver/search.ts` again uses an ordinary per-state DFS frame and archaeology found no arbitrary-depth one-successor chain compression in core DFS/beam traversal. `PRUNE_MC_FORCED_FIRST_MOVE` is a much narrower forced-first-step mechanism.
+
+**Boundary:** do not infer value from static corridor geometry. Stateful path history can change legality at every step. First run an observer-only census on current expensive misses: maximal post-prune legal-successor-cardinality-one chain lengths, fraction of canonical work spent inside them, mechanics crossed, and which search families pay that work. Only a material share earns a state-certified traversal treatment that still applies every underlying transition/prune and preserves canonical work accounting.
+
+### Dependency-conditioned repair neighbourhoods
+
+**Status:** changed premise; generic positional repair tested negative, dependency-defined locality unresolved.
+
+The uploaded CP-LNS/LNS research emphasizes effective neighbourhoods after propagation and variable/constraint relationships: choosing the right coupled decision universe can matter more than nominal destruction size or the sophistication of the selector. Pathfinder's closest historical treatment was positional rather than dependency-defined. Commit `5f0848994d11a5ba40161d5143ddc9f129223c59` added an elite-prefix DFS repair operator; its 20-level shared-budget A/B was 4/20 versus 5/20 control, including a confirmed budget-displacement loss. That closes the unchanged broad prefix-probe form.
+
+Exact repair-retreat archaeology later showed why path distance is a poor neighbourhood definition. One population's exact minimum feasible rollback coincided with early known-solution divergence, while a broadened population contained supported elites repairable after only 1–2 rollback steps despite a 27–29-step known-solution proxy. Locality is regime-dependent.
+
+**Smallest next question:** on already exact-labelled repair-retreat cases, derive the set of future-relevant commitments that differ between a dead elite continuation and a rescuing feasible continuation: turn arrival/exit choices, crossing/axis commitments, portal use, visit topology/separators, obligation ordering, and the path history that couples them. Ask whether this causal interface is substantially smaller/more stable than rollback distance and recurs across unrelated levels. No CP-LNS operator, adaptive destroy severity, or bandit until such a compact dependency interface is demonstrated.
+
 ### Scheduler Cartesian-product starvation
 
 **Status:** proven historical failure class; permanent audit target.
@@ -349,5 +369,7 @@ Detailed forensic evidence from the 2026-09-13 pass is preserved in:
 - `reports/2026-09-13-solver-archaeology-overlap-restart-retention-006.md`
 - `reports/2026-09-13-solver-archaeology-february-external-memos-007.md`
 - `reports/2026-09-13-solver-archaeology-residual-interface-retry-lineage-008.md`
+- `reports/2026-09-13-solver-archaeology-uploaded-research-crosswalk-009.md`
+- `reports/2026-09-13-solver-archaeology-uploaded-research-crosswalk-010.md`
 
 Use the register for durable premise/disposition memory and the dated reports only when the underlying historical evidence or reasoning is needed.
