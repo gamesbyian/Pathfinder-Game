@@ -23,7 +23,7 @@ const BUDGET_MS = 600_000; // wall-safety only; nodeBudget is the decision-beari
 const CORPUS_PATH = 'data/stress/stress-levels-random.json';
 const TARGET_IDS = ['R02768', 'R02180'];
 const TECHNIQUES = [
-    { label: 'plain', key: 'repair|score=repair|guidance=none' },
+    { label: 'plain', key: 'repair|score=repair|guidance=standard' },
     { label: 'must-turn-biased', key: 'repair|score=repair|guidance=must-turn-biased' },
 ];
 
