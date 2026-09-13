@@ -2,65 +2,60 @@
 
 Deferred/reopen questions only. Current priority: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); method: [`solver-research-operating-model.md`](solver-research-operating-model.md); capability memory: [`solver-capability-memory.md`](solver-capability-memory.md); dispositions: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Reconcile old questions with `research-status-index --compact` before new compute.
 
-This is not a second queue or experiment diary. Carry forward only the smallest unexplained residue and a concrete reopen condition.
+This is not a second queue or experiment diary. Carry forward only unexplained residue plus a concrete reopen condition.
 
 ## New-premise routing
 
-Closed work reopens only for a changed causal premise/treatment, not renewed interest. Capability memory may nominate mechanisms but does not waive an owning reopen gate; historical same-level outcomes stay offline evidence until reconciled to current code/protocol. [`new-premise map`](../reports/2026-09-11-new-premise-reopen-map-001.md), [`capability-memory closeout`](../reports/2026-09-11-capability-memory-next-gate-closeout-001.md)
+Closed work reopens only for a changed causal premise/treatment. Historical outcomes remain offline evidence until reconciled to current code/protocol. [`reopen map`](../reports/2026-09-11-new-premise-reopen-map-001.md)
 
-The earlier mechanic-composition transfer pilot is closed for its portal-terminal-relocation instrument because general-difficulty confounding hit the pre-registered stop rule; reopen only with a materially different manipulation and its own confound check. The structural-response extension ladder is also closed for its two frozen pairs. Current class-5 premise generation belongs in the live workstream authority.
+Portal-terminal relocation is closed because its mechanic-composition pilot hit the preregistered general-difficulty confound. The structural-response extension is closed for its two frozen pairs. Current class-5 premise generation belongs in workstreams.
 
 ## Capability-acquisition frontier
 
-The corrected post-1,048 boundary has **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical production-context candidates. Older 445/143 and 388/200 splits are historical cohort sizes only. [`current atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
+September 12's corrected boundary established **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical production-context candidates. These are dated evidence, not permanent properties. Freshness-reconcile a class-5 row before acquisition research; newer isolated capability makes it a composition/exposure nomination first. [`atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
 
-Treat those counts as a frozen evidence join, not permanent level properties. Hint provenance and other isolated evidence can accumulate outside the census used to build the atlas. Before spending acquisition research on a class-5 row, run the cheap freshness reconciliation in [`the specimen/freshness audit`](../reports/2026-09-12-class5-microscope-specimen-and-freshness-audit-001.md). Any row with newer/unjoined isolated cold capability is a composition/exposure nomination first, not a clean acquisition specimen.
+The suspicious same-revision class-5 hint successes were 5/5 T1 variants, 0/5 base T1, all `coarse-state-near-tie-retention-off`; production already reaches the corresponding retry. Technique-census hints now retain source-cell identity. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
-September 12 provenance reconciliation found the suspicious same-revision class-5 hint successes were **5/5 T1 variants and 0/5 base T1**, all `coarse-state-near-tie-retention-off`; production already reaches the corresponding retry. Technique-census hint provenance must retain its source cell so `isolatedTechnique` cannot blur base T1 and experimental cells. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
+Funnel: **freshness -> controlled contrast -> all-known-basin first loss -> microscope when premise-starved -> smallest generic capability -> bounded pilot -> independent validation**.
 
-Funnel: **freshness reconcile -> class4/class5 contrast -> source-controlled profile/family comparison -> all-known-basin first loss -> single-level microscope when premise-starved -> smallest generic capability -> bounded pilot -> independent/whole-family validation**. Missing baseline/provenance stays `unknown`; capability-memory membership is premise evidence, not current capability.
-
-The naive family/reference rung is closed: whole-ladder `swap`/`cs` rescue is confound-dominated, so a future family probe needs an explicit decoupled control. [`family comparison`](../reports/2026-09-12-class5-family-reference-comparison-001.md) The broad scorer-vocabulary discriminator is also closed negative; do not resume generic weight/profile tuning from class-5 membership alone. [`scorer vocabulary`](../reports/2026-09-11-scorer-vocabulary-frontier-witness-only-001.md)
+Naive `swap`/`cs` rescue is confound-dominated; family probes need decoupled controls. Generic scorer-vocabulary tuning is closed negative. The September 12 six-summary future-feasibility rejoin is also closed null: exact-resource capacity, topology scarcity and current joint-obligation summaries all overlap LIVE/DEAD across the resolved B2 + R03229 set. Do not resume with nearby scalar-feature accretion. [`family`](../reports/2026-09-12-class5-family-reference-comparison-001.md), [`feasibility null`](../reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md)
 
 ### Single-level microscope method
 
-When a recurring frontier phenotype is established but cheap generic treatments no longer yield a premise, one **freshness-cleared** hard level may be used as a microscope. Freeze its extinction boundary before treatment search, compare the known-live culled state with a tiny fixed survivor set, exact-adjudicate survivor future feasibility, classify the mechanism, then seek the smallest generic runtime-legal explanation. A specimen solve is discovery evidence only; no level ID, stored hint, family membership, or historical outcome may become runtime policy.
+Use one freshness-cleared hard level only after a recurring frontier phenotype exists and cheap generic treatments stop yielding premises. Freeze the extinction boundary, compare known-live culled state with a tiny survivor set, exact-adjudicate future feasibility, classify the mechanism, then seek the smallest runtime-legal explanation. A specimen solve is discovery evidence only.
 
-This method has direct precedent: the August B1/B2 extinction-adjacent CP-SAT program already froze rank-1 retained vs known-supported culled states (plus cutoff states for width-saturation) and established both `dead top-ranked / live known alternative` and `live / live` phenotypes. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md) Reproducing dead-top/live-witness is therefore **not a new premise by itself**. A new microscope must expose a materially different exact phenotype or earn a new mechanism-specific descriptor/architectural limitation beyond previously tried generic scorer/feature work.
+B1/B2 already established `dead top-ranked / live known alternative` and `live / live`. `R03229` reproduced the former at depth 22. Reopen microscope work only for a changed causal question. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md), [`result`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
-`R03229` completed the method: at its frozen width-2000 first-loss boundary, depth 22, CP-SAT found the culled witness **LIVE** and both rank-1 and cutoff survivors **DEAD**. This is B1/B2 recurrence. Reopen microscope work only for a changed causal question that can produce new information. [`result`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
+## Secondary solve-harvest trigger
 
-## Structural response extension
-
-**CLOSED.** The full temporal-persistence -> difficulty-control -> family-flip -> solution-space-mediation -> operational-first-divergence ladder completed for `R02687`/objectiveFirst and `R02094`/intersectionHarvest. n=2 licenses no selector. Reopen only for a new pair/premise, not another variant of this question. [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
+The September 12 class-1/2/3 rejoin is complete and found no already-legal no-contention batch. Repeat only after another material production-boundary/provenance reinterpretation. Class 4 remains freshness/reconciliation territory. One seven-level must-turn-biased repair seam graduated to the live workstream as a changed-treatment nomination. [`result`](../reports/2026-09-12-class123-cheap-harvest-rejoin-001.md)
 
 ## Deferred questions
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Richer static graph/placement selectors** | Reopen for one mechanism-specific descriptor from recurring solution/family/trace/first-loss evidence. The prior 18-feature bundle added no held-out value; no generic feature accretion. |
-| **Stability-aware portfolios** | Reopen only if WS1 finds a compact held-out decision signal beyond current work/coverage evidence. Capability-memory union may nominate the contrast, not the selector. |
-| **Latent response dimensions / biclusters** | Only if simpler pair/cohort analysis leaves stable unexplained structure after temporal/difficulty controls. |
-| **Repair restart allocation in the near-miss band** | Keep the unchanged 150M form closed. Preserve the replicated 64M fully-spent bestBadness<=6 signal; reopen on a fresh legal population with the same texture or a changed allocation contract. |
-| **Beam continuation / cross-policy handoff** | Same-policy residual tranches, simple beam->DFS handoff and repeated/staged switching are closed. Reopen for a distinct complementary policy or an earned first-loss/state-selection mechanism with live futures. |
-| **Temporal anchor diversity** | No standing old-solver ensemble. Reopen after a material production-boundary change only when compatible historical rows suggest a distinct old regime owns a stable basin and the decision cannot be answered without replay. |
-| **Counterfactual displaced-capability recurrence** | Ordinary churn stays in solver health. Reopen when losses from multiple unrelated accepted changes recur in the same mechanism phenotype. |
-| **Generator/editor-envelope technique niches** | Reopen only with a joinable finer envelope or envelope-specific mechanism claim; broad corpus ease/repertoire/regime questions are characterized. |
-| **Minimal technique-niche counterexamples** | Use reducer + exact/reference validation when a robust niche needs causal isolation. Reopen the microscope only when the causal question differs from the completed R03229 B1/B2 recurrence. |
-| **Typed producer -> consumer search artifacts** | Require measured consumer limitation, novel timely information, bounded production/storage/replay cost, independent control and matched-work benefit. No general blackboard. |
-| **Queryable analytical layer** | Reopen only if recurring joins still need bespoke scripts after existing helpers are extended. Capability memory stays a narrow rebuildable view, not a warehouse. |
-| **Class-1 compact beam-menu exposure** | Naive append/insert under strict total work is closed; extra exposure dilutes protected suffix winners in the dominant high-intersection rules. Reopen only with a non-strict/additive-tier envelope or proven reserve headroom outside those rules. |
+| **Richer static graph/placement selectors** | A materially new mechanism-specific descriptor from recurring solution/trace/first-loss evidence. Prior 18-feature bundle and September 12 six-summary future-feasibility pass added no held-out discriminator. |
+| **Stability-aware portfolios** | WS1 finds a compact held-out decision signal beyond current work/coverage evidence. |
+| **Latent response dimensions / biclusters** | Simpler pair/cohort analysis leaves stable unexplained structure after temporal/difficulty controls. |
+| **Repair restart allocation in near-miss band** | Unchanged 150M form stays closed. Reopen the replicated 64M fully-spent `bestBadness<=6` signal only on a fresh legal population or changed allocation contract. |
+| **Beam continuation / cross-policy handoff** | Same-policy tranches, simple beam->DFS and staged switching are closed. Reopen for a distinct complementary policy or earned live-future selection mechanism. |
+| **Temporal anchor diversity** | After a material production-boundary change, compatible historical rows show a distinct old regime owns a stable basin and replay is needed to decide. |
+| **Counterfactual displaced-capability recurrence** | Multiple unrelated accepted changes lose the same mechanism phenotype. |
+| **Generator/editor-envelope niches** | A joinable finer envelope or envelope-specific mechanism claim appears. |
+| **Typed producer -> consumer search artifacts** | Measured consumer limitation, novel timely information, bounded production/storage/replay cost, independent control, matched-work benefit. No general blackboard. |
+| **Queryable analytical layer** | Recurring joins still require bespoke scripts after existing helpers are extended. Capability memory remains a narrow rebuildable view. |
+| **Class-1 compact beam-menu exposure** | Current rejoin found zero reserve-window headroom outside the already-closed high-intersection rules. Reopen only with a materially different work/allocation contract, not another strict-work append/insert. |
 
 ## Demoted forms
 
 Do not reopen unchanged without materially new evidence:
 
-- whole-ladder retries, global seed fan-out, nearby-threshold widening or broad extra repair dose;
-- hand-authored scorer proliferation, universal beam-width increases, or novelty/MAP-Elites/DPP machinery before a descriptor-aware treatment earns it;
-- broad ZDD/DD/frontier, representative-set, automaton, CEGAR/interpolation, RCSP/label-setting, CDCL/LCG or backdoor frameworks before a bounded mechanism demonstrates value;
-- exact/approximate caching without new sound recurrence/sufficiency evidence;
+- whole-ladder retries, global seed fan-out, nearby-threshold widening, broad extra repair dose;
+- hand-authored scorer proliferation, universal beam-width increases, nearby future-feasibility scalar features, novelty/MAP-Elites/DPP machinery without a mechanism;
+- broad ZDD/DD/frontier, representative-set, automaton, CEGAR/interpolation, RCSP/label-setting, CDCL/LCG or backdoor frameworks before a bounded mechanism earns them;
+- exact/approximate caching without sound recurrence/sufficiency evidence;
 - rotate/mirror retries or broad symmetry canonicalization instead of first-divergence diagnosis;
 - hazard/bandit/ML scheduling before simpler fixed-work evidence shows actionable headroom;
-- bulk variants, full-corpus A/Bs for falsified ideas, retained failed code, proxy optimization after solve/work/correctness failure, or framework-building before the smallest information-value pilot succeeds.
+- bulk variants, full-corpus A/Bs for falsified ideas, retained failed code, proxy optimization after solve/work/correctness failure, or framework-building before a small information-value pilot succeeds.
 
 Keep this file short: questions, boundaries, reopen conditions.

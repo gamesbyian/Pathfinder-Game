@@ -1,13 +1,13 @@
 # Solver workflow remediation implementation handoff
 
-> **Status:** implementation handoff for the active [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md).
+> **Status:** completed historical implementation handoff for [`solver-workflow-evidence-remediation-plan.md`](solver-workflow-evidence-remediation-plan.md); remediation merged in PR #1740 on 2026-09-11.
 > **Created:** 2026-09-11.
-> **Purpose:** lock pre-implementation decisions, reduce agent ambiguity, and define the boundary between mechanical repo remediation and later scientific reinterpretation.
-> **Priority:** subordinate to the remediation plan. Ordinary solver-research priority remains owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
+> **Purpose:** preserve the pre-implementation decisions and mechanical/scientific boundary used by the completed remediation. This is not a current execution queue.
+> **Current route:** use [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) for closeout conclusions and the ordinary research/evidence authorities for new work. Solver-research priority remains owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
 ## 1. Settled workflow lifecycle decisions
 
-These decisions were resolved by inspecting current `main` plus recent git history. Treat them as implementation instructions unless current source reveals a concrete contradiction.
+These decisions were resolved by inspecting current `main` plus recent git history. They are retained as the historical implementation contract for PR #1740; current source and lifecycle inventory own present behavior.
 
 | Workflow | Decision | Reason / implementation note |
 |---|---|---|

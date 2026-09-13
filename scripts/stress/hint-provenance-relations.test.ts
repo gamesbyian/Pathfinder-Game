@@ -4,36 +4,16 @@ import { auditCrossHintEventCollisions } from './hint-provenance-relations.mjs';
 function event(overrides: any = {}) {
     return {
         solver: {
-            id: 'pathfinder-solver',
-            version: 'abc123',
-            technique: 'beam',
-            scoringProfileId: 'default',
-            orderingBiasId: null,
-            beamWidth: 2000,
-            mechanicBucketRetention: false,
-            gateKey: 1,
-            forcing: null,
-            attemptIndex: 0,
+            id: 'pathfinder-solver', version: 'abc123', technique: 'beam', scoringProfileId: 'default',
+            orderingBiasId: null, beamWidth: 2000, mechanicBucketRetention: false, gateKey: 1,
+            forcing: null, attemptIndex: 0,
         },
         search: {
-            nodesExpanded: 100,
-            elapsedMs: 10,
-            budgetMs: 1000,
-            workSpent: 100,
-            workBudget: 1000,
-            cumulativeNodesExpanded: 100,
-            cumulativeElapsedMs: 10,
-            cumulativeBudgetMs: 1000,
-            termination: 'solved',
-            randomSeed: 7,
-            seedSalt: 'x',
+            nodesExpanded: 100, elapsedMs: 10, budgetMs: 1000, workSpent: 100, workBudget: 1000,
+            cumulativeNodesExpanded: 100, cumulativeElapsedMs: 10, cumulativeBudgetMs: 1000,
+            termination: 'solved', randomSeed: 7, seedSalt: 'x',
         },
-        context: {
-            usedExistingHints: false,
-            hintGuided: false,
-            levelRevision: 'rev-1',
-            isolatedTechnique: true,
-        },
+        context: { usedExistingHints: false, hintGuided: false, levelRevision: 'rev-1', isolatedTechnique: true },
         foundAt: '2026-09-12T00:00:00.000Z',
         ...overrides,
     };
@@ -58,15 +38,19 @@ describe('cross-hint provenance relations', () => {
         expect(audit.pathMemberships).toBe(2);
         expect(audit.identitiesByOrigin['pathfinder-solver']).toBe(1);
         expect(audit.identitiesByFacet['isolated-technique']).toBe(1);
-        expect(audit.examples[0].paths).toHaveLength(2);
+        expect(audit.identitiesByTechnique.beam).toBe(1);
+        expect(audit.identitiesByProducerKey['pathfinder-solver|abc123|beam']).toBe(1);
+        expect(audit.examplesByTechnique.beam).toHaveLength(1);
+        expect(audit.examplesByTechnique.beam[0].pathCount).toBe(2);
+        expect(audit.examplesByTechnique.beam[0].pathPreviews).toHaveLength(2);
+        expect(audit.examples[0].pathLengths).toEqual([3, 3]);
     });
 
     it('does not call repeated recording on one path a cross-hint collision', () => {
         const a = event();
         const b = event({ foundAt: '2026-09-12T00:00:01.000Z' });
         const audit = auditCrossHintEventCollisions([{
-            id: 'R00002',
-            hintRecords: [{ path: [1, 2, 3], provenance: [a, b] }],
+            id: 'R00002', hintRecords: [{ path: [1, 2, 3], provenance: [a, b] }],
         }]);
         expect(audit.collisionIdentities).toBe(0);
     });
