@@ -1,6 +1,6 @@
 # Solver archaeology: repair descent-shadow orphan
 
-> **Status:** concluded-positive archaeology / unresolved observer premise
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — archived July repair-stagnation plan reconciled against August-September repair reachability/reconstructability work and current WS6 authority
 > **Decision:** preserve the July descent-aware shadow probe as an unresolved diagnostic question, not as a repair operator. Later WS6 work classified reconstruction from already-live prefixes and showed most exact-live repair cases are operator-incapable, but it did not identify which earlier descent commitments make a later near-miss unreconstructable.
 > **Remaining gate:** only if current repair/first-loss evidence again indicates an interior/early-commitment deficit, run a bounded read-only descent observer before designing a new operator. A null or heterogeneous result closes the descendant.
