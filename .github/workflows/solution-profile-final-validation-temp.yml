@@ -14,12 +14,37 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - name: Prepare one-shot validation metadata
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          report = Path('reports/2026-09-13-solution-profile-resource-audit-001.md')
+          text = report.read_text()
+          old = 'Status: hardening implemented on branch; full validation and generated-artifact refresh pending.'
+          new = '''> **Status:** active
+          > **Last evidence:** 2026-09-13 — semantic hardening passed targeted profile tests and lint; full repository validation is now running.
+          > **Decision:** retain the solution-profile resource as a known-solution sample-profile instrument under schema v3, with unsupported axes omitted from comparison.
+          > **Remaining gate:** regenerate tracked schema-v3 libraries and pass the repository validation, type/docs checks, and comparer smoke tests.'''
+          assert old in text, 'expected pre-validation audit status line not found'
+          report.write_text(text.replace(old, new, 1))
+
+          readme = Path('.github/workflows/README.md')
+          r = readme.read_text()
+          name = 'solution-profile-final-validation-temp.yml'
+          if name not in r:
+              marker = '## One-shot diagnostics (delete after use)\n\n'
+              assert marker in r, 'one-shot workflow section not found'
+              r = r.replace(marker, marker + '`solution-profile-final-validation-temp.yml` is the branch-local one-shot validation/regeneration gate for the 2026-09-13 solution-profile audit; delete it after the run is recorded.\n\n', 1)
+              readme.write_text(r)
+          PY
       - name: Regenerate published profile library
         run: npm run stress:solution-profile -- --levels-json=data/levels.json --out=reports/stress/solution-profile-published.json
       - name: Regenerate Corpus-1 profile library
@@ -34,17 +59,33 @@ jobs:
         run: npm run stress:solution-profile-compare -- --target-level=1 --top=3
       - name: Origin-bucket comparer smoke
         run: npm run stress:solution-profile-compare -- --target-level=1 --bucket=pathfinder-solver --top=1
-      - name: Commit regenerated profile artifacts
+      - name: Finalize audit status and recheck docs
         shell: bash
         run: |
-          git add reports/stress/solution-profile-published.json \
+          python - <<'PY'
+          from pathlib import Path
+          report = Path('reports/2026-09-13-solution-profile-resource-audit-001.md')
+          text = report.read_text()
+          active = '''> **Status:** active
+          > **Last evidence:** 2026-09-13 — semantic hardening passed targeted profile tests and lint; full repository validation is now running.
+          > **Decision:** retain the solution-profile resource as a known-solution sample-profile instrument under schema v3, with unsupported axes omitted from comparison.
+          > **Remaining gate:** regenerate tracked schema-v3 libraries and pass the repository validation, type/docs checks, and comparer smoke tests.'''
+          done = '''> **Status:** concluded-positive
+          > **Last evidence:** 2026-09-13 — schema-v3 profile regeneration, fast repository CI, type/docs checks, and combined/origin-bucket comparer smoke tests all passed.
+          > **Decision:** retain the hardened solution-profile resource as a known-solution sample-profile instrument; sparse-profile similarity remains exploratory research evidence, not a production routing feature.
+          > **Remaining gate:** none for this audit; future profile/outcome research must use held-out evidence and the provenance/evidence-purpose controls documented below.'''
+          assert active in text, 'active audit status block not found'
+          report.write_text(text.replace(active, done, 1))
+          PY
+          npm run check:documentation-links
+      - name: Commit regenerated profile artifacts and audit closeout
+        shell: bash
+        run: |
+          git add reports/2026-09-13-solution-profile-resource-audit-001.md \
+                  reports/stress/solution-profile-published.json \
                   reports/stress/solution-profile-published-summary.md \
                   reports/stress/solution-profile-corpus1.json \
                   reports/stress/solution-profile-corpus1-summary.md
-          if git diff --cached --quiet; then
-            echo 'Generated profile artifacts already current.'
-            exit 0
-          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'research: regenerate schema-v3 solution profiles'
