@@ -33,9 +33,9 @@ July 2026 work progressed from a rejected cell-overlap proxy to actual winding-n
 
 **What is proved:** complete solutions contain a topological diversity axis that the older solution-diversity metric could miss.
 
-**Not proved:** homotopy class predicts LIVE/DEAD frontier fate, increases solve rate, or provides a useful runtime key.
+**Not proved:** homotopy class predicts LIVE/DEAD frontier fate, increases solve rate, or provides a useful runtime key. The historical puncture point was the obstacle-cluster centroid, explicitly approximate for concave clusters, and no checked-in winding analyzer was found on current `main`.
 
-**Smallest next question:** on exact-labelled extinction cases, do known completions of the last LIVE branch occupy a topological completion class absent from completions represented by the retained DEAD population? Reuse the old offline winding machinery first; no in-loop topology feature unless this relation recurs.
+**Smallest next question:** on exact-labelled extinction cases, do known completions of the last LIVE branch occupy a topological completion class absent from completions represented by the retained DEAD population? Reconstruct the tiny offline observer and include a robustness check for puncture choice; no in-loop topology feature unless this relation recurs.
 
 ### Completion-regime / categorical future structure
 
@@ -44,6 +44,16 @@ July 2026 work progressed from a rejected cell-overlap proxy to actual winding-n
 Several historical lines point toward a common missing abstraction: the solver often represents how much obligation remains, but may poorly represent which qualitatively different completion regimes remain possible. Evidence families include homotopy classes, future-crossing commitments, portal-pair identity, mechanic-bucket retention, coarse-state merge churn, alternate-representation retries, exact extinction cases, and regime-dependent restart value.
 
 **Smallest next question:** seek a recurring categorical distinction in exact-labelled LIVE-vs-DEAD states before adding another scalar feasibility feature.
+
+### Residual-interface equivalence / partial-order commutativity
+
+**Status:** generic detour-gadget mining received a weak first gate; commutativity question remains unresolved.
+
+The August 6 frontier triage nominated two cheap offline ideas: mine accepted solutions for same-interface subpaths with different length/intersection contributions, and test whether disjoint local excursions can commute while preserving externally relevant state. The later residual-interface census substantially performed the first experiment under changed vocabulary. Across 20 levels / 288 canonical-valid solutions it found 31,351 exact represented-state-preserving occurrences, 845 unique signatures, and only 14 cross-level signatures. Follow-up inspection collapsed nearly all cross-level cases to the same elementary short-route versus four-edge rectangular-loop motif; one weak held-out motif survived but did not demonstrate recognition, useful alternatives, or work reduction. No generic detour operator was earned.
+
+The same tooling also emitted `commutingCandidate`, but only when two subpaths had the same sorted obligation multiset in a different order. Archaeology found no descendant that performed the original decision-bearing test: swap/reorder the excursions and measure legality, future completion feasibility/count/topology, solver work, and which mechanics break commutativity. Candidate counting is not evidence of partial-order equivalence.
+
+**Boundary:** keep generic gadget mining closed absent a changed mechanic-conditioned premise. If current exact-labelled or accepted-path evidence independently points to redundant obligation ordering, the smallest legitimate descendant is an offline swap/replay observer. Do not infer equivalence from obligation-multiset identity alone.
 
 ### Unfinished August full-pool categorical-state projection
 
@@ -105,7 +115,9 @@ May rescue systems used progress-based lockouts: a rescue could refire beyond a 
 
 Because the 150M population differed from the 64M population, the history cannot isolate work scale from residual-band interaction. It does establish that action value was regime-dependent rather than globally monotone.
 
-**Smallest next question:** characterize whether current expensive stages continue producing novel/better search states, and whether legal current-solve observables predict marginal continuation value. Do not retest generic restart; join novelty/progress to canonical `workSpent` first.
+March-April retry machinery is an earlier ancestor of this question. Telemetry-delta family switching and broad-stagnation novelty retries were merged before an April retry-fingerprint layer tried to summarize timeout-like attempts by nodes, depth, and near-solution dimensions. The first apparent `retryFingerprintDupes=0` reading was partly a signature bug: L134 repeatedly produced the same 5468-node/depth-49 shape, but empty near-dimension serialization prevented a match until a core-signature fallback was added. July repair diagnostics later showed a stronger observer result: two levels returned to the exact same length+must-turn deficit family across tens of thousands of fresh restarts and many stagnation bursts.
+
+**Smallest next question:** characterize whether current expensive stages continue producing novel/better search states, and whether legal current-solve observables predict marginal continuation value. Treat response fingerprints as observers of structural stasis, not proof of basin identity; join them to incremental outcome and canonical `workSpent` before changing allocation. Do not retest generic restart.
 
 ### Scheduler Cartesian-product starvation
 
@@ -129,7 +141,7 @@ A later beam→repair interoperability study found strong non-redundancy across 
 
 **Status:** old implementation unattractive; abstraction retained.
 
-A March parity-breaker experiment retargeted search toward an unused parity-changing portal when direct goal parity became impossible. The specific heuristic was reverted. The reusable idea is event-level retargeting: when a necessary future event becomes active, guide toward the event that repairs feasibility rather than always scoring against the ultimate goal.
+A March parity-breaker experiment retargeted search toward an unused parity-changing portal when direct goal parity became impossible. The specific heuristic was merged without runtime solver validation and reverted roughly 94 seconds later without a recorded causal failure. That dirty revert does not establish the formulation was ineffective. The reusable idea is event-level retargeting: when a necessary future event becomes active, guide toward the event that repairs feasibility rather than always scoring against the ultimate goal.
 
 ### Backward-search / backward-information lineage
 
@@ -163,9 +175,13 @@ The much larger modern variant library can now turn this from anecdote into a re
 
 ### Perturbation-response fingerprints
 
-**Status:** premise-generation tool; raw sibling rescue alone is confounded.
+**Status:** premise-generation tool; raw sibling rescue and coarse retry steering are confounded.
 
 Rather than using `variant solved` as causal evidence, characterize which controlled mutation families change capability and whether action value moves consistently across whole parents. Current authorities already require decoupled controls for structural-response claims.
+
+Historical retry-response work adds a second caution. March-April code used nodes/depth/near-solution summaries to detect apparently repeated timeout regimes and alter later retries. Participation and identity were unreliable: some rescue gates excluded the target phenotype, and L134's repeated core shape failed fingerprint equality because an empty near-dimension serialization differed. July's observer-only repair tracing later found genuine repeated deficit regimes across tens of thousands of restarts on two levels, supporting fingerprints as **stasis detectors** but not as equivalence proofs.
+
+**Boundary:** compact fingerprints may nominate repeated regimes or low-marginal-value actions. They must not be treated as proof that two states, attempts, or basins are equivalent. Any modern use should test whether fingerprint persistence/change predicts incremental solve/progress value under canonical `workSpent` before steering allocation.
 
 ### Independent accepted-path differential microscope
 
@@ -229,7 +245,9 @@ The lesson was then partially forgotten. On March 1, PR #201 replaced the richer
 
 May supplied a direct semantic counterexample rather than another implementation bug. L135 could reach the same transposition signature with different visited-cell sets and different feasible completions; a doomed branch poisoned the signature and pruned the viable completion. Disabling the transposition memo in the sanity pass solved the level. June SolverV2 then instrumented **sound full-state reconvergence** using head + visited set + edge usage + all constraint counters and reported 0.0% repeats across L79, L139, L92 and L61, with more than 157K unique states per inspected search. In that measured regime, preserving enough history to make equivalence sound removed the DAG-like reuse the memo was supposed to exploit.
 
-**General lesson:** Pathfinder future equivalence has been path-history-sensitive from the beginning. Global coarse memoization should be understood as a capability-altering representation/merge policy, not an innocent cache optimization. A sound full-state memo has little demonstrated collapse value on the measured hard cases; an aggressively compact memo gains reuse precisely by asserting equivalences that require independent validation. Any compact Class-5 key or coarse representation should therefore be tested against exact-live alternatives as a falsifiable retention hypothesis, not justified by cache hit rate alone.
+July repeated the lesson quantitatively. A crude transposition signature first appeared to show roughly 92-99% duplicate node visits. Once full visited identity and edge/axis history were restored, true reconvergence fell to roughly 0.5-16%, usually around 1-2%; the most dramatic coarse “duplicate” case had the least true duplication. A later beam measurement found sound duplicate elimination at only about 0.019% of roughly 11.4M candidates. The apparent optimization opportunity was largely an artifact of asserted equivalence.
+
+**General lesson:** Pathfinder future equivalence has been path-history-sensitive from the beginning. Global coarse memoization should be understood as a capability-altering representation/merge policy, not an innocent cache optimization. A sound full-state memo has little demonstrated collapse value on the measured hard cases; an aggressively compact memo gains reuse precisely by asserting equivalences that require independent validation. Any compact Class-5 key, response fingerprint, residual-interface identity, or coarse representation should therefore be used to nominate cases and tested against exact-live alternatives before it becomes a merge/prune/steering key.
 
 ### Coarse-state merge / near-tie retention
 
@@ -279,7 +297,7 @@ At least three substantial external solver-research artifacts existed in the rep
 
 Most high-level recommendations from the readable Claude memo and the directly inspected Gemini material were absorbed or later superseded: hint-path counterexample replay, side-channel telemetry discipline, joint-obligation/Held-Karp work, staged feature-flagged experiments, diagnosing gate predicates before threshold changes, and broad bidirectional/backward-search ideas. Do not treat the deleted memos as a generic untried-ideas menu.
 
-The two materially less-absorbed ideas found so far remain the phenotype-gated final-mile completable-state discriminator and action/gate misclassification framing recorded above. The direct Gemini recovery has not yet exposed a third premise strong enough to add to that list.
+The two materially less-absorbed ideas found so far remain the phenotype-gated final-mile completable-state discriminator and action/gate misclassification framing recorded above. The direct Gemini recovery has not yet exposed a third premise strong enough to add to that list. The deleted ChatGPT/`Pathfinder solver research memo.pdf` blob was located, but the connector cannot decode the historical binary PDF as UTF-8; later citations and overlap with the other memos remain the available evidence unless the binary is recovered through another repository-capable path.
 
 ## Experimental-integrity failure classes to check during archaeology
 
@@ -296,7 +314,8 @@ The two materially less-absorbed ideas found so far remain the phenotype-gated f
 - branch existence mistaken for unique or authoritative work;
 - feature code present but option propagation omitted, leaving the intended treatment disabled;
 - consumer receives non-redundant artifacts but cannot exploit them, so producer diversity is mistaken for interoperability;
-- metric aggregation drops an earlier seed/attempt's progress and manufactures an apparent allocation effect.
+- metric aggregation drops an earlier seed/attempt's progress and manufactures an apparent allocation effect;
+- coarse diagnostic identity mistaken for semantic state/basin/interface equivalence.
 
 ## Explicitly not resurrected by archaeology alone
 
@@ -312,7 +331,8 @@ The two materially less-absorbed ideas found so far remain the phenotype-gated f
 - static exact-k backward reachability and the old backward-bridge scorer;
 - the old fast-portfolio scheduler as a production design;
 - old February failed-state memoization;
-- historical intersection blueprint/synthetic-must-cross production implementations.
+- historical intersection blueprint/synthetic-must-cross production implementations;
+- generic reusable detour-gadget libraries from the August residual-interface census alone.
 
 These require a materially changed causal premise and the current authority's reopen condition, not historical curiosity.
 
@@ -328,5 +348,6 @@ Detailed forensic evidence from the 2026-09-13 pass is preserved in:
 - `reports/2026-09-13-solver-archaeology-topology-family-response-005.md`
 - `reports/2026-09-13-solver-archaeology-overlap-restart-retention-006.md`
 - `reports/2026-09-13-solver-archaeology-february-external-memos-007.md`
+- `reports/2026-09-13-solver-archaeology-residual-interface-retry-lineage-008.md`
 
 Use the register for durable premise/disposition memory and the dated reports only when the underlying historical evidence or reasoning is needed.
