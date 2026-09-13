@@ -32,7 +32,7 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 1. **Class-4 allocation:** implement/validate the dead-last additive whole-ladder retry before population scale. Skip family mining; freshness is established and the question is allocation/collateral.
 2. **Class-2 composition:** existing-family preflight is complete. Across the seven nominated parents, historical whole-ladder `cs`/`gr`/`swap` siblings solve only **8/210**; `R02768` contributes 5/30 while `R02180` is 1/30 and three parents are 0/30. First test the smallest default-off/additive late must-turn-biased repair probe on the deliberate contrast pair `R02768` (family-responsive) + `R02180` (family-rigid), with matched work and no plain-repair theft. If it earns continuation, add at least one 0/30 parent before scaling. [`family preflight`](../reports/2026-09-13-must-turn-biased-family-preflight-001.md)
-3. **Class-5 acquisition:** test whether exact/reliable dead detections reduce to a recurring compact sound cause with material repeated-work cost. If absent, close. If present, shadow-test the smallest solve-local reason key. Family evidence is secondary only after a cause exists; raw sibling rescue remains confounded. No broad CDCL/LCG framework. [`excavation`](../reports/2026-09-12-solver-future-work-backlog-excavation-001.md)
+3. **Class-5 acquisition:** rejoin the August connectivity-rejection Stage-B population before collecting a fresh generic recurrence census. Historically, reached-set/boundary shapes recurred within a solve far more than literal exact states (83.1% / 82.2% vs 52.6%); that line was closed because cross-level transfer was weak, not because solve-local recurrence was absent. First ask whether the same population survives on current Class-5 misses, then whether repeated shapes reduce to a **small sound cause** with material repeated-work cost and matching cheaper than `isConnected`. Only a positive result earns shadow-testing of the smallest solve-local reason key. No broad CDCL/LCG framework. [`archaeology rejoin`](../reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md), [`Stage B`](../reports/2026-08-28-connectivity-rejection-stage-b-audit.md)
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, and goal-attraction-disabled retry are **PROMOTED**. Portal coarse-state merge, repair late-probe `7->6` seeds, and portfolio-18 resumable tranche are **CLOSED NEGATIVE/NULL**. Admissible-order retry `1.0->0.18` is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
 
@@ -58,7 +58,7 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive retry; class-2 contrasted must-turn pilot; compact dead-cause recurrence. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive retry; class-2 contrasted must-turn pilot; rejoined solve-local dead-cause gate. |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; use families first when structural. |
 | 6 | Repair reachability | **SUPPORTING** | Reopen when continuation needs interior/early commitment revision. |
 | 7 | Architectural speed | **SUPPORTING** | Reopen for earned mechanism with measured runtime cost/new hotspot. |
