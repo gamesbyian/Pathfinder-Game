@@ -54,8 +54,10 @@ jobs:
             git rev-parse HEAD:data/hints
             git rev-parse HEAD:data/stress/stress-levels.json
             git rev-parse HEAD:data/stress/stress-levels-random.json
+            git rev-parse HEAD:data/stress/stress-levels-envelope.json
             git rev-parse HEAD:data/stress/hints
             git rev-parse HEAD:data/stress/hints-random
+            git rev-parse HEAD:data/stress/hints-envelope
           } | sha256sum | awk '{print "key="$1}' >> "$GITHUB_OUTPUT"
       - name: Restore exact runtime-data tree
         id: runtime-data-cache
@@ -68,8 +70,10 @@ jobs:
             data/hints
             data/stress/stress-levels.json
             data/stress/stress-levels-random.json
+            data/stress/stress-levels-envelope.json
             data/stress/hints
             data/stress/hints-random
+            data/stress/hints-envelope
           key: runtime-data-${{ steps.runtime-data-key.outputs.key }}
       - name: Materialize runtime data on cache miss
         if: steps.runtime-data-cache.outputs.cache-hit != 'true'
@@ -92,8 +96,10 @@ jobs:
           /data/hints/
           /data/stress/stress-levels.json
           /data/stress/stress-levels-random.json
+          /data/stress/stress-levels-envelope.json
           /data/stress/hints/
           /data/stress/hints-random/
+          /data/stress/hints-envelope/
           EOF
       - uses: actions/setup-node@v7
         with:
