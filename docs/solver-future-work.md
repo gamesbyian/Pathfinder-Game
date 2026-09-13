@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
 Deferred/reopen questions only. Current priority: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); method: [`solver-research-operating-model.md`](solver-research-operating-model.md); capability memory: [`solver-capability-memory.md`](solver-capability-memory.md); dispositions: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Reconcile old questions with `research-status-index --compact` before new compute.
