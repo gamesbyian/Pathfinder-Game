@@ -11,13 +11,13 @@
 // orchestration.ts's own header for the split this file is part of.
 import { scaledStageWorkBudget } from './budget-units.js';
 import { withWorkCapScope } from './budget-context.js';
-import { GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS, repairAttempt } from './attempts.js';
+import { GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS, repairAttempt, repairMustTurnBiasedAttempt } from './attempts.js';
 import { withSolverStage } from './stage-policy.js';
 import { buildRetryTierAblationOverride, runWholeLadderRetryTier } from './stage-executors.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig } from './types.js';
-import type { StageBudgetPlan } from './stage-budget.js';
-import type { computeShrinkRecoveryBudget } from './stage-budget.js';
+import { REPAIR_LATE_MUSTTURN_BIASED_RETRY_NODE_BUDGET } from './stage-budget.js';
+import type { StageBudgetPlan, computeShrinkRecoveryBudget } from './stage-budget.js';
 import { runAttempt } from './orchestration-run-attempt.js';
 import { runInterleavedAttempts, runGateSerialAttempts } from './orchestration-main-search.js';
 import { EARLY_REPAIR_SEARCH_ATTEMPT_MS_CAP } from './orchestration-early-repair.js';
@@ -721,6 +721,42 @@ export async function runAdditiveRetryTiers({
                 const remainingNodeBudget = Math.min(ownBudgetRemaining, outerCeilingRemaining);
                 const r = await runAttempt(gateKey, level, prep, repairLateProbeConfig, retryBudget, Date.now(), yieldFn, remainingNodeBudget);
                 result.attempts.push(withSolverStage(r.attempt, 'late-repair-search'));
+                if (r.path) { result.solution = r.path; break; }
+            }
+        });
+    }
+
+
+    // Default-off additive must-turn-guidance retry. The ordinary 5M late-repair attempt must have
+    // actually participated first; eligibility alone is insufficient because a depleted outer
+    // ceiling could otherwise let the child treatment leapfrog the control. This stage does not
+    // borrow or withhold work/nodes from any earlier tier: it gets a separate 7M stage-local cap and
+    // fresh work scope only after the plain attempt has failed.
+    if (!result.solution
+        && repairLateProbeTierWillRun
+        && cfg?.STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY === true
+        && repairConfigs.length === 0
+        && (level.mustPassTurnDirs?.size ?? 0) > 0
+        && result.attempts.some(attempt => attempt.stageId === 'late-repair-search')) {
+        const lateMustTurnConfig = repairMustTurnBiasedAttempt();
+        const stageEntryNodes = prep._metrics!.nodesExpanded;
+        const stageStart = Date.now();
+        const stageWorkBudget = scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK);
+        await withWorkCapScope(prep, prep._workMeter.units + stageWorkBudget, async () => {
+            for (let gi = 0; gi < activeGates.length; gi++) {
+                const ownBudgetRemaining = REPAIR_LATE_MUSTTURN_BIASED_RETRY_NODE_BUDGET
+                    - (prep._metrics!.nodesExpanded - stageEntryNodes);
+                if (ownBudgetRemaining <= 0) break;
+                const gateKey = activeGates[gi];
+                const elapsed = Date.now() - stageStart;
+                const gatesLeft = activeGates.length - gi;
+                const retryBudget = Math.floor((timeBudgetMs - elapsed) / gatesLeft);
+                if (retryBudget < 50) break;
+                const r = await runAttempt(
+                    gateKey, level, prep, lateMustTurnConfig, retryBudget, Date.now(), yieldFn,
+                    ownBudgetRemaining,
+                );
+                result.attempts.push(withSolverStage(r.attempt, 'late-repair-must-turn-biased-retry'));
                 if (r.path) { result.solution = r.path; break; }
             }
         });
