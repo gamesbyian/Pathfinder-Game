@@ -81,8 +81,9 @@ import { withSolverStage } from '../../modules/solver/stage-policy.js';
 // implements: main-search + repair-fallback racing concurrently (phase 1), then goal-attraction-disabled-retry
 // (phase 2). Every other stage in the full sequential ladder (early-repair-search, admissible-order,
 // coarse-state-near-tie-retention-disabled-retry, admissible-order-alternate-tiebreak-retry, connectivity-axis-prune-disabled-retry,
-// repair-elite-prefix-dfs-retry, must-cross-neighbor-prune-disabled-retry, late-repair-search, repair-shrink-
-// recovery) is sequential-only — this file does not reimplement a different, narrower ladder for
+// repair-elite-prefix-dfs-retry, must-cross-neighbor-prune-disabled-retry, late-repair-search,
+// late-repair-must-turn-biased-retry, repair-shrink-recovery) is sequential-only — this file does
+// not reimplement a different, narrower ladder for
 // them, it simply does not run them at all. A raced solve is therefore NOT a complete substitute
 // for the sequential engine on a level that only solves via one of the unraced tiers; callers that
 // need the full ladder's coverage should fall back to solveLevel() (orchestration.ts) after a
