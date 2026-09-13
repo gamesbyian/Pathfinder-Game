@@ -39,6 +39,10 @@ function distinct(values) {
     return [...new Set(values)];
 }
 
+function finiteNumber(value) {
+    return Number.isFinite(value) ? value : null;
+}
+
 function familyManifestRows(root) {
     const roots = familyArtifactRoots(root);
     const familyRows = [];
@@ -70,6 +74,12 @@ function familyManifestRows(root) {
             familyMode: manifest.familyMode ?? null,
             familyIdentity,
             parentContentHash: manifest.parentContentHash ?? null,
+            requestedCount: finiteNumber(manifest.requestedCount),
+            acceptedCount: finiteNumber(manifest.acceptedCount),
+            generationAttempts: finiteNumber(manifest.generationAttempts),
+            attemptBudget: finiteNumber(manifest.attemptBudget),
+            movableInstanceCount: finiteNumber(manifest.movableInstanceCount),
+            generationRunCount: Array.isArray(manifest.generationRuns) ? manifest.generationRuns.length : 0,
             manifestPath,
         });
         for (const variant of manifest.variants) {
@@ -87,6 +97,7 @@ function familyManifestRows(root) {
                 objectType: variant.mutationManifest?.objectType ?? null,
                 parentContentHash: manifest.parentContentHash ?? null,
                 variantContentHash: variant.variantContentHash ?? null,
+                generationAttempts: finiteNumber(variant.generationAttempts),
                 manifestPath,
             });
         }
@@ -107,6 +118,7 @@ function evidencePurposePolicy() {
         'confirmatory-holdout': 'requires untouched whole-parent holdout units and decision-frozen treatment',
         'transfer-generalization': 'requires unrelated parent/source/construction distribution beyond the development family pool',
         'solution-transfer': 'requires referee validation on the target puzzle; replay provenance is derivative evidence rather than an independent discovery event',
+        'generation-selectivity': 'accepted variants condition on generator eligibility/referee checks; use requested/attempted/accepted denominators before treating generated rows as the operator population',
     };
 }
 
@@ -135,12 +147,18 @@ export function auditVariantLibrary(root) {
             manifestPaths: distinct(rows.map(row => row.manifestPath)).sort() }))
         .filter(row => row.rows > 1);
     const conflictingLogicalVariants = duplicateLogicalVariants.filter(row => row.contentHashes.length > 1);
+    const crossModeLogicalVariants = duplicateLogicalVariants.filter(row => row.modes.length > 1);
     const familyIdCollisions = [...familyIdGroups.entries()]
         .map(([familyId, rows]) => ({ familyId, familyIdentities: distinct(rows.map(row => row.familyIdentity)).sort(),
             manifestPaths: distinct(rows.map(row => row.manifestPath)).sort() }))
         .filter(row => row.familyIdentities.length > 1);
 
-    const evidenceRows = index.variants.flatMap(variant => variant.evidence ?? []);
+    // The family index may attach one evidence object to multiple duplicate generated records that
+    // share the same canonical variant join key. Count observations by object identity, and report
+    // attachment multiplicity separately, so an integrity defect cannot inflate provenance coverage.
+    const evidenceAttachments = index.variants.flatMap(variant => variant.evidence ?? []);
+    const evidenceRows = [...new Set(evidenceAttachments)];
+    const duplicateEvidenceAttachments = evidenceAttachments.length - evidenceRows.length;
     const evidenceWithSolverCommit = evidenceRows.filter(row => row.solverCommit).length;
     const evidenceWithRunId = evidenceRows.filter(row => row.runId).length;
     const evidenceWithBudget = evidenceRows.filter(row => row.budget != null || row.nodeBudget != null || row.wallDeadlineMs != null).length;
@@ -150,8 +168,29 @@ export function auditVariantLibrary(root) {
         .map(([mode, rows]) => ({ mode, variants: rows.length, parents: distinct(rows.map(row => row.parentIdentity)).length }))
         .sort((a, b) => String(a.mode).localeCompare(String(b.mode)));
 
+    const generationByMode = [...groupBy(familyRows, row => row.familyMode).entries()]
+        .map(([mode, rows]) => {
+            const withCounts = rows.filter(row => row.requestedCount != null && row.acceptedCount != null);
+            const requested = withCounts.reduce((sum, row) => sum + row.requestedCount, 0);
+            const accepted = withCounts.reduce((sum, row) => sum + row.acceptedCount, 0);
+            const withAttempts = rows.filter(row => row.generationAttempts != null);
+            return {
+                mode,
+                families: rows.length,
+                parents: distinct(rows.map(row => row.parentIdentity)).length,
+                familiesWithRequestAcceptanceCounts: withCounts.length,
+                familiesMissingRequestAcceptanceCounts: rows.length - withCounts.length,
+                requested,
+                accepted,
+                acceptancePerRequested: requested > 0 ? accepted / requested : null,
+                familiesWithGenerationAttempts: withAttempts.length,
+                generationAttempts: withAttempts.reduce((sum, row) => sum + row.generationAttempts, 0),
+            };
+        })
+        .sort((a, b) => String(a.mode).localeCompare(String(b.mode)));
+
     return {
-        schemaVersion: 1,
+        schemaVersion: 2,
         counts: {
             familyManifests: familyRows.length,
             variantRows: variantRows.length,
@@ -159,7 +198,14 @@ export function auditVariantLibrary(root) {
             uniqueLogicalVariantIdentities: distinct(variantRows.map(row => row.variantIdentity).filter(Boolean)).length,
             ignoredNonFamilyManifests: ignoredManifests.length,
             manifestParseFailures: parseFailures.length,
-            evidenceRows: evidenceRows.length,
+            evidenceObservations: evidenceRows.length,
+            evidenceAttachments: evidenceAttachments.length,
+        },
+        identitySemantics: {
+            parentRecordIdentity: '(parentCorpus,parentId)',
+            variantRecordIdentity: '(parentCorpus,parentId,variantId)',
+            generationContext: 'familyId/familyMode/relation are provenance and transformation context; they do not mint a new puzzle identity',
+            aggregateObservationKey: '(corpus,parentId,mode,variantId) may be used while reconciling historical aggregate observations before joining to variant records',
         },
         evidencePurposes: evidencePurposePolicy(),
         contentIdentity: {
@@ -170,6 +216,7 @@ export function auditVariantLibrary(root) {
             exactNoOpVariants: noOpVariants.length,
             duplicateLogicalVariants: duplicateLogicalVariants.length,
             conflictingLogicalVariants: conflictingLogicalVariants.length,
+            crossModeLogicalVariants: crossModeLogicalVariants.length,
             familyIdCollisions: familyIdCollisions.length,
             examples: {
                 parentHashIdentityCollisions: bounded(parentHashIdentityCollisions),
@@ -177,11 +224,22 @@ export function auditVariantLibrary(root) {
                 noOpVariants: bounded(noOpVariants.map(row => ({ variantIdentity: row.variantIdentity, relation: row.relation, manifestPath: row.manifestPath }))),
                 duplicateLogicalVariants: bounded(duplicateLogicalVariants),
                 conflictingLogicalVariants: bounded(conflictingLogicalVariants),
+                crossModeLogicalVariants: bounded(crossModeLogicalVariants),
                 familyIdCollisions: bounded(familyIdCollisions),
             },
         },
+        generationEvidence: {
+            familiesWithRequestAcceptanceCounts: familyRows.filter(row => row.requestedCount != null && row.acceptedCount != null).length,
+            familiesMissingRequestAcceptanceCounts: familyRows.filter(row => row.requestedCount == null || row.acceptedCount == null).length,
+            familiesWithAttemptBudget: familyRows.filter(row => row.attemptBudget != null).length,
+            familiesWithGenerationAttempts: familyRows.filter(row => row.generationAttempts != null).length,
+            variantsWithGenerationAttempts: variantRows.filter(row => row.generationAttempts != null).length,
+            byMode: generationByMode,
+        },
         evaluationEvidence: {
-            rows: evidenceRows.length,
+            observations: evidenceRows.length,
+            attachments: evidenceAttachments.length,
+            duplicateAttachmentsFromDuplicateVariantRecords: duplicateEvidenceAttachments,
             withSolverCommit: evidenceWithSolverCommit,
             missingSolverCommit: evidenceRows.length - evidenceWithSolverCommit,
             withRunId: evidenceWithRunId,
@@ -203,6 +261,8 @@ export function auditVariantLibrary(root) {
             exactNoOpVariant: 'candidate ineffective transform or symmetry fixed point; inspect transformation semantics before deciding whether it is invalid',
             conflictingEvaluation: 'distinct observations must remain visible; use solver/run/budget context before treating disagreement as instability',
             missingHistoricalContext: 'unknown, not implicitly equivalent to current/default solver context',
+            generationSelectivity: 'accepted generated rows are conditioned on operator eligibility and validation; use requested/attempted/accepted denominators before population claims',
+            duplicateEvidenceAttachment: 'one indexed observation attached to duplicate generated records is dependence, not replication',
         },
     };
 }
