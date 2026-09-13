@@ -12,13 +12,23 @@ Initial hypotheses to test:
 4. Nearest-profile rankings may be unstable when compared levels expose different feature subsets or evidence density.
 5. Existing provenance/applicability machinery should be reused rather than introducing another trust taxonomy.
 
-## Confirmed findings so far
+## Confirmed findings
 
 ### F1 — `mustCrossOrder.rigid` overclaims the evidence
 
 `mustCrossOrderStats()` currently sets `rigid=true` whenever every *stored accepted path in the bucket* shares one first-entry and completion order. The implementation comment goes further and calls this “a genuinely level-forced constraint rather than an artifact of how solutions happened to be found.” That conclusion is only justified for an exhaustive solution set (or by a separate proof). For ordinary sampled hint libraries the field means **observed-single-order**, not level-forced rigidity.
 
-Risk: downstream consumers can silently convert a sampling property into a puzzle property. The documentation already warns against this interpretation, so implementation semantics and documentation currently disagree.
+The empirical prefix audit makes this severe rather than theoretical. Among levels whose early sample appeared rigid but which had a larger stored sample available, the apparent rigidity later broke at very high rates:
+
+| observed paths | apparent-rigid cases | later non-rigid | failure rate |
+|---:|---:|---:|---:|
+| 1 | 960 | 709 | 73.9% |
+| 2 | 763 | 535 | 70.1% |
+| 3 | 684 | 467 | 68.3% |
+| 5 | 598 | 402 | 67.2% |
+| 10 | 464 | 310 | 66.8% |
+
+This does not estimate the true-space rigidity rate because the “full” stored library is still sampled. It does establish that the current `rigid` label is badly unsafe even relative to the evidence already present in the repo.
 
 Required repair: preserve the descriptive observation but separate it from any proven-rigidity claim. Existing artifacts need either a schema bump/migration or a compatibility field whose semantics are explicit.
 
@@ -26,7 +36,9 @@ Required repair: preserve the descriptive observation but separate it from any p
 
 `buildSinglePathProfile()` deliberately degenerates n=1 statistics. `prefixDiversityStats()` reports zero shared-prefix values for n=1; `pairwiseDistinctivenessStats()` reports zero mean distance with zero pairs compared. `profileDistanceTerms()` then treats those zeros as real comparable measurements rather than unavailable axes.
 
-Risk: nearest-profile ranking for the common hidden-witness target case is partly driven by whether a library profile itself happens to have low diversity. The target has no evidence about solution-space diversity; it only has one observed solution. “Unknown” is therefore being scored as “known zero.”
+The empirical counterfactual is decisive. For all 1,700 Corpus-2 levels, a single construction witness was profiled against the published+Corpus-1 library. A support-aware interpretation that merely skipped axes lacking enough observations changed the #1 nearest profile on **1,623 / 1,700 targets (95.5%)**. The median overlap between the current and support-aware top-five sets was **0 / 5**; mean overlap was 0.133.
+
+Risk: sparse-target rankings are dominated by invented values for unobserved distribution properties. “Unknown” is behaving as “known zero.”
 
 Required repair: distance terms that require multiple paths must become non-comparable when sample support is insufficient. The raw descriptive profile may keep graceful n=1 values for compatibility, but comparison must respect support counts.
 
@@ -34,17 +46,17 @@ Required repair: distance terms that require multiple paths must become non-comp
 
 For n=1/sparse targets, `discoverySaturation.plateauFraction` is null. The distance layer substitutes `1` via `?? 1`, causing absence of a measured plateau to act as a concrete late-plateau observation.
 
-Risk: a missing sampling-history property becomes a ranking signal. This is especially inappropriate for hidden witnesses, which have no discovery process at all.
+For one-path prefixes, removing unsupported sample-history/diversity axes reduced median distance to the eventual stored profile from **0.1483 to 0.0128**. That is not evidence that the one-path sample is actually a complete representation: only a median **68.3% of nominal distance weight** remained comparable. It shows that much of the current one-path/full-profile disagreement is manufactured by axes the target could not possibly measure.
 
 Required repair: saturation distance is comparable only when both sides have an observed plateau based on a meaningful discovery series; otherwise the axis must be skipped.
 
-### F4 — profile distance currently reports only the blended score, not evidential coverage
+### F4 — profile distance reports the blend but not evidential coverage
 
-`profileDistance()` skips explicit null axes, but callers receive no comparable-weight denominator or count. Two candidates can therefore have similarly low distances while one comparison was supported by almost every axis and another by only a small compatible subset.
+`profileDistance()` skips explicit null axes, but callers receive no comparable-weight denominator or count. Two candidates can therefore have similarly low distances while one comparison was supported by nearly every axis and another by a much smaller compatible subset.
 
-Risk: sparse-mechanic and sparse-evidence matches can look deceptively precise. This matters because the documentation explicitly tells researchers to use rankings for sparse targets.
+The empirical support-aware audit found median comparable nominal weight of 68.3% for one-path comparisons and 81.7% for 2–10-path comparisons, with some mechanic-dependent comparisons reaching 95%. Those are materially different evidence objects but the current API/CLI presents the same scalar shape.
 
-Required repair: expose comparison coverage (comparable axes / comparable weight, ideally against the maximum applicable weight) beside the distance, and make CLI output show it.
+Required repair: expose comparison coverage (comparable axes and comparable weight, preferably against the maximum applicable weight) beside the distance, and make CLI output show it.
 
 ### F5 — tracked human summaries still expose retired provenance semantics
 
@@ -78,10 +90,45 @@ Risk: small individually, but it reduces discoverability and is further evidence
 
 Required repair: update generator-owned references so regenerated artifacts route to the current authority.
 
+### F9 — discovery-saturation chronology is not available uniformly
+
+`discoverySaturationCurve()` orders hints by earliest provenance `foundAt`, with undated hints receiving `Infinity`. In the empirical inventory, all hints were dated for all 102 Corpus-1 levels and all 1,700 Corpus-2 levels, but only **38 / 160 published levels** had dates on every hint.
+
+Risk: on most published levels the “discovery saturation” curve mixes real chronology with a trailing block whose order is merely retained artifact order. That may still describe accumulation in file order, but it is not a longitudinal discovery-process measurement and should not be compared as one.
+
+Required repair: stamp chronology coverage and make saturation/process claims unavailable or explicitly partial when dates are incomplete. Do not silently turn file order into experimental history.
+
+### F10 — sparse profile identity is unstable even after unsupported axes are removed
+
+As a representation-stability diagnostic, the audit asked whether the first 1/3/5 stored solutions for a library level ranked that same level's eventual full profile nearest among the 262 published+Corpus-1 library profiles. This is deliberately *not* a solver-performance metric.
+
+Current distance self-retrieval was weak: top-1 rates were 2.0%, 4.3%, and 5.9% at 1/3/5 paths; median ranks were 78, 42.5, and 35. Support-aware distance improved those to 9.1%, 8.7%, and 11.0% top-1, with median ranks 38.5, 24.5, and 20. The improvement confirms the missing-evidence problem, but the remaining weakness says something deeper: a small known-solution sample is often not a stable stand-in for the eventual known-solution profile.
+
+Risk: nearest-profile conclusions from sparse targets should be treated as exploratory descriptions, not robust similarity facts, even after the immediate n=1 bug is fixed.
+
+Required repair: attach sampling-support/confidence metadata to profiles and comparisons. Any downstream use should be able to require a minimum support class rather than relying on raw path count or a warning in prose.
+
+## Empirical inventory notes
+
+The audit traversed 160 published levels, 102 Corpus-1 levels, and 1,700 Corpus-2 levels. Median stored hint counts were 341.5, 359, and 50.5 respectively. Every level had at least one stored hint. Provenance volume substantially exceeds conservative dependency-stratum volume: median events-per-stratum were 2.48 (published), 4.17 (Corpus 1), and 4.80 (Corpus 2), with Corpus-2 p90 at 26.67. Raw provenance/hint multiplicity therefore remains a poor proxy for independent evidential support.
+
+The empirical probe is diagnostic-only. Its “support-aware distance” is a counterfactual that removes clearly unsupported axes; it is not proposed as a production routing rule or as the final profile metric.
+
 ## Direction
 
-The emerging distinction is important: this asset is usually a **known-solution sample profile**, with a smaller subset of claims promoted to genuine solution-space statements when evidence supports them. The audit should make that distinction machine-visible rather than leaving it as prose caution.
+The core naming/ontology conclusion is now evidence-backed: this asset is usually a **known-solution sample profile**, not a measured solution space. A smaller subset of claims can be promoted to genuine solution-space statements when explicit completeness/proof contracts support them. That distinction should become machine-visible.
 
-The first repair tranche should be conservative and semantics-preserving: stop scoring unsupported n=1 diversity/saturation axes; expose distance coverage; stop calling observed single must-cross order “level-forced”; remove unsupported completeness language; strengthen freshness identity; and repair generated authority links. A later empirical tranche can then measure convergence and provenance sensitivity on trustworthy inputs.
+The first repair tranche should be conservative and semantics-preserving:
 
-This report will continue to be updated in small commits as findings are established.
+1. stop scoring unsupported n=1 diversity/saturation axes;
+2. expose distance coverage/support;
+3. rename observed must-cross single-order semantics instead of calling them level-forced rigidity;
+4. demote event-local exhaustive markers from completeness claims;
+5. expose chronology coverage for saturation;
+6. strengthen freshness identity and add a profile-algorithm version;
+7. repair generated authority links and stale provenance vocabulary;
+8. add support/confidence metadata suitable for downstream filtering.
+
+After those repairs, a second empirical tranche should re-run convergence, provenance-stratum sensitivity, and downstream joins. Only then is it worth asking whether individual profile axes predict useful solver capability beyond ordinary level structure/family ancestry.
+
+The audit will continue to be updated in small commits as findings and repairs are established.
