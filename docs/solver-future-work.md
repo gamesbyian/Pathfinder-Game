@@ -34,6 +34,7 @@ The September 12 class-1/2/3 rejoin is complete and found no already-legal no-co
 
 | Question | Reopen condition / boundary |
 |---|---|
+| **Admissible-order non-default retry repricing (`1.0 -> 0.18`)** | Current form is not ready for another A/B. Confirmation 006 gave the target tier zero work, and later probes recovered the architectural prerequisite: ordinary admissible-order search does not consume the per-tier soft work cap. Reopen only after a bounded consumer-semantics repair plus a canary proving nonzero, fraction-differentiated target-stage work under a production-shaped node cap. Then, and only then, rerun matched-work repricing. [`artifact recovery`](../reports/2026-09-10-admissible-order-confirmation-006-artifact-recovery.md), [`methodology diagnosis`](../reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md) |
 | **Richer static graph/placement selectors** | A materially new mechanism-specific descriptor from recurring solution/trace/first-loss evidence. Prior 18-feature bundle and September 12 six-summary future-feasibility pass added no held-out discriminator. |
 | **Stability-aware portfolios** | WS1 finds a compact held-out decision signal beyond current work/coverage evidence. |
 | **Latent response dimensions / biclusters** | Simpler pair/cohort analysis leaves stable unexplained structure after temporal/difficulty controls. |
