@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { CORPUS_ALIASES, describeLevel, deterministicSample, filterLevelDescriptors, summarizeDescriptors } from './corpus-query-lib.mjs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { CORPUS_ALIASES, describeLevel, deterministicSample, filterLevelDescriptors, loadCorpus, summarizeDescriptors } from './corpus-query-lib.mjs';
 
 assert.equal(CORPUS_ALIASES.corpus1, CORPUS_ALIASES.stress1,
     'live corpus1 vocabulary must resolve through the same canonical loader path as stress1');
@@ -23,6 +26,18 @@ const summary = summarizeDescriptors(items);
 assert.equal(summary.levels, 3);
 assert.equal(summary.mechanics.gates, 3);
 assert.equal(summary.mechanics.mustCross, 2);
+
+// loadCorpus is the shared shape boundary for research tools. Both historical top-level arrays and
+// current wrapper objects must resolve to the same levels collection when a direct path is supplied.
+const tempRoot = mkdtempSync(path.join(os.tmpdir(), 'pathfinder-corpus-query-'));
+try {
+    writeFileSync(path.join(tempRoot, 'array.json'), JSON.stringify(levels));
+    writeFileSync(path.join(tempRoot, 'wrapped.json'), JSON.stringify({ schemaVersion: 1, levels }));
+    assert.deepEqual(loadCorpus(tempRoot, 'array.json').levels.map(level => level.id), ['A', 'B', 'C']);
+    assert.deepEqual(loadCorpus(tempRoot, 'wrapped.json').levels.map(level => level.id), ['A', 'B', 'C']);
+} finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+}
 
 // Corpora written before the routing-regime rename carry stressMeta.archetype/navDensity;
 // current generate.mjs output carries stressMeta.routingRegime/requiredPathCoverageRatio.
