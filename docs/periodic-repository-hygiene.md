@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=24000 max=30000 -->
 # Periodic repository hygiene plan
 
 > **Purpose:** recurring agent-driven entropy-control pass for Pathfinder.
@@ -177,7 +178,6 @@ Preserve level-blindness and evidence-selection rules. Historical outcome data m
 Account broadly for dead files/exports, stale TODO/FIXME notes, obsolete flags, expired compatibility code, duplicate helpers/constants/config, superseded schemas/readers/writers, unused dependencies, stale aliases, generated artifacts treated as sources, abandoned architecture branches, impossible states, misleading examples/fixtures, root clutter, redundant indexes/inventories, and active code depending unexpectedly on frozen artifacts.
 
 Treat source-file size as an editability/reviewability resource, not merely a cosmetic metric. Run the file-size ratchet and inspect files approaching thresholds as well as current offenders/exemptions. Large implementation, test, and workflow files should justify their cohesion. When splitting:
-
 - extract along real responsibility seams, not arbitrary line counts;
 - preserve stable public façades/import paths when that materially reduces migration risk;
 - keep types/contracts in sensible owners rather than creating dumping-ground modules;

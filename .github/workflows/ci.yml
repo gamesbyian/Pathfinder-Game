@@ -18,7 +18,8 @@ concurrency:
 # Keep the PR gate deliberately coarse-grained. Hosted-runner startup and npm-install latency are
 # variable enough that splitting cheap checks into many jobs increases tail latency: the PR waits
 # for the unluckiest runner. Two lanes preserve useful parallelism while paying checkout/setup/npm-ci
-# only twice. Local command composition remains authoritative in package.json / docs/testing.md.
+# only twice. Independent validation steps within a lane continue after ordinary validation failures
+# so one run reports the useful failure set; setup/install failures still stop dependent validation.
 jobs:
   fast-gate:
     runs-on: ubuntu-latest
@@ -119,15 +120,33 @@ jobs:
         # npm-audit output was informational here, not a CI gate, and security checks have their own
         # explicit repository commands.
         run: npm ci --prefer-offline --no-audit --fund=false
-      - name: Run non-lint repository checks
-        run: npm run check:nonlint
+      - name: Check package-script reachability
+        id: dead_scripts
+        continue-on-error: true
+        run: npm run check:dead-scripts
+      - name: Check textual source invariants
+        id: text_source
+        continue-on-error: true
+        run: npm run check:text-source-files
+        env:
+          PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+      - name: Run non-lint validators
+        id: validators
+        continue-on-error: true
+        run: npm run check:validators
         env:
           PATHFINDER_PR_INCREMENTAL: ${{ github.event_name == 'pull_request' && '1' || '0' }}
       - name: Run lint
+        id: lint
+        continue-on-error: true
         run: npm run check:lint
       - name: Run Node and CLI contract tests
+        id: node_tests
+        continue-on-error: true
         run: npm run test:node
       - name: Solver capability canary
+        id: solver_canary
+        continue-on-error: true
         # Tiny semantic canary, not a batch tier: 9 fixed representative levels (data/levels.json),
         # a few seconds total. This is the ONLY solver-capability check anywhere in this repo that
         # runs automatically on every PR -- every corpus-scale sweep is a manually-dispatched GHA
@@ -146,7 +165,30 @@ jobs:
             --levels=pos:1,pos:20,pos:40,pos:60,pos:80,pos:100,pos:120,pos:140,pos:160 \
             --budget-ms=15000 --work-budget=5000000
       - name: Build production bundle
+        id: build
+        continue-on-error: true
         run: npm run build
+      - name: Fail fast-gate if any validation failed
+        if: always()
+        shell: bash
+        env:
+          DEAD_SCRIPTS: ${{ steps.dead_scripts.outcome }}
+          TEXT_SOURCE: ${{ steps.text_source.outcome }}
+          VALIDATORS: ${{ steps.validators.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          NODE_TESTS: ${{ steps.node_tests.outcome }}
+          SOLVER_CANARY: ${{ steps.solver_canary.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          failed=0
+          for name in DEAD_SCRIPTS TEXT_SOURCE VALIDATORS LINT NODE_TESTS SOLVER_CANARY BUILD; do
+            status="${!name}"
+            printf '%-14s %s\n' "$name" "$status"
+            if [[ "$status" != "success" ]]; then
+              failed=1
+            fi
+          done
+          exit "$failed"
 
   # Coverage and the heavyweight implementation proofs share one runner/install. Coverage skips
   # only the four proof files delegated to the explicit test:deep-proofs command immediately after
@@ -173,19 +215,42 @@ jobs:
       - name: Install dependencies from the npm cache
         run: npm ci --prefer-offline --no-audit --fund=false
       - name: Run covered ordinary test population
+        id: coverage
+        continue-on-error: true
         run: npm run test:coverage
         env:
           SOLVER_DEADLOCK_PROOF_SKIP: '1'
           SOLVER_R02560_PROOF_SKIP: '1'
       - name: Run heavyweight implementation proofs
+        id: deep_proofs
+        continue-on-error: true
         run: npm run test:deep-proofs
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
       - name: Exercise level-fingerprint repository identity through Firestore emulator
+        id: firestore
+        continue-on-error: true
         run: >-
           npx --yes firebase-tools@15.28.2
           emulators:exec --only firestore
           --project demo-pathfinder-fingerprint-boundary
           "npm run test:firestore-level-fingerprint-boundary"
+      - name: Fail deep-verification if any validation failed
+        if: always()
+        shell: bash
+        env:
+          COVERAGE: ${{ steps.coverage.outcome }}
+          DEEP_PROOFS: ${{ steps.deep_proofs.outcome }}
+          FIRESTORE: ${{ steps.firestore.outcome }}
+        run: |
+          failed=0
+          for name in COVERAGE DEEP_PROOFS FIRESTORE; do
+            status="${!name}"
+            printf '%-12s %s\n' "$name" "$status"
+            if [[ "$status" != "success" ]]; then
+              failed=1
+            fi
+          done
+          exit "$failed"

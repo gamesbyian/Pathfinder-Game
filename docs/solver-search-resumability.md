@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=7500 max=10000 -->
 # Resumable solver search
 
 > **Status:** opt-in in-memory beam continuation primitive exists; the portfolio-18 same-policy residual-tranche scheduler test is CLOSED NULL, and no production scheduling policy currently consumes continuation.

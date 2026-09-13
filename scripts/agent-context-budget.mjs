@@ -9,6 +9,7 @@ const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
 const selectedRoute = value('route');
 const check = args.includes('--check');
+const authorityBudgetPattern = /<!--\s*agent-context-budget:\s*warn=(\d+)\s+max=(\d+)\s*-->/u;
 
 function fileBytes(relativePath) {
     const absolute = path.join(root, relativePath);
@@ -45,25 +46,41 @@ function summarizeRoute(route) {
     };
 }
 
-function summarizeAuthority(budget) {
-    const file = fileBytes(budget.path);
-    const status = !file.exists ? 'missing' : file.bytes > budget.maxBytes ? 'over-max' : file.bytes > budget.warnBytes ? 'warning' : 'ok';
+function authorityBudget(relativePath) {
+    const absolute = path.join(root, relativePath);
+    if (!fs.existsSync(absolute)) return { status: 'missing' };
+    const prefix = fs.readFileSync(absolute, 'utf8').slice(0, 4096);
+    const match = authorityBudgetPattern.exec(prefix);
+    if (!match) return { status: 'missing-declaration' };
+    const warnBytes = Number(match[1]);
+    const maxBytes = Number(match[2]);
+    if (!Number.isSafeInteger(warnBytes) || !Number.isSafeInteger(maxBytes) || warnBytes <= 0 || maxBytes <= warnBytes) {
+        return { status: 'invalid-declaration', warnBytes, maxBytes };
+    }
+    return { status: 'ok', warnBytes, maxBytes };
+}
+
+function summarizeAuthority(authority) {
+    const file = fileBytes(authority.path);
+    const budget = authorityBudget(authority.path);
+    let status = budget.status;
+    if (status === 'ok') status = file.bytes > budget.maxBytes ? 'over-max' : file.bytes > budget.warnBytes ? 'warning' : 'ok';
     return {
-        path: budget.path,
-        purpose: budget.purpose,
+        path: authority.path,
+        purpose: authority.purpose,
         status,
         bytes: file.bytes,
-        warnBytes: budget.warnBytes,
-        maxBytes: budget.maxBytes,
-        warningHeadroomBytes: headroom(file.bytes, budget.warnBytes),
-        maxHeadroomBytes: headroom(file.bytes, budget.maxBytes),
+        warnBytes: budget.warnBytes ?? null,
+        maxBytes: budget.maxBytes ?? null,
+        warningHeadroomBytes: budget.warnBytes == null ? null : headroom(file.bytes, budget.warnBytes),
+        maxHeadroomBytes: budget.maxBytes == null ? null : headroom(file.bytes, budget.maxBytes),
     };
 }
 
 const routes = config.routes
     .filter(route => !selectedRoute || route.id === selectedRoute)
     .map(summarizeRoute);
-const authorities = (config.authorityBudgets ?? []).map(summarizeAuthority);
+const authorities = (config.authorities ?? []).map(summarizeAuthority);
 
 if (selectedRoute && routes.length === 0) {
     console.error(`Unknown route: ${selectedRoute}`);
@@ -77,6 +94,6 @@ if (selectedRoute && routes.length === 0) {
     }, null, 2));
     if (check && (
         routes.some(route => route.status === 'over-max' || route.missingRequired.length > 0)
-        || authorities.some(authority => authority.status === 'over-max' || authority.status === 'missing')
+        || authorities.some(authority => !['ok', 'warning'].includes(authority.status))
     )) process.exitCode = 1;
 }

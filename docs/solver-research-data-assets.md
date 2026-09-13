@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=9000 max=12000 -->
 # Solver research data assets
 
 > **Status:** human evidence-topology guide.

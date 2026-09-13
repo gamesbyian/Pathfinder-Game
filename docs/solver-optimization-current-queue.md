@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=700 max=1000 -->
 # Solver optimization current queue
 
 The live queue is [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).

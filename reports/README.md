@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=7000 max=9500 -->
 # Reports index
 
 Dated reports are evidence, **not a roadmap or second queue**. Raw per-run material belongs in [`logs/`](../logs/).
