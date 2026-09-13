@@ -55,6 +55,7 @@ The class-1/2/3 rejoin found no already-legal no-contention batch. Repeat only a
 | **Typed producer -> consumer artifacts** | Measured consumer limitation, novel timely information, bounded cost, independent control and matched-work benefit. |
 | **Queryable analytical layer** | Recurring joins still require bespoke scripts after existing helpers are extended. |
 | **Class-1 compact beam-menu exposure** | A materially different work/allocation contract creates real headroom. |
+| **Representation-sensitivity lineage survival** | Reopen only after WS2 priority work or when a current solve cliff supplies a clean matched isolated-action case. The Sep 3 mapped-path pilot already cleared semantic mismatch and simple equal-score enumeration as explanations of its large historical cliffs; the next rung is known-live lineage survival, with geometry/interface-cost controls, R02248 as an observer positive control, recurrence on two independent parents and a held-out third-parent prediction before intervention. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
 
 ## Demoted forms
 
@@ -66,7 +67,7 @@ Do not reopen unchanged without materially new evidence:
 - connectivity-derived solve-local reason reuse on the current Class-5 residual, unless a materially changed population independently restores the historical rejection cluster;
 - broad ZDD/DD/frontier, representative-set, automaton, CEGAR/interpolation, RCSP/label-setting, CDCL/LCG or backdoor frameworks before a bounded mechanism earns them;
 - caching without sound recurrence/sufficiency evidence;
-- rotate/mirror retries or broad symmetry canonicalization instead of first-divergence diagnosis;
+- rotate/mirror retries or broad symmetry canonicalization; the earned diagnostic rung is matched-action known-live lineage survival, not another generic first-divergence replay;
 - hazard/bandit/ML scheduling before simpler fixed-work evidence shows headroom;
 - scheduler fairness/participation floors without marginal-value and displaced-capability evidence;
 - standalone adaptive must-cross urgency/anchoring without a changed categorical-completion premise;
