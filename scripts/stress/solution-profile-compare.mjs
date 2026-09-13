@@ -28,7 +28,7 @@ import { PACK } from '../../modules/domain/cell-key.ts';
 import {
     buildBucketProfile, buildSinglePathProfile, extractObjectives, nearestProfiles,
     computeHintSignature, regenerateCorpusProfile, SOLUTION_PROFILE_TAXONOMY,
-    hasCurrentSolutionProfileTaxonomy,
+    hasCurrentSolutionProfileTaxonomy, storedLevelProfileForBucket,
 } from './solution-profile-lib.mjs';
 import { mustCrossKeysOf, requiredPathCoverageRatio } from '../../modules/domain/hint-novelty.ts';
 import { NEAR_HAMILTONIAN_COVERAGE_THRESHOLD } from '../../modules/domain/path-features.ts';
@@ -76,15 +76,6 @@ function ensureFreshLibrary(fullPath, fileLabel) {
     return output;
 }
 
-function levelProfileForBucket(levelEntry, bucket) {
-    if (bucket === 'combined') return levelEntry.combined;
-    const bucketProfile = levelEntry.bySource?.[bucket];
-    // A generator-side `sameAsCombined` marker is a storage deduplication reference, not a
-    // profile. Resolve it here before handing the value to distance code.
-    if (bucketProfile?.sameAsCombined) return levelEntry.combined;
-    return bucketProfile;
-}
-
 function loadPool(files, bucket) {
     const pool = [];
     for (const file of files) {
@@ -93,7 +84,7 @@ function loadPool(files, bucket) {
         const parsed = ensureFreshLibrary(fullPath, file);
         const corpusTag = path.basename(file, '.json').replace(/^solution-profile-/, '');
         for (const levelEntry of parsed.levels || []) {
-            const profile = levelProfileForBucket(levelEntry, bucket);
+            const profile = storedLevelProfileForBucket(levelEntry, bucket);
             if (!profile || profile.insufficientData) continue;
             pool.push({ id: `${corpusTag}#${levelEntry.level}`, solutionProfile: profile });
         }

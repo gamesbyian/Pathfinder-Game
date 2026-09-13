@@ -1,4 +1,4 @@
-// Solution-space fingerprint primitives for the known-solvable corpora (published + stress-corpus-1).
+// Known-solution sample-profile primitives for the known-solvable corpora (published + stress-corpus-1).
 //
 // A "fingerprint" here is an aggregate description of how a level's ACCEPTED solutions behave —
 // not the level's shape (that's domain/level-fingerprint.ts, a structural dedup hash) and not a
@@ -372,8 +372,8 @@ function downsampleCurve(curve) {
  * entry orders) stops appearing as more accepted solutions are found, walked in DISCOVERY order
  * (each hint's earliest recorded `foundAt`). `plateauStartIndex`/`plateauFraction` are a HEURISTIC
  * (first point after which a trailing window contributes zero new edges/cells) — NOT a claim the
- * search is exhaustive. `provablyExhaustive` (computed by the caller from provenance) is the only
- * legitimate "this library is complete" signal; see docs/solver-solution-profile.md's caution.
+ * search is exhaustive. No generic profile field proves the stored library is the complete
+ * solution space; see docs/solver-solution-profile.md for the evidence boundary.
  */
 export function discoverySaturationCurve(hints, mcKeys, grid) {
     const chronologyDatedHints = hints.filter(h => Number.isFinite(earliestFoundAt(h))).length;
@@ -528,6 +528,15 @@ export function buildSinglePathProfile(path, level, seed = 20260703) {
     return buildBucketProfile([{ path, provenance: [] }], level, objectives, mcKeys, useCrossings, seed);
 }
 
+/** Resolve one persisted per-level bucket, including storage-deduplication references. */
+export function storedLevelProfileForBucket(levelEntry, bucket = 'combined') {
+    if (!levelEntry) return null;
+    if (bucket === 'combined') return levelEntry.combined || null;
+    const candidate = levelEntry.bySource?.[bucket];
+    if (candidate?.sameAsCombined) return levelEntry.combined || null;
+    return candidate || null;
+}
+
 // ─── Cross-level distance ─────────────────────────────────────────────────────
 //
 // Raw cell/edge keys are packed coordinates — meaningless to compare across two levels with
@@ -562,6 +571,14 @@ function objectiveDepthDist(a, b) {
 
 const footprintSet = (fp) => new Set(fp || []);
 
+/** Comparable longitudinal saturation position. A fully dated sample below the heuristic's
+ * minimum five observations cannot measure a plateau. With adequate chronology, null
+ * `plateauFraction` means no plateau was detected, represented as the end of the observed stream. */
+function saturationPosition(stats) {
+    if (!stats?.chronologyComplete || (stats.totalHints ?? 0) < 5) return null;
+    return stats.plateauFraction ?? 1;
+}
+
 /** Named per-axis distance contributions between two bucket profiles, each in [0,1] or `null`
  *  when the axis isn't comparable (a mechanic absent on one or both sides). Exposed separately
  *  from profileDistance so a caller (solution-profile-compare.mjs) can show WHICH axes drove a
@@ -586,8 +603,8 @@ export function profileDistanceTerms(a, b) {
             ? null : Math.abs(a.prefixDiversity.meanSharedPrefixFrac - b.prefixDiversity.meanSharedPrefixFrac),
         pairwiseDistinctiveness: (a.pairwiseDistinctiveness?.pairsCompared ?? 0) < 1 || (b.pairwiseDistinctiveness?.pairsCompared ?? 0) < 1
             ? null : Math.abs(a.pairwiseDistinctiveness.meanDistance - b.pairwiseDistinctiveness.meanDistance),
-        discoverySaturation: a.discoverySaturation?.plateauFraction == null || b.discoverySaturation?.plateauFraction == null
-            ? null : Math.abs(a.discoverySaturation.plateauFraction - b.discoverySaturation.plateauFraction),
+        discoverySaturation: saturationPosition(a.discoverySaturation) == null || saturationPosition(b.discoverySaturation) == null
+            ? null : Math.abs(saturationPosition(a.discoverySaturation) - saturationPosition(b.discoverySaturation)),
     };
 }
 
@@ -652,7 +669,7 @@ function mean(values) {
 
 /** Aggregates a run's per-level profiles (as produced by buildLevelSolutionProfile) into a
  *  corpus-wide summary — counts, central tendencies, and the "how many levels does each
- *  provenance source contribute usefully to" coverage table. Never claims corpus-wide exhaustion;
+ *  provenance origin contribute usefully to" coverage table. Never claims corpus-wide exhaustion;
  *  it only reports what fraction of levels have at least one hint whose OWN termination was
  *  'exhaustive' (an event-local marker), without promoting that event into a whole-library completeness claim. */
 export function summarizeCorpusProfiles(levelProfiles) {
@@ -730,7 +747,7 @@ export function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
         `- Must-cross order: **${summary.levelsWithObservedSingleMustCrossOrder}** / ` +
         `${summary.levelsWithMustCrossOrder} multi-must-cross levels show one observed entry+completion order in the stored sample.`,
         summary.meanDiscoverySaturationPlateauFraction === null
-            ? '- Discovery-saturation plateau: n/a (no level had enough hints to detect one).'
+            ? '- Discovery-saturation plateau: n/a (no comparable fully dated level had a detected plateau).'
             : `- Mean discovery-saturation plateau point: **${summary.meanDiscoverySaturationPlateauFraction}** ` +
               'of a level\'s hint corpus (heuristic — see doc; not proof of exhaustion).',
         '',

@@ -10,7 +10,7 @@ import {
     classifyProvenanceSource, sourcesForHint, bucketHintsBySource, extractObjectives, turnEvents,
     objectiveSatisfactionDepths, normalizedFootprint, portalUsageStats, mustCrossOrderStats,
     turnLocationStats, prefixDiversityStats, pairwiseDistinctivenessStats, discoverySaturationCurve,
-    buildBucketProfile, buildLevelSolutionProfile, buildSinglePathProfile, profileDistance,
+    buildBucketProfile, buildLevelSolutionProfile, buildSinglePathProfile, storedLevelProfileForBucket, profileDistance,
     profileDistanceTerms, profileDistanceWithCoverage, nearestProfiles, summarizeCorpusProfiles, renderSummaryMd, PROVENANCE_SOURCES,
     computeHintSignature,
     hasCurrentSolutionProfileTaxonomy, SOLUTION_PROFILE_SCHEMA_VERSION, SOLUTION_PROFILE_TAXONOMY, SOLUTION_PROFILE_ALGORITHM_VERSION,
@@ -181,13 +181,14 @@ test('portalUsageStats: counts directed jumps and leaves signature blank for non
     assert.equal(stats.directedJumpFrequency[0].jump, `${p(0, 0)}>${p(9, 9)}`);
 });
 
-test('mustCrossOrderStats: null below 2 must-cross keys; rigid=true when every path agrees', () => {
+test('mustCrossOrderStats: null below 2 must-cross keys; observedSingleOrder describes sample agreement', () => {
     assert.equal(mustCrossOrderStats([[p(0, 0)]], [p(0, 0)]), null);
     const mcKeys = [p(1, 0), p(3, 0)];
     const pathA = [p(0, 0), p(1, 0), p(2, 0), p(3, 0), p(4, 0)];
     const pathB = [p(0, 0), p(1, 0), p(2, 0), p(3, 0), p(4, 0), p(4, 0)]; // same order, extra revisit
     const stats = mustCrossOrderStats([pathA, pathB], mcKeys);
-    assert.equal(stats.rigid, true);
+    assert.equal(stats.observedSingleOrder, true);
+    assert.equal(stats.rigid, true); // compatibility alias only
     assert.equal(stats.distinctFirstEntryOrders, 1);
 });
 
@@ -279,6 +280,22 @@ test('buildSinglePathProfile: degenerates cleanly for a lone witness path', () =
     assert.equal(profile.pairwiseDistinctiveness.pairsCompared, 0);
 });
 
+
+test('storedLevelProfileForBucket resolves sameAsCombined storage references', () => {
+    const combined = { pathCount: 3, marker: 'combined' };
+    const entry_ = {
+        combined,
+        bySource: {
+            other: { pathCount: 3, sameAsCombined: true },
+            witness: { pathCount: 2, marker: 'witness' },
+        },
+    };
+    assert.equal(storedLevelProfileForBucket(entry_, 'other'), combined);
+    assert.equal(storedLevelProfileForBucket(entry_, 'witness').marker, 'witness');
+    assert.equal(storedLevelProfileForBucket(entry_, 'combined'), combined);
+    assert.equal(storedLevelProfileForBucket(entry_, 'missing'), null);
+});
+
 // ── cross-level distance ────────────────────────────────────────────────────────
 
 test('profileDistance: a profile is (near-)identical to itself', () => {
@@ -303,6 +320,30 @@ test('profileDistanceTerms: one-path distribution axes are unknown rather than s
     assert.equal(terms.pairwiseDistinctiveness, null);
     assert.equal(terms.discoverySaturation, null);
     assert.equal(terms.turnChirality, null);
+});
+
+
+test('profileDistanceTerms: adequate dated no-plateau history is an observed endpoint, not missing evidence', () => {
+    const base = {
+        cellVisitFrequency: { normalizedFootprint: [], entropy: 0 },
+        turnDistribution: { turnRateMean: 0, cwFraction: null },
+        mustCrossOrder: null,
+        portalUsage: { pathsTotal: 5, pathsUsingPortals: 0 },
+        objectiveSatisfaction: [],
+        prefixDiversity: { pathsSampled: 1, meanSharedPrefixFrac: 0 },
+        pairwiseDistinctiveness: { pairsCompared: 0, meanDistance: 0 },
+        discoverySaturation: { chronologyComplete: true, totalHints: 5, plateauFraction: null },
+    };
+    const plateau = {
+        ...base,
+        discoverySaturation: { chronologyComplete: true, totalHints: 5, plateauFraction: 0.4 },
+    };
+    assert.ok(Math.abs(profileDistanceTerms(base, plateau).discoverySaturation - 0.6) < 1e-9);
+    const incomplete = {
+        ...base,
+        discoverySaturation: { chronologyComplete: false, totalHints: 5, plateauFraction: null },
+    };
+    assert.equal(profileDistanceTerms(base, incomplete).discoverySaturation, null);
 });
 
 test('profileDistanceWithCoverage exposes how much nominal distance weight was comparable', () => {
