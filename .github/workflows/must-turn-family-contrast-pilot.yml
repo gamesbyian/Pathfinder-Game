@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
 
+# Branch-only bounded research execution; remove after the result is captured.
 jobs:
   pilot:
     runs-on: ubuntu-latest
