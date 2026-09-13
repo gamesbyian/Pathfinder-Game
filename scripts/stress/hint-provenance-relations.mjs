@@ -14,6 +14,8 @@ export function auditCrossHintEventCollisions(levels) {
     let pathMemberships = 0;
     const origins = new Map();
     const facets = new Map();
+    const techniques = new Map();
+    const producerKeys = new Map();
     const examples = [];
 
     for (const level of levels || []) {
@@ -24,10 +26,7 @@ export function auditCrossHintEventCollisions(levels) {
                 const identity = provenanceEventIdentity(event);
                 let row = byIdentity.get(identity);
                 if (!row) {
-                    row = {
-                        event,
-                        paths: new Map(),
-                    };
+                    row = { event, paths: new Map() };
                     byIdentity.set(identity, row);
                 }
                 if (!row.paths.has(pathSignature)) row.paths.set(pathSignature, hint.path || []);
@@ -45,6 +44,10 @@ export function auditCrossHintEventCollisions(levels) {
             origins.set(origin, (origins.get(origin) || 0) + 1);
             const eventFacets = [...provenanceFacets(row.event)].sort();
             for (const facet of eventFacets) facets.set(facet, (facets.get(facet) || 0) + 1);
+            const technique = row.event?.solver?.technique ?? 'unknown';
+            techniques.set(technique, (techniques.get(technique) || 0) + 1);
+            const producerKey = [origin, row.event?.solver?.version ?? 'unknown', technique].join('|');
+            producerKeys.set(producerKey, (producerKeys.get(producerKey) || 0) + 1);
             if (examples.length < 50) {
                 examples.push({
                     levelId: level.id ?? level.levelId ?? null,
@@ -65,6 +68,8 @@ export function auditCrossHintEventCollisions(levels) {
         pathMemberships,
         identitiesByOrigin: Object.fromEntries([...origins].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
         identitiesByFacet: Object.fromEntries([...facets].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+        identitiesByTechnique: Object.fromEntries([...techniques].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+        identitiesByProducerKey: Object.fromEntries([...producerKeys].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
         examples,
     };
 }
