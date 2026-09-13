@@ -4,11 +4,9 @@
 > **Read for:** duplicate authority, compatibility migration, mutable-state lifetime, and semantic boundary cleanup.
 > **Do not use for:** solver-policy/research priority; use [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 
-Preserve behavior and evidence. Similar-looking representations are not automatically duplicates. Structural refactors should remain separate from solver-policy tuning unless the structural defect prevents trustworthy research.
+Preserve behavior and evidence. Similar representations are not automatically duplicates. Keep structural refactors separate from solver-policy tuning unless a structural defect prevents trustworthy research.
 
-Historical detail: [`archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md).
-
-Detailed duplicate-authority audit: [`../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md`](../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md). Treat that report as evidence/detail, not as a competing queue. Its second-pass reconciliation is authoritative over its initial abstraction proposals.
+History: [`archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md). Detail: [`../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md`](../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md); its second-pass reconciliation supersedes its initial proposals.
 
 ## Classification
 
@@ -22,13 +20,13 @@ Detailed duplicate-authority audit: [`../reports/2026-09-12-duplicate-authority-
 | Evidence reconstruction | Prefer authoritative producer facts when several consumers independently rebuild the same scientific classification or join from raw fields. |
 | Identity-model weakness | Strengthen identifiers when apparent duplication/ambiguity is caused by under-resolved run, event, treatment, source, population, or revision identity. |
 
-External forms may vary. Internal authority and mutable-resource lifetime should not be ambiguous.
+External forms may vary; internal authority and mutable-resource lifetime should be unambiguous.
 
 ## Current debt
 
 | Area | Current direction / exit condition |
 |---|---|
-| **Residual evidence/classification authority** | Current residual-class research still reconstructs capability, offer/reach/starvation, dispatch, historical-candidate, and no-known-candidate distinctions from several already-canonical lower-level artifacts. The corrected post-1029 atlas is the strongest candidate to become a versioned generated residual-class authority because local predicate drift already changed 25 classifications. Preserve the five-class semantics and source evidence; exit when class-specific research consumes one authoritative residual derivation or an intentionally versioned alternative rather than re-encoding class rules locally. |
+| **Residual evidence/classification authority** | Current residual-class research still reconstructs capability, offer/reach/starvation, dispatch, historical-candidate, and no-known-candidate distinctions from several canonical lower-level artifacts. The corrected post-1029 atlas is the strongest candidate for a versioned generated residual-class authority because local predicate drift already changed 25 classifications. Preserve the five-class semantics/source evidence; exit when class-specific research consumes one authoritative residual derivation or an intentionally versioned alternative rather than re-encoding class rules locally. |
 | **Research-population derivation** | Core population identity/integrity already exists in `solver-experiment-contract.mjs`, experiment preflight/publication, recovery tooling, and the operating-model single-population-source rule. Do **not** create another generic population authority. Add only reusable derivation recipes/helpers for recurring multi-asset joins such as current residual ∩ capability/treatment predicates, then feed their literal IDs/source identity into the existing hash/integrity contract. Exit when recurring research joins stop re-encoding membership predicates. |
 | **Exact treatment opportunity over lifecycle telemetry** | Canonical `stageLifecycle` already owns stage instantiated/reached/skipped/starved/exhausted status plus attempts/nodes/work, and attempt/action identity is already canonical. Remaining debt exists only where a consumer must infer exact action/config opportunity from stage-family names or ladder reconstruction. Prefer enriching/deriving from existing lifecycle + action telemetry before introducing any new participation schema. |
 | **Research-question state synchronization** | `solver-research-question-relations.json` already owns machine-readable question IDs, state, evidence, relationships, constraints, results, and reopen conditions. Do **not** replace it. Validate/project it against the Markdown workstream authority, research-status index, workflow outcome artifacts, and report evidence where current tooling permits those surfaces to drift. Preserve relation topology separately from execution priority and workflow execution outcome. |
