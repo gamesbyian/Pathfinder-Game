@@ -1,0 +1,35 @@
+name: Temporary solution-profile audit probe lint fix
+
+on:
+  push:
+    branches:
+      - chatgpt/solution-profile-resource-audit-2026-09-13
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove dead diagnostic local
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/stress/solution-profile-resource-audit.mjs')
+          s = p.read_text()
+          old = "        const rawTerms = profileDistanceTerms(profile, pool[0]?.profile || profile);\n"
+          if old in s:
+              p.write_text(s.replace(old, ''))
+          PY
+      - name: Commit if changed
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/stress/solution-profile-resource-audit.mjs
+          git commit -m 'research: lint empirical profile audit probe'
+          git push origin HEAD:chatgpt/solution-profile-resource-audit-2026-09-13
