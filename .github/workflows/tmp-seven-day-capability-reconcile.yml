@@ -41,10 +41,8 @@ jobs:
           const readIds = p => fs.readFileSync(p, 'utf8').split(/\s+/).map(s => s.trim()).filter(Boolean);
           const uniq = xs => [...new Set(xs)].sort();
 
-          const baselinePath = 'reports/stress/capability-runs/34683011115/per-level-corpus2.json';
-          const previousPath = 'reports/stress/capability-runs/34531412380/per-level-corpus2.json';
-          const baseline = readJson(baselinePath);
-          const previous = readJson(previousPath);
+          const baseline = readJson('reports/stress/capability-runs/34683011115/per-level-corpus2.json');
+          const previous = readJson('reports/stress/capability-runs/34531412380/per-level-corpus2.json');
           const niche = readJson('reports/stress/technique-niches/2026-09-03/level-capability.json');
 
           const nicheRows = [];
@@ -66,42 +64,65 @@ jobs:
           walk(niche);
           if (!nicheRows.length) throw new Error('No solvingActions rows found in technique-niche artifact');
 
-          const idsForAction = key => uniq(nicheRows.filter(row => row.solvingActions.includes(key)).map(row => row.id));
+          const actionLabels = uniq(nicheRows.flatMap(row => row.solvingActions));
+          const interestingLabels = actionLabels.filter(label => /turn|mechanic|intersection|objective/i.test(label));
+          console.log('CAPABILITY_ACTION_LABELS');
+          console.log(JSON.stringify(interestingLabels, null, 2));
+
+          const idsForPredicate = predicate => uniq(nicheRows.filter(row => row.solvingActions.some(predicate)).map(row => row.id));
           const currentSolved = solvedIds(reportRows(baseline));
           const previousSolved = solvedIds(reportRows(previous));
           const displaced = diffIdSets(currentSolved, previousSolved).lostIds;
 
-          const sources = [
+          const sourceDefinitions = [
             {
               id: 'portal-coarse-state-merge',
               gainIds: readIds('data/stress/portal-coarse-state-merge-gain-referee-check-001-ids.txt'),
+              matchedLabels: ['historical +158 referee-valid gain set'],
             },
             {
-              id: 'repair-must-turn-biased',
-              gainIds: idsForAction('repair|guidance=must-turn-biased'),
+              id: 'repair-turn-biased',
+              predicate: label => /repair/i.test(label) && /turn-biased/i.test(label) && !/must-turn/i.test(label),
             },
             {
               id: 'beam-intersectionHarvest-mechanic-buckets',
-              gainIds: idsForAction('beam|intersectionHarvest|width=5000|retention=mechanic-buckets'),
+              predicate: label => /beam/i.test(label) && /intersectionHarvest/i.test(label) && /mechanic/i.test(label),
             },
             {
               id: 'beam-objectiveFirst-mechanic-buckets',
-              gainIds: idsForAction('beam|objectiveFirst|width=5000|retention=mechanic-buckets'),
+              predicate: label => /beam/i.test(label) && /objectiveFirst/i.test(label) && /mechanic/i.test(label),
             },
             {
               id: 'goal-attraction-disabled-retry',
               gainIds: ['R01124', 'R02020', 'R02060'],
+              matchedLabels: ['promoted retry +3 set'],
             },
             {
               id: 'accepted-change-displaced-losses',
               gainIds: displaced,
+              matchedLabels: ['solved-set losses: 34531412380 -> 34683011115'],
             },
-          ];
+          ].map(source => {
+            if (!source.predicate) return source;
+            const matchedLabels = actionLabels.filter(source.predicate);
+            return {
+              ...source,
+              matchedLabels,
+              gainIds: idsForPredicate(source.predicate),
+            };
+          });
+
+          console.log('CAPABILITY_SOURCE_IDENTITIES');
+          console.log(JSON.stringify(sourceDefinitions.map(source => ({
+            id: source.id,
+            matchedLabels: source.matchedLabels,
+            demonstratedIds: source.gainIds.length,
+          })), null, 2));
 
           const result = buildCapabilityMemory({
             baselineId: '34683011115-corpus2',
             baselineRows: baseline,
-            candidates: sources.map(source => ({
+            candidates: sourceDefinitions.map(source => ({
               id: source.id,
               disposition: 'diagnostic',
               signature: { gainIds: source.gainIds, lossIds: [] },
