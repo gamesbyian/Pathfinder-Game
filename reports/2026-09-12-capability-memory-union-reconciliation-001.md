@@ -1,6 +1,6 @@
 # Capability-memory union reconciliation 001
 
-> **Status:** concluded-positive / correction
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-12 — PR-only existing-data runs `34728842684` and `34728960554` rebuilt the corrected 1,048-solve residual atlas, recovered the exact technique-niche action identities, and recomputed the six-source capability-memory union from committed evidence without running the solver.
 > **Decision:** the later September 12 capability-memory prose contains an impossible aggregate: portal coarse-state merge alone nominates 137 current residual rows, so the stated six-source union of 65 cannot be correct. Recomputing all six named source families yields a **179-row union**, distributed **14 / 28 / 21 / 116 / 0** across residual classes 1–5. The class-5 “known capability does not reach this frontier” conclusion survives; the broader “capability memory is low-yield” interpretation does not. Class 4 now owes the cheap freshness/reconciliation gate that the capability-memory contract prescribes.
 > **Remaining gate:** replay a tiny, prespecified current class-4 sample of the historical portal coarse-state-merge nominations under the existing default-off flag and current production code/budget semantics. If the old capability is stale, close quickly. If it persists, test the smallest changed-treatment exposure/allocation form without reopening the globally losing treatment.
