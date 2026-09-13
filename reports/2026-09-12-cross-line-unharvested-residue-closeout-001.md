@@ -1,67 +1,36 @@
 # Cross-line unharvested residue closeout 001
 
-> **Status:** concluded-analysis / routed
-> **Last evidence:** 2026-09-12 — mechanic-composition pilot, class-5 family/reference comparison, WS1 first-divergence result, class-5 bucket-retention canaries, corrected residual atlas/capability-memory census, and provenance source-cell repair.
-> **Decision:** harvest the useful cross-line residue without opening parallel research programs. Two cheap controls feed the active future-feasibility gate; one bounded research-integrity audit is retained; non-class-5 solve harvesting stays subordinate but visible.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-12 — completed class-1/2/3 rejoin, bounded future-feasibility null, semantic-label audit/repair, and exact cross-hint provenance classification added to the earlier mechanic-composition, family/reference, WS1 first-divergence and capability-memory evidence.
+> **Decision:** the same-day cross-line residue has been harvested without opening parallel research programs. Useful controls/premises are now routed explicitly; already-due cheap gates have been executed rather than left as future-work prose.
+> **Remaining gate:** none for this reconciliation. Material downstream questions now live under stable IDs in `docs/solver-research-question-relations.json` and current priority in `docs/solver-optimization-workstreams.md`.
 
-## 1. Perturbation susceptibility is a phenotype, not a causal explanation
+## What survived closed experiments
 
-The class-5 family/reference comparison correctly closed raw `swap`/`cs` rescue as causal evidence: large unconstrained reshuffles rescue more often than targeted single swaps, and the highest-rescue parents are solved by many unrelated edits.
+The class-5 family/reference comparison closed raw `swap`/`cs` rescue as causal evidence, but diffuse perturbation susceptibility remained useful as non-causal calibration. The mechanic-composition relocation pilot likewise closed its intervention while preserving `R01274`/`R01882` as clean positive controls and `R01849`/`R02036` as generic-loosening confound controls.
 
-The residual information is still useful. A parent rescued by many unrelated edits may lie close to a broad feasibility boundary even though no individual edit identifies the missing mechanism. Therefore **diffuse perturbation susceptibility may be used as an offline corroborative phenotype** for the already-active future-feasibility descriptors.
+Those controls were fed into the bounded future-feasibility rejoin without allowing them to select their own target. The resulting six prespecified scalar summaries still failed to separate LIVE from DEAD across 31 exact-labelled states on 15 levels. That route is therefore closed rather than expanded post hoc.
 
-Bounded use only:
+## Diversity and viability
 
-- no new family generation or solve sweep;
-- use already-committed per-parent rescue density only;
-- ask whether high diffuse-rescue parents also show distinctive capacity/slack/topology-scarcity values under a descriptor already chosen for independent reasons;
-- treat any association as development evidence, never as a runtime feature or causal proof.
+WS1 showed mechanic-bucket retention can preserve newly created structural-progress modes on selected solved siblings. WS2's class-5 bucket canaries remained solve-null, while `R03229` again showed DEAD preferred over LIVE. Together these results establish a useful constraint: **structural-progress diversity and viable future optionality are distinct quantities**. Generic bucket/width/scorer work stays closed absent a new mechanism-specific discriminator.
 
-This does not reopen family/reference causal analysis. To avoid circular validation, perturbation rescue density must not select the descriptor that it is later used to corroborate.
+## Evidence-integrity residue
 
-## 2. Mechanic-composition clean/confounded cases are calibration controls
+The broader convenience-label audit found one additional real semantic misuse: `reconcile-isolated-hint-census-context.mjs` still treated `variantLabel` as evidence of an experimental source cell. That classifier is repaired; other inspected label uses are descriptive/identity plumbing rather than causal predicates.
 
-The relocation instrument is correctly closed because `R01849` and `R02036` become easier through unrelated routes after decoupling. But `R01274` and `R01882` provide clean predicted chains: the promoted joint-obligation prune rescues the original and the rescue disappears after decoupling while decoupled control remains unsolved.
+The exact cross-hint provenance audit then found 44,305 same-event/multiple-path identities. Replay and explicit multi-output producers explain almost all of them. The 160 apparently ordinary-search collisions are exactly the historical `isolated-technique` tail and match the already-repaired technique-census source-cell under-resolution. No deterministic replay or near-collision expansion is earned.
 
-If the active future-feasibility pass chooses a **joint-obligation compatibility** summary, reuse these four parents as an offline calibration set:
+## Cheap residual harvest
 
-- `R01274`, `R01882`: positive mechanism controls;
-- `R01849`, `R02036`: confound controls that a useful descriptor should not naively interpret as proof of the targeted obligation mechanism.
+The corrected 98 class-1/2/3 rows were rejoined immediately instead of left for periodic future review. No already-legal zero-contention batch exists. Class 1 has no protected-suffix headroom; class 3 is already exposed-and-failed; class 2 mostly rejoins existing priced/deferred policies.
 
-No new Stage-C run is implied. The existing pilot result supplies the labels. This is supplementary calibration only; B1/B2 + `R03229` remain the owning exact-feasibility evidence. These four cases may challenge a descriptor selected from the owning evidence, not choose that descriptor and then validate it.
+One changed-treatment descendant survives: seven class-2 levels have isolated `must-turn-biased` repair wins while current policy reaches repair context but omits that guidance. A bounded additive late must-turn-biased probe is now a live WS2 candidate; it is not counted as harvested capability.
 
-## 3. Useful diversity versus viable optionality
+## Lost/duplicate premise cleanup
 
-WS1 stage 5 shows that mechanic-bucket retention can preserve newly created structural-progress modes on solved siblings. The class-5 `intsBucketRetention` and mechanic-bucket canaries show that changing retained diversity alone does not rescue the frozen class-5 first-loss population. R03229 shows a stronger failure: a genuinely LIVE continuation can be culled while DEAD states are preferred.
+Backlog excavation recovered reason-producing dead-state reuse/local nogoods as a premise that had disappeared without a negative result, while collapsing minimal technique-niche counterexample/reducer work into the already-owning microscope methodology. After the scalar future-feasibility null, compact sound dead-cause recurrence is now a diagnostic-only WS2 gate.
 
-The common conceptual object is therefore **remaining viable optionality**: how much genuinely feasible continuation space remains, not merely how many progress labels or structural buckets are represented.
+## Process consequence
 
-This is an interpretation lens, not a fourth descriptor family. Exact-resource capacity, topology scarcity, and joint-obligation compatibility are candidate cheap approximations to that latent quantity. Do not create an “optionality” feature buffet or new architecture from this wording alone.
-
-## 4. Semantic fields versus bookkeeping labels
-
-Two same-day evidence-integrity failures share a pattern:
-
-- `variantLabel` was used as a proxy for a non-base/experimental condition even though the actual causal distinction lived in `ablation`;
-- `isolatedTechnique: true` did not preserve which technique-census source cell actually produced the success.
-
-A bounded spot audit of the three known `isBaseT1`/T1-join consumers (`analyze-post-1029-residual-atlas.mjs`, `analyze-current-missing-attempt-exposure.mjs`, `analyze-equal-work-census.mjs`) confirms the `variantLabel` misuse is repaired consistently: all now ignore `variantLabel`, rely on the explicit `ablation` field for modified-condition semantics, and carry comments documenting why. No additional demonstrated bug was found in that known consumer set.
-
-Retained audit question beyond those repaired consumers: **where else do research scripts infer semantic/causal meaning from convenience labels, names, or summary booleans when an explicit causal/provenance field exists or should exist?** Candidate fields include `pairLabel`, `isolatedTechnique`, origin labels, arm names, and similar research-only summaries. Repair only demonstrated semantic ambiguity; do not launch a schema redesign.
-
-## 5. Non-class-5 residual solve harvest remains a secondary lane
-
-The corrected 652-miss residual is `22/39/37/123/431` across classes 1-5. Class 5 remains the dominant capability-acquisition frontier, and the six-source capability-memory census reaches zero class-5 rows.
-
-However, **221 residual misses are outside class 5**. Their existence should remain visible as a possible source of cheap solve-count gains while WS2 pursues harder acquisition work. The turn-biased class-2 cases do not themselves reopen anything because the production toggle is already closed negative at matched work.
-
-Scheduling rule: periodically ask whether classes 1-3 contain a newly exposed, already-legal, low-cost batch after material production/provenance changes. Do not divert primary research from class 5 merely because these rows are easier to explain.
-
-## Routing and completion state
-
-- **Done directly:** sections 1-3 are now wired into the active future-feasibility handoff without expanding its frozen 2-4 descriptor budget or using the calibration evidence to select its own target.
-- **Done directly:** the known three `variantLabel` consumers were spot-audited and are consistent with the repaired semantics.
-- **Retained follow-up:** broader semantic-label review remains bounded and should piggyback on future provenance/evidence maintenance rather than becoming a new campaign.
-- **Retained follow-up:** classes 1-3 receive a cheap-harvest check after material boundary/provenance changes; no standing parallel solve campaign is created.
-
-No additional workstream is created by this report.
+This closeout itself exposed the systemic weakness: reports preserve evidence well, but relationships such as `answers`, `triggers`, `constrains`, `calibrates`, `negative-control-for`, `supersedes` and `duplicate-of` were easy to lose during compaction. The sparse question-relation registry and bidirectional closeout rule now preserve only those material cross-question edges, while the workstream authority remains the sole execution queue.
