@@ -1,6 +1,9 @@
 # Solver future-work backlog excavation
 
-Date: 2026-09-12
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-12 — current future-work/workstream authorities compared with the 2026-08-24 expert backlog, then reconciled again after the class-1/2/3 and future-feasibility gates completed.
+> **Decision:** most old programs are absorbed/closed; one duplicate method lane was removed and one genuinely orphaned premise, reason-producing dead-state reuse, was recovered. After the simple future-feasibility null, that premise is now a diagnostic-only live WS2 successor.
+> **Remaining gate:** none for backlog excavation. `WS2-COMPACT-DEAD-CAUSE-RECURRENCE` owns the recovered question and must show material recurrence before any nogood implementation.
 
 ## Question
 
@@ -16,40 +19,37 @@ Compared the current deferred/reopen authority with the 2026-08-24 expert-grade 
 |---|---|
 | Maintained exact/reference formulation | **ABSORBED.** Exact/reference work is now WS5, on demand/supporting. B1/B2 plus R03229 are the current labels; expansion is gated on an earned question. |
 | Restart/randomization study | **TESTED FORMS CLOSED / ABSORBED.** WS0 owns restart/randomization and is closed in tested forms; global seed fan-out remains demoted absent recurring commitment-diversity evidence. |
-| Learned failure / reason-producing propagation | **ORPHANED, STILL PLAUSIBLE.** No current authority or result was found that closes or carries this premise. Restore only the smallest form: sound local reason/nogood reuse after evidence of repeated exploration of the same exact-dead cause. Do not jump to CDCL/LCG or non-chronological backtracking. |
+| Learned failure / reason-producing propagation | **RECOVERED.** No closing result existed. The smallest form is now WS2's diagnostic question: show repeated exploration of the same sound compact dead cause before any solve-local reason reuse. |
 | Automatic algorithm configuration / portfolio construction | **REDUCED/ABSORBED.** Scheduler/WS1/capability-memory work consumed the useful part. Generic configuration search is not currently earned; the surviving residue is stability-aware action selection after a held-out legal signal exists. |
 | Generalization/challenge-corpus maintenance | **ABSORBED AS METHOD.** WS3 is method-complete; grouped-family independence and confirmation pressure are standing rules rather than a future research program. |
-| Beam retention and survivor selection | **HEAVILY TESTED; GENERIC FORMS CLOSED.** WS4 is closed in width/bucket/scorer forms. Current future-feasibility analysis may nominate a new mechanism-specific axis, but this is no longer an open generic program. |
+| Beam retention and survivor selection | **HEAVILY TESTED; GENERIC FORMS CLOSED.** WS4 is closed in width/bucket/scorer forms. The later bounded future-feasibility scalar pass also closed null. |
 | Repair operator quality | **ABSORBED BY WS6.** Reopen only when evidence shows a live continuation needs interior/early commitment revision. |
-| State-conditioned must-cross reasoning | **SUBSUMED BY CURRENT FUTURE-FEASIBILITY QUESTION.** The useful residue is resource/obligation feasibility, especially exact-resource capacity and joint-obligation compatibility, not another generic must-cross attraction policy. |
-| Guidance distance distinct from admissible pruning | **SUPERSEDED AS A GENERIC LINE.** Goal-attraction retry work and later scorer-vocabulary negatives remove the case for generic guidance retuning. A new guidance feature needs mechanism-specific first-loss evidence and can re-enter through WS2/WS4. |
+| State-conditioned must-cross reasoning | **CONSUMED BY THE FUTURE-FEASIBILITY TEST.** Compact resource/obligation summaries were tried and did not separate exact feasibility. A new premise is required. |
+| Guidance distance distinct from admissible pruning | **SUPERSEDED AS A GENERIC LINE.** Goal-attraction retry work and later scorer-vocabulary negatives remove the case for generic guidance retuning. |
 | Typed producer -> consumer artifacts | **STILL VALID DEFERRED.** Current future-work entry already carries a strong consumer-limitation/timeliness/cost/matched-work gate. |
 | Queryable analytical layer | **STILL VALID DEFERRED INFRASTRUCTURE.** Existing helpers/capability memory have raised the bar; reopen only if recurring joins still require bespoke scripts. |
-| Native/WASM search kernel | **CLOSED UNDER CURRENT SHAPE.** `solver-architectural-speed-opportunities.md` now requires a compact material hotspot and small stable boundary before reconsideration. |
+| Native/WASM search kernel | **CLOSED UNDER CURRENT SHAPE.** Reconsider only after a compact material hotspot and stable boundary appear. |
 
-## Current-file cleanup findings
+## Cleanup findings
 
-The current file is much healthier than its age suggests because it has been repeatedly compacted and reconciled. Most entries have real reopen conditions. Two cleanup points remain:
+`Minimal technique-niche counterexamples` was duplicate optionality: reducer/exact validation is a method already owned by the microscope workflow. It is no longer a separate future lane.
 
-1. `Minimal technique-niche counterexamples` is not a distinct future question anymore. Reducer/exact validation is a method, and the microscope method immediately above already owns the causal-isolation gate. Keeping both advertises duplicate optionality.
-2. The old learned-failure premise was dropped without disposition. It should return as a narrow deferred question, explicitly gated on observed repeated exact-dead cause recurrence and a sound small reason representation.
-
-Other speculative entries such as temporal-anchor diversity, latent response dimensions, and generator/editor-envelope niches should stay only because their present wording includes a concrete evidence trigger. If those triggers are later shown false/irrelevant, remove them rather than preserving the idea indefinitely.
+The learned-failure premise, by contrast, had disappeared without a negative result or current owner. That is precisely the kind of epistemic loss document compaction can cause when relationships between questions and evidence are not retained explicitly.
 
 ## Recovered premise: reason-producing dead-state reuse
 
-The August premise is more interesting after the B1/B2 + R03229 evidence than it was when first written, but the connection must not be overstated. `LIVE culled / DEAD preferred` proves a future-feasibility ranking failure; it does **not** prove the solver repeatedly rediscovers the same dead reason.
+B1/B2 + `R03229` establish a future-feasibility ranking failure, but do not prove repeated rediscovery of the same dead reason. The bounded scalar descriptor pass subsequently failed as well. The legitimate changed premise is therefore about **representation/reuse of proven dead causes**, not another scalar score feature.
 
-The cheapest legitimate re-entry is therefore diagnostic:
+The diagnostic gate is:
 
-1. On exact-adjudicated extinction cases or another naturally recurring cohort, identify whether multiple explored states fail for the same small, sound resource/commitment reason.
-2. Measure recurrence inside one solve and the work spent beneath repeated instances of that reason.
-3. Only if recurrence is material, define the smallest solve-local reason/nogood representation whose key includes all future-relevant state needed for soundness.
-4. Shadow it first: count would-have-rejected states and verify exact/referee safety.
-5. Then run a matched-work bounded treatment.
+1. identify whether multiple explored states fail for the same small, sound resource/commitment reason;
+2. measure within-solve recurrence and wasted work beneath repeated instances;
+3. only if recurrence is material, define the smallest solve-local reason key containing all future-relevant state needed for soundness;
+4. shadow it first and verify exact/referee safety;
+5. only then consider a matched-work treatment.
 
-A null at steps 1-2 closes this route cheaply. A positive result would be a capability-acquisition mechanism materially different from another scorer, width, bucket, or retry.
+A null at steps 1-2 closes this route cheaply. No CDCL/LCG, global unsound keys or non-chronological backtracking is implied.
 
 ## Result
 
-The old backlog contains mostly consumed programs, one duplicated method entry, and one genuine forgotten premise. Restore **reason-producing dead-state reuse** as deferred, not active; remove the duplicate minimal-counterexample row. Do not change current WS2 priority: the due class-1/2/3 cheap harvest and bounded future-feasibility rejoin remain first.
+The excavation found mostly consumed history, one duplicate question and one real lost premise. The latter is now first-class in the live question-relation registry so compaction cannot silently erase it again.
