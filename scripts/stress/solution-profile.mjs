@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /**
- * Solution-space fingerprint generator for the known-solvable corpora.
+ * Known-solution sample-profile generator for the known-solvable corpora.
  *
- * Builds one solution-space fingerprint per level (combined + per-provenance-source — see
+ * Builds one observed-solution profile per level (combined + per-provenance-origin; see
  * solution-profile-lib.mjs) from that level's saved hint corpus, plus a corpus-wide summary.
  * Read-only against the corpus (never writes levels.json/hints/*); output is analysis tooling
- * under reports/stress/, per docs/solution-profile.md.
+ * under reports/stress/, per docs/solver-solution-profile.md.
  *
  * This is a thin CLI over solution-profile-lib.mjs's regenerateCorpusProfile() — the same
- * function solution-profile-compare.mjs calls automatically when it finds a library stale (see
- * docs/solution-profile.md's Freshness section). Run this directly when you want to force a
- * regen without doing a comparison, or to build a non-default/partial library via --levels=.
+ * function solution-profile-compare.mjs calls automatically when it finds a full library stale.
+ * Run this directly when you want to force a regen or build a non-default/partial library via
+ * --levels=. A generated profile describes the stored solution sample; it does not assert that
+ * the latent solution space has been exhaustively measured.
  *
  * Run via tsx (needed for the TS domain-layer imports solution-profile-lib.mjs pulls in). --levels
  * accepts positions or, for a corpus whose levels carry an id (both stress corpora), the id
@@ -48,7 +49,7 @@ function main() {
         seed: SEED,
     });
 
-    console.log(`Wrote ${output.levels.length} level fingerprint(s) to ${path.relative(ROOT, outAbsPath)}`);
+    console.log(`Wrote ${output.levels.length} level profile(s) to ${path.relative(ROOT, outAbsPath)}`);
     console.log(`Wrote corpus summary to ${path.relative(ROOT, mdPath)}`);
     console.log(JSON.stringify(output.corpusSummary, null, 1));
 }
