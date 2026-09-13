@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-13T02:42:31.224Z",
+  "sourceReference": "tmp/class5-dead-cause-reference.json",
+  "method": "mechanic-family relaxation (--core-only/--no-mustcross/--no-flippers/--no-landmarks) + prefix-length bisection over cpsat-reference-probe.py; every claimed cause verified by a second CP-SAT call showing the DEAD verdict flips to LIVE once the cause is removed",
+  "timeLimitSecPerProbe": 90,
+  "totalDeadRows": 30,
+  "totalProbeCalls": 104,
+  "causes": [
+    {
+      "caseId": "R00046:d10:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 10,
+      "fullPrefixLength": 11,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": 10,
+      "prefixLengthBracket": [
+        10,
+        10
+      ],
+      "bisectionAbstainedAt": null,
+      "probesUsed": 4
+    },
+    {
+      "caseId": "R00046:d12:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 12,
+      "fullPrefixLength": 13,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        7
+      ],
+      "bisectionAbstainedAt": 4,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R00046:d14:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 14,
+      "fullPrefixLength": 15,
+      "mechanicCause": "mustCross",
+      "mechanicCauseDetail": "relaxing only mustCross alone flips this to LIVE",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        15
+      ],
+      "bisectionAbstainedAt": 8,
+      "probesUsed": 5
+    },
+    {
+      "caseId": "R00046:d16:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 16,
+      "fullPrefixLength": 17,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": 13,
+      "prefixLengthBracket": [
+        13,
+        13
+      ],
+      "bisectionAbstainedAt": null,
+      "probesUsed": 5
+    },
+    {
+      "caseId": "R00046:d18:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 18,
+      "fullPrefixLength": 19,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        10
+      ],
+      "bisectionAbstainedAt": 5,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R00046:d20:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 20,
+      "fullPrefixLength": 21,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        4,
+        6
+      ],
+      "bisectionAbstainedAt": 5,
+      "probesUsed": 5
+    },
+    {
+      "caseId": "R00046:d22:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 22,
+      "fullPrefixLength": 23,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        6
+      ],
+      "bisectionAbstainedAt": 3,
+      "probesUsed": 4
+    },
+    {
+      "caseId": "R00046:d24:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 24,
+      "fullPrefixLength": 25,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        25
+      ],
+      "bisectionAbstainedAt": 13,
+      "probesUsed": 2
+    },
+    {
+      "caseId": "R00046:d26:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 26,
+      "fullPrefixLength": 27,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        14
+      ],
+      "bisectionAbstainedAt": 7,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R00046:d29:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 29,
+      "fullPrefixLength": 30,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        30
+      ],
+      "bisectionAbstainedAt": 15,
+      "probesUsed": 2
+    },
+    {
+      "caseId": "R00046:d31:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 31,
+      "fullPrefixLength": 32,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        16
+      ],
+      "bisectionAbstainedAt": 8,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R00046:d33:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 33,
+      "fullPrefixLength": 34,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        17
+      ],
+      "bisectionAbstainedAt": 9,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R00046:d38:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 38,
+      "fullPrefixLength": 39,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": 17,
+      "prefixLengthBracket": [
+        17,
+        17
+      ],
+      "bisectionAbstainedAt": null,
+      "probesUsed": 7
+    },
+    {
+      "caseId": "R00046:d40:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 40,
+      "fullPrefixLength": 41,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        21
+      ],
+      "bisectionAbstainedAt": 11,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R00046:d42:culled-rank2001",
+      "levelId": "R00046",
+      "depth": 42,
+      "fullPrefixLength": 43,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": 17,
+      "prefixLengthBracket": [
+        17,
+        17
+      ],
+      "bisectionAbstainedAt": null,
+      "probesUsed": 6
+    },
+    {
+      "caseId": "R02733:d15:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 15,
+      "fullPrefixLength": 16,
+      "mechanicCause": "abstain",
+      "mechanicCauseDetail": "core-only probe abstained",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        8
+      ],
+      "bisectionAbstainedAt": 4,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R02733:d17:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 17,
+      "fullPrefixLength": 18,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        5
+      ],
+      "bisectionAbstainedAt": 3,
+      "probesUsed": 4
+    },
+    {
+      "caseId": "R02733:d20:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 20,
+      "fullPrefixLength": 21,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        21
+      ],
+      "bisectionAbstainedAt": 11,
+      "probesUsed": 2
+    },
+    {
+      "caseId": "R02733:d22:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 22,
+      "fullPrefixLength": 23,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        6
+      ],
+      "bisectionAbstainedAt": 3,
+      "probesUsed": 4
+    },
+    {
+      "caseId": "R02733:d25:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 25,
+      "fullPrefixLength": 26,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        13
+      ],
+      "bisectionAbstainedAt": 7,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R02733:d27:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 27,
+      "fullPrefixLength": 28,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        14
+      ],
+      "bisectionAbstainedAt": 7,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R02733:d30:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 30,
+      "fullPrefixLength": 31,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        8
+      ],
+      "bisectionAbstainedAt": 4,
+      "probesUsed": 4
+    },
+    {
+      "caseId": "R02733:d32:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 32,
+      "fullPrefixLength": 33,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        9
+      ],
+      "bisectionAbstainedAt": 5,
+      "probesUsed": 4
+    },
+    {
+      "caseId": "R02733:d34:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 34,
+      "fullPrefixLength": 35,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        35
+      ],
+      "bisectionAbstainedAt": 18,
+      "probesUsed": 2
+    },
+    {
+      "caseId": "R02733:d37:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 37,
+      "fullPrefixLength": 38,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        38
+      ],
+      "bisectionAbstainedAt": 19,
+      "probesUsed": 2
+    },
+    {
+      "caseId": "R02733:d39:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 39,
+      "fullPrefixLength": 40,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        20
+      ],
+      "bisectionAbstainedAt": 10,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R02733:d42:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 42,
+      "fullPrefixLength": 43,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        43
+      ],
+      "bisectionAbstainedAt": 22,
+      "probesUsed": 2
+    },
+    {
+      "caseId": "R02733:d46:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 46,
+      "fullPrefixLength": 47,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        24
+      ],
+      "bisectionAbstainedAt": 12,
+      "probesUsed": 3
+    },
+    {
+      "caseId": "R02733:d49:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 49,
+      "fullPrefixLength": 50,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        7
+      ],
+      "bisectionAbstainedAt": 4,
+      "probesUsed": 5
+    },
+    {
+      "caseId": "R02733:d51:culled-rank2001",
+      "levelId": "R02733",
+      "depth": 51,
+      "fullPrefixLength": 52,
+      "mechanicCause": "core-topology",
+      "mechanicCauseDetail": "relaxing every optional mechanic (must-cross/flippers/landmarks) at once is still DEAD",
+      "minimalPrefixLength": null,
+      "prefixLengthBracket": [
+        1,
+        52
+      ],
+      "bisectionAbstainedAt": 26,
+      "probesUsed": 2
+    }
+  ],
+  "mechanicDistribution": [
+    {
+      "mechanicCause": "core-topology",
+      "count": 28
+    },
+    {
+      "mechanicCause": "mustCross",
+      "count": 1
+    }
+  ],
+  "abstainedCauseCount": 1
+}

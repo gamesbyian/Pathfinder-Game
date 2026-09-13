@@ -1,0 +1,4234 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-13T01:29:15.188Z",
+  "corpus": "data/stress/stress-levels-random.json",
+  "selectionRule": {
+    "description": "One culled candidate per evenly-spaced-subsampled score-width-culled depth per level, prespecified before CP-SAT adjudication.",
+    "depthsPerLevel": 15,
+    "rankOffset": 1
+  },
+  "perLevel": [
+    {
+      "levelId": "R00046",
+      "survivalFile": "tmp/r00046-microscope-survival.json",
+      "beamWidth": 2000,
+      "totalCullDepthsAvailable": 29,
+      "cullDepths": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "depthsSelected": [
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        29,
+        31,
+        33,
+        38,
+        40,
+        42
+      ],
+      "casesEmitted": 15
+    },
+    {
+      "levelId": "R02733",
+      "survivalFile": "tmp/r02733-microscope-survival.json",
+      "beamWidth": 2000,
+      "totalCullDepthsAvailable": 35,
+      "cullDepths": [
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51
+      ],
+      "depthsSelected": [
+        15,
+        17,
+        20,
+        22,
+        25,
+        27,
+        30,
+        32,
+        34,
+        37,
+        39,
+        42,
+        46,
+        49,
+        51
+      ],
+      "casesEmitted": 15
+    }
+  ],
+  "cases": [
+    {
+      "id": "R00046:d10:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          9
+        ]
+      ],
+      "depth": 10,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 39.204761904761895,
+        "insertionOrder": 937,
+        "beamWidth": 2000,
+        "poolSize": 2361,
+        "cutoffScore": 39.28531746031746,
+        "firstCulledScore": 39.204761904761895
+      }
+    },
+    {
+      "id": "R00046:d12:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "depth": 12,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 195.96230158730162,
+        "insertionOrder": 997,
+        "beamWidth": 2000,
+        "poolSize": 3826,
+        "cutoffScore": 196,
+        "firstCulledScore": 195.96230158730162
+      }
+    },
+    {
+      "id": "R00046:d14:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ]
+      ],
+      "depth": 14,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 240.22777777777782,
+        "insertionOrder": 1644,
+        "beamWidth": 2000,
+        "poolSize": 3904,
+        "cutoffScore": 240.23333333333335,
+        "firstCulledScore": 240.22777777777782
+      }
+    },
+    {
+      "id": "R00046:d16:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ]
+      ],
+      "depth": 16,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 301.42539682539683,
+        "insertionOrder": 7708,
+        "beamWidth": 2000,
+        "poolSize": 4094,
+        "cutoffScore": 301.42539682539683,
+        "firstCulledScore": 301.42539682539683
+      }
+    },
+    {
+      "id": "R00046:d18:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "depth": 18,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 338.5325396825397,
+        "insertionOrder": 6416,
+        "beamWidth": 2000,
+        "poolSize": 3238,
+        "cutoffScore": 338.57698412698414,
+        "firstCulledScore": 338.5325396825397
+      }
+    },
+    {
+      "id": "R00046:d20:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "depth": 20,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 385.80476190476196,
+        "insertionOrder": 7637,
+        "beamWidth": 2000,
+        "poolSize": 3676,
+        "cutoffScore": 386.05039682539683,
+        "firstCulledScore": 385.80476190476196
+      }
+    },
+    {
+      "id": "R00046:d22:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "depth": 22,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 427.93293650793646,
+        "insertionOrder": 7917,
+        "beamWidth": 2000,
+        "poolSize": 3851,
+        "cutoffScore": 427.93293650793646,
+        "firstCulledScore": 427.93293650793646
+      }
+    },
+    {
+      "id": "R00046:d24:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ]
+      ],
+      "depth": 24,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 479.1996031746032,
+        "insertionOrder": 4400,
+        "beamWidth": 2000,
+        "poolSize": 3508,
+        "cutoffScore": 479.1996031746032,
+        "firstCulledScore": 479.1996031746032
+      }
+    },
+    {
+      "id": "R00046:d26:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "depth": 26,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 496.3765873015872,
+        "insertionOrder": 7064,
+        "beamWidth": 2000,
+        "poolSize": 2601,
+        "cutoffScore": 496.4531746031747,
+        "firstCulledScore": 496.3765873015872
+      }
+    },
+    {
+      "id": "R00046:d29:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "depth": 29,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 500.8412698412699,
+        "insertionOrder": 5224,
+        "beamWidth": 2000,
+        "poolSize": 2601,
+        "cutoffScore": 500.8412698412699,
+        "firstCulledScore": 500.8412698412699
+      }
+    },
+    {
+      "id": "R00046:d31:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "depth": 31,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 538.0246031746032,
+        "insertionOrder": 7174,
+        "beamWidth": 2000,
+        "poolSize": 3138,
+        "cutoffScore": 538.0246031746032,
+        "firstCulledScore": 538.0246031746032
+      }
+    },
+    {
+      "id": "R00046:d33:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "depth": 33,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 556.2488095238093,
+        "insertionOrder": 5557,
+        "beamWidth": 2000,
+        "poolSize": 3000,
+        "cutoffScore": 556.2876984126983,
+        "firstCulledScore": 556.2488095238093
+      }
+    },
+    {
+      "id": "R00046:d38:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          11,
+          5
+        ]
+      ],
+      "depth": 38,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 574.7801587301585,
+        "insertionOrder": 3901,
+        "beamWidth": 2000,
+        "poolSize": 2121,
+        "cutoffScore": 574.8690476190475,
+        "firstCulledScore": 574.7801587301585
+      }
+    },
+    {
+      "id": "R00046:d40:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          10,
+          4
+        ]
+      ],
+      "depth": 40,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 624.327380952381,
+        "insertionOrder": 4940,
+        "beamWidth": 2000,
+        "poolSize": 3047,
+        "cutoffScore": 624.3801587301587,
+        "firstCulledScore": 624.327380952381
+      }
+    },
+    {
+      "id": "R00046:d42:culled-rank2001",
+      "levelId": "R00046",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "depth": 42,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 636.0829365079366,
+        "insertionOrder": 5776,
+        "beamWidth": 2000,
+        "poolSize": 2270,
+        "cutoffScore": 636.1190476190476,
+        "firstCulledScore": 636.0829365079366
+      }
+    },
+    {
+      "id": "R02733:d15:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ]
+      ],
+      "depth": 15,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 217.88714938030006,
+        "insertionOrder": 5301,
+        "beamWidth": 2000,
+        "poolSize": 2690,
+        "cutoffScore": 217.88714938030006,
+        "firstCulledScore": 217.88714938030006
+      }
+    },
+    {
+      "id": "R02733:d17:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          5,
+          11
+        ]
+      ],
+      "depth": 17,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 345.7635464231355,
+        "insertionOrder": 5684,
+        "beamWidth": 2000,
+        "poolSize": 3138,
+        "cutoffScore": 345.79235703413786,
+        "firstCulledScore": 345.7635464231355
+      }
+    },
+    {
+      "id": "R02733:d20:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          11,
+          10
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          1
+        ]
+      ],
+      "depth": 20,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 441.6709393346379,
+        "insertionOrder": 7226,
+        "beamWidth": 2000,
+        "poolSize": 2967,
+        "cutoffScore": 441.6802565775169,
+        "firstCulledScore": 441.6709393346379
+      }
+    },
+    {
+      "id": "R02733:d22:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          7
+        ]
+      ],
+      "depth": 22,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 507.43904109589045,
+        "insertionOrder": 6885,
+        "beamWidth": 2000,
+        "poolSize": 3119,
+        "cutoffScore": 507.43904109589045,
+        "firstCulledScore": 507.43904109589045
+      }
+    },
+    {
+      "id": "R02733:d25:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          9,
+          5
+        ]
+      ],
+      "depth": 25,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 571.4103609480321,
+        "insertionOrder": 5628,
+        "beamWidth": 2000,
+        "poolSize": 2582,
+        "cutoffScore": 571.4560121765601,
+        "firstCulledScore": 571.4103609480321
+      }
+    },
+    {
+      "id": "R02733:d27:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          3,
+          7
+        ]
+      ],
+      "depth": 27,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 596.3657534246576,
+        "insertionOrder": 7548,
+        "beamWidth": 2000,
+        "poolSize": 2332,
+        "cutoffScore": 596.3837899543379,
+        "firstCulledScore": 596.3657534246576
+      }
+    },
+    {
+      "id": "R02733:d30:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          2,
+          6
+        ]
+      ],
+      "depth": 30,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 669.9409871711242,
+        "insertionOrder": 4108,
+        "beamWidth": 2000,
+        "poolSize": 2404,
+        "cutoffScore": 669.9560991519895,
+        "firstCulledScore": 669.9409871711242
+      }
+    },
+    {
+      "id": "R02733:d32:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          3
+        ]
+      ],
+      "depth": 32,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 719.5308436616654,
+        "insertionOrder": 7797,
+        "beamWidth": 2000,
+        "poolSize": 2403,
+        "cutoffScore": 719.5461839530335,
+        "firstCulledScore": 719.5308436616654
+      }
+    },
+    {
+      "id": "R02733:d34:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          11,
+          10
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "depth": 34,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 765.9177973472495,
+        "insertionOrder": 7448,
+        "beamWidth": 2000,
+        "poolSize": 2396,
+        "cutoffScore": 766.0411828658404,
+        "firstCulledScore": 765.9177973472495
+      }
+    },
+    {
+      "id": "R02733:d37:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          9,
+          1
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "depth": 37,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 820.0012774516198,
+        "insertionOrder": 6285,
+        "beamWidth": 2000,
+        "poolSize": 2508,
+        "cutoffScore": 820.2507555990433,
+        "firstCulledScore": 820.0012774516198
+      }
+    },
+    {
+      "id": "R02733:d39:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ]
+      ],
+      "depth": 39,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 871.8824418351818,
+        "insertionOrder": 4680,
+        "beamWidth": 2000,
+        "poolSize": 2480,
+        "cutoffScore": 871.900820830615,
+        "firstCulledScore": 871.8824418351818
+      }
+    },
+    {
+      "id": "R02733:d42:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          11,
+          9
+        ],
+        [
+          11,
+          10
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ]
+      ],
+      "depth": 42,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 946.8242878886715,
+        "insertionOrder": 5360,
+        "beamWidth": 2000,
+        "poolSize": 2478,
+        "cutoffScore": 946.8663731245924,
+        "firstCulledScore": 946.8242878886715
+      }
+    },
+    {
+      "id": "R02733:d46:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          9,
+          1
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          3
+        ]
+      ],
+      "depth": 46,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 946.5880952380954,
+        "insertionOrder": 2901,
+        "beamWidth": 2000,
+        "poolSize": 2175,
+        "cutoffScore": 946.6745705588171,
+        "firstCulledScore": 946.5880952380954
+      }
+    },
+    {
+      "id": "R02733:d49:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          11,
+          1
+        ],
+        [
+          10,
+          1
+        ],
+        [
+          9,
+          1
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          7
+        ]
+      ],
+      "depth": 49,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 1019.6246684061754,
+        "insertionOrder": 5893,
+        "beamWidth": 2000,
+        "poolSize": 2188,
+        "cutoffScore": 1019.6246684061754,
+        "firstCulledScore": 1019.6246684061754
+      }
+    },
+    {
+      "id": "R02733:d51:culled-rank2001",
+      "levelId": "R02733",
+      "corpus": "data/stress/stress-levels-random.json",
+      "prefix": [
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          1
+        ],
+        [
+          9,
+          1
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          10
+        ]
+      ],
+      "depth": 51,
+      "source": {
+        "selectionRule": "first-culled (rank == beamWidth + rank-offset) at an evenly-spaced subsample of score-width-culled depths",
+        "rank": 2001,
+        "score": 1031.4598771472058,
+        "insertionOrder": 7992,
+        "beamWidth": 2000,
+        "poolSize": 2096,
+        "cutoffScore": 1031.4712654924988,
+        "firstCulledScore": 1031.4598771472058
+      }
+    }
+  ]
+}
