@@ -28,6 +28,22 @@ Use one freshness-cleared hard level only after a recurring frontier phenotype e
 
 B1/B2 established `dead top-ranked / live known alternative` and `live / live`. `R03229` reproduced the former at depth 22. Reopen microscope work only for a changed causal question. [`B2`](../reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md), [`result`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
+## Archaeology-derived reopen stack
+
+These are **successor/reopen questions, not parallel current work**. The active Class-5 solve-local dead-cause gate in the workstream authority remains first. If that gate closes null, use this order before inventing fresh scorer/feasibility families:
+
+| Priority | Question | Reopen condition / boundary |
+|---:|---|---|
+| 1 | **Full-pool categorical-state projection** | Reconcile the unfinished August projection against current exact-labelled extinction cases. Run only if its categorical/interface keys remain non-redundant with current evidence. Read-only first: bucket structure, singleton share, exact-LIVE survival, random-reserve and modest-width controls. No quota/crowding policy from historical intent alone. |
+| 2 | **Homotopy / topological completion classes** | If the categorical projection is heterogeneous/null or specifically nominates topology, reconstruct the old winding observer on exact-labelled LIVE/DEAD extinction cases with robust puncture choices. Complete-solution diversity alone is not runtime evidence. No in-loop topology key unless recurrence is demonstrated. |
+| 3 | **Future-intersection commitments / arbitrary-target feasibility microscope** | Only when exact-labelled evidence nominates a specific crossing/event feasibility distinction. Historical synthetic-must-cross/blueprint implementations were dirty negatives; revive at most the smallest read-only target-relative feasibility query needed by the microscope. |
+| 4 | **Cross-attempt basin-overlap observer** | Reopen when nominally different current actions/retries appear behaviorally redundant and allocation depends on whether they explore distinct basins. Rebuild with canonical action identity and participation checks; overlap is an observer, not an anti-redundancy policy by itself. |
+| 5 | **Dependency-conditioned repair descent shadow** | WS6 evidence specifically implicates an interior/early commitment that append-only continuation cannot revise. Trace which earlier coupled commitments differ between dead elite continuation and rescuing feasible continuation before designing another repair operator. |
+| 6 | **Certified forced-chain traversal census** | WS7 finds material runtime/work in current expensive misses and an observer shows substantial canonical work occurs in post-prune legal-successor-cardinality-one chains. Only then test state-certified macro traversal with every underlying transition/prune still applied and work accounted. |
+| 7 | **Partial-order / commuting excursion replay** | Current exact-labelled or accepted-path evidence independently points to redundant obligation ordering. First swap/replay candidate excursions and measure legality/future completion/work; same obligation multiset is not equivalence. |
+
+The archaeology register owns the historical evidence and dirty-negative distinctions behind these questions. This file owns only the reopen order/boundaries. [`register`](solver-archaeology-register.md)
+
 ## Secondary solve-harvest trigger
 
 The September 12 class-1/2/3 rejoin found no already-legal no-contention batch. Repeat only after another material production-boundary/provenance reinterpretation. One seven-level must-turn-biased repair seam graduated to the live workstream. [`result`](../reports/2026-09-12-class123-cheap-harvest-rejoin-001.md)
@@ -59,6 +75,9 @@ Do not reopen unchanged without materially new evidence:
 - exact/approximate caching without sound recurrence/sufficiency evidence;
 - rotate/mirror retries or broad symmetry canonicalization instead of first-divergence diagnosis;
 - hazard/bandit/ML scheduling before simpler fixed-work evidence shows actionable headroom;
+- scheduler fairness/participation floors without marginal-value and displaced-capability evidence;
+- standalone adaptive must-cross urgency/anchoring without a changed categorical-completion premise;
+- generic reusable detour-gadget libraries from the historical residual-interface census alone;
 - bulk variants, full-corpus A/Bs for falsified ideas, retained failed code, proxy optimization after solve/work/correctness failure, or framework-building before a small information-value pilot succeeds.
 
 Keep this file short: questions, boundaries, reopen conditions.
