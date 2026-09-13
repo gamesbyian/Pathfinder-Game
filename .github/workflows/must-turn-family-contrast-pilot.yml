@@ -1,0 +1,34 @@
+name: Must-turn family contrast pilot
+
+on:
+  push:
+    branches:
+      - chatgpt/must-turn-family-contrast-pilot-2026-09-13
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Run four-cell matched-node pilot
+        run: >-
+          node scripts/run-bundled.mjs scripts/stress/must-turn-family-contrast-pilot.mjs
+          --out=tmp/must-turn-family-contrast-pilot.json
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: must-turn-family-contrast-pilot
+          path: tmp/must-turn-family-contrast-pilot.json
+          if-no-files-found: error
