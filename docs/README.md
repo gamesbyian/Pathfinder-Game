@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=10000 max=13000 -->
 # Pathfinder documentation index
 
 Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories ownership; it is not a second agent guide.
