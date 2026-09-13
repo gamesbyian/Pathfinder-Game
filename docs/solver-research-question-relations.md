@@ -35,6 +35,6 @@ Update the relation registry only for material edges. A negative treatment can t
 
 ## State semantics
 
-`active-candidate` and `active-diagnostic` indicate live questions, not priority rank. `closed-tested-form` means the stated form is answered; its evidence may still have outgoing relationships. `reopensOn` records the changed premise/evidence needed to revisit it.
+`active-candidate` and `active-diagnostic` indicate live questions, not priority rank. `deferred-reopen` preserves a question with an explicit trigger/reopen boundary but does not authorize current execution. `closed-tested-form` means the stated form is answered; its evidence may still have outgoing relationships. `reopensOn` records the changed premise/evidence needed to revisit it.
 
 Stable IDs identify questions, not implementation names. If wording evolves while the causal question stays the same, keep the ID. If the causal question changes materially, create a new ID and relate it through `implies`, `triggeredBy`, `supersedes`, or `duplicateOf` as appropriate.
