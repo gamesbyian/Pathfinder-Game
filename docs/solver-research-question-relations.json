@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Sparse current map of solver-research questions and the evidence relationships that prevent rediscovery. This is not a second queue; execution priority remains in docs/solver-optimization-workstreams.md.",
+  "questions": [
+    {
+      "id": "WS2-CLASS123-CHEAP-HARVEST",
+      "question": "Does the corrected class-1/2/3 residual contain already-demonstrated capability that can be collected without reopening a measured contention mechanism?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": ["reports/2026-09-12-class123-cheap-harvest-rejoin-001.md"],
+      "result": "No direct batch. Class 1 has no reserve headroom; class 3 is exposed-and-failed; class 2 mostly rejoins priced policies. A seven-level must-turn-biased descendant remains a changed-treatment question.",
+      "implies": ["WS2-MUST-TURN-LATE-ADDITIVE"],
+      "constrains": ["Class-1 menu additions need a materially different allocation contract."],
+      "reopensOn": "Material production-boundary or provenance reinterpretation."
+    },
+    {
+      "id": "WS2-MUST-TURN-LATE-ADDITIVE",
+      "question": "Can a bounded additive late must-turn-biased repair probe recover the seven current class-2 isolated winners without widening the broad repair gate or stealing work from plain repair?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "answeredBy": [],
+      "result": null,
+      "triggeredBy": ["WS2-CLASS123-CHEAP-HARVEST"],
+      "constrains": ["Start with the cheap end of the seven-row seam; require matched-work and collateral accounting before population scale."],
+      "reopensOn": null
+    },
+    {
+      "id": "WS2-GENERIC-STRUCTURAL-DIVERSITY",
+      "question": "Is generic structural-progress diversity/retention sufficient to fix the recurring class-5 extinction phenotype?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": [
+        "reports/2026-09-12-ws1-stage5-first-divergence-result-001.md",
+        "reports/2026-09-12-class5-microscope-branch-reconciliation-001.md"
+      ],
+      "result": "Mechanic buckets can preserve fresh progress on selected solved siblings, but class-5 bucket canaries solve nothing and R03229 still prefers DEAD over LIVE. Progress diversity and viable future optionality are distinct.",
+      "implies": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "negativeControlFor": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "reopensOn": "A new diversity axis tied to a recurring exact-live/exact-dead discriminator, not another generic bucket/width/scorer sweep."
+    },
+    {
+      "id": "WS2-SIMPLE-FUTURE-FEASIBILITY",
+      "question": "Can a small runtime-legal scalar summary of residual capacity, topology scarcity, or joint-obligation compatibility separate exact-LIVE from exact-DEAD extinction states?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": ["reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"],
+      "result": "No. Six prespecified summaries overlap LIVE/DEAD across 31 exact-labelled states on 15 levels; joint-obligation rejects are zero throughout.",
+      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE"],
+      "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
+      "calibratedBy": ["WS2-MECHANIC-COMPOSITION-CAUSALITY"],
+      "reopensOn": "A materially new mechanism-specific descriptor premise."
+    },
+    {
+      "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
+      "question": "Do failed searches repeatedly encounter the same sound compact dead cause often enough for solve-local reason reuse/local nogoods to have information value?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "answeredBy": [],
+      "result": null,
+      "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "constrains": ["Measure recurrence and wasted work before building a cache; no CDCL/LCG/global unsound keys without a bounded win."],
+      "reopensOn": null
+    },
+    {
+      "id": "WS2-MECHANIC-COMPOSITION-CAUSALITY",
+      "question": "Can structural mechanic relocation causally identify a missing mechanic-composition capability rather than merely make puzzles generically easier?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": [
+        "reports/2026-09-12-mechanic-composition-pilot-001-result.md",
+        "reports/2026-09-12-class5-family-reference-comparison-001.md"
+      ],
+      "result": "The portal-terminal instrument is confounded; swap/cs rescue is also dominated by generic difficulty loosening. Clean/confounded cases remain useful calibration evidence.",
+      "calibrates": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "reopensOn": "A manipulation that proves the specific edit, rather than generic loosening, caused the effect."
+    },
+    {
+      "id": "WS1-CROSS-HINT-EVENT-COLLISIONS",
+      "question": "Does one canonical provenance discovery-event identity appearing on multiple accepted paths reveal current determinism or provenance-schema defects?",
+      "owner": "WS1",
+      "state": "closed-tested-form",
+      "answeredBy": ["reports/2026-09-12-cross-hint-provenance-relations-001.md"],
+      "result": "No current determinism defect earned replay. Most collisions are legitimate replay/multi-output semantics; the 160 isolated-technique tail is historical technique-census source-cell under-resolution already repaired in current provenance.",
+      "constrains": ["Repeated paths sharing one event identity are dependent evidence unless producer semantics establish independence."],
+      "reopensOn": "A current one-output producer yields a same-event/multiple-path collision after exact source/config context is present."
+    }
+  ]
+}
