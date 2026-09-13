@@ -2,15 +2,18 @@
 /**
  * Four-cell information-value pilot for the class-2 must-turn-biased repair seam.
  *
- * Compare the current plain late-repair primitive against the exact isolated
- * must-turn-biased repair action at the shipped late-tier dose (5M nodes) on
- * the two family-preflight contrast parents:
+ * Rung 2 compares plain repair against the exact isolated must-turn-biased repair
+ * action at 7M nodes on the two family-preflight contrast parents:
  *   R02768 — historically family-responsive (5/30 sibling solves)
  *   R02180 — historically family-rigid (1/30 sibling solves)
  *
- * This does not change orchestration. It asks the cheaper prerequisite question:
- * can the changed action recover either parent inside the bounded dose that a
- * future additive late tier would actually receive?
+ * Rung 1 at the shipped 5M late-repair dose produced a matched treatment gain on
+ * R02768 (biased solved at 1,179,294; plain exhausted) but both arms exhausted on
+ * R02180. Historical isolated evidence put R02180's biased find at 6,206,072, so
+ * 7M is a bounded dose test rather than a new mechanism search.
+ *
+ * This does not change orchestration. It asks whether a small dedicated biased
+ * dose can recover both contrast parents before any additive tier is implemented.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -18,7 +21,7 @@ import process from 'node:process';
 
 import { createCellRunner } from '../technique-census-cell.mjs';
 
-const NODE_BUDGET = 5_000_000;
+const NODE_BUDGET = 7_000_000;
 const BUDGET_MS = 600_000; // wall-safety only; nodeBudget is the decision-bearing bound.
 const CORPUS_PATH = 'data/stress/stress-levels-random.json';
 const TARGET_IDS = ['R02768', 'R02180'];
@@ -40,12 +43,10 @@ for (const id of TARGET_IDS) {
 const rows = [];
 for (const id of TARGET_IDS) {
     for (const technique of TECHNIQUES) {
-        // Fresh prep/runner per cell keeps the pilot independent of prior cell state while
-        // reusing the canonical census execution boundary.
         const { runCell } = await createCellRunner();
         const row = await runCell({
-            cellId: `${id}:${technique.label}:late-dose`,
-            tier: 'must-turn-family-contrast-pilot',
+            cellId: `${id}:${technique.label}:7m-dose`,
+            tier: 'must-turn-family-contrast-pilot-rung2',
             corpus: 'corpus2',
             levelPos: positions.get(id),
             techniqueKeys: [technique.key],
@@ -72,7 +73,7 @@ const byId = Object.fromEntries(TARGET_IDS.map(id => {
 
 const result = {
     schemaVersion: 1,
-    purpose: 'bounded-matched-node prerequisite for additive late must-turn-biased repair integration',
+    purpose: '7M matched-node dose rung for additive late must-turn-biased repair integration',
     sourceCommit: process.env.GITHUB_SHA ?? null,
     corpus: 'corpus2',
     nodeBudgetPerCell: NODE_BUDGET,
@@ -82,6 +83,11 @@ const result = {
     familyPreflight: {
         R02768: { historicalSiblingSolved: 5, historicalSiblingTotal: 30, class: 'family-responsive' },
         R02180: { historicalSiblingSolved: 1, historicalSiblingTotal: 30, class: 'family-rigid' },
+    },
+    priorRung: {
+        nodeBudgetPerCell: 5_000_000,
+        R02768: { plain: 'budget-reached', mustTurnBiased: 'solved@1179294' },
+        R02180: { plain: 'budget-reached', mustTurnBiased: 'budget-reached' },
     },
     summary: byId,
     rows,
