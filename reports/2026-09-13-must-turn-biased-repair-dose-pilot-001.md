@@ -83,6 +83,8 @@ That is the desired evidence pipeline: family data for cheap causal screening an
 
 The default-off integration adds `STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY` immediately after `late-repair-search`. The child tier has its own 7M stage-local node cap and a fresh work scope. It also requires a recorded `late-repair-search` attempt before it may run, so a depleted outer ceiling cannot let the treatment leapfrog a plain control that never actually participated.
 
+The worker-thread race engine deliberately remains narrower than the sequential production ladder and does not reimplement this late experimental retry. Its canonical parity contract records `late-repair-must-turn-biased-retry` as sequential-only, so raced batch callers continue to rely on the existing full-sequential fallback after a raced miss rather than maintaining a second implementation of a default-off mechanism.
+
 Run `34740639674` exercised the full current production ladder with only that opt-in enabled, `nodeBudget=50,000,000`, a nonbinding 300s wall allowance per target, and lifecycle telemetry. Both targets satisfied the predeclared integration contract:
 
 | Parent | Plain late stage | Child must-turn stage | Referee | Result |
