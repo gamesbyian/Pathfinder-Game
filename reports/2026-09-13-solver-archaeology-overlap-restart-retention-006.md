@@ -1,6 +1,11 @@
 # Solver archaeology: overlap, restart value, and unfinished retention gate
 
-Status: historical-evidence follow-up. This report does not change solver behavior or current workstream priority.
+> **Status:** active
+> **Last evidence:** 2026-09-13 — Archaeology confirmed the August full-pool retention projection was prepared but never executed and recovered regime-dependent restart evidence.
+> **Decision:** Keep generic restart, snapshot-to-same-consumer, and unmeasured anti-redundancy behavior closed; preserve the unfinished read-only retention projection and basin-overlap observer as current measurement opportunities.
+> **Remaining gate:** Reconcile the August full-pool projection with current WS4/Class-5 evidence, then run the prespecified fixed-width read-only projection only if it remains non-redundant.
+
+This report does not change solver behavior or current workstream priority.
 
 ## 1. August full-pool categorical-state projection is genuinely unfinished
 
