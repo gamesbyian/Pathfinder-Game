@@ -6,7 +6,7 @@
 
 Current-state only. Detailed evidence belongs in reports; history under `docs/archive/snapshots/`.
 
-Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Deferred material: [`solver-future-work.md`](solver-future-work.md).
+Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Question relations: [`solver-research-question-relations.md`](solver-research-question-relations.md). Deferred material: [`solver-future-work.md`](solver-future-work.md).
 
 Program lens: **capability composition** exposes/selects/allocates demonstrated capability; **capability acquisition** creates generic capability where no known action succeeds.
 
@@ -35,11 +35,11 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** ACTIVE / PARALLEL ANALYSIS.
+**State:** SUPPORTING / NO ACTIVE SELECTOR GATE.
 
 Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path and capability-memory evidence to distinguish `not exposed` from `exposed-and-failed`, and technique-relative response from shared-capability failure. IDs/outcomes/hints remain offline diagnostics. Production selectors require legal current-level/current-solve signals and confirmation proportional to selection pressure.
 
-**Cross-hint provenance audit active, near closeout.** Same-event/multiple-path collisions are overwhelmingly replay or multi-output producer semantics; retain exact collisions as dependent evidence, not independent discoveries. The remaining small ordinary-search tail must be adjudicated by producer contract before any determinism replay. [`report`](../reports/2026-09-12-cross-hint-provenance-relations-001.md)
+**Cross-hint provenance audit closed.** All 44,305 exact same-event/multiple-path identities are explained by replay/multi-output semantics or historical technique-census source-cell under-resolution already repaired in current provenance. The 160 apparently ordinary-search collisions are exactly the `isolated-technique` tail. No determinism replay or near-collision stage is earned. [`report`](../reports/2026-09-12-cross-hint-provenance-relations-001.md)
 
 **Structural-response extension closed** for `R02687`/objectiveFirst and `R02094`/intersectionHarvest. Stage 3 found family flips; stages 4-5 found no licensed selector from n=2. Reopen only for a new pair/premise. [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
 
@@ -54,7 +54,7 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 2 | Residual capability + allocation | **ACTIVE / FIRST** | In parallel: bounded late must-turn-biased repair pilot; diagnostic recurrence test for compact sound dead causes. |
-| 1 | Automatic action selection | **ACTIVE / PARALLEL** | Finish producer-contract adjudication of the small ordinary-search collision tail; otherwise structural-response ladder is closed. |
+| 1 | Automatic action selection | **SUPPORTING** | No live selector/provenance gate; reopen for a new legal decision signal or unexplained producer relation. |
 | 6 | Repair reachability | **SUPPORTING** | Reopen when live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed | **SUPPORTING** | Reopen for earned mechanism with measured runtime cost/new hotspot. |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
@@ -80,10 +80,12 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 - Exact labels are offline truth, never runtime steering. Failed compact future-feasibility summaries do not license feature accretion.
 - Convenience labels/summary booleans are not causal fields; use explicit provenance/config fields for decision-bearing joins.
 - Reconcile old questions against newer evidence before new compute. Prefer the smallest information-value test.
+- At result closeout, update material **outbound** question relations as well as the local verdict: answers, triggers, constraints, calibration/negative controls, supersessions and duplicates belong in the sparse question registry when they would otherwise be easy to lose.
 
 ## Cheap evidence routing
 
-- prior research: `node scripts/research-status-index.mjs --compact --query=<term>`
+- prior research + question relations: `node scripts/research-status-index.mjs --compact --query=<term>`
+- question-only lookup: `node scripts/research-status-index.mjs --compact --kind=question --query=<term>`
 - tools: `node scripts/tooling-census.mjs --compact --query=<term>`
 - assets: `node scripts/research-asset-query.mjs --query=<term>`
 - capability memory: `node scripts/solver-capability-memory.mjs --manifest=<manifest.json> --out=tmp/capability-memory.json --summary-out=tmp/capability-memory.md`
