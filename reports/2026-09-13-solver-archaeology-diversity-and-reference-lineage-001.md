@@ -1,8 +1,11 @@
 # Solver archaeology: diversity/portfolio and reference-lineage follow-up
 
-Status: OPEN / in-progress evidence note. Current priority remains `docs/solver-optimization-workstreams.md`; archaeology register: `docs/solver-archaeology-register.md`.
+> **Status:** active
+> **Last evidence:** 2026-09-13 — Open archaeology pass identified two evidence lineages requiring rename-aware participation checks.
+> **Decision:** Continue the portfolio/basin-participation and exact-label ancestry excavation without changing current solver priority or behavior.
+> **Remaining gate:** Verify normalized identity intersection, nonzero participation/work, and reference-model coverage before accepting any historical null from these lineages.
 
-This note records the next excavation targets and accumulates findings as they are verified.
+This note records the next excavation targets and accumulates findings as they are verified. Current priority remains `docs/solver-optimization-workstreams.md`; archaeology register: `docs/solver-archaeology-register.md`.
 
 ## Target A: portfolio / variety / restart participation
 
