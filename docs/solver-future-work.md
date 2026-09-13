@@ -46,7 +46,7 @@ The archaeology register owns the historical evidence and dirty-negative distinc
 
 ## Secondary solve-harvest trigger
 
-The September 12 class-1/2/3 rejoin found no already-legal no-contention batch. Repeat only after another material production-boundary/provenance reinterpretation. One seven-level must-turn-biased repair seam graduated to the live workstream. [`result`](../reports/2026-09-12-class123-cheap-harvest-rejoin-001.md)
+The September 12 class-1/2/3 rejoin found no already-legal no-contention batch. Repeat only after another material production-boundary/provenance reinterpretation. The must-turn-biased repair seam has **graduated out of future work**: current reconstruction leaves six genuine guidance rows, the 7M default-off late tier has proven matched efficacy and real-ladder integration on `R02768` + `R02180`, and its remaining eligible-population economics gate is live in the workstream authority. [`rejoin`](../reports/2026-09-12-class123-cheap-harvest-rejoin-001.md), [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md)
 
 ## Deferred questions
 
