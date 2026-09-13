@@ -63,9 +63,11 @@ March briefly generalized search so an arbitrary cell could be treated as a cons
 
 **Status:** strong historical motivation; no clean negative verdict located.
 
-May L92 investigation measured retries with pairwise overlap near 1.0 and implemented a prefix-divergence guard that carried timed-out prefixes forward and suppressed exact early repetition with a fallback if all moves were suppressed. The mechanism repeatedly suffered option/telemetry transport failures and later disappeared. No clean result has yet been found showing a correctly delivered basin-divergence treatment was useless.
+April already built portfolio-diversity telemetry including `pairwiseStateOverlap`, `branchDecisionCorrelation`, family coverage, and frozen attempt identity. The first implementation was not actually measuring what it claimed: a transport/serialization omission caused identity fields to disappear and `pairwiseStateOverlap` to report 1.0 trivially. A later repair explicitly fixed that telemetry path. This is important because it means the repository once had a direct basin-overlap instrument, but its earliest apparent results are invalid unless they postdate the fix.
 
-**Smallest next question:** current observer measuring trajectory/state-population overlap between nominally different attempts/actions on residual misses. Determine whether portfolio breadth is real or mostly nominal before changing behavior.
+May L92 investigation separately measured retries with pairwise overlap near 1.0 and implemented a prefix-divergence guard that carried timed-out prefixes forward and suppressed exact early repetition with a fallback if all moves were suppressed. That mechanism repeatedly suffered option/result transport failures: `forbiddenPrefixes` was dropped by an internal allowlist, and later the prior-attempt history itself was stripped by canonical result projection. The attempted full `attempts[]` passthrough then caused a catastrophic serialization regression and was reverted. No clean result has yet been found showing a correctly delivered basin-divergence treatment was useless.
+
+**Smallest next question:** recover or rebuild the observer only, using current canonical attempt identities and explicit participation checks, and measure trajectory/state-population overlap between nominally different actions on residual misses. Determine whether portfolio breadth is real or mostly nominal before changing behavior.
 
 ### Progress-conditioned continuation / allocation
 
@@ -123,11 +125,29 @@ Rather than using `variant solved` as causal evidence, characterize which contro
 
 Where an independent accepted path exists, compare its prefix against production search to identify the first point a valid route is pruned, merged, scored below width, or never offered. Treat one level as premise generation only, then seek recurring phenotype.
 
+### Bulk dead-branch separation versus incremental pruning
+
+**Status:** strong historical negative on tiny local gap closure; relevant to Class-5 premise shape.
+
+July's CP-SAT prune-gap study on two hard levels found roughly 74% of provably dead sibling branches were still entered by the production gauntlet near known-valid paths. A later axis-aware connectivity refinement soundly rejected 7.6% of the remaining dead-branch gap, hit zero live branches, made the search substantially faster, and still produced a net solve loss at matched budget. The recorded interpretation was that when most sibling branches are dead, removing one extra dead branch mostly redirects search into another dead branch; marginal local closure has near-zero outcome value unless the gap is closed in bulk.
+
+**Current implication:** this strengthens the case for categorical/bulk distinctions between completion regimes rather than an indefinite sequence of individually sound tiny prunes. It also cautions against treating `sound + catches real dead states` as sufficient evidence for solve-rate value.
+
+### Offline exact-labelled inference scoring
+
+**Status:** reusable research method already demonstrated historically.
+
+The July axis-reach probe rebuilt historical CP-SAT-labelled branch states and scored a candidate inference against them offline, without rerunning CP-SAT or modifying the production solver. The tool was kept after the production treatment was reverted because this experimental pattern was valuable.
+
+**Current implication:** before implementing a new structural inference or commitment descriptor, first score it against committed exact-labelled branch cases wherever possible. This is a direct bridge to topology-at-extinction and future-crossing-commitment observers.
+
 ### Compact recurring dead causes / reason reuse
 
 **Status:** current WS2 gate; archaeology supports but does not broaden it.
 
 Historical progressive contradiction probes and later dead-state reasoning suggest checking whether exact/reliable dead detections collapse to recurring compact sound causes with material repeated-work cost. Current workstream correctly limits the next step to the smallest solve-local reason key if such causes actually recur; no broad CDCL/LCG framework is earned.
+
+The current diagnostic has now found at least one directly verified recurrence instance across structurally different beam states, but population-scale materiality is still unresolved because most prefix bisections abstained. Preserve that as an existence proof, not a rate estimate.
 
 ## Representation and retention lessons
 
@@ -151,6 +171,12 @@ The naming cleanup clarified that old `diverse` beam identities map to mechanic-
 
 Historical `archetype` means current routing regime, an implementation classifier rather than an intrinsic puzzle type. At least one July turn-landmark-heavy investigation gave all 16 existing attempt configs independent full budgets; all failed after large search. That result is evidence of missing capability, not merely poor routing. Preserve this distinction when reclassifying old archetype reports.
 
+### Portfolio-selector history
+
+July measured substantial ordering waste on solved levels: about 79% of solve time occurred in attempts before the eventual winner in one fresh Corpus-1 benchmark. A naive small-sample 1-NN selector underperformed the existing routing-regime dominant-winner baseline and was explicitly treated as a weak first negative, not a closure. Later the separate fast-portfolio scheduler experiment was reverified after an unrelated repair regression was fixed; its apparent speed advantage reversed and the scheduler was correctly retained as not production-ready.
+
+**Interpretation:** do not resurrect the old portfolio scheduler. Preserve two narrower conclusions: real ordering/allocation headroom has existed, and apparent portfolio wins are highly sensitive to whether the baseline capabilities themselves are healthy. Current WS1/WS2 evidence should decide whether any analogous headroom exists now.
+
 ### Attempt identity and historical analysis integrity
 
 A September analyzer retained old compact attempt keys after the naming cleanup and silently matched zero rows for all eight prespecified comparisons against current data until fixed. Therefore successful execution is not participation evidence.
@@ -161,9 +187,11 @@ A September analyzer retained old compact attempt keys after the naming cleanup 
 
 Historical research vocabulary crosses `oracle`, `atlas`, `labelled branch set`, and current `referenceLabel/referenceReason` terminology. Old `oracle-abstain` and atlas-era files may contain exact-labelled evidence that current-name searches miss.
 
-A prior CP-SAT report also misattributed abstentions to high must-cross count; later work showed flipping filters were the actual unsupported mechanic and corrected the report after adding flipper support. Preserve this as a warning against turning correlated level features into causal explanations before checking model eligibility/coverage.
+The August B2 extinction-adjacent work is an important ancestor of current Class-5 microscopy. It built same-parent sibling cases from real score/width extinction decisions, then CP-SAT-labelled top-ranked retained candidates and known-supported culled alternatives. Among usable cases it independently reproduced `DEAD top-ranked / LIVE alternative` twice, while usable weak-margin cases instead showed `LIVE / LIVE`. This means the historical taxonomy already distinguished at least two qualitatively different extinction mechanisms before the current Class-5 vocabulary existed.
 
-**Next archaeology target:** trace the full oracle -> atlas -> labelled-branch -> reference-label history for LIVE/DEAD observations, exact-prefix probes, and extinction evidence not represented in the current Class-5 premise set.
+A prior CP-SAT report also misattributed abstentions to high must-cross count; later work showed flipping filters were the actual unsupported mechanic and corrected the report after adding flipper support. Another multi-gate CP-SAT bug temporarily admitted illegal paths through unused gate cells and was fixed during the same B2 lineage. Exact-label evidence therefore needs model-version/coverage awareness, not just a LIVE/DEAD token.
+
+**Next archaeology target:** continue tracing pre-B2 `oracle/atlas/prune-gap` evidence for mechanism observations not represented in the current Class-5 premise set, and identify committed exact-labelled case sets that can cheaply score topology/crossing/commitment hypotheses offline.
 
 ## Experimental-integrity failure classes to check during archaeology
 
@@ -173,6 +201,7 @@ A prior CP-SAT report also misattributed abstentions to high must-cross count; l
 - workflow green while treatment and control are behaviorally identical;
 - analyzer executes but old identity keys match zero rows;
 - mixed-era join/group compares raw strings rather than normalized identities;
+- telemetry fields exist but are trivially constant because upstream identity/state was stripped;
 - sample drawn only from unsolved population makes regressions impossible by construction;
 - sound pruning evaluated only on correctness witnesses, not fixed-budget solve-set churn;
 - bundled experiments reverted together, obscuring which premise actually failed;
@@ -187,6 +216,7 @@ A prior CP-SAT report also misattributed abstentions to high must-cross count; l
 - global coarse-state merge forms already closed negative;
 - snapshot-to-same-consumer rescue without a complementary receptor;
 - broad symmetry/random restart work absent a changed premise;
-- old parity-waypoint heuristic as production policy.
+- old parity-waypoint heuristic as production policy;
+- the old fast-portfolio scheduler as a production design.
 
 These require a materially changed causal premise and the current authority's reopen condition, not historical curiosity.
