@@ -85,13 +85,21 @@
     },
     {
       "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
-      "question": "Do failed searches repeatedly encounter the same sound compact dead cause often enough for solve-local reason reuse/local nogoods to have information value?",
+      "question": "Can a recurring solve-local failure shape be reduced to a small sound dead cause with enough repeated-work value for bounded reason reuse?",
       "owner": "WS2",
       "state": "active-diagnostic",
-      "answeredBy": [],
-      "result": null,
+      "answeredBy": [
+        "reports/2026-08-28-connectivity-rejection-stage-b-audit.md",
+        "reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md"
+      ],
+      "result": "Recurrence discovery is not blank: August Stage B found strong within-solve recurrence for connectivity failure shapes (83.1% reached-set / 82.2% blocker-set sharing versus 52.6% exact-state sharing) but stopped because cross-level transfer was weak. Current changed scope is solve-local. Rejoin that population on current Class-5 misses, then test sound cause reduction and economics; shape equality alone is not a nogood.",
       "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
-      "constrains": ["Measure recurrence and wasted work before building a cache; no CDCL/LCG/global unsound keys without a bounded win."],
+      "constrainedBy": ["reports/2026-08-24-learned-failure-certificate-audit.md"],
+      "constrains": [
+        "Do not pay for a fresh generic recurrence census before rejoining the August connectivity population.",
+        "Measure sound cause sufficiency, repeated-work cost, match cost, and shadow counterexamples before any pruning treatment.",
+        "No CDCL/LCG/global unsound keys without a bounded win."
+      ],
       "reopensOn": null
     },
     {
