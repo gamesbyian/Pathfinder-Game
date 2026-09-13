@@ -16,17 +16,19 @@ function fixture() {
     );
     writeManifest('corpus-a', 'family-P1-sym', {
         schemaVersion: 2, familyId: 'family-shared-id', parentLevelId: 'P1', parentCorpus: 'source-a.json',
-        familyMode: 'symmetry', parentContentHash: 'parent-shared', variants: [
-            { variantId: 'V1', relation: 'symmetry', variantContentHash: 'variant-shared', mutationManifest: { operation: 'transform' } },
-            { variantId: 'V2', relation: 'symmetry', variantContentHash: 'parent-shared', mutationManifest: { operation: 'transform' } },
-            { variantId: 'V3', relation: 'symmetry', variantContentHash: 'variant-three-a', mutationManifest: { operation: 'transform' } },
-            { variantId: 'V4', relation: 'symmetry', mutationManifest: { operation: 'transform' } },
+        familyMode: 'symmetry', parentContentHash: 'parent-shared', requestedCount: 5, acceptedCount: 4,
+        generationAttempts: 7, attemptBudget: 20, variants: [
+            { variantId: 'V1', relation: 'symmetry', variantContentHash: 'variant-shared', generationAttempts: 1, mutationManifest: { operation: 'transform' } },
+            { variantId: 'V2', relation: 'symmetry', variantContentHash: 'parent-shared', generationAttempts: 1, mutationManifest: { operation: 'transform' } },
+            { variantId: 'V3', relation: 'symmetry', variantContentHash: 'variant-three-a', generationAttempts: 2, mutationManifest: { operation: 'transform' } },
+            { variantId: 'V4', relation: 'symmetry', generationAttempts: 3, mutationManifest: { operation: 'transform' } },
         ],
     });
     writeManifest('corpus-a', 'family-P1-repeat', {
         schemaVersion: 2, familyId: 'family-repeat', parentLevelId: 'P1', parentCorpus: 'source-a.json',
-        familyMode: 'symmetry', parentContentHash: 'parent-shared', variants: [
-            { variantId: 'V3', relation: 'symmetry', variantContentHash: 'variant-three-b', mutationManifest: { operation: 'transform' } },
+        familyMode: 'local-mutant', parentContentHash: 'parent-shared', requestedCount: 1, acceptedCount: 1,
+        generationAttempts: 2, attemptBudget: 10, variants: [
+            { variantId: 'V3', relation: 'local-mutant', variantContentHash: 'variant-three-b', generationAttempts: 2, mutationManifest: { operation: 'mutate' } },
         ],
     });
     writeManifest('corpus-b', 'family-P2-sym', {
@@ -43,9 +45,17 @@ function fixture() {
 }
 
 describe('variant-library evidence audit', () => {
-    it('separates logical identity, exact content identity, and evidence context', () => {
+    it('separates record/content identity, observation attachment, and generation selection', () => {
         const audit = auditVariantLibrary(fixture());
-        expect(audit.counts).toMatchObject({ familyManifests: 3, variantRows: 6, uniqueParentIdentities: 2 });
+        expect(audit.schemaVersion).toBe(2);
+        expect(audit.counts).toMatchObject({
+            familyManifests: 3,
+            variantRows: 6,
+            uniqueParentIdentities: 2,
+            evidenceObservations: 1,
+            evidenceAttachments: 1,
+        });
+        expect(audit.identitySemantics.variantRecordIdentity).toBe('(parentCorpus,parentId,variantId)');
         expect(audit.contentIdentity).toMatchObject({
             parentsMissingContentHash: 0,
             variantsMissingContentHash: 1,
@@ -54,16 +64,31 @@ describe('variant-library evidence audit', () => {
             exactNoOpVariants: 1,
             duplicateLogicalVariants: 1,
             conflictingLogicalVariants: 1,
+            crossModeLogicalVariants: 1,
             familyIdCollisions: 1,
         });
+        expect(audit.generationEvidence).toMatchObject({
+            familiesWithRequestAcceptanceCounts: 2,
+            familiesMissingRequestAcceptanceCounts: 1,
+            familiesWithAttemptBudget: 2,
+            familiesWithGenerationAttempts: 2,
+            variantsWithGenerationAttempts: 5,
+        });
+        expect(audit.generationEvidence.byMode.find(row => row.mode === 'symmetry')).toMatchObject({
+            families: 2,
+            familiesWithRequestAcceptanceCounts: 1,
+            requested: 5,
+            accepted: 4,
+        });
         expect(audit.evaluationEvidence).toMatchObject({
-            rows: 1,
+            observations: 1,
+            attachments: 1,
+            duplicateAttachmentsFromDuplicateVariantRecords: 0,
             missingSolverCommit: 1,
             missingRunId: 1,
             withRecordedBudgetContext: 0,
         });
-        expect(audit.evidencePurposes['current-solver-capability']).toMatch(/rechecked on current code/u);
+        expect(audit.evidencePurposes['generation-selectivity']).toMatch(/requested\/attempted\/accepted/u);
         expect(audit.interpretation.exactHashCollision).toMatch(/classify semantics/u);
-        expect(audit.populationShape.modes.find(row => row.mode === 'symmetry')?.variants).toBe(6);
     });
 });
