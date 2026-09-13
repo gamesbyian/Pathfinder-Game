@@ -1,6 +1,11 @@
 # Solver archaeology: topology classes and family-response hardness
 
-Status: historical-evidence follow-up. Both lines below are observer/analysis opportunities; neither justifies a production solver change by itself.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — Archaeology confirmed homotopy as an orphaned observer line and recovered the earlier fragile-versus-robust family-response result.
+> **Decision:** Treat topology and mutation-family response as premise-generation/stratification signals only; neither justifies a production solver change without current residual evidence.
+> **Remaining gate:** none
+
+Both lines below are observer/analysis opportunities; neither justifies a production solver change by itself.
 
 ## Homotopy / topological completion classes
 
