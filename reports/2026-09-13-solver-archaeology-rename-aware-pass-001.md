@@ -1,6 +1,9 @@
 # Solver archaeology: rename-aware reverse pass
 
-Status: INTERIM / evidence-preservation report. Current priority remains `docs/solver-optimization-workstreams.md`. The running premise register is `docs/solver-archaeology-register.md`.
+> **Status:** active
+> **Last evidence:** 2026-09-13 — the rename-aware reverse pass began translating historical solver evidence through the August/September semantic migration.
+> **Decision:** continue the pass as evidence preservation; current solver priority remains owned by the workstream authority.
+> **Remaining gate:** finish the rename-aware pass and reconcile durable premises into the archaeology register.
 
 ## Question
 

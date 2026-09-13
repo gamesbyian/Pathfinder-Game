@@ -1,6 +1,9 @@
 # Solver archaeology: failure learning and producer/consumer handoff
 
-Status: historical-evidence follow-up. This report narrows several premises; it does not change current workstream priority or production behavior.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — failure-learning and producer/consumer handoff mechanisms were separated into materially distinct historical classes.
+> **Decision:** preserve the narrowed premises and distinctions without changing current solver priority or production behavior.
+> **Remaining gate:** require a current producer/consumer failure signal before promoting any historical learning-handoff descendant.
 
 ## Failure-learning lineage
 

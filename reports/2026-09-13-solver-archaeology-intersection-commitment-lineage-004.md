@@ -1,6 +1,9 @@
 # Solver archaeology: intersection-commitment lineage
 
-Status: historical-evidence follow-up. This report separates the future-crossing premise from several bundled implementations and does not recommend restoring old production mechanisms.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — archaeology separated the future-crossing premise from the bundled hard-prune and synthetic-anchor implementations.
+> **Decision:** preserve the premise/implementation distinction and do not restore the historical production mechanisms.
+> **Remaining gate:** require current residual evidence for a specific descendant before reopening intersection-commitment work.
 
 ## First forced-crossing bundle
 
