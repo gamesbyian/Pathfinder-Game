@@ -12,7 +12,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 
 Optional filters: `--status=...`, `--kind=queue|experiment|evidence`. Open only the matched report whose protocol, evidence, caveats, or reasoning you need.
 
-Current solver priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md).
+Current solver priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md). For explicitly historical/retired solver premises and their dispositions, use [`../docs/solver-archaeology-register.md`](../docs/solver-archaeology-register.md) before opening broad old report families.
 
 ## Report contract
 
@@ -39,7 +39,9 @@ Check:
 - family/generator dependence and independent unit;
 - later attribution/telemetry/provenance corrections;
 - proxy metric versus product objective;
-- explicit supersession/correction by newer evidence.
+- explicit supersession/correction by newer evidence;
+- historical identity normalization and actual nonzero treatment participation;
+- whether a revert or null closed a premise, only one formulation, or merely a broken/non-participating treatment.
 
 Reproducible selected-on evidence remains selected-on evidence.
 
@@ -47,6 +49,7 @@ Reproducible selected-on evidence remains selected-on evidence.
 
 - priority/state/gates: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md)
 - research method: [`../docs/solver-research-operating-model.md`](../docs/solver-research-operating-model.md)
+- historical premise/disposition memory: [`../docs/solver-archaeology-register.md`](../docs/solver-archaeology-register.md) (**not** a priority authority)
 - scheduling/allocation: [`../docs/solver-scheduling-policy.md`](../docs/solver-scheduling-policy.md)
 - evaluation/generalization: [`../docs/solver-evaluation-evidence.md`](../docs/solver-evaluation-evidence.md)
 - deterministic cost: [`../docs/solver-budget-determinism.md`](../docs/solver-budget-determinism.md)
