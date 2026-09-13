@@ -1,7 +1,7 @@
 # Solver archaeology: residual interfaces and retry-signature lineage 008
 
 > **Status:** inconclusive
-> **Last evidence:** 2026-09-13 — archaeology cross-checked residual-interface mining, retry-fingerprint identity, repair stagnation, and sound transposition evidence.
+> **Last evidence:** 2026-09-13 — archaeology cross-checked residual-interface mining, retry-fingerprint identity, repair stagnation, and sound transposition evidence; PR-review corrections were rejoined before closeout.
 > **Decision:** preserve the unresolved commutativity observer question and response-fingerprint measurement lesson; keep generic gadget mining and compact-equivalence steering closed.
 > **Remaining gate:** only reopen from current authority when exact-labelled or current fixed-work evidence supplies a specific recurring mechanism that these observers can test.
 > **Authority boundary:** this report does not change `docs/solver-optimization-workstreams.md` or `docs/solver-future-work.md`. It preserves archaeology evidence for future premise selection. No production solver behavior changed.
@@ -94,26 +94,29 @@ The same commit found other rescue predicates silently excluding the intended po
 
 Historical zero fingerprint recurrence is not evidence of zero behavioral recurrence unless the signature identity and rescue participation are verified. This is another instance of a recurring archaeology failure class: a mechanism exists, but its classifier/transport/predicate prevents the intended treatment from seeing the target population.
 
-## 5. July supplied stronger observer evidence of structural stasis
+## 5. July supplied bounded observer evidence of repeated stagnation at the same best deficit family
 
 The later repair-search stagnation investigation did not rely on the old retry fingerprint to steer behavior. It instrumented the actual `computeBadness` term breakdown on two repair-close levels.
 
-Both levels improved quickly, then reproduced the same exact deficit family across tens of thousands of fresh restarts and many additional stagnation bursts:
+The bounded runs established that each level reached a best state with a specific length-plus-must-turn deficit and then produced **no further best-ever improvement** for the remainder of that run:
 
-- `R02344`: badness 2, `length deficit = 1` plus one pending must-turn, frozen from restart 68,012 through roughly 2.19M nodes;
-- `R02123`: badness 6, `length deficit = 4` plus two pending must-turns, frozen from restart 127,881 through roughly 2.5M nodes.
+- `R02344`: best badness 2 at restart 68,012, `length deficit = 1` plus one pending must-turn; no later best-ever improvement through roughly 2.19M nodes;
+- `R02123`: best badness 6 at restart 127,881, `length deficit = 4` plus two pending must-turns; no later best-ever improvement through roughly 2.5M nodes.
 
-This explained three earlier negative restart-constant experiments: they assumed more or differently timed independent restarts would eventually reach another structural family. The observer showed the retries repeatedly returned to the same deficit regime instead.
+PR review correctly narrowed the original writeup. The debug line fired on **new best-ever improvements**, not on every restart or every elite-pool admission. Therefore these runs do **not** prove that every later restart reproduced the identical deficit signature, that the elite pool itself stayed compositionally identical, or that the plateau was permanent beyond the bounded run. The original claim that the best state appeared “well under 1%” of the time budget was also wrong: the cited improvements occurred around 3.95s and 4.44s in 8s runs, roughly 49-56% of wall budget.
+
+What survives is still useful but narrower: on these two specimens, generic restart-constant changes had already failed, and the best observed regime at the plateau combined exact-length pressure with pending directional must-turn obligations. That nominated a mechanism-specific repair question, but it did not establish a repeated-basin equivalence class by itself.
 
 The proposed targeted length-deficit + directional-must-turn operator was not found as a direct descendant under that vocabulary. Later must-turn guidance and current additive must-turn-biased repair work are related, but should not be treated as proof that the specific July hypothesis was completed.
 
 ### Disposition
 
-The robust surviving premise is **observer-first response fingerprinting**:
+The robust surviving premise is **observer-first response fingerprinting**, with a stricter evidence bar than the original report used:
 
-- repeated response signatures can diagnose structural stasis and declining marginal value;
-- a coarse response signature is not proof that two search states or basins are equivalent;
-- steering/allocation should be earned only after the signature predicts incremental action value under canonical work accounting.
+- repeated or stable response signatures can diagnose stagnation only to the granularity actually observed;
+- a coarse response signature is not proof that two search states, restarts, elite pools, or basins are equivalent;
+- steering/allocation should be earned only after the signature predicts incremental action value under canonical work accounting;
+- if the observer records only best-ever changes, absence of a new best is evidence of plateau, not evidence that every intervening search attempt is structurally identical.
 
 This lines up with the current progress-conditioned allocation question without resurrecting the old adaptive retry design.
 
@@ -154,8 +157,9 @@ The archaeology value is therefore the incomplete chain, not a recommendation to
 1. Treat same-interface / same-fingerprint / same-summary identities as hypotheses, not equivalence relations.
 2. The detour-gadget line received more of a real falsification gate than its old name suggests; generic gadget mining should stay closed absent changed evidence.
 3. The commuting/partial-order line was only candidate-counted, not validated. Its offline equivalence question remains genuinely unresolved.
-4. Retry-response signatures have stronger value as observers of basin/regime stagnation than as direct steering keys.
+4. Retry-response signatures have stronger value as bounded observers of stagnation than as direct steering keys.
 5. Any modern use of response fingerprints should join them to incremental outcome and canonical `workSpent`, not raw retries or wall-clock behavior.
 6. Old zero-recurrence/null-participation claims require identity/predicate audits before being inherited.
+7. Review-corrected wording matters: an observer that records only best-ever changes cannot certify per-restart basin identity.
 
 No item here independently changes current solver priority. The nearest current-authority joins are the WS2 progress/allocation question, categorical completion-regime microscopy, and exact-labelled observer work.
