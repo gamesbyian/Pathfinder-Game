@@ -24,13 +24,13 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 **Class 5:** generic width/retention rescue, `swap`/`cs`, bounded known-capability composition and base-T1 harvest are closed. `R03229` reproduces the historical LIVE-culled / DEAD-preferred mechanism. Six prespecified scalar future-feasibility summaries over **31 exact-labelled states / 15 levels** all overlap LIVE and DEAD; joint-obligation rejects are zero. Do not resume scalar-feature accretion. [`reconciliation`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md), [`feasibility`](../reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md)
 
-**Archaeology-derived acquisition order:** current solve-local dead-cause rejoin is first. If null, run the unfinished August **full-pool categorical-state projection** on current exact-labelled extinction cases. If that is null/heterogeneous or nominates topology, run a reconstructed **homotopy/winding completion-class observer** with puncture-robustness checks. Future-crossing commitments or arbitrary-target feasibility are later mechanism-specific microscopes only when exact-labelled evidence nominates the event. Basin overlap, commutativity, forced-chain compression and repair descent-shadow remain conditional supporting questions. [`register`](solver-archaeology-register.md)
+**Archaeology-derived acquisition order:** current solve-local dead-cause rejoin is first. The August full-pool categorical quota projection was **already executed and closed negative** over 207 ranked pools; do not rerun it as an automatic fallback. If dead-cause closes null, advance to the unresolved **homotopy/winding completion-class observer** with puncture-robustness checks, unless new independent exact-labelled evidence first earns a materially different categorical key or survivor mechanism. Future-crossing commitments or arbitrary-target feasibility are later mechanism-specific microscopes only when exact-labelled evidence nominates the event. Basin overlap, commutativity, forced-chain compression and repair descent-shadow remain conditional supporting questions. [`correction`](../reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md), [`register`](solver-archaeology-register.md)
 
 **Next WS2 gates, in parallel:**
 
 1. **Class-4 allocation:** validate a dead-last additive whole-ladder retry before population scale. Freshness is established; this is allocation/collateral.
 2. **Class-2 economics:** run the smallest bounded eligible-population A/B for the proven default-off 7M `late-repair-must-turn-biased-retry`. Measure reach, gains/losses, incremental `workSpent`, wall cost and collateral under an explicit aggregate envelope. Do not widen toward slower historical winners merely to harvest known IDs.
-3. **Class-5 acquisition:** rejoin the August connectivity-rejection Stage-B population. Historically reached-set/boundary shapes recurred within a solve at 83.1% / 82.2% versus 52.6% exact-state sharing. Ask whether that population survives on current misses, then whether repeated shapes reduce to a **small sound cause** with material repeated-work cost and matching cheaper than `isConnected`. Only then shadow-test reason reuse. If null, advance to the categorical full-pool gate. No broad CDCL/LCG. [`archaeology rejoin`](../reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md)
+3. **Class-5 acquisition:** rejoin the August connectivity-rejection Stage-B population. Historically reached-set/boundary shapes recurred within a solve at 83.1% / 82.2% versus 52.6% exact-state sharing. Ask whether that population survives on current misses, then whether repeated shapes reduce to a **small sound cause** with material repeated-work cost and matching cheaper than `isConnected`. Only then shadow-test reason reuse. If null, advance to the topological/homotopy observer, not the already-completed August quota projection. No broad CDCL/LCG. [`archaeology rejoin`](../reports/2026-09-13-solver-archaeology-dead-cause-rejoin-and-dirty-negative-011.md)
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, and goal-attraction-disabled retry are **PROMOTED**. Portal coarse-state merge and repair late-probe `7->6` seeds are **CLOSED NEGATIVE**. Admissible-order retry repricing is **DEFERRED**. Late must-turn-biased repair is **OPEN DEFAULT-OFF / INTEGRATION PROVEN**, pending eligible-population economics. [`ledger`](solver-opt-in-experiment-ledger.md)
 
@@ -52,14 +52,14 @@ Mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 general-diff
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive exposure; Class-2 7M must-turn economics; Class-5 dead-cause rejoin, then categorical full-pool if null. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 additive exposure; Class-2 7M must-turn economics; Class-5 dead-cause rejoin, then homotopy/topological observer if null. |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; use families first when structural. |
 | 6 | Repair reachability | **SUPPORTING** | Reopen when continuation needs interior/early commitment revision; descent-shadow observer is preserved for that condition. |
 | 7 | Architectural speed | **SUPPORTING** | Reopen for earned mechanism with measured cost; forced-chain traversal requires a current one-successor-chain census first. |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
 | 8 | Isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not tail entitlement. |
 | 0 | Restart/randomization | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence. |
-| 4 | Beam retention | **CLOSED IN TESTED FORMS** | Generic forms stay closed; exact categorical/topological evidence may support a changed premise. |
+| 4 | Beam retention | **CLOSED IN TESTED FORMS** | Generic forms and the August low-cardinality quota keys stay closed; new independent categorical/topological evidence may support a changed premise. |
 | 5 | Exact/reference model | **ON DEMAND** | Supplies offline truth for current acquisition questions. |
 
 ## Standing research rules
