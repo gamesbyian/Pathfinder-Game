@@ -17,15 +17,21 @@ const relationRegistry = existsSync(relationsPath)
     ? JSON.parse(readFileSync(relationsPath, 'utf8'))
     : { schemaVersion: 1, questions: [] };
 const questions = Array.isArray(relationRegistry.questions) ? relationRegistry.questions : [];
+const normalizedQuestionStatus = state => {
+    const value = String(state ?? '').toLowerCase();
+    if (value.startsWith('active')) return 'active';
+    if (value.startsWith('closed')) return 'closed';
+    return value;
+};
 const wantedQuery = query.trim().toLowerCase();
 const wantedStatus = status.trim().toLowerCase();
 const wantedKind = kind.trim().toLowerCase();
 const questionMatches = questions.filter(question => {
     if (wantedKind && wantedKind !== 'question') return false;
-    if (wantedStatus && String(question.state ?? '').toLowerCase() !== wantedStatus) return false;
+    if (wantedStatus && normalizedQuestionStatus(question.state) !== wantedStatus) return false;
     if (!wantedQuery) return true;
     return JSON.stringify(question).toLowerCase().includes(wantedQuery);
-}).map(question => ({ kind: 'question', ...question }));
+}).map(question => ({ kind: 'question', status: normalizedQuestionStatus(question.state), ...question }));
 
 if (outputArg) {
     const output = path.resolve(outputArg);
