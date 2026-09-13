@@ -187,32 +187,30 @@ function combinePurposeAudits(corpora) {
     }));
 }
 
+function combineCountMaps(corpora, field) {
+    const counts = new Map();
+    for (const corpus of corpora) for (const [key, count] of Object.entries(corpus.crossHintEventCollisionAudit[field] ?? {})) {
+        counts.set(key, (counts.get(key) || 0) + count);
+    }
+    return Object.fromEntries([...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])));
+}
+
 function combineCollisionAudits(corpora) {
-    const origins = new Map();
-    const facets = new Map();
     const examples = [];
     for (const corpus of corpora) {
-        const row = corpus.crossHintEventCollisionAudit;
-        for (const [origin, count] of Object.entries(row.identitiesByOrigin)) {
-            origins.set(origin, (origins.get(origin) || 0) + count);
-        }
-        for (const [facet, count] of Object.entries(row.identitiesByFacet)) {
-            facets.set(facet, (facets.get(facet) || 0) + count);
-        }
-        for (const example of row.examples) {
+        for (const example of corpus.crossHintEventCollisionAudit.examples) {
             if (examples.length >= 50) break;
             examples.push(example);
         }
     }
     return {
-        levelsWithCollisions: corpora.reduce((sum, corpus) =>
-            sum + corpus.crossHintEventCollisionAudit.levelsWithCollisions, 0),
-        collisionIdentities: corpora.reduce((sum, corpus) =>
-            sum + corpus.crossHintEventCollisionAudit.collisionIdentities, 0),
-        pathMemberships: corpora.reduce((sum, corpus) =>
-            sum + corpus.crossHintEventCollisionAudit.pathMemberships, 0),
-        identitiesByOrigin: Object.fromEntries([...origins].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
-        identitiesByFacet: Object.fromEntries([...facets].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
+        levelsWithCollisions: corpora.reduce((sum, corpus) => sum + corpus.crossHintEventCollisionAudit.levelsWithCollisions, 0),
+        collisionIdentities: corpora.reduce((sum, corpus) => sum + corpus.crossHintEventCollisionAudit.collisionIdentities, 0),
+        pathMemberships: corpora.reduce((sum, corpus) => sum + corpus.crossHintEventCollisionAudit.pathMemberships, 0),
+        identitiesByOrigin: combineCountMaps(corpora, 'identitiesByOrigin'),
+        identitiesByFacet: combineCountMaps(corpora, 'identitiesByFacet'),
+        identitiesByTechnique: combineCountMaps(corpora, 'identitiesByTechnique'),
+        identitiesByProducerKey: combineCountMaps(corpora, 'identitiesByProducerKey'),
         examples,
     };
 }
@@ -228,13 +226,10 @@ report.total = {
     crossHintEventCollisionAudit: combineCollisionAudits(totals),
     evidencePurposeAudit: combinePurposeAudits(totals),
     legacyAmbiguityAudit: {
-        entriesMissingAnyCapabilityContext: totals.reduce((sum, corpus) =>
-            sum + corpus.legacyAmbiguityAudit.entriesMissingAnyCapabilityContext, 0),
-        strictColdMissingCapabilityContext: totals.reduce((sum, corpus) =>
-            sum + corpus.legacyAmbiguityAudit.strictColdMissingCapabilityContext, 0),
+        entriesMissingAnyCapabilityContext: totals.reduce((sum, corpus) => sum + corpus.legacyAmbiguityAudit.entriesMissingAnyCapabilityContext, 0),
+        strictColdMissingCapabilityContext: totals.reduce((sum, corpus) => sum + corpus.legacyAmbiguityAudit.strictColdMissingCapabilityContext, 0),
         missingContextFields: Object.fromEntries(['usedExistingHints', 'hintGuided', 'isolatedTechnique']
-            .map(field => [field, totals.reduce((sum, corpus) =>
-                sum + corpus.legacyAmbiguityAudit.missingContextFields[field], 0)])),
+            .map(field => [field, totals.reduce((sum, corpus) => sum + corpus.legacyAmbiguityAudit.missingContextFields[field], 0)])),
     },
 };
 
