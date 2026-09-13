@@ -11,7 +11,7 @@ import {
     objectiveSatisfactionDepths, normalizedFootprint, portalUsageStats, mustCrossOrderStats,
     turnLocationStats, prefixDiversityStats, pairwiseDistinctivenessStats, discoverySaturationCurve,
     buildBucketProfile, buildLevelSolutionProfile, buildSinglePathProfile, profileDistance,
-    profileDistanceTerms, profileDistanceWithCoverage, nearestProfiles, summarizeCorpusProfiles, PROVENANCE_SOURCES,
+    profileDistanceTerms, profileDistanceWithCoverage, nearestProfiles, summarizeCorpusProfiles, renderSummaryMd, PROVENANCE_SOURCES,
     computeHintSignature,
     hasCurrentSolutionProfileTaxonomy, SOLUTION_PROFILE_SCHEMA_VERSION, SOLUTION_PROFILE_TAXONOMY, SOLUTION_PROFILE_ALGORITHM_VERSION,
 } from './solution-profile-lib.mjs';
@@ -395,4 +395,25 @@ test('solution-profile taxonomy stamp rejects legacy or partially stamped librar
         provenanceTaxonomy: SOLUTION_PROFILE_TAXONOMY,
         profileAlgorithmVersion: SOLUTION_PROFILE_ALGORITHM_VERSION,
     }), true);
+});
+
+
+test('renderSummaryMd uses current event/order summary fields', () => {
+    const md = renderSummaryMd({
+        levelsTotal: 2,
+        levelsWithHints: 2,
+        levelsInsufficientData: 0,
+        levelsWithExhaustiveSearchEvent: 1,
+        meanHintCount: 3,
+        meanPathwiseDistinctiveness: 0.25,
+        meanTurnRate: 0.4,
+        meanCwFraction: 0.5,
+        levelsWithObservedSingleMustCrossOrder: 1,
+        levelsWithMustCrossOrder: 2,
+        meanDiscoverySaturationPlateauFraction: null,
+        sourceCoverage: Object.fromEntries(PROVENANCE_SOURCES.map(source => [source, 0])),
+    }, 'test', 'data/test.json');
+    assert.match(md, /\*\*1\*\* levels have at least one hint/);
+    assert.match(md, /Must-cross order: \*\*1\*\* \/ 2 multi-must-cross levels/);
+    assert.doesNotMatch(md, /undefined/);
 });

@@ -654,7 +654,7 @@ function mean(values) {
  *  corpus-wide summary — counts, central tendencies, and the "how many levels does each
  *  provenance source contribute usefully to" coverage table. Never claims corpus-wide exhaustion;
  *  it only reports what fraction of levels have at least one hint whose OWN termination was
- *  'exhaustive' (provablyExhaustive), which is a per-level fact, not an inference. */
+ *  'exhaustive' (an event-local marker), without promoting that event into a whole-library completeness claim. */
 export function summarizeCorpusProfiles(levelProfiles) {
     const withHints = levelProfiles.filter(p => !p.insufficientData);
     const combined = withHints.map(p => p.combined).filter(Boolean);
@@ -711,7 +711,7 @@ export function computeHintSignature(levels, levelNumbers = null) {
 }
 
 
-function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
+export function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
     const lines = [
         `# Solution-space fingerprint summary — ${corpusTag}`,
         '',
@@ -722,12 +722,12 @@ function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {
         '',
         `- Levels: **${summary.levelsTotal}** total, **${summary.levelsWithHints}** with hints, ` +
         `**${summary.levelsInsufficientData}** with none.`,
-        `- **${summary.levelsProvablyExhaustive}** levels have at least one hint whose own search ` +
+        `- **${summary.levelsWithExhaustiveSearchEvent}** levels have at least one hint whose own search ` +
         'terminated `exhaustive` (an event-local context marker, not proof the stored library is complete).',
         `- Mean hints/level: **${summary.meanHintCount}**. Mean pairwise distinctiveness: ` +
         `**${summary.meanPathwiseDistinctiveness}**. Mean turn rate: **${summary.meanTurnRate}** ` +
         `(cw fraction **${summary.meanCwFraction}**).`,
-        `- Must-cross order: **${summary.levelsWithRigidMustCrossOrder}** / ` +
+        `- Must-cross order: **${summary.levelsWithObservedSingleMustCrossOrder}** / ` +
         `${summary.levelsWithMustCrossOrder} multi-must-cross levels show one observed entry+completion order in the stored sample.`,
         summary.meanDiscoverySaturationPlateauFraction === null
             ? '- Discovery-saturation plateau: n/a (no level had enough hints to detect one).'
