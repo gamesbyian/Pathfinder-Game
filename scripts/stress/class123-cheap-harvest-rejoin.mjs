@@ -34,6 +34,7 @@ for (const row of atlas.rows ?? []) {
     const { id: _id, stressMeta: _stressMeta, hints: _hints, ...raw } = entry;
     const level = Solver.prepareLevelForSolver(raw, { source: 'raw' });
     const configs = getAttemptConfigs(level, null);
+    const policyIds = new Set(configs.map(attemptConfigKey));
     const main = configs.filter(c => !c.repair && !c.admissibleOrder);
     const mainIds = new Set(main.map(attemptConfigKey));
     const primaryWins = (row.t1Wins ?? []).filter(w => w.class === row.primaryClass);
@@ -43,6 +44,7 @@ for (const row of atlas.rows ?? []) {
     const decisionWins = primaryWins.map(win => ({
         identity: win.identity,
         nodes: win.nodes ?? null,
+        currentlyInPolicyMenu: policyIds.has(win.identity),
         currentlyInMainMenu: mainIds.has(win.identity),
         dispatched: win.dispatched ?? null,
         familyReached: win.familyReached ?? null,
@@ -53,7 +55,9 @@ for (const row of atlas.rows ?? []) {
         primaryClass: row.primaryClass,
         routingRegime: row.routingRegime,
         reqInt: row.features?.reqInt ?? null,
+        mustTurn: level.mustPassTurnDirs?.size ?? 0,
         bucket: row.bucket ?? null,
+        policyConfigCount: configs.length,
         mainConfigCount: main.length,
         lateReserveConfigCount: MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT,
         reserveWindowHeadroom: Math.max(0, MAIN_SEARCH_LATE_RESERVE_CONFIG_COUNT - main.length),
@@ -67,7 +71,7 @@ const class2 = rows.filter(r => r.primaryClass === 2);
 const class3 = rows.filter(r => r.primaryClass === 3);
 const class1OutsideClosed = class1.filter(r => !r.strictHighIntAdditionClosed);
 const output = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     atlas: ATLAS,
     counts: { class1: class1.length, class2: class2.length, class3: class3.length },
     class1: {
@@ -88,4 +92,5 @@ console.log(JSON.stringify({
     class1OutsideClosed: output.class1.outsideClosedCount,
     class1OutsideWithReserveHeadroom: output.class1.outsideClosedWithReserveHeadroom,
     outside: class1OutsideClosed.map(r => ({ levelId:r.levelId, mainConfigCount:r.mainConfigCount, reserveWindowHeadroom:r.reserveWindowHeadroom, wins:r.decisionWins })),
+    class2PolicyMisses: class2.filter(r => r.decisionWins.some(w => !w.currentlyInPolicyMenu)).map(r => ({ levelId:r.levelId, mustTurn:r.mustTurn, wins:r.decisionWins.filter(w => !w.currentlyInPolicyMenu) })),
 }, null, 2));
