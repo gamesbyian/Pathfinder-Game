@@ -1,6 +1,11 @@
 # Solver archaeology: backward, diversity, and extinction follow-up
 
-Status: historical-evidence follow-up. This report does not change solver behavior or current workstream priority.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — Historical review closed static exact-k/backward-route forms and identified unfinished overlap and full-pool extinction observer work.
+> **Decision:** Keep static exact-k backward and backward-route scoring closed; preserve basin-overlap observation and the August categorical-state full-pool projection as distinct measurement opportunities, not production changes.
+> **Remaining gate:** none
+
+This report does not change solver behavior or current workstream priority.
 
 ## Backward-search lineage
 
