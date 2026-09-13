@@ -1,8 +1,9 @@
 # Stress-corpus research-resource audit
 
-> **Status:** concluded-positive with guardrail/tooling repairs implemented on `chatgpt/stress-corpus-resource-audit-2026-09-13`.
-> **Scope:** published levels, stress Corpus 1, stress Corpus 2, and the in-envelope challenge corpus as research evidence infrastructure.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — fresh 2,162-row corpus census plus permanent-CI integration checks.
 > **Decision:** keep corpus bytes/history intact; improve evidence ancestry visibility and invariant coverage rather than rewriting historical metadata.
+> **Remaining gate:** none for this audit; pursue symmetry/near-equivalence or deeper dependence analysis only when a concrete research decision requires it.
 
 ## Bottom line
 
@@ -52,7 +53,7 @@ Any analysis that treats Corpus 1's header generator version or A-F batches as p
 
 The current research authorities and query aliases treat envelope as a first-class challenge corpus, but both `check:level-provenance` and `check:corpus-level-formatting` covered only published/C1/C2.
 
-The fresh census found no current envelope corruption, so this was latent guardrail debt rather than an observed data defect. The branch extends both invariants to envelope.
+The fresh census found no current envelope corruption, so this was latent guardrail debt rather than an observed data defect. The branch extends both invariants to envelope. Permanent CI's sparse runtime-data checkout/cache also omitted envelope, so the CI materialization paths are extended in the same change rather than leaving the stronger invariant unexecutable in PR validation.
 
 ### 4. The cheap query surface hid the ancestry needed for safe stratification
 
@@ -83,7 +84,8 @@ A global all-pairs similarity project is not justified merely because it can be 
 2. `corpus-query` tests now cover provenance filtering and metadata separation.
 3. `check:level-provenance` covers envelope, so ids/provenance are globally checked across all four first-class corpora.
 4. `check:corpus-level-formatting` covers envelope as well.
-5. `scripts/stress/corpus-evidence-audit.mjs` is retained as a read-only census tool for future corpus-health checks.
+5. Permanent CI materializes envelope levels/hints so those invariants actually run against the fourth corpus.
+6. `scripts/stress/corpus-evidence-audit.mjs` is retained as a read-only census tool for future corpus-health checks.
 
 No corpus data file is rewritten by this audit.
 
