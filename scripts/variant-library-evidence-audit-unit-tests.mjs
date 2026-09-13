@@ -33,7 +33,10 @@ function fixture() {
     });
     writeManifest('corpus-b', 'family-P2-sym', {
         schemaVersion: 2, familyId: 'family-shared-id', parentLevelId: 'P2', parentCorpus: 'source-b.json',
-        familyMode: 'symmetry', parentContentHash: 'parent-shared', variants: [
+        familyMode: 'symmetry', parentContentHash: 'parent-shared', requestedCount: 2, acceptedCount: 5,
+        generationAttempts: 3, attemptBudget: 8,
+        generationRuns: [{ variantIds: ['W0'] }, { variantIds: ['W1'] }],
+        variants: [
             { variantId: 'W1', relation: 'symmetry', variantContentHash: 'variant-shared', mutationManifest: { operation: 'transform' } },
         ],
     });
@@ -68,18 +71,21 @@ describe('variant-library evidence audit', () => {
             familyIdCollisions: 1,
         });
         expect(audit.generationEvidence).toMatchObject({
-            familiesWithRequestAcceptanceCounts: 2,
-            familiesMissingRequestAcceptanceCounts: 1,
-            familiesWithAttemptBudget: 2,
-            familiesWithGenerationAttempts: 2,
+            singleRunFamiliesWithComparableRequestAcceptanceCounts: 2,
+            multiRunFamiliesWithAmbiguousTopLevelCounters: 1,
+            familiesMissingComparableRequestAcceptanceCounts: 1,
+            familiesWithAttemptBudget: 3,
+            familiesWithGenerationAttempts: 3,
             variantsWithGenerationAttempts: 5,
         });
         expect(audit.generationEvidence.byMode.find(row => row.mode === 'symmetry')).toMatchObject({
             families: 2,
-            familiesWithRequestAcceptanceCounts: 1,
+            singleRunFamiliesWithComparableRequestAcceptanceCounts: 1,
+            multiRunFamiliesWithAmbiguousTopLevelCounters: 1,
             requested: 5,
             accepted: 4,
         });
+        expect(audit.generationEvidence.ambiguousCounterExamples[0]).toMatchObject({ familyId: 'family-shared-id', generationRunCount: 2 });
         expect(audit.evaluationEvidence).toMatchObject({
             observations: 1,
             attachments: 1,
@@ -88,7 +94,8 @@ describe('variant-library evidence audit', () => {
             missingRunId: 1,
             withRecordedBudgetContext: 0,
         });
-        expect(audit.evidencePurposes['generation-selectivity']).toMatch(/requested\/attempted\/accepted/u);
+        expect(audit.evidencePurposes['generation-selectivity']).toMatch(/same generation run/u);
+        expect(audit.interpretation.appendedFamilyCounters).toMatch(/ambiguous/u);
         expect(audit.interpretation.exactHashCollision).toMatch(/classify semantics/u);
     });
 });
