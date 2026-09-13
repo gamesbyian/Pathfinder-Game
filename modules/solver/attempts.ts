@@ -187,7 +187,7 @@ export const repairAttempt = (): AttemptConfig => ({ scoringProfileId: 'repair',
 /** A second repair attempt, appended only when the level has must-turn cells (so a level with
  *  none can never reach it) and only ever run after the ordinary repairAttempt above has already
  *  failed — see AttemptConfig.repairMustTurnBiased and data/stress/README.md's S043 writeup. */
-const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repair', orderingBias: null, repair: true, repairMustTurnBiased: true });
+export const repairMustTurnBiasedAttempt = (): AttemptConfig => ({ scoringProfileId: 'repair', orderingBias: null, repair: true, repairMustTurnBiased: true });
 /** A third repair attempt (turn-aware selective bias, see AttemptConfig.repairTurnBiased). Added ONLY
  *  under an explicit STRATEGY_REPAIR_TURN_BIAS flag (default-off in production) and only on must-turn
  *  levels, placed FIRST among the repair configs (see the append site below) so it solves fast rather

@@ -224,7 +224,14 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
         // `eligible: undefined` and are filtered out; every other stage is covered and in the
         // same declared order as before (stage-policy.ts's SOLVER_STAGE_IDS order matches this
         // telemetry's own historical row order exactly).
-        const solverStagePlan = buildSolverStagePlan({ budgetPlan: stageBudgetPlan, mainSearchEligible: hasMainConfig });
+        const solverStagePlan = buildSolverStagePlan({
+            budgetPlan: stageBudgetPlan,
+            mainSearchEligible: hasMainConfig,
+            lateRepairMustTurnBiasedRetryEligible: stageBudgetPlan.repairLateProbeTierWillRun
+                && !hasRepairConfig
+                && (level.mustPassTurnDirs?.size ?? 0) > 0
+                && cfg?.STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY === true,
+        });
         const runnable = new Map<string, boolean>(
             solverStagePlan
                 .filter((entry): entry is typeof entry & { eligible: boolean } => entry.eligible !== undefined)
@@ -245,6 +252,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // repair-fallback's (see repairLateProbeTierWillRun's own comment) — it exists FOR
             // levels with no repair config in the ladder, not levels that have one.
             ['late-repair-search', !hasRepairConfig],
+            ['late-repair-must-turn-biased-retry', !hasRepairConfig && (level.mustPassTurnDirs?.size ?? 0) > 0],
             ['guidance-goal-distance-retry', hasMainConfig],
             // Inverted for the same reason as late-repair-search above: this tier synthesizes its
             // own repair attempt as a multi-seed extension of late-repair-search, so it shares that

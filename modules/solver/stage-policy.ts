@@ -32,6 +32,7 @@ const rows = [
     ['repair-elite-prefix-dfs-retry', 100, 'opt-in', 'retry', 'elite-prefix repair retry enabled', 'configured-repair', 'additive-node-headroom', 'repair-elite-prefix-dfs-retry'],
     ['must-cross-neighbor-prune-disabled-retry', 110, 'production-default', 'retry', 'must-cross neighbor retry enabled', 'configured-main', 'additive-node-headroom', 'must-cross-neighbor-prune-disabled-retry'],
     ['late-repair-search', 120, 'production-default', 'retry', 'late repair probe enabled', 'configured-repair', 'fixed-node-cap', 'late-repair-search'],
+    ['late-repair-must-turn-biased-retry', 122, 'opt-in', 'retry', 'ordinary late repair participated and failed; must-turn present; experiment flag enabled', 'configured-repair', 'fixed-node-cap', 'late-repair-must-turn-biased-retry'],
     ['guidance-goal-distance-retry', 125, 'production-default', 'retry', 'goal-attraction legacy-distance retry enabled', 'configured-main', 'additive-node-headroom', 'guidance-goal-distance-retry'],
     ['late-repair-multiseed-retry', 128, 'production-default', 'retry', 'late-repair-search multi-seed retry enabled and late-repair-search itself eligible', 'configured-repair', 'additive-node-headroom', 'late-repair-multiseed-retry'],
     ['legacy-latency-portfolio-pass', 20, 'experiment-only', 'legacy-latency-portfolio', 'portfolio pass includes config', 'portfolio', 'portfolio-pass', null],
