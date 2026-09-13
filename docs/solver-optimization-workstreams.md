@@ -30,9 +30,9 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 **Next WS2 gates, in parallel:**
 
-1. **Class-4 allocation form:** implement and validate the dead-last additive whole-ladder retry described above before any population-scale measurement.
-2. **Class-2 composition / solve harvest:** implement the smallest default-off/additive late must-turn-biased repair probe that tests the seven-level seam without widening the full repair-fallback gate or stealing plain-repair work. Start on the cheap end (`R02768`, `R02180`), then matched-work/collateral confirmation before population scale.
-3. **Acquisition / class 5:** test the recovered **reason-producing dead-state reuse** premise at the diagnostic gate only: can exact/reliable dead detections on hard residual solves be reduced to the same compact sound cause often enough that repeated exploration wastes material work? If recurrence is absent, close it. If present, only then shadow-test the smallest solve-local reason key. No CDCL/LCG or broad learned-search framework. [`excavation`](../reports/2026-09-12-solver-future-work-backlog-excavation-001.md)
+1. **Class-4 allocation form:** implement and validate the dead-last additive whole-ladder retry described above before any population-scale measurement. Do not detour through family mining; the live question is allocation/collateral after current capability freshness is already established.
+2. **Class-2 composition / solve harvest:** implement the smallest default-off/additive late must-turn-biased repair probe that tests the seven-level seam without widening the full repair-fallback gate or stealing plain-repair work. In parallel with that tiny probe, query the existing mounted family resource for controlled must-turn/landmark/obligation relatives around the seven nominated parents; use any repair-response flips only to sharpen whether the seam looks structural or parent-specific, and do not delay the probe or generate new families if the needed counterfactual is absent. Start on the cheap end (`R02768`, `R02180`), then matched-work/collateral confirmation before population scale. [`variant routing`](../reports/2026-09-13-variant-library-resource-integration-audit-002.md)
+3. **Acquisition / class 5:** test the recovered **reason-producing dead-state reuse** premise at the diagnostic gate only: can exact/reliable dead detections on hard residual solves be reduced to the same compact sound cause often enough that repeated exploration wastes material work? If recurrence is absent, close it. If present, only then shadow-test the smallest solve-local reason key. Family data is secondary only after a sound recurring cause is nominated; raw sibling rescue stays confound-dominated. No CDCL/LCG or broad learned-search framework. [`excavation`](../reports/2026-09-12-solver-future-work-backlog-excavation-001.md)
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, and goal-attraction-disabled retry are **PROMOTED**. Portal coarse-state merge, repair late-probe `7->6` seeds, and portfolio-18 resumable tranche are **CLOSED NEGATIVE/NULL** in their tested forms. Admissible-order retry `1.0->0.18` is **DEFERRED**. A current class-4 freshness replay of the closed portal treatment's positive basin is diagnostic evidence recovery, not a disposition reversal. [`ledger`](solver-opt-in-experiment-ledger.md)
 
@@ -41,6 +41,8 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE.
 
 Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path and capability-memory evidence to distinguish `not exposed` from `exposed-and-failed`, and technique-relative response from shared-capability failure. IDs/outcomes/hints remain offline diagnostics. Production selectors require legal current-level/current-solve signals and confirmation proportional to selection pressure.
+
+For a new **structural** selector premise, query existing controlled families before broad static-feature mining or new family generation. Family contrasts are a cheap way to reject descriptors that merely correlate with ancestry: ask whether the candidate legal descriptor changes under the controlled intervention and whether action/technique value changes with it across whole parents. A family flip is nomination evidence, not by itself a licensed selector. [`variant routing`](../reports/2026-09-13-variant-library-resource-integration-audit-002.md)
 
 **Cross-hint provenance audit closed.** All 44,305 exact same-event/multiple-path identities are explained by replay/multi-output semantics or historical technique-census source-cell under-resolution already repaired in current provenance. The 160 apparently ordinary-search collisions are exactly the `isolated-technique` tail. No determinism replay or near-collision stage is earned. [`report`](../reports/2026-09-12-cross-hint-provenance-relations-001.md)
 
@@ -56,15 +58,15 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | In parallel: tiny class-4 portal coarse-state freshness replay; bounded late must-turn-biased repair pilot; diagnostic recurrence test for compact sound dead causes. |
-| 1 | Automatic action selection | **SUPPORTING** | No live selector/provenance gate; reopen for a new legal decision signal or unexplained producer relation. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | In parallel: dead-last class-4 portal coarse-state retry design; bounded late must-turn-biased repair pilot plus cheap existing-family structural preflight; diagnostic recurrence test for compact sound dead causes. |
+| 1 | Automatic action selection | **SUPPORTING** | No live selector/provenance gate; reopen for a new legal decision signal or unexplained producer relation, using existing family contrasts first when the premise is structural. |
 | 6 | Repair reachability | **SUPPORTING** | Reopen when live continuation needs interior/early commitment revision. |
 | 7 | Architectural speed | **SUPPORTING** | Reopen for earned mechanism with measured runtime cost/new hotspot. |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve grouped-family independence; scale confirmation with selection pressure. |
 | 8 | Isolated capability missed by production | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not permanent tail entitlement. |
 | 0 | Restart/randomization | **CLOSED IN TESTED FORMS** | Reopen only for recurring commitment-diversity/restart evidence. |
-| 4 | Beam retention | **CLOSED IN TESTED FORMS** | Generic width/bucket/scorer forms stay closed. |
-| 5 | Exact/reference model | **ON DEMAND** | Expand exact labels only for an earned mechanism-specific question. |
+| 4 | Beam retention | **CLOSED IN TESTED FORMS** | Generic width/bucket/scorer forms stay closed; controlled relatives are a high-value reopen resource for a changed retention mechanism. |
+| 5 | Exact/reference model | **ON DEMAND** | Expand exact labels only for an earned mechanism-specific question; families may nominate boundary pairs but never substitute for exact labels. |
 
 ## Standing research rules
 
@@ -83,6 +85,7 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 - Exact labels are offline truth, never runtime steering. Failed compact future-feasibility summaries do not license feature accretion.
 - Convenience labels/summary booleans are not causal fields; use explicit provenance/config fields for decision-bearing joins.
 - Reconcile old questions against newer evidence before new compute. Prefer the smallest information-value test.
+- When the question is response to a controlled structural change, query the existing variant-family resource before new family generation or broad solver compute; when a controlled relative cannot change the decision, skip family mining rather than treating it as a checklist. [`variant resource`](variant-level-research.md)
 - At result closeout, update material **outbound** question relations as well as the local verdict: answers, triggers, constraints, calibration/negative controls, supersessions and duplicates belong in the sparse question registry when they would otherwise be easy to lose.
 
 ## Cheap evidence routing
@@ -94,5 +97,6 @@ Mechanic-composition pilot: 2/5 clean predicted chains, 2/5 general-difficulty c
 - capability memory: `node scripts/solver-capability-memory.mjs --manifest=<manifest.json> --out=tmp/capability-memory.json --summary-out=tmp/capability-memory.md`
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`
 - provenance: `node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- --corpus=all --out=tmp/hint-provenance-evidence.json`
+- variant families: mount `claude/variant-levels-solver-insights-tpk4qg`, then `npm run family:index -- --variant-family-dataset-root=<worktree>` and use `family:query` / `family:coverage`; run `node scripts/variant-library-evidence-audit.mjs --variant-family-dataset-root=<worktree> --pretty` before decision-bearing whole-trove counts/joins.
 
 Search named mechanisms through `research-status-index --compact`; chronology belongs in dated reports.
