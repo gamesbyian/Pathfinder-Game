@@ -29,13 +29,34 @@
       "question": "Can already-demonstrated capability from materially distinct historical/current evidence sources explain a meaningful share of the current class-5 residual?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "answeredBy": ["reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md"],
-      "result": "No for the bounded prespecified census. Six materially distinct sources nominate 65/652 current residual rows, all in classes 1-4, with zero reach into the corrected 431-row class-5 frontier.",
+      "answeredBy": [
+        "reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md",
+        "reports/2026-09-12-capability-memory-union-reconciliation-001.md"
+      ],
+      "result": "No for class 5 under the bounded evidence: corrected sources reach zero of the 431 class-5 rows. The earlier prose value of a 65-row six-source union is invalid and must not be reused; existing-data reconstruction proves at least 153 current-residual nominations across two sources, concentrated in classes 1-4.",
+      "implies": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
       "constrains": [
         "Do not make broader composition/portfolio mining the first explanation for class 5 without a materially new capability source.",
+        "Do not generalize the class-5 zero-reach result into a claim that capability memory is low-yield for class 4.",
         "Historical closed-treatment signatures remain nomination/calibration evidence, not current production capability."
       ],
-      "reopensOn": "A materially new capability source with exact/protocol-compatible evidence that was not represented in the completed bounded census."
+      "reopensOn": "A materially new capability source with exact/protocol-compatible evidence that reaches class 5 and was not represented in the bounded census."
+    },
+    {
+      "id": "WS2-CLASS4-PORTAL-COARSE-FRESHNESS",
+      "question": "Does the September 9 portal coarse-state-merge positive basin still reproduce on current class-4 residual rows under current code and production-shaped work semantics?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "answeredBy": [],
+      "result": null,
+      "triggeredBy": ["WS2-KNOWN-CAPABILITY-COMPLEMENTARITY"],
+      "constrainedBy": ["reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"],
+      "constrains": [
+        "Start with a tiny prespecified freshness sample, not the 113-row nominated class-4 basin.",
+        "Do not reopen the globally enabled treatment: its 12 losses and hard R01273 capability regression remain valid controls.",
+        "If capability is fresh, test only a changed-treatment exposure/allocation form that preserves ordinary production capability and explicit work accounting."
+      ],
+      "reopensOn": null
     },
     {
       "id": "WS2-GENERIC-STRUCTURAL-DIVERSITY",
