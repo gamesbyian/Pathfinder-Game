@@ -1,0 +1,46 @@
+name: class5-homotopy-prefix-census-one-shot
+
+on:
+  push:
+    branches:
+      - chatgpt/class5-homotopy-census-2026-09-13
+
+concurrency:
+  group: class5-homotopy-prefix-census-one-shot
+  cancel-in-progress: true
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Run fixed-endpoint homotopy census
+        run: |
+          mkdir -p tmp
+          node scripts/run-bundled.mjs scripts/stress/class5-homotopy-prefix-census.mjs -- \
+            --out=tmp/class5-homotopy-prefix-census.json
+      - name: Print result marker
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const doc = JSON.parse(fs.readFileSync('tmp/class5-homotopy-prefix-census.json','utf8'));
+          console.log('HOMOTOPY_CENSUS ' + JSON.stringify(doc.summary));
+          for (const c of doc.contrasts) console.log('HOMOTOPY_CONTRAST ' + JSON.stringify(c));
+          NODE
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: class5-homotopy-prefix-census
+          path: tmp/class5-homotopy-prefix-census.json
+          retention-days: 30
