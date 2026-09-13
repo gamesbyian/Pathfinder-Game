@@ -1,6 +1,9 @@
 # Solver archaeology: uploaded research crosswalk 009
 
-Date: 2026-09-13
+> **Status:** inconclusive
+> **Last evidence:** 2026-09-13 — external research reports were cross-walked against current `main`, historical commits, exact-label follow-ups, and current solver authority.
+> **Decision:** preserve three archaeology lessons: unfinished symmetry-equivariance causality, formulation-specific relinking failure with surviving soft complementarity evidence, and regime-dependent repair locality.
+> **Remaining gate:** none changes current priority by itself; each may reopen only when current exact/fixed-work evidence produces the matching phenotype and the current-authority boundary is satisfied.
 
 Scope: cross-check externally supplied research reports against retained Pathfinder history and current authority. This is archaeology evidence, not a new opportunity catalogue. `docs/solver-optimization-workstreams.md` remains current execution authority and `docs/solver-future-work.md` remains reopen/deferred authority.
 
