@@ -1,0 +1,34 @@
+name: Apply late must-turn tier patch shallow
+
+on:
+  push:
+    branches:
+      - chatgpt/must-turn-family-contrast-pilot-2026-09-13
+    paths:
+      - scripts/apply-late-mustturn-tier-patch-shallow.py
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit --fund=false
+      - run: python3 scripts/apply-late-mustturn-tier-patch.py
+      - run: npm run check:types
+      - run: npx vitest run scripts/late-mustturn-tier-unit-tests.mjs
+      - run: npm run check:lint
+      - name: Commit integration
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add modules/solver/attempts.ts modules/solver/ablation-config.ts modules/solver/stage-id-normalization.mjs modules/solver/stage-policy.ts modules/solver/stage-budget-core.ts modules/solver/orchestration-additive-retry-tiers.ts scripts/late-mustturn-tier-unit-tests.mjs
+          git commit -m 'Research: integrate opt-in late must-turn repair tier'
+          git push origin HEAD:chatgpt/must-turn-family-contrast-pilot-2026-09-13
