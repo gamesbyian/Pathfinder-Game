@@ -1,6 +1,6 @@
 # Must-turn-biased repair dose pilot 001
 
-> **Status:** concluded-positive; default-off integration proven
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — current matched-node isolated repair rungs on `R02768`, `R02180`, and `R03049`; reconstruction of technique census `33717910218`; and real-orchestration integration run `34740639674` at branch commit `1797066e0b203ed9defba778da139c787581c3fc`.
 > **Decision:** retain the smallest default-off additive late must-turn-biased repair tier at a 7M node cap, after the existing plain late-repair tier. The corrected guidance population is six rows: `R03049` is an allocation/dose case because standard repair already solves it in the census.
 > **Remaining gate:** bounded eligible-population work/collateral economics before any broader exposure or default-on promotion. The integration/correct-placement gate is closed.
