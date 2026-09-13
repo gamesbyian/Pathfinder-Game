@@ -1,223 +1,238 @@
 # Variant-library evidence audit
 
-**Status:** first evidence-system pass complete; machine audit added for reproducible whole-library execution.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-12 — hostile second pass clarified variant/observation identity, generation selectivity, append-run counter loss, and observation-vs-attachment counting.
+> **Decision:** keep the existing variant-family library as a high-value research instrument, but route decision-bearing use through explicit identity/provenance/selection semantics; do not launch another bulk generation campaign from this audit.
+> **Remaining gate:** run the machine audit against the full historical variant-family checkout when whole-library collision/selectivity counts become decision-bearing; otherwise pursue only ranked solver questions that the existing library can answer cleanly.
 
 ## Question
 
-The historical variant-family resource is large enough to be treated as a research instrument rather than a bag of generated levels. This audit asks the same kinds of questions that recently improved hint provenance: what are the real semantic entities, which identities are trustworthy, which records support which kinds of inference, where dependence or missing context can masquerade as evidence, and what useful solver signal is already present but underused?
+The historical variant-family resource is large enough to be treated as a research instrument rather than a bag of generated levels. This audit applies the same posture that recently improved hint provenance: identify the real semantic entities, distinguish identities, classify evidence by purpose, expose dependence and missing context, and look for solver-relevant signal that data plumbing has obscured.
 
-The goal is solver capability. Data hygiene matters only insofar as it prevents false conclusions, wasted compute, or missed opportunities to increase cold stress-corpus solves.
+The goal is still solves. Data hygiene matters only when it prevents false conclusions, wasted compute, or missed capability.
 
 ## Bottom line
 
-The library is scientifically useful, but it is not one homogeneous dataset and should never be analyzed as one. At minimum it contains two different research regimes sharing storage: small designed mechanistic family experiments and later bulk family/census campaigns. Those regimes differ in parent selection, transformation intent, solver era, evaluation protocol, and inferential purpose.
+The library is scientifically useful, but it is not one homogeneous dataset. It contains at least two research regimes sharing storage: small designed mechanistic family experiments and later bulk family/census campaigns. Those regimes differ in parent selection, transformation intent, solver era, evaluation protocol, and inferential purpose.
 
-The most important findings are:
+The strongest findings are:
 
-1. **Record identity and puzzle identity are different layers.** The repository already experienced a real cross-corpus bare-ID collision (`R02000`) that caused family solve evidence to overwrite another corpus's result. Current indexing protects many record joins, but generation manifests also retain exact parent/variant content hashes that were not being used as an evidence-integrity surface. The new audit exposes exact-content convergence, no-op variants, conflicting logical variants, and family-ID collisions without assuming any is automatically a bug.
-2. **Historical evaluation evidence has purpose-dependent value.** Modern run manifests preserve solver commit, policy, budget, selection, seeds and shard identity; much older family evidence does not. Missing context must remain unknown. Historical solves are valid historical capability evidence and strong nomination evidence, but do not establish current solver capability without current-code recheck.
-3. **Family row count is an especially dangerous denominator.** Siblings share a parent and generator. Campaigns also selected parents for different reasons. A prevalence claim over raw variant rows can combine pseudo-replication with selection bias. Any population claim needs an eligible-parent denominator and campaign-selection model.
-4. **Naive perturbation rescue is now empirically known to be confounded.** The current class-5 comparison found constrained shuffles rescue roughly three times as many parents as targeted swaps, and many unrelated swaps independently rescue the same parent. The mechanic-composition pilot independently found general-difficulty loosening. Solved/unsolved sibling differences are useful causal nominations only after showing that the transformation isolates the intended cause.
-5. **Stored solution multiplicity is heavily derivative.** Variant-to-parent replay created very large numbers of referee-valid parent hints, and later provenance analysis found most stored hints in the relevant pool were cross-variant replays. A replayed solution is valuable evidence that the target puzzle accepts the path, but it is not an independent solver-discovery event.
-6. **The historical census discarded information that current research now wants.** The September 11 structural-response work could not answer a per-technique family question because the old family census retained only the whole-ladder winning configuration per variant. This is information loss, not a null result.
-7. **Conflicting historical/current observations are potentially useful signal.** The current family index correctly preserves differing observations for the same logical variant rather than flattening them. Those disagreements can nominate temporal-instability or budget-sensitivity studies once solver/run context is accounted for.
+1. **Generated variant identity, puzzle-content identity, transformation context, aggregate-observation identity, and solver-evaluation identity are distinct.** The historical `R02000` collision demonstrated the operational cost of collapsing them. Current tooling is much safer, but the canonical documentation itself still blurred record identity with an aggregate reconciliation key; this audit repaired that distinction.
+2. **Historical evaluation evidence is purpose-dependent.** Modern run manifests preserve solver code, policy, budget, selection, seeds and shard identity. Older evidence often does not. Missing context stays unknown. Historical solves establish historical capability and nominate current cliffs; they do not establish current capability without recheck.
+3. **Raw family rows are a dangerous denominator.** Siblings share parents and generation machinery; campaigns selected parents for different reasons. Population claims require parent/campaign denominators, not row counts.
+4. **Generation is itself a selection process.** A generated row has already passed operator eligibility, placement attempts, witness/referee checks and deduplication. Accepted variants are therefore a selected subset of attempted operator outcomes, not an unbiased sample of all possible edits.
+5. **Appendable generation manifests lose a useful per-run denominator.** On a multi-run family, top-level `acceptedCount` is cumulative while `requestedCount`, `generationAttempts` and `attemptBudget` describe the latest invocation. `generationRuns` retains per-run variant IDs but not those counters. Historical acceptance-rate reconstruction is therefore ambiguous after append. The machine audit refuses to compute such rates for multi-run families.
+6. **Naive perturbation rescue is empirically confounded.** Recent class-5 work found constrained shuffles rescue far more parents than targeted swaps, and unrelated swaps can independently rescue the same parent. The mechanic-composition pilot also found generic loosening. A solved sibling is strong causal nomination, not automatic proof that the named edit caused the rescue.
+7. **Stored solution multiplicity is heavily derivative.** Variant-to-parent replay generated many referee-valid parent hints. Those prove target validity and can expose useful search mechanisms, but replay-derived records are not independent solver discoveries.
+8. **Historical family compute discarded some counterfactuals current research now wants.** The recent structural-response investigation could not recover per-technique outcomes because the old family census retained only each variant's whole-ladder winning configuration. That is information loss, not a negative scientific result.
+9. **Conflicting mixed-era observations can be useful signal.** Once solver/run/budget context is sufficient, differing observations for the same logical variant can nominate temporal capability drift, budget cliffs or true instability instead of being flattened away.
 
 ## Semantic model
 
-The library contains several entities that must not be collapsed:
+The evidence system contains at least these entities:
 
-- **parent puzzle**: the canonical source level;
-- **generation event / family**: one invocation or campaign producing relatives from a parent;
-- **variant puzzle**: concrete generated puzzle content;
-- **transformation relation**: the claimed structural relationship between parent and variant;
-- **evaluation run**: solver code, policy, budget, seed and selection context;
-- **solver attempt/result**: an observation about one puzzle under one evaluation context;
-- **accepted solution**: a referee-valid path for a puzzle;
+- **parent puzzle**: source level;
+- **generation event/family**: invocation or campaign producing relatives;
+- **generated variant record**: one named relative under a parent;
+- **puzzle content**: normalized structural puzzle identity;
+- **transformation context**: family mode, relation and mutation description;
+- **aggregate observation**: a historical or canonical stored solver result before it is joined back to a generated record;
+- **evaluation run**: solver code, policy, budget, seed, selection and shard context;
+- **solver attempt/result**: observation about one puzzle under one evaluation context;
+- **accepted solution**: referee-valid path;
 - **replay/transfer event**: application of an existing solution to another puzzle;
-- **aggregate/report**: a copied or summarized representation of lower-level evidence;
-- **derived claim**: a research conclusion made from one or more of the above.
+- **aggregate/report**: copied or summarized evidence;
+- **derived claim**: research conclusion using one or more of the above.
 
-Useful edges are `generatedFrom`, `transformedBy`, `evaluatedIn`, `solvedBy`, `replayedTo`, `selectedBecauseOf`, and `summarizedInto`. A future query layer should prefer these semantic relations over filename proximity.
+Useful relationships are `generatedFrom`, `transformedBy`, `evaluatedIn`, `solvedBy`, `replayedTo`, `selectedBecauseOf`, and `summarizedInto`. Future analysis should prefer these relations over filename proximity.
 
 ## Identity ladder
 
-There are at least five materially different identities:
+The second pass resolved an important ambiguity in the live family authority:
 
-1. **record identity**: corpus + parent + mode + variant ID;
-2. **puzzle-content identity**: normalized puzzle content, represented in modern generation manifests by `parentContentHash` / `variantContentHash`;
-3. **transformation identity**: parent plus the semantic operation that produced the variant;
-4. **evaluation identity**: puzzle plus solver commit/configuration/budget/seed/run;
-5. **evidence identity**: the underlying observation even when copied into multiple aggregate files or reports.
+1. **parent record identity:** `(parentCorpus, parentId)`;
+2. **generated variant record identity:** `(parentCorpus, parentId, variantId)`;
+3. **puzzle-content identity:** normalized puzzle content, represented in modern manifests by `parentContentHash` / `variantContentHash`;
+4. **generation/transformation context:** `familyId`, `familyMode`, relation and mutation semantics;
+5. **aggregate observation key:** historical aggregate reconciliation may temporarily use `(corpus, parentId, mode, variantId)` so observations from different recorded modes do not collapse before joining to generated records;
+6. **evaluation identity:** puzzle + solver/configuration/budget/seed/run;
+7. **evidence identity:** the underlying observation even when copied into multiple aggregate files or attached to multiple indexed records.
 
-The `R02000` incident proves this distinction is operational, not theoretical. Two different puzzles shared a bare ID; flat family solve paths keyed only by that ID allowed one corpus's attempt to overwrite the other. A related branch-state mismatch later caused the renamed level to be silently skipped during parent replay. Those failures motivated corpus-qualified storage and joins.
+`mode` is therefore not part of canonical generated puzzle identity. It is transformation/provenance context and, where necessary, part of the historical aggregate-observation key. `docs/variant-level-research.md` now says this explicitly.
 
-Current family indexing is substantially safer: duplicate bare variant IDs are not joined unless the available context disambiguates them, and mixed-era aggregate snapshots reconcile by logical identity plus normalized evidence payload. Historical-only rows survive partial canonical coverage; contradictory rows survive as conflicts.
+The machine audit also distinguishes **evidence observations** from **evidence attachments**. If one indexed observation is attached to duplicate generated records, that is dependence rather than replication and must not inflate provenance-coverage statistics.
 
-The remaining dormant integrity surface is exact content. Modern manifests preserve content hashes, so the new `scripts/variant-library-evidence-audit.mjs` reports:
+## Exact-content integrity surface
 
-- one exact parent content hash attached to multiple logical parent identities;
-- one exact variant content hash attached to multiple logical variant identities;
-- variant hash exactly equal to parent hash;
-- duplicate logical variant identities, including conflicting content hashes;
+Modern generation manifests preserve content hashes that were underused as a research-integrity surface. `scripts/variant-library-evidence-audit.mjs` reports:
+
+- exact parent content shared by multiple parent identities;
+- exact variant content shared by multiple variant identities;
+- variant content identical to parent content;
+- duplicate logical variant identities;
+- conflicting content under one logical variant identity;
+- cross-mode reuse of one logical variant identity;
 - one family ID attached to multiple family identities;
 - missing parent/variant content hashes.
 
-These are **classification candidates**, not automatic errors. A symmetry fixed point can legitimately produce a no-op. Two transformations can legitimately converge on identical puzzle content. The important property is that such relationships become visible before row counts or family labels are interpreted as independent evidence.
+These are **classification candidates**, not automatic corruption. Symmetry fixed points can legitimately produce parent-equal variants, and independent transforms can converge on the same puzzle. The important property is visibility before row counts or family labels are interpreted as independent evidence.
 
 ## Purpose-specific evidence policy
 
-The audit adds an explicit policy table to its machine output. The important distinctions are:
+The same record can be strong evidence for one question and unsafe for another.
 
 | Purpose | Admissibility rule |
 |---|---|
-| Generation lineage | Generation manifest is directly useful when parent, variant and relation identity are explicit. |
-| Structural relation | Transform label alone is nomination evidence; decision-bearing causal use should reconstruct or content-check the claimed edit. |
-| Historical solver capability | Valid for the recorded solver context. Missing historical fields remain unknown. |
-| Current solver capability | Historical outcome nominates; current code/budget must recheck decision-bearing cliffs. |
+| Generation lineage | Directly useful when parent, variant and relation identity are explicit. |
+| Structural relation | Transform label alone is nomination evidence; causal use should reconstruct/content-check the edit. |
+| Historical solver capability | Valid for the recorded solver context; missing context remains unknown. |
+| Current solver capability | Historical outcome nominates; current code/budget rechecks decision-bearing cliffs. |
 | Within-parent causal nomination | Useful with transformation semantics and confound review; siblings remain correlated. |
-| Cross-parent mechanism generalization | Requires whole-parent inference and campaign/selection conditioning. |
-| Prevalence estimation | Requires explicit eligible-parent denominator and selection model. Raw row prevalence is insufficient. |
-| Scheduler/config discovery | Whole-parent grouping and fixed-work comparison; family identity/outcomes never become runtime features. |
-| Confirmatory holdout | Whole untouched parent units, with treatment frozen before exact failures are inspected. |
-| Transfer/generalization | Requires unrelated parent/source/construction distribution beyond development families. |
-| Solution transfer | Referee validation proves the path on the target; replay provenance remains derivative rather than independent discovery. |
-
-This mirrors the lesson from hint provenance: the same record may be strong evidence for one question and unsafe for another.
+| Cross-parent mechanism generalization | Requires whole-parent inference plus campaign/selection conditioning. |
+| Prevalence estimation | Requires explicit eligible-parent denominator and selection model. |
+| Scheduler/config discovery | Use whole-parent grouping and fixed-work comparison; family identity/outcomes never become runtime features. |
+| Confirmatory holdout | Requires untouched whole-parent units and decision-frozen treatment. |
+| Transfer/generalization | Requires unrelated parent/source/construction distribution beyond the development family pool. |
+| Solution transfer | Referee validation proves the path on the target; replay provenance remains derivative. |
+| Generation selectivity | Compare requested/attempted/accepted only when those counters describe the same generation run. |
 
 ## Population and selection effects
 
-The resource was accumulated through different campaigns, not sampled once from a stable population.
-
-The original July family work was deliberately small and mechanistic. It selected parents to study symmetry/orientation, repair behavior and particular solver cliffs. Later campaigns expanded broadly, including a fragile/robust census selected from levels unsolved under a then-current baseline and stratified by turn load. Still later wide-trove collection evaluated much larger families and additional transform modes.
+The resource accumulated through campaigns, not one stable sample. The original family work was small and mechanistic; later campaigns selected different parent populations and eventually evaluated much larger collections and more transform modes.
 
 Consequences:
 
-- raw variant count is never an independent sample size;
-- parent count is a better first denominator, but can still be selected/conditional;
-- a parent that received many variants must not outweigh a parent with few variants by accident;
-- transformation modes have different acceptance processes and different meanings;
-- historical "unsolved parent" cohorts are conditional on the solver baseline that created them;
-- revisiting an interesting family changes its status from clean confirmation material to development material;
-- corpus-specific mechanisms must survive cross-corpus checks before being generalized.
+- variant-row count is never an independent sample size;
+- parent count is a better first denominator but may still be selected/conditional;
+- prolific families must not silently outweigh sparse families;
+- modes have different eligibility and acceptance processes;
+- historical "unsolved" cohorts are conditional on the solver baseline that created them;
+- inspected families become development data for descendant hypotheses;
+- corpus-specific mechanisms need cross-parent/cross-corpus confirmation before generalization.
 
-The symmetry history is a useful warning. A particular orientation looked consistently harmful across the small published-corpus repair-gated cohort, then failed to replicate across stress-corpus families. The mechanism of orientation sensitivity was real; the universal orientation rule was not.
+The symmetry history is a useful warning: an orientation effect looked consistent in a small selected cohort and then failed to generalize across stress families. Representation sensitivity was real; the universal orientation rule was not.
+
+## Generation selectivity and lost counters
+
+The current generator accepts only candidates that survive operator-specific eligibility, placement attempts, witness preservation/referee validation and fingerprint deduplication. Rejection can therefore carry information: some structural edits are much easier to realize on some parents than others.
+
+Modern manifests preserve useful top-level generation counters and per-variant `generationAttempts`, but append semantics create a specific information-loss boundary. On subsequent runs of the same family:
+
+- `acceptedCount` becomes the cumulative number of variants in the family;
+- `requestedCount`, `generationAttempts` and `attemptBudget` describe the current invocation;
+- `generationRuns` preserves timestamp/seed/generator identity and newly created variant IDs, but not per-run requested/attempt/budget counters.
+
+That means top-level acceptance ratios become scientifically invalid after more than one generation run. The audit classifies those manifests as ambiguous instead of fabricating a denominator. If future research needs generator selectivity as a decision-bearing statistic, the producer should preserve those counters inside each `generationRun` prospectively; historical missing values should remain missing.
 
 ## Transformation confounding
 
-The strongest current warning comes from the class-5 residual work.
-
-A population-scale comparison of `swap` versus constrained-shuffle families found the larger, less targeted perturbation rescued far more parents than the smaller targeted edit. Inspection also found multiple unrelated single-object swaps independently rescuing the same parent without a shared feature separating solved from unsolved variants. The separate portal-terminal mechanic-composition pilot also encountered general-difficulty confounds.
+Recent class-5 work supplies a standing negative control for family interpretation. Larger/less-targeted edits rescued substantially more parents than targeted swaps, and multiple unrelated swaps could rescue one parent. Separate mechanic-composition work also found generic difficulty loosening.
 
 Therefore:
 
 - "a nearby variant solved" does not establish that the changed feature caused the rescue;
-- larger or freer edits can simply make a puzzle generically easier;
-- transform families are excellent for **causal nomination**, but causal attribution needs a decoupled or matched control;
-- rescue rate itself can be a property of the generator's amount of difficulty relaxation.
-
-This should be treated as a standing negative control for future family analyses.
+- freer edits may simply make a puzzle easier;
+- families are excellent for **causal nomination**;
+- causal attribution needs matched/decoupled controls or mechanism-specific evidence;
+- rescue rate can measure generator looseness as much as the named structural property.
 
 ## Evaluation provenance and mixed eras
 
-Modern family evaluation manifests are strong. They record solver commit/ref/dirty state, invocation, selection, dataset identity, policy, budgets, seeds, shard identity, timestamps, outputs and source generation artifacts. The family index validates cross-shard agreement and completeness.
+Modern family evaluation manifests are strong: solver commit/ref/dirty state, invocation, selection, dataset identity, solver policy, budgets, seeds, shard identity, timestamps, outputs and source-generation artifacts are explicit. The family index validates shard agreement/completeness and attaches run context to evidence.
 
-Historical artifacts predate that contract. They remain evidence, but their missing fields cannot be filled from modern defaults. The new audit measures evaluation rows with and without solver commit, run identity and recorded budget context, and includes the existing mixed-era conflict diagnostics.
+Historical artifacts predate that contract. Missing fields cannot be filled from modern defaults.
 
-A useful interpretation ladder for same-logical-variant disagreement is:
+For same-logical-variant disagreement:
 
-1. same solver/config/budget/seed identity and different result: possible nondeterminism or evidence corruption;
-2. same solver family but different budget: possible budget cliff;
-3. different solver commit: temporal capability drift nomination;
-4. missing context: ambiguity, not instability evidence;
-5. copied aggregate representations of one observation: dependence, not replication.
+1. same solver/config/budget/seed identity and different result can nominate nondeterminism or corruption;
+2. same solver family with different budget can nominate a budget cliff;
+3. different solver commits can nominate temporal capability drift;
+4. missing context is ambiguity, not instability evidence;
+5. copied representations or duplicate attachments are dependence, not replication.
 
-Only the first class should immediately nominate determinism replay.
+Only the first class immediately earns determinism replay.
 
 ## Solution and hint dependence
 
-The variant library became a powerful solution source. Parent replay checked hundreds of thousands of variant hints and accepted very large fractions after referee validation; hundreds of corpus-2 parents gained their first known parent hint this way. That is a genuine capability-relevant result because it proves those canonical puzzles have valid solutions reachable through related generated instances.
+Variant-derived solutions are valuable because referee validation proves the target puzzle accepts them, and because a related puzzle can expose a path canonical search missed. But replay creates dependence across records. Counts of hints, variants or accepted transfers cannot automatically be interpreted as independent discovery counts.
 
-It also changes how solution multiplicity must be interpreted. A later provenance census found that most stored hints in the relevant stress pool were cross-variant replays. One solver discovery can therefore produce multiple accepted records across related puzzles and then flow back to a parent. Counts of hints, provenance rows or solved relatives are not automatically counts of independent discovery events.
+The useful questions are relational: which transforms expose transferable paths, which search mechanisms discover them, and whether the mechanism can be generalized without using historical IDs/outcomes at runtime.
 
-The right use is relational: which transformation exposed a path the canonical search missed, whether the transferred path is structurally informative, and whether the responsible search mechanism can be generalized without using historical identity at runtime.
+## Information loss already encountered
 
-## Information loss discovered
+The historical family census cannot answer every question its compute appears to have covered. The clearest example is per-technique response: whole-ladder winner records do not preserve isolated outcomes for every technique/configuration. Current work had to rerun a bounded exact comparison rather than infer a nonexistent counterfactual.
 
-The family census currently cannot answer every question the historical compute appears to have "covered." The clearest example is the September 11 structural technique-response investigation: old family evidence retained the single whole-ladder winning configuration for each variant, but not isolated outcomes for each technique/configuration. The desired plain-vs-mechanic-buckets counterfactual was therefore absent and required a bounded current-code resolve.
+The design rule is to preserve the smallest sufficient attempt-level result for plausible later comparisons: canonical action/config identity, work/budget, outcome, relevant randomness semantics, generation relation, and explicit run provenance. Detailed traces should remain mechanism-specific and earned.
 
-This suggests a general rule for future family collection: preserve the smallest sufficient attempt-level result needed for plausible later counterfactuals, but do not explode storage merely to anticipate every question. Important retained dimensions are solver/config identity, work/budget, success/failure, seed/randomness semantics where relevant, and explicit generation relation. Detailed traces should remain mechanism-specific and earned.
+The append-run generation-counter issue is the analogous loss on the generation side.
 
-## Dependency audit
+## Current dependency audit
 
-Current decision-bearing family uses are mostly disciplined:
+Current decision-bearing family use is mostly disciplined:
 
-- `docs/variant-level-research.md` already requires whole-parent independence, current-code rechecks for decision-bearing historical cliffs, and conflict-safe mixed-era indexing.
-- Workstream 1's recent structural-response extension used family flips only as an intermediate gate; it did not promote a selector from two parents, and the line closed when later stages did not justify generalization.
-- Workstream 2's class-5 family/reference line explicitly closed naive perturbation rescue as confound-dominated rather than converting family rescue rate into a solver treatment.
-- The current workstream authority treats family evidence as offline selection/diagnostic evidence and forbids IDs/outcomes/family labels as production routing inputs.
+- `docs/variant-level-research.md` requires whole-parent independence, current-code rechecks for historical cliffs, and conflict-safe indexing;
+- recent structural-response work used family flips only as an intermediate gate and did not promote a selector from tiny family evidence;
+- class-5 work correctly closed naive perturbation rescue as confound-dominated;
+- production routing forbids IDs, family membership and historical outcomes as runtime inputs.
 
-The main remaining dependency risk is **scratch analysis outside the shared index**. Any analysis that rejoins historical family aggregates by raw variant ID, silently prefers one filename era, weights rows as independent, or reports rescue prevalence without the campaign denominator can recreate already-solved evidence problems. The common index and the new audit should remain the front door.
+The main remaining risk is scratch analysis outside shared boundaries: raw-ID joins, silent filename-era preference, row-weighted pseudo-replication, acceptance-rate calculations across appended manifests, or rescue prevalence without an eligible-parent denominator can recreate already-known evidence errors.
 
-## Newly exposed research opportunities
+## Research opportunities exposed
 
-### Tier A: directly relevant to current residual solves
+Highest-value uses of the existing library are:
 
-1. **Mixed-era conflict mining.** Use conflicting same-logical-variant observations to nominate a small set of temporal/budget cliffs, then current-code recheck only those with enough context to interpret. This turns reconciliation fallout into mechanism candidates rather than treating it solely as dirty data.
-2. **Difficulty-neutral family controls for class 5.** Before generating new bulk variants, query existing siblings for transformations matched on broad difficulty proxies but differing in the candidate structural property. If no existing family can supply a decoupled control, specify exactly the minimal new pilot needed. This is the cleanest route to rehabilitating family evidence for the current capability-acquisition problem.
-3. **Technique-specific rechecks on information-rich families.** Historical whole-ladder outcomes can nominate families where action/config value flips. Resolve only the exact technique pairs required by a current WS1/WS2 hypothesis, grouped by parent, rather than rerunning the trove.
-4. **Solution-transfer mechanism analysis.** Separate witness-preserving transforms from transforms that materially alter obligations, then ask which solver families discover parent-valid paths through each class. This may expose representation/search failures that can be repaired generically.
+1. **Mixed-era conflict mining:** nominate temporal/budget cliffs from conflicting observations, then current-code recheck only interpretable cases.
+2. **Difficulty-neutral controls for class 5:** search existing siblings for transformations matched on broad difficulty effects but differing in the candidate structural property before generating anything new.
+3. **Technique-specific rechecks on information-rich families:** resolve only exact action/config counterfactuals needed by a current WS1/WS2 hypothesis.
+4. **Solution-transfer mechanism analysis:** separate witness-preserving from obligation-changing transforms and ask which solver mechanisms discover parent-valid paths through each class.
+5. **Effective unique-puzzle census:** run the exact-content audit on the full historical checkout and quantify nominal rows that collapse to identical content, by parent/mode.
+6. **Campaign-denominator map:** reconstruct eligible parent populations and selection rules for major campaigns before making prevalence claims.
+7. **Generation rejection/selectivity:** where run-consistent counters survive, test whether low acceptance or high attempt cost clusters structurally. Do not reconstruct multi-run historical rates from incompatible top-level counters.
 
-### Tier B: evidence quality that may produce new hypotheses
-
-5. **Effective unique-puzzle census.** Execute the exact-content audit on the full research branch. Quantify how many nominal variant rows collapse onto identical puzzle content, by transform mode and parent. This gives an empirical pseudo-replication measure rather than relying only on family counts.
-6. **Campaign denominator map.** Reconstruct each major campaign's eligible population and selection rule, then attach a population label to derived analyses. This makes it possible to distinguish "prevalence among then-unsolved high-turn-load parents" from an accidental all-corpus claim.
-7. **Generation rejection as evidence.** Where rejection/failure metadata survives, test whether inability to construct a requested controlled edit is itself structurally concentrated. This can reveal where a transform operator's apparent coverage is selective.
-
-### Tier C: deliberately not earned
+Not earned by this audit:
 
 - another broad variant-generation campaign;
-- a global scheduler rule from raw family rescue rate;
+- a global scheduler rule from raw rescue rate;
 - a universal orientation correction;
-- post-hoc scalar feature fishing over thousands of correlated siblings;
+- post-hoc scalar feature fishing over correlated siblings;
 - treating replay-derived hint multiplicity as solver multiplicity.
 
-## Durable guardrail added
+## Durable guardrail
 
-`scripts/variant-library-evidence-audit.mjs` is a reusable whole-library audit over a `--variant-family-dataset-root`. It uses the current family index for evaluation evidence and independently reads generation manifests for content identity that the index does not currently expose.
+`scripts/variant-library-evidence-audit.mjs` is a deterministic whole-library audit over `--variant-family-dataset-root`. Schema v2 emits:
 
-It emits:
-
-- semantic evidence-purpose policy;
+- explicit record/observation identity semantics;
 - family/variant/parent counts;
-- missing content hashes;
-- exact parent/variant content collisions;
-- parent-equal variant content;
-- duplicate/conflicting logical variants;
+- missing and colliding content identities;
+- no-op, duplicate, conflicting and cross-mode logical variants;
 - family-ID collisions;
-- transform-mode parent/row shape;
-- evaluation rows with/missing solver commit, run identity and budget context;
-- existing family-index parse, run-manifest and mixed-era reconciliation diagnostics;
-- bounded examples for forensic follow-up.
+- transform-mode population shape;
+- generation-counter coverage and append-run ambiguity;
+- evaluation observations versus attachments;
+- solver/run/budget provenance coverage;
+- existing family-index parse/run/mixed-era diagnostics;
+- bounded examples for forensic follow-up;
+- a purpose-specific evidence-policy table.
 
-`variant-library-evidence-audit-unit-tests.mjs` exercises the key distinction: the same fixture contains a legitimate-looking exact-content convergence, a parent-equal variant, a conflicting logical variant, a family-ID collision and provenance-poor historical evaluation evidence. The audit surfaces each without declaring the content collisions bugs.
+It is covered by focused fixture tests and the ordinary Vitest population. Exact-content collisions are surfaced for classification rather than declared corrupt by fiat.
 
-A full run against the 2.5 GB research checkout should be committed only if its output becomes a decision-bearing research artifact; the audit itself remains deterministic/re-runnable and should normally write to `tmp/` during exploration.
+A full run over the approximately 2.5 GB historical checkout should produce committed numbers only when those numbers become decision-bearing. During exploration, the audit should normally write to `tmp/` or stdout.
 
-## What remains genuinely unanswerable from existing evidence
+## What existing evidence cannot recover
 
-Some questions need new evidence rather than cleverer joins:
+Clever joins cannot reconstruct:
 
-- per-technique outcomes for historical variants where only the whole-ladder winner was retained;
-- current capability for historical cliffs not rerun under current code;
-- pathwise first-divergence mechanism where no trace was collected;
-- causal effect of a transform whose existing siblings simultaneously alter multiple difficulty-relevant properties and provide no matched control;
-- unbiased prevalence outside campaigns whose original eligible population/selection rule cannot be reconstructed;
-- semantic random coupling questions when historical runs record neither the necessary random-event mapping nor sufficient trace identity.
+- per-technique historical outcomes where only a whole-ladder winner was retained;
+- solver/config/budget identity absent from legacy evaluation records;
+- per-run requested/attempt/budget generation counters for already-appended manifests;
+- rejected candidate details that were never stored;
+- an unbiased population denominator for campaigns whose original eligibility/selection rule is not recoverable;
+- independent discovery multiplicity from replay-expanded solution records without producer provenance.
 
-For these, the correct response is a bounded new measurement tied to a current decision, not bulk regeneration.
+Those remain unknown unless a new bounded measurement is scientifically worth the cost.
 
-## Disposition
+## Closeout
 
-The variant library remains a high-value solver-research asset. Its best role is **relational and mechanistic**: nominate controlled boundaries, expose search asymmetries, recover transferable solutions, test configuration response across whole parents, and provide held-out challenges. Its weakest role is raw bulk prevalence.
+The audit has changed the way the library should be read, added executable guardrails, corrected a live identity ambiguity, exposed an additional producer-side information-loss boundary, and produced several bounded solve-oriented research uses. Further generic auditing now has diminishing returns.
 
-The immediate research recommendation is to run the machine audit over the historical branch, classify any exact-content/identity anomalies, then use the resulting conflict and uniqueness strata to choose a small number of current residual families for one of the Tier-A analyses above. No new broad generation is earned by this audit.
+The next work should come from a ranked solver question, not from continuing to excavate the library because it is large.
