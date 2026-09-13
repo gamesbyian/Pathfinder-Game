@@ -3,12 +3,12 @@
  * Nearest-neighbor triage: compares one target level (typically an unsolved stress-corpus-2 level,
  * profiled from its hidden witness and/or whatever hints it has) against the solution-space
  * fingerprint library built by solution-profile.mjs, and reports which known-solvable levels its
- * solution behavior most resembles — see docs/solution-profile.md.
+ * solution behavior most resembles — see docs/solver-solution-profile.md.
  *
  * Freshness: before loading each --library file, checks it against its source corpus's CURRENT
  * hint content (see solution-profile-lib.mjs's computeHintSignature) and transparently
  * regenerates it in place if stale — this is the one place these libraries are actually read, so
- * it's the right (and only) place staleness is repaired; see docs/solution-profile.md's Freshness
+ * it's the right (and only) place staleness is repaired; see docs/solver-solution-profile.md's Freshness
  * section for why this isn't instead hooked into hint-discovery tooling. A library built from a
  * `--levels=` partial selection is left untouched (can't safely infer "stale" vs "intentionally
  * partial" from a hint-count mismatch alone) — regenerate those by hand if needed.
@@ -69,8 +69,8 @@ function ensureFreshLibrary(fullPath, fileLabel) {
     if (parsed.hintSignature?.hash === currentSignature.hash && taxonomyCurrent) return parsed; // fresh
 
     const reason = taxonomyCurrent
-        ? `${parsed.hintSignature?.totalHints ?? '?'} -> ${currentSignature.totalHints} hints`
-        : `taxonomy ${parsed.provenanceTaxonomy ?? 'legacy/unknown'} -> ${SOLUTION_PROFILE_TAXONOMY}`;
+        ? `${parsed.hintSignature?.totalHints ?? '?'} -> ${currentSignature.totalHints} hints/content changed`
+        : `profile schema/taxonomy/algorithm is legacy or unknown (taxonomy ${parsed.provenanceTaxonomy ?? 'legacy/unknown'}; expected ${SOLUTION_PROFILE_TAXONOMY})`;
     console.warn(`[solution-profile] ${fileLabel} is stale relative to ${parsed.source} (${reason}) — regenerating...`);
     const { output } = regenerateCorpusProfile({
         levelsJsonAbsPath: sourceAbsPath,
@@ -162,7 +162,7 @@ function main() {
         const worstAxis = Object.entries(r.terms)
             .filter(([, v]) => v !== null)
             .sort((a, b) => b[1] - a[1])[0];
-        console.log(`  ${r.id.padEnd(24)} distance=${r.distance}` + (worstAxis ? `  (most different on: ${worstAxis[0]}=${worstAxis[1]})` : ''));
+        console.log(`  ${r.id.padEnd(24)} distance=${r.distance} support=${Math.round(r.support.comparableWeightFraction * 100)}%` + (worstAxis ? `  (most different on: ${worstAxis[0]}=${worstAxis[1]})` : ''));
     }
     console.log('');
     console.log('Full per-axis breakdown for the nearest match:');
