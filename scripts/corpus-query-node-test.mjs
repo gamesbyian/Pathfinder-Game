@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { describeLevel, deterministicSample, filterLevelDescriptors, summarizeDescriptors } from './corpus-query-lib.mjs';
+import { CORPUS_ALIASES, describeLevel, deterministicSample, filterLevelDescriptors, summarizeDescriptors } from './corpus-query-lib.mjs';
+
+assert.equal(CORPUS_ALIASES.corpus1, CORPUS_ALIASES.stress1,
+    'live corpus1 vocabulary must resolve through the same canonical loader path as stress1');
+assert.equal(CORPUS_ALIASES.corpus2, CORPUS_ALIASES.stress2,
+    'live corpus2 vocabulary must resolve through the same canonical loader path as stress2');
 
 const levels = [
     { id: 'A', grid: { w: 5, h: 5 }, reqLen: 12, reqInt: 1, gates: [{ x: 1, y: 1 }], portals: [], mustCross: [], stressMeta: { featureTags: ['small'], generationBatch: 'A' } },
