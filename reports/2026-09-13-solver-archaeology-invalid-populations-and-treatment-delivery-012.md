@@ -1,6 +1,6 @@
 # Solver archaeology: invalid populations and treatment-delivery failures
 
-> **Status:** concluded-positive archaeology
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — July beam telemetry, repair-budget, elite-splice, family-rerun, and scheduler-reverification chains traced through retained commits/reports
 > **Decision:** preserve these chains as experimental-integrity controls. Several historical solver populations and comparisons were invalid because instrumentation or treatment delivery was broken; do not inherit their apparent mechanism verdicts without using the corrected descendants.
 > **Remaining gate:** none for the historical correction itself. Current experiments should apply the extracted controls: prove participation, prove budget semantics, validate diagnostic counters on all exit paths, and refresh any population whose defining telemetry changes.
