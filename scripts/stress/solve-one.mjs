@@ -10,10 +10,9 @@
  *   node scripts/run-bundled.mjs scripts/stress/solve-one.mjs
  *       --corpus=<file> --id=<levelId> [--budget-ms=20000]
  */
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import process from 'node:process';
 
+import { loadCorpus } from '../corpus-query-lib.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 
 const ROOT = process.cwd();
@@ -34,8 +33,8 @@ installBrowserStubs();
 const { createSolver } = await import('../../modules/solver.js');
 const Solver = createSolver();
 
-const corpus = JSON.parse(readFileSync(path.resolve(ROOT, CORPUS_FILE), 'utf8'));
-const entry = corpus.levels.find(l => l.id === LEVEL_ID);
+const { levels } = loadCorpus(ROOT, CORPUS_FILE);
+const entry = levels.find(l => l.id === LEVEL_ID);
 if (!entry) {
     process.stdout.write(JSON.stringify({ id: LEVEL_ID, status: 'error', ok: false, error: `not found in ${CORPUS_FILE}` }) + '\n');
     process.exit(0);
