@@ -25,6 +25,20 @@
       "reopensOn": null
     },
     {
+      "id": "WS2-KNOWN-CAPABILITY-COMPLEMENTARITY",
+      "question": "Can already-demonstrated capability from materially distinct historical/current evidence sources explain a meaningful share of the current class-5 residual?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": ["reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md"],
+      "result": "No for the bounded prespecified census. Six materially distinct sources nominate 65/652 current residual rows, all in classes 1-4, with zero reach into the corrected 431-row class-5 frontier.",
+      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE"],
+      "constrains": [
+        "Do not make broader composition/portfolio mining the first explanation for class 5 without a materially new capability source.",
+        "Historical closed-treatment signatures remain nomination/calibration evidence, not current production capability."
+      ],
+      "reopensOn": "A materially new capability source with exact/protocol-compatible evidence that was not represented in the completed bounded census."
+    },
+    {
       "id": "WS2-GENERIC-STRUCTURAL-DIVERSITY",
       "question": "Is generic structural-progress diversity/retention sufficient to fix the recurring class-5 extinction phenotype?",
       "owner": "WS2",
@@ -46,7 +60,10 @@
       "answeredBy": ["reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"],
       "result": "No. Six prespecified summaries overlap LIVE/DEAD across 31 exact-labelled states on 15 levels; joint-obligation rejects are zero throughout.",
       "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE"],
-      "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
+      "constrainedBy": [
+        "WS2-GENERIC-STRUCTURAL-DIVERSITY",
+        "WS2-KNOWN-CAPABILITY-COMPLEMENTARITY"
+      ],
       "calibratedBy": ["WS2-MECHANIC-COMPOSITION-CAUSALITY"],
       "reopensOn": "A materially new mechanism-specific descriptor premise."
     },
@@ -57,7 +74,10 @@
       "state": "active-diagnostic",
       "answeredBy": [],
       "result": null,
-      "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "triggeredBy": [
+        "WS2-SIMPLE-FUTURE-FEASIBILITY",
+        "WS2-KNOWN-CAPABILITY-COMPLEMENTARITY"
+      ],
       "constrains": ["Measure recurrence and wasted work before building a cache; no CDCL/LCG/global unsound keys without a bounded win."],
       "reopensOn": null
     },
@@ -73,6 +93,23 @@
       "result": "The portal-terminal instrument is confounded; swap/cs rescue is also dominated by generic difficulty loosening. Clean/confounded cases remain useful calibration evidence.",
       "calibrates": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
       "reopensOn": "A manipulation that proves the specific edit, rather than generic loosening, caused the effect."
+    },
+    {
+      "id": "WS2-ADMISSIBLE-ORDER-RETRY-REPRICING",
+      "question": "Can admissible-order non-default retry work be repriced from 1.0 toward 0.18 without losing unique capability?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": [
+        "reports/2026-09-10-admissible-order-confirmation-006-artifact-recovery.md",
+        "reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md"
+      ],
+      "result": "Not answerable by further budget rescaling in the current implementation. Confirmation 006 gave the target tier zero allocated/spent work; later probes recovered the consumer-side cause: ordinary admissible-order search does not consume the per-tier soft work cap, matching the older sibling work-cap-gap family.",
+      "constrainedBy": ["reports/2026-08-28-admissible-order-work-cap-gap-discovery.md"],
+      "constrains": [
+        "Do not launch another 1.0-vs-0.18 confirmation until the ordinary search primitive demonstrably consumes the intended per-tier cap.",
+        "A valid canary must show real nonzero target-stage participation and fraction-differentiated work under a production-shaped node cap before population compute."
+      ],
+      "reopensOn": "A bounded consumer-semantics repair plus regression/canary evidence that the per-tier soft cap is actually observed and differentiates target-stage work."
     },
     {
       "id": "WS1-CROSS-HINT-EVENT-COLLISIONS",
