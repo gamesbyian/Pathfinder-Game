@@ -5,8 +5,8 @@ s = lib.read_text()
 replacements = {
     "'exhaustive' (provablyExhaustive), which is a per-level fact, not an inference.":
         "'exhaustive' (an event-local marker), without promoting that event into a whole-library completeness claim.",
-    '`**${summary.levelsProvablyExhaustive}** levels have at least one hint whose own search ` +':
-        '`**${summary.levelsWithExhaustiveSearchEvent}** levels have at least one hint whose own search ` +',
+    '`- **${summary.levelsProvablyExhaustive}** levels have at least one hint whose own search ` +':
+        '`- **${summary.levelsWithExhaustiveSearchEvent}** levels have at least one hint whose own search ` +',
     '`- Must-cross order: **${summary.levelsWithRigidMustCrossOrder}** / ` +':
         '`- Must-cross order: **${summary.levelsWithObservedSingleMustCrossOrder}** / ` +',
     'function renderSummaryMd(summary, corpusTag, levelsJsonLabel) {':
