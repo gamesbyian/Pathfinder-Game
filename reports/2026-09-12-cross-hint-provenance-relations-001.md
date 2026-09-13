@@ -1,54 +1,36 @@
 # Cross-hint provenance relations 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-12 — post-merge `main` after PRs #1751 and #1753; current canonical provenance identity, September 11 evidence audit, and the class-5 freshness reconciliation.
-> **Decision:** audit same-level reuse of one canonical discovery-event identity across distinct accepted paths before broader near-collision/path-distance work.
-> **Remaining gate:** run the all-corpus evidence report, classify every exact collision by producer contract, then decide whether any surviving cases justify provenance-schema repair, bounded determinism replay, or second-stage near-collision analysis.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-12 — all-corpus schema-v3 evidence report after bounded per-technique examples were added; 44,305 exact same-event/multiple-path identities classified by origin, facet, technique and producer.
+> **Decision:** exact collisions are explained by producer multiplicity/replay semantics plus one historical provenance-under-resolution class already repaired by source-cell capture. No hidden-determinism replay or provenance-distance stage is earned.
+> **Remaining gate:** none for exact collisions. Reopen only if a future producer with one-output semantics yields a same-event/multiple-path collision after current provenance fields are present.
 
-## Why this is distinct
+## Question
 
-`provenanceEventIdentity()` is the canonical persistence identity for one stored discovery event. The September 11 audit checked semantic duplicates **inside each hint**, while `mergeHints()` and `reconcileHints()` deduplicate provenance only after grouping by exact path. This left one relation unmeasured:
+`provenanceEventIdentity()` is the canonical persistence identity for one stored discovery event. The September 11 audit checked semantic duplicates inside one hint; this audit asked whether one canonical event identity is attached to multiple distinct accepted paths on the same level.
 
-> one canonical provenance event identity -> two or more different accepted paths on the same level
+## Result
 
-That relation may be legitimate producer multiplicity, enumeration, inheritance/replay attribution, copied attribution, hidden nondeterminism, or an identity that is too coarse. The audit reports the relation without assuming the explanation.
+The all-corpus audit found **44,305** collision identities.
 
-The September 12 class-5 freshness reconciliation raised the priority: technique-census provenance retained `isolatedTechnique: true` but not source-cell identity, so T1-variant success could resemble bare-T1 success. Cross-hint relational analysis looks systematically for analogous under-resolution.
+- **42,755** are `variant-parent-replay`: one source discovery is intentionally attributed to multiple parent-valid paths. These are dependent replay evidence, not independent discoveries.
+- **1,550** are `pathfinder-solver` origin. Most belong to explicitly multi-output/hint-guided producers such as `prefix-anchored`, `ablation-full`, candidate-grid enumeration, family enumeration and targeted enumeration.
+- The apparently more suspicious ordinary-search tail is exactly the **160 `isolated-technique` collisions**: 95 admissible-order, 50 beam, 10 repair and 5 DFS. This matches the already-diagnosed historical technique-census provenance gap. Before exact `context.techniqueCensusCell` capture, distinct census cells could persist indistinguishable event identities. Current provenance now preserves the cell identity, so this is historical under-resolution rather than evidence of current nondeterminism.
 
-## Implemented first-stage audit
+Repeated examples from that tail recur as the same small path sets across multiple solver revisions, further contradicting a flaky-run interpretation. No affected case earns deterministic replay.
 
-`scripts/stress/hint-provenance-relations.mjs` adds `auditCrossHintEventCollisions(levels)`. Per level it indexes provenance by canonical identity, records distinct path signatures, reports identities spanning multiple paths, stratifies by origin/facets, and emits bounded examples.
+## Tooling finding
 
-`scripts/stress/hint-provenance-evidence-report.mjs` now includes this result per corpus and in the combined total; report schema is 3. Existing `--fail-on-duplicates` semantics remain unchanged because a cross-hint collision is not automatically an integrity failure.
+Adding per-technique examples initially made the report itself fail with `RangeError: Invalid string length`: a single one-to-many event can span very many full paths, so retaining every path in diagnostic examples made the audit artifact unbounded. `hint-provenance-relations.mjs` now retains only bounded path previews plus exact path counts. The diagnostic remains adjudicable without allowing replay-heavy provenance to explode report size.
 
-Regression tests distinguish:
+## Interpretation
 
-- the same canonical event attached to distinct paths -> collision;
-- repeated recording on one path -> not a cross-hint collision;
-- genuinely different event identities -> separate.
+The audit confirms the standing evidence rule:
 
-Run:
+> multiple paths carrying one canonical event identity are dependent evidence unless the producer contract establishes independent discovery semantics.
 
-```bash
-node scripts/run-bundled.mjs scripts/stress/hint-provenance-evidence-report.mjs -- \
-  --corpus=all \
-  --out=tmp/hint-provenance-evidence.json
-```
+It also validates the current source-cell provenance repair as the right response to the one genuine identity-granularity gap found here. No broader schema redesign is indicated.
 
-Inspect `crossHintEventCollisionAudit` before interpretation.
+## Second-stage disposition
 
-## Interpretation ladder
-
-1. **Known one-to-many producer semantics** — expected; document the contract if needed.
-2. **Replay/inheritance attribution** — likely expected dependence; do not count as independent discovery.
-3. **Producer identity too coarse** — add the smallest missing causal field. Census-cell identity is the current precedent.
-4. **Same deterministic invocation, genuinely different outputs** — candidate hidden nondeterminism; replay only affected cases.
-5. **Copied/propagated attribution without a legitimate producer contract** — persistence/provenance bug.
-
-Only after exact collisions are explained should analysis widen to provenance-distance versus solution-distance. Useful later contrasts include seed-only changes, solver-revision changes, retry/census-cell changes, small provenance distance with large basin distance, and large provenance distance converging on one basin. Reuse existing solution-profile/basin machinery rather than creating a second taxonomy.
-
-## Boundary
-
-This work does not claim that a cross-hint collision is a determinism defect. The immediate question is: **what entity does a provenance event identity promise to identify for each producer, and does observed path multiplicity respect that contract?**
-
-No broad solver campaign is warranted to answer it.
+Near-collision/provenance-distance versus solution-distance analysis remains interesting but is **not automatically next**. Exact collisions did not reveal a live determinism problem, and any later near-collision question must first join against existing family/basin, seed-sensitivity, solver-version-drift and structural-response evidence. That work needs a new concrete question, not continuation by inertia.
