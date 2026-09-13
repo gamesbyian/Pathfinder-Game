@@ -34,7 +34,9 @@ npm run family:coverage -- --variant-family-dataset-root=../pathfinder-variant-r
 
 `.cache/family-index.json` is deterministic/disposable. Extend the family index rather than creating investigation-specific indexes.
 
-Mixed-era aggregate snapshots are reconciled at the index boundary by logical `(corpus, parentId, mode, variantId)` identity **and normalized evidence payload**. A current `variant-family-dataset-attempts-*` row replaces a frozen pre-cleanup row only when the two observations are payload-equivalent after identity normalization. Historical-only rows remain visible when canonical coverage is partial; differing observations for the same logical variant both survive and are reported as conflicts. The index exposes `diagnostics.familyAttemptAggregates` so partial coverage, conflicts, ambiguous rows, and duplicate canonical logical rows are inspectable, and recognized historical `winningConfig` identities are canonicalized on read. Do not reintroduce corpus-wide filename precedence or raw-string attempt joins in downstream scratch analysis.
+Two identity layers matter here. A generated **variant record** is identified by `(parentCorpus, parentId, variantId)`; `mode` describes the generation/transformation context and does not mint a new puzzle identity. Historical/canonical aggregate reconciliation may additionally use `(corpus, parentId, mode, variantId)` as an **observation key** because old aggregate rows need the mode dimension to avoid collapsing distinct recorded observations before they are joined back to generated variant records. Do not confuse that observation key with canonical variant identity.
+
+Mixed-era aggregate snapshots are reconciled at the index boundary by observation key **and normalized evidence payload**. A current `variant-family-dataset-attempts-*` row replaces a frozen pre-cleanup row only when the two observations are payload-equivalent after identity normalization. Historical-only rows remain visible when canonical coverage is partial; differing observations for the same logical variant both survive and are reported as conflicts. The index exposes `diagnostics.familyAttemptAggregates` so partial coverage, conflicts, ambiguous rows, and duplicate canonical logical rows are inspectable, and recognized historical `winningConfig` identities are canonicalized on read. Do not reintroduce corpus-wide filename precedence or raw-string attempt joins in downstream scratch analysis.
 
 ## Scientific unit and independence
 
@@ -53,7 +55,7 @@ Rules:
 5. use parent-clustered/grouped uncertainty or parent-level summaries when inference treats families as the independent unit;
 6. guard against overly specific geometry/fingerprints acting as family identifiers;
 7. re-run decision-bearing historical cliffs on current code;
-8. preserve full `(parentCorpus, parentId, variantId)` identity and generation/evaluation provenance.
+8. preserve generated variant identity `(parentCorpus, parentId, variantId)`, generation/transformation context, and evaluation provenance separately.
 
 A thousand near-duplicate siblings can be excellent causal evidence for one parent and terrible evidence that a rule generalizes to a thousand unrelated puzzles. Keep those uses separate.
 

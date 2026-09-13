@@ -1,6 +1,6 @@
 # Duplicate authority and missing abstractions audit
 
-> **Status:** second-pass reconciled
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-12 — repository-wide audit followed by an explicit falsification pass against existing population, lifecycle, stage-policy, corpus, provenance, capability-memory, evidence-registry, and question-relation infrastructure
 > **Decision:** preserve this as the detailed evidence report; durable unresolved structural debt belongs in `docs/architecture-unification-debt.md`, while active solver-research priority remains owned by `docs/solver-optimization-workstreams.md`.
 > **Remaining gate:** no implementation is authorized by this report. Any cleanup should start from the existing owners named below and demonstrate live duplicated authority before adding a new abstraction.
