@@ -2,7 +2,7 @@
 
 > **Status:** concluded-positive archaeology
 > **Last evidence:** 2026-09-13 — historical ablation safety-valve/coverage/default-semantics bugs and the July stale-code Corpus-2 refresh reconciled against later corrections
-> **Decision:** treat historical ablation/batch verdicts as valid only when the actual executed configuration/code identity and participation are demonstrable. Several confident historical results were measuring a different treatment than their labels claimed.
+> **Decision:** treat historical ablation/batch verdicts as valid only when the actual executed configuration/code identity and participation are demonstrable. Several confident historical results were measuring a different treatment than their labels claimed, although later clean reruns can restore the same final verdict.
 > **Remaining gate:** none for these historical corrections. For current experiments, persist resolved configuration, code ancestry, participation, checkpoint freshness, and comparator identity as decision-bearing evidence.
 > **Evidence role:** archaeology / research-control-plane calibration
 > **Selection:** historical cases where the experiment label and the executed treatment/code materially diverged.
@@ -56,7 +56,7 @@ The fix moved the override entirely out of ablation into dedicated `SolveOpts.re
 
 **Classification:** multi-treatment confound caused by sparse-config default semantics. Any affected historical comparison is not a clean repair-budget experiment.
 
-## 4. The inverse bug silently enabled unrelated default-off mechanisms
+## 4. The inverse bug silently enabled unrelated default-off mechanisms, invalidating an intermediate turn-bias verdict
 
 Commit `983fc4e8df79b2d7ae816985fc46b421f66f1e56` exposed the mirror-image failure in `normalizeAblationConfig`.
 
@@ -68,11 +68,13 @@ Its Proxy returned `true` for any unspecified flag. That was correct for normal 
 
 As a result, a sparse configuration that explicitly enabled turn bias **also silently enabled elite-prefix DFS**, which had independently measured net-negative.
 
-This manufactured the historical “turn bias is conclusively `-7/1700`” result. The report was formally retracted. A proposed interaction with the repair nogood cache was also falsified: disabling that cache gave `-8`, not a recovery. The actual confound was the unrequested elite-prefix treatment.
+At that moment the historical “turn bias is conclusively `-7/1700`” result was not usable evidence and was correctly retracted. A proposed interaction with the repair nogood cache was also falsified: disabling that cache gave `-8`, not a recovery. The corrected code introduced explicit opt-in-default semantics and regression tests.
 
-The corrected code introduced explicit opt-in-default semantics and regression tests.
+Crucially, archaeology must follow the chain past the retraction. Commit `676947f7195eb12a6a17a6b17251570e979a4e00` then ran a clean post-fix matched pair: baseline **725/1700**, isolated turn bias **718/1700**, with the gained/lost level sets byte-identical to the earlier confounded run. The accidental elite-prefix activation had flipped zero levels in that population. So the **final** `-7/1700` turn-bias verdict is clean; only the earlier path to that verdict was dirty.
 
-**Classification:** dirty negative / wrong treatment. The `-7/1700` result is not evidence against turn bias.
+**Classification:** intermediate dirty negative followed by a clean confirming rerun. Do not cite the confounded arm as evidence, but do retain the later clean negative.
+
+This is also distinct from the current Class-2 **must-turn-biased repair** seam. `STRATEGY_REPAIR_TURN_BIAS` / `repairTurnBiased` is a separate opt-in treatment and its broad promotion gate is closed negative.
 
 ## 5. One bug had already been fixed locally without fixing the shared root
 
@@ -81,6 +83,8 @@ The turn-bias retraction notes that the same “unrequested opt-in flag activate
 This is a recurring project pattern: a harness-local patch can make one experiment trustworthy while leaving the shared experimental substrate broken.
 
 **Control exported:** when an experiment uncovers a configuration semantic bug, audit the shared normalization/dispatch boundary, not just the triggering script.
+
+A later descendant proves the lesson remained relevant: commit `794592dcfbaa7394df8cb500971594c0e29a7f7b` found five retry-tier hand-rolled config Proxies had reintroduced the same opt-in-default leak after the central fix. Shared semantics must be reused, not copied approximately.
 
 ## 6. A supposedly fresh 286/1700 Corpus-2 refresh ran stale solver code
 
@@ -126,6 +130,8 @@ These failures cover four distinct identities that a solver experiment must pres
 
 A result can have perfect-looking JSON provenance and still be wrong if any one of those identities is false.
 
+The turn-bias chain adds an equally important converse: **a dirty experiment does not make the premise innocent forever.** It means the verdict is unknown until rerun. A clean rerun may confirm, reverse, or narrow the same result.
+
 ## 9. Current experimental rule
 
 For any decision-bearing solver experiment, persist or verify enough evidence to answer all of these before interpreting outcome:
@@ -146,8 +152,8 @@ Several historical solver verdicts were not merely noisy. Their labels described
 - disabled mechanisms still ran;
 - named flags did nothing;
 - unrelated mechanisms silently changed state;
-- an opt-in negative was actually a different multi-treatment arm;
+- an opt-in negative was initially confounded, then later cleanly reproduced;
 - an entire fresh corpus refresh ran stale code;
 - a reset branch could still skip all solving from inherited checkpoints.
 
-The durable lesson is simple: **experimental identity must be observed after all normalization, checkout, resume, dispatch, and consumer boundaries.**
+The durable lesson is simple: **experimental identity must be observed after all normalization, checkout, resume, dispatch, and consumer boundaries, and dirty evidence must be rerun rather than either trusted or permanently discarded.**
