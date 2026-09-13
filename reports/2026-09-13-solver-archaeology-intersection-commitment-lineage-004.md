@@ -1,6 +1,11 @@
 # Solver archaeology: intersection-commitment lineage
 
-Status: historical-evidence follow-up. This report separates the future-crossing premise from several bundled implementations and does not recommend restoring old production mechanisms.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — Historical lineage review separated the future-crossing premise from bundled unsound, non-participating, and over-expensive implementations.
+> **Decision:** Do not restore the old production mechanisms; preserve the narrower premise that equal intersection deficit can hide different realizable future crossing commitments for observer-only testing.
+> **Remaining gate:** none
+
+This report separates the future-crossing premise from several bundled implementations and does not recommend restoring old production mechanisms.
 
 ## First forced-crossing bundle
 
