@@ -1,3 +1,4 @@
+<!-- agent-context-budget: warn=28000 max=38000 -->
 # Solver workflow and research-evidence remediation plan
 
 > **Status:** completed by PR #1740 on 2026-09-11; retained as a compact historical route, not an active queue.
