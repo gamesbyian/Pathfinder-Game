@@ -7,6 +7,10 @@ import { variantFamilyDatasetRootArg } from './family-paths.mjs';
 const argv = process.argv.slice(2);
 const command = argv.find(arg => !arg.startsWith('--')) ?? 'query';
 const arg = name => argv.find(value => value.startsWith(`--${name}=`))?.slice(name.length + 3);
+const filterValue = value => {
+    if (value == null || !value.includes(',')) return value;
+    return value.split(',').map(item => item.trim()).filter(Boolean);
+};
 const root = variantFamilyDatasetRootArg(argv);
 const indexPath = path.resolve(arg('index') ?? path.join(root, '.cache/family-index.json'));
 const load = () => {
@@ -14,7 +18,8 @@ const load = () => {
     return JSON.parse(readFileSync(indexPath, 'utf8'));
 };
 const filters = Object.fromEntries(['corpus', 'parentCorpus', 'parentId', 'familyId', 'variantId', 'mode', 'relation', 'operator', 'objectType', 'evaluated', 'solved']
-    .map(key => [key, arg(key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`))]).filter(([, value]) => value != null));
+    .map(key => [key, filterValue(arg(key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)))])
+    .filter(([, value]) => value != null));
 
 if (command === 'index') {
     const index = buildFamilyIndex(root);
@@ -28,6 +33,6 @@ if (command === 'index') {
 } else if (command === 'coverage') {
     console.log(JSON.stringify(coverageByParent(load(), filters), null, 2));
 } else {
-    console.error('usage: family-index.mjs index|show|query|coverage [--variant-family-dataset-root=PATH] [--index=PATH] [filters]');
+    console.error('usage: family-index.mjs index|show|query|coverage [--variant-family-dataset-root=PATH] [--index=PATH] [filters; comma-separate values for cohorts]');
     process.exitCode = 2;
 }
