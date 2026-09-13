@@ -133,7 +133,7 @@ assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'question', st
 assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow-up' }).map(x => x.id), ['WS2-FOLLOWUP']);
 assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'experiment' }), [],
     'question query helper must not leak questions into other compact kinds');
-const invalidRelations = structuredClone(questionRegistry);
+const invalidRelations = JSON.parse(JSON.stringify(questionRegistry));
 invalidRelations.questions[0].implies = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidRelations), [
     'questions[0].implies references unknown question WS2-MISSING',
