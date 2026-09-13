@@ -1,6 +1,11 @@
 # Solver archaeology: failure learning and producer/consumer handoff
 
-Status: historical-evidence follow-up. This report narrows several premises; it does not change current workstream priority or production behavior.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — Historical review separated repair experience memory, sound generalized certificates, and beam-to-repair handoff evidence.
+> **Decision:** Keep cross-level connectivity certificates and the tested beam-survivor-to-repair handoff closed; only revisit solve-local sound reasons or new typed handoffs when recurrence/materiality or consumer complementarity is demonstrated first.
+> **Remaining gate:** none
+
+This report narrows several premises; it does not change current workstream priority or production behavior.
 
 ## Failure-learning lineage
 
