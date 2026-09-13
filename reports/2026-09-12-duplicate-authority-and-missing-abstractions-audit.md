@@ -1,9 +1,9 @@
 # Duplicate authority and missing abstractions audit
 
-> **Status:** active
-> **Last evidence:** 2026-09-12 — initial repository-wide audit of solver/research duplication and authority boundaries
+> **Status:** second-pass reconciled
+> **Last evidence:** 2026-09-12 — repository-wide audit followed by an explicit falsification pass against existing population, lifecycle, stage-policy, corpus, provenance, capability-memory, evidence-registry, and question-relation infrastructure
 > **Decision:** preserve this as the detailed evidence report; durable unresolved structural debt belongs in `docs/architecture-unification-debt.md`, while active solver-research priority remains owned by `docs/solver-optimization-workstreams.md`.
-> **Remaining gate:** re-audit the current implementation against every recommendation here, especially recent identity/provenance/population/capability work, and revise any finding already implemented or intentionally covered elsewhere.
+> **Remaining gate:** no implementation is authorized by this report. Any cleanup should start from the existing owners named below and demonstrate live duplicated authority before adding a new abstraction.
 
 This audit is about duplicated implementation, duplicated knowledge, duplicated authority, evidence reconstruction, identity weakness, and missing Pathfinder-domain abstractions. It is deliberately not a cosmetic DRY pass. Similar-looking code is only a problem where independent encodings can drift, corrupt research evidence, enlarge agent context, or create avoidable maintenance burden.
 
@@ -11,141 +11,158 @@ The current production boundary supplied for this audit is 100/102 Corpus 1 and 
 
 ## Executive conclusion
 
-Pathfinder already has several strong canonicalization patterns, notably canonical attempt/action identity, provenance-event identity at the hint persistence boundary, work-unit compatibility helpers, regenerable capability-memory manifests, and increasingly explicit experiment contracts. The remaining high-risk duplication is concentrated one level above those primitives: research populations, residual evidence/classification, treatment participation, work disposition, run/provenance schema composition, and question lifecycle/result propagation.
+The first pass correctly identified several places where higher-order research semantics are still reconstructed locally, but it overestimated how many *new* abstractions the repo needs. The falsification pass found substantial existing infrastructure that should be extended or consumed rather than replaced:
 
-The recurring failure mode is that a higher-order research concept first appears inside one analysis script and later gets reconstructed elsewhere from lower-level fields. The code may look different while encoding the same proposition. That is where drift can change experiment populations or research conclusions.
+- `modules/solver/stage-policy.ts` already owns `SOLVER_STAGE_SPECS`, scheduler phase, eligibility, attempt source, budget-policy identity, retry identity, and a typed `BudgetEnvelope`.
+- production already emits canonical `stageLifecycle` telemetry rich enough to represent instantiated/reached/skipped/starved/exhausted status plus actual attempts/nodes/work; `scripts/stress/lifecycle-failure-map.mjs` deliberately derives stage vocabulary from that producer instead of maintaining a parallel registry.
+- `scripts/solver-experiment-contract.mjs`, population-integrity tooling, result publication, recovery tooling, experiment preflight, and the research operating model already provide population identity, hashing, completeness, execution limits, resolved execution identity, and the "single population source" discipline.
+- `scripts/level-data-io.mjs` already owns explicit `pos:`/`id:` level-selection semantics and hint-aware level I/O; `scripts/corpus-query-lib.mjs` already owns common corpus aliases/loading/querying for research.
+- `docs/solver-research-data-assets.json` is already a structured evidence registry containing asset grain, authorities, query entry points, join keys, relationships, roles, and caveats. `docs/solver-research-data-assets.md` explicitly says to name join keys before writing ad hoc joins.
+- `docs/solver-capability-memory.md` plus `scripts/solver-capability-memory.mjs` already define a regenerable derived capability interface and explicitly forbid hand-rebuilding decision-bearing unions.
+- `docs/solver-research-question-relations.json` is already a machine-readable question registry containing state, answered-by evidence, results, triggers/implies/constrains relationships, and reopen conditions.
+- canonical attempt/action identity and provenance-event identity are already strong examples of the right producer/boundary ownership pattern.
 
-## Highest-risk findings
+So the main architectural conclusion becomes narrower: **Pathfinder does not primarily need a new layer of named domain objects. It needs the existing canonical producers/contracts to reach the remaining bespoke consumers, plus a small number of still-missing derived authorities where the same scientific classification is repeatedly rebuilt.**
 
-### 1. Residual classification remains analysis-owned rather than domain-owned
+## Second-pass reconciliation table
 
-The current post-1029 residual atlas reconstructs its own scientific ontology from multiple artifacts: baseline rows, lifecycle reach/starvation telemetry, T1 census rows, static ladder membership, dynamic repair/admissible stage families, attempt identity, and hint provenance. It locally decides whether a known rescuer was not offered, offered but unreached/starved, reached and failed, known only from historical production-context evidence, or absent from known evidence.
+| First-pass proposal | Existing implementation found | Corrected conclusion |
+|---|---|---|
+| New declarative stage/budget registry | `SOLVER_STAGE_SPECS`, `SolverStageSpec`, `BudgetEnvelope` in `stage-policy.ts`; stage plan/budget modules already own orchestration semantics | **Do not create another registry.** Make source-text budget ratchets consume/check existing policy metadata where possible and close any fields the registry cannot yet express. Keep behavioral ratchets independent. |
+| New `ResearchPopulation` abstraction | `hashPopulation`, canonical identity, population integrity, recovery population, experiment contracts, corpus query, preflight, result publisher, and operating-model single-population-source rule already exist | **Do not create a parallel population authority.** Add reusable derivation recipes/helpers only for recurring multi-asset joins that are still bespoke, feeding the existing population contract. |
+| New `TreatmentParticipation` object | canonical producer-emitted `stageLifecycle` already records stage instantiated/reached/skipped/starved/exhausted plus attempts/nodes/work; attempts carry action/config identity; opportunity audit already checks real work/nodes | **Narrow the gap.** Prefer lifecycle/attempt telemetry directly. Add treatment/action-level derived participation only where exact-config opportunity cannot be represented from existing telemetry without local stage-family inference. |
+| New `ResearchQuestion` registry | `solver-research-question-relations.json` already stores question IDs, states, evidence, results, relationships, constraints and reopen rules | **Registry already exists.** Missing work, if justified, is synchronization/validation/result-propagation between this registry, the workstream authority, workflow outcome artifacts, and the prose-derived status index. |
+| New `Corpus` / `CorpusLevelRef` layer | `level-data-io.mjs` already owns explicit selector semantics and level/hint I/O; `corpus-query-lib.mjs` already owns common aliases/loading | **Prefer migration/extension.** Move bespoke loaders and position/ID logic onto these existing owners where semantics match. Add a richer level reference only if a concrete remaining join needs corpus fingerprint + ID + position together. |
+| New `RunIdentity` / `ResearchSolverContext` framework | experiment-manifest library, experiment contract, experiment preflight, result publisher, workflow manifests, and family-run manifests already capture substantial execution/provenance context | **Do not add a framework by default.** Reuse the existing experiment contract/publisher in decision-bearing harnesses; extract shared fragments only when two current schemas demonstrably drift. |
+| New generic `CapabilityEvidence` layer | structured evidence-asset registry plus capability-memory derived interface already define evidence roles, joins, freshness, capability signatures and historical/current distinctions | **Do not create another evidence ontology.** Extend the asset registry/capability-memory interface or produce a residual-specific derived artifact where needed. |
+| Canonical residual evidence/classification | current residual atlas still locally composes census, lifecycle, ladder/action identity, and provenance; older residual-decomposition machinery encodes a coarser taxonomy | **Still a genuine gap.** This is the strongest candidate for a new derived authority because a documented local-classification error already changed 25 residual assignments. |
 
-This has already drifted materially. The atlas records that treating `variantLabel` as evidence that a T1 cell was non-base incorrectly excluded clean turn-biased repair cells. `ablation` was the meaningful discriminator. The bug misclassified 25 current-residual levels, including nine class-5 rows. That is direct evidence that local reconstruction of capability/treatment semantics can alter research populations.
+## Highest-risk findings after reconciliation
+
+### 1. Residual classification remains the clearest genuine missing derived authority
+
+The current post-1029 residual atlas reconstructs its scientific ontology from multiple already-canonical lower-level sources: baseline rows, lifecycle reach/starvation telemetry, T1 census rows, static ladder membership, dynamic repair/admissible stage families, attempt identity, and hint provenance. It locally decides whether a known rescuer was not offered, offered but unreached/starved, reached and failed, known only from historical production-context evidence, or absent from known evidence.
+
+This has already drifted materially. The atlas records that treating `variantLabel` as evidence that a T1 cell was non-base incorrectly excluded clean turn-biased repair cells. `ablation` was the meaningful discriminator. The bug misclassified 25 current-residual levels, including nine class-5 rows. That is direct evidence that local reconstruction can alter research populations.
 
 **Duplication type:** semantic, authority-level, evidence/reconstruction.
 
-**Consequence:** changes the population assigned to capability-acquisition, composition, scheduler-opportunity, and unknown-capability research. Can change which experiments are proposed and how their results are interpreted.
+**Consequence:** changes the population assigned to capability-acquisition, composition, scheduler-opportunity, and unknown-capability research.
 
-**Direction:** define canonical `ResidualEvidence` plus a versioned `ResidualClassification` function over canonical capability evidence, treatment participation, lifecycle/work evidence, and provenance qualification. Residual atlas and class-specific analyses should consume that representation rather than re-derive its semantics.
+**Corrected direction:** build a *derived residual artifact/library* from the existing authoritative inputs, not a new general evidence framework. It should version the five-class rules, record exact source artifacts/population identity, and expose the per-level evidence used for each class. The current atlas can become or seed that producer. Class-specific research should consume that output rather than copy its joins/classifier.
 
-### 2. Work accounting has a canonical unit but still has duplicated policy descriptions
+### 2. Work accounting has a canonical policy registry, but one enforcement path shadows it with source text
 
-`modules/solver/budget-units.ts` correctly defines work as the canonical allocation currency and milliseconds as a compatibility boundary. `scaledStageWorkBudget` is the appropriate shared primitive for additive stage allocation.
+`modules/solver/budget-units.ts` correctly defines work as the canonical allocation currency. More importantly, the second pass found that `modules/solver/stage-policy.ts` already provides the declarative registry the first pass proposed: `SOLVER_STAGE_SPECS` owns stage identity, phase, eligibility, attempt source, budget-policy identity and retry identity, and `BudgetEnvelope` gives explicit wall/work/node/headroom dimensions.
 
-However, `scripts/check-solver-budget-boundaries.mjs` maintains source-text allowlists describing which orchestration sites are permitted to remain wall-derived or historically compatible. The checker itself documents that one work-dose defect escaped this model because the relevant line had a different syntactic shape and therefore never matched the allowlist scan. A broader behavioral test found it later.
+The remaining smell is narrower. `scripts/check-solver-budget-boundaries.mjs` still keeps hand-maintained source-line and variable-name allowlists describing permitted legacy allocation sites. Its own comments document a real work-dose defect that escaped the checker because the source expression had a different syntactic shape.
 
-The technique-census cell runner also implements a distinct but scientifically meaningful work scheduler: per-gate shares, flat/per-technique caps, `_workCap` and `_strictWorkCap`, right-censoring rules, deadline truncation, and work disposition. That execution policy should remain distinct from production, but it should not invent a separate vocabulary for work units and terminal dispositions.
+**Duplication type:** authority-level enforcement shadow, not missing policy abstraction.
 
-**Duplication type:** authority-level, semantic, test/rule duplication.
+**Consequence:** a new/reworded orchestration allocation can evade the textual ratchet even when it violates the intended canonical work model.
 
-**Consequence:** can invalidate equal-work comparisons, retry conclusions, or stage participation accounting.
+**Corrected direction:** do not add another registry. Where feasible, make structural checks validate `SOLVER_STAGE_SPECS` / stage-budget outputs / budget envelopes and reserve source scanning for narrowly defined compatibility debt that cannot yet be represented there. Keep independent behavioral tests because they caught a defect the structural checker missed.
 
-**Direction:** keep independent experimental schedulers, but share explicit `WorkBudget` / `WorkAllocation` / `WorkDisposition` concepts. Move production stage budget policy toward a declarative registry that can be inspected directly instead of maintaining source-text shadow authority. Preserve independent behavioral ratchets because they catch common-mode mistakes the structural registry may miss.
+### 3. Research-question state has a machine registry, but synchronization remains split
 
-### 3. Research-question state is split across structured relations, result vocabulary, and prose-derived status
+The first pass called for a machine-readable question registry. That already exists in `docs/solver-research-question-relations.json`: current entries contain stable question IDs, owner, state, `answeredBy`, result, `triggeredBy`/`implies`/`constrains`/`constrainedBy`, negative-control/calibration relations, and `reopensOn`.
 
-The repo has structured question relations, workflow outcome vocabulary, report conventions, workstream authority, future-work authority, and a status index. But lifecycle state still depends partly on parsing Markdown tables and prose-shaped report metadata, while relation semantics and result outcomes are separate machine authorities.
+At the same time, `scripts/research-status-index-lib.mjs` still builds queue state by parsing the Markdown workstream table and structured report headers, while `scripts/research-workflow-outcome.mjs` owns a separate execution-outcome vocabulary. That means the remaining issue is not lack of a question model but cross-authority propagation and validation.
 
-**Duplication type:** authority-level, workflow-level, schema-level.
+**Duplication type:** workflow/authority synchronization.
 
-**Consequence:** a result can materially answer, constrain, supersede, trigger, or gate a question without every downstream surface reaching the same state. Agents can receive conflicting views of whether work is open or closed.
+**Consequence:** question relations can say a successor is triggered or a form is closed while other discovery/status surfaces lag or infer state differently.
 
-**Direction:** move question lifecycle into a machine-readable `ResearchQuestion` registry/state model with explicit relations, current disposition, evidence references, transition/result propagation, and reopen conditions. Generate status/index prose from that model. Keep relation topology separate from priority ranking.
+**Corrected direction:** keep workstream priority where it is and keep workflow execution outcome distinct. Add validation/projection only if current tooling does not already ensure that question state/evidence relationships and the status/workstream surfaces agree. Do not replace the existing relation registry.
 
-### 4. Research population construction is still bespoke across experiments
+### 4. Population identity is strong; recurring multi-asset population *derivation* is the remaining gap
 
-`solver-experiment-contract.mjs` already has strong population identity primitives: canonicalized IDs, population hashes, corpus identity, execution/limit contracts, completeness checks, and compatibility checks. What remains duplicated is upstream derivation: residual intersections, T1 winner filters, current-residual joins, treatment-specific cohorts, capability-memory unions, and historical candidate construction.
+The repo already has more population machinery than the first pass credited: `solver-experiment-contract.mjs` canonicalizes and hashes identities and validates population completeness; result publication carries population identity/integrity; recovery tooling derives only missing IDs under strict integrity conditions; experiment preflight freezes a literal selected vector; corpus query provides deterministic filtering/sampling; and the operating model explicitly requires a single population source for plan/execution/combine/manifest.
 
-**Duplication type:** semantic, evidence/reconstruction, abstraction mismatch.
+What still appears bespoke is higher-order scientific selection such as `current residual ∩ base-T1 winner ∩ treatment X`, especially when it spans census, lifecycle, provenance, capability memory, or residual classes.
 
-**Consequence:** two agents can study nominally the same scientific population while using subtly different membership rules, exclusions, freshness assumptions, or identity bases.
+**Duplication type:** semantic join/reconstruction, not basic population plumbing.
 
-**Direction:** add a domain-aware `ResearchPopulation` query/join layer. It should emit identities, source artifact identities/fingerprints, derivation operations, exclusions/reasons, corpus identity, treatment identity basis, and a stable hash. It should then feed the existing experiment contract instead of replacing it.
+**Consequence:** two analyses can use different predicates or evidence freshness while both publish internally valid population hashes.
 
-### 5. Treatment participation is reconstructed instead of emitted as a first-class fact
+**Corrected direction:** extend the existing population contract with small reusable derivation helpers/recipes for recurring multi-asset joins. A recipe should produce the literal IDs plus source artifact identities, predicates/exclusions, and then use the existing `hashPopulation`/integrity machinery. Do not create a second generic population framework.
 
-The current residual atlas demonstrates the distinction. Static beam/DFS offeredness can be inferred from plan membership; repair/admissible families require stage reach/starvation logic; actual dispatch is separate again. The wider research model now needs to distinguish configured, eligible, offered/planned, stage reached, starved, dispatched, completed, allocated work, spent work, and outcome.
+### 5. Treatment participation mostly exists at stage level; exact treatment/config opportunity is where reconstruction remains
 
-**Duplication type:** semantic, identity-model weakness, abstraction mismatch.
+Production lifecycle telemetry is already much stronger than the first pass implied. `scripts/stress/lifecycle-failure-map.mjs` deliberately consumes canonical producer-emitted `stageLifecycle`, derives stage vocabulary from the artifact rather than a local list, dual-reads only historical `techniqueLifecycle`, and exposes instantiated/reached/starved/skipped/exhausted status plus attempts, actual nodes and actual work. `scripts/experiment-opportunity-audit.mjs` independently defines real stage participation as an attempt with positive work or nodes.
 
-**Consequence:** capability signature and treatment disposition can collapse together. This is especially dangerous for class-2 scheduling/acquisition questions where a known-capable treatment may simply never have received meaningful opportunity.
+The residual atlas nevertheless has to reconstruct family-specific offeredness for repair/admissible configurations and literal ladder membership for beam/DFS. That is a narrower identity/granularity issue: stage reach is not always the same fact as exact action/config opportunity.
 
-**Direction:** emit a first-class `TreatmentParticipation` record from solver orchestration/lifecycle instrumentation. Analyses should consume it rather than reconstructing opportunity from stage names and attempt bags.
+**Duplication type:** evidence reconstruction caused by granularity mismatch.
 
-### 6. Experiment/run provenance uses multiple strong schemas that overlap below the proper abstraction boundary
+**Consequence:** class-2 can confuse a stage being present/reached with the exact known-capable action being meaningfully offered.
 
-`experiment-manifest-lib.mjs` and `solver-experiment-contract.mjs` are both disciplined, but independently describe lower-level concepts such as commit/run identity, producer/workflow identity, population, budget/work envelope, execution posture, and side effects. Family-evaluation manifests add another composition.
+**Corrected direction:** first reuse and, if necessary, enrich existing lifecycle/attempt telemetry. Introduce a separate `TreatmentParticipation` schema only if exact action/config opportunity still cannot be represented cleanly by canonical action identity plus lifecycle fields. The burden is now on a concrete consumer to prove the need.
 
-**Duplication type:** schema-level, authority-level, abstraction mismatch.
+### 6. Experiment/run provenance is already converging through contracts and publication
 
-**Consequence:** schema evolution and agent discovery burden; different research tools may carry materially different provenance strength.
+The initial audit was right that multiple schemas overlap, but the second pass found an active convergence path. `solver-experiment-preflight.mjs` uses `experiment-manifest-lib.mjs`; `publish-solver-sweep-result.mjs` consumes `solver-experiment-contract.mjs`, population integrity, workflow outcome, declared contracts, resolved execution identity, limits and side-effect posture. The operating model already requires resolved treatment provenance at the solver invocation boundary.
 
-**Direction:** do not create one giant manifest. Extract shared composable records/validators such as `RunIdentity`, `ProducerIdentity`, `PopulationIdentity`, `BudgetEnvelope`, and `SideEffectPolicy`, then let experiment/family/result contracts compose them.
+**Duplication type:** schema overlap, with an existing convergence owner.
 
-### 7. Solver harnesses encode materially different experiment semantics
+**Consequence:** still potential maintenance burden, but no evidence yet warrants creating shared `RunIdentity`/`ProducerIdentity` classes merely for neatness.
 
-`run-solver-direct.mjs`, `stress/solve-one.mjs`, fingerprinting, technique-census cells, portfolio sweeps, microscopes, and replay tools differ in work-budget support, hint/history loading, solver lifetime, process isolation, validation, lower-level versus production orchestration, and output projection.
+**Corrected direction:** prefer the v3 experiment contract/result publisher for new decision-bearing workflows. Extract a lower-level shared fragment only when a concrete pair of live schemas has drifted or must interoperate. Family-run manifests may legitimately remain purpose-specific.
 
-Some divergence is essential: fresh-process isolation and isolated-technique execution are legitimate independent methods. The architectural problem is that common context is implicit, so two tools that sound like “run the solver” may produce evidence with different scientific meaning.
+### 7. Solver harness differences are real, but existing contract/preflight machinery is the likely boundary
 
-**Duplication type:** workflow-level, semantic, repeated mechanics.
+Fresh-process retry, production solving, isolated census cells, fingerprints, replays and microscopes intentionally execute differently. That independence should remain. The first pass proposed a `ResearchSolverContext`; the second pass found that the experiment contract, preflight, canary checks, result publisher and operating-model gates already cover much of what such a context would encode for decision-bearing runs.
 
-**Consequence:** research comparability can depend on harness choice without that choice being obvious in the result artifact.
+**Corrected direction:** do not invent another run-context framework. Audit which decision-bearing harnesses bypass the existing contract/preflight/publisher path and migrate those where the semantics fit. Keep diagnostic one-offs lightweight when they are not promotion evidence.
 
-**Direction:** define an explicit `ResearchSolverContext` / run-context contract covering corpus identity, level reference, work/deadline interpretation, history/hint posture, solver lifetime, side effects, validation policy, seed/determinism posture, and output provenance. Specialized executors remain distinct.
+### 8. Corpus/level infrastructure already has owners; remaining debt is caller migration and authority overlap
 
-### 8. Corpus loading and level identity remain too informal for the research layer
+`level-data-io.mjs` already owns explicit `pos:` versus `id:` selector semantics, current/legacy hint attachment and persistent ID handling. `corpus-query-lib.mjs` owns common corpus aliases, array-versus-wrapper loading, deterministic sampling and legal structural descriptors. The research asset registry identifies corpus join keys and query entry points.
 
-Several research paths independently handle array-vs-`.levels` documents, corpus-name/path mappings, ID/position lookup, stripping `id`/`stressMeta`, and solver normalization. This now matters because published IDs and array positions are not guaranteed to remain identical.
+There are still local corpus maps/loaders in tools such as technique census and `solve-one`, but this is no longer evidence for a new `Corpus` object by itself.
 
-**Duplication type:** implementation, semantic, identity-model weakness.
+**Corrected direction:** inventory bespoke loaders and move them to `level-data-io` or `corpus-query-lib` where semantics match. If those two existing owners themselves overlap incompatibly, resolve that boundary explicitly. Add a richer level-reference structure only if a real current join needs corpus revision/fingerprint + persistent ID + position together.
 
-**Consequence:** off-by-one or ID/position joins, hint loss, inconsistent raw-level shape, or divergent corpus membership.
+## Existing architecture that should be reused, not duplicated
 
-**Direction:** canonical `Corpus` / `CorpusLevelRef` loader with corpus identity/fingerprint, level ID, position, raw level, metadata, and optional hint context. Position semantics should be explicit rather than inferred.
+### Attempt/action identity
 
-## Areas that already show the right architecture
+`modules/solver/attempt-identity.mjs` owns canonical and historical parsing/formatting plus stage+seed action identity. `scripts/attempt-config-key.mjs` adds policy-aware materialization without re-owning grammar. Keep this split.
 
-### Canonical attempt and action identity
+### Stage policy and lifecycle telemetry
 
-`modules/solver/attempt-identity.mjs` correctly separates config-family identity from stage/seed action identity, owns current and historical parsing/normalization, and provides discovery terms for mixed-era evidence. `scripts/attempt-config-key.mjs` appropriately adds policy vocabulary validation rather than re-owning syntax.
+`modules/solver/stage-policy.ts` already supplies stable stage metadata and budget-envelope vocabulary. Production `stageLifecycle` is an authoritative producer surface; `lifecycle-failure-map.mjs` is intentionally designed to consume emitted stage vocabulary rather than maintain its own registry. New research should build on these before inventing stage/treatment classifications.
 
-This is a model to copy, not a target for broad consolidation. New artifacts should prefer canonical action/config fields so fewer readers need to reconstruct identity from old flag bags.
+### Provenance identity and evidence applicability
 
-### Provenance event identity at the persistence boundary
+Hint event identity is already canonicalized at the persistence/runtime boundary. The research-data guide additionally requires query-purpose-aware provenance applicability rather than local trusted/untrusted predicates. Preserve those authorities.
 
-`scripts/hint-provenance-identity.mjs` is already just a compatibility re-export because the canonical discovery-event identity moved into the hint persistence/runtime boundary. That is the correct direction: merge/reconcile/capture/cleanup should consume one identity authority.
+### Evidence registry
 
-### Capability-memory manifest reconstruction
+`docs/solver-research-data-assets.json` is already the machine registry for evidence families, authorities, query entry points, join keys, relationships, roles and caveats. Any new reusable join should reference this registry rather than creating another asset catalogue.
 
-The recent capability-memory repair is also a good pattern: source assets and exclusions live in a regenerable manifest rather than a manually assembled union. This should be generalized into typed capability-evidence projections where appropriate, while preserving independent evidence producers.
+### Capability memory
 
-## Straightforward extraction opportunities
+Capability memory already provides the intended generated/derived interface over historical/current complementary capability and explicitly states that decision-bearing unions should be regenerated from manifests/results rather than rebuilt in prose or arrays. Extend this interface when the question is capability memory; do not create a parallel `CapabilityEvidence` store.
 
-These are lower risk than the missing-domain-abstraction work and should not alter solver policy:
+### Experiment population/provenance contract
 
-1. canonical corpus loader/reference layer;
-2. research artifact JSON/JSONL read/write helpers with schema/kind/provenance hooks;
-3. shared run-provenance fragments for commit/ref/dirty, producer/entrypoint, timestamps, and source fingerprints;
-4. one persisted-record normalization boundary for current/historical attempt/action fields;
-5. canonical execution-disposition vocabulary distinct from scientific workflow outcome and research-question lifecycle;
-6. reusable CLI option groups for corpus/level selection, work/deadline, seed/determinism, output, and side-effect posture.
+`solver-experiment-contract.mjs`, experiment manifests/preflight, integrity tooling and result publication already form a substantial common substrate. New decision-bearing research should feed it rather than inventing new population/run identity formats.
 
-Avoid a generic `utils` layer. These abstractions should correspond to Pathfinder concepts.
+### Question relation registry
 
-## Deeper missing abstractions
+`solver-research-question-relations.json` already contains the higher-order question relation/state model. Any additional lifecycle automation should validate/project this authority, not supersede it.
 
-The current evidence points toward six domain concepts with high leverage:
+## Straightforward opportunities that survived the falsification pass
 
-- **`ResearchPopulation`** — explicit, fingerprinted, reproducible population construction and joins;
-- **`TreatmentParticipation`** — what opportunity and execution a treatment actually received;
-- **`CapabilityEvidence`** — typed observations from isolated census, production history, accepted paths, provenance, etc., preserving evidence strength/context;
-- **`ResidualEvidence` / `ResidualClassification`** — one canonical classification over the preceding evidence;
-- **`RunIdentity` / run-context fragments** — reusable execution/provenance identity across manifests and tools;
-- **`ResearchQuestion` lifecycle/state** — relations plus explicit machine-owned disposition/result propagation.
+1. **Move residual-class consumers onto one generated/versioned residual-class artifact or library.** This has demonstrated correctness value.
+2. **Replace avoidable textual budget-policy shadowing with checks against existing stage-policy/stage-budget structures.** Keep independent behavioral tests.
+3. **Migrate bespoke corpus loading/selection to the existing `level-data-io` / `corpus-query-lib` owners where their semantics fit.** No new corpus framework unless a concrete unmet identity need remains.
+4. **Add reusable population-derivation helpers only for recurring multi-asset joins, feeding the existing experiment population contract.** Do not generalize ahead of repeated use.
+5. **Wire question-relation state/evidence into status validation or generated projections if current checks allow drift.** The registry already exists.
+6. **Prefer producer-emitted lifecycle/action telemetry over local family-stage inference, enriching that existing telemetry only where exact treatment opportunity cannot otherwise be recovered.**
 
-These should not be introduced merely because their names are appealing. The follow-up audit must first verify whether equivalent concepts already exist elsewhere under different names.
+The first-pass suggestions for generic JSON/JSONL utilities, broad CLI option frameworks, a new `RunIdentity`, a new `ResearchSolverContext`, and a generic `CapabilityEvidence` layer are **withdrawn as recommendations** absent a concrete current duplication they uniquely solve. They may be reasonable local extractions later, but this audit should not pre-authorize them.
 
 ## Duplication that should deliberately remain
 
@@ -153,31 +170,32 @@ These should not be introduced merely because their names are appealing. The fol
 - Technique-census allocation policy versus production orchestration. Share units/identity/disposition vocabulary, not the scheduler itself.
 - Fresh-process retry/solve tooling. Process isolation is the point; share configuration/corpus semantics without collapsing the execution boundary.
 - Frozen historical readers and compatibility parsers. Prefer canonical-write/dual-read at narrow boundaries rather than rewriting history.
-- Independent behavioral work-accounting tests. The current budget checker history proves that structural/source checks alone are insufficient.
-- Independent capability/evidence producers used as cross-checks. Canonicalize observations after production rather than forcing all evidence through one algorithm.
+- Independent behavioral work-accounting tests. The current budget-checker history proves structural checks alone are insufficient.
+- Independent capability/evidence producers used as cross-checks. Canonicalize or join their observations rather than forcing common-mode generation.
 
 ## Apparent duplication that is meaningfully different
 
 - `AttemptIdentity` versus `AttemptActionIdentity`: family/config identity intentionally excludes stage/seed; action identity includes them.
 - Work budget versus wall deadline: two different resources; the defect is re-deriving work from wall time after normalization, not retaining both dimensions.
-- Capability signature versus treatment disposition: “known capable” and “actually offered/reached/dispatched” answer different questions.
-- Question relation graph versus priority: relations constrain state but should not secretly become another priority ordering.
-- Experiment manifest versus scientific result contract: different top-level purposes, though their lower-level provenance fragments may deserve shared validators.
+- Stage lifecycle versus exact treatment/config opportunity: related but not identical grains.
+- Capability signature versus treatment disposition: known capability and actual scheduling opportunity answer different questions.
+- Question relation graph versus workstream priority versus workflow execution outcome: they describe different dimensions and should be synchronized, not collapsed.
+- Experiment/family manifests versus scientific result contract: different top-level purposes; shared fragments should be extracted only when concrete drift warrants it.
+- Evidence registry versus capability memory: the former describes available evidence topology; the latter derives complementary capability for a named baseline/question.
 
-## Initial cleanup order
+## Revised cleanup order
 
-This order is intentionally conservative around active solver research:
-
-1. **Freeze semantics before refactoring.** Define/verify data contracts for participation, capability evidence, populations, and residual classes; add parity tests against current artifacts.
-2. **Canonicalize population construction.** Move repeated residual/capability/treatment intersections onto a reusable query layer with derivation/fingerprint output.
-3. **Canonicalize research-question lifecycle.** Make status and outbound propagation machine-owned; generate prose views.
-4. **Strengthen writers.** Emit canonical action identity, treatment participation, work disposition, validator identity, and source fingerprints so readers stop reconstructing them.
-5. **Consolidate harness context/boilerplate.** Share corpus/run/config/provenance semantics while preserving execution-policy differences.
-6. **Replace source-text budget shadow authority.** Move production stage-budget policy into inspectable declarative structure; retain independent behavioral ratchets.
-7. **Retire compatibility residue last.** Remove old aliases/representations only after live-consumer and historical-reader inventories prove they are unnecessary.
+1. **Residual classification first, but as a derived-authority extraction.** Preserve current five-class behavior and source identities; add parity against the corrected atlas before moving consumers.
+2. **Consumer migration onto existing authorities.** Prefer `stageLifecycle`, canonical action identity, evidence registry joins, capability memory, `level-data-io`, corpus query, and experiment population/provenance contracts before writing new helpers.
+3. **Population derivation helpers only where repeated joins remain after step 2.** Keep literal IDs and existing population hashes as the execution boundary.
+4. **Question-state synchronization.** Validate/project the existing question-relations registry against status/workstream/evidence surfaces rather than replacing it.
+5. **Budget ratchet cleanup.** Make existing stage-policy/stage-budget structures carry as much enforceable policy as practical, while retaining behavioral independence.
+6. **Compatibility residue last.** Remove old aliases/representations only after live-consumer and historical-reader inventories prove they are unnecessary.
 
 ## Architectural interpretation
 
-The duplication pattern appears because Pathfinder's research ontology has grown faster than its domain model. Production has concrete attempts, stages, budgets, results, and artifacts. Research now needs higher-order concepts such as capability, opportunity, participation, comparable work, freshness, residual class, evidence strength, population identity, and question lifecycle. Those concepts often first appeared as local analysis logic, then were reconstructed elsewhere.
+Pathfinder's research ontology did grow faster than some of its original tooling, but the repo has already spent substantial effort catching up. The second pass changes the diagnosis from “several missing domain abstractions” to “several strong authorities exist, but adoption is uneven and a few higher-order derived classifications remain local.”
 
-The strongest recent repairs all follow the same shape: normalize at a producer/persistence boundary, retain historical dual-read compatibility where required, and make consumers read canonical facts rather than rediscover them. Capability-memory manifests, attempt/action identity, and provenance-event identity are examples. The follow-up audit should determine exactly how far that pattern has already spread before any new implementation is proposed.
+The key architectural risk is therefore **authority reach**. A canonical concept can exist and still fail architecturally if consumers reconstruct an approximate local version because they do not know about it, cannot import it in their execution environment, or need a slightly different grain. `lifecycle-failure-map.mjs` shows the desired shape: derive vocabulary from producer telemetry, normalize compatibility once, and refuse to maintain a second stage registry. The residual atlas bug shows the opposite shape: a scientifically meaningful predicate was inferred locally from a bookkeeping field and changed class membership.
+
+The next cleanup work should optimize for fewer epistemic dialects by extending existing owners outward, not by adding a fresh abstraction layer inward. A proposed new module should now answer a stricter question: **which current authoritative producer or contract cannot represent this fact, and which two or more live consumers are independently reconstructing it today?** If that cannot be demonstrated, do not add the module.
