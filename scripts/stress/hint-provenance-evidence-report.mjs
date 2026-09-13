@@ -197,10 +197,19 @@ function combineCountMaps(corpora, field) {
 
 function combineCollisionAudits(corpora) {
     const examples = [];
+    const examplesByTechnique = new Map();
     for (const corpus of corpora) {
         for (const example of corpus.crossHintEventCollisionAudit.examples) {
             if (examples.length >= 50) break;
             examples.push(example);
+        }
+        for (const [technique, techniqueExamples] of Object.entries(corpus.crossHintEventCollisionAudit.examplesByTechnique ?? {})) {
+            const combined = examplesByTechnique.get(technique) ?? [];
+            for (const example of techniqueExamples) {
+                if (combined.length >= 5) break;
+                combined.push(example);
+            }
+            examplesByTechnique.set(technique, combined);
         }
     }
     return {
@@ -211,6 +220,7 @@ function combineCollisionAudits(corpora) {
         identitiesByFacet: combineCountMaps(corpora, 'identitiesByFacet'),
         identitiesByTechnique: combineCountMaps(corpora, 'identitiesByTechnique'),
         identitiesByProducerKey: combineCountMaps(corpora, 'identitiesByProducerKey'),
+        examplesByTechnique: Object.fromEntries([...examplesByTechnique].sort((a, b) => a[0].localeCompare(b[0]))),
         examples,
     };
 }
