@@ -1,0 +1,106 @@
+name: TEMP class4 portal coarse freshness
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+
+      - name: Rebuild corrected residual atlas
+        run: |
+          node scripts/run-bundled.mjs scripts/stress/analyze-post-1029-residual-atlas.mjs -- \
+            --baseline=reports/stress/capability-runs/34683011115/per-level-corpus2.json \
+            --lifecycle=reports/stress/capability-runs/34683011115/lifecycle-failure-map-corpus2.json \
+            --census=reports/stress/technique-census/33717910218/combined-cells.json \
+            --hints-dir=data/stress/hints-random \
+            --out=tmp/class4-freshness-atlas.json
+
+      - name: Prespecify five spread class-4 portal nominations
+        id: sample
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const atlas = JSON.parse(fs.readFileSync('tmp/class4-freshness-atlas.json', 'utf8'));
+          const corpusRaw = JSON.parse(fs.readFileSync('data/stress/stress-levels-random.json', 'utf8'));
+          const levels = Array.isArray(corpusRaw) ? corpusRaw : corpusRaw.levels;
+          const gains = fs.readFileSync('data/stress/portal-coarse-state-merge-gain-referee-check-001-ids.txt', 'utf8')
+            .split(/\s+/).map(s => s.trim()).filter(Boolean);
+
+          const classById = new Map();
+          const seen = new Set();
+          function walk(value) {
+            if (!value || typeof value !== 'object' || seen.has(value)) return;
+            seen.add(value);
+            if (Array.isArray(value)) {
+              for (const item of value) walk(item);
+              return;
+            }
+            const id = value.levelId ?? value.id ?? value.level;
+            const cls = value.primaryClass ?? value.class ?? value.classId ?? value.residualClass;
+            if (id != null && cls != null && /^[1-5]$/.test(String(cls))) classById.set(String(id), Number(cls));
+            for (const child of Object.values(value)) walk(child);
+          }
+          walk(atlas);
+
+          const nominees = [...new Set(gains.filter(id => classById.get(id) === 4))].sort();
+          if (nominees.length !== 113) throw new Error(`Expected 113 current class-4 portal nominations, got ${nominees.length}`);
+          const indexes = [0, Math.floor((nominees.length - 1) / 4), Math.floor((nominees.length - 1) / 2), Math.floor(3 * (nominees.length - 1) / 4), nominees.length - 1];
+          const ids = [...new Set(indexes.map(i => nominees[i]))];
+          if (ids.length !== 5) throw new Error(`Expected five unique sample ids, got ${ids.length}`);
+          const positionById = new Map(levels.map((level, i) => [String(level.id), i + 1]));
+          const positions = ids.map(id => {
+            const position = positionById.get(id);
+            if (!position) throw new Error(`Could not resolve corpus position for ${id}`);
+            return position;
+          });
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `ids=${ids.join(',')}\npositions=${positions.join(',')}\n`);
+          console.log(`CLASS4_FRESHNESS_SAMPLE ids=${ids.join(',')} positions=${positions.join(',')}`);
+          NODE
+
+      - name: Replay historical treatment on current code
+        run: |
+          node scripts/level-blind-capability-sweep.mjs \
+            --corpus=data/stress/stress-levels-random.json \
+            --levels='${{ steps.sample.outputs.positions }}' \
+            --node-budget=50000000 \
+            --work-budget=67000000 \
+            --workers=4 \
+            --enable-flags=STRATEGY_PORTAL_COARSE_STATE_MERGE \
+            --attempt-budget-telemetry \
+            --out=tmp/class4-portal-coarse-freshness.json \
+            --summary-out=tmp/class4-portal-coarse-freshness.md
+
+      - name: Print decision evidence
+        if: always()
+        run: |
+          echo "CLASS4_FRESHNESS_IDS=${{ steps.sample.outputs.ids }}"
+          if [ -f tmp/class4-portal-coarse-freshness.md ]; then cat tmp/class4-portal-coarse-freshness.md; fi
+          if [ -f tmp/class4-portal-coarse-freshness.json ]; then
+            node --input-type=module <<'NODE'
+            import fs from 'node:fs';
+            const data = JSON.parse(fs.readFileSync('tmp/class4-portal-coarse-freshness.json', 'utf8'));
+            const rows = Array.isArray(data) ? data : (data.rows ?? data.results ?? data.levels ?? []);
+            console.log('CLASS4_FRESHNESS_RESULT');
+            console.log(JSON.stringify(rows.map(row => ({
+              id: row.id ?? row.levelId,
+              solved: row.solved ?? row.ok,
+              status: row.status,
+              workSpent: row.workSpent,
+              nodes: row.nodes ?? row.nodesExpanded,
+              refereeValid: row.refereeValid,
+            })), null, 2));
+            NODE
+          fi
