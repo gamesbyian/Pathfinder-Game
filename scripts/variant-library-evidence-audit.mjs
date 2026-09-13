@@ -58,12 +58,13 @@ function familyManifestRows(root) {
         }
         const corpusDir = path.relative(roots.families, file).split(path.sep).slice(0, -1).join('/');
         const corpus = corpusDir || manifest.parentCorpus || 'root';
-        const parentIdentity = `${corpus}\0${manifest.parentLevelId}`;
+        const parentCorpus = manifest.parentCorpus ?? corpus;
+        const parentIdentity = `${parentCorpus}\0${manifest.parentLevelId}`;
         const familyIdentity = `${parentIdentity}\0${manifest.familyMode ?? ''}\0${manifest.familyId ?? ''}`;
         familyRows.push({
             corpus,
             parentId: manifest.parentLevelId,
-            parentCorpus: manifest.parentCorpus ?? null,
+            parentCorpus,
             parentIdentity,
             familyId: manifest.familyId ?? null,
             familyMode: manifest.familyMode ?? null,
@@ -80,7 +81,7 @@ function familyManifestRows(root) {
                 familyMode: manifest.familyMode ?? null,
                 familyIdentity,
                 variantId: variant.variantId ?? null,
-                variantIdentity: variant.variantId ? `${corpus}\0${manifest.parentLevelId}\0${manifest.familyMode ?? ''}\0${variant.variantId}` : null,
+                variantIdentity: variant.variantId ? `${parentCorpus}\0${manifest.parentLevelId}\0${variant.variantId}` : null,
                 relation: variant.relation ?? null,
                 operator: variant.mutationManifest?.operation ?? variant.mutationManifest?.objectType ?? null,
                 objectType: variant.mutationManifest?.objectType ?? null,
@@ -130,6 +131,7 @@ export function auditVariantLibrary(root) {
     const duplicateLogicalVariants = [...logicalVariantGroups.entries()]
         .map(([variantIdentity, rows]) => ({ variantIdentity, rows: rows.length,
             contentHashes: distinct(rows.map(row => row.variantContentHash).filter(Boolean)).sort(),
+            modes: distinct(rows.map(row => row.familyMode).filter(Boolean)).sort(),
             manifestPaths: distinct(rows.map(row => row.manifestPath)).sort() }))
         .filter(row => row.rows > 1);
     const conflictingLogicalVariants = duplicateLogicalVariants.filter(row => row.contentHashes.length > 1);
