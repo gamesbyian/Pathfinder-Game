@@ -1,33 +1,24 @@
 #!/usr/bin/env node
 /**
- * Post-1,029 residual atlas: per-level five-class rescuer breakdown for the current 671 Corpus-2
- * misses, joining the frozen T1 isolated-technique census against this exact production run's own
- * per-attempt dispatch log, per-level lifecycle reach/starvation telemetry, structural/fingerprint
- * features, and hint-store provenance/history evidence.
+ * Post-1,029 residual atlas: per-level five-class rescuer breakdown for the current Corpus-2
+ * misses, joining the frozen T1 isolated-technique census against the production run's dispatch
+ * log, lifecycle reach/starvation telemetry, structural features, and hint provenance evidence.
  *
- * This performs no new solving. It only rejoins already-registered research assets:
- *   - reports/stress/capability-runs/<run>/per-level-corpus2.json  (production baseline + exact
- *     per-attempt `failedStrategies` dispatch log for this run)
- *   - reports/stress/capability-runs/<run>/lifecycle-failure-map-corpus2.json (per-level
- *     reachedTechniques/starvedTechniques)
- *   - reports/stress/technique-census/<census>/combined-cells.json (frozen base-T1 isolated census)
- *   - data/stress/hints-random/<id>.json (hint/provenance store, for the no-T1-winner cross-check)
- *   - data/stress/stress-levels-random.json (structural features + routing regime)
- *
- * Example:
- *   node scripts/run-bundled.mjs scripts/stress/analyze-post-1029-residual-atlas.mjs -- \
- *     --baseline=reports/stress/capability-runs/34531412380/per-level-corpus2.json \
- *     --lifecycle=reports/stress/capability-runs/34531412380/lifecycle-failure-map-corpus2.json \
- *     --census=reports/stress/technique-census/33717910218/combined-cells.json \
- *     --hints-dir=data/stress/hints-random \
- *     --out=tmp/post-1029-residual-atlas.json
+ * This performs no new solving. Five-class semantics live in residual-classification-lib.mjs;
+ * this file assembles evidence and presentation around that authority.
  */
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { normalizeAttemptIdentityKey } from '../../modules/solver/attempt-identity.mjs';
 import { isProductionContextEvidence } from './provenance-source-taxonomy.mjs';
+import {
+    RESIDUAL_CLASSIFICATION_SCHEMA_VERSION,
+    classifyResidualLevel,
+    isBaseT1CensusRow,
+    summarizeResidualClasses,
+} from './residual-classification-lib.mjs';
 
 const argv = process.argv.slice(2);
 const args = new Map(argv.filter(a => a.startsWith('--') && a.includes('=')).map(a => {
@@ -47,13 +38,10 @@ const OUT = args.get('--out') || 'tmp/post-1029-residual-atlas.json';
 
 const readJson = file => JSON.parse(readFileSync(path.resolve(file), 'utf8'));
 
-// --- load inputs -----------------------------------------------------------------------------
 const baselineDoc = readJson(BASELINE);
 const baselineRows = baselineDoc.rows;
-const lifecycleDoc = readJson(LIFECYCLE);
-const lifecycleRows = lifecycleDoc.levels;
-const censusDoc = readJson(CENSUS);
-const censusRows = censusDoc.results ?? [];
+const lifecycleRows = readJson(LIFECYCLE).levels;
+const censusRows = readJson(CENSUS).results ?? [];
 const corpusDoc = readJson(CORPUS);
 const corpusRows = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
 
@@ -63,37 +51,14 @@ const { getAttemptConfigs, attemptConfigKey, classifyRoutingRegime } = SOLVER_TE
 const baselineById = new Map(baselineRows.map(row => [row.id, row]));
 const lifecycleById = new Map(lifecycleRows.map(row => [row.id, row]));
 const corpusById = new Map(corpusRows.map((row, index) => [row.id, { row, pos: index + 1 }]));
-
 const currentResidual = baselineRows.filter(row => row.ok === false).map(row => row.id).sort();
 
-// `variantLabel` is NOT reliable as a "this cell tests something other than the clean base
-// technique" signal on its own: scripts/build-technique-census-plan.mjs's T1_PROMOTED_VARIANTS
-// stamps every promoted entry with `variantLabel: variant.label` purely as a bookkeeping marker
-// (distinguishing "not in the live-derived default-ladder ALL_TECHNIQUE_KEYS enumeration" from the
-// ordinary per-level loop), independent of whether the cell is actually a modified condition.
-// `repair|score=repair|guidance=turn-biased`'s own promoted-variant entry has `ablation: null` and
-// its `variantLabel` is self-referential (equals its own techniqueKey) — confirmed by that file's
-// own comment ("ablation: null, NOT { enable: [...] } ... the flag is inert here regardless"): it is
-// a clean, unmodified, single-technique T1 dispatch, exactly as eligible to be a "known T1
-// candidate" as `must-turn-biased` (which sits directly in ALL_TECHNIQUE_KEYS and was never
-// affected by this). `ablation` is the actual "this cell tests a non-default condition" signal —
-// every other T1_PROMOTED_VARIANTS entry (the six connectivity/coarse-state-merge/mc-neighbor-
-// budget ablations) carries a real non-null `ablation` and is correctly excluded by that check
-// alone. Excluding on `variantLabel` too silently dropped all 936 corpus-2 turn-biased T1 cells
-// (161 solved) from t1Wins, incorrectly inflating classes 4/5 by 25 current-residual rows (9 of
-// them class 5) — see reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md.
-function isBaseT1(row) {
-    return row?.corpus === 'corpus2'
-        && row.tier === 'T1'
-        && row.techniqueKeys?.length === 1
-        && !row.flagExperiment
-        && !row.pairLabel
-        && !row.ablation;
-}
-
+// The canonical predicate intentionally does not exclude variantLabel. Clean promoted T1 entries
+// such as turn-biased repair carry one; ablation is the modified-condition signal. This distinction
+// is the 2026-09-12 correction that moved 25 current-residual rows back out of classes 4/5.
 const t1WinsByLevel = new Map();
 for (const row of censusRows) {
-    if (!isBaseT1(row)) continue;
+    if (!isBaseT1CensusRow(row)) continue;
     if (!(row.ok === true && row.refereeValid !== false)) continue;
     const id = row.levelId ?? corpusRows[(row.levelPos ?? 0) - 1]?.id;
     if (!id) continue;
@@ -102,69 +67,28 @@ for (const row of censusRows) {
     t1WinsByLevel.get(id).push({ identity, nodes: row.nodesExpanded ?? null, gate: row.winningGate ?? null });
 }
 
-// Retry-tier stages, for reconciling "no exact dispatch match" against the coarser reached/starved
-// lifecycle telemetry. Repair/admissible-order retry tiers do not carry one fixed base-T1 identity
-// the way static beam/dfs ladder configs do (seed/tiebreak vary per dispatch), so their offered-ness
-// is judged by stage reach rather than literal ladder membership.
-const FAMILY_STAGES = {
-    repair: ['early-repair-search', 'late-repair-search', 'repair-fallback', 'late-repair-multiseed-retry',
-        'repair-elite-prefix-dfs-retry'],
-    'admissible-order': ['admissible-order-fallback', 'admissible-order-alternate-tiebreak-retry'],
-};
-function familyOf(identity) {
-    return identity.split('|', 1)[0];
-}
-
-function classifyWin(win, { offeredLadder, dispatchedIdentities, reachedSet, starvedSet }) {
-    const family = familyOf(win.identity);
-    const dispatched = dispatchedIdentities.has(win.identity);
-    let cls;
-    let familyReached = null;
-    let familyStarved = null;
-    let offered = null;
-    if (family === 'beam' || family === 'dfs') {
-        // Static ladder config: literal plan membership is the sharp offered/not-offered signal.
-        offered = offeredLadder.has(win.identity);
-        if (!offered) cls = 1;
-        else if (!dispatched) cls = 2; // planned but the ladder never actually reached it this run
-        else cls = 3; // planned and dispatched; production attempt failed despite isolated capability
-    } else {
-        const stages = FAMILY_STAGES[family] ?? [];
-        familyReached = stages.some(s => reachedSet.has(s));
-        familyStarved = stages.some(s => starvedSet.has(s));
-        if (!familyReached && !dispatched) cls = 1;
-        else if (dispatched && !familyStarved) cls = 3;
-        else cls = 2; // stage nominally reached but this exact config not dispatched, or stage starved
-    }
-    return { ...win, family, offered, dispatched, familyReached, familyStarved, class: cls };
-}
-
-// --- hint-store provenance cross-check for zero-T1-winner levels -----------------------------
 function historicalProductionContextCandidate(id) {
     const file = path.join(HINTS_DIR, `${id}.json`);
     if (!existsSync(file)) return null;
     let doc;
     try { doc = readJson(file); } catch { return null; }
-    const hints = doc.hints ?? [];
-    for (const hint of hints) {
+    for (const hint of doc.hints ?? []) {
         for (const entry of hint.provenance ?? []) {
-            if (isProductionContextEvidence(entry)) {
-                return {
-                    technique: entry.solver?.technique ?? null,
-                    scoringProfileId: entry.solver?.scoringProfileId ?? null,
-                    beamWidth: entry.solver?.beamWidth ?? null,
-                    gateKey: entry.solver?.gateKey ?? null,
-                    nodesExpanded: entry.search?.nodesExpanded ?? null,
-                    termination: entry.search?.termination ?? null,
-                    foundAt: entry.foundAt ?? entry.context?.foundAt ?? null,
-                };
-            }
+            if (!isProductionContextEvidence(entry)) continue;
+            return {
+                technique: entry.solver?.technique ?? null,
+                scoringProfileId: entry.solver?.scoringProfileId ?? null,
+                beamWidth: entry.solver?.beamWidth ?? null,
+                gateKey: entry.solver?.gateKey ?? null,
+                nodesExpanded: entry.search?.nodesExpanded ?? null,
+                termination: entry.search?.termination ?? null,
+                foundAt: entry.foundAt ?? entry.context?.foundAt ?? null,
+            };
         }
     }
     return null;
 }
 
-// --- per-level rows ----------------------------------------------------------------------------
 const rows = [];
 for (const id of currentResidual) {
     const corpusEntry = corpusById.get(id);
@@ -189,27 +113,14 @@ for (const id of currentResidual) {
     const baseline = baselineById.get(id);
     const lifecycle = lifecycleById.get(id);
     const dispatchedIdentities = new Set((baseline?.failedStrategies ?? [])
-        .map(s => { try { return normalizeAttemptIdentityKey(s); } catch { return s; } }));
+        .map(value => { try { return normalizeAttemptIdentityKey(value); } catch { return value; } }));
     const reachedSet = new Set(lifecycle?.reachedTechniques ?? []);
     const starvedSet = new Set(lifecycle?.starvedTechniques ?? []);
-
     const t1Wins = t1WinsByLevel.get(id) ?? [];
-    const classifiedWins = t1Wins.map(win => classifyWin(win, { offeredLadder, dispatchedIdentities, reachedSet, starvedSet }));
-
-    const hasClass1 = classifiedWins.some(w => w.class === 1);
-    const hasClass2 = classifiedWins.some(w => w.class === 2);
-    const hasClass3 = classifiedWins.some(w => w.class === 3);
-
-    let provenanceRescuer = null;
-    let hasClass4 = false;
-    let hasClass5 = false;
-    if (t1Wins.length === 0) {
-        provenanceRescuer = historicalProductionContextCandidate(id);
-        if (provenanceRescuer) hasClass4 = true; else hasClass5 = true;
-    }
-
-    const primaryClass = hasClass1 ? 1 : hasClass2 ? 2 : hasClass3 ? 3 : hasClass4 ? 4 : 5;
-    const multiplicity = t1Wins.length;
+    const provenanceRescuer = t1Wins.length === 0 ? historicalProductionContextCandidate(id) : null;
+    const classification = classifyResidualLevel({
+        t1Wins, provenanceRescuer, offeredLadder, dispatchedIdentities, reachedSet, starvedSet,
+    });
 
     rows.push({
         id,
@@ -221,52 +132,49 @@ for (const id of currentResidual) {
         productionWork: baseline?.workSpent ?? null,
         productionStatus: baseline?.status ?? null,
         productionAttemptCount: baseline?.attemptCount ?? null,
-        t1WinMultiplicity: multiplicity,
-        t1Wins: classifiedWins,
-        provenanceRescuer,
-        primaryClass,
-        classes: { 1: hasClass1, 2: hasClass2, 3: hasClass3, 4: hasClass4, 5: hasClass5 },
+        t1WinMultiplicity: classification.t1WinMultiplicity,
+        t1Wins: classification.t1Wins,
+        provenanceRescuer: classification.provenanceRescuer,
+        primaryClass: classification.primaryClass,
+        classes: classification.classes,
     });
 }
 
-// --- summaries -----------------------------------------------------------------------------
-function count(pred) { return rows.filter(pred).length; }
-const classCounts = {
-    1: { label: 'known rescuer not offered', primary: count(r => r.primaryClass === 1), any: count(r => r.classes[1]) },
-    2: { label: 'known rescuer offered but not reached or materially starved', primary: count(r => r.primaryClass === 2), any: count(r => r.classes[2]) },
-    3: { label: 'known rescuer reached with comparable work but failed', primary: count(r => r.primaryClass === 3), any: count(r => r.classes[3]) },
-    4: { label: 'no T1 winner but a historical production-context candidate exists', primary: count(r => r.primaryClass === 4), any: count(r => r.classes[4]) },
-    5: { label: 'no known rescuer after cross-evidence reconciliation', primary: count(r => r.primaryClass === 5), any: count(r => r.classes[5]) },
-};
+const classCounts = summarizeResidualClasses(rows);
 
 function structuralOverlap(pred) {
     const subset = rows.filter(pred);
     return {
         n: subset.length,
-        portalBearing: subset.filter(r => r.features.portals > 0).length,
-        mustCrossBearing: subset.filter(r => r.features.mustCross > 0).length,
-        intersectionHeavy: subset.filter(r => r.routingRegime === 'intersection-heavy').length,
-        mustCrossHeavyRegime: subset.filter(r => r.routingRegime === 'must-cross-heavy').length,
-        multiPortalRegime: subset.filter(r => r.routingRegime === 'multi-portal').length,
-        tripleOverlap: subset.filter(r => r.features.portals > 0 && r.features.mustCross > 0
-            && r.routingRegime === 'intersection-heavy').length,
+        portalBearing: subset.filter(row => row.features.portals > 0).length,
+        mustCrossBearing: subset.filter(row => row.features.mustCross > 0).length,
+        intersectionHeavy: subset.filter(row => row.routingRegime === 'intersection-heavy').length,
+        mustCrossHeavyRegime: subset.filter(row => row.routingRegime === 'must-cross-heavy').length,
+        multiPortalRegime: subset.filter(row => row.routingRegime === 'multi-portal').length,
+        tripleOverlap: subset.filter(row => row.features.portals > 0 && row.features.mustCross > 0
+            && row.routingRegime === 'intersection-heavy').length,
     };
 }
 
 const byRoutingRegime = {};
-for (const r of rows) {
-    byRoutingRegime[r.routingRegime] = byRoutingRegime[r.routingRegime] ?? { total: 0, byClass: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
-    byRoutingRegime[r.routingRegime].total++;
-    byRoutingRegime[r.routingRegime].byClass[r.primaryClass]++;
+for (const row of rows) {
+    byRoutingRegime[row.routingRegime] = byRoutingRegime[row.routingRegime]
+        ?? { total: 0, byClass: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } };
+    byRoutingRegime[row.routingRegime].total++;
+    byRoutingRegime[row.routingRegime].byClass[row.primaryClass]++;
 }
 
-const lowMultiplicity = rows.filter(r => r.t1WinMultiplicity > 0 && r.t1WinMultiplicity <= 2)
-    .map(r => ({ id: r.id, multiplicity: r.t1WinMultiplicity, primaryClass: r.primaryClass, routingRegime: r.routingRegime }))
+const lowMultiplicity = rows.filter(row => row.t1WinMultiplicity > 0 && row.t1WinMultiplicity <= 2)
+    .map(row => ({
+        id: row.id, multiplicity: row.t1WinMultiplicity,
+        primaryClass: row.primaryClass, routingRegime: row.routingRegime,
+    }))
     .sort((a, b) => a.multiplicity - b.multiplicity || a.id.localeCompare(b.id));
 
 const result = {
     generatedAt: new Date().toISOString(),
     evidenceRole: 'development-rejoin / gate-1 residual atlas',
+    residualClassificationSchemaVersion: RESIDUAL_CLASSIFICATION_SCHEMA_VERSION,
     baseline: BASELINE,
     lifecycle: LIFECYCLE,
     census: CENSUS,
@@ -275,11 +183,11 @@ const result = {
     currentResidualLevels: currentResidual.length,
     classCounts,
     structuralOverlap: {
-        class1: structuralOverlap(r => r.primaryClass === 1),
-        class2: structuralOverlap(r => r.primaryClass === 2),
-        class3: structuralOverlap(r => r.primaryClass === 3),
-        class4: structuralOverlap(r => r.primaryClass === 4),
-        class5: structuralOverlap(r => r.primaryClass === 5),
+        class1: structuralOverlap(row => row.primaryClass === 1),
+        class2: structuralOverlap(row => row.primaryClass === 2),
+        class3: structuralOverlap(row => row.primaryClass === 3),
+        class4: structuralOverlap(row => row.primaryClass === 4),
+        class5: structuralOverlap(row => row.primaryClass === 5),
         all: structuralOverlap(() => true),
     },
     byRoutingRegime,
@@ -293,7 +201,8 @@ writeFileSync(path.resolve(OUT), JSON.stringify(result, null, 2));
 
 console.log(`Residual: ${currentResidual.length}`);
 console.log('Primary-class breakdown:');
-for (const [k, v] of Object.entries(classCounts)) console.log(`  ${k}. ${v.label}: ${v.primary} (any-rescuer membership: ${v.any})`);
+for (const [key, value] of Object.entries(classCounts))
+    console.log(`  ${key}. ${value.label}: ${value.primary} (any-rescuer membership: ${value.any})`);
 console.log(`Low-multiplicity (<=2 isolated T1 winners) misses: ${lowMultiplicity.length}`);
 console.log('By routing regime (primary class 1..5):');
 for (const [regime, data] of Object.entries(byRoutingRegime))
