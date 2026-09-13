@@ -56,49 +56,20 @@ const unapprovedLegacyLines = liveLegacyLines.filter(line => !approvedLegacyTime
 assert.deepEqual(unapprovedLegacyLines, [],
     `new wall-derived allocation site(s) found: ${unapprovedLegacyLines.join(' | ')}. Use work, or explicitly document/migrate the debt rather than extending it.`);
 
-// 2026-09-02: `const roundWorkBudget = legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);`
-// (late-repair-multiseed-retry's own per-seed fresh workCap) used to be approved here as a second
-// "intentional compatibility boundary" alongside workBudget's own resolution below. It was not: a
-// widened whole-ladder deadline-independence test (orchestration.test.ts) empirically caught this
-// exact tier resizing its allocatedWorkCeiling 10x between a 60s and a 600s non-binding
-// timeBudgetMs, proving it was undetected work-dose debt of the same shape as every migrated site
-// above, not a deliberate boundary. Now migrated (ninth site) to
-// scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK) — see its own call-site comment in
-// orchestration.ts. Only ONE direct conversion of that ms field to work remains approved:
-// `workBudget`'s own resolution, the genuine, singular legacy compatibility boundary.
-const approvedDirectMsToWorkSites = new Set([
-    'const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);',
-]);
+// There is exactly one legitimate wall-ms -> work compatibility boundary inside orchestration:
+// resolution of solveLevel's caller-facing legacy time budget into the solve's canonical workBudget.
+// Every later stage/retry allocation must derive from that resolved work budget. This intentionally
+// scans every live legacyMsToWork(...) invocation rather than selected variable names: the older
+// name-based ratchet missed repairLateProbeTotalBudget because that site's wall budget had a
+// different syntactic shape, allowing the same work-dose defect to survive until a behavioral test
+// found it. Arbitrary future variable names must not be able to bypass this boundary again.
+const approvedDirectMsToWorkSite =
+    'const workBudget = explicitBaseWorkBudget ?? legacyWorkBudget ?? legacyMsToWork(timeBudgetMs, MIN_ATTEMPT_WORK);';
 const directMsToWorkLines = orchestration.split('\n')
     .map(line => line.trim())
-    .filter(line => line.includes('legacyMsToWork(timeBudgetMs'));
-assert.deepEqual(directMsToWorkLines.filter(line => !approvedDirectMsToWorkSites.has(line)), [],
-    'new direct timeBudgetMs -> work conversion added inside orchestration; normalize only at an intentional compatibility boundary');
-
-// 2026-08-28+: queue #2 step-3 migrated sites no longer re-derive their own work pool from
-// timeBudgetMs via legacyMsToWork — each now scales the solve's own resolved `workBudget` instead
-// (see budget-units.ts's scaledStageWorkBudget and each tier's own call-site comment in
-// orchestration.ts). Each site's own `*TotalBudget` (ms) line stays timeBudgetMs-derived and stays
-// in approvedLegacyTimeDerivedAllocations above — that is now a WALL-DEADLINE sizing line only
-// (a genuine, permanent use of timeBudgetMs), distinct from the work-dose debt the still-unmigrated
-// sites in that set carry. Guard against silently reintroducing the old work-dose pattern for each
-// migrated tier. See reports/2026-08-28-dedup-near-tie-retry-work-dose-migration.md for the full
-// account of what this pattern does and does not preserve.
-//
-// 2026-09-02: `repairLateProbeTotalBudget` (late-repair-search) is included here even though it was
-// NEVER one of the nine names in approvedLegacyTimeDerivedAllocations above: its ms line is a bare
-// `= timeBudgetMs` assignment with no `* fraction` multiplication, so it never matched that set's
-// regex-based scan and was undetected debt of the identical work-dose pattern for as long as every
-// other site above carried it. If a future site reconverts a `totalBudget`-shaped ms value back into
-// work via legacyMsToWork without going through an approved/migrated name tracked in one of these
-// two lists, it can currently slip past this ratchet the same way — search the source directly
-// (`grep -n legacyMsToWork modules/solver/orchestration.ts`) when auditing for new debt rather than
-// trusting this list's completeness alone.
-const migratedWorkDoseSites = ['coarseStateNearTieRetentionRetryTotalBudget', 'repairFallbackTotalBudget', 'nonDefaultRetryTotalBudget', 'connectivityRetryTotalBudget', 'mcNeighborBudgetRetryTotalBudget', 'goalAttractionGuidanceDistanceRetryTotalBudget', 'repairElitePrefixDfsRetryTotalBudget', 'repairLateProbeTotalBudget'];
-for (const site of migratedWorkDoseSites) {
-    assert.equal(orchestration.includes(`legacyMsToWork(${site}`), false,
-        `${site}'s work dose regressed back to a timeBudgetMs-derived legacyMsToWork conversion`);
-}
+    .filter(line => !line.startsWith('//') && /\blegacyMsToWork\s*\(/u.test(line));
+assert.deepEqual(directMsToWorkLines, [approvedDirectMsToWorkSite],
+    'orchestration must have exactly one legacyMsToWork(...) call: solve-level compatibility normalization. Stage/retry work doses must scale the resolved workBudget instead.');
 
 assert.match(portfolio, /LEGACY WALL-CLOCK SCHEDULER EXPERIMENT/u,
     'the old ms portfolio must remain visibly quarantined until it is work-normalized or removed');
