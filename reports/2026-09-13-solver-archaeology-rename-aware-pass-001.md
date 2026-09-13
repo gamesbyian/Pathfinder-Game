@@ -1,6 +1,11 @@
 # Solver archaeology: rename-aware reverse pass
 
-Status: INTERIM / evidence-preservation report. Current priority remains `docs/solver-optimization-workstreams.md`. The running premise register is `docs/solver-archaeology-register.md`.
+> **Status:** active
+> **Last evidence:** 2026-09-13 — Rename-aware reverse pass reinterpreted historical solver evidence through current canonical vocabulary.
+> **Decision:** Keep the identified archaeology priorities active as evidence-generation targets; do not reopen closed scalar, scorer, width, retention, CDCL/LCG, or global coarse-state treatments merely because their historical names differ.
+> **Remaining gate:** Complete the prioritized topology, basin-participation, exact-label ancestry, future-crossing, constrained-event, and scheduler-starvation follow-ups against current evidence.
+
+Current priority remains `docs/solver-optimization-workstreams.md`. The running premise register is `docs/solver-archaeology-register.md`.
 
 ## Question
 
