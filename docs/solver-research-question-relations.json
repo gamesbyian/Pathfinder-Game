@@ -68,7 +68,7 @@
       ],
       "result": "Mechanic buckets can preserve fresh progress on selected solved siblings, but class-5 bucket canaries solve nothing and R03229 still prefers DEAD over LIVE. Progress diversity and viable future optionality are distinct.",
       "implies": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
-      "negativeControlFor": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "negativeControlFor": ["WS2-SIMPLE-FUTURE-FEASIBILITY", "WS2-CATEGORICAL-FULL-POOL"],
       "reopensOn": "A new diversity axis tied to a recurring exact-live/exact-dead discriminator, not another generic bucket/width/scorer sweep."
     },
     {
@@ -78,7 +78,7 @@
       "state": "closed-tested-form",
       "answeredBy": ["reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"],
       "result": "No. Six prespecified summaries overlap LIVE/DEAD across 31 exact-labelled states on 15 levels; joint-obligation rejects are zero throughout.",
-      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE"],
+      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-CATEGORICAL-FULL-POOL"],
       "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
       "calibratedBy": ["WS2-MECHANIC-COMPOSITION-CAUSALITY"],
       "reopensOn": "A materially new mechanism-specific descriptor premise."
@@ -98,9 +98,42 @@
       "constrains": [
         "Do not pay for a fresh generic recurrence census before rejoining the August connectivity population.",
         "Measure sound cause sufficiency, repeated-work cost, match cost, and shadow counterexamples before any pruning treatment.",
+        "If the current rejoin closes null, advance to WS2-CATEGORICAL-FULL-POOL rather than nearby scalar-feature accretion.",
         "No CDCL/LCG/global unsound keys without a bounded win."
       ],
       "reopensOn": null
+    },
+    {
+      "id": "WS2-CATEGORICAL-FULL-POOL",
+      "question": "Do current exact-labelled extinction pools contain a recurring categorical/interface-state distinction that preserves LIVE material even though scalar future-feasibility summaries fail?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "answeredBy": [],
+      "result": "Historical August work reached four DEAD-top-ranked/LIVE-alternative parents, rejected pairwise scalar accretion, and prepared full ranked-pool projection tooling, but no committed full-pool projection verdict was found. The experiment is unfinished, not negative.",
+      "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY", "docs/solver-archaeology-register.md"],
+      "implies": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
+      "constrains": [
+        "Run read-only on current exact-labelled cases before any quota/crowding policy.",
+        "Require non-redundancy with current exact-labelled evidence and compare against random-reserve/modest-width controls.",
+        "A null/heterogeneous result should prefer a changed representation premise over another scalar descriptor."
+      ],
+      "reopensOn": "The active solve-local dead-cause gate closes null, and the historical categorical/interface keys remain non-redundant on current exact-labelled extinction cases."
+    },
+    {
+      "id": "WS2-HOMOTOPY-COMPLETION-CLASSES",
+      "question": "Does topological completion class distinguish exact-LIVE from exact-DEAD frontier material in cases where ordinary represented progress and scalar feasibility overlap?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "answeredBy": [],
+      "result": "Historical winding-number analysis established a real complete-solution diversity axis: multiple homotopy classes on 12/19 must-cross-heavy published levels, with 16.6% of cross-class hint pairs treated as similar by the older diversity metric. Runtime LIVE/DEAD relevance was never tested, and the old centroid puncture was approximate for concave obstacle clusters.",
+      "triggeredBy": ["WS2-CATEGORICAL-FULL-POOL"],
+      "constrainedBy": ["docs/solver-archaeology-register.md"],
+      "constrains": [
+        "Reconstruct only a tiny offline winding observer with puncture-robustness checks.",
+        "Complete-solution class diversity does not itself license an in-loop topology feature or retention quota."
+      ],
+      "reopensOn": "The categorical full-pool gate is null/heterogeneous or specifically nominates topology on current exact-labelled extinction cases."
     },
     {
       "id": "WS2-MECHANIC-COMPOSITION-CAUSALITY",
@@ -131,6 +164,20 @@
         "A valid canary must enable the enforcement path and show real nonzero target-stage participation plus fraction-differentiated work under a production-shaped node cap before population compute."
       ],
       "reopensOn": "Current residual evidence again isolates ordered-systemic loss, and a cheap enforcement-path canary proves nonzero fraction-differentiated target-stage work under a production-shaped node cap."
+    },
+    {
+      "id": "WS6-DEPENDENCY-CONDITIONED-REPAIR",
+      "question": "When append-only repair cannot rescue a near miss, is the missing neighborhood better defined by a compact set of earlier coupled commitments than by rollback/path distance?",
+      "owner": "WS6",
+      "state": "deferred-reopen",
+      "answeredBy": [],
+      "result": "Historical repair-retreat evidence made rollback locality regime-dependent, and an archived descent-aware shadow probe intended to identify the earlier coupled commitment was never executed. This preserves an observer question, not a new repair operator.",
+      "constrainedBy": ["docs/solver-archaeology-register.md"],
+      "constrains": [
+        "Reopen only after current evidence implicates an interior/early commitment that continuation cannot revise.",
+        "Trace changed turn/crossing/axis/portal/visit/obligation commitments before designing CP-LNS, adaptive destroy, or another repair neighborhood."
+      ],
+      "reopensOn": "WS6 sees current exact-labelled or repair-retreat evidence that rescue requires revising an interior/early commitment outside the append-only neighborhood."
     },
     {
       "id": "WS1-CROSS-HINT-EVENT-COLLISIONS",
