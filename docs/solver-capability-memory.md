@@ -142,6 +142,8 @@ node scripts/solver-capability-memory.mjs \
 
 The output includes pairwise nomination overlap, unique nominations, and a greedy union view. That union is **diagnostic headroom**, not an additive solve claim. Historical nominations and current row-report gains must not be summed as though they were equally fresh or independently validated.
 
+When a union or per-source count becomes decision-bearing prose, derive it from the machine-readable manifest/result rather than rebuilding source identity or set algebra by hand. Preserve enough identity to regenerate the result, including exact action/config labels where they select a source. At minimum assert `union nomination count >= max(candidate nomination count)` before closeout. The September 12 reconciliation caught an invalid `65`-row prose union only because one member source already had `137` nominations.
+
 ## Capability displacement
 
 Accepted solver changes may have positive net value while losing some old winners. Those losses are not automatically bugs and do not automatically block promotion when the owning acceptance rule permits the tradeoff. They are, however, unusually useful causal evidence.
@@ -237,5 +239,6 @@ When a solver experiment materially changes capability, ask at closeout:
 5. Does a rejected change reveal a distinct basin/mechanism worth a future premise?
 6. Is the evidence already queryable through existing reports/assets, or does a reusable interface need extending?
 7. Did the production residual/current-state documentation become stale?
+8. If aggregate capability-memory counts are published, are they generated from a reproducible manifest/result with exact source identities, and do basic set invariants hold?
 
 Most experiments will still close with no further machinery. Capability memory exists to prevent the scientifically interesting exceptions from becoming tombstones.

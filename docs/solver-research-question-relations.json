@@ -25,6 +25,40 @@
       "reopensOn": null
     },
     {
+      "id": "WS2-KNOWN-CAPABILITY-COMPLEMENTARITY",
+      "question": "Can already-demonstrated capability from materially distinct historical/current evidence sources explain a meaningful share of the current class-5 residual?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": [
+        "reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md",
+        "reports/2026-09-12-capability-memory-union-reconciliation-001.md"
+      ],
+      "result": "No for class 5 under the bounded evidence: the corrected six-source union nominates 179/652 current residual rows, distributed 14/28/21/116/0 across classes 1-5, with zero reach into the 431 class-5 rows. The earlier prose value of a 65-row union is invalid and must not be reused.",
+      "implies": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
+      "constrains": [
+        "Do not make broader composition/portfolio mining the first explanation for class 5 without a materially new capability source.",
+        "Do not generalize the class-5 zero-reach result into a claim that capability memory is low-yield for class 4; 116/123 class-4 rows are nominated by the six-source panel.",
+        "Historical closed-treatment signatures remain nomination/calibration evidence, not current production capability."
+      ],
+      "reopensOn": "A materially new capability source with exact/protocol-compatible evidence that reaches class 5 and was not represented in the bounded census."
+    },
+    {
+      "id": "WS2-CLASS4-PORTAL-COARSE-FRESHNESS",
+      "question": "Does the September 9 portal coarse-state-merge positive basin still reproduce on current class-4 residual rows under current code and production-shaped work semantics?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "answeredBy": [],
+      "result": null,
+      "triggeredBy": ["WS2-KNOWN-CAPABILITY-COMPLEMENTARITY"],
+      "constrainedBy": ["reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"],
+      "constrains": [
+        "Start with a tiny prespecified freshness sample, not the 113-row nominated class-4 basin.",
+        "Do not reopen the globally enabled treatment: its 12 losses and hard R01273 capability regression remain valid controls.",
+        "If capability is fresh, test only a changed-treatment exposure/allocation form that preserves ordinary production capability and explicit work accounting."
+      ],
+      "reopensOn": null
+    },
+    {
       "id": "WS2-GENERIC-STRUCTURAL-DIVERSITY",
       "question": "Is generic structural-progress diversity/retention sufficient to fix the recurring class-5 extinction phenotype?",
       "owner": "WS2",
@@ -73,6 +107,23 @@
       "result": "The portal-terminal instrument is confounded; swap/cs rescue is also dominated by generic difficulty loosening. Clean/confounded cases remain useful calibration evidence.",
       "calibrates": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
       "reopensOn": "A manipulation that proves the specific edit, rather than generic loosening, caused the effect."
+    },
+    {
+      "id": "WS2-ADMISSIBLE-ORDER-RETRY-REPRICING",
+      "question": "Can admissible-order non-default retry work be repriced from 1.0 toward 0.18 without losing unique capability?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "answeredBy": [
+        "reports/2026-08-28-admissible-order-work-cap-gap-discovery.md",
+        "reports/2026-09-10-admissible-order-confirmation-006-artifact-recovery.md",
+        "reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md"
+      ],
+      "result": "The unchanged production path cannot answer this by budget rescaling: confirmation 006 gave the target tier zero allocated/spent work and ordinary admissible-order search ignores the per-tier soft work cap. A default-off enforcement seam now exists for a valid future experiment, but the repricing question remains deferred until current residual evidence earns it.",
+      "constrains": [
+        "Do not launch another 1.0-vs-0.18 confirmation merely because the enforcement seam exists.",
+        "A valid canary must enable the enforcement path and show real nonzero target-stage participation plus fraction-differentiated work under a production-shaped node cap before population compute."
+      ],
+      "reopensOn": "Current residual evidence again isolates ordered-systemic loss, and a cheap enforcement-path canary proves nonzero fraction-differentiated target-stage work under a production-shaped node cap."
     },
     {
       "id": "WS1-CROSS-HINT-EVENT-COLLISIONS",
