@@ -97,12 +97,12 @@
         "reports/2026-09-10-admissible-order-confirmation-006-artifact-recovery.md",
         "reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md"
       ],
-      "result": "Not answerable by further budget rescaling in the current implementation. Confirmation 006 gave the target tier zero allocated/spent work; later probes recovered the consumer-side cause: ordinary admissible-order search does not consume the per-tier soft work cap, matching the older sibling work-cap-gap family.",
+      "result": "The unchanged production path cannot answer this by budget rescaling: confirmation 006 gave the target tier zero allocated/spent work and ordinary admissible-order search ignores the per-tier soft work cap. A default-off enforcement seam now exists for a valid future experiment, but the repricing question remains deferred until current residual evidence earns it.",
       "constrains": [
-        "Do not launch another 1.0-vs-0.18 confirmation until the ordinary search primitive demonstrably consumes the intended per-tier cap.",
-        "A valid canary must show real nonzero target-stage participation and fraction-differentiated work under a production-shaped node cap before population compute."
+        "Do not launch another 1.0-vs-0.18 confirmation merely because the enforcement seam exists.",
+        "A valid canary must enable the enforcement path and show real nonzero target-stage participation plus fraction-differentiated work under a production-shaped node cap before population compute."
       ],
-      "reopensOn": "A bounded consumer-semantics repair plus regression/canary evidence that the per-tier soft cap is actually observed and differentiates target-stage work."
+      "reopensOn": "Current residual evidence again isolates ordered-systemic loss, and a cheap enforcement-path canary proves nonzero fraction-differentiated target-stage work under a production-shaped node cap."
     },
     {
       "id": "WS1-CROSS-HINT-EVENT-COLLISIONS",
