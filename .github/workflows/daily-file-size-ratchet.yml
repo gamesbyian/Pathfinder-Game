@@ -1,0 +1,24 @@
+name: Daily file-size ratchet
+
+on:
+  schedule:
+    - cron: '23 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-file-size-ratchet
+  cancel-in-progress: true
+
+jobs:
+  full-repository-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+      - name: Enforce repository-wide file-size ratchet
+        run: node scripts/check-file-size-ratchet.mjs
