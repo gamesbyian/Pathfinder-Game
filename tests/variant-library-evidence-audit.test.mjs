@@ -21,11 +21,15 @@ function fixture() {
         parentCorpus: 'source-a.json',
         familyMode: 'symmetry',
         parentContentHash: 'same-parent-content',
+        requestedCount: 5,
+        acceptedCount: 4,
+        generationAttempts: 7,
+        attemptBudget: 20,
         variants: [
-            { variantId: 'V1', relation: 'symmetry', variantContentHash: 'shared-variant-content', mutationManifest: { operation: 'transform' } },
-            { variantId: 'V2', relation: 'symmetry', variantContentHash: 'same-parent-content', mutationManifest: { operation: 'transform' } },
-            { variantId: 'V3', relation: 'symmetry', variantContentHash: 'first-v3-content', mutationManifest: { operation: 'transform' } },
-            { variantId: 'V4', relation: 'symmetry', mutationManifest: { operation: 'transform' } },
+            { variantId: 'V1', relation: 'symmetry', variantContentHash: 'shared-variant-content', generationAttempts: 1, mutationManifest: { operation: 'transform' } },
+            { variantId: 'V2', relation: 'symmetry', variantContentHash: 'same-parent-content', generationAttempts: 1, mutationManifest: { operation: 'transform' } },
+            { variantId: 'V3', relation: 'symmetry', variantContentHash: 'first-v3-content', generationAttempts: 2, mutationManifest: { operation: 'transform' } },
+            { variantId: 'V4', relation: 'symmetry', generationAttempts: 3, mutationManifest: { operation: 'transform' } },
         ],
     });
     writeManifest('a', 'p1-other', {
@@ -35,8 +39,12 @@ function fixture() {
         parentCorpus: 'source-a.json',
         familyMode: 'local-mutant',
         parentContentHash: 'same-parent-content',
+        requestedCount: 1,
+        acceptedCount: 1,
+        generationAttempts: 2,
+        attemptBudget: 10,
         variants: [
-            { variantId: 'V3', relation: 'local-mutant', variantContentHash: 'second-v3-content', mutationManifest: { operation: 'mutate' } },
+            { variantId: 'V3', relation: 'local-mutant', variantContentHash: 'second-v3-content', generationAttempts: 2, mutationManifest: { operation: 'mutate' } },
         ],
     });
     writeManifest('b', 'p2-sym', {
@@ -57,21 +65,43 @@ function fixture() {
 }
 
 describe('variant-library evidence audit', () => {
-    test('separates record identity, content identity and evaluation provenance', () => {
+    test('separates record/content identity, observation attachment, and generation selection', () => {
         const audit = auditVariantLibrary(fixture());
-        expect(audit.counts.familyManifests).toBe(3);
-        expect(audit.counts.variantRows).toBe(6);
-        expect(audit.contentIdentity.exactParentHashIdentityCollisions).toBe(1);
-        expect(audit.contentIdentity.exactVariantHashIdentityCollisions).toBe(1);
-        expect(audit.contentIdentity.exactNoOpVariants).toBe(1);
-        expect(audit.contentIdentity.duplicateLogicalVariants).toBe(1);
-        expect(audit.contentIdentity.conflictingLogicalVariants).toBe(1);
-        expect(audit.contentIdentity.familyIdCollisions).toBe(1);
-        expect(audit.contentIdentity.variantsMissingContentHash).toBe(1);
-        expect(audit.evaluationEvidence.rows).toBe(1);
-        expect(audit.evaluationEvidence.missingSolverCommit).toBe(1);
-        expect(audit.evaluationEvidence.missingRunId).toBe(1);
-        expect(audit.evaluationEvidence.withRecordedBudgetContext).toBe(0);
+        expect(audit.schemaVersion).toBe(2);
+        expect(audit.counts).toMatchObject({
+            familyManifests: 3,
+            variantRows: 6,
+            uniqueParentIdentities: 2,
+            evidenceObservations: 1,
+            evidenceAttachments: 1,
+        });
+        expect(audit.identitySemantics.variantRecordIdentity).toBe('(parentCorpus,parentId,variantId)');
+        expect(audit.contentIdentity).toMatchObject({
+            exactParentHashIdentityCollisions: 1,
+            exactVariantHashIdentityCollisions: 1,
+            exactNoOpVariants: 1,
+            duplicateLogicalVariants: 1,
+            conflictingLogicalVariants: 1,
+            crossModeLogicalVariants: 1,
+            familyIdCollisions: 1,
+            variantsMissingContentHash: 1,
+        });
+        expect(audit.generationEvidence).toMatchObject({
+            familiesWithRequestAcceptanceCounts: 2,
+            familiesMissingRequestAcceptanceCounts: 1,
+            familiesWithAttemptBudget: 2,
+            familiesWithGenerationAttempts: 2,
+            variantsWithGenerationAttempts: 5,
+        });
+        expect(audit.evaluationEvidence).toMatchObject({
+            observations: 1,
+            attachments: 1,
+            duplicateAttachmentsFromDuplicateVariantRecords: 0,
+            missingSolverCommit: 1,
+            missingRunId: 1,
+            withRecordedBudgetContext: 0,
+        });
         expect(audit.evidencePurposes['current-solver-capability']).toMatch(/rechecked on current code/u);
+        expect(audit.evidencePurposes['generation-selectivity']).toMatch(/requested\/attempted\/accepted/u);
     });
 });
