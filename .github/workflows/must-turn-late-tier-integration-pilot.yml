@@ -1,0 +1,33 @@
+name: Must-turn late-tier integration pilot
+
+on:
+  push:
+    branches:
+      - chatgpt/must-turn-family-contrast-pilot-2026-09-13
+    paths:
+      - scripts/stress/must-turn-late-tier-integration-pilot.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --prefer-offline --no-audit --fund=false
+      - name: Run real-ladder integration pilot
+        run: >-
+          node scripts/run-bundled.mjs scripts/stress/must-turn-late-tier-integration-pilot.mjs
+          --out=tmp/must-turn-late-tier-integration-pilot.json
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: must-turn-late-tier-integration-pilot
+          path: tmp/must-turn-late-tier-integration-pilot.json
+          if-no-files-found: error
