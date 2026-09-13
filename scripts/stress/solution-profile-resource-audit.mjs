@@ -272,7 +272,6 @@ function corpus2WitnessRankingAudit(corpus2, pool) {
             provenance: [],
         };
         const profile = buildProfile(entry.level, [witnessHint]);
-        const rawTerms = profileDistanceTerms(profile, pool[0]?.profile || profile);
         if ((profile.prefixDiversity?.pathsSampled ?? 0) < 2 ||
             (profile.pairwiseDistinctiveness?.pairsCompared ?? 0) < 1 ||
             profile.discoverySaturation?.plateauFraction == null ||
