@@ -8,6 +8,8 @@ Preserve behavior and evidence. Similar-looking representations are not automati
 
 Historical detail: [`archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md`](archive/snapshots/architecture-unification-debt-2026-09-04-pre-proposal-consolidation.md).
 
+Detailed duplicate-authority audit: [`../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md`](../reports/2026-09-12-duplicate-authority-and-missing-abstractions-audit.md). Treat that report as evidence/detail, not as a competing queue.
+
 ## Classification
 
 | Kind | Rule |
@@ -17,6 +19,8 @@ Historical detail: [`archive/snapshots/architecture-unification-debt-2026-09-04-
 | Parallel internal authority | Unify modules that independently own the same policy/schema/meaning. |
 | Repeated mechanics | Share budget/telemetry/provenance/executor plumbing without forcing identical behavior. |
 | Hidden lifetime coupling | Make mutable-state ownership/lifetime explicit; reset/isolate it or define a typed handoff. |
+| Evidence reconstruction | Prefer authoritative producer facts when several consumers independently rebuild the same scientific classification or join from raw fields. |
+| Identity-model weakness | Strengthen identifiers when apparent duplication/ambiguity is caused by under-resolved run, event, treatment, source, population, or revision identity. |
 
 External forms may vary. Internal authority and mutable-resource lifetime should not be ambiguous.
 
@@ -24,7 +28,14 @@ External forms may vary. Internal authority and mutable-resource lifetime should
 
 | Area | Current direction / exit condition |
 |---|---|
-| **Stage work/budget ownership** | Replace accidental shared mutable budget inheritance with explicit attempt/stage ownership where it remains. Structural changes must preserve policy unless separately tested as scheduler experiments. Budget semantics are owned by [`solver-budget-determinism.md`](solver-budget-determinism.md) and scheduler policy by [`solver-scheduling-policy.md`](solver-scheduling-policy.md); do not duplicate their current gates here. |
+| **Residual evidence/classification authority** | Current residual-class research still reconstructs capability, offer/reach/starvation, dispatch, historical-candidate, and no-known-candidate distinctions from multiple lower-level artifacts. Preserve the five-class semantics and independent evidence sources, but converge repeated reconstruction onto one versioned residual-evidence/classification contract once equivalent existing machinery has been inventoried. Exit when class-specific research consumes one authoritative derivation or an intentionally versioned alternative rather than re-encoding class rules locally. |
+| **Research-population construction** | Decision-bearing cohorts such as current residual ∩ historical winner ∩ treatment/capability predicates should have reproducible derivation, source identity/fingerprints, exclusions, identity basis, and stable population identity. Extend existing experiment-contract population primitives rather than creating a parallel population authority. Exit when bespoke joins are no longer required for recurring solver-research population shapes. |
+| **Treatment participation semantics** | Keep capability signature distinct from execution opportunity. Make configured/eligible/offered/reached/starved/dispatched/completed/work-allocation/work-spent/outcome distinctions authoritative enough that analyses do not infer them differently from stage-name families and attempt bags. Prefer producer-emitted participation/lifecycle facts where feasible. |
+| **Research-question lifecycle/result propagation** | Relations, result vocabulary, report metadata, status/index surfaces, and workstream/future-work authorities should not independently determine whether a question is open, answered, constrained, triggered, superseded, or gated. Preserve relation topology separately from priority. Move toward one machine-readable lifecycle/disposition authority with generated/projection views when current implementations do not already provide it. |
+| **Experiment/run provenance fragments** | Experiment manifests, family-run manifests, result contracts, fingerprints, and research artifacts legitimately have different top-level schemas, but should not independently redefine commit/run/producer/population/budget/side-effect identity. Reuse composable lower-level validators/records where overlap is real; do not collapse everything into a single manifest. |
+| **Research solver run context / harness semantics** | Fresh-process retry, production solve, isolated-technique census, fingerprinting, replay/microscope, and sweep tools may execute differently by design. Common corpus identity, work/deadline semantics, history/hint posture, determinism/seed, validator identity, side effects, and provenance should be explicit rather than rediscovered per harness. Share context/contract, not necessarily executor implementation. |
+| **Corpus/level reference authority** | Reduce repeated array-vs-`levels`, path tables, ID/position mapping, metadata stripping, and raw→solver normalization where a coherent corpus/level-reference abstraction can preserve semantics. Position must not stand in for persistent level identity. Keep hint-aware and historical readers distinct only where their extra semantics require it. |
+| **Stage work/budget ownership** | Replace accidental shared mutable budget inheritance with explicit attempt/stage ownership where it remains. Structural changes must preserve policy unless separately tested as scheduler experiments. Budget semantics are owned by [`solver-budget-determinism.md`](solver-budget-determinism.md) and scheduler policy by [`solver-scheduling-policy.md`](solver-scheduling-policy.md); do not duplicate their current gates here. Source-text ratchets should not become a second hand-maintained policy authority when an inspectable stage/budget registry can express the rule directly; retain independent behavioral checks. |
 | **Per-solve vs realm-global work meters** | Keep meanings explicit and prevent cumulative realm state from influencing solve budgets or nested/concurrent behavior. Prefer caller-owned multi-solve accumulation from `SolveResult.workSpent`. Retire this row when ownership cannot be confused by callers. |
 | **Search-stage mutable-state isolation** | No known current same-action fresh-vs-preceded discrepancy after the 2026-09-03 reproduction sweep. Reopen as correctness/research-validity debt only if fixed input/config/seed/work produces a new history-dependent search discrepancy without an intentional typed handoff. |
 | **Residual stage/retry dispatch duplication** | Remove mirrored policy/dispatch only when canonical stage/action identity remains explicit and behavior is preserved. New actions use canonical scheduler/action identity. |
@@ -64,6 +75,10 @@ Persistent IDs identify entities; fingerprints identify exact structural revisio
 ### Semantic boundaries
 
 Wire-level meaning should have one definition before projection into runtime/domain/solver representations. Specialized implementations may remain. Independent referee/reference paths are useful when they detect drift rather than duplicate mutable policy.
+
+### Research evidence boundaries
+
+Scientific concepts that recur across experiments should have one explicit identity and derivation contract before they become ranking or promotion inputs. Producers should preserve decision-bearing facts when downstream reconstruction would require interpreting aliases, stage families, incomplete provenance, or manually assembled source lists. Independent evidence producers may remain intentionally separate; canonicalize their observations rather than forcing common-mode generation.
 
 ## Priority rule
 
