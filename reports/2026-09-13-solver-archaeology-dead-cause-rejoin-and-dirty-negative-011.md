@@ -85,13 +85,20 @@ The uploaded research correctly distinguishes exact-state caching from explanati
 
 The August connectivity population is currently the strongest known pre-existing candidate because its failures originate in a sound native rejection rather than stochastic repair failure.
 
-## 6. Articulation/separator orphan discovered but not promoted here
+## 6. Separator/articulation line was already tested and mostly closed
 
-The July literature cross-check ranked articulation-point / graph-separator structure as a cheap near-term idea and proposed a pre-code correlation against witness-divergence data. Archaeology found no Tarjan/articulation implementation or committed result under that vocabulary.
+A first archaeology pass briefly misclassified the July literature-cross-check's articulation/separator proposal as orphaned. Exact commit-vocabulary search corrected that immediately.
 
-However, its original motivation leaned on high witness ordering discrepancy, while later controlled evidence found no general move-ordering deficit on unsolved levels. That weakens the old rationale without testing the structural premise itself.
+The actual chain is substantial:
 
-Disposition: preserve as an orphaned **observer premise**, not as a current WS2 priority. If revisited, test separator/chokepoint structure directly against exact LIVE/DEAD or recurring connectivity-failure populations, not against generic witness rank/discrepancy. Do not build a separator prune first.
+- `b4633404` (2026-07-11) ran the proposed pre-code test linking articulation-gated objectives to witness-divergence discrepancy. Correlation was **-0.406**, opposite the expected sign. The report correctly noted that witness discrepancy measures branching/ordering confusion rather than forced-detour cost, so this refuted the proposed proxy more than all separator structure.
+- `f64228e3` (2026-07-18) then ran a real Tarjan articulation-point pocket prevalence check for adjacent-turn/resource-bound use. The targeted pattern appeared on only **1/40** sampled levels.
+- `f644918d` (2026-08-05) built shared residual-decomposition and shadow-evaluation infrastructure and tested a single-articulation pendant-chamber resource-spectrum reasoner against a CP-SAT-labelled branch atlas. It caught **2** dead branches with **zero false rejects**, but applicability was about **0.4%** of sibling branches and the probe abstained on **97%** of the atlas.
+- `30008f9c` (2026-08-06) explicitly corrected a later documentation gap that had again described region/separator work as unstarted.
+
+Disposition: **do not resurrect generic articulation/separator pruning.** The line progressed from a bad proxy through a direct prevalence check to a sound shadow reasoner and found the structural population too sparse for the tested forms. Separator information can still appear as part of another independently earned causal interface, but it is not an orphaned standalone opportunity.
+
+This correction is itself a useful archaeology warning: default-branch code search can miss historical experiments after tools/docs are retired; exact commit-message and old-doc vocabulary searches are necessary before declaring an idea untested.
 
 ## Bottom line
 
@@ -99,5 +106,7 @@ Two historical verdicts change meaning when their actual failure modes and succe
 
 - the July CP-SAT result was a **dirty negative** caused by an under-constrained model;
 - the August connectivity-certificate line was **cross-level negative but solve-local positive evidence**.
+
+A third apparent orphan, separator/articulation reasoning, disappears under deeper commit archaeology because the repo did in fact test it through multiple increasingly direct gates.
 
 The current Class-5 compact-dead-cause question should therefore rejoin August Stage B rather than restart at recurrence discovery, while retaining the much stricter requirement that any reusable cause be logically sound and economically worthwhile.
