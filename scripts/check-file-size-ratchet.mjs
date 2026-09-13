@@ -7,8 +7,9 @@
  * file to be split immediately.
  *
  * PR CI opts into incremental mode with PATHFINDER_PR_INCREMENTAL=1, so only files changed by the
- * PR can fail the gate. A scheduled daily workflow runs the same check against the full repository
- * to surface unrelated or accumulated size debt without taxing every agent task.
+ * PR can fail the gate. This preserves immediate enforcement for size growth caused by the PR while
+ * avoiding unrelated cleanup work. A scheduled daily workflow runs the same check against the full
+ * repository to surface stale grandfathering or accumulated size debt.
  *
  * Unrelated files already over target when this check was added are grandfathered at their
  * CURRENT size in GRANDFATHERED below: they may shrink freely but must never grow past their
