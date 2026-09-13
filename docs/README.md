@@ -17,6 +17,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, workstream state, and next gates** |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
+| [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
 | [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
 | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer and holdout discipline |
@@ -56,6 +57,7 @@ Before broad catalogs, reports, corpora, or histories:
 
 - solver priority/state: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md);
 - prior evidence: `node scripts/research-status-index.mjs --compact --query=<term>`;
+- historical solver premise/disposition memory: [`solver-archaeology-register.md`](solver-archaeology-register.md) when the question is explicitly about old/retired work;
 - existing tooling: `node scripts/tooling-census.mjs --compact --query=<term>`;
 - solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`;
 - corpus shape: `node scripts/corpus-query.mjs --corpus=stress2`;
@@ -72,7 +74,7 @@ Default orientation:
 3. the specialist doc for the current gate
 4. compact evidence/tool queries before broad artifacts
 
-Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence.
+Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence. Use [`solver-archaeology-register.md`](solver-archaeology-register.md) only when tracing historical premises/dispositions; it does not rank current work.
 
 The September 11 workflow/evidence remediation is complete. For current workflow/evidence maintenance, start from [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), the maintained workflow lifecycle/indexes, and the workflow/scripts being changed. Use [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) for the completed program's conclusions; the remediation plan and implementation handoff are historical records, not active queues.
 

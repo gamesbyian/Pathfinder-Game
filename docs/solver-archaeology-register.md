@@ -2,7 +2,9 @@
 
 Status: active evidence register for historical solver premises, unresolved mechanisms, and archaeology-derived reopen questions. This is not a priority queue. Current execution priority remains `docs/solver-optimization-workstreams.md`; deferred/reopen authority remains `docs/solver-future-work.md`.
 
-Purpose: prevent historically interesting mechanisms from being lost through vocabulary drift, bundled negative experiments, renamed identities, stale branches, or incomplete treatment delivery. Each entry records the historical premise, what was actually tested, what is genuinely closed, what remains unresolved, and the smallest useful next question.
+Purpose: prevent historically interesting mechanisms from being lost through vocabulary drift, bundled negative experiments, renamed identities, stale branches, incomplete treatment delivery, or unfinished experiment chains. Each entry records the historical premise, what was actually tested, what is genuinely closed, what remains unresolved, and the smallest useful next question.
+
+Retained repository history begins on **2026-02-24**. Searches that begin with later solver vocabulary can therefore miss substantial February/March ancestry. Pre-February-24 ideas, if any, are only recoverable from later-copied artifacts or sources outside retained Git history.
 
 ## Archaeology method
 
@@ -12,10 +14,14 @@ Historical conclusions are not trusted from labels alone. Before treating a hist
 2. prove the intended treatment actually participated in the execution path and received the intended work;
 3. separate a premise from the implementation bundle that happened to test it;
 4. distinguish `cleanly falsified`, `implementation/formulation falsified`, and `premise unresolved`;
-5. treat historical branches as evidence, not authority; recover unique evidence explicitly;
-6. preserve corrections and supersessions rather than silently rewriting old evidence.
+5. treat historical branches as evidence, not authority; compare ancestry before assuming a stale branch contains unique work;
+6. preserve corrections and supersessions rather than silently rewriting old evidence;
+7. follow negative-result chains through the next intended experiment instead of inheriting a revert's verdict automatically;
+8. treat dead tooling as a record of an unanswered question until the question itself is shown to have been answered.
 
 Historical vocabulary families currently known to matter include: `archetype -> routing regime`; compact attempt keys -> canonical structured attempt identities; `diverse beam -> mechanic-bucket retention`; `dedup near-tie -> coarse-state near-tie retention`; `atlas/oracle -> labelled branch/reference model`; `trove -> variant family dataset`; `random/randoms -> corpus2`.
+
+The stale-branch sweep performed during this archaeology found the obvious solver/research branches inspected to be ancestors of `main` with zero unique commits ahead. Therefore branch-shaped residue is a lower-priority seam unless another artifact points to unique work.
 
 ## Premises requiring a proper look
 
@@ -23,37 +29,51 @@ Historical vocabulary families currently known to matter include: `archetype -> 
 
 **Status:** premise unresolved; strongest apparent orphan.
 
-July 2026 work progressed from a rejected cell-overlap proxy to actual winding-number signatures around obstacle clusters. The corrected probe found multiple homotopy classes on 12/19 must-cross-heavy published levels and found 16.6% of cross-class hint pairs treated as similar by the then-current diversity metric. The July 23 planning consolidation called homotopy-class signatures the highest-priority research build. No later clean implementation result or closure has yet been found, and current authorities contain no explicit homotopy disposition.
+July 2026 work progressed from a rejected cell-overlap proxy to actual winding-number signatures around connected obstacle-cluster centroids. The corrected probe found multiple homotopy classes on 12/19 must-cross-heavy published levels and found 16.6% of cross-class hint pairs treated as similar by the then-current diversity metric. The July 23 planning consolidation called homotopy-class signatures the highest-priority research build. Alias searches through `homotopy`, `winding`, topological/path-class vocabulary, branches, and later planning found no implementation descendant or clean closure.
 
 **What is proved:** complete solutions contain a topological diversity axis that the older solution-diversity metric could miss.
 
 **Not proved:** homotopy class predicts LIVE/DEAD frontier fate, increases solve rate, or provides a useful runtime key.
 
-**Smallest next question:** on exact-labelled extinction cases, does the last known-live branch preserve a topological completion class absent from the retained dead population? Observer-only first; no scoring or retention change unless this relation exists.
+**Smallest next question:** on exact-labelled extinction cases, do known completions of the last LIVE branch occupy a topological completion class absent from completions represented by the retained DEAD population? Reuse the old offline winding machinery first; no in-loop topology feature unless this relation recurs.
 
 ### Completion-regime / categorical future structure
 
 **Status:** synthesis premise; unresolved.
 
-Several historical lines point toward a common missing abstraction: the solver often represents how much obligation remains, but may poorly represent which qualitatively different completion regimes remain possible. Evidence families include homotopy classes, future-crossing commitments, portal-pair identity, mechanic-bucket retention, coarse-state merge churn, and alternate-representation retries.
+Several historical lines point toward a common missing abstraction: the solver often represents how much obligation remains, but may poorly represent which qualitatively different completion regimes remain possible. Evidence families include homotopy classes, future-crossing commitments, portal-pair identity, mechanic-bucket retention, coarse-state merge churn, alternate-representation retries, exact extinction cases, and regime-dependent restart value.
 
 **Smallest next question:** seek a recurring categorical distinction in exact-labelled LIVE-vs-DEAD states before adding another scalar feasibility feature.
 
+### Unfinished August full-pool categorical-state projection
+
+**Status:** genuinely unfinished experiment; high-value observer gate.
+
+The August 24 beam-extinction descriptor line reached four exact A/D `DEAD top-ranked / LIVE alternative` parents (`S00001`, `S00030`, `S00048`, `R00104`). Pairwise scalar/simple-interface stories did not recur: MustCross first-pass phase distinguished only one pair, local required-axis corridor availability distinguished none, and other cheap state differences were heterogeneous.
+
+The historical response was disciplined: stop pairwise feature accretion and capture the **full ranked extinction pools**. Compare a tiny prespecified family of already-maintained categorical/interface-state keys at unchanged width, reporting bucket count, singleton share, guaranteed slots, exact-LIVE survival, random-reserve control, and modest width-only control. Tooling was extended specifically to retain the full pools and the exact intended output path was documented.
+
+No committed full-pool artifact, projection result, or later verdict was found. The old branch contains no unique later execution. This is not a negative result.
+
+**Boundary:** current WS4 generic retention forms stay closed. First reconcile this historical counterfactual against current Class-5 exact-labelled evidence. If it remains non-redundant, run it read-only; do not jump directly to a quota/crowding policy.
+
 ### Future intersection commitments / Intersection Opportunity Graph lineage
 
-**Status:** premise unresolved; original implementation bundle not a clean test.
+**Status:** premise unresolved; historical production formulations not clean evidence against the premise.
 
-April work turned future free intersections into structural commitments using synthetic must-cross anchors and single/pair/triplet probes. That experiment bundled a new lower bound, synthetic obligations, and a probe scheduler, then was reverted. The core question was never cleanly isolated.
+April work turned future free intersections into structural commitments using synthetic must-cross anchors and single/pair/triplet probes. The first bundle also included an intersection+goal hard bound whose own implementation admitted false positives; the bundle was reverted quickly.
+
+A later descendant reappeared as **intersection blueprint planning**: select locations for unconstrained future intersections, convert them into virtual crossing commitments, and search blueprint variants. Archaeology found that `enableBlueprintPlanning` was omitted from a solve-context transport, so the mechanism was silently disabled. When later option propagation made it participate alongside unrelated changes, audit runtime exploded because blueprint added full policy sweeps; propagation was disabled again, the troubled stack was reverted, and the residual flag was eventually removed as dead code. No deliberate matched-work enabled A/B was found.
 
 **Live premise:** LIVE and DEAD states with the same intersection deficit may differ in which future crossing plans remain realizable.
 
-**Smallest next question:** observer/reference-model comparison of realizable future crossing commitments on exact-labelled sibling states. Do not restore synthetic must-cross production behavior as the first experiment.
+**Smallest next question:** observer/reference-model comparison of realizable future crossing commitments on exact-labelled sibling states. Do not restore synthetic must-cross or blueprint production behavior as the first experiment.
 
 ### Constrained-event / arbitrary-target feasibility oracle
 
 **Status:** instrumentation premise; unresolved as a small research primitive.
 
-March briefly generalized search so an arbitrary cell could be treated as a constrained target while retaining puzzle obligations. The broad architecture was reverted, but the query shape remains useful.
+March briefly generalized search so an arbitrary cell could be treated as a constrained target while retaining puzzle obligations, portal/flipper context, and fast-fail logic. The broad architecture was reverted, but the query shape remains useful.
 
 **Possible use:** offline microscope for questions such as whether a state can still complete through a candidate crossing region, portal family, missing must-cross axis, chokepoint, or other structural event.
 
@@ -61,21 +81,29 @@ March briefly generalized search so an arbitrary cell could be treated as a cons
 
 ### Cross-attempt basin overlap and anti-redundancy
 
-**Status:** strong historical motivation; no clean negative verdict located.
+**Status:** strong historical motivation; general observer question unresolved.
 
-April already built portfolio-diversity telemetry including `pairwiseStateOverlap`, `branchDecisionCorrelation`, family coverage, and frozen attempt identity. The first implementation was not actually measuring what it claimed: a transport/serialization omission caused identity fields to disappear and `pairwiseStateOverlap` to report 1.0 trivially. A later repair explicitly fixed that telemetry path. This is important because it means the repository once had a direct basin-overlap instrument, but its earliest apparent results are invalid unless they postdate the fix.
+April already built portfolio-diversity telemetry including `pairwiseStateOverlap`, `branchDecisionCorrelation`, family coverage, and frozen attempt identity. The first implementation was not actually measuring what it claimed: a transport/serialization omission removed policy identity and root-move information, causing `distinctProfileIdCount=0` and `pairwiseStateOverlap=1` mechanically. A later repair explicitly fixed those paths. No later committed Gate-B interpretation using the repaired telemetry has been found, and the historical observer is no longer on current `main`.
 
-May L92 investigation separately measured retries with pairwise overlap near 1.0 and implemented a prefix-divergence guard that carried timed-out prefixes forward and suppressed exact early repetition with a fallback if all moves were suppressed. That mechanism repeatedly suffered option/result transport failures: `forbiddenPrefixes` was dropped by an internal allowlist, and later the prior-attempt history itself was stripped by canonical result projection. The attempted full `attempts[]` passthrough then caused a catastrophic serialization regression and was reverted. No clean result has yet been found showing a correctly delivered basin-divergence treatment was useless.
+May L92 investigation independently reported retries with pairwise overlap near 1.0 and implemented a prefix-divergence guard. That treatment repeatedly suffered control-plane failures: `forbiddenPrefixes` was omitted from an internal allowlist, timeout-prefix history was lost across hint-ladder iterations, a raw `attempts[]` passthrough caused a catastrophic serialization regression, and a later shallow projection had to restore the transport safely. The archaeology did not find a clean general verdict showing correctly delivered basin-divergence behavior was useless.
 
-**Smallest next question:** recover or rebuild the observer only, using current canonical attempt identities and explicit participation checks, and measure trajectory/state-population overlap between nominally different actions on residual misses. Determine whether portfolio breadth is real or mostly nominal before changing behavior.
+**Smallest next question:** rebuild the observer only, using current canonical action identities and explicit participation checks, and measure trajectory/state-population overlap between nominally different current actions/retries on residual misses. Determine whether portfolio breadth is real or mostly nominal before changing behavior.
 
 ### Progress-conditioned continuation / allocation
 
-**Status:** historical mechanism worth generalizing conceptually.
+**Status:** historical mechanism plus fixed-work evidence worth generalizing conceptually.
 
-May rescue systems used progress-based lockouts: a rescue could refire beyond a soft cap only when relevant telemetry improved. This suggests a broader WS2 question: continuation should perhaps depend on observed marginal search progress rather than retry count or action identity alone.
+May rescue systems used progress-based lockouts: a rescue could refire beyond a soft cap only when relevant telemetry improved. August then ran a more direct equal-work restart-versus-continuation line:
 
-**Smallest next question:** characterize whether current expensive stages continue producing novel/better search states before designing a scheduler change.
+- `W=16M`, 20 near-miss levels: no detected difference after correcting a best-badness aggregation bug that had falsely favored continuation;
+- `W=64M`, same 20 rows: continuation 1/20, restart 3/20;
+- prespecified disjoint 23-row confirmation at `W=64M`: continuation 2/23, restart 5/23;
+- pooled `W=64M`: continuation 3/43, restart 8/43, five restart-only gains, zero losses;
+- `W=150M`, fresh harder `bestBadness 7-9` band: 9/36 vs 9/36 on the identical solve set, closing the attempted production translation.
+
+Because the 150M population differed from the 64M population, the history cannot isolate work scale from residual-band interaction. It does establish that action value was regime-dependent rather than globally monotone.
+
+**Smallest next question:** characterize whether current expensive stages continue producing novel/better search states, and whether legal current-solve observables predict marginal continuation value. Do not retest generic restart; join novelty/progress to canonical `workSpent` first.
 
 ### Scheduler Cartesian-product starvation
 
@@ -87,9 +115,13 @@ June showed a major gain simply by changing nesting from gate-outer/config-inner
 
 ### Frontier snapshots / producer -> receptor handoff
 
-**Status:** tested form partly negative; broader premise conditionally open.
+**Status:** specific forms closed; broader premise conditionally open.
 
-May beam work saved promising frontier snapshots and retried them with endgame IDA*. Those alternate IDA* starts also exhausted on L92, so `snapshot -> same old completion consumer` is weak evidence. The broader handoff premise remains open only if a genuinely complementary consumer or earned live-future selector exists, consistent with current future-work authority.
+May beam work saved promising frontier snapshots and retried them with endgame IDA*. Early telemetry was invalid because an incorrect/undeclared `startTime` made snapshot budget gating silently skip the fallback. After repair, audit telemetry showed snapshots were captured and multi-start actually ran; L92 attempts D-G reported two snapshot fires/two snapshots tried and all exhausted. Therefore `beam snapshot -> same endgame IDA* consumer` is genuinely negative on that case.
+
+A later beam→repair interoperability study found strong non-redundancy across a stratified 25-level sample: 942 beam artifacts and 1,657 repair elites had zero exact-prefix and zero metric-projection overlap on every inspected level. The proper matched-budget handoff was then implemented (`STRATEGY_REPAIR_BEAM_SEED`). Its isolated repair test appeared to gain a solve, but the full production ladder already solved that level; end-to-end the result was 2/13 vs 2/13 with roughly +3.5% nodes.
+
+**General lesson:** non-redundant information is not sufficient evidence of useful interoperability. Keep both tested consumers closed. Reopen handoff only when there is a genuinely complementary consumer **and** evidence that the producer preserves information that consumer can exploit.
 
 ### Dynamic event retargeting
 
@@ -97,11 +129,23 @@ May beam work saved promising frontier snapshots and retried them with endgame I
 
 A March parity-breaker experiment retargeted search toward an unused parity-changing portal when direct goal parity became impossible. The specific heuristic was reverted. The reusable idea is event-level retargeting: when a necessary future event becomes active, guide toward the event that repairs feasibility rather than always scoring against the ultimate goal.
 
+### Backward-search / backward-information lineage
+
+**Status:** tested broad/static forms closed; one narrow historical adaptation premise remained unported.
+
+A later archaeology pass separated several ideas that had been blurred as “bidirectional/backward search.” Giant meet-frontier search is structurally unattractive because the state includes path-history information and frontier cardinality explodes. A proposed exact static backward query, essentially “can the goal be reached in exactly `k` steps from here?”, was actually tested and found redundant with ordinary distance+parity information; that form is closed.
+
+An older pre-rewrite solver also carried a softer backward-BFS signal used only for move/retry bias. The scoring-bias half was ported in August as `SCORE_BACKWARD_BRIDGE`, default-off, and immediately harmed a known repair rescue without demonstrated benefit. The retry-adaptation half was explicitly not ported and no later descendant was found.
+
+**Boundary:** do not revive backward search or the old bridge scorer. The unported retry-adaptation idea is historical evidence only unless a current predictive signal independently earns it.
+
 ### Joint-obligation representation
 
 **Status:** recurring historical lineage; nearby scalar route currently closed.
 
 April must-cross scheduling, May unified Held-Karp obligation bounds, August future-event compatibility ideas, and September's null result for six scalar future-feasibility summaries all point at the interaction among obligations. The current evidence says not to continue by accreting nearby scalar summaries.
+
+May's unified Held-Karp history is especially instructive: the initial extra must-cross revisit slack overpruned known-valid paths and had to be removed. The admissible version necessarily undercounted some second-visit interaction cost. This is another sign that compact aggregate lower bounds reach representational limits around interacting obligations.
 
 **Reopen shape:** changed represented information, event compatibility, or categorical commitment structure, not another weighted deficit.
 
@@ -109,7 +153,9 @@ April must-cross scheduling, May unified Held-Karp obligation bounds, August fut
 
 **Status:** worth recomputing with the modern variant library.
 
-Earlier family work distinguished levels that become easy under small perturbations from those whose local relatives remain hard. The much larger modern variant library can now make this distinction more informative.
+The historical family experiment already showed a strong phenotype split. In one 477-variant study, R02248 solved under 35/45 perturbations spanning multiple mutation families, while R00440 stayed unsolved under all 45 variants across five mutation types despite many different solver actions being tried.
+
+The much larger modern variant library can now turn this from anecdote into a residual classifier.
 
 **Hypothesis:** fragile hard levels are more likely search/routing/representation interactions; robust hard families are stronger candidates for true capability gaps.
 
@@ -129,7 +175,7 @@ Where an independent accepted path exists, compare its prefix against production
 
 **Status:** strong historical negative on tiny local gap closure; relevant to Class-5 premise shape.
 
-July's CP-SAT prune-gap study on two hard levels found roughly 74% of provably dead sibling branches were still entered by the production gauntlet near known-valid paths. A later axis-aware connectivity refinement soundly rejected 7.6% of the remaining dead-branch gap, hit zero live branches, made the search substantially faster, and still produced a net solve loss at matched budget. The recorded interpretation was that when most sibling branches are dead, removing one extra dead branch mostly redirects search into another dead branch; marginal local closure has near-zero outcome value unless the gap is closed in bulk.
+July's CP-SAT prune-gap study first found roughly 74% of provably dead sibling branches still entered near known-valid paths; a larger follow-up still found roughly 62% across 14 levels, including cases without must-cross. A later axis-aware connectivity refinement soundly rejected 7.6% of the remaining dead-branch gap, hit zero live branches, made search substantially faster, and still produced a net solve loss at matched budget. The recorded interpretation was that when most sibling branches are dead, removing one extra dead branch mostly redirects search into another dead branch; marginal local closure has near-zero outcome value unless the gap is closed in bulk.
 
 **Current implication:** this strengthens the case for categorical/bulk distinctions between completion regimes rather than an indefinite sequence of individually sound tiny prunes. It also cautions against treating `sound + catches real dead states` as sufficient evidence for solve-rate value.
 
@@ -143,13 +189,41 @@ The July axis-reach probe rebuilt historical CP-SAT-labelled branch states and s
 
 ### Compact recurring dead causes / reason reuse
 
-**Status:** current WS2 gate; archaeology supports but does not broaden it.
+**Status:** current WS2 gate; archaeology narrows rather than broadens it.
 
-Historical progressive contradiction probes and later dead-state reasoning suggest checking whether exact/reliable dead detections collapse to recurring compact sound causes with material repeated-work cost. Current workstream correctly limits the next step to the smallest solve-local reason key if such causes actually recur; no broad CDCL/LCG framework is earned.
+July rejected a coarse global nogood signature because the same key could occur on both a dead end and a successful path. August later found high exact dead-end recurrence inside repair and shipped a solve-local exact-state experience cache net-positive, but later archaeology corrected the interpretation: this was **experience memory inside an incomplete randomized search**, not logical UNSAT learning.
 
-The current diagnostic has now found at least one directly verified recurrence instance across structurally different beam states, but population-scale materiality is still unresolved because most prefix bisections abstained. Preserve that as an existence proof, not a rate estimate.
+A later learned-certificate audit tested generalized connectivity-derived failure reasons. Recurrence existed, but 91.2% remained within one level, tripping the experiment's own stop condition and closing the cross-level certificate form.
+
+Historical progressive contradiction probes and dead-state reasoning therefore support the current narrow question: do exact/reliable dead detections collapse to recurring compact **solve-local** sound causes with material repeated-work cost? Current workstream correctly limits the next step to the smallest solve-local reason key if such causes actually recur; no broad CDCL/LCG framework is earned.
+
+The current diagnostic has found at least one directly verified recurrence instance across structurally different beam states, but population-scale materiality remains unresolved because most prefix bisections abstained. Preserve that as an existence proof, not a rate estimate.
+
+### Final-mile completable-state discrimination
+
+**Status:** external-memo premise; unimplemented and phenotype-gated.
+
+A deleted May external-research memo distinguished an L108-like final-mile flood from L92-style failure to get close. It proposed a bounded structural `completable` predicate as a secondary FOCAL/EES-style discriminator among states with similar admissible lower bound, rather than another global scalar score. Repository searches found no explicit implementation descendant.
+
+**Boundary:** do not reopen because it is merely untried. First require a current residual phenotype with many near-equal-bound states, materially different exact completion labels, scalar non-separation, and a cheap bounded structural query that separates them. If that phenotype exists, the premise changes represented information and is distinct from the six closed scalar Class-5 summaries.
+
+### Gate/action quality as a misclassification problem
+
+**Status:** partially absorbed historical premise; current allocation interpretation remains interesting.
+
+The same external memo argued against simply lowering a rescue threshold when a gate failed to fire. It proposed recording predicate truth and later outcome as a false-positive/false-negative dataset, replacing a bad proxy with a structurally different predictor such as obligation-reduction slope over a work window. Later Pathfinder work did add predicate telemetry and progress-conditioned lockouts, but no clean current treatment of **action/gate value as a calibrated prediction problem** was found.
+
+**Current implication:** this aligns with WS2 only as measurement. Ask whether current legal progress/basin observables predict incremental action value under canonical `workSpent` before changing allocation.
 
 ## Representation and retention lessons
+
+### February failed-state memoization / future equivalence
+
+**Status:** obsolete implementation; durable representational warning.
+
+The late-February solver introduced failed-state memoization almost immediately. Its early signature omitted the full visited-count map and per-cell axis-usage state. A follow-up had to add those details because states that looked equal under the coarse key could have different legal futures. The same change added a diagnostic warning when the goal remained statically reachable but search returned NO-SOLUTION, explicitly pointing suspicion at pruning/memoization.
+
+**General lesson:** Pathfinder future equivalence has been path-history-sensitive from the beginning. Any compact Class-5 key or coarse representation should be treated as a falsifiable hypothesis about future equivalence, not as an innocent cache optimization.
 
 ### Coarse-state merge / near-tie retention
 
@@ -175,7 +249,7 @@ Historical `archetype` means current routing regime, an implementation classifie
 
 July measured substantial ordering waste on solved levels: about 79% of solve time occurred in attempts before the eventual winner in one fresh Corpus-1 benchmark. A naive small-sample 1-NN selector underperformed the existing routing-regime dominant-winner baseline and was explicitly treated as a weak first negative, not a closure. Later the separate fast-portfolio scheduler experiment was reverified after an unrelated repair regression was fixed; its apparent speed advantage reversed and the scheduler was correctly retained as not production-ready.
 
-**Interpretation:** do not resurrect the old portfolio scheduler. Preserve two narrower conclusions: real ordering/allocation headroom has existed, and apparent portfolio wins are highly sensitive to whether the baseline capabilities themselves are healthy. Current WS1/WS2 evidence should decide whether any analogous headroom exists now.
+**Interpretation:** do not resurrect the old portfolio scheduler. Preserve two narrower conclusions: real ordering/allocation headroom has existed, and apparent portfolio wins are highly sensitive to whether the baseline capabilities themselves are healthy. Current WS1/WS2 evidence should decide whether analogous headroom exists now.
 
 ### Attempt identity and historical analysis integrity
 
@@ -191,7 +265,15 @@ The August B2 extinction-adjacent work is an important ancestor of current Class
 
 A prior CP-SAT report also misattributed abstentions to high must-cross count; later work showed flipping filters were the actual unsupported mechanic and corrected the report after adding flipper support. Another multi-gate CP-SAT bug temporarily admitted illegal paths through unused gate cells and was fixed during the same B2 lineage. Exact-label evidence therefore needs model-version/coverage awareness, not just a LIVE/DEAD token.
 
-**Next archaeology target:** continue tracing pre-B2 `oracle/atlas/prune-gap` evidence for mechanism observations not represented in the current Class-5 premise set, and identify committed exact-labelled case sets that can cheaply score topology/crossing/commitment hypotheses offline.
+**Next archaeology target:** use pre-B2 `oracle/atlas/prune-gap` evidence only when it adds a mechanism observation not already represented in the current Class-5 premise set, and prefer committed exact-labelled case sets that can cheaply score topology/crossing/commitment hypotheses offline.
+
+## External research artifact lineage
+
+At least three substantial external solver-research artifacts existed in the repository before cleanup: `claude_report.txt`, `Pathfinder solver research memo.pdf`, and `Gemini Pathfinder Solver Debugging and Research.rtf`. The Gemini RTF was explicitly deleted May 26 but remains as a historical blob; later May commits explicitly cite all three memos.
+
+Most high-level recommendations from the readable Claude memo were absorbed: hint-path counterexample replay, side-channel telemetry discipline, joint-obligation/Held-Karp work, staged feature-flagged experiments, and diagnosing gate predicates before threshold changes. Do not treat the deleted memos as a generic untried-ideas menu.
+
+The two materially less-absorbed ideas found so far are the phenotype-gated final-mile completable-state discriminator and action/gate misclassification framing recorded above.
 
 ## Experimental-integrity failure classes to check during archaeology
 
@@ -205,7 +287,10 @@ A prior CP-SAT report also misattributed abstentions to high must-cross count; l
 - sample drawn only from unsolved population makes regressions impossible by construction;
 - sound pruning evaluated only on correctness witnesses, not fixed-budget solve-set churn;
 - bundled experiments reverted together, obscuring which premise actually failed;
-- branch existence mistaken for unique or authoritative work.
+- branch existence mistaken for unique or authoritative work;
+- feature code present but option propagation omitted, leaving the intended treatment disabled;
+- consumer receives non-redundant artifacts but cannot exploit them, so producer diversity is mistaken for interoperability;
+- metric aggregation drops an earlier seed/attempt's progress and manufactures an apparent allocation effect.
 
 ## Explicitly not resurrected by archaeology alone
 
@@ -215,8 +300,27 @@ A prior CP-SAT report also misattributed abstentions to high must-cross count; l
 - broad CDCL/LCG, ZDD/DD/frontier, CEGAR/interpolation, RCSP/label-setting, automata or representative-set frameworks;
 - global coarse-state merge forms already closed negative;
 - snapshot-to-same-consumer rescue without a complementary receptor;
+- generic restart/randomization or the old production restart split;
 - broad symmetry/random restart work absent a changed premise;
 - old parity-waypoint heuristic as production policy;
-- the old fast-portfolio scheduler as a production design.
+- static exact-k backward reachability and the old backward-bridge scorer;
+- the old fast-portfolio scheduler as a production design;
+- old February failed-state memoization;
+- historical intersection blueprint/synthetic-must-cross production implementations.
 
 These require a materially changed causal premise and the current authority's reopen condition, not historical curiosity.
+
+## Session archaeology reports
+
+Detailed forensic evidence from the 2026-09-13 pass is preserved in:
+
+- `reports/2026-09-13-solver-archaeology-rename-aware-pass-001.md`
+- `reports/2026-09-13-solver-archaeology-diversity-and-reference-lineage-001.md` (superseded target list)
+- `reports/2026-09-13-solver-archaeology-backward-diversity-extinction-002.md`
+- `reports/2026-09-13-solver-archaeology-learning-handoff-003.md`
+- `reports/2026-09-13-solver-archaeology-intersection-commitment-lineage-004.md`
+- `reports/2026-09-13-solver-archaeology-topology-family-response-005.md`
+- `reports/2026-09-13-solver-archaeology-overlap-restart-retention-006.md`
+- `reports/2026-09-13-solver-archaeology-february-external-memos-007.md`
+
+Use the register for durable premise/disposition memory and the dated reports only when the underlying historical evidence or reasoning is needed.

@@ -1,9 +1,9 @@
 # Solver archaeology: rename-aware reverse pass
 
-> **Status:** active
-> **Last evidence:** 2026-09-13 — the rename-aware reverse pass began translating historical solver evidence through the August/September semantic migration.
-> **Decision:** continue the pass as evidence preservation; current solver priority remains owned by the workstream authority.
-> **Remaining gate:** finish the rename-aware pass and reconcile durable premises into the archaeology register.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — the rename-aware pass established the relevant vocabulary lineages, historical validity checks, and orphan/premise distinctions now preserved in the archaeology register.
+> **Decision:** use rename-aware reverse tracing as a permanent archaeology method; current solver priority remains owned by `docs/solver-optimization-workstreams.md`.
+> **Remaining gate:** none
 
 ## Question
 

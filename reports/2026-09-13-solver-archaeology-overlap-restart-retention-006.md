@@ -1,9 +1,9 @@
 # Solver archaeology: overlap, restart value, and unfinished retention gate
 
-> **Status:** active
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-13 — overlap/restart archaeology confirmed an unfinished categorical-state retention line alongside closed historical mechanisms.
 > **Decision:** preserve the unfinished retention premise as a scoped research lead; make no production or priority change from archaeology alone.
-> **Remaining gate:** close the unfinished retention gate with current evidence before any solver-policy change.
+> **Remaining gate:** reconcile the unfinished retention projection against current WS4/Class-5 evidence before any solver-policy change.
 
 ## 1. August full-pool categorical-state projection is genuinely unfinished
 

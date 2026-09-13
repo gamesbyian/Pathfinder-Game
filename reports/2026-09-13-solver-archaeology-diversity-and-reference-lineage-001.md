@@ -1,11 +1,11 @@
 # Solver archaeology: diversity/portfolio and reference-lineage follow-up
 
-> **Status:** active
-> **Last evidence:** 2026-09-13 — the diversity/portfolio and reference-lineage archaeology targets were opened and evidence accumulation began.
-> **Decision:** continue the evidence note without changing solver behavior or current workstream priority.
-> **Remaining gate:** complete the stated excavation targets and reconcile durable findings into the archaeology register.
+> **Status:** superseded
+> **Last evidence:** 2026-09-13 — the target list was worked through and durable findings moved into the archaeology register and later focused reports.
+> **Decision:** use this file only as the original excavation target list; use `docs/solver-archaeology-register.md` and the later archaeology reports for current historical conclusions.
+> **Remaining gate:** none
 
-This note records the next excavation targets and accumulates findings as they are verified.
+This note records the original excavation targets that drove the later diversity, restart, reference-lineage, and exact-label archaeology.
 
 ## Target A: portfolio / variety / restart participation
 

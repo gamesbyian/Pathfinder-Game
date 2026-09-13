@@ -1,15 +1,15 @@
 # Solver archaeology: February origins and deleted external research memos
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-13 — retained history was traced back to 2026-02-25 and deleted external-research premises were recovered and reconciled.
+> **Last evidence:** 2026-09-13 — retained history was traced back to 2026-02-24 and deleted external-research premises were recovered and reconciled.
 > **Decision:** preserve the chronology corrections and premises as historical evidence; make no solver or priority change from archaeology alone.
 > **Remaining gate:** any revived premise must earn a current, decision-bearing solver experiment before affecting policy.
 
-## 1. Retained repository history begins on 2026-02-25, not April
+## 1. Retained repository history begins on 2026-02-24, not April
 
-Direct commit-list queries show no retained commits before 2026-02-25. There are no commits from 2026-02-01 through 2026-02-24, and no January commits in retained history.
+Direct commit-list queries show retained repository history on 2026-02-24 and no retained commits before that date. A query ending at the start of 2026-02-24 returns no commits, and no January commits are present in retained history.
 
-This corrects an earlier archaeology mistake caused by searching with later solver-research vocabulary instead of walking the repository timeline. January/pre-February thinking, if any, can only be recovered from artifacts copied into the repository later or from sources outside retained Git history.
+This corrects an earlier archaeology mistake caused by searching with later solver-research vocabulary instead of walking the repository timeline. Pre-February-24 thinking, if any, can only be recovered from artifacts copied into the repository later or from sources outside retained Git history.
 
 ## 2. February already contains the core future-equivalence warning
 
