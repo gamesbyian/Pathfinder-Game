@@ -1,8 +1,9 @@
 # Research-label semantic audit 001
 
-> **Status:** complete; one additional ambiguity fixed
-> **Scope:** bounded follow-up to the September 12 `variantLabel` atlas bug. Inspect convenience fields named by the live/future-work guard (`variantLabel`, `pairLabel`, `isolatedTechnique`, origin/arm/source labels) only where they can affect research interpretation.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-12 — bounded audit of decision-bearing `variantLabel`, `pairLabel`, `isolatedTechnique`, and origin/arm/source-label consumers after the corrected atlas bug.
 > **Decision:** no schema redesign. One remaining decision-bearing `variantLabel` misuse was found and repaired in `reconcile-isolated-hint-census-context.mjs`; the other inspected uses are identity/display/provenance metadata or are guarded by explicit source-cell reconciliation.
+> **Remaining gate:** none. Reopen only when a concrete ambiguous semantic join appears after evidence-plumbing changes.
 
 ## Finding
 
