@@ -109,7 +109,7 @@ Do not infer that CP-SAT search workers should equal runner vCPUs; compare repre
 
 ## Repository / diagnostic workflows
 
-These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `solver-diagnostics.yml`, `deploy-pages.yml`, `deploy-firestore-rules.yml`, `main-push-validation.yml`, and `solver-evidence-integrity-guard.yml`. Completed migration/campaign browser gates belong in Git history and dated evidence, not in the maintained workflow surface.
+These are not solver-batch entrypoints, but remain listed here for workflow discoverability checks: `ci.yml`, `daily-file-size-ratchet.yml`, `solver-diagnostics.yml`, `deploy-pages.yml`, `deploy-firestore-rules.yml`, `main-push-validation.yml`, and `solver-evidence-integrity-guard.yml`. `daily-file-size-ratchet.yml` performs the repository-wide size/debt scan once per day (and on manual dispatch); ordinary PR CI checks only files changed by that PR. Completed migration/campaign browser gates belong in Git history and dated evidence, not in the maintained workflow surface.
 
 Use the narrowest workflow whose evidence semantics match the question. Capability workflows must remain level-blind. Avoid creating a new batch runner merely for different parallelism: common entrypoints now expose or implement the worker/shard controls needed to trade concurrent footprint against tail latency.
 

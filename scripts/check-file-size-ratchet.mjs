@@ -6,6 +6,11 @@
  * files (60 KB), and GitHub Actions workflows (40 KB) — without requiring every existing large
  * file to be split immediately.
  *
+ * PR CI opts into incremental mode with PATHFINDER_PR_INCREMENTAL=1, so only files changed by the
+ * PR can fail the gate. This preserves immediate enforcement for size growth caused by the PR while
+ * avoiding unrelated cleanup work. A scheduled daily workflow runs the same check against the full
+ * repository to surface stale grandfathering or accumulated size debt.
+ *
  * Unrelated files already over target when this check was added are grandfathered at their
  * CURRENT size in GRANDFATHERED below: they may shrink freely but must never grow past their
  * recorded ceiling. A file not in that list is held to the plain target. When a grandfathered
@@ -15,6 +20,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+
+import { prChangedFiles } from './repository-file-view.mjs';
 
 const KB = 1024;
 const TARGETS = {
@@ -62,11 +69,15 @@ function categoryFor(relativePath) {
     return null;
 }
 
+const incremental = prChangedFiles(process.cwd());
+const changed = incremental ? new Set(incremental) : null;
 const failures = [];
 const seenGrandfathered = new Set();
 
 for (const absolute of walk(process.cwd())) {
     const relativePath = repoRelative(absolute);
+    if (changed && !changed.has(relativePath)) continue;
+
     const category = categoryFor(relativePath);
     if (!category) continue;
 
@@ -95,14 +106,18 @@ for (const absolute of walk(process.cwd())) {
     }
 }
 
-for (const relativePath of Object.keys(GRANDFATHERED)) {
-    if (!seenGrandfathered.has(relativePath)) {
-        failures.push(`GRANDFATHERED entry for ${relativePath} no longer resolves to a tracked file -- remove the stale entry.`);
+// Stale grandfathered entries are repository-wide maintenance debt. Do not make an unrelated PR
+// fail because another file disappeared or moved; the daily full scan will catch the stale entry.
+if (!incremental) {
+    for (const relativePath of Object.keys(GRANDFATHERED)) {
+        if (!seenGrandfathered.has(relativePath)) {
+            failures.push(`GRANDFATHERED entry for ${relativePath} no longer resolves to a tracked file -- remove the stale entry.`);
+        }
     }
 }
 
 if (failures.length) {
-    console.error('File-size ratchet failed:');
+    console.error(`File-size ratchet failed (${incremental ? 'changed files only' : 'full repository'}):`);
     for (const failure of failures) console.error(`  - ${failure}`);
     console.error(
         '\nSplit the offending file along its existing seams (see modules/solver/orchestration.ts\'s '
@@ -112,4 +127,5 @@ if (failures.length) {
     process.exit(1);
 }
 
-console.log(`File-size ratchet valid: implementation <= ${TARGETS.implementation}B, test <= ${TARGETS.test}B, workflow <= ${TARGETS.workflow}B (${Object.keys(GRANDFATHERED).length} grandfathered exception(s)).`);
+const scope = incremental ? `${incremental.length} changed path(s)` : 'full repository';
+console.log(`File-size ratchet valid (${scope}): implementation <= ${TARGETS.implementation}B, test <= ${TARGETS.test}B, workflow <= ${TARGETS.workflow}B (${Object.keys(GRANDFATHERED).length} grandfathered exception(s)).`);
