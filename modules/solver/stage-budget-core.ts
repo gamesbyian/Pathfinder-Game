@@ -819,12 +819,6 @@ export const MC_NEIGHBOR_BUDGET_RETRY_NODE_RESERVE_FRACTION = 0.5;
  *  at the larger cap too. */
 export const REPAIR_LATE_PROBE_NODE_BUDGET = 5_000_000;
 
-/** Default-off integration-test dose for the additive must-turn-biased retry immediately
- * after late-repair-search. 7M is the smallest matched-node dose that reproduced both
- * R02768 (1,179,294) and R02180 (6,206,072) while same-dose standard repair failed.
- * Keep separate from REPAIR_LATE_PROBE_NODE_BUDGET until population economics earn promotion. */
-export const REPAIR_LATE_MUSTTURN_BIASED_RETRY_NODE_BUDGET = 7_000_000;
-
 /** STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY (promoted default-ON 2026-08-23). Dead-last
  *  additive whole-ladder retry (same `runWholeLadderRetryTier` shape as
  *  STRATEGY_CONNECTIVITY_AXIS_EXHAUSTED_RETRY) forcing SCORE_GOAL_ATTRACTION_GUIDANCE_DISTANCE on
