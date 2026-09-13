@@ -8,6 +8,9 @@
 // headroom to later stages.
 export * from './stage-budget-core.js';
 
+/** Default-off 7M node dose proven by the 2026-09-13 must-turn repair integration pilot. */
+export const REPAIR_LATE_MUSTTURN_BIASED_RETRY_NODE_BUDGET = 7_000_000;
+
 import { GOAL_ATTRACTION_DISABLED_RETRY_CANDIDATE_FLAGS } from './attempts.js';
 import { defaultConfig } from './ablation-config.js';
 import { retryTierOverridesChangeBehavior } from './stage-executors.js';
