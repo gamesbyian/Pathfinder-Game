@@ -15,7 +15,9 @@ function safeNormalizeRoutingRegime(value) {
 export const CORPUS_ALIASES = Object.freeze({
     published: 'data/levels.json',
     stress1: 'data/stress/stress-levels.json',
+    corpus1: 'data/stress/stress-levels.json',
     stress2: 'data/stress/stress-levels-random.json',
+    corpus2: 'data/stress/stress-levels-random.json',
     envelope: 'data/stress/stress-levels-envelope.json',
 });
 
