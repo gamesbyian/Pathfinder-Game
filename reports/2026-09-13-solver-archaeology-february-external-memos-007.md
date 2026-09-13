@@ -1,6 +1,9 @@
 # Solver archaeology: February origins and deleted external research memos
 
-Status: historical-evidence follow-up. This report preserves chronology corrections, early solver-state lessons, and external-research premises. It does not change solver behavior or current workstream priority.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — retained history was traced back to 2026-02-25 and deleted external-research premises were recovered and reconciled.
+> **Decision:** preserve the chronology corrections and premises as historical evidence; make no solver or priority change from archaeology alone.
+> **Remaining gate:** any revived premise must earn a current, decision-bearing solver experiment before affecting policy.
 
 ## 1. Retained repository history begins on 2026-02-25, not April
 

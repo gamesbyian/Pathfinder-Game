@@ -1,6 +1,9 @@
 # Solver archaeology: backward, diversity, and extinction follow-up
 
-Status: historical-evidence follow-up. This report does not change solver behavior or current workstream priority.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — historical follow-up closed the tested static exact-k and backward-bridge forms while preserving one narrow unported retry-adaptation premise.
+> **Decision:** do not restore the tested backward-search forms; preserve the narrower adaptation premise only as historical evidence.
+> **Remaining gate:** require a present-day predictive signal before any revisit of the unported retry-adaptation premise.
 
 ## Backward-search lineage
 

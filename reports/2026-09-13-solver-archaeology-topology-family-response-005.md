@@ -1,6 +1,9 @@
 # Solver archaeology: topology classes and family-response hardness
 
-Status: historical-evidence follow-up. Both lines below are observer/analysis opportunities; neither justifies a production solver change by itself.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — archaeology confirmed topology-class and family-response ideas as analysis/observer opportunities rather than production-ready mechanisms.
+> **Decision:** retain both lines as research opportunities; neither changes production solver policy by itself.
+> **Remaining gate:** require current observer/analysis evidence and a decision-bearing solver premise before either line can affect production.
 
 ## Homotopy / topological completion classes
 
