@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readLevelsWithHints } from './level-data-io.mjs';
 import { loadCorpus } from './corpus-query-lib.mjs';
+import { classifyCorpusSelectionLineage } from './corpus-selection-lineage.mjs';
 import { buildFamilyIndex } from './family-index-lib.mjs';
 import { auditTrackedProfileLibrary } from './cross-resource-profile-integrity.mjs';
 import {
@@ -59,12 +60,21 @@ if (familyRootArg) {
 }
 
 const familyCoverage = familyCoverageFromIndex(familyIndex, currentLevelIds);
-const rows = loaded.flatMap(corpus => corpus.levels.map(level => analyzeLevelObservability({
-    source: corpus.source,
-    level,
-    metadata: corpus.metadata,
-    familyCoverage,
-})));
+const rows = loaded.flatMap(corpus => corpus.levels.map((level, position) => {
+    const row = analyzeLevelObservability({
+        source: corpus.source,
+        level,
+        metadata: corpus.metadata,
+        familyCoverage,
+    });
+    row.selectionLineage = classifyCorpusSelectionLineage(
+        corpus.source,
+        level,
+        corpus.metadata,
+        { position, totalLevels: corpus.levels.length },
+    );
+    return row;
+}));
 const summary = summarizeCrossResourceObservability(rows, familyIndexMeta, Number(value('case-limit') ?? 25));
 summary.generatedAt = new Date().toISOString();
 summary.profileIntegrity = profileIntegrity;
