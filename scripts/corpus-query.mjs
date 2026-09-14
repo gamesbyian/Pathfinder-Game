@@ -6,7 +6,12 @@ const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name
 const number = name => { const raw = value(name); return raw == null ? null : Number(raw); };
 const source = value('corpus') ?? 'stress2';
 const { path, levels, metadata } = loadCorpus(process.cwd(), source);
-const descriptors = levels.map(level => describeLevel(level, { source, metadata }));
+const descriptors = levels.map((level, position) => describeLevel(level, {
+    source,
+    metadata,
+    position,
+    totalLevels: levels.length,
+}));
 const ids = (value('id') ?? value('ids') ?? '').split(',').filter(Boolean);
 let matches = filterLevelDescriptors(descriptors, {
     ids,
