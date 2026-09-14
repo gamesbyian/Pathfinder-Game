@@ -46,8 +46,9 @@ describe('cross-resource observability', () => {
         expect(analyzeLevelObservability({ source: 'stress2', level, metadata, familyCoverage: new Map() }).family.availability).toBe('mounted-no-parent-record');
     });
 
-    it('joins family coverage by current globally unique parent id', () => {
+    it('joins family coverage and uses evaluation counts only when evidence artifacts are loaded', () => {
         const coverage = familyCoverageFromIndex({
+            counts: { evidenceArtifacts: 2 },
             families: [{ parentId: 'R00001', parentCorpus: 'stress2', familyId: 'F1', variantCount: 3, mode: 'swap' }],
             variants: [
                 { parentId: 'R00001', evaluated: true, solved: true },
@@ -57,15 +58,53 @@ describe('cross-resource observability', () => {
         expect(coverage?.get('R00001')).toEqual({
             families: 1,
             variants: 3,
+            familyIds: ['F1'],
             modes: ['swap'],
             parentCorpora: ['stress2'],
+            evaluationEvidenceLoaded: true,
             evaluated: 2,
             solved: 1,
         });
+
+        const manifestOnly = familyCoverageFromIndex({
+            counts: { evidenceArtifacts: 0 },
+            families: [{ parentId: 'R00001', parentCorpus: 'stress2', familyId: 'F1', variantCount: 3, mode: 'swap' }],
+            variants: [{ parentId: 'R00001', evaluated: false, solved: false }],
+        }, ['R00001']);
+        expect(manifestOnly?.get('R00001')?.evaluationEvidenceLoaded).toBe(false);
+        expect(manifestOnly?.get('R00001')?.evaluated).toBeNull();
+        expect(manifestOnly?.get('R00001')?.solved).toBeNull();
+    });
+
+    it('checks replay family identity against mounted parent manifests', () => {
+        const base = {
+            id: 'R00001',
+            provenance: { origin: 'procedural', history: [{ action: 'generated', timestamp: '2026-07-09T00:00:00Z', detail: { corpusName: 'random-uniform-v1', generatorVersion: '1.1.0' } }] },
+        };
+        const coverage = new Map([['R00001', {
+            families: 1, variants: 3, familyIds: ['F1'], modes: ['swap'], parentCorpora: ['stress2'],
+            evaluationEvidenceLoaded: false, evaluated: null, solved: null,
+        }]]);
+        const matched = analyzeLevelObservability({
+            source: 'stress2', metadata: { appendHistory: [{ appendedAt: '2026-07-11T00:00:00Z' }] }, familyCoverage: coverage,
+            level: { ...base, hintRecords: [{ path: [1, 2], provenance: [replay('F1', 'R00001', '2026-08-01T00:00:00Z')] }] },
+        });
+        expect(matched.ancestry.replayFamilyCompatibility.status).toBe('matched');
+        expect(matched.ancestry.replayFamilyCompatibility.unmatchedFamilies).toEqual([]);
+
+        const unmatched = analyzeLevelObservability({
+            source: 'stress2', metadata: { appendHistory: [{ appendedAt: '2026-07-11T00:00:00Z' }] }, familyCoverage: coverage,
+            level: { ...base, hintRecords: [{ path: [1, 2], provenance: [replay('F2', 'R00001', '2026-08-01T00:00:00Z')] }] },
+        });
+        expect(unmatched.ancestry.replayFamilyCompatibility.status).toBe('partial-or-unmatched');
+        expect(unmatched.ancestry.replayFamilyCompatibility.unmatchedFamilies).toEqual(['F2']);
     });
 
     it('summarizes selection-conditioned and four-resource coverage without calling it independence', () => {
-        const familyCoverage = new Map([['R00001', { families: 1, variants: 3, modes: ['swap'], parentCorpora: ['stress2'], evaluated: 0, solved: 0 }]]);
+        const familyCoverage = new Map([['R00001', {
+            families: 1, variants: 3, familyIds: ['F1'], modes: ['swap'], parentCorpora: ['stress2'],
+            evaluationEvidenceLoaded: false, evaluated: null, solved: null,
+        }]]);
         const rows = [analyzeLevelObservability({
             source: 'stress2',
             metadata: { appendHistory: [{ appendedAt: '2026-07-11T00:00:00Z' }] },
@@ -79,7 +118,10 @@ describe('cross-resource observability', () => {
         const summary = summarizeCrossResourceObservability(rows, { loaded: true }, 5);
         expect(summary.totals.fourResourceJoinableLevels).toBe(1);
         expect(summary.totals.replayTouchedLevels).toBe(1);
+        expect(summary.totals.matchedReplayFamilyLevelLineages).toBe(1);
+        expect(summary.totals.unmatchedReplayFamilyLevelLineages).toBe(0);
         expect(summary.bySelectionStratum['c2-original-random-solver-negative-survivor'].levels).toBe(1);
+        expect(summary.byFamilyAvailability['parent-indexed'].levels).toBe(1);
         expect(summary.topCases.replayFeedbackCandidates[0].id).toBe('R00001');
     });
 });
