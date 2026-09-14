@@ -58,7 +58,12 @@ export function describeLevel(level, context = {}) {
     const area = (level.grid?.w ?? 0) * (level.grid?.h ?? 0);
     const objects = Object.values(counts).reduce((sum, value) => sum + value, 0);
     const meta = level.stressMeta ?? {};
-    const selectionLineage = classifyCorpusSelectionLineage(context.source, level, context.metadata ?? null);
+    const selectionLineage = classifyCorpusSelectionLineage(
+        context.source,
+        level,
+        context.metadata ?? null,
+        { position: context.position, totalLevels: context.totalLevels },
+    );
     return {
         id: level.id,
         grid: [level.grid?.w ?? null, level.grid?.h ?? null],
