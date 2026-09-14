@@ -194,8 +194,8 @@ as the independent unit.
 
 | Population/source | Default role for new solver-policy decisions |
 |---|---|
-| Corpus 1 | development/diagnosis; batches B/C/D/F can still be solver-blind at generation time, but repeated project use matters |
-| Corpus 2 | primary large development/capability laboratory |
+| Corpus 1 | development/diagnosis; **not a whole-population cross-generator source**: current rows are 23 A-F survivors plus 79 random-uniform rows selected for 2026-07-10 solver success before square-grid retention |
+| Corpus 2 | primary large development/capability laboratory; current rows mix 328 survivors from the 2026-07-10 solver-negative random complement with 1,372 later square-grid replacements |
 | Existing in-envelope stratum | player-envelope challenge; confirmation only when untouched for the decision; same generator family as Corpus 2 |
 | Spent/void 2026 confirmation cohorts | historical/development evidence as documented in their reports |
 | Locked unused blocks/cohorts from the same random generator | confirmation, not cross-generator transfer |
@@ -205,6 +205,8 @@ as the independent unit.
 
 Roles are claim-relative. A population can be untouched for one candidate and development data for a
 descendant after its results influence redesign.
+
+Corpus membership also has selection history. The July-10/11 reconstruction is current authority at [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md): generation can be solver-blind while later corpus membership is solver-outcome-selected. Do not infer distributional independence from a corpus filename.
 
 ## Evidence integrity and reuse
 

@@ -2,9 +2,17 @@
 
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-03 — GHA runs [`33718270281`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718270281) (dispatch A) and [`33718272194`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718272194) (dispatch B), both complete.
-> **Decision:** on Corpus 1, `portfolio-18-tranche-v2` **ties** `full-menu` on coverage (93/102 each) while spending 7.12% less work, and still **beats** `portfolio-18-flat-2m` on coverage (93 vs. 91) at more work than the flat cap. No regression against either baseline transfers — but the *stronger* Corpus-2 result (tranche-v2 strictly beating full-menu's own coverage, +4 and +6 on the two Corpus-2 confirmations) does not replicate here; Corpus 1 shows a tie, not a win. Report this honestly as a weaker-magnitude, same-direction result on a genuinely different generator, not a repeat of the Corpus-2 finding's full strength.
+> **Decision (2026-09-13 corrected interpretation):** the recorded whole-Corpus-1 totals remain valid, but Corpus 1 was not a clean different-generator population. On the genuine 23-row A-F stratum all three arms solve 22/23; `portfolio-18-tranche-v2` spends 29.92% more aggregate work than `full-menu`. The favorable whole-C1 work result is carried by 79 migrated random-uniform rows selected for historical solver success. This run does **not** establish tranche-v2 work-saving cross-generator transfer.
 > **Remaining gate:** none for this transfer check itself. Per its own stop condition, no v3 cap map or repeat dispatch is warranted from a tie — this is not a regression to chase.
-> **Evidence role:** cross-generator transfer/challenge — `docs/solver-scheduling-policy.md`'s promotion-path step 8 ("sample-independent confirmation and cross-distribution transfer/challenge evidence appropriate to the policy's selection pressure and claim scope"), not yet exercised for this candidate.
+> **Evidence role (corrected 2026-09-13):** historical development/forensic evidence with a failed population-role premise; not a completed cross-generator transfer gate.
+
+## 2026-09-13 population-role correction
+
+A fresh selection-history reconstruction recovered PR #1182 and the original July-10 corpus split: 300 random rows were moved into Corpus 1 because the then-current solver solved them, while the 1,700 unsolved/timeout complement remained Corpus 2. After square-grid cleanup, current Corpus 1 contains only 23 genuine A-F rows and 79 of those solver-positive migrated random rows.
+
+The preserved September-3 shard artifacts were rejoined by that ancestry. `full-menu`, `portfolio-18-flat-2m`, and `portfolio-18-tranche-v2` each solve 22/23 genuine A-F rows. Tranche-v2 uses 148,017,188 work on those rows versus full-menu's 113,932,072: **+29.92%**, the opposite sign from the whole-C1 -7.12% result. Every tranche-v2/full-menu coverage gain/loss is in the migrated random stratum. See [`2026-09-13-stress-corpus-selection-history-reconstruction-audit.md`](2026-09-13-stress-corpus-selection-history-reconstruction-audit.md).
+
+The original dispatch and its numeric totals were not broken; the assumption that all 102 rows represented a genuinely different generator was.
 
 ## Why this dispatch
 

@@ -48,11 +48,13 @@
       "affordances": [
         "Stratify findings by generator/source rather than treating all hard levels as exchangeable.",
         "Use construction witnesses to establish solvability and localize solver divergence without granting the solver a hint.",
-        "Separate solver-aware Corpus-1 batches, solver-blind Corpus 2, and the in-envelope stratum when checking robustness."
+        "Stratify by both generation ancestry and later population-selection history; corpus filenames do not imply distributional independence."
       ],
       "caveats": [
         "Construction witnesses prove solvability, not cold solver capability.",
         "Corpus 2 has been heavily mined and is a development/capability laboratory rather than untouched evidence.",
+        "Corpus 1 includes 79 current random-uniform rows selected for historical solver success; whole Corpus 1 is not a cross-generator source relative to Corpus 2.",
+        "Current Corpus 2 includes 328 survivors from the historical solver-negative random complement plus 1,372 later replacement rows.",
         "Rows from the same generator or family may not be independent for a broad claim."
       ]
     },

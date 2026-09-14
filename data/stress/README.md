@@ -61,6 +61,8 @@ homogeneous A-F population. A 2026-09-13 row-level provenance census found:
 - 23 retained generator-1.0.0 rows carrying the older A-F `generationBatch` strata below;
 - 79 retained generator-1.1.0 rows whose provenance reports `random-uniform-v1` and no A-F batch.
 
+Those 79 rows are also **selection-conditioned**: on 2026-07-10, PR #1182 moved 300 rows from the original 2,000-level random corpus into Corpus 1 specifically because the then-current solver solved them. The next day's square-grid cleanup retained 79. Generation provenance therefore does not tell the whole evidence story; see [`../../docs/solver-corpus-selection-provenance.md`](../../docs/solver-corpus-selection-provenance.md). Whole Corpus 1 must not be treated as a cross-generator population relative to Corpus 2.
+
 Therefore do not apply the file header's generator version or the A-F batch labels to all 102 rows.
 Use `node scripts/corpus-query.mjs --corpus=stress1` and its provenance/batch filters when the
 ancestry distinction matters. The A-F table remains the contract for the rows that actually carry
@@ -88,8 +90,9 @@ level-blind. Fresh samples from the same generator can still provide sample-inde
 See [`../../docs/solver-evaluation-evidence.md`](../../docs/solver-evaluation-evidence.md). Its level
 IDs are persistent identifiers, not semantic features and never production policy inputs.
 
-The corpus has been regenerated/cleaned historically. Do not infer content or chronology from the
-numeric suffix of an `R` ID. Use the level data and provenance.
+The corpus has been regenerated/cleaned historically. On 2026-07-10 the 1,700 rows then left in Corpus 2 were the unsolved/timeout complement after 300 solver-positive random rows were migrated to Corpus 1. The 2026-07-11 square-grid cleanup retained 328 of those old rows and generated 1,372 replacements. Thus current Corpus 2 is not one prospective July-9 draw even before later research mining. See [`../../docs/solver-corpus-selection-provenance.md`](../../docs/solver-corpus-selection-provenance.md).
+
+Do not infer content or chronology from the numeric suffix of an `R` ID. Use the level data and provenance.
 
 ## Third stratum: in-envelope
 
