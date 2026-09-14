@@ -1,9 +1,11 @@
 # Accepted-path/oracle evidence across diagnostics audit 001
 
-> **Status:** concluded-positive-with-conditioning
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-14 — bounded Audit 3 synthesis over all-path hard-prune replay, Solution Profile sample-composition evidence, cross-resource ancestry evidence, identity-bound replay contracts, and maintained consumer inspection.
+> **Decision:** accepted paths remain sound offline positive oracles, but representative-path and known-path-set diagnostics must preserve their conditioning identity. Broad hard-prune soundness survives alternate-oracle attack; descriptive rank/extinction/phenotype claims are path- or observed-set-conditioned unless independently adjudicated.
+> **Remaining gate:** no broad solver rerun is required; before a live mechanism nomination relies on the preregistered seven-level representative-path cohort, add an explicit path/signature substitution input and execute the frozen cohort without changing any other variable.
 > **Audit:** inference-first research Audit 3
 > **Date:** 2026-09-13
-> **Decision:** accepted paths remain sound offline positive oracles, but representative-path and known-path-set diagnostics must preserve their conditioning identity. Broad hard-prune soundness survives alternate-oracle attack; descriptive rank/extinction/phenotype claims are path- or observed-set-conditioned unless independently adjudicated.
 > **Scope:** accepted-path/oracle choice, known-path sample composition, diagnostic ancestry, and observability conditioning. This is not a re-audit of hint provenance, Solution Profiles, family variants, or experiment lifecycle machinery.
 > **Production behavior:** unchanged.
 
