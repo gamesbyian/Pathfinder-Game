@@ -107,8 +107,7 @@ describe('cross-resource observability', () => {
             evaluationEvidenceLoaded: false, evaluated: null, solved: null,
         }]]);
         const rows = [analyzeLevelObservability({
-            source: 'stress2',
-            metadata: { appendHistory: [{ appendedAt: '2026-07-11T00:00:00Z' }] },
+            source: 'stress1',
             familyCoverage,
             level: {
                 id: 'R00001',
@@ -121,7 +120,7 @@ describe('cross-resource observability', () => {
         expect(summary.totals.replayTouchedLevels).toBe(1);
         expect(summary.totals.matchedReplayFamilyLevelLineages).toBe(1);
         expect(summary.totals.unmatchedReplayFamilyLevelLineages).toBe(0);
-        expect(summary.bySelectionStratum['c2-original-random-solver-negative-survivor'].levels).toBe(1);
+        expect(summary.bySelectionStratum['c1-migrated-random-solver-positive'].levels).toBe(1);
         expect(summary.byFamilyAvailability['parent-indexed'].levels).toBe(1);
         expect(summary.topCases.replayFeedbackCandidates[0].id).toBe('R00001');
     });
