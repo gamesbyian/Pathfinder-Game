@@ -2,6 +2,8 @@
 
 This directory is the tracked closeout store for **decision-bearing v3 solver experiment evidence** whose original GitHub Actions artifacts may expire.
 
+It is the durable retention surface of the existing `experiment-manifests` research asset, not a separate evidence family or truth store. Use `node scripts/research-asset-query.mjs --id=experiment-manifests` for the normal registry entry and [`docs/solver-research-data-assets.md`](../../../docs/solver-research-data-assets.md) for cross-asset interpretation.
+
 It is populated by `scripts/persist-decision-bearing-experiment-evidence.mjs` through the repository's existing serialized `.github/workflows/harvest-solver-evidence.yml` writer.
 
 ## Admission rule

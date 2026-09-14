@@ -7,73 +7,74 @@ This is not a second queue or experiment diary. Carry forward only unexplained r
 
 ## New-premise routing
 
-Closed work reopens only for a changed causal premise/treatment. Query existing variant families before new levels for controlled structural questions; skip family mining when allocation, participation, runtime cost, or exact feasibility is the real gate. If existing/natural families lack the needed source or clean intervention, use the question-first human/editor-parent apparatus rather than bulk generation. [`variant guide`](variant-level-research.md), [`human contrasts`](human-parent-contrast-research.md)
+Closed work reopens only for a changed causal premise/treatment. Query existing variant families first for structural questions; skip family mining when allocation, participation, runtime cost, or exact feasibility is the real gate. If existing families lack the needed source/contrast, use the question-first human/editor-parent apparatus rather than bulk generation. [`variant guide`](variant-level-research.md), [`human contrasts`](human-parent-contrast-research.md)
 
 ## Audit-derived conditional work
 
-The 2026-09-13 corpus/profile audits add conditional reopen items, not top-priority work. [`re-evaluation`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md)
+The 2026-09-13 corpus/profile audits add conditional items, not top-priority work. [`re-evaluation`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md)
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Profile-instrument calibration** | A live mechanism question needs profile evidence. Use schema-v3 support-aware semantics, ordinary structural-similarity controls, and unrelated held-out-family validation for nominated legal descriptors. |
-| **Prospective profile-vs-solvability** | A concrete decision needs the relationship. Use a prospectively defined population/current semantics; do not repeat the superseded selected-C1 correlation. |
-| **Independent transfer for omitted mechanics** | A broad claim is blocked because topology composition omits the mechanic. Prefer locked human/editor parents that represent it; otherwise add the smallest independent construction capability. Whole C1 cannot substitute. |
-| **`portfolio-18-flat-2m` old-generator nomination** | Static allocation resumes and cheap independent current evidence can test the 22/23 tie at ~27.5% less work seen on the genuine old-generator C1 stratum. |
+| **Profile-instrument calibration** | A live mechanism needs profile evidence. Use schema-v3 support-aware semantics, structural-similarity controls, and unrelated held-out-family validation. |
+| **Prospective profile-vs-solvability** | A concrete decision needs it. Use a prospectively defined population/current semantics; do not repeat the selected-C1 correlation. |
+| **Independent transfer for omitted mechanics** | A broad claim is blocked by omitted mechanics. Prefer locked human/editor parents; otherwise add the smallest independent construction capability. Whole C1 cannot substitute. |
+| **`portfolio-18-flat-2m` old-generator nomination** | Static allocation resumes and cheap independent evidence can test the old-generator 22/23 tie at ~27.5% less work. |
 
-Exact frozen-row solve/work facts stand unless execution/participation was invalid; retest only when corrected evidence scope leaves a live decision unanswered.
+The 2026-09-14 inference audits add four earned conditional actions. Do not interrupt live WS2 gates for them. [`program closeout`](../reports/2026-09-14-inference-audit-program-reconciliation-closeout-001.md)
+
+| Question / repair | Reopen condition / boundary |
+|---|---|
+| **Accepted-path representative sensitivity** | A live mechanism depends on one representative/path-set view. Then run the frozen seven-level Audit-3 substitution cohort with unchanged solver/config/budget. |
+| **Class-3 exact-action dose resolution** | Triage depends on whether the 37 rows are comparable-work failures. Historical atlas data lacks per-attempt `workSpent`; use retained current evidence or the smallest current-code measurement that can change triage. Until then: dose-unverified. |
+| **Known-prefix oracle-set manifest** | A decision-bearing prefix-survival study needs replay/dependency-stratified path-set sensitivity. Add a compact conditioning-set manifest; do not reconstruct history or dump full provenance. |
+| **Experiment producer maturation** | When a decision-bearing workflow is touched or a recurring consumer gap appears, finish Audit-1 producer semantics: v3 contract at execution, resolved treatment identity, compact participation derived from retained rows, owning question/preflight link where known, and execution failure separate from scientific outcome. Durable primary-row retention is now canonical. |
+
+Frozen solve/work facts stand unless execution/participation was invalid; retest only when corrected scope leaves a live decision unanswered.
 
 ## Capability-acquisition frontier
 
-The dated boundary is **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical candidates. Freshness-reconcile before reuse. [`atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
+Boundary: **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical candidates. Freshness-reconcile before reuse. [`atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
 
-Naive `swap`/`cs`, generic scorer tuning, six-summary future-feasibility, connectivity/dead-cause reuse, and August low-cardinality categorical quota projection are closed in tested forms. Fixed-endpoint homotopy is also closed for coverage, not premise failure: no eligible same-endpoint LIVE/DEAD contrast existed. [`homotopy`](../reports/2026-09-13-class5-homotopy-prefix-census-result-001.md)
+Naive `swap`/`cs`, generic scorer tuning, six-summary future-feasibility, connectivity/dead-cause reuse, August low-cardinality categorical quotas, and fixed-endpoint homotopy are closed in tested forms. Homotopy is coverage-null, not premise-false. [`homotopy`](../reports/2026-09-13-class5-homotopy-prefix-census-result-001.md)
 
-Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smallest generic capability -> bounded pilot -> independent validation**. A single-level microscope is discovery only; `R03229` reproduced the historical `dead top-ranked / live known alternative` phenotype. [`result`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
+Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smallest generic capability -> bounded pilot -> independent validation**. A single-level microscope is discovery only. [`result`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
 
 ## Archaeology-derived reopen stack
 
 | Priority | Question | Reopen condition / boundary |
 |---:|---|---|
-| 1 | **Open-path topological completion signature** | **LIVE CURRENT GATE.** Define a defensible H-signature/reference system without arbitrary endpoint closures; require invariance and endpoint-identity controls. If natural exact-labelled material remains contrast-starved afterward, use a tiny human-parent topology intervention and exact-label it. Generated witnesses are not DEAD labels. |
-| 2 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction. If natural cases cannot isolate it, use the smallest witness-preserving human-parent intervention, then exact-label. |
-| 3 | **Cross-attempt basin overlap** | Different actions/retries appear redundant and allocation depends on distinct-basin evidence. Controlled descendants may test structural recurrence; parents are the independent units. |
-| 4 | **Dependency-conditioned repair descent shadow** | WS6 implicates an interior/early commitment append-only continuation cannot revise. Controlled obligation relocation/order changes are preferred when natural pairs are dirty. |
-| 5 | **Certified forced-chain traversal census** | WS7 finds material cost inside post-prune one-successor chains. Family generation does not earn the mechanism; use it only later for validation. |
-| 6 | **Partial-order / commuting excursion replay** | Exact/accepted-path evidence suggests redundant obligation ordering. If no clean pair exists, create a small order-changing solvable family. |
+| 1 | **Open-path topological completion signature** | **LIVE CURRENT GATE.** Define a defensible H-signature/reference without arbitrary endpoint closure; require invariance and endpoint-identity controls. If natural exact labels remain contrast-starved, use a tiny human-parent intervention and exact-label it. |
+| 2 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving human-parent intervention then exact-label. |
+| 3 | **Cross-attempt basin overlap** | Allocation depends on whether actions/retries reach distinct basins; parents are the independent units. |
+| 4 | **Dependency-conditioned repair descent shadow** | WS6 implicates an early/interior commitment append-only continuation cannot revise; prefer controlled obligation relocation/order changes. |
+| 5 | **Certified forced-chain traversal census** | WS7 finds material cost inside post-prune one-successor chains. |
+| 6 | **Partial-order / commuting excursion replay** | Exact/accepted-path evidence suggests redundant obligation ordering and no clean natural pair exists. |
 
-Historical dirty negatives live in [`solver-archaeology-register.md`](solver-archaeology-register.md).
+Historical dirty negatives: [`solver-archaeology-register.md`](solver-archaeology-register.md).
 
 ## Secondary solve-harvest trigger
 
-Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased repair is live work: six genuine guidance rows remain; the 7M default-off late tier solves `R02768` + `R02180`; eligible-population economics is the current gate. Do not divert that gate into human-parent generation. [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md)
+Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased repair remains live: six guidance rows, with `R02768` + `R02180` solved by the 7M late tier; eligible-population economics is the gate. [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md)
 
 ## Deferred questions
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Admissible-order retry repricing (`1.0 -> 0.18`)** | Current residual again isolates ordered-systemic loss and a canary proves real fraction-differentiated target-stage work. |
-| **Richer static graph/placement selectors** | New mechanism descriptor from recurring trace/first-loss evidence; existing families first, then whole-parent human/editor replication if it can change a strong selector claim. |
-| **Stability-aware portfolios** | WS1 finds a compact held-out signal beyond current work/coverage evidence. Family stability is robustness, not independence by row. |
-| **Latent response dimensions / biclusters** | Simpler analysis leaves stable unexplained structure; query whole-parent families first, then human-origin parents for a specific unresolved dimension. |
-| **Repair restart near-miss allocation** | Fresh legal population/changed contract revives the replicated 64M `bestBadness<=6` signal. Controlled descendants test stability only after value reappears. |
-| **Beam continuation / cross-policy handoff** | A complementary policy or earned live-future mechanism appears; controlled cliffs may localize handoff boundaries. |
-| **Temporal/displaced-capability niches** | A material boundary change or repeated unrelated losses reveal a stable basin; human-parent replication can distinguish broad phenotype from stress-generator niche. |
-| **Human/editor-envelope niches** | A mechanism needs published/human-shaped geometry or a mechanic/topology omitted by procedural transfer. Use `human-parent-contrast-pilot.mjs` with explicit question/evidence role/exposure and whole-parent denominators. This is not a standing Corpus 3. |
-| **Research infrastructure** | Add producer→consumer/query plumbing only after a measured recurring consumer limitation. |
+| **Admissible-order retry repricing (`1.0 -> 0.18`)** | Residual again isolates ordered-systemic loss and a canary proves fraction-differentiated target-stage work. |
+| **Richer static graph/placement selectors** | A recurring trace/first-loss descriptor appears; existing families first, whole-parent human/editor replication if needed. |
+| **Stability-aware portfolios** | WS1 finds a compact held-out signal beyond current work/coverage evidence. |
+| **Latent response dimensions / biclusters** | Simpler analysis leaves stable unexplained structure; whole-parent families first. |
+| **Repair restart near-miss allocation** | Fresh legal population/changed contract revives the replicated 64M `bestBadness<=6` signal. |
+| **Beam continuation / cross-policy handoff** | A complementary policy or earned live-future mechanism appears. |
+| **Temporal/displaced-capability niches** | A boundary change or repeated unrelated losses reveal a stable basin. |
+| **Human/editor-envelope niches** | A mechanism needs human-shaped geometry or mechanics/topology omitted by procedural transfer; use whole-parent denominators. |
+| **Research infrastructure** | Add producer/consumer/query plumbing only after a measured recurring limitation. Audit-specific producer conditions are above. |
 | **Class-1 compact beam-menu exposure** | A materially different work/allocation contract creates real headroom. |
-| **Representation-sensitivity lineage survival** | After WS2 priority work, or a clean current cliff, measure known-live lineage survival with geometry/interface controls, recurrence on two independent parents, and a held-out third-parent prediction. Prefer human-parent descendants when they give cleaner independent-parent cliffs. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
-| **Counterfactual displaced-capability recurrence** | Multiple unrelated accepted changes lose the same phenotype; test recurrence across whole human/editor parents before calling it broad. |
+| **Representation-sensitivity lineage survival** | After WS2 priority work, or on a clean current cliff, measure known-live lineage survival with geometry/interface controls and unrelated-parent replication. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
+| **Counterfactual displaced-capability recurrence** | Multiple unrelated accepted changes lose the same phenotype; test whole human/editor parents before broadening. |
 
 ## Demoted forms
 
-Do not reopen unchanged without materially new evidence:
-
-- broad retries, seed fan-out, nearby-threshold widening, extra repair dose, scorer proliferation, universal width, or generic novelty/diversity machinery;
-- legacy nearest-profile/rank, sampled-rigidity, incomplete-chronology plateau, or exhaustive-event-as-completeness claims without current support-aware evidence;
-- selected-C1 profile/solvability reruns, whole C1 as cross-generator transfer, or C2 as untouched random evidence;
-- August quota keys or current connectivity-reason reuse without a changed premise/population;
-- broad alternative-search/frameworks, caching without recurrence/sufficiency, or rotate/mirror/canonicalization before the earned lineage-survival diagnostic;
-- hazard/bandit/ML scheduling or fairness floors before fixed-work marginal-value evidence;
-- standalone must-cross urgency, generic detour libraries, bulk variants/human descendants, full-corpus A/Bs for falsified ideas, or framework-building before a small information-value pilot succeeds.
+Do not reopen unchanged without materially new evidence: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; whole C1 as transfer or C2 as untouched evidence; current connectivity/quota forms without changed premise; broad alternative-search frameworks or rotate/mirror/canonicalization before earned lineage diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency, generic detour libraries, bulk variants/human descendants, or full-corpus A/Bs for falsified ideas.
 
 Keep this file short: questions, boundaries, reopen conditions.
