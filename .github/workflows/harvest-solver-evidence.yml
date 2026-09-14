@@ -73,7 +73,7 @@ jobs:
           # artifact, which is exactly the shape the semantic importers expect.
           gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir artifact-staging
 
-      - name: Merge all recoverable hint evidence onto latest main
+      - name: Merge all recoverable hint and decision-bearing experiment evidence onto latest main
         shell: bash
         env:
           SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
@@ -115,14 +115,25 @@ jobs:
               --source-workflow="$SOURCE_WORKFLOW" \
               --source-sha="$SOURCE_SHA"
 
-            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ 2>/dev/null; then
-              echo 'No new canonical hint/provenance evidence to persist.'
+            # A decision-bearing v3 result has already passed the experiment contract, population
+            # integrity and research-outcome gates. Preserve that exact manifest plus its published
+            # primary/include evidence before Actions retention can erase the rows needed to
+            # reconstruct the verdict. Non-decision-bearing benchmark artifacts are ignored.
+            node scripts/persist-decision-bearing-experiment-evidence.mjs \
+              --staging-dir=artifact-staging \
+              --out-root=reports/stress/experiment-evidence
+
+            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ 2>/dev/null; then
+              echo 'No new canonical hint/provenance or decision-bearing experiment evidence to persist.'
               exit 0
             fi
 
             git add data/hints/ data/stress/hints/ data/stress/hints-random/
             if [ -d reports/stress/pending-solver-evidence ]; then
               git add reports/stress/pending-solver-evidence/
+            fi
+            if [ -d reports/stress/experiment-evidence ]; then
+              git add reports/stress/experiment-evidence/
             fi
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then
