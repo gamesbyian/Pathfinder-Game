@@ -126,8 +126,31 @@ function profileSupport(source, hintSummary) {
 function familyForLevel(levelId, familyCoverage) {
     if (familyCoverage == null) return { availability: 'not-mounted' };
     const row = familyCoverage.get(levelId);
-    if (!row) return { availability: 'mounted-no-parent-record', families: 0, variants: 0, modes: [], evaluated: null, solved: null };
+    if (!row) return {
+        availability: 'mounted-no-parent-record', families: 0, variants: 0, familyIds: [], modes: [],
+        evaluationEvidenceLoaded: null, evaluated: null, solved: null,
+    };
     return { availability: 'parent-indexed', ...row };
+}
+
+function replayFamilyCompatibility(hintSummary, family) {
+    if (!hintSummary.replayFamilies.length) {
+        return { status: 'no-replay-lineage', matchedFamilies: [], unmatchedFamilies: [] };
+    }
+    if (family.availability === 'not-mounted') {
+        return { status: 'family-resource-not-mounted', matchedFamilies: null, unmatchedFamilies: null };
+    }
+    if (family.availability === 'mounted-no-parent-record') {
+        return { status: 'no-parent-manifest-for-replay', matchedFamilies: [], unmatchedFamilies: [...hintSummary.replayFamilies] };
+    }
+    const known = new Set(family.familyIds ?? []);
+    const matchedFamilies = hintSummary.replayFamilies.filter(id => known.has(id));
+    const unmatchedFamilies = hintSummary.replayFamilies.filter(id => !known.has(id));
+    return {
+        status: unmatchedFamilies.length ? 'partial-or-unmatched' : 'matched',
+        matchedFamilies,
+        unmatchedFamilies,
+    };
 }
 
 export function analyzeLevelObservability({ source, level, metadata = null, familyCoverage = null }) {
@@ -136,6 +159,7 @@ export function analyzeLevelObservability({ source, level, metadata = null, fami
     const family = familyForLevel(level.id, familyCoverage);
     const selectionLineage = classifyCorpusSelectionLineage(source, level, metadata);
     const replayParentSelfMatch = hintSummary.replayParents.includes(level.id);
+    const familyCompatibility = replayFamilyCompatibility(hintSummary, family);
     return {
         id: level.id,
         corpus: source,
@@ -148,6 +172,7 @@ export function analyzeLevelObservability({ source, level, metadata = null, fami
             replayFirstPathsKnown: hintSummary.replayFirstHints,
             replayParentSelfMatch,
             replayParentMismatch: hintSummary.replayParents.length > 0 && !replayParentSelfMatch,
+            replayFamilyCompatibility: familyCompatibility,
         },
     };
 }
@@ -165,6 +190,8 @@ function groupSummary(rows) {
         replayTouchedLevels: rows.filter(row => row.provenance.replayTouchedHints > 0).length,
         replayFirstLevels: rows.filter(row => row.provenance.replayFirstHints > 0).length,
         replayOnlyLevels: rows.filter(row => row.provenance.replayOnlyHints > 0).length,
+        replayFamilyMatchedLevels: rows.filter(row => row.ancestry.replayFamilyCompatibility.status === 'matched').length,
+        replayFamilyUnmatchedLevels: rows.filter(row => ['partial-or-unmatched', 'no-parent-manifest-for-replay'].includes(row.ancestry.replayFamilyCompatibility.status)).length,
         familyCoverageKnownLevels: familyKnown.length,
         familyParents: rows.filter(row => row.family.availability === 'parent-indexed').length,
     };
@@ -196,6 +223,7 @@ function compactCase(row) {
         replayFirstHints: row.provenance.replayFirstHints,
         replayOnlyHints: row.provenance.replayOnlyHints,
         replayFamilies: row.provenance.replayFamilies.length,
+        replayFamilyCompatibility: row.ancestry.replayFamilyCompatibility.status,
         profileSupport: row.profile.supportShape,
         familyAvailability: row.family.availability,
         families: row.family.families ?? null,
@@ -224,9 +252,13 @@ export function summarizeCrossResourceObservability(rows, familyIndexMeta = null
 
     const replayLineages = new Set();
     const replayParents = new Set();
+    const matchedReplayFamilies = new Set();
+    const unmatchedReplayFamilies = new Set();
     for (const row of rows) {
         for (const family of row.provenance.replayFamilies) replayLineages.add(`${row.id}\0${family}`);
         for (const parent of row.provenance.replayParents) replayParents.add(`${row.id}\0${parent}`);
+        for (const family of row.ancestry.replayFamilyCompatibility.matchedFamilies ?? []) matchedReplayFamilies.add(`${row.id}\0${family}`);
+        for (const family of row.ancestry.replayFamilyCompatibility.unmatchedFamilies ?? []) unmatchedReplayFamilies.add(`${row.id}\0${family}`);
     }
 
     return {
@@ -242,6 +274,8 @@ export function summarizeCrossResourceObservability(rows, familyIndexMeta = null
             replayFamilyLevelLineages: replayLineages.size,
             replayParentLevelPairs: replayParents.size,
             replayParentMismatchLevels: rows.filter(row => row.ancestry.replayParentMismatch).length,
+            matchedReplayFamilyLevelLineages: familyMounted ? matchedReplayFamilies.size : null,
+            unmatchedReplayFamilyLevelLineages: familyMounted ? unmatchedReplayFamilies.size : null,
             familyParents: familyMounted ? familyParents.length : null,
             fourResourceJoinableLevels: familyMounted ? fourWay.length : null,
             fourResourceTrackedProfileLevels: familyMounted ? trackedFourWay.length : null,
@@ -250,6 +284,8 @@ export function summarizeCrossResourceObservability(rows, familyIndexMeta = null
         byCorpus: by(rows, row => row.corpus),
         bySelectionStratum: by(rows, row => row.selectionLineage.stratum),
         byHistoricalOutcomeConditioning: by(rows, row => row.selectionLineage.historicalOutcomeConditioning),
+        byFamilyAvailability: by(rows, row => row.family.availability),
+        byReplayExposure: by(rows, row => row.provenance.replayTouchedHints > 0 ? 'replay-touched' : 'not-replay-touched'),
         topCases: {
             replayFeedbackCandidates: replayHeavy.filter(row => row.provenance.replayTouchedHints > 0).slice(0, limit).map(compactCase),
             fourResourceRichCandidates: richFourWay.slice(0, limit).map(compactCase),
@@ -261,31 +297,38 @@ export function summarizeCrossResourceObservability(rows, familyIndexMeta = null
 export function familyCoverageFromIndex(index, currentLevelIds = null) {
     if (!index) return null;
     const allowed = currentLevelIds ? new Set(currentLevelIds) : null;
+    const evaluationEvidenceLoaded = (index.counts?.evidenceArtifacts ?? 0) > 0;
     const rows = new Map();
     for (const family of index.families ?? []) {
         if (allowed && !allowed.has(family.parentId)) continue;
         const row = rows.get(family.parentId) ?? {
             families: 0,
             variants: 0,
+            familyIds: new Set(),
             modes: new Set(),
             parentCorpora: new Set(),
-            evaluated: 0,
-            solved: 0,
+            evaluationEvidenceLoaded,
+            evaluated: evaluationEvidenceLoaded ? 0 : null,
+            solved: evaluationEvidenceLoaded ? 0 : null,
         };
         row.families++;
+        row.familyIds.add(family.familyId);
         row.variants += family.variantCount ?? 0;
         if (family.mode) row.modes.add(family.mode);
         if (family.parentCorpus) row.parentCorpora.add(family.parentCorpus);
         rows.set(family.parentId, row);
     }
-    for (const variant of index.variants ?? []) {
-        const row = rows.get(variant.parentId);
-        if (!row) continue;
-        if (variant.evaluated) row.evaluated++;
-        if (variant.solved) row.solved++;
+    if (evaluationEvidenceLoaded) {
+        for (const variant of index.variants ?? []) {
+            const row = rows.get(variant.parentId);
+            if (!row) continue;
+            if (variant.evaluated) row.evaluated++;
+            if (variant.solved) row.solved++;
+        }
     }
     return new Map([...rows].map(([id, row]) => [id, {
         ...row,
+        familyIds: [...row.familyIds].sort(),
         modes: [...row.modes].sort(),
         parentCorpora: [...row.parentCorpora].sort(),
     }]));
