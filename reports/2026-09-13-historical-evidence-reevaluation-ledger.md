@@ -1,6 +1,9 @@
 # Historical evidence re-evaluation after the corpus and solution-profile audits
 
-> **Status:** current forensic re-evaluation ledger.
+> **Status:** active
+> **Last evidence:** 2026-09-13 — forensic sweep after the stress-corpus selection-history and solution-profile resource audits, including historical C1/profile consumers and static-portfolio transfer evidence.
+> **Decision:** retain exact row-level solver observations unless their execution was broken, but narrow or supersede claims whose population role or analytical instrument no longer supports the original inference. No blanket rerun of solver research is warranted.
+> **Remaining gate:** reconcile the live solver queue, future-work authorities and major research-method docs against these dispositions; perform any cheap required recomputations/rechecks, then close this ledger as the durable audit-to-queue bridge.
 > **Trigger:** the 2026-09-13 stress-corpus selection-history audit and solution-profile resource audit.
 > **Scope:** historical solver-research claims whose scientific interpretation depended on corpus independence/selection or legacy solution-profile semantics.
 > **Not in scope:** replaying every solver A/B. Exact solve/work observations remain observations unless the population role, instrument, treatment participation, or execution itself was material to the claim.
