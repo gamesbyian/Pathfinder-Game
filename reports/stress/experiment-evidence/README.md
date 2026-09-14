@@ -2,7 +2,7 @@
 
 This directory is the tracked closeout store for **decision-bearing v3 solver experiment evidence** whose original GitHub Actions artifacts may expire.
 
-It is populated by `.github/workflows/harvest-solver-evidence.yml` through `scripts/persist-decision-bearing-experiment-evidence.mjs`.
+It is populated through `scripts/persist-decision-bearing-experiment-evidence.mjs` by the repository's serialized evidence harvesters.
 
 ## Admission rule
 
@@ -24,7 +24,7 @@ Each retained directory is named:
 
 and contains:
 
-- `manifest.json` — the exact published v3 result/contract manifest;
+- `manifest.json` — the exact published v3 result/contract manifest, always retained uncompressed and readable;
 - `bundle.json` — retention index with experiment/run/config/population identity and per-file checksums;
 - `evidence/...` — every non-missing file/directory named by the published manifest's evidence entries.
 
@@ -34,15 +34,18 @@ The bundle is intended to retain enough primary evidence to recompute the decisi
 
 ## Automatic harvest
 
-For solver workflows already watched by `harvest-solver-evidence.yml`, decision-bearing v3 bundles are retained during the same serialized semantic harvest that persists canonical hint/provenance evidence.
+Two workflow surfaces share the same repository-wide evidence-writer lock:
 
-The harvester resets to current `main` and replays the immutable source artifacts on a push race, so re-harvesting the same source run is deterministic and does not merge evidence JSON line-by-line.
+- `.github/workflows/harvest-solver-evidence.yml` retains decision-bearing v3 bundles encountered in the canonical solver/hint workflows it already harvests; and
+- `.github/workflows/harvest-decision-bearing-experiment-evidence.yml` retains bundles from fresh broad/residual confirmation, static-portfolio confirmation, and cross-run reconciliation workflows without sending those generated populations through canonical hint importers.
+
+Both reset to current `main` and replay immutable source artifacts on a push race, so re-harvesting the same source run is deterministic and does not merge generated evidence JSON line-by-line.
 
 ## Backfill without solver compute
 
-While an existing source run's artifacts still exist, use the **Harvest solver hint evidence** workflow's manual dispatch and provide `source_run_id`.
+While an existing source run's artifacts still exist, manually dispatch **Harvest decision-bearing experiment evidence** with `source_run_id`. It downloads the existing artifacts and applies the same admission rule. No solver rerun is needed.
 
-The workflow downloads the existing artifacts and applies the same retention rule. No solver rerun is needed.
+The older **Harvest solver hint evidence** manual dispatch also retains a decision-bearing v3 bundle when the source run is one of the canonical hint/provenance workflow families.
 
 Historical experiments whose primary artifacts have already expired remain historically unreconstructable at the missing layer. Do not fabricate replacement rows from current defaults or rerun old science merely to make this directory look complete.
 
