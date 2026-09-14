@@ -3,11 +3,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { levelFeatures, levelDistance, packedToPair } from './features.mjs';
+import { levelFeatures, levelDistance } from './features.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const CORPORA = [
-  { key: 'published', file: 'data/levels.json', hintsDir: 'data/hints' },
+  { key: 'published', file: 'data/levels.json' },
   { key: 'stress1', file: 'data/stress/stress-levels.json' },
   { key: 'stress2', file: 'data/stress/stress-levels-random.json' },
   { key: 'envelope', file: 'data/stress/stress-levels-envelope.json' },
@@ -28,20 +28,18 @@ function stats(values) {
 }
 function inc(map, key, n = 1) { map[key] = (map[key] || 0) + n; }
 function sorted(map) { return Object.fromEntries(Object.entries(map).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))); }
-function firstPublishedWitness(index) {
-  const p = path.join(root, 'data/hints', `${String(index + 1).padStart(5, '0')}.json`);
-  if (!fs.existsSync(p)) return null;
-  try {
-    const hints = JSON.parse(fs.readFileSync(p, 'utf8'));
-    return Array.isArray(hints) && Array.isArray(hints[0]) ? hints[0].map(packedToPair) : null;
-  } catch { return null; }
-}
 function loadCorpus(spec) {
   const parsed = readJson(spec.file);
   const levels = Array.isArray(parsed) ? parsed : parsed.levels;
   return { ...spec, parsed, rows: levels.map((level, index) => {
-    const witness = spec.key === 'published' ? firstPublishedWitness(index) : (level?.stressMeta?.witnessSolution || null);
-    return { level, index, witness, features: levelFeatures(level, witness) };
+    const witness = spec.key === 'published' ? null : (level?.stressMeta?.witnessSolution || null);
+    return {
+      level,
+      index,
+      witness,
+      features: levelFeatures(level, witness),
+      comparableFeatures: levelFeatures(level, null),
+    };
   }) };
 }
 
@@ -71,6 +69,13 @@ function summarizePopulation(corpus) {
     const a = MECH[i], b = MECH[j];
     cooccurrence[`${a}+${b}`] = rows.filter(r => r.features[a] > 0 && r.features[b] > 0).length;
   }
+  const header = Array.isArray(corpus.parsed) ? null : {
+    generatedAt: corpus.parsed.generatedAt ?? null,
+    generatorVersion: corpus.parsed.generatorVersion ?? null,
+    masterSeed: corpus.parsed.masterSeed ?? null,
+    generationStats: corpus.parsed.generationStats ?? null,
+    appendHistory: corpus.parsed.appendHistory ?? null,
+  };
   return {
     rows: rows.length,
     grids: sorted(grids),
@@ -86,12 +91,19 @@ function summarizePopulation(corpus) {
     mechanicPairCooccurrence: sorted(cooccurrence),
     witnessSupportRows: rows.filter(r => r.features.witness).length,
     witness: Object.fromEntries(Object.entries(witness).map(([k, v]) => [k, stats(v)])),
-    generationStats: Array.isArray(corpus.parsed) ? null : (corpus.parsed.generationStats || null),
+    wrapperGenerationMetadata: header,
   };
 }
 
 function nearestNeighbourSummary(corpora) {
-  const all = corpora.flatMap(c => c.rows.map(r => ({ corpus: c.key, id: r.level?.id || `${c.key}:${r.index + 1}`, f: r.features })));
+  // Deliberately omit witness-only dimensions for every row. Published rows do not carry
+  // construction witnesses, and levelDistance renormalizes when witness dimensions are absent;
+  // mixing witnessed and unwitnessed comparisons would make distances non-comparable.
+  const all = corpora.flatMap(c => c.rows.map(r => ({
+    corpus: c.key,
+    id: r.level?.id || `${c.key}:${r.index + 1}`,
+    f: r.comparableFeatures,
+  })));
   const byCorpus = {};
   for (const c of corpora) byCorpus[c.key] = { within: [], nearestAny: [], nearestOtherCorpus: [], ownerOfNearestAny: {} };
   for (let i = 0; i < all.length; i++) {
@@ -117,58 +129,17 @@ function nearestNeighbourSummary(corpora) {
   }]));
 }
 
-function walkFiles(dir, out = []) {
-  if (!fs.existsSync(dir)) return out;
-  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, ent.name);
-    if (ent.isDirectory()) walkFiles(p, out); else out.push(p);
-  }
-  return out;
-}
-function exposureLowerBound(corpora) {
-  const ids = new Map();
-  for (const c of corpora) for (const row of c.rows) if (row.level?.id) ids.set(row.level.id, { corpus: c.key, files: new Set(), mentions: 0 });
-  const roots = ['reports', 'docs', '.github/workflows', 'scripts'];
-  const allowed = /\.(md|json|mjs|js|ts|yml|yaml)$/i;
-  const corpusFiles = new Set(CORPORA.map(c => path.normalize(path.join(root, c.file))));
-  let scannedFiles = 0;
-  for (const rel of roots) for (const file of walkFiles(path.join(root, rel))) {
-    if (!allowed.test(file) || corpusFiles.has(path.normalize(file))) continue;
-    let text; try { text = fs.readFileSync(file, 'utf8'); } catch { continue; }
-    scannedFiles++;
-    const found = new Set(text.match(/\b(?:L|S|R|E)\d{3,6}\b/g) || []);
-    for (const id of found) if (ids.has(id)) {
-      const rec = ids.get(id);
-      const re = new RegExp(`\\b${id}\\b`, 'g');
-      rec.mentions += (text.match(re) || []).length;
-      rec.files.add(path.relative(root, file));
-    }
-  }
-  const summary = {};
-  for (const c of corpora) {
-    const recs = [...ids.entries()].filter(([, v]) => v.corpus === c.key).map(([id, v]) => ({ id, files: v.files.size, mentions: v.mentions }));
-    summary[c.key] = {
-      rows: recs.length,
-      explicitlyReferencedRows: recs.filter(r => r.files > 0).length,
-      referenceFileCount: stats(recs.map(r => r.files)),
-      mentionCount: stats(recs.map(r => r.mentions)),
-      mostReferenced: recs.sort((a, b) => b.files - a.files || b.mentions - a.mentions || a.id.localeCompare(b.id)).slice(0, 25),
-    };
-  }
-  return { scannedFiles, note: 'Lower bound only: explicit level-id references in reports/docs/workflows/scripts. Aggregate corpus use without row ids is not attributed.', corpora: summary };
-}
-
 const corpora = CORPORA.map(loadCorpus);
 const output = {
   generatedAt: new Date().toISOString(),
   purpose: 'Population-validity/dependence audit. Descriptive only; no solver outcomes are used.',
   caveats: [
     'Accepted stress rows are conditioned on witness success, validation, novelty rejection, and placement feasibility; retained distributions are not the raw proposal priors.',
-    'Nearest-neighbour distances use the repository levelDistance descriptor and are diagnostics, not proof of statistical independence.',
-    'Explicit-reference exposure is a conservative lower bound, not a complete decision genealogy.',
+    'Nearest-neighbour distances intentionally omit witness-only dimensions so all four populations use one comparable feature contract.',
+    'Nearest-neighbour distances are diagnostics, not proof of statistical independence or a replacement for family/generator ancestry.',
+    'Research-exposure genealogy is intentionally not inferred from raw id-reference counts: generated aggregate artifacts make that measure misleading.',
   ],
   populations: Object.fromEntries(corpora.map(c => [c.key, summarizePopulation(c)])),
   nearestNeighbours: nearestNeighbourSummary(corpora),
-  researchExposureLowerBound: exposureLowerBound(corpora),
 };
 console.log(JSON.stringify(output, null, 2));
