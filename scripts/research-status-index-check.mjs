@@ -131,12 +131,19 @@ assert.equal(normalizeResearchQuestionStatus('active-candidate'), 'active');
 assert.equal(normalizeResearchQuestionStatus('closed-tested-form'), 'closed');
 assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'question', status: 'active' }).map(x => x.id), ['WS2-CURRENT']);
 assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow-up' }).map(x => x.id), ['WS2-FOLLOWUP']);
+assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow up' }).map(x => x.id), ['WS2-FOLLOWUP'],
+    'ordinary spaced vocabulary must discover a hyphenated question');
 assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'experiment' }), [],
     'question query helper must not leak questions into other compact kinds');
 const invalidRelations = JSON.parse(JSON.stringify(questionRegistry));
 invalidRelations.questions[0].implies = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidRelations), [
     'questions[0].implies references unknown question WS2-MISSING',
+]);
+const invalidSupersession = JSON.parse(JSON.stringify(questionRegistry));
+invalidSupersession.questions[0].supersedes = ['WS2-MISSING'];
+assert.deepEqual(validateResearchQuestionRegistry(invalidSupersession), [
+    'questions[0].supersedes references unknown question WS2-MISSING',
 ]);
 
 await import('./corpus-query-node-test.mjs');
