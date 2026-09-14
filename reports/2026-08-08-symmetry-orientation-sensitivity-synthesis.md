@@ -1,9 +1,9 @@
 # Symmetry orientation sensitivity: current synthesis and next steps
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-08-08 — reconciliation of the 38-family rerun, R02248/R01465 ablations, Phase C/D variant results, and current search implementation
-> **Decision:** treat a symmetry rescue as evidence of representation-dependent finite search; diagnose ranked solve-status cliffs before considering an orientation-retry tier, and prefer bounded search diversity over a global score retune
-> **Remaining gate:** run the existing family-boundary tooling on the wide trove, then complete trace/divergence/ablation diagnosis for the highest-ranked independent symmetry cliffs until a mechanism recurs or the top five families have distinct signatures
+> **Last evidence:** 2026-09-14 — historical claim-lineage audit narrowed perturbation robustness from causal hardness to a descriptive response phenotype
+> **Decision:** treat a symmetry rescue as evidence of representation-dependent finite search; diagnose ranked solve-status cliffs before considering an orientation-retry tier, and prefer bounded search diversity over a global score retune. Treat `fragile` / `robust` as tested perturbation-response labels, not latent-cause classifications.
+> **Remaining gate:** run the existing family-boundary tooling on the wide trove only if a current mechanism question earns it; otherwise use the current representation-sensitivity lineage-survival gate
 
 ## Question and answer
 
@@ -38,8 +38,9 @@ plateaus across seeds—but not the same ablation. R02248 unlocked when
 Phase D extended the pattern to R02795, R00156, and R02960. Their rescuing ablations implicated
 goal attraction, perimeter bias, or objective attraction. Across the five diagnosed fragile
 families, no single score flag rescued more than two. The recurring mechanism is therefore not one
-universally broken term. It is a family of position/attraction scores making an early structural
-commitment that becomes unrecoverable after beam truncation or within the repair budget.
+universally broken term. On these selected parent-level cases, position/attraction scores can make
+an early structural commitment that becomes unrecoverable after beam truncation or within the
+repair budget.
 
 ### What remains established
 
@@ -49,11 +50,13 @@ revisit incentive create a crossing too soon, consuming adjacency needed to cove
 cells later. Disabling intersection setup rescued every hard orientation in the targeted ablation.
 That is an interaction effect, not proof that the term should be removed globally.
 
-The wider variant experiment also distinguishes **fragile** and **robust** failures. Fragile levels
-often solve after a symmetry or small controlled perturbation and are promising heuristic/search-
-diversity targets. Robust examples such as R00440 fail across many transformations and techniques;
-they look more like combinatorial capability gaps requiring bounds, pruning, or a new technique.
-This classification is diagnostic, not a proof that every member has the same cause.
+The wider variant experiment also exposes different **perturbation-response phenotypes**. Fragile
+parents often solve after a symmetry or small controlled perturbation and are useful discovery
+material for heuristic/search-diversity questions. Parents historically labelled robust, such as
+R00440, resisted the tested transformations and technique menu. That resistance is descriptive:
+it does **not** prove intrinsic combinatorial hardness, technique independence, or that bounds,
+pruning, or a new search family is the missing cause. The parent is the independent unit and the
+accepted family rows are conditioned by the generator/witness/validation pipeline.
 
 ## Implementation-level causal chain
 
@@ -76,11 +79,12 @@ divergence.
 
 ## Recommended next work
 
-### 1. Build the ranked queue from artifacts that already exist
+### 1. Use family ranking only when a current question needs it
 
-Run the implemented boundary report over the wide family trove. Rank canonical-failure/symmetry-
-success first, then sibling solve-status disagreement, extreme work spread, and winning-technique
-spread. Do not select only memorable levels or one transform index.
+The historical boundary report can still rank canonical-failure/symmetry-success parents, sibling
+solve-status disagreement, extreme work spread, and winning-technique spread. It is discovery
+machinery, not a standing queue. Current work should follow the live representation-sensitivity
+lineage-survival gate and use family ranking when that gate needs controlled parent-level cases.
 
 ### 2. Use one diagnosis packet per high-ranked family
 
@@ -93,8 +97,9 @@ For each selected family:
    divergence;
 5. run single-flag scoring ablations, then small interaction ablations only when the first pass
    warrants them;
-6. repeat the winning ablation across every hard orientation and at least one independent family;
-7. record whether the family is fragile, robust, or still inconclusive.
+6. repeat the winning ablation across every hard orientation and at least one unrelated parent;
+7. record whether the parent is perturbation-sensitive, perturbation-resistant, or inconclusive
+   without treating that label as its latent cause.
 
 ### 3. Prefer diversity hypotheses to a universal coefficient change
 
@@ -111,10 +116,11 @@ a cheap predictor or shared-search implementation; its cost was already judged d
 ### 4. Keep production orientation retry deferred
 
 Trying all eight presentations is a useful diagnostic control but a poor first production fix: it
-can multiply work, hides recurrent scoring defects, and does nothing for robust hard cores. Revisit
-an orientation portfolio only if the ranked diagnosis shows a residual population dominated by
-irreducible tie/cutoff effects and a raced, shared-budget implementation beats score-diversity on
-solved count and total work.
+can multiply work, hides recurrent scoring defects, and does not establish why a
+perturbation-resistant parent is hard. Revisit an orientation portfolio only if current matched
+lineage diagnostics show a residual population dominated by representation-dependent cutoff
+effects and a raced, shared-budget implementation beats score-diversity on solved count and total
+work.
 
 ## Acceptance criteria for a solver change
 
@@ -132,5 +138,7 @@ A symmetry-derived change is ready to keep only when it:
 
 This synthesis does not claim a corpus-wide prevalence rate. The historical 38-family study used a
 selected population, and the five ablation-diagnosed fragile families are enough to reject a
-single-term explanation but not enough to estimate how often each mechanism occurs. The wide-trove
-boundary run is the next measurement that can make that statement responsibly.
+single-term explanation on those cases but not enough to estimate how often each mechanism occurs.
+Family rows are correlated within parent, and family/replay/imported-hint/Profile/path-derived
+descendants must not be counted as independent confirmation without an ancestry break. See
+[`2026-09-14-historical-claim-lineage-audit-001.md`](2026-09-14-historical-claim-lineage-audit-001.md).
