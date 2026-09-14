@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { auditTrackedProfileLibrary } from './cross-resource-profile-integrity.mjs';
 import {
     analyzeLevelObservability,
     familyCoverageFromIndex,
@@ -123,5 +124,38 @@ describe('cross-resource observability', () => {
         expect(summary.bySelectionStratum['c2-original-random-solver-negative-survivor'].levels).toBe(1);
         expect(summary.byFamilyAvailability['parent-indexed'].levels).toBe(1);
         expect(summary.topCases.replayFeedbackCandidates[0].id).toBe('R00001');
+    });
+
+    it('checks tracked Solution Profile rows against current hint support at corpus position', () => {
+        const levels = [{
+            id: 'S00001',
+            hintRecords: [
+                { path: [1, 2], provenance: [pathfinder('2026-08-01T00:00:00Z')] },
+                { path: [1, 3], provenance: [pathfinder('2026-08-02T00:00:00Z')] },
+            ],
+        }];
+        const library = {
+            schemaVersion: 3,
+            provenanceTaxonomy: 'origin-facet-applicability-v2',
+            profileAlgorithmVersion: 'sample-support-v2',
+            source: 'data/stress/stress-levels.json',
+            levels: [{
+                level: 1,
+                hintCount: 2,
+                combined: {
+                    pathCount: 2,
+                    distinctPathCount: 2,
+                    discoverySaturation: { chronologyDatedHints: 2, chronologyComplete: true },
+                },
+            }],
+        };
+        const compatible = auditTrackedProfileLibrary(library, levels, { sourcePath: 'data/stress/stress-levels.json' });
+        expect(compatible.compatible).toBe(true);
+        expect(compatible.mismatchCount).toBe(0);
+
+        library.levels[0].hintCount = 1;
+        const stale = auditTrackedProfileLibrary(library, levels, { sourcePath: 'data/stress/stress-levels.json' });
+        expect(stale.compatible).toBe(false);
+        expect(stale.mismatchTypes['hint-count']).toBe(1);
     });
 });
