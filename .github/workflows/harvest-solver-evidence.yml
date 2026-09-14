@@ -24,11 +24,11 @@ on:
         description: 'Existing Actions run id to re-harvest/backfill without rerunning the solver.'
         required: true
       source_workflow:
-        description: 'Optional source workflow label for provenance/pending-evidence notes.'
+        description: 'Optional expected source workflow name; when supplied it must match the Actions run.'
         required: false
-        default: 'manual backfill'
+        default: ''
       source_sha:
-        description: 'Optional source solver SHA for isolated-tool provenance when the artifact itself does not record it.'
+        description: 'Optional expected source SHA; when supplied it must match the Actions run.'
         required: false
         default: ''
 
@@ -66,6 +66,29 @@ jobs:
       - name: Self-test durable experiment evidence retention
         run: node scripts/persist-decision-bearing-experiment-evidence.mjs --self-test
 
+      - name: Resolve source run identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+          EXPECTED_WORKFLOW: ${{ inputs.source_workflow }}
+          EXPECTED_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          source_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID")"
+          source_workflow="$(jq -r '.name' <<<"$source_json")"
+          source_sha="$(jq -r '.head_sha' <<<"$source_json")"
+          if [[ -n "$EXPECTED_WORKFLOW" && "$EXPECTED_WORKFLOW" != "$source_workflow" ]]; then
+            echo "Expected source workflow '$EXPECTED_WORKFLOW' but run $SOURCE_RUN_ID belongs to '$source_workflow'." >&2
+            exit 1
+          fi
+          if [[ -n "$EXPECTED_SHA" && "$EXPECTED_SHA" != "$source_sha" ]]; then
+            echo "Expected source SHA '$EXPECTED_SHA' but run $SOURCE_RUN_ID resolved to '$source_sha'." >&2
+            exit 1
+          fi
+          printf 'SOURCE_WORKFLOW=%s\n' "$source_workflow" >> "$GITHUB_ENV"
+          printf 'SOURCE_SHA=%s\n' "$source_sha" >> "$GITHUB_ENV"
+
       - name: Download every artifact from the source solver run
         shell: bash
         env:
@@ -84,8 +107,6 @@ jobs:
         shell: bash
         env:
           SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
-          SOURCE_WORKFLOW: ${{ github.event.workflow_run.name || inputs.source_workflow || 'manual backfill' }}
-          SOURCE_SHA: ${{ github.event.workflow_run.head_sha || inputs.source_sha }}
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
