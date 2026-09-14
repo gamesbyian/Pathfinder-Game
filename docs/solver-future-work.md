@@ -20,6 +20,15 @@ The 2026-09-13 corpus/profile audits add conditional reopen items, not top-prior
 | **Independent transfer for omitted mechanics** | A broad claim is blocked because topology composition omits the mechanic. Prefer locked human/editor parents that represent it; otherwise add the smallest independent construction capability. Whole C1 cannot substitute. |
 | **`portfolio-18-flat-2m` old-generator nomination** | Static allocation resumes and cheap independent current evidence can test the 22/23 tie at ~27.5% less work seen on the genuine old-generator C1 stratum. |
 
+The 2026-09-14 inference audits add four further **earned but conditional** actions. They are not reasons to interrupt the live WS2 gates. [`program closeout`](../reports/2026-09-14-inference-audit-program-reconciliation-closeout-001.md)
+
+| Question / repair | Reopen condition / boundary |
+|---|---|
+| **Accepted-path representative sensitivity** | A live mechanism nomination materially depends on one representative path or one accepted-path-set view. Then add/use an explicit path/signature substitution input and run the frozen seven-level Audit-3 cohort under unchanged solver/config/budget. Do not run it merely to complete the audit record. |
+| **Class-3 exact-action dose resolution** | A live allocation/acquisition decision depends on deciding which of the 37 atlas rows are true comparable-work failures. The historical frozen atlas cannot supply the missing per-attempt `workSpent`; prefer retained current evidence when available, otherwise run only the smallest current-code exact-action measurement that can change triage. Until then the rows stay dose-unverified. |
+| **Known-prefix oracle-set manifest** | A decision-bearing known-solution-prefix survival study needs replay/dependency-stratified path-set sensitivity. Add a compact producer manifest for the conditioning set rather than reconstructing it from historical sidecars or dumping full provenance. |
+| **Experiment producer maturation** | When a decision-bearing workflow is materially touched, or a recurring consumer limitation is measured, finish the prospective Audit-1 contract at that producer: declare the v3 experiment/selection contract at execution time, retain resolved treatment identity and primary evidence, derive compact stage participation without replacing rows, link the owning question/preflight where known, and preserve execution failure separately from scientific outcome. Durable primary-row retention is now provided by the canonical evidence harvester. Promote `experiment-manifests` to audited-resource grade only if repeated use still exposes a resource-level semantic gap. |
+
 Exact frozen-row solve/work facts stand unless execution/participation was invalid; retest only when corrected evidence scope leaves a live decision unanswered.
 
 ## Capability-acquisition frontier
@@ -59,7 +68,7 @@ Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased repair is
 | **Beam continuation / cross-policy handoff** | A complementary policy or earned live-future mechanism appears; controlled cliffs may localize handoff boundaries. |
 | **Temporal/displaced-capability niches** | A material boundary change or repeated unrelated losses reveal a stable basin; human-parent replication can distinguish broad phenotype from stress-generator niche. |
 | **Human/editor-envelope niches** | A mechanism needs published/human-shaped geometry or a mechanic/topology omitted by procedural transfer. Use `human-parent-contrast-pilot.mjs` with explicit question/evidence role/exposure and whole-parent denominators. This is not a standing Corpus 3. |
-| **Research infrastructure** | Add producer→consumer/query plumbing only after a measured recurring consumer limitation. |
+| **Research infrastructure** | Add producer→consumer/query plumbing only after a measured recurring consumer limitation. Audit-derived experiment/oracle producer conditions are listed above rather than hidden behind this generic bucket. |
 | **Class-1 compact beam-menu exposure** | A materially different work/allocation contract creates real headroom. |
 | **Representation-sensitivity lineage survival** | After WS2 priority work, or a clean current cliff, measure known-live lineage survival with geometry/interface controls, recurrence on two independent parents, and a held-out third-parent prediction. Prefer human-parent descendants when they give cleaner independent-parent cliffs. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
 | **Counterfactual displaced-capability recurrence** | Multiple unrelated accepted changes lose the same phenotype; test recurrence across whole human/editor parents before calling it broad. |
