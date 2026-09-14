@@ -9,6 +9,10 @@ on:
       - 'scripts/corpus-selection-lineage.mjs'
       - '.github/workflows/cross-resource-observability-audit.yml'
 
+concurrency:
+  group: cross-resource-observability-audit
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
