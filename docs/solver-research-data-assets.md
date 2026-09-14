@@ -8,6 +8,8 @@
 
 Do not duplicate the machine registry here. This file explains safe cross-asset use. The older catalogue is frozen at [`archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md).
 
+Human/editor-parent controlled contrasts use the existing **variant-family data** asset contract rather than creating a parallel evidence store. Their source/selection interpretation is owned by [`human-parent-contrast-research.md`](human-parent-contrast-research.md); generated descendants still join through normal parent/variant identity and provenance.
+
 ## Cheap discovery first
 
 ```bash
@@ -48,7 +50,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 | Operational traces | encountered decision | How did searches diverge? |
 | Exact/reference labels | level × state/prefix | Is selected material feasible? |
 | Offline replay atlas | labelled state × probe | Can a candidate reasoner explain/use exact labels? |
-| Variant families | parent × controlled transform | Which controlled structural changes flip behavior? |
+| Variant families, including human/editor-parent contrasts | parent × controlled transform | Which controlled structural changes flip behavior, and does the relation survive across whole parent sources? |
 | Experiment manifests | run/arm/shard | Which code/data/protocol produced an observation? |
 | Raw logs/baselines | raw run/snapshot | What happened before interpretation? |
 | Research-status index | report/workstream/experiment | Has this been tested/renamed? |
@@ -56,7 +58,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include census × lifecycle, census × profiles, census × variants/traces/static descriptors, benchmark × lifecycle, benchmark/history × capability memory, hint provenance × profile/census, structural fingerprint × persisted evidence, exact labels × traces/prefix survival, and manifests × decision-bearing runs. These are opportunities, not mandatory ritual. Use the smallest join that answers the gate.
+Useful joins include census × lifecycle, census × profiles, census × variants/traces/static descriptors, benchmark × lifecycle, benchmark/history × capability memory, hint provenance × profile/census, structural fingerprint × persisted evidence, exact labels × traces/prefix survival, and manifests × decision-bearing runs. Human-parent descendants use the same variant-family joins; preserve parent source/exposure and analyze whole parents when the claim needs independent units. These are opportunities, not mandatory ritual. Use the smallest join that answers the gate.
 
 ## Three different fingerprints
 
@@ -78,13 +80,15 @@ Solver-blind generation does not make later corpus membership independent. Curre
 
 A residual or participant cohort supports the conditional question it was selected for, not unconditional mechanic prevalence. Level-blindness alone does not establish sample or distributional generalization.
 
+Human/editor-parent generation adds a genuinely different **parent source** from the procedural stress generators, but it does not erase selection. Descendants of one parent remain correlated, preserved witnesses prove solvability only, and a parent family whose outcomes influenced treatment design becomes development evidence for descendants of that decision. See [`human-parent-contrast-research.md`](human-parent-contrast-research.md).
+
 ### Solution profiles are sample profiles
 
 Profile fields summarize stored known solutions with explicit support. Missing/unsupported axes remain unavailable. `observedSingleOrder` is sampled agreement, not structural rigidity. `hasExhaustiveSearchEvent` records an event, not unrestricted whole-space enumeration/persistence. Saturation/plateau claims require adequate dated chronology. Sparse nearest-profile identity is exploratory even under schema v3 and needs independent calibration before decision-bearing use. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`profile audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
 
 ### Independence, missingness, and hint provenance
 
-Variant siblings, generator batches, rediscoveries, and multiple rows from one level are not automatically independent; hold out whole families/parents when needed. Missing provenance is unknown: an absent baseline/capability-memory row is no observation, not failure.
+Variant siblings, generator batches, rediscoveries, and multiple rows from one level are not automatically independent; hold out whole families/parents when needed. For human/editor controlled contrasts, the parent family is the usual independent unit and parent exposure must be explicit. Missing provenance is unknown: an absent baseline/capability-memory row is no observation, not failure.
 
 Declare the evidence purpose before consuming provenance: `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process`. Use shared applicability/dependency-stratum helpers rather than a local “trusted hint” predicate.
 
@@ -99,6 +103,8 @@ Historical capability may survive code drift as forensic nomination, but current
 ## Asset maintenance
 
 When a durable evidence family changes, update [`solver-research-data-assets.json`](solver-research-data-assets.json), not parallel prose. Registry entries should own stable ID/status, grain/independent unit, locations/authorities, query entry points, join keys, related assets, evidence roles, and leakage/freshness/selection caveats.
+
+Human/editor controlled contrasts intentionally remain under the existing `variant-family-data` asset rather than minting a new asset ID: the generated records/manifests use the same family identity/provenance contract. Add a new registry asset only if the apparatus later creates a genuinely separate persisted evidence interface.
 
 Capability memory is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the current question.
 
