@@ -2,10 +2,11 @@
 
 > **Status:** current contract for durable solver-research resources.
 > **Registry:** [`solver-research-data-assets.json`](solver-research-data-assets.json) remains the asset inventory and evidence-topology authority.
+> **Audit declarations:** [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) adds audit-grade semantics keyed to existing registry IDs; it is not a second asset catalogue.
 > **Cross-asset guide:** [`solver-research-data-assets.md`](solver-research-data-assets.md).
 > **Report method:** [`investigation-report-conventions.md`](investigation-report-conventions.md).
 
-This contract turns the lessons from the 2026-09 provenance, variant-family, solution-profile, stress-corpus, and decision-exposure audits into a reusable resource standard. It is deliberately a layer over the existing asset registry, not a second evidence warehouse.
+This contract turns the lessons from the 2026-09 provenance, variant-family, solution-profile, stress-corpus, and decision-exposure audits into a reusable resource standard. It is deliberately a stricter layer over the existing asset registry, not a second evidence warehouse.
 
 The contract exists to keep two questions separate:
 
@@ -36,7 +37,7 @@ The catalogue contract answers “what is this, where is it, and how do I approa
 
 ### Audited-resource contract
 
-An audited resource also needs an entry in `auditedResourceContracts` in the same registry. That declaration must make the following explicit:
+An audited resource also needs an entry in `solver-research-resource-contract-audits.json`, keyed by the existing registry `assetId`. That declaration must make the following explicit:
 
 - **Independent unit:** the unit that may legitimately count as independent support for the resource's usual research questions.
 - **Identity layers:** the distinct identities that must not be collapsed, such as level, path, event, parent family, generated variant, puzzle content, evaluation run, or accepted solution.
@@ -145,4 +146,4 @@ Other registry entries remain legitimate catalogue-grade resources. Upgrade one 
 
 ## Enforcement boundary
 
-`npm run check:audit-artifacts` validates the registry's catalogue shape, relationship references, audited-resource declarations, and the four initial audited-resource memberships. It can catch missing declarations, broken references, duplicate IDs, and malformed contract fields. It cannot certify that a scientific claim is true, that a population is actually independent, or that a consumer inventory is complete. Those remain audit/review questions.
+`npm run check:audit-artifacts` validates the existing registry's catalogue shape and relationship references, validates the audit-declaration overlay against real registry IDs, and requires the four initial audited resources to have complete declarations. It can catch missing declarations, broken references, duplicate IDs, and malformed contract fields. It cannot certify that a scientific claim is true, that a population is actually independent, or that a consumer inventory is complete. Those remain audit/review questions.
