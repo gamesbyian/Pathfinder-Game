@@ -145,6 +145,24 @@ That does not make joint research impossible. It changes the unit of cleanliness
 
 Several are especially informative because replay touched paths only after non-replay discovery. That distinction must survive future tooling: **replay-touched != replay-first**.
 
+### F11 — replay lineage has a large mode asymmetry, but the denominator needed to explain it was not retained
+
+Joining family IDs to their generation modes produces a striking descriptive pattern. Among mounted family manifests, at least one stored replay lineage is present for:
+
+| Family mode | Families | Families represented by replay lineage | Descriptive coverage |
+|---|---:|---:|---:|
+| constrained-shuffle | 1,962 | 1,940 | 98.88% |
+| group-reshuffle | 1,946 | 1,920 | 98.66% |
+| swap | 1,962 | 1,830 | 93.27% |
+| symmetry | 1,928 | 985 | 51.09% |
+| local-mutant | 1,912 | 964 | 50.42% |
+
+That is **not** a transform success-rate result. PR #1340's parent-hint replay batch attempted every *discovered variant hint* against its canonical parent, but its persisted/reportable counters were only corpus-level totals: manifests processed, variant hints checked/accepted and parents touched. It did not retain the checked/accepted denominator by family mode, and the generated `reports/families/2026-08-08-parent-hint-replay.json` was not committed.
+
+Therefore a family absent from replay provenance may mean its variants had no discovered hints to attempt, attempted paths failed parent replay, or both. The current stored lineage can describe the numerator but cannot separate those mechanisms. Recovering the denominator would require rematerializing the historical variant-hint inputs, which this audit does not justify merely to turn an intriguing pattern into a statistic.
+
+Prospective lesson: any future replay/transfer campaign intended for comparative mechanism inference should persist attempted and accepted counts by parent/family/mode, not only corpus totals. This is a concrete instance where aggregation destroyed the counterfactual needed by a later scientifically legitimate question.
+
 ## What the four-resource join can safely answer
 
 High-value uses now include:
@@ -161,6 +179,7 @@ Unsafe uses include:
 - hint count or profile support volume used as a proxy for number of latent solutions;
 - row-weighted variant evidence treated as independent observations;
 - absent family evaluation logs interpreted as failures;
+- replay-lineage presence by family mode interpreted as a transfer rate without the attempted variant-hint denominator;
 - current corpus filename used as sufficient population identity.
 
 ## Solve-oriented next use
