@@ -3,7 +3,7 @@
 > **Status:** active
 > **Last evidence:** 2026-09-14 — corrected manifest-only census accepted after reproducing the authoritative 23 / 79 / 328 / 1,372 standing stress-selection strata; machine summary committed in `2026-09-14-cross-resource-observability-summary-001.json`.
 > **Decision:** the four audited resources are a useful evidence system, but they are not four independent views. Variant-family replay is a major upstream contributor to the stored known-solution sample summarized by Solution Profiles, so family evidence and current profile phenotype normally share ancestry.
-> **Remaining gate:** propagate the replay/profile lineage rule to durable guidance, remove the temporary census workflow, run ordinary validation, and close the audit.
+> **Remaining gate:** run ordinary validation and close the audit; replay/profile guidance, contract semantics, executable selection-lineage guards, and temporary-runner cleanup are complete.
 > **Evidence role:** forensic/discovery; existing data only.
 > **Selection:** all current published/C1/C2 levels plus generation manifests from the historical variant-family branch; no new variants, family evaluations, or solver outcomes.
 > **Inference scope:** evidence availability, ancestry, missingness and safe join semantics. This audit does not infer current solver efficacy from stored family or hint outcomes.
@@ -61,9 +61,11 @@ This branch adds `scripts/corpus-selection-lineage.mjs` and exposes selection li
 
 The first complete census was rejected because it classified all 1,700 C2 rows as original solver-negative survivors rather than 328 survivors + 1,372 replacements. The bug was scientifically useful: July-11 append generation preserved surviving rows and their old per-row generation provenance, so row timestamps could not recover the later curation boundary.
 
-The correct separator is corpus-level append history plus current row position. The July cleanup retained 328 rows in place and appended exactly 1,372 replacements. The shared classifier now derives that boundary from append metadata and array position rather than guessing from timestamps or IDs.
+For the accepted census, the reconstruction used the corpus-level July append count plus current row position: the cleanup retained 328 rows in place and appended exactly 1,372 replacements. That correctly reproduced the standing population and was sufficient to validate the empirical run.
 
-This is a concrete example of the stress-corpus audit's central distinction: **generation provenance and selection provenance are different dimensions**.
+A later durability review found that current-position rule should not be the permanent classifier because a future legitimate append would move a `current total - 1,372` boundary. The July append algorithm supplies a stable historical identity boundary instead: it preserved the survivors, whose highest ID is `R01997`, then continued monotonic ID allocation with the first replacement at **`R01998`**. `scripts/corpus-selection-lineage.mjs` therefore uses `R01998` as the durable C2 replacement boundary, and the ordinary corpus-query test separately guards that the current corpus still resolves to exactly 328 historical solver-negative survivors and 1,372 July replacements. This survives later appends and row reordering.
+
+This is a concrete example of the stress-corpus audit's central distinction: **generation provenance and selection provenance are different dimensions**. It also shows why a reconstructed historical boundary should be encoded in an identity that remains stable under later corpus growth rather than inferred afresh from mutable container shape.
 
 ### F3 — family missingness needs three states
 
@@ -176,8 +178,8 @@ If Solution Profile features are used in that investigation, construct the compa
 
 Several temporary-runner failures occurred before accepted evidence existed: nonexistent `.nvmrc`, artifact-action mismatch, serial partial-clone materialization, and one missing `tmp/` staging directory. Those were execution plumbing only. No failed runner produced accepted scientific output.
 
-The first successful census was also rejected rather than interpreted because its C2 stratum sanity check failed. That rejection directly produced F2 and the shared append-boundary classifier. The corrected run passed the external 23 / 79 / 328 / 1,372 population gate before any cross-resource conclusion was accepted.
+The first successful census was also rejected rather than interpreted because its C2 stratum sanity check failed. That rejection directly produced F2. The corrected accepted run used the then-sufficient append-count/current-position reconstruction and passed the external 23 / 79 / 328 / 1,372 population gate before any cross-resource conclusion was accepted. The subsequent durability pass replaced that mutable positional rule with the stable `R01998` first-replacement identity boundary without changing any accepted current-population count or empirical conclusion.
 
 ## Closeout direction
 
-The audit has now answered the substantive questions. The remaining work is repository hygiene: encode the replay/profile join rule in durable research guidance, remove the branch-only census workflow, run normal validation, and then mark this report concluded-positive.
+The substantive audit and durable semantic propagation are complete. Replay/profile join guidance is in `docs/solver-research-data-assets.md`, the four audited-resource declarations carry the new ancestry semantics, the standing stress selection strata have an executable real-corpus guard, the accepted empirical result has a committed machine summary, and the branch-only census workflow has been removed. Ordinary repository validation is the only remaining closeout gate.
