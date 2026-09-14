@@ -49,29 +49,25 @@ assert.deepEqual(filterLevelDescriptors(c1Items, { selectionStratum: 'c1-migrate
 assert.equal(summarizeDescriptors(c1Items).evidenceAncestry.selectionStrata['c1-af-retained'], 1);
 assert.equal(summarizeDescriptors(c1Items).evidenceAncestry.historicalOutcomeConditioning['historical-production-success'], 1);
 
-const c2Meta = { appendHistory: [{ appendedAt: '2026-07-11T12:21:23.704Z', count: 1 }] };
-const c2Old = describeLevel(levels[1], { source: 'stress2', metadata: c2Meta, position: 0, totalLevels: 2 });
-const c2Replacement = describeLevel({ ...levels[1], id: 'D' }, { source: 'stress2', metadata: c2Meta, position: 1, totalLevels: 2 });
+const c2Old = describeLevel({ ...levels[1], id: 'R01997' }, { source: 'stress2' });
+const c2Replacement = describeLevel({ ...levels[1], id: 'R01998' }, { source: 'stress2' });
+const c2LaterReplacement = describeLevel({ ...levels[1], id: 'R05000' }, { source: 'stress2' });
 assert.equal(c2Old.selectionLineage.stratum, 'c2-original-random-solver-negative-survivor');
 assert.equal(c2Replacement.selectionLineage.stratum, 'c2-july11-replacement');
+assert.equal(c2LaterReplacement.selectionLineage.stratum, 'c2-july11-replacement');
 assert.equal(c2Old.selectionLineage.historicalOutcomeConditioning, 'historical-production-failure');
 assert.equal(c2Replacement.selectionLineage.historicalOutcomeConditioning, 'none-known');
 
 // Guard the reconstructed standing-population split against future "simplifications" that infer
-// C2 ancestry from copied row timestamps or numeric ids. July-11 append generation preserved the
-// 328 surviving rows in place and appended 1,372 replacements; C1 independently retains 23 A-F
-// rows plus 79 historically solver-positive random migrants.
+// C2 ancestry from copied row timestamps or a moving current-position boundary. July-11 append
+// generation preserved 328 survivors and continued IDs after R01997; C1 independently retains
+// 23 A-F rows plus 79 historically solver-positive random migrants.
 for (const [source, expected] of [
     ['stress1', { 'c1-af-retained': 23, 'c1-migrated-random-solver-positive': 79 }],
     ['stress2', { 'c2-original-random-solver-negative-survivor': 328, 'c2-july11-replacement': 1372 }],
 ]) {
     const current = loadCorpus(process.cwd(), source);
-    const descriptors = current.levels.map((level, position) => describeLevel(level, {
-        source,
-        metadata: current.metadata,
-        position,
-        totalLevels: current.levels.length,
-    }));
+    const descriptors = current.levels.map(level => describeLevel(level, { source }));
     assert.deepEqual(summarizeDescriptors(descriptors).evidenceAncestry.selectionStrata, expected,
         `${source} selection strata must match the 2026-09-13 reconstruction authority`);
 }
