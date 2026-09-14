@@ -49,9 +49,9 @@ assert.deepEqual(filterLevelDescriptors(c1Items, { selectionStratum: 'c1-migrate
 assert.equal(summarizeDescriptors(c1Items).evidenceAncestry.selectionStrata['c1-af-retained'], 1);
 assert.equal(summarizeDescriptors(c1Items).evidenceAncestry.historicalOutcomeConditioning['historical-production-success'], 1);
 
-const c2Meta = { appendHistory: [{ appendedAt: '2026-07-11T12:21:23.704Z' }] };
-const c2Old = describeLevel(levels[1], { source: 'stress2', metadata: c2Meta });
-const c2Replacement = describeLevel({ ...levels[1], id: 'D', provenance: { ...levels[1].provenance, history: [{ ...levels[1].provenance.history[0], timestamp: '2026-07-11T12:21:23.704Z' }] } }, { source: 'stress2', metadata: c2Meta });
+const c2Meta = { appendHistory: [{ appendedAt: '2026-07-11T12:21:23.704Z', count: 1 }] };
+const c2Old = describeLevel(levels[1], { source: 'stress2', metadata: c2Meta, position: 0, totalLevels: 2 });
+const c2Replacement = describeLevel({ ...levels[1], id: 'D' }, { source: 'stress2', metadata: c2Meta, position: 1, totalLevels: 2 });
 assert.equal(c2Old.selectionLineage.stratum, 'c2-original-random-solver-negative-survivor');
 assert.equal(c2Replacement.selectionLineage.stratum, 'c2-july11-replacement');
 assert.equal(c2Old.selectionLineage.historicalOutcomeConditioning, 'historical-production-failure');
