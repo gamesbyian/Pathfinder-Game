@@ -1,101 +1,183 @@
 # Cross-resource observability and ancestry audit 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-13 — shared corpus-selection lineage, family missingness/replay identity, and tracked Solution Profile compatibility checks implemented before accepting empirical output.
-> **Decision:** investigate the four audited research resources as one evidence system, with special attention to cross-resource coverage, shared ancestry, selection into observability, and apparently independent signals that descend from one historical event.
-> **Remaining gate:** ingest the empirical coverage/ancestry run, classify the highest-value clean and contaminated joins, and reconcile any durable compatibility changes.
-> **Evidence role:** forensic/discovery; existing data only unless a later bounded question genuinely requires new solver compute.
-> **Selection:** all current published/C1/C2 levels for on-main resources, plus existing variant-family manifests from the audited off-main resource; no new variants or solver outcomes.
-> **Population identity:** current tracked published/stress corpora at branch base; variant-family manifests are read from `claude/variant-levels-solver-insights-tpk4qg` without materializing the full historical trove.
-> **Selection history:** preserve corpus generation/selection ancestry, hint discovery/replay ancestry, profile sample/provenance support, and variant parent/generation ancestry separately.
-> **Inference scope:** characterize evidence availability/dependence and nominate bounded mechanism questions; do not infer solver efficacy from resource richness or historical stored successes.
+> **Last evidence:** 2026-09-14 — corrected manifest-only census accepted after reproducing the authoritative 23 / 79 / 328 / 1,372 standing stress-selection strata; machine summary committed in `2026-09-14-cross-resource-observability-summary-001.json`.
+> **Decision:** the four audited resources are a useful evidence system, but they are not four independent views. Variant-family replay is a major upstream contributor to the stored known-solution sample summarized by Solution Profiles, so family evidence and current profile phenotype normally share ancestry.
+> **Remaining gate:** propagate the replay/profile lineage rule to durable guidance, remove the temporary census workflow, run ordinary validation, and close the audit.
+> **Evidence role:** forensic/discovery; existing data only.
+> **Selection:** all current published/C1/C2 levels plus generation manifests from the historical variant-family branch; no new variants, family evaluations, or solver outcomes.
+> **Inference scope:** evidence availability, ancestry, missingness and safe join semantics. This audit does not infer current solver efficacy from stored family or hint outcomes.
 
-## Questions
+## Bottom line
 
-1. Which levels/parents have usable evidence from stress/published corpus context, hint provenance, solution profiles, and variant families?
-2. Is four-resource coverage concentrated in historically solved, heavily inspected, older, selected, or particular corpus-ancestry strata?
-3. Which cross-resource observations are genuinely complementary, and which are repeated representations of one underlying event or family lineage?
-4. Where does one resource repair a blind spot in another, and where does joining them compound selection or pseudo-replication?
-5. Which existing multi-resource cases are unusually clean candidates for mechanism research aimed at more stress-corpus solves?
-6. What small producer/query changes would make useful cross-resource joins easier without creating a second research warehouse?
+The cross-resource join is much more complete than expected and much less independent than a naive join would imply.
+
+Every one of the **1,962** current published/C1/C2 parents has variant-family generation manifests. The bounded mount contains **9,864 families** and **97,154 variants**. Every current level is touched by variant-to-parent replay provenance. Across **7,639** observed parent/family replay lineages, all 7,639 reconcile to a family actually generated under that parent; there are **zero** unmatched family lineages and **zero** replay-parent mismatches.
+
+That integrity result is excellent. The inferential result is the important warning: of **266,997** stored accepted paths, **206,558 (77.36%)** carry replay provenance, **201,339 (75.41%)** have variant replay as their earliest fully dated discovery, and **200,773 (75.20%)** are replay-only in recorded origin terms. At level granularity, all 1,962 are replay-touched, 1,940 contain at least one replay-first path, and 1,930 contain at least one replay-only path.
+
+Therefore current Solution Profiles are often downstream summaries of paths imported through the family pipeline. A family transformation and a current profile feature may still be jointly useful, but their agreement is not independent corroboration unless path ancestry is filtered or explicitly modeled.
 
 ## Working model
 
-The four resources play different roles but are causally connected:
+The resources occupy different points in one causal graph:
 
 - **corpus/population:** where a puzzle came from and why it remained in a research population;
-- **variant family/intervention:** controlled relatives and transformation/evaluation history;
-- **hint provenance/observation lineage:** how a stored accepted path entered the evidence base;
-- **solution profile/phenotype:** support-aware summary of the stored known-solution sample.
+- **variant family/intervention:** controlled relatives and transformation history;
+- **hint provenance/observation lineage:** how a referee-valid path entered the stored evidence base;
+- **solution profile/phenotype:** support-aware summary of that stored known-solution sample.
 
-The dangerous feedback loop is: selected corpus parent -> generated/inspected family -> transferred or newly discovered path -> stored provenance -> changed solution profile -> later population/family selection. Cross-resource agreement is therefore not independent corroboration unless ancestry says it is.
+The recurring loop is `selected parent -> generated family -> transferred/discovered path -> stored provenance -> profile -> later research selection`. The safe question is not merely whether two resources agree, but whether they are descendants of the same observation or intervention.
 
-## Method
+## Method and accepted run
 
-The audit runner is `scripts/cross-resource-observability-audit.mjs`, with pure aggregation in `scripts/cross-resource-observability-lib.mjs`. It uses:
+`scripts/cross-resource-observability-audit.mjs` joins current published, C1 and C2 levels/hints against family generation manifests. It reuses shared provenance taxonomy, family indexing and corpus-query semantics rather than inventing a parallel evidence store. `scripts/cross-resource-profile-integrity.mjs` separately verifies tracked published/C1 schema-v3 profile rows against current corpus position, hint/path counts and chronology support.
 
-- `readLevelsWithHints()` for current stored accepted paths;
-- the shared provenance origin/dependency-stratum taxonomy for observation ancestry;
-- `scripts/corpus-selection-lineage.mjs` for the standing C1/C2 selection strata established by the September 13 reconstruction;
-- the existing family-index parser for family manifests;
-- `scripts/cross-resource-profile-integrity.mjs` to verify tracked published/C1 schema-v3 profile rows against current hint/path/chronology support at the same corpus positions;
-- support-shape facts from the same known-solution sample consumed by Solution Profiles, without pretending C2 has a tracked profile library or that any sample is the latent complete solution space.
+The family mount intentionally contains generation manifests only. Historical family evaluation logs are absent, so evaluated/solved counts remain **unknown**, never `0`.
 
-The family side deliberately distinguishes **not mounted** from **mounted with no parent record**. The empirical runner fetches only `*-manifest.json` blobs from the research branch, enough to establish parent/family/variant coverage without buying a 2.5 GB checkout. Because that bounded mount intentionally excludes family evaluation logs, evaluated/solved counts remain `unknown` rather than being reported as zero.
+The accepted run is workflow `34799898992`, analyzer commit `4b71031003f5a32243ea97c1f619e0c0fa20a087`, artifact `10331251606`, digest `sha256:517ff9ad642db339ac68f2c53b51c33747d3083f9456227be905c511ecfd80f6`. The compact durable result is `reports/2026-09-14-cross-resource-observability-summary-001.json`.
 
-Replay provenance is also cross-checked against the mounted family manifests. For each current parent the analysis records whether replay-referenced family IDs are present under that parent. This turns family -> replay -> profile ancestry from a naming assumption into a checkable join. An absent family mount remains unknown; an actual mounted mismatch is surfaced separately.
+Before interpretation, the run had to reproduce the independently established population strata exactly:
 
-The per-level matrix records stored-path count, provenance-event count, within-path dependency strata, replay-touched/replay-only/replay-first paths, chronology support, tracked-versus-derivable profile status, corpus selection stratum, family-parent coverage, and replay-family compatibility. Summary output stratifies those facts by corpus, selection stratum, historical solver-outcome conditioning, family availability, and replay exposure.
+| Stratum | Rows |
+|---|---:|
+| C1 A-F retained survivors | 23 |
+| C1 migrated random, historically solver-positive | 79 |
+| C2 original random, historically solver-negative survivors | 328 |
+| C2 July-11 replacement rows | 1,372 |
+| Published, mixed historical selection | 160 |
 
-## Findings so far
+It did.
+
+## Findings
 
 ### F1 — selection provenance was authoritative but not composable
 
-The stress-corpus audit established four standing stress strata that materially change inference:
+The September stress-corpus reconstruction had established the four standing stress strata, but the decisive selection history lived mainly in prose. `corpus-query` previously exposed generation ancestry without the later solver-outcome migration/retention history.
 
-- C1 A-F retained survivors;
-- C1 migrated random rows selected for historical solver success;
-- C2 original random rows retained from the historical solver-negative complement;
-- C2 July-11 replacement rows.
+This branch adds `scripts/corpus-selection-lineage.mjs` and exposes selection lineage through `corpus-query`, including `--selection-stratum=` filtering. This metadata is offline research context only and is explicitly illegal as a cold-solver routing feature.
 
-That correction existed in prose/report authority, while `corpus-query` exposed generation ancestry only. A profile/provenance/family analysis therefore had to re-implement or manually remember the most important corpus-selection fact.
+### F2 — C2 exposed why generation provenance cannot substitute for curation history
 
-Repair on this branch: `scripts/corpus-selection-lineage.mjs` owns the current offline classification, and `corpus-query` exposes `selectionLineage`, summary counts, and `--selection-stratum=` filtering. This is research metadata only and is explicitly not a legal cold-solver feature.
+The first complete census was rejected because it classified all 1,700 C2 rows as original solver-negative survivors rather than 328 survivors + 1,372 replacements. The bug was scientifically useful: July-11 append generation preserved surviving rows and their old per-row generation provenance, so row timestamps could not recover the later curation boundary.
 
-### F2 — family absence needs a three-state interpretation
+The correct separator is corpus-level append history plus current row position. The July cleanup retained 328 rows in place and appended exactly 1,372 replacements. The shared classifier now derives that boundary from append metadata and array position rather than guessing from timestamps or IDs.
 
-A normal `main` checkout does not contain the canonical large family resource. Therefore “no indexed family” has two very different meanings: the family resource was not mounted, or it was mounted and the parent truly had no manifest. The cross-resource tool keeps those states separate. This is the same missingness discipline learned from provenance/profile auditing, applied at the resource-availability level.
+This is a concrete example of the stress-corpus audit's central distinction: **generation provenance and selection provenance are different dimensions**.
 
-### F3 — partial resource mounts create their own missingness semantics
+### F3 — family missingness needs three states
 
-The bounded empirical design mounts family manifests but intentionally omits census/evaluation artifacts. The first implementation inherited the family index's `evaluated=false` defaults and would therefore have reported `0 evaluated / 0 solved`, silently converting “not loaded” into negative evidence.
+A normal `main` checkout does not contain the historical family trove. Therefore these states are distinct:
 
-Repair: family-parent coverage now carries `evaluationEvidenceLoaded`; manifest-only runs expose `evaluated:null` and `solved:null`. Numeric counts are produced only when evaluation evidence artifacts were actually indexed. This is a cross-resource form of the same absent-as-false defect found in legacy hint provenance and sparse profile axes.
+1. family resource not mounted;
+2. resource mounted, no parent record;
+3. parent indexed.
 
-### F4 — replay ancestry can be verified against family identity rather than inferred from labels
+The join preserves all three. Missing resource context cannot become a negative family observation.
 
-Variant replay provenance already preserves family and parent identity through its dependency-stratum key. The family index independently preserves the families generated under each parent. The audit now intersects those identities and reports matched versus unmatched replay-family lineages.
+### F4 — partial mounts create their own missingness semantics
 
-This matters because a profile may be replay-exposed even when the family trove is not mounted, while a mounted manifest lets us distinguish a real family -> replay -> stored-path lineage from a stale/malformed reference. It also supplies a direct integrity check on the proposed cross-resource ancestry graph without counting the replay as independent evidence.
+A manifest-only mount knows generation identity but does not know historical evaluation outcomes. An early implementation inherited default false values and would have reported `0 evaluated / 0 solved`.
 
-### F5 — tracked profile compatibility belongs at the join boundary
+That is fixed. Family coverage carries `evaluationEvidenceLoaded`; this run reports `evaluated:null` and `solved:null`. The lesson is broader than families: a partial resource projection needs an explicit contract for which absent fields mean unavailable rather than false.
 
-Published and C1 have tracked schema-v3 Solution Profile libraries, but those persisted rows are historically keyed by corpus position. A cross-resource join should not infer compatibility merely because the library file is current-looking.
+### F5 — replay ancestry reconciles cleanly to actual family identity
 
-Repair: `scripts/cross-resource-profile-integrity.mjs` checks each tracked row against the current level/hint sidecars at the same corpus position: schema/source identity, row position, hint count, combined path count, distinct-path count, dated-hint count, and chronology completeness. The empirical audit will therefore surface stale or misaligned profile materialization separately from profile sampling limitations. C2 remains explicitly `derivable-not-tracked`; absence of a tracked C2 library is not a missing row or negative profile observation.
+The audit matched **7,639 / 7,639** replay parent/family lineages to mounted family manifests, with zero unmatched family lineages and zero replay-parent mismatches.
 
-## Execution note
+This turns the proposed `family -> replay -> stored path -> profile` chain from a naming convention into an empirically verified ancestry surface. Replay remains dependent evidence, but the linkage itself is highly coherent.
 
-The first temporary runner attempt failed during Node setup because the branch-only workflow referenced a nonexistent `.nvmrc`. No dependencies, family data, analysis, or evidence run occurred. The runner now uses the repository's normal Node 20 convention. The failed setup attempt is execution plumbing, not an audit result.
+### F6 — tracked profile materialization is internally consistent
 
-The first manifest materializer also fetched individual partial-clone blobs serially. It was replaced before accepting evidence with an exact-path sparse worktree so manifest blobs are fetched as a batch while variant level files/evaluation logs remain unmaterialized. The temporary workflow uses a cancel-in-progress concurrency group so only the newest audit revision is relevant.
+The published and C1 schema-v3 profile libraries both match their current source corpus and hint sidecars exactly under the audit's position/path/chronology checks:
 
-## Pending empirical questions
+- published: 160 / 160 compatible rows;
+- C1: 102 / 102 compatible rows;
+- mismatch count: 0 in both libraries.
 
-- How concentrated is family-parent coverage across the four standing C1/C2 selection strata?
-- How often has variant replay actually touched the stored sample used by profiles, and how often is replay the earliest known discovery of a stored path rather than merely a later rediscovery event?
-- Are family-covered levels systematically richer in hints/provenance than non-family levels?
-- Do replay family IDs reconcile cleanly against the mounted family manifests?
-- Do tracked published/C1 profile rows still agree exactly with current hint/path/chronology support?
-- How many apparent four-resource cases remain after requiring whole-parent family identity and dependency-aware provenance accounting?
-- Which low-replay four-resource cases give the cleanest existing intervention + phenotype + population combinations for mechanism follow-up?
+C2 remains `derivable-not-tracked`; that is an availability distinction, not a missing profile observation.
+
+### F7 — family coverage is universal, so presence is not a discriminator
+
+All 1,962 current parents have family manifests. Median family count is five in every standing selection stratum. Family presence therefore cannot explain why some populations have richer hint/profile evidence than others and should not be used as a pseudo-feature for stratification.
+
+The useful family variables are relation/mode, transformation context, generation/evaluation identity and whole-parent outcomes, not the binary fact that a family exists.
+
+### F8 — current profiles are heavily downstream of replay
+
+Replay is not a small annotation layer. It dominates much of the stored sample.
+
+| Selection stratum | Median stored paths | Median replay-first fraction | Aggregate replay-first fraction |
+|---|---:|---:|---:|
+| C1 A-F retained | 450 | 53.54% | 50.70% |
+| C1 migrated solver-positive | 331 | 53.02% | 56.22% |
+| C2 original solver-negative survivors | 39 | 92.31% | 81.90% |
+| C2 July replacements | 55 | 91.65% | 78.99% |
+| Published | 341.5 | 78.53% | 75.48% |
+
+All C1/C2 levels have complete dated hint chronology under the current sidecars. Published chronology is complete for only 38 / 160 levels, so temporal ancestry claims there require additional caution.
+
+The practical consequence is simple: **do not use a current Solution Profile as an independent response variable to explain the effect of the same variant-family pipeline unless replay-first paths are excluded or the shared ancestry is part of the question.**
+
+### F9 — profile richness is observability history, not latent solution-space size
+
+The cleanest demonstration comes from the original random-generator split. The 79 current C1 random rows were historically selected because the old solver solved them; the 328 surviving C2 rows came from the solver-negative complement.
+
+Their family campaign breadth is similar:
+
+- C1 migrated rows: median 5 families / 47 generated variants;
+- C2 original negative survivors: median 5 families / 52 variants.
+
+But their stored known-solution samples differ dramatically:
+
+- C1 migrated rows: median **331** paths;
+- C2 original negative survivors: median **39** paths.
+
+That 8.5x difference cannot safely be read as an estimate of latent solution-space size. It reflects solver outcome selection plus subsequent discovery/replay history. Profile support remains valuable, but support volume itself is an observability variable.
+
+### F10 — there is no naturally replay-free four-resource cohort
+
+The audit's original hope for a clean `family + provenance + profile + population` subset untouched by replay fails: **0** levels satisfy that condition. Every current parent is replay-touched.
+
+That does not make joint research impossible. It changes the unit of cleanliness from level membership to **path lineage**. A small nominated set of levels has complete chronology, at least ten stored paths, and <=25% replay-first paths. Examples include `R03279`, `R01553`, `R02843`, `S00115`, `S00030`, `R02716`, `R03188`, `R02290`, and `R01636`. These are development candidates, not independent holdouts.
+
+Several are especially informative because replay touched paths only after non-replay discovery. That distinction must survive future tooling: **replay-touched != replay-first**.
+
+## What the four-resource join can safely answer
+
+High-value uses now include:
+
+- identifying parent/family lineages whose transformed relatives exposed parent-valid paths that production search did not initially find;
+- comparing transformation classes against **lineage-filtered** path/profile properties;
+- using corpus selection strata to prevent solver-positive/negative historical cohorts from being averaged into one fake population;
+- using replay-first versus non-replay-first paths to ask which structural motifs were exposed by family transfer;
+- selecting exact current-code rechecks from historical family evidence without treating replay multiplicity as repeated discovery.
+
+Unsafe uses include:
+
+- family outcome correlated against an unfiltered current profile and described as independent mechanism confirmation;
+- hint count or profile support volume used as a proxy for number of latent solutions;
+- row-weighted variant evidence treated as independent observations;
+- absent family evaluation logs interpreted as failures;
+- current corpus filename used as sufficient population identity.
+
+## Solve-oriented next use
+
+The best follow-up is not another global family census. For a live solver mechanism question, start with a named current residual and then use the existing family/provenance graph to find whole parents where:
+
+1. a transform exposed a referee-valid parent path or a historical capability cliff;
+2. the relevant path ancestry is known;
+3. the mechanism can be stated without parent IDs or historical outcomes at runtime;
+4. current-code recheck can be bounded to the exact counterfactual needed.
+
+If Solution Profile features are used in that investigation, construct the comparison from non-replay-first paths when the family pipeline is the putative cause. Current full profiles remain appropriate when the question is simply "what does the known sample now look like?"
+
+## Execution history
+
+Several temporary-runner failures occurred before accepted evidence existed: nonexistent `.nvmrc`, artifact-action mismatch, serial partial-clone materialization, and one missing `tmp/` staging directory. Those were execution plumbing only. No failed runner produced accepted scientific output.
+
+The first successful census was also rejected rather than interpreted because its C2 stratum sanity check failed. That rejection directly produced F2 and the shared append-boundary classifier. The corrected run passed the external 23 / 79 / 328 / 1,372 population gate before any cross-resource conclusion was accepted.
+
+## Closeout direction
+
+The audit has now answered the substantive questions. The remaining work is repository hygiene: encode the replay/profile join rule in durable research guidance, remove the branch-only census workflow, run normal validation, and then mark this report concluded-positive.
