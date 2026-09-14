@@ -1,9 +1,9 @@
 # Cross-resource observability and ancestry audit 001
 
-> **Status:** active
-> **Last evidence:** 2026-09-14 — corrected manifest-only census accepted after reproducing the authoritative 23 / 79 / 328 / 1,372 standing stress-selection strata; machine summary committed in `2026-09-14-cross-resource-observability-summary-001.json`.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-14 — accepted manifest-only census reproduced the authoritative 23 / 79 / 328 / 1,372 stress-selection strata; ordinary CI run `34801046277` passed deep verification, validators, lint, Node/CLI contracts, solver canary, and production build.
 > **Decision:** the four audited resources are a useful evidence system, but they are not four independent views. Variant-family replay is a major upstream contributor to the stored known-solution sample summarized by Solution Profiles, so family evidence and current profile phenotype normally share ancestry.
-> **Remaining gate:** run ordinary validation and close the audit; replay/profile guidance, contract semantics, executable selection-lineage guards, and temporary-runner cleanup are complete.
+> **Remaining gate:** none.
 > **Evidence role:** forensic/discovery; existing data only.
 > **Selection:** all current published/C1/C2 levels plus generation manifests from the historical variant-family branch; no new variants, family evaluations, or solver outcomes.
 > **Inference scope:** evidence availability, ancestry, missingness and safe join semantics. This audit does not infer current solver efficacy from stored family or hint outcomes.
@@ -199,6 +199,6 @@ Several temporary-runner failures occurred before accepted evidence existed: non
 
 The first successful census was also rejected rather than interpreted because its C2 stratum sanity check failed. That rejection directly produced F2. The corrected accepted run used the then-sufficient append-count/current-position reconstruction and passed the external 23 / 79 / 328 / 1,372 population gate before any cross-resource conclusion was accepted. The subsequent durability pass replaced that mutable positional rule with the stable `R01998` first-replacement identity boundary without changing any accepted current-population count or empirical conclusion.
 
-## Closeout direction
+## Closeout
 
-The substantive audit and durable semantic propagation are complete. Replay/profile join guidance is in `docs/solver-research-data-assets.md`, the four audited-resource declarations carry the new ancestry semantics, the standing stress selection strata have an executable real-corpus guard, the accepted empirical result has a committed machine summary, and the branch-only census workflow has been removed. Ordinary repository validation is the only remaining closeout gate.
+The audit is concluded-positive. Replay/profile join guidance is durable in `docs/solver-research-data-assets.md`; the audited-resource contract declarations carry the new ancestry semantics; the standing stress selection strata have an executable real-corpus guard; the accepted empirical result has a committed machine summary; and the temporary census workflow is gone. CI run `34801046277` passed deep verification, package-script reachability and authority budgets, source invariants, validators, lint, Node/CLI contracts, the solver capability canary, and the production build.
