@@ -9,6 +9,19 @@ This is not a second queue or experiment diary. Carry forward only unexplained r
 
 Closed work reopens only for a changed causal premise/treatment. Historical outcomes remain offline evidence until reconciled to current code/protocol. For controlled structural questions, query existing variant families before new levels/broad compute; skip family mining when allocation, current participation, runtime cost, or exact feasibility is the real gate. [`variant guide`](variant-level-research.md)
 
+## Audit-derived conditional work
+
+The 2026-09-13 stress-corpus and solution-profile audits create four **conditional** reopen items, not new top-priority work. [`re-evaluation`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md)
+
+| Question | Reopen condition / boundary |
+|---|---|
+| **Support-aware profile similarity calibration** | Only when a live WS1/mechanism question materially needs cross-level similarity. Use schema-v3 support-aware comparison and independent/held-out calibration; old nearest-profile identities are not reusable evidence and sparse similarity never becomes exact-level routing. |
+| **Prospective profile-versus-solvability study** | Only when a concrete decision needs this relationship. Start from a prospectively defined population and current profile semantics; do **not** generate a large C2 profile library merely to replicate the superseded selected-C1 correlation. |
+| **Independent transfer source for omitted mechanics** | A broad promotion claim is genuinely blocked because the current topology-composition source omits the mechanism at issue (currently portals, static filters, surround, adjacent-turn, or multi-gate). Expand the smallest missing construction capability or use genuinely independent editor/human material; whole C1 cannot substitute for cross-generator transfer. |
+| **`portfolio-18-flat-2m` old-generator allocation nomination** | Static allocation work resumes and a cheap independent current population can test it. On the genuine old-generator C1 stratum it tied full-menu at 22/23 while using ~27.5% less work, but 23 historical rows are nomination evidence only. |
+
+These audits do **not** earn a blanket rerun of old A/Bs. Exact frozen-row solve/work observations stand unless execution/participation was invalid; re-test only when a corrected population role or profile analysis leaves a live decision unanswered.
+
 ## Capability-acquisition frontier
 
 September 12's corrected boundary found **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical candidates. Treat these as dated evidence. Freshness-reconcile before acquisition work; newer isolated capability makes a row composition/exposure evidence first. [`atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
@@ -64,6 +77,9 @@ Do not reopen unchanged without materially new evidence:
 
 - whole-ladder retries, global seed fan-out, nearby-threshold widening, broad extra repair dose;
 - scorer proliferation, universal width increases, nearby feasibility scalars, novelty/MAP-Elites/DPP without a mechanism;
+- legacy nearest-profile/rank, sampled-rigidity, incomplete-chronology plateau or exhaustive-event-as-completeness conclusions without schema-v3/support-aware recomputation and an independently suitable population;
+- repeating the superseded C1 profile/solvability correlation on a larger selected corpus without a prospective design;
+- using whole Corpus 1 as cross-generator transfer evidence or treating current Corpus 2 as an untouched random sample;
 - the August fixed-width low-cardinality full-pool quota keys; reopen only for a materially new independently motivated descriptor or survivor mechanism;
 - connectivity-derived solve-local reason reuse on the current Class-5 residual, unless a materially changed population independently restores the historical rejection cluster;
 - broad ZDD/DD/frontier, representative-set, automaton, CEGAR/interpolation, RCSP/label-setting, CDCL/LCG or backdoor frameworks before a bounded mechanism earns them;
