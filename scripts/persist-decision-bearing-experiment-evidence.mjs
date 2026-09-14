@@ -15,7 +15,10 @@ for (const arg of args) {
 }
 
 function safeSegment(value, fallback) {
-  const result = String(value ?? '').trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+  const result = String(value ?? '')
+    .trim()
+    .replace(/[^A-Za-z0-9._-]+/g, '-')
+    .replace(/^[.-]+|[.-]+$/g, '');
   return result || fallback;
 }
 
