@@ -54,6 +54,14 @@ An audited resource also needs an entry in `solver-research-resource-contract-au
 
 These are scientific semantics, not prose decoration. When one is unknown, say `unknown` or describe the limitation. Do not invent a value to make the contract look complete.
 
+## Discoverability rule
+
+A scientifically correct declaration is insufficient if normal repository entry points hide the qualification until after a decision is made.
+
+For audited resources, the ordinary resource query path should expose the independent unit and the decision-safety semantics that most often change inference: conditioning, dependence, missingness, freshness/revision, irreversible information loss, and prospective producer gaps. A researcher should not need specialist memory or `--full` output merely to learn that rows are dependent, an axis is unavailable rather than zero, or a historical result is not current capability.
+
+Where a resource reinterpretation changes a live question or successor gate, the audit closeout should also verify that normal research navigation leads to the updated state. The Resource Contract does not replace the question registry; it requires the resource audit to propagate far enough that a fresh researcher is not routed by the superseded interpretation.
+
 ## Conditioning vocabulary
 
 Do not use a single boolean such as `outcomeConditioned` to stand for population independence.
@@ -85,6 +93,7 @@ A resource audit is not complete merely because a report exists. Before closeout
 5. Update current method/queue authorities when the audit changes a live gate.
 6. Reconcile status/remaining-gate metadata so the audit does not remain accidentally “active.”
 7. Add or update an executable checker when the rule is mechanically testable.
+8. Exercise the normal discovery/navigation path a fresh researcher would use and verify that decision-bearing caveats and any question-state consequence appear before a superseded inference can steer new work.
 
 A full census or replay is **not** mandatory just to close an audit. Run expensive materialization only when its counts are decision-bearing or needed to validate a concrete contract claim.
 
@@ -105,6 +114,16 @@ Never rewrite a literal historical observation solely because its inferential ro
 
 Then separately narrow, supersede, or invalidate the inference. “The population did not support the claimed transfer” is different from “the run did not happen.”
 
+## Reconstructability and durability rule
+
+Freshness and irreversible information loss also apply to evidence that exists now but is expected to disappear before the research conclusion stops being useful.
+
+For a decision-bearing closeout, identify which primary evidence is required to reconstruct the claim and whether that evidence is durably retained for the expected reuse horizon. If primary rows, manifests, treatment identity, participation telemetry, or population identity live only in expiring external artifacts, preserve the minimal decision-bearing bundle prospectively or record the expiration/reconstructability boundary explicitly. A durable summary is not a substitute for primary rows when later audit or attribution depends on row-level distinctions.
+
+Do not fabricate durable history after evidence has expired. Once the primary observation is unrecoverable, the surviving report can remain a historical claim with a narrower reconstructability grade, but it must not silently regain row-level evidentiary weight.
+
+This rule does not require committing every raw artifact. Preserve the smallest bundle needed to reconstruct the decision-bearing comparison and its identity, population, participation, and outcome semantics.
+
 ## Prospective producer rule
 
 When a resource repeatedly loses information that later research needs, fix the producer prospectively rather than fabricating history. The four audited resources currently nominate these producer improvements:
@@ -113,6 +132,8 @@ When a resource repeatedly loses information that later research needs, fix the 
 - **Variant families:** retain invocation-local requested/attempted/accepted/budget counters inside each generation-run record rather than relying on mixed cumulative/latest top-level counters.
 - **Hint provenance:** wherever practical, reference the originating run/experiment manifest so attempted denominator, failures, protocol identity, and work semantics are recoverable for performance claims.
 - **Solution profiles:** keep mechanics-applicability/support distinct from statistical sample/stability support; do not let one nominal coverage number imply both.
+
+The inference-first experiment-lifecycle audit adds a cross-resource producer rule: future decision-bearing experiment closeouts should durably preserve the experiment/selection contract plus the combined primary rows or an equivalently reconstructable decision bundle before ephemeral workflow artifacts expire.
 
 These are prospective improvements. Missing historical data remains missing.
 
@@ -130,6 +151,7 @@ Before using a durable resource in a broad or promotion-facing decision, ask:
 8. What information was never preserved?
 9. Has this exact population/resource already influenced this treatment or an ancestor?
 10. Does a current consumer still encode an older semantic assumption?
+11. Can the primary evidence needed to audit this claim still be reconstructed for the period in which the decision is expected to matter?
 
 If those questions materially change the answer, record them in the decision-bearing report under the existing investigation conventions.
 
@@ -146,4 +168,4 @@ Other registry entries remain legitimate catalogue-grade resources. Upgrade one 
 
 ## Enforcement boundary
 
-`npm run check:audit-artifacts` validates the existing registry's catalogue shape and relationship references, validates the audit-declaration overlay against real registry IDs, and requires the four initial audited resources to have complete declarations. It can catch missing declarations, broken references, duplicate IDs, and malformed contract fields. It cannot certify that a scientific claim is true, that a population is actually independent, or that a consumer inventory is complete. Those remain audit/review questions.
+`npm run check:audit-artifacts` validates the existing registry's catalogue shape and relationship references, validates the audit-declaration overlay against real registry IDs, and requires the four initial audited resources to have complete declarations. It can catch missing declarations, broken references, duplicate IDs, and malformed contract fields. It cannot certify that a scientific claim is true, that a population is actually independent, that a manifest establishes causal participation, or that a consumer inventory is complete. Those remain audit/review questions.
