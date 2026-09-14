@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
@@ -11,10 +13,6 @@ for (const arg of args) {
   const eq = arg.indexOf('=');
   values.set(eq === -1 ? arg.slice(2) : arg.slice(2, eq), eq === -1 ? 'true' : arg.slice(eq + 1));
 }
-
-const stagingDir = path.resolve(values.get('staging-dir') || 'artifact-staging');
-const outRoot = path.resolve(values.get('out-root') || 'reports/stress/experiment-evidence');
-const compressAboveBytes = Number(values.get('compress-above-bytes') || 4 * 1024 * 1024);
 
 function safeSegment(value, fallback) {
   const result = String(value ?? '').trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
@@ -59,7 +57,7 @@ function findDecisionBearingManifests(root) {
     .filter(({ manifest }) => manifest?.kind === 'pathfinder-solver-experiment-result' && manifest?.schemaVersion === 3 && manifest?.decisionBearing === true);
 }
 
-function copyEvidenceFile(source, artifactRoot, destinationRoot, logicalRelative, files) {
+function copyEvidenceFile(source, artifactRoot, destinationRoot, logicalRelative, files, compressAboveBytes) {
   const resolved = path.resolve(source);
   if (!isInside(artifactRoot, resolved)) throw new Error(`evidence path escapes artifact root: ${source}`);
   if (!fs.existsSync(resolved)) throw new Error(`decision-bearing evidence file is missing: ${source}`);
@@ -67,7 +65,7 @@ function copyEvidenceFile(source, artifactRoot, destinationRoot, logicalRelative
   if (stat.isDirectory()) {
     for (const child of walk(resolved)) {
       const nested = path.join(logicalRelative, path.relative(resolved, child));
-      copyEvidenceFile(child, artifactRoot, destinationRoot, nested, files);
+      copyEvidenceFile(child, artifactRoot, destinationRoot, nested, files, compressAboveBytes);
     }
     return;
   }
@@ -89,49 +87,108 @@ function copyEvidenceFile(source, artifactRoot, destinationRoot, logicalRelative
   });
 }
 
-fs.mkdirSync(outRoot, { recursive: true });
-const retained = [];
-for (const { file: manifestFile, manifest } of findDecisionBearingManifests(stagingDir)) {
-  const artifactRoot = path.dirname(manifestFile);
-  const experimentId = safeSegment(manifest?.experiment?.experimentId, 'experiment');
-  const runId = safeSegment(manifest?.experiment?.workflowRunId ?? manifest?.runId, 'unknown-run');
-  const runAttempt = safeSegment(manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt, '1');
-  const destinationRoot = path.join(outRoot, `${experimentId}__run-${runId}__attempt-${runAttempt}`);
-  fs.rmSync(destinationRoot, { recursive: true, force: true });
-  fs.mkdirSync(destinationRoot, { recursive: true });
+export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, compressAboveBytes = 4 * 1024 * 1024 }) {
+  const staging = path.resolve(stagingDir);
+  const output = path.resolve(outRoot);
+  fs.mkdirSync(output, { recursive: true });
+  const retained = [];
 
-  const files = [];
-  copyEvidenceFile(manifestFile, artifactRoot, destinationRoot, 'manifest.json', files);
-  for (const entry of manifest.entries || []) {
-    if (entry?.missing || !entry?.published) continue;
-    const source = path.resolve(artifactRoot, entry.published);
-    const logical = path.join('evidence', entry.role || 'entry', entry.published);
-    copyEvidenceFile(source, artifactRoot, destinationRoot, logical, files);
+  for (const { file: manifestFile, manifest } of findDecisionBearingManifests(staging)) {
+    const artifactRoot = path.dirname(manifestFile);
+    const experimentId = safeSegment(manifest?.experiment?.experimentId, 'experiment');
+    const runId = safeSegment(manifest?.experiment?.workflowRunId ?? manifest?.runId, 'unknown-run');
+    const runAttempt = safeSegment(manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt, '1');
+    const destinationRoot = path.join(output, `${experimentId}__run-${runId}__attempt-${runAttempt}`);
+    fs.rmSync(destinationRoot, { recursive: true, force: true });
+    fs.mkdirSync(destinationRoot, { recursive: true });
+
+    const files = [];
+    copyEvidenceFile(manifestFile, artifactRoot, destinationRoot, 'manifest.json', files, compressAboveBytes);
+    for (const entry of manifest.entries || []) {
+      if (entry?.missing || !entry?.published) continue;
+      const source = path.resolve(artifactRoot, entry.published);
+      const logical = path.join('evidence', entry.role || 'entry', entry.published);
+      copyEvidenceFile(source, artifactRoot, destinationRoot, logical, files, compressAboveBytes);
+    }
+
+    const bundle = {
+      schemaVersion: 1,
+      kind: 'pathfinder-durable-experiment-evidence-bundle',
+      experimentId: manifest?.experiment?.experimentId ?? null,
+      workflowFamily: manifest?.experiment?.workflowFamily ?? null,
+      workflowRunId: manifest?.experiment?.workflowRunId ?? manifest?.runId ?? null,
+      workflowRunAttempt: manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt ?? null,
+      resolvedSha: manifest?.experiment?.resolvedSha ?? null,
+      configurationHash: manifest?.experiment?.configurationHash ?? null,
+      populationIdentityHash: manifest?.population?.identityHash ?? manifest?.populationIdentityHash ?? null,
+      researchOutcome: manifest?.researchOutcome ?? null,
+      sourceArtifact: manifest?.sourceArtifact ?? null,
+      runUrl: manifest?.runUrl ?? null,
+      decisionBearing: true,
+      files,
+    };
+    fs.writeFileSync(path.join(destinationRoot, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
+    retained.push({ experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId, path: destinationRoot, files: files.length });
   }
-
-  const bundle = {
-    schemaVersion: 1,
-    kind: 'pathfinder-durable-experiment-evidence-bundle',
-    experimentId: manifest?.experiment?.experimentId ?? null,
-    workflowFamily: manifest?.experiment?.workflowFamily ?? null,
-    workflowRunId: manifest?.experiment?.workflowRunId ?? manifest?.runId ?? null,
-    workflowRunAttempt: manifest?.experiment?.workflowRunAttempt ?? manifest?.runAttempt ?? null,
-    resolvedSha: manifest?.experiment?.resolvedSha ?? null,
-    configurationHash: manifest?.experiment?.configurationHash ?? null,
-    populationIdentityHash: manifest?.population?.identityHash ?? manifest?.populationIdentityHash ?? null,
-    researchOutcome: manifest?.researchOutcome ?? null,
-    sourceArtifact: manifest?.sourceArtifact ?? null,
-    runUrl: manifest?.runUrl ?? null,
-    decisionBearing: true,
-    files,
-  };
-  fs.writeFileSync(path.join(destinationRoot, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
-  retained.push({ experimentId: bundle.experimentId, workflowRunId: bundle.workflowRunId, path: path.relative(process.cwd(), destinationRoot).replaceAll('\\', '/'), files: files.length });
+  return retained;
 }
 
-if (retained.length === 0) {
-  console.log('No decision-bearing v3 experiment artifacts found; nothing to retain.');
+function selfTest() {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'persist-experiment-evidence-'));
+  try {
+    const staging = path.join(temp, 'staging');
+    const artifact = path.join(staging, 'decision-artifact');
+    const ignored = path.join(staging, 'ordinary-benchmark');
+    const output = path.join(temp, 'retained');
+    fs.mkdirSync(artifact, { recursive: true });
+    fs.mkdirSync(ignored, { recursive: true });
+    const primary = Buffer.from(JSON.stringify({ levels: [{ id: 'A', ok: true, workSpent: 12 }] }));
+    fs.writeFileSync(path.join(artifact, 'result.json'), primary);
+    const manifest = {
+      schemaVersion: 3,
+      kind: 'pathfinder-solver-experiment-result',
+      decisionBearing: true,
+      runId: '123',
+      runAttempt: '2',
+      experiment: { experimentId: 'fixture/experiment', workflowFamily: 'fixture', workflowRunId: '123', workflowRunAttempt: '2', resolvedSha: 'a'.repeat(40), configurationHash: `sha256:${'b'.repeat(64)}` },
+      population: { identityHash: `sha256:${'c'.repeat(64)}` },
+      researchOutcome: { outcome: 'completed-positive' },
+      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false }],
+    };
+    fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+    fs.writeFileSync(path.join(ignored, 'manifest.json'), JSON.stringify({ ...manifest, decisionBearing: false }));
+
+    const retained = persistDecisionBearingExperimentEvidence({ stagingDir: staging, outRoot: output, compressAboveBytes: 8 });
+    assert.equal(retained.length, 1);
+    const destination = path.join(output, 'fixture-experiment__run-123__attempt-2');
+    const bundle = JSON.parse(fs.readFileSync(path.join(destination, 'bundle.json'), 'utf8'));
+    assert.equal(bundle.decisionBearing, true);
+    assert.equal(bundle.files.length, 2);
+    const primaryRecord = bundle.files.find(file => file.source === 'result.json');
+    assert.ok(primaryRecord);
+    assert.equal(primaryRecord.sha256, sha256(primary));
+    assert.equal(primaryRecord.compression, 'gzip');
+    assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, primaryRecord.stored))), primary);
+    assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
+    console.log('persist decision-bearing experiment evidence self-test passed');
+  } finally {
+    fs.rmSync(temp, { recursive: true, force: true });
+  }
+}
+
+if (values.has('self-test')) {
+  selfTest();
 } else {
-  console.log(`Retained ${retained.length} decision-bearing experiment evidence bundle(s).`);
-  for (const item of retained) console.log(`- ${item.experimentId ?? 'unknown experiment'} run ${item.workflowRunId ?? 'unknown'} -> ${item.path} (${item.files} files)`);
+  const stagingDir = path.resolve(values.get('staging-dir') || 'artifact-staging');
+  const outRoot = path.resolve(values.get('out-root') || 'reports/stress/experiment-evidence');
+  const compressAboveBytes = Number(values.get('compress-above-bytes') || 4 * 1024 * 1024);
+  const retained = persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, compressAboveBytes });
+  if (retained.length === 0) {
+    console.log('No decision-bearing v3 experiment artifacts found; nothing to retain.');
+  } else {
+    console.log(`Retained ${retained.length} decision-bearing experiment evidence bundle(s).`);
+    for (const item of retained) {
+      console.log(`- ${item.experimentId ?? 'unknown experiment'} run ${item.workflowRunId ?? 'unknown'} -> ${path.relative(process.cwd(), item.path).replaceAll('\\', '/')} (${item.files} files)`);
+    }
+  }
 }
