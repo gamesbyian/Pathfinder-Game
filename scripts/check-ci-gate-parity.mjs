@@ -46,7 +46,9 @@ requireMembers('ci', fullClosure, ['check', 'check:lint', 'test:coverage', 'test
 
 const workflowRuns = [...workflow.matchAll(/^\s*run:\s*npm run ([A-Za-z0-9:_-]+)\s*$/gm)].map(match => match[1]);
 const expectedWorkflowRuns = [
-  'check:nonlint',
+  'check:dead-scripts',
+  'check:text-source-files',
+  'check:validators',
   'check:lint',
   'test:node',
   'build',
