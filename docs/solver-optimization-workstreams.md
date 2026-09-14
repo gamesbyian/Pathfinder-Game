@@ -2,7 +2,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-13.
+> **Reconciled:** 2026-09-14.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Human/editor contrasts: [`human-parent-contrast-research.md`](human-parent-contrast-research.md).
@@ -23,9 +23,9 @@ No live Class-2/Class-4 gate depends on the invalid whole-C1 transfer premise or
 
 **State:** ACTIVE / FIRST PRIORITY.
 
-**Production boundary:** run `34683011115` is **100/102 C1 + 1,048/1,700 C2**, leaving 652 C2 misses. Corrected atlas: 22 not-offered, 39 offered-but-unreached/starved, 37 reached/comparable-work-failed, 123 no-T1-winner-but-historical-candidate, **431 no known admissible/T1 candidate**. [`atlas`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md)
+**Production boundary:** run `34683011115` is **100/102 C1 + 1,048/1,700 C2**, leaving 652 C2 misses. Corrected atlas: 22 not-offered, 39 offered-but-unreached/starved, 37 exact-dispatched/reached with target-action dose not established by the atlas, 123 no-T1-winner-but-historical-candidate, **431 no known admissible/T1 candidate**. [`atlas`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md), [`observability audit`](../reports/2026-09-14-capability-observability-attribution-audit-001.md)
 
-**Class 1-3 rejoin:** class 1 has no free menu headroom; class 3 is exposed-and-failed. Six genuine must-turn-guidance rows remain. A 7M pilot plus real-ladder replay reproduce referee-valid gains on `R02768` and `R02180` only after plain late repair fails. Next gate: **60-row participant-aware economics/collateral A/B**, 40 control-unsolved + 20 control-downstream-solved actual participants, excluding the development pair. Human-parent must-turn families become useful only after that gate if promotion/generalization needs structural transfer. [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md), [`preflight`](../reports/2026-09-13-ws2-class2-class4-allocation-preflight-001.md)
+**Class 1-3 rejoin:** class 1 has no free menu headroom; class 3 is exposed/dispatched but is not, from atlas evidence alone, a comparable-work negative. Exact-action `workSpent`/dose must be joined before treating a row as evidence that more of the same work cannot help. Six genuine must-turn-guidance rows remain. A 7M pilot plus real-ladder replay reproduce referee-valid gains on `R02768` and `R02180` only after plain late repair fails. Next gate: **60-row participant-aware economics/collateral A/B**, 40 control-unsolved + 20 control-downstream-solved actual participants, excluding the development pair. Human-parent must-turn families become useful only after that gate if promotion/generalization needs structural transfer. [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md), [`preflight`](../reports/2026-09-13-ws2-class2-class4-allocation-preflight-001.md)
 
 **Class 4:** corrected capability-memory union is 179 rows. Portal coarse-state merge nominates 113/123 class-4 rows; global merge remains closed after 12 losses. An 8-level freshness replay solved 8/8 referee-valid. Next: a **default-off true-dead-last additive whole-ladder retry** enabling portal coarse-state merge only inside that retry. Canary: 8 freshness rows + `R01273` + non-portal controls; only a pass earns the 113-row allocation test. If the additive form survives, human/editor portal parents are a useful transfer source because topology-composition v0.1 omits portals; do not insert that work before the current canary/allocation gate. [`freshness`](../reports/2026-09-13-class4-portal-coarse-freshness-replay-001.md), [`preflight`](../reports/2026-09-13-ws2-class2-class4-allocation-preflight-001.md)
 
@@ -71,7 +71,7 @@ For a new structural selector premise, query controlled families first. Family f
 - A historical null/revert is not a premise verdict until participation, measurement integrity, and formulation are established.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
 - Hold out independent units and scale confirmation with tuning/selection pressure. For generated human/editor descendants, the parent family is the usual independent unit.
-- Reusable rows require matching protocol identity; nominal stage reach is not participation. Timeout/errors are indeterminate, not ordinary failures.
+- Reusable rows require matching protocol identity; nominal stage reach or dispatch is not participation. A comparable-work negative requires exact-action work/dose evidence. Timeout/errors are indeterminate, not ordinary failures.
 - Refresh residual-derived views after material promotion or provenance reinterpretation before reusing class counts.
 - A validated hint prefix proves that prefix live, not alternatives dead. A preserved construction witness proves solvability, not solution-space rigidity or DEAD alternatives. Exact labels are offline truth, never runtime steering.
 - A single-level microscope may generate a premise, never a production exception.
