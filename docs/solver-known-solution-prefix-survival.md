@@ -15,6 +15,14 @@ The observer distinguishes known support through incoming frontier, generated ca
 
 Observation OFF/ON parity is mandatory. Enabling it must not change solution, canonical work, scoring, retention, tie order, randomness, or cache/memo lifetime.
 
+## Oracle-set identity and conditioning
+
+The observer is set-valued evidence. Its conclusion is conditional on the accepted-path set supplied to it, even though every included path is a sound positive oracle. Persisted decision-bearing runs should therefore retain enough compact metadata to reconstruct that conditioning set: level structural revision, path-set inclusion rule, exact accepted-path identity/signature, structural solution family, provenance/evidence purpose, conservative dependency stratum and replay ancestry where known, plus solver/config revision.
+
+Do not infer independence from `supportedPaths`, `supportedFamilies` or raw provenance counts alone. Multiple labels can descend from one replay/family/discovery chain. When a claim matters to a live mechanism nomination, compare scientifically justified path-set views such as all eligible paths, dependency-collapsed support, replay-first exclusion, or one representative per conservative dependency stratum. Missing historical ancestry stays unknown.
+
+Identity-bound exact/reference labels remain bound to their original witness path. Never replace those witnesses with generic representatives merely to make the metadata uniform.
+
 ## Interpretation
 
 Known hints/solutions are incomplete, so:
