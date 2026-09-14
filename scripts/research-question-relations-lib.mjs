@@ -7,7 +7,15 @@ const QUESTION_ID_RELATION_FIELDS = Object.freeze([
     'negativeControlFor',
     'calibratedBy',
     'calibrates',
+    'supersedes',
+    'duplicateOf',
 ]);
+
+const normalizeSearchText = value => String(value ?? '')
+    .toLowerCase()
+    .replace(/[-_]+/gu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
 
 export function normalizeResearchQuestionStatus(state) {
     const value = String(state ?? '').toLowerCase();
@@ -61,6 +69,7 @@ export function validateResearchQuestionRegistry(registry) {
 
 export function queryResearchQuestions(registry, { query = '', status = '', kind = '' } = {}) {
     const wantedQuery = query.trim().toLowerCase();
+    const normalizedQuery = normalizeSearchText(query);
     const wantedStatus = status.trim().toLowerCase();
     const wantedKind = kind.trim().toLowerCase();
     if (wantedKind && wantedKind !== 'question') return [];
@@ -69,7 +78,8 @@ export function queryResearchQuestions(registry, { query = '', status = '', kind
         const normalizedStatus = normalizeResearchQuestionStatus(question.state);
         if (wantedStatus && normalizedStatus !== wantedStatus) return false;
         if (!wantedQuery) return true;
-        return JSON.stringify(question).toLowerCase().includes(wantedQuery);
+        const haystack = JSON.stringify(question).toLowerCase();
+        return haystack.includes(wantedQuery) || normalizeSearchText(haystack).includes(normalizedQuery);
     }).map(question => ({
         kind: 'question',
         status: normalizeResearchQuestionStatus(question.state),

@@ -8,9 +8,12 @@
       "owner": "WS2",
       "state": "closed-tested-form",
       "answeredBy": ["reports/2026-09-12-class123-cheap-harvest-rejoin-001.md"],
-      "result": "No direct batch. Class 1 has no reserve headroom; class 3 is exposed-and-failed; class 2 mostly rejoins priced policies. The must-turn-biased descendant graduated to its own current treatment question.",
+      "result": "No direct batch. Class 1 has no reserve headroom; class 3 has exact dispatch/reach evidence but the atlas alone does not establish exact-action nonzero/comparable dose; class 2 mostly rejoins priced policies. The must-turn-biased descendant graduated to its own current treatment question.",
       "implies": ["WS2-MUST-TURN-LATE-ADDITIVE"],
-      "constrains": ["Class-1 menu additions need a materially different allocation contract."],
+      "constrains": [
+        "Class-1 menu additions need a materially different allocation contract.",
+        "Do not treat the class-3 atlas bucket as a comparable-work negative without exact-action work/dose evidence."
+      ],
       "reopensOn": "Material production-boundary or provenance reinterpretation."
     },
     {
@@ -36,7 +39,7 @@
         "reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md",
         "reports/2026-09-12-capability-memory-union-reconciliation-001.md"
       ],
-      "result": "No for class 5 under the bounded evidence: the corrected six-source union nominates 179/652 current residual rows, distributed 14/28/21/116/0 across classes 1-5, with zero reach into the 431 class-5 rows. The earlier prose value of a 65-row union is invalid and must not be reused.",
+      "result": "No for class 5 under the bounded evidence: the corrected six-source union nominates 179/652 current residual rows, distributed 14/28/21/116/0 across classes 1-5, with zero reach into the 431 class-5 rows. The earlier prose value of a 65-row union is invalid and must not be reused. The union is coverage/complementarity evidence, not a count of independent causal confirmations.",
       "implies": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
       "constrains": [
         "Do not make broader composition/portfolio mining the first explanation for class 5 without a materially new capability source.",
@@ -46,17 +49,55 @@
       "reopensOn": "A materially new capability source with exact/protocol-compatible evidence that reaches class 5 and was not represented in the bounded census."
     },
     {
+      "id": "WS2-PORTAL-COARSE-GLOBAL-MERGE",
+      "question": "Should portal coarse-state merge be globally enabled on portal-bearing levels?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "aliases": ["portal coarse", "portal merge", "global portal coarse state"],
+      "answeredBy": [
+        "reports/2026-09-09-portal-coarse-state-merge-ab-001-preflight.md",
+        "reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"
+      ],
+      "result": "No in the tested global form. The frozen 954-level A/B produced 158 referee-valid gains and 12 losses, including a hard R01273 capability regression that persisted at 10x budget. Bounded second-survivor and predecessor-history subkey salvage shapes also failed their cheapest deterministic gate. Promotion/global placement is closed, while the large positive basin remains capability evidence.",
+      "implies": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
+      "negativeControlFor": ["WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION"],
+      "constrains": [
+        "Do not equate global promotion failure with absence of portal coarse-state capability.",
+        "Do not retry the unchanged global merge or the failed bounded-subkey/retention-slot salvage shapes.",
+        "Any successor must preserve ordinary production winners, especially the R01273 regression control, and account for fixed-work displacement."
+      ],
+      "reopensOn": "A materially different global mechanism removes the demonstrated regression mechanism and earns a new promotion contract; narrower allocation descendants do not reopen this tested form."
+    },
+    {
       "id": "WS2-CLASS4-PORTAL-COARSE-FRESHNESS",
       "question": "Does the September 9 portal coarse-state-merge positive basin still reproduce on current class-4 residual rows under current code and production-shaped work semantics?",
       "owner": "WS2",
       "state": "concluded-positive",
       "answeredBy": ["reports/2026-09-13-class4-portal-coarse-freshness-replay-001.md"],
-      "result": "fresh: 8/8 stratified-sampled class-4 rows solved and referee-valid under current code/production-matched budgets. Successor question is the least-disruptive allocation-form design (dead-last additive whole-ladder retry), not another freshness check.",
-      "triggeredBy": ["WS2-KNOWN-CAPABILITY-COMPLEMENTARITY"],
+      "result": "Fresh: 8/8 stratified-sampled class-4 rows solved and referee-valid under current code/production-matched budgets. Successor question is the least-disruptive allocation form: a dead-last additive whole-ladder retry, not another freshness check and not reopening the global merge.",
+      "triggeredBy": ["WS2-KNOWN-CAPABILITY-COMPLEMENTARITY", "WS2-PORTAL-COARSE-GLOBAL-MERGE"],
+      "implies": ["WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION"],
       "constrainedBy": ["reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"],
       "constrains": [
         "Do not reopen the globally enabled treatment: its 12 losses and hard R01273 capability regression remain valid controls.",
-        "The successor allocation-form test must preserve ordinary production capability (structurally, via tier ordering) and explicit work accounting."
+        "The successor allocation-form test must preserve ordinary production capability structurally through tier ordering and explicit work accounting."
+      ],
+      "reopensOn": null
+    },
+    {
+      "id": "WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION",
+      "question": "Can fresh portal coarse-state capability be exposed only in a true dead-last additive whole-ladder retry without unacceptable collateral or fixed-work displacement?",
+      "owner": "WS2",
+      "state": "active-candidate",
+      "aliases": ["portal coarse allocation", "dead last portal retry", "portal coarse exposure"],
+      "answeredBy": [],
+      "result": "Global placement is closed negative, but current capability is fresh on the prespecified class-4 sample. The live question is allocation/economics: first pass a canary containing the eight freshness rows, R01273, and non-portal controls; only then consider the 113-row nominated population.",
+      "triggeredBy": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
+      "constrainedBy": ["WS2-PORTAL-COARSE-GLOBAL-MERGE"],
+      "constrains": [
+        "Keep the merge default-off and enable it only inside the true dead-last retry for this gate.",
+        "R01273 is a hard regression control, not evidence that the positive capability basin disappeared.",
+        "Require explicit aggregate work, gains/losses, participation and downstream displacement before any broader allocation claim."
       ],
       "reopensOn": null
     },
@@ -112,6 +153,7 @@
       "question": "Do current exact-labelled extinction pools contain a recurring categorical/interface-state distinction that preserves LIVE material even though scalar future-feasibility summaries fail?",
       "owner": "WS2",
       "state": "closed-tested-form",
+      "aliases": ["categorical projection", "full pool", "full-pool survivor projection"],
       "answeredBy": [
         "reports/2026-08-25-beam-full-pool-survivor-projection.md",
         "reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md"
@@ -128,17 +170,40 @@
     },
     {
       "id": "WS2-HOMOTOPY-COMPLETION-CLASSES",
-      "question": "Does topological completion class distinguish exact-LIVE from exact-DEAD frontier material in cases where ordinary represented progress and scalar feasibility overlap?",
+      "question": "Does the rigorous fixed-endpoint homotopy/winding formulation distinguish exact-LIVE from exact-DEAD frontier material?",
       "owner": "WS2",
-      "state": "active-diagnostic",
-      "answeredBy": [],
-      "result": "Historical winding-number analysis established a real complete-solution diversity axis: multiple homotopy classes on 12/19 must-cross-heavy published levels, with 16.6% of cross-class hint pairs treated as similar by the older diversity metric. Runtime LIVE/DEAD relevance was never tested, and the old centroid puncture was approximate for concave obstacle clusters. With the current dead-cause and low-cardinality quota descendants closed, this is now the live Class-5 acquisition gate.",
+      "state": "closed-tested-form",
+      "aliases": ["homotopy", "fixed endpoint topology", "winding"],
+      "answeredBy": ["reports/2026-09-13-class5-homotopy-prefix-census-result-001.md"],
+      "result": "Coverage null, not premise failure. The current exact-labelled population contains 28 prefixes across 14 levels but zero same-level/same-start/same-endpoint LIVE/DEAD groups, so the fixed-endpoint winding comparison cannot adjudicate topology. The correct successor is an independently defined open-path signature/reference question, not an arbitrary endpoint closure.",
       "triggeredBy": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-CATEGORICAL-FULL-POOL"],
+      "implies": ["WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"],
       "constrainedBy": ["docs/solver-archaeology-register.md"],
       "constrains": [
-        "Reconstruct only a tiny offline winding observer with puncture-robustness checks.",
-        "First ask whether exact-LIVE and exact-DEAD frontier states differ in reachable completion topology.",
+        "Do not weaken the fixed-endpoint contract by drawing ad hoc closures merely to manufacture contrast.",
         "Complete-solution class diversity does not itself license an in-loop topology feature or retention quota."
+      ],
+      "reopensOn": "A future exact-labelled population contains same-level/same-start/same-endpoint LIVE/DEAD groups sufficient for the prespecified winding comparison."
+    },
+    {
+      "id": "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE",
+      "question": "Can a mathematically defensible open-path topological signature/reference encode already-incurred commitment and distinguish exact-LIVE from exact-DEAD material without arbitrary endpoint-closure signal?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "aliases": ["topology", "open path topology", "H signature", "topological acquisition"],
+      "answeredBy": [],
+      "result": "This is the current Class-5 acquisition gate. Generic diversity, six scalar future-feasibility summaries, current-population dead-cause reuse and low-cardinality full-pool quota forms are closed in their tested forms; fixed-endpoint winding was coverage-null. The live question is whether a rigorous open-path representation exists before buying new labels or changing runtime search.",
+      "triggeredBy": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
+      "constrainedBy": [
+        "WS2-GENERIC-STRUCTURAL-DIVERSITY",
+        "WS2-SIMPLE-FUTURE-FEASIBILITY",
+        "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
+        "WS2-CATEGORICAL-FULL-POOL"
+      ],
+      "constrains": [
+        "Require an invariance argument and endpoint-identity controls before treating any H-signature as decision-bearing.",
+        "First use existing exact-labelled material; if natural contrast remains starved after the representation is defined, use the smallest controlled human-parent topology intervention and exact-label the relevant states.",
+        "Generated solvable witnesses do not substitute for exact DEAD labels, and a complete-solution topology axis does not itself justify an in-loop feature."
       ],
       "reopensOn": null
     },
@@ -159,13 +224,14 @@
       "id": "WS2-ADMISSIBLE-ORDER-RETRY-REPRICING",
       "question": "Can admissible-order non-default retry work be repriced from 1.0 toward 0.18 without losing unique capability?",
       "owner": "WS2",
-      "state": "closed-tested-form",
+      "state": "deferred-reopen",
+      "aliases": ["admissible order", "retry repricing", "ordered systemic retry"],
       "answeredBy": [
         "reports/2026-08-28-admissible-order-work-cap-gap-discovery.md",
         "reports/2026-09-10-admissible-order-confirmation-006-artifact-recovery.md",
         "reports/2026-09-10-admissible-order-non-default-retry-matched-work-methodology-001.md"
       ],
-      "result": "The unchanged production path cannot answer this by budget rescaling: confirmation 006 gave the target tier zero allocated/spent work and ordinary admissible-order search ignores the per-tier soft work cap. A default-off enforcement seam now exists for a valid future experiment, but the repricing question remains deferred until current residual evidence earns it.",
+      "result": "The repricing question is not answered by the nominal production A/B: the target tier received zero allocated/spent work and ordinary admissible-order search ignored the per-tier soft work cap. A default-off enforcement seam now exists for a valid future experiment, but plumbing availability does not make the science active. The question remains deferred until current residual evidence earns it and a cheap canary proves real fraction-differentiated target-stage participation.",
       "constrains": [
         "Do not launch another 1.0-vs-0.18 confirmation merely because the enforcement seam exists.",
         "A valid canary must enable the enforcement path and show real nonzero target-stage participation plus fraction-differentiated work under a production-shaped node cap before population compute."
