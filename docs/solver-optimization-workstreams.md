@@ -11,6 +11,12 @@ Method: [`solver-research-operating-model.md`](solver-research-operating-model.m
 
 Program lens: **capability composition** exposes/selects/allocates demonstrated capability; **capability acquisition** creates generic capability where no known action succeeds.
 
+## 2026-09-13 data-audit guardrail
+
+The stress-corpus selection-history and solution-profile audits change evidence interpretation, **not the execution order below**. Whole Corpus 1 is not a cross-generator source: 79/102 current rows descend from random-generator levels selected for historical solver success. Corpus 2 is a mixed development laboratory, not one untouched random draw. Current residuals/participant cohorts are intentionally outcome-selected and support conditional allocation/mechanism claims about that residual, not mechanic-wide prevalence. Solution profiles are known-solution **sample** profiles: use schema-v3 support-aware axes, treat `observedSingleOrder` as sampled agreement, `hasExhaustiveSearchEvent` as an event marker rather than whole-space completeness, and sparse nearest-profile matches as exploratory only. [`corpus authority`](solver-corpus-selection-provenance.md), [`profile authority`](solver-solution-profile.md), [`re-evaluation`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md)
+
+No live WS2 gate below depends on the invalid whole-C1 transfer premise or legacy nearest-profile semantics. The Class-2 60-row participant A/B and Class-4 113-row residual test remain correctly scoped conditional-economics/allocation experiments; do not later report their hit rates as population prevalence. The recent WS1 replay/first-divergence evidence remains valid and earns no audit-driven repeat.
+
 ## Current execution priority
 
 ### 1. Workstream 2: residual capability + fixed-work allocation
@@ -39,7 +45,7 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE.
 
-Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path and capability-memory evidence to distinguish not-exposed from exposed-and-failed, and technique-relative response from shared failure. Production selectors require legal current-level/current-solve signals and confirmation proportional to selection pressure.
+Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path and capability-memory evidence to distinguish not-exposed from exposed-and-failed, and technique-relative response from shared failure. Production selectors require legal current-level/current-solve signals and confirmation proportional to selection pressure. Any profile-derived selector premise must begin from schema-v3 support-aware profile evidence; legacy nearest-neighbour identity, sampled rigidity, saturation without complete chronology, and exhaustive-event markers are not selector features or structural truth.
 
 For a new structural selector premise, query controlled families first. Ask whether legal descriptor and action value move under intervention across whole parents. Family flips nominate; they do not license a selector. Cross-hint provenance audit is closed: same-event/multiple-path identities are explained by replay/multi-output semantics or repaired historical source-cell under-resolution. Structural-response extension is also closed for the tested pair. [`provenance`](../reports/2026-09-12-cross-hint-provenance-relations-001.md), [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
 
@@ -67,6 +73,10 @@ Mechanic-composition pilot produced 2/5 clean predicted chains, 2/5 general-diff
 
 - Use `workSpent` across techniques; nodes are within-technique diagnostics. New actions/configs normally compete inside total work.
 - Level-blindness is not generalization. IDs, historical outcomes, hints, family labels and capability-memory membership never become runtime routing inputs.
+- Corpus/container names are not evidence roles. Record generation ancestry, later selection history and prior decision use separately; whole C1 is not cross-generator transfer and C2 is not an untouched random sample.
+- A selected residual or participant cohort supports the conditional question it was built for, not unconditional mechanic prevalence or unseen-level effect size.
+- Separate the exact observed result from its inferential entitlement; narrowing an evidence role does not erase row-level solve/work facts.
+- Solution-profile fields describe the stored known-solution sample with explicit support. Missing axes stay missing; sampled agreement is not proof of rigidity; exhaustive-search events are not whole-space completeness.
 - Preserve **disposition** and **capability signature** separately. Closed treatments may remain useful offline evidence.
 - Historical gain/loss intersections with current residual are nominations until reconciled; missing provenance stays unknown.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
