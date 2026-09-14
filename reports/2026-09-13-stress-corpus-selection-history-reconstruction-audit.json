@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-09-13",
+  "classification": "premise-failed-population-evidence-role",
+  "selectionHistory": {
+    "2026-07-10": {
+      "sourceRandomPopulation": 2000,
+      "event": "solver-outcome partition and migration",
+      "source": "PR #1182",
+      "solverPositiveMigratedToCorpus1": 300,
+      "solverNegativeOrTimeoutLeftInCorpus2": 1700
+    },
+    "2026-07-11": {
+      "event": "square-grid cleanup",
+      "sourceCommit": "063ada5c9b97a29a392865413e1d53630bf347f6",
+      "corpus1Before": 450,
+      "corpus1After": 102,
+      "corpus2RowsRemovedAndReplaced": 1372,
+      "corpus2After": 1700
+    }
+  },
+  "currentStrata": {
+    "corpus1": {
+      "rows": 102,
+      "originalAF": 23,
+      "migratedRandomSelectedForHistoricalSolverSuccess": 79
+    },
+    "corpus2": {
+      "rows": 1700,
+      "originalRandomSelectedForHistoricalSolverFailureThenSquareRetained": 328,
+      "squareReplacementRowsGeneratedAfterPartition": 1372
+    }
+  },
+  "september3TransferReanalysis": {
+    "historicalReport": "reports/2026-09-03-portfolio-18-tranche-v2-cross-generator-001-preflight.md",
+    "controlRun": 33718270281,
+    "treatmentRun": 33718272194,
+    "strata": {
+      "genuineAF": {
+        "rows": 23,
+        "solved": {
+          "full-menu": 22,
+          "portfolio-18-flat-2m": 22,
+          "portfolio-18-tranche-v2": 22
+        },
+        "aggregateWorkSpent": {
+          "full-menu": 113932072,
+          "portfolio-18-flat-2m": 82592469,
+          "portfolio-18-tranche-v2": 148017188
+        },
+        "trancheV2VsFullMenuWorkDelta": 34085116,
+        "trancheV2VsFullMenuWorkDeltaPct": 29.91705092487039,
+        "trancheV2VsFullMenuGains": [],
+        "trancheV2VsFullMenuLosses": [],
+        "commonMiss": "S00028"
+      },
+      "migratedRandom": {
+        "rows": 79,
+        "solved": {
+          "full-menu": 71,
+          "portfolio-18-flat-2m": 69,
+          "portfolio-18-tranche-v2": 71
+        },
+        "aggregateWorkSpent": {
+          "full-menu": 914968506,
+          "portfolio-18-flat-2m": 678154926,
+          "portfolio-18-tranche-v2": 807653353
+        },
+        "trancheV2VsFullMenuWorkDelta": -107315153,
+        "trancheV2VsFullMenuWorkDeltaPct": -11.728835724538042,
+        "trancheV2VsFullMenuGains": ["R00064", "R01756"],
+        "trancheV2VsFullMenuLosses": ["R00045", "R00087"]
+      },
+      "wholeCorpus1": {
+        "rows": 102,
+        "solved": {
+          "full-menu": 93,
+          "portfolio-18-flat-2m": 91,
+          "portfolio-18-tranche-v2": 93
+        },
+        "aggregateWorkSpent": {
+          "full-menu": 1028900578,
+          "portfolio-18-flat-2m": 760747395,
+          "portfolio-18-tranche-v2": 955670541
+        },
+        "trancheV2VsFullMenuWorkDelta": -73230037,
+        "trancheV2VsFullMenuWorkDeltaPct": -7.117309346093108
+      }
+    },
+    "correctedConclusion": "The whole-Corpus-1 run does not establish tranche-v2 work-saving cross-generator transfer. On the genuine A-F stratum coverage is 22/23 for both tranche-v2 and full-menu, while tranche-v2 spends 29.92% more aggregate work. The favorable aggregate work result is carried by migrated same-generator rows."
+  }
+}
