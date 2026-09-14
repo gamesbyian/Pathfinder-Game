@@ -1,7 +1,7 @@
 # Cross-resource observability and ancestry audit 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-13 — shared corpus-selection lineage classifier and cross-resource observability runner implemented; bounded manifest-only family census dispatched on the audit branch.
+> **Last evidence:** 2026-09-13 — shared corpus-selection lineage classifier and cross-resource observability runner implemented; manifest-only family evaluation missingness and replay-family identity checks hardened before accepting empirical output.
 > **Decision:** investigate the four audited research resources as one evidence system, with special attention to cross-resource coverage, shared ancestry, selection into observability, and apparently independent signals that descend from one historical event.
 > **Remaining gate:** ingest the empirical coverage/ancestry run, classify the highest-value clean and contaminated joins, and reconcile any durable compatibility changes.
 > **Evidence role:** forensic/discovery; existing data only unless a later bounded question genuinely requires new solver compute.
@@ -40,9 +40,11 @@ The audit runner is `scripts/cross-resource-observability-audit.mjs`, with pure 
 - the existing family-index parser for family manifests;
 - support-shape facts from the same known-solution sample consumed by Solution Profiles, without pretending C2 has a tracked profile library or that any sample is the latent complete solution space.
 
-The family side deliberately distinguishes **not mounted** from **mounted with no parent record**. The empirical runner fetches only `*-manifest.json` blobs from the research branch, enough to establish parent/family/variant coverage without buying a 2.5 GB checkout or pretending absent evaluation logs are failures.
+The family side deliberately distinguishes **not mounted** from **mounted with no parent record**. The empirical runner fetches only `*-manifest.json` blobs from the research branch, enough to establish parent/family/variant coverage without buying a 2.5 GB checkout. Because that bounded mount intentionally excludes family evaluation logs, evaluated/solved counts remain `unknown` rather than being reported as zero.
 
-The per-level matrix records stored-path count, provenance-event count, within-path dependency strata, replay-touched/replay-only/replay-first paths, chronology support, tracked-versus-derivable profile status, corpus selection stratum, and family-parent coverage. Summary output stratifies those facts by corpus, selection stratum, and historical solver-outcome conditioning.
+Replay provenance is also cross-checked against the mounted family manifests. For each current parent the analysis records whether replay-referenced family IDs are present under that parent. This turns family -> replay -> profile ancestry from a naming assumption into a checkable join. An absent family mount remains unknown; an actual mounted mismatch is surfaced separately.
+
+The per-level matrix records stored-path count, provenance-event count, within-path dependency strata, replay-touched/replay-only/replay-first paths, chronology support, tracked-versus-derivable profile status, corpus selection stratum, family-parent coverage, and replay-family compatibility. Summary output stratifies those facts by corpus, selection stratum, historical solver-outcome conditioning, family availability, and replay exposure.
 
 ## Findings so far
 
@@ -63,10 +65,27 @@ Repair on this branch: `scripts/corpus-selection-lineage.mjs` owns the current o
 
 A normal `main` checkout does not contain the canonical large family resource. Therefore “no indexed family” has two very different meanings: the family resource was not mounted, or it was mounted and the parent truly had no manifest. The cross-resource tool keeps those states separate. This is the same missingness discipline learned from provenance/profile auditing, applied at the resource-availability level.
 
+### F3 — partial resource mounts create their own missingness semantics
+
+The bounded empirical design mounts family manifests but intentionally omits census/evaluation artifacts. The first implementation inherited the family index's `evaluated=false` defaults and would therefore have reported `0 evaluated / 0 solved`, silently converting “not loaded” into negative evidence.
+
+Repair: family-parent coverage now carries `evaluationEvidenceLoaded`; manifest-only runs expose `evaluated:null` and `solved:null`. Numeric counts are produced only when evaluation evidence artifacts were actually indexed. This is a cross-resource form of the same absent-as-false defect found in legacy hint provenance and sparse profile axes.
+
+### F4 — replay ancestry can be verified against family identity rather than inferred from labels
+
+Variant replay provenance already preserves family and parent identity through its dependency-stratum key. The family index independently preserves the families generated under each parent. The audit now intersects those identities and reports matched versus unmatched replay-family lineages.
+
+This matters because a profile may be replay-exposed even when the family trove is not mounted, while a mounted manifest lets us distinguish a real family -> replay -> stored-path lineage from a stale/malformed reference. It also supplies a direct integrity check on the proposed cross-resource ancestry graph without counting the replay as independent evidence.
+
+## Execution note
+
+The first temporary runner attempt failed during Node setup because the branch-only workflow referenced a nonexistent `.nvmrc`. No dependencies, family data, analysis, or evidence run occurred. The runner now uses the repository's normal Node 20 convention. The failed setup attempt is execution plumbing, not an audit result.
+
 ## Pending empirical questions
 
 - How concentrated is family-parent coverage across the four standing C1/C2 selection strata?
 - How often has variant replay actually touched the stored sample used by profiles, and how often is replay the earliest known discovery of a stored path rather than merely a later rediscovery event?
 - Are family-covered levels systematically richer in hints/provenance than non-family levels?
+- Do replay family IDs reconcile cleanly against the mounted family manifests?
 - How many apparent four-resource cases remain after requiring whole-parent family identity and dependency-aware provenance accounting?
 - Which low-replay four-resource cases give the cleanest existing intervention + phenotype + population combinations for mechanism follow-up?
