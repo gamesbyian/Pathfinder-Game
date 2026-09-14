@@ -15,8 +15,8 @@ The 2026-09-13 corpus/profile audits add conditional reopen items, not new top-p
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Support-aware profile similarity** | A live WS1/mechanism question materially needs cross-level similarity. Use schema-v3 supported axes plus independent/held-out calibration; old nearest-profile identities are not reusable evidence. |
-| **Prospective profile-vs-solvability** | A concrete decision needs the relationship. Start with a prospectively defined population/current semantics; do not reproduce the superseded selected-C1 correlation on a larger selected corpus. |
+| **Profile-instrument calibration** | A live WS1/mechanism question materially needs profile evidence. Run the schema-v3 convergence/stability tranche as one package: conservative provenance-dependency strata, comparison against ordinary structural similarity, explicit comparable-axis coverage, and unrelated held-out-family validation for any nominated legal descriptor. Old nearest-profile identities are not reusable evidence. |
+| **Prospective profile-vs-solvability** | A concrete decision needs the relationship. Start with a prospectively defined population/current semantics and explicit evidence-purpose/version controls; do not reproduce the superseded selected-C1 correlation on a larger selected corpus. |
 | **Independent transfer for omitted mechanics** | A broad promotion claim is blocked because topology-composition omits the relevant mechanic. Add the smallest independent construction capability or use genuinely independent editor/human material; whole C1 cannot substitute. |
 | **`portfolio-18-flat-2m` old-generator nomination** | Static allocation work resumes and a cheap independent current population can test it. The genuine old-generator C1 stratum tied full-menu at 22/23 with ~27.5% less work, but those 23 historical rows nominate only. |
 
