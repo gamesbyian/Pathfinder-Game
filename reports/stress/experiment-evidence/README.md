@@ -40,13 +40,13 @@ For canonical hint-producing sources it runs the existing hint/provenance import
 
 For broad/residual confirmation, static-portfolio confirmation, and cross-run reconciliation sources it deliberately skips the hint importers and runs only durable experiment retention. Fresh generated confirmation populations therefore cannot become canonical hint sources merely because they share the same serialized evidence writer.
 
-The workflow resets to current `main` and replays immutable source artifacts on a push race, so re-harvesting the same source run is deterministic and does not merge generated evidence JSON line-by-line.
+The workflow resolves the source workflow name and head SHA directly from the Actions run ID before choosing its import path. Optional manual expectations must match that resolved identity. It then resets to current `main` and replays immutable source artifacts on a push race, so re-harvesting the same source run is deterministic and does not merge generated evidence JSON line-by-line.
 
 ## Backfill without solver compute
 
-While an existing source run's artifacts still exist, manually dispatch **Harvest solver hint evidence** with `source_run_id` and, when the source workflow is not one of the canonical hint producers, the matching `source_workflow` label.
+While an existing source run's artifacts still exist, manually dispatch **Harvest solver hint evidence** with `source_run_id`.
 
-The workflow downloads the existing artifacts and applies the same admission rule. For experiment-only source labels it skips hint importers. No solver rerun is needed.
+The workflow resolves the source workflow identity itself, downloads the existing artifacts, and applies the same admission/import rules. `source_workflow` and `source_sha` are optional assertions rather than routing inputs. No solver rerun is needed.
 
 Historical experiments whose primary artifacts have already expired remain historically unreconstructable at the missing layer. Do not fabricate replacement rows from current defaults or rerun old science merely to make this directory look complete.
 
