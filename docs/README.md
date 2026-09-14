@@ -38,6 +38,7 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-level-blindness.md`](solver-level-blindness.md) | Runtime information boundary |
 | [`solver-correctness-hardening.md`](solver-correctness-hardening.md) | Solver correctness/state/provenance invariants |
 | [`variant-level-research.md`](variant-level-research.md) | Variant/family evidence and dataset use |
+| [`human-parent-contrast-research.md`](human-parent-contrast-research.md) | Question-first human/editor-parent controlled contrasts and evidence boundaries |
 | [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) | Default-off mechanism dispositions |
 | [`solver-future-work.md`](solver-future-work.md) | Deferred/reopen ideas |
 | [`investigation-report-conventions.md`](investigation-report-conventions.md) | Investigation/report contract |
@@ -90,6 +91,7 @@ These are reusable instruments, not priority authorities.
 | [`technique-census-analysis.md`](technique-census-analysis.md) | Census/portfolio diagnostics |
 | [`solver-offline-replay-harness.md`](solver-offline-replay-harness.md) | Read-only exact/reference-labelled probes |
 | [`solver-known-solution-prefix-survival.md`](solver-known-solution-prefix-survival.md) | Known-solution-prefix survival observation |
+| [`human-parent-contrast-research.md`](human-parent-contrast-research.md) | Human/editor-origin controlled family generation for earned causal/transfer questions |
 | [`solver-search-resumability.md`](solver-search-resumability.md) | Opt-in beam continuation mechanism and current research dispositions |
 | [`solver-ablation.md`](solver-ablation.md) | Exploratory ablation lab |
 | [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Required-length sensitivity |

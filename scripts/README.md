@@ -14,6 +14,7 @@ For a named concept, use compact/queryable front doors before `package.json` or 
 - completed naming-cleanup status/history: `npm run naming:status -- --batch=<id>` (phase/json options are also available); do not reopen the frozen plan;
 - corpora: `node scripts/corpus-query.mjs --corpus=stress2`; filters/list/sample stay compact, `--full` emits exact levels;
 - hint/provenance: `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; use `--full` only for exact paths/provenance;
+- controlled human/editor contrast pilot: `node scripts/human-parent-contrast-pilot.mjs --question=<id> --evidence-role=<development|confirmation|transfer> --parent=<id> --mode=<family-mode>`; see [`../docs/human-parent-contrast-research.md`](../docs/human-parent-contrast-research.md);
 - tracked raw artifacts: `node scripts/artifact-query.mjs [--query=...] [--role=...]`;
 - completed GHA runs: `npm run gha:fetch-result -- --run=<run-id>` or `--workflow=<name>`; enumerate shards only when standard retrieval is incomplete;
 - tool lookup: `node scripts/tooling-census.mjs --compact --query=<term>`;
@@ -40,7 +41,7 @@ It runs fresh matched arms and reports retained multi-child decision-prefix agre
 - `solver-parallel/`: parallel solver infrastructure.
 - `solver-oracle/`: independent oracle/fuzz support.
 - top-level `hint-*`: hint discovery/enumeration/provenance.
-- top-level `family-*`: variant/family generation and analysis.
+- top-level `family-*`: variant/family generation and analysis; `human-parent-contrast-pilot.mjs` is the question-first human/editor research wrapper over that machinery.
 - `check-*`: repository/data/documentation invariants.
 - `current-level-facts.mjs`: current level/count/maxima snapshot; `--check` guards the generated reference block and `--write` refreshes it.
 - `*-unit-tests.mjs`: Vitest-owned suites.
@@ -64,5 +65,6 @@ Research-code presence does not imply an active hypothesis. Reconcile with [`../
 - Preserve level-blindness for cold capability experiments.
 - Respect provenance classes when mining stored hints.
 - Prefer compact query/summary views before large files.
+- For controlled human/editor descendants, treat whole parent families as the independence unit and keep production solver outcomes out of generation acceptance.
 
 Solver CLI semantics: [`../docs/solver-architecture.md`](../docs/solver-architecture.md). Validation: [`../docs/testing.md`](../docs/testing.md).

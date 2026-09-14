@@ -139,6 +139,39 @@ The generator is durable tooling, **not a standing committed corpus**. By defaul
 `tmp/`. Generate a persistent or locked sample only when a ranked research question earns it. Do
 not tune generator parameters in response to candidate solve outcomes.
 
+## Third construction regime: human/editor-parent controlled contrasts
+
+The family generator already supports a materially different source regime when its parent is
+human/editor-authored content:
+
+> human/editor parent -> controlled witness-preserving/transformed mutation -> referee-certified descendant
+
+Use [`../../docs/human-parent-contrast-research.md`](../../docs/human-parent-contrast-research.md) and
+`node scripts/human-parent-contrast-pilot.mjs` rather than treating this as another standing stress
+corpus. The wrapper delegates actual mutation and validation to `family-generate.mjs`, defaults the
+parent source to `data/levels.json`, defaults output to `tmp/`, and records the question, evidence
+role, parent exposure, and parent-family independence unit before the generated family is interpreted.
+
+This regime is useful because the 2026-09-13 population audit found published levels occupy a visibly
+different structural region from Corpus 2/envelope, while the envelope remains inside the same dense
+witness-first grammar. Human/editor descendants therefore provide a way to run controlled causal
+experiments or transfer challenges on human-origin topology without requiring hundreds of new
+hand-authored puzzles.
+
+Do not overstate that independence:
+
+- descendants of one parent are correlated siblings; the parent family is the usual independent unit;
+- a preserved hint/witness proves solvability only, not complete solution-space structure;
+- published-parent origin does not make a family untouched if the parent/outcomes already influenced
+  treatment design;
+- production solver outcomes must not decide which mutations survive generation;
+- use locked whole parents for confirmation/transfer and development parents freely for causal diagnosis.
+
+This apparatus is especially useful when topology composition omits the mechanic under test (for
+example portals), when natural exact-labelled rows lack a clean controlled contrast, or when a
+representation/repair/selector premise needs recurrence across independent human-origin parents.
+It must not delay an already-frozen allocation/economics gate merely because generation is available.
+
 ## Workflow
 
 Use [`../../docs/tooling-catalog.md`](../../docs/tooling-catalog.md) for task-oriented tool selection.
@@ -150,6 +183,7 @@ npx tsx scripts/stress/corpus-evidence-audit.mjs
 npm run stress:generate
 npm run stress:generate-random
 npm run stress:generate-topology
+node scripts/human-parent-contrast-pilot.mjs --question=<id> --evidence-role=development --parent=<id> --mode=local-mutant
 npm run stress:validate-witnesses
 npm run stress:compare
 npm run stress:smoke
@@ -172,7 +206,8 @@ answers the question. Family/variant research has its own canonical resource:
 [`../../docs/variant-level-research.md`](../../docs/variant-level-research.md).
 
 The 2026-09-13 resource audit is recorded at
-[`../../reports/2026-09-13-stress-corpus-research-resource-audit.md`](../../reports/2026-09-13-stress-corpus-research-resource-audit.md).
+[`../../reports/2026-09-13-stress-corpus-research-resource-audit.md`](../../reports/2026-09-13-stress-corpus-research-resource-audit.md), with population interpretation in
+[`../../reports/2026-09-13-stress-corpus-population-validity-audit.md`](../../reports/2026-09-13-stress-corpus-population-validity-audit.md).
 
 ## Measurement rules
 
@@ -189,6 +224,8 @@ The 2026-09-13 resource audit is recorded at
   [`../../docs/solver-evaluation-evidence.md`](../../docs/solver-evaluation-evidence.md). A new seed
   from the same generator can confirm a selected candidate; a cross-distribution claim needs a
   materially different source such as topology composition or independent human/editor material.
+- For human/editor contrast families, count whole parent families as independent units and preserve
+  parent exposure state. Descendant row count alone cannot support a cross-level generalization claim.
 - Do not quote solve totals from this README. Counts change quickly and belong in frozen run reports,
   baselines, and [`../../docs/solver-optimization-workstreams.md`](../../docs/solver-optimization-workstreams.md).
 

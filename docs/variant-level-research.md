@@ -71,6 +71,27 @@ A rule that generalizes across siblings but fails on unrelated parents is family
 
 Once exact outcomes from a holdout family/block have influenced design, reclassify that unit as development data for descendants. Untouched blocks/parent families remain usable; do not discard an entire locked pool merely because one block was consumed. Where tooling permits, prefer aggregate holdout results during iteration and defer exact failure inspection until the treatment/decision is frozen. See [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
+## Human/editor-parent controlled contrasts
+
+A third construction regime is now an explicit supported use of the same family machinery:
+
+> **human/editor parent -> controlled transformation -> referee-certified solvable descendant**
+
+Use [`human-parent-contrast-research.md`](human-parent-contrast-research.md) and `node scripts/human-parent-contrast-pilot.mjs` when a ranked question needs human-origin structure, a clean causal intervention missing from natural rows, or transfer coverage for a mechanic/topology omitted by the procedural generators.
+
+This does **not** create a standing Corpus 3. The wrapper delegates transformations and validation to `family-generate.mjs`, defaults output to `tmp/`, requires the research question and evidence role up front, and records parent exposure plus the parent-family independence unit. `data/levels.json` is the default human/editor parent source.
+
+Important boundaries:
+
+- a published/human parent is an independent source from witness-first/topology procedural construction, but its generated siblings remain correlated descendants of that parent;
+- a stored/inherited witness proves descendant solvability only, not uniqueness, rigidity, complete solution-space topology, or DEAD alternatives;
+- production solver outcomes must not filter which descendants are retained;
+- human origin does not make a family untouched. If parent/descendant outcomes influenced candidate design, that family is development evidence for descendants of the decision;
+- confirmation/transfer claims require whole parent families locked before outcomes are inspected;
+- prefer the smallest transformation that isolates the premise, and stop generation when it cannot change a ranked solver decision.
+
+This regime is especially useful for human-origin replication of selector relations, portal transfer after an earned candidate, representation/lineage-survival cliffs, repair-commitment contrasts, and exact-labelled causal neighborhoods. It must not interrupt already-frozen allocation/economics gates merely because generation is available.
+
 ## What variants are for
 
 | Question | Useful evidence |
@@ -84,6 +105,7 @@ Once exact outcomes from a holdout family/block have influenced design, reclassi
 | Invariant/equivariant falsification | Symmetry/local-mutant counterexamples locating the first decision that fails to transform as expected. |
 | Exact/oracle targeting | Families that bracket feasible/infeasible prefixes or reduced instances. |
 | Generalization tests | Whole-parent held-out confirmation, followed by unrelated transfer data. |
+| Human-origin causal/transfer tests | Whole human/editor parents with question-specific witness-preserving descendants; parent count is the independence denominator. |
 
 Variants are especially useful for **causal nomination** because a controlled transformation can isolate what changed. They are weaker as raw bulk statistics because siblings share ancestry and generation machinery.
 
@@ -169,6 +191,8 @@ Before a new family campaign larger than a small pilot, record:
 8. how confirmation families will remain untouched during tuning;
 9. how parent weighting/pseudo-replication will be handled.
 
+For human/editor-parent campaigns, also record parent exposure state and whether the intended claim is development, confirmation, or transfer. Prefer the dedicated human-parent front door because it captures those fields before generation.
+
 Do not generate tens of thousands of variants merely to “have more data.” Do not expand a campaign because the first few interesting cliffs make additional data emotionally tempting; expansion should answer a prespecified uncertainty or mechanism question.
 
 ## Evaluation-run provenance
@@ -183,7 +207,8 @@ Generation provenance does not make old solver results current. A current re-eva
 
 | Need | Entry point |
 |---|---|
-| Generate a justified pilot | `npm run family:generate` |
+| Generate a justified generic family pilot | `npm run family:generate` |
+| Generate a question-first human/editor contrast pilot | `node scripts/human-parent-contrast-pilot.mjs` |
 | Build/query index | `family:index`, `family:show`, `family:query`, `family:coverage` |
 | Join solve/mutation effects | `npm run family:analyze` |
 | Boundary synthesis | `npm run family:boundary-report` |
@@ -205,6 +230,7 @@ The variant-family dataset is **evidence, not backlog**. Current family work sho
 2. beam extinction/retention boundaries;
 3. first-divergence diagnosis for symmetry cliffs, with semantic RNG coupling only when randomness is part of the question;
 4. exact/reference labels around causal boundaries;
-5. repair/restart/operator behavior across controlled relatives.
+5. repair/restart/operator behavior across controlled relatives;
+6. human-origin controlled contrasts when existing/natural families cannot answer an earned ranked question.
 
-Bulk census-generation for its own sake is deprioritized. If family analysis is no longer changing a ranked decision, stop mining it merely because the variant-family dataset is large.
+Bulk census-generation for its own sake is deprioritized. If family analysis is no longer changing a ranked decision, stop mining or generating it merely because the resource exists.
