@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "auditId": "experiment-evidence-lifecycle-audit-001",
+  "date": "2026-09-14",
+  "report": "reports/2026-09-14-experiment-evidence-lifecycle-audit-001.md",
+  "overall": "semantics-pass-retention-gap",
+  "primaryFinding": "Current inference semantics correctly distinguish participation, conditioning, tested-form scope, disposition and capability in the hostile sample, but some decision-bearing primary row evidence remains available only through expiring GitHub Actions artifacts.",
+  "forensicCases": [
+    {
+      "id": "prune-mc-portal-forced-neighbor",
+      "class": "clean-promoted-positive",
+      "verdict": "reproduced",
+      "controlRun": "34557531960",
+      "treatmentRun": "34557533731",
+      "resolvedSha": "dd28ee07ba6669db5224fb3791a194fd5668dbfb",
+      "population": 219,
+      "controlSolved": 0,
+      "treatmentSolved": 21,
+      "gains": 21,
+      "losses": 0,
+      "controlWorkSpent": 51794598716,
+      "treatmentWorkSpent": 49662705934,
+      "controlNodes": 45024213737,
+      "treatmentNodes": 41659932525,
+      "errors": 0,
+      "deadlineTruncations": 0,
+      "refereeValidTreatmentSolves": 21,
+      "scope": "structural-predicate current-control-miss residual",
+      "propagation": "correctly-qualified",
+      "retentionRisk": "primary Actions artifacts expire 2026-12-10"
+    },
+    {
+      "id": "portal-coarse-state-global-merge",
+      "class": "capability-with-collateral",
+      "verdict": "promotion-negative-capability-positive",
+      "gains": 158,
+      "losses": 12,
+      "propagation": "correctly-separated-disposition-and-capability"
+    },
+    {
+      "id": "admissible-order-non-default-retry-production-ab",
+      "class": "non-participating-nominal-experiment",
+      "verdict": "inconclusive-non-participating",
+      "population": 150,
+      "targetAttemptsRecorded": 276,
+      "targetNodesExpanded": 0,
+      "propagation": "correctly-preserves-open-repricing-question"
+    },
+    {
+      "id": "goal-attraction-global-swap",
+      "class": "tested-form-negative-descendant-alive",
+      "verdict": "global-form-negative",
+      "descendant": "STRATEGY_GOAL_ATTRACTION_GUIDANCE_DISTANCE_RETRY",
+      "propagation": "premise-not-erased"
+    },
+    {
+      "id": "highint-standard-ih-reserve-preserving",
+      "class": "gate-stopped-before-broad-population",
+      "verdict": "selected-mechanism-gate-negative",
+      "gate1Gains": 1,
+      "gate1Losses": 1,
+      "gate2Executed": false,
+      "propagation": "unrun-gate-remains-unrun"
+    },
+    {
+      "id": "class4-portal-coarse-freshness",
+      "class": "conditional-current-capability",
+      "verdict": "positive-conditioned",
+      "sample": 8,
+      "solved": 8,
+      "refereeValid": 8,
+      "propagation": "freshness-only-not-population-effect"
+    },
+    {
+      "id": "static-portfolio-whole-c1-transfer",
+      "class": "legacy-claim-reinterpretation",
+      "verdict": "literal-observation-stands-transfer-claim-narrowed",
+      "propagation": "previous-overclaim-repaired"
+    },
+    {
+      "id": "confirmation-workflow-matrix-arm-bug",
+      "class": "execution-plumbing-failure",
+      "verdict": "void-causal-evidence",
+      "affectedCompletedCohorts": 4,
+      "propagation": "previous-false-diagnoses-retracted-and-workflow-hardened"
+    },
+    {
+      "id": "production-refresh-34683011115",
+      "class": "v3-negative-control",
+      "verdict": "correctly-non-decision-bearing",
+      "schemaVersion": 3,
+      "artifactCoverage": "60/60",
+      "decisionBearing": false,
+      "reason": "missing declared experiment contract and intended-population identity",
+      "retentionRisk": "Actions artifact expires 2026-12-11"
+    }
+  ],
+  "systemicFindings": [
+    "durable primary row retention is weaker than semantic interpretation",
+    "v3 decision-bearing validation is conservative but adoption is incomplete",
+    "real participation is often reconstructed from attempt rows rather than retained as a compact manifest field",
+    "resolved treatment identity must be recorded at execution time to prevent plumbing failures from becoming science"
+  ],
+  "newSolverComputeEarned": false,
+  "livePriorityChanged": false,
+  "prospectiveActions": [
+    "retain v3 manifest/contract plus combined primary rows for future decision-bearing closeouts before Actions expiry",
+    "declare v3 contracts at dispatch/production time for decision-bearing workflows",
+    "retain compact stage participation summaries without replacing primary rows",
+    "link experiment results to owning question/preflight where known",
+    "preserve failed/cancelled/miswired execution identity separately from scientific outcomes"
+  ]
+}
