@@ -1,7 +1,7 @@
 # Solution-space profiles join safely to census corpus1 by array position; the old production-solved association is superseded
 
-> **Status:** superseded analytical result; join-method finding retained
-> **Last evidence:** 2026-09-13 re-evaluation against the stress-corpus selection-history audit and solution-profile resource audit; original analysis was 2026-09-05.
+> **Status:** superseded
+> **Last evidence:** 2026-09-13 — re-evaluation against the stress-corpus selection-history audit and solution-profile resource audit; original analysis was 2026-09-05.
 > **Decision:** the 102/102 position-to-ID join is valid and reusable. The reported association between legacy profile diversity and `productionSolved` must not be used as evidence of a solvability relationship. Seventy-nine of the 102 Corpus-1 rows were historically admitted because an earlier solver solved them, so this analysis conditions the population on a close ancestor of its outcome. Its strongest profile axes also used legacy support/rigidity semantics corrected by schema v3.
 > **Remaining gate:** none for this old analysis. Do not generate a Corpus-2 profile library merely to “replicate” it. A future profile-versus-solvability study must start with a prospectively defined population and current support-aware profile semantics.
 > **Evidence role:** forensic only for the old feature/outcome table; durable engineering evidence for the safe join method.
