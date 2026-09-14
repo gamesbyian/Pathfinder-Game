@@ -21,6 +21,8 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
 | [`solver-research-data-assets.json`](solver-research-data-assets.json) | Structured per-asset locations, authorities, joins, relationships, roles, and caveats |
+| [`solver-research-resource-contract.md`](solver-research-resource-contract.md) | Catalogue-grade and audit-grade scientific semantics for durable research resources |
+| [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) | Machine-readable audit-grade declarations keyed to research-asset IDs |
 | [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) | Development/confirmation/transfer and holdout discipline |
 | [`solver-scheduling-policy.md`](solver-scheduling-policy.md) | Action selection and fixed-work allocation research |
 | [`solver-budget-determinism.md`](solver-budget-determinism.md) | Work/budget/deadline semantics |
@@ -75,7 +77,7 @@ Default orientation:
 3. the specialist doc for the current gate
 4. compact evidence/tool queries before broad artifacts
 
-Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence. Use [`solver-archaeology-register.md`](solver-archaeology-register.md) only when tracing historical premises/dispositions; it does not rank current work.
+Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance and [`solver-research-resource-contract.md`](solver-research-resource-contract.md) when a decision depends on a resource's independence, identity, conditioning, missingness, freshness, information loss, or audited consumer semantics. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence. Use [`solver-archaeology-register.md`](solver-archaeology-register.md) only when tracing historical premises/dispositions; it does not rank current work.
 
 The September 11 workflow/evidence remediation is complete. For current workflow/evidence maintenance, start from [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), the maintained workflow lifecycle/indexes, and the workflow/scripts being changed. Use [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) for the completed program's conclusions; the remediation plan and implementation handoff are historical records, not active queues.
 
