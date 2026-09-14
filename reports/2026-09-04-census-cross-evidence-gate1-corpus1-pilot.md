@@ -1,7 +1,7 @@
 # Gate 1 pilot: solution-space fingerprints vs technique response, Corpus-1
 
-> **Status:** superseded-for-reuse; historically inconclusive
-> **Last evidence:** 2026-09-13 re-evaluation against the stress-corpus selection-history audit and solution-profile resource audit; original measurements were 2026-09-04.
+> **Status:** superseded
+> **Last evidence:** 2026-09-13 — re-evaluation against the stress-corpus selection-history audit and solution-profile resource audit; original measurements were 2026-09-04.
 > **Decision:** preserve the original tiny-cohort tables as historical observations of the then-current stored sample, but do **not** reuse them as current mechanism evidence without recomputation. Whole Corpus 1 is selection-conditioned and ancestry-mixed, while several legacy profile axes treated unsupported sparse observations as measurements and `rigid` as a puzzle property rather than sampled agreement.
 > **Remaining gate:** none from this historical pilot. If any nominated descriptor becomes relevant to a live question, recompute it with schema-v3 support-aware profiles, explicit population-selection/ancestry strata, and an independent confirmation population before escalation.
 > **Evidence role:** historical discovery/forensic evidence only; not confirmation and not current profile-mechanism evidence.
