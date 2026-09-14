@@ -96,6 +96,12 @@ console.log(`Artifact metadata check passed (${metadata.artifacts.length} tracke
 const registryPath = 'docs/solver-research-data-assets.json';
 const contractPath = 'docs/solver-research-resource-contract-audits.json';
 const researchFailures = [];
+const BASELINE_AUDITED_RESOURCE_IDS = new Set([
+  'hint-provenance',
+  'variant-family-data',
+  'solution-space-profiles',
+  'stress-corpora',
+]);
 const catalogueArrayFields = [
   'grain', 'locations', 'authorities', 'queryEntryPoints', 'joinKeys', 'evidenceRoles',
   'relatedAssets', 'affordances', 'caveats',
@@ -193,6 +199,10 @@ if (contract) {
     for (const requiredId of requiredIds) {
       if (!assetIds.has(requiredId)) researchFailures.push(`required audited resource is not in registry: ${requiredId}`);
       if (!auditedIds.has(requiredId)) researchFailures.push(`required audited resource has no declaration: ${requiredId}`);
+    }
+    for (const baselineId of BASELINE_AUDITED_RESOURCE_IDS) {
+      if (!requiredIds.has(baselineId)) researchFailures.push(`baseline audited resource was silently removed from requiredAuditedResources: ${baselineId}`);
+      if (!auditedIds.has(baselineId)) researchFailures.push(`baseline audited resource lost its declaration: ${baselineId}`);
     }
   }
 }
