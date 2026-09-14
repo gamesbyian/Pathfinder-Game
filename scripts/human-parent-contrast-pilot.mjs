@@ -17,7 +17,8 @@
  * Defaults:
  *   --parent-corpus=data/levels.json
  *   --parent-exposure=unknown
- *   output under tmp/human-parent-contrasts/<question>/
+ *   family output under one shared tmp/human-parent-contrasts/families/ ID namespace
+ *   research context under tmp/human-parent-contrasts/contexts/<question>/
  *
  * Confirmation/transfer claims require --parent-exposure=locked-untouched. This does not magically
  * prove independence; it forces the caller to make the claim explicit before outcomes exist.
@@ -74,11 +75,12 @@ const slug = question
     .slice(0, 72) || 'question';
 const safeParent = parent.replace(/[^A-Za-z0-9._-]+/g, '_');
 const safeMode = mode.replace(/[^A-Za-z0-9._-]+/g, '_');
-const baseDir = path.join('tmp', 'human-parent-contrasts', slug);
-const defaultOut = path.join(baseDir, `family-${safeParent}-${safeMode}.json`);
+const familyDir = path.join('tmp', 'human-parent-contrasts', 'families');
+const contextDir = path.join('tmp', 'human-parent-contrasts', 'contexts', slug);
+const defaultOut = path.join(familyDir, `family-${safeParent}-${safeMode}-${slug}.json`);
 const out = values.get('--out') || defaultOut;
 const manifestOut = values.get('--manifest-out') || out.replace(/\.json$/i, '-manifest.json');
-const contextOut = values.get('--context-out') || out.replace(/\.json$/i, '-research-context.json');
+const contextOut = values.get('--context-out') || path.join(contextDir, `family-${safeParent}-${safeMode}-research-context.json`);
 
 const wrapperOnly = new Set([
     '--question', '--evidence-role', '--parent-exposure', '--context-out', '--dry-run',
@@ -103,6 +105,7 @@ const context = {
         solverOutcomeFiltering: false,
         output: out,
         familyManifest: manifestOut,
+        siblingIdNamespace: path.dirname(out),
     },
     witnessInterpretation: 'admissibility-and-solvability-certificate-only',
     interpretationRules: [
@@ -110,6 +113,7 @@ const context = {
         'Split discovery, confirmation and transfer by whole parent family.',
         'A preserved witness proves at least one valid solution, not the complete solution-space structure.',
         'Once outcomes influence treatment design, that parent family is development evidence for descendants of the decision.',
+        'Persistent families generated in separate worktrees must be reconciled through a collision-safe shared variant-ID namespace before datasets are combined.',
     ],
 };
 
