@@ -22,7 +22,6 @@ jobs:
         run: |
           from pathlib import Path
 
-          # Current evidence authority: corpus labels do not imply distributional independence.
           p = Path('docs/solver-evaluation-evidence.md')
           s = p.read_text()
           old = '| Corpus 1 | development/diagnosis; batches B/C/D/F can still be solver-blind at generation time, but repeated project use matters |'
@@ -34,38 +33,30 @@ jobs:
           assert old in s
           s = s.replace(old, new, 1)
           marker = 'Roles are claim-relative. A population can be untouched for one candidate and development data for a\ndescendant after its results influence redesign.\n'
-          addition = marker + '\nCorpus membership also has selection history. The July-10/11 reconstruction is current authority at [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md): generation can be solver-blind while later corpus membership is solver-outcome-selected. Do not infer distributional independence from a corpus filename.\n'
           assert marker in s
-          s = s.replace(marker, addition, 1)
+          s = s.replace(marker, marker + '\nCorpus membership also has selection history. The July-10/11 reconstruction is current authority at [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md): generation can be solver-blind while later corpus membership is solver-outcome-selected. Do not infer distributional independence from a corpus filename.\n', 1)
           p.write_text(s)
 
-          # Stress-corpus workflow contract: record the outcome-conditioned migration explicitly.
           p = Path('data/stress/README.md')
           s = p.read_text()
           marker = '- 79 retained generator-1.1.0 rows whose provenance reports `random-uniform-v1` and no A-F batch.\n'
-          addition = marker + '\nThose 79 rows are also **selection-conditioned**: on 2026-07-10, PR #1182 moved 300 rows from the original 2,000-level random corpus into Corpus 1 specifically because the then-current solver solved them. The next day\'s square-grid cleanup retained 79. Generation provenance therefore does not tell the whole evidence story; see [`../../docs/solver-corpus-selection-provenance.md`](../../docs/solver-corpus-selection-provenance.md). Whole Corpus 1 must not be treated as a cross-generator population relative to Corpus 2.\n'
           assert marker in s
-          s = s.replace(marker, addition, 1)
+          s = s.replace(marker, marker + '\nThose 79 rows are also **selection-conditioned**: on 2026-07-10, PR #1182 moved 300 rows from the original 2,000-level random corpus into Corpus 1 specifically because the then-current solver solved them. The next day\'s square-grid cleanup retained 79. Generation provenance therefore does not tell the whole evidence story; see [`../../docs/solver-corpus-selection-provenance.md`](../../docs/solver-corpus-selection-provenance.md). Whole Corpus 1 must not be treated as a cross-generator population relative to Corpus 2.\n', 1)
           marker = 'The corpus has been regenerated/cleaned historically. Do not infer content or chronology from the\nnumeric suffix of an `R` ID. Use the level data and provenance.\n'
-          addition = 'The corpus has been regenerated/cleaned historically. On 2026-07-10 the 1,700 rows then left in Corpus 2 were the unsolved/timeout complement after 300 solver-positive random rows were migrated to Corpus 1. The 2026-07-11 square-grid cleanup retained 328 of those old rows and generated 1,372 replacements. Thus current Corpus 2 is not one prospective July-9 draw even before later research mining. See [`../../docs/solver-corpus-selection-provenance.md`](../../docs/solver-corpus-selection-provenance.md).\n\nDo not infer content or chronology from the numeric suffix of an `R` ID. Use the level data and provenance.\n'
           assert marker in s
-          s = s.replace(marker, addition, 1)
+          s = s.replace(marker, 'The corpus has been regenerated/cleaned historically. On 2026-07-10 the 1,700 rows then left in Corpus 2 were the unsolved/timeout complement after 300 solver-positive random rows were migrated to Corpus 1. The 2026-07-11 square-grid cleanup retained 328 of those old rows and generated 1,372 replacements. Thus current Corpus 2 is not one prospective July-9 draw even before later research mining. See [`../../docs/solver-corpus-selection-provenance.md`](../../docs/solver-corpus-selection-provenance.md).\n\nDo not infer content or chronology from the numeric suffix of an `R` ID. Use the level data and provenance.\n', 1)
           p.write_text(s)
 
-          # Data-asset registry: expose selection ancestry as a first-class caveat.
           p = Path('docs/solver-research-data-assets.json')
           s = p.read_text()
           old = '"Separate solver-aware Corpus-1 batches, solver-blind Corpus 2, and the in-envelope stratum when checking robustness."'
-          new = '"Stratify by both generation ancestry and later population-selection history; corpus filenames do not imply distributional independence."'
           assert old in s
-          s = s.replace(old, new, 1)
+          s = s.replace(old, '"Stratify by both generation ancestry and later population-selection history; corpus filenames do not imply distributional independence."', 1)
           old = '"Corpus 2 has been heavily mined and is a development/capability laboratory rather than untouched evidence.",\n        "Rows from the same generator or family may not be independent for a broad claim."'
-          new = '"Corpus 2 has been heavily mined and is a development/capability laboratory rather than untouched evidence.",\n        "Corpus 1 includes 79 current random-uniform rows selected for historical solver success; whole Corpus 1 is not a cross-generator source relative to Corpus 2.",\n        "Current Corpus 2 includes 328 survivors from the historical solver-negative random complement plus 1,372 later replacement rows.",\n        "Rows from the same generator or family may not be independent for a broad claim."'
           assert old in s
-          s = s.replace(old, new, 1)
+          s = s.replace(old, '"Corpus 2 has been heavily mined and is a development/capability laboratory rather than untouched evidence.",\n        "Corpus 1 includes 79 current random-uniform rows selected for historical solver success; whole Corpus 1 is not a cross-generator source relative to Corpus 2.",\n        "Current Corpus 2 includes 328 survivors from the historical solver-negative random complement plus 1,372 later replacement rows.",\n        "Rows from the same generator or family may not be independent for a broad claim."', 1)
           p.write_text(s)
 
-          # Historical September transfer report: preserve raw result, correct its evidence role.
           p = Path('reports/2026-09-03-portfolio-18-tranche-v2-cross-generator-001-preflight.md')
           lines = p.read_text().splitlines()
           for i, line in enumerate(lines):
@@ -86,28 +77,11 @@ jobs:
           ]
           lines[insert_at:insert_at] = correction
           p.write_text('\n'.join(lines) + '\n')
-
-          # Current execution authority: retire the stale transfer interpretation without erasing chronology.
-          p = Path('docs/solver-optimization-workstreams.md')
-          s = p.read_text()
-          old = '**2026-09-03: cross-generator transfer check complete**'
-          new = '**2026-09-13 correction: the September-3 whole-Corpus-1 run did not establish cross-generator transfer**'
-          assert old in s
-          s = s.replace(old, new, 1)
-          old = 'The no-regression/work-saving property transfers to a genuinely different generator; the magnitude of advantage over `full-menu` specifically appears Corpus-2-calibrated, not universal'
-          new = 'Fresh ancestry reanalysis shows that interpretation was invalid: on the genuine 23-row A-F stratum all three arms solve 22/23 and tranche-v2 costs 29.92% more work than full-menu; the whole-C1 work saving and all tranche/full coverage churn come from 79 migrated same-generator rows selected for historical solver success'
-          assert old in s
-          s = s.replace(old, new, 1)
-          old = '**The next real gate is a production-wiring decision**'
-          new = '**Do not count this run as a completed cross-generator promotion gate; if that historical promotion claim matters again, it requires genuinely independent transfer evidence. The production-wiring question is separate.**'
-          assert old in s
-          s = s.replace(old, new, 1)
-          p.write_text(s)
       - name: Commit corrections
         run: |
           git config user.name gamesbyian
           git config user.email ianmakesjokes@gmail.com
-          git add docs/solver-evaluation-evidence.md docs/solver-optimization-workstreams.md docs/solver-research-data-assets.json data/stress/README.md reports/2026-09-03-portfolio-18-tranche-v2-cross-generator-001-preflight.md
+          git add docs/solver-evaluation-evidence.md docs/solver-research-data-assets.json data/stress/README.md reports/2026-09-03-portfolio-18-tranche-v2-cross-generator-001-preflight.md
           git diff --cached --check
           git commit -m "Apply corpus selection-history corrections"
           git push origin HEAD:chatgpt/stress-corpus-fresh-reconstruction-audit-2026-09-13
