@@ -1,5 +1,5 @@
 const RANDOM_CORPUS_NAME = 'random-uniform-v1';
-const SQUARE_CLEANUP_APPEND_SEED = 20260711;
+const C2_SQUARE_CLEANUP_FIRST_REPLACEMENT_NUMBER = 1998;
 
 function history(level) {
     return Array.isArray(level?.provenance?.history) ? level.provenance.history : [];
@@ -52,26 +52,17 @@ function stress1Lineage(level) {
     };
 }
 
-function squareCleanupAppend(metadata) {
-    const appendHistory = Array.isArray(metadata?.appendHistory) ? metadata.appendHistory : [];
-    if (!appendHistory.length) return null;
-    return appendHistory.find(entry => entry?.masterSeed === SQUARE_CLEANUP_APPEND_SEED) ?? appendHistory[0];
-}
+function stress2Lineage(level) {
+    const idMatch = /^R(\d+)$/.exec(level?.id ?? '');
+    const idNumber = idMatch ? Number(idMatch[1]) : null;
 
-function stress2Lineage(level, metadata, context) {
-    const cleanupAppend = squareCleanupAppend(metadata);
-    const appendedRows = Number.isInteger(cleanupAppend?.count) ? cleanupAppend.count : 0;
-    const position = context?.position;
-    const totalLevels = context?.totalLevels;
-
-    // The July-11 append implementation preserved every surviving row byte-for-byte and appended
-    // replacements after them. Row provenance was copied from the original random generator and
-    // therefore cannot distinguish the two eras. The square-cleanup append count plus current
-    // array position is the durable reconstruction boundary: 328 retained rows + 1,372 appended.
-    // Do not sum later appendHistory entries: a future append must not retroactively move this cut.
-    if (Number.isInteger(position) && Number.isInteger(totalLevels) && appendedRows > 0 && appendedRows < totalLevels) {
-        const firstAppendedPosition = totalLevels - appendedRows;
-        if (position < firstAppendedPosition) {
+    // The July-11 cleanup preserved the 328 square survivors in place. Its append generator then
+    // continued IDs after the highest survivor (R01997), so the first replacement is R01998 and
+    // every later replacement/append remains above that boundary. Unlike `current total - 1372`,
+    // this identity boundary survives later appends and row reordering. The ordinary corpus-query
+    // test guards the independently reconstructed 328 / 1,372 current counts.
+    if (Number.isInteger(idNumber)) {
+        if (idNumber < C2_SQUARE_CLEANUP_FIRST_REPLACEMENT_NUMBER) {
             return {
                 stratum: 'c2-original-random-solver-negative-survivor',
                 selectionConditioning: ['historical-production-failure', 'square-grid-retention'],
@@ -97,13 +88,12 @@ function stress2Lineage(level, metadata, context) {
 
 /**
  * Current standing-corpus selection lineage established by the 2026-09-13 reconstruction audit.
- * `context.position` is zero-based corpus-array position; `context.totalLevels` is the current row
- * count. This is offline evidence metadata only and must never become a cold-solver routing feature.
+ * This is offline evidence metadata only and must never become a cold-solver routing feature.
  */
 export function classifyCorpusSelectionLineage(source, level, metadata = null, context = {}) {
     const key = String(source ?? '').toLowerCase();
     if (key === 'stress1' || key === 'corpus1') return stress1Lineage(level);
-    if (key === 'stress2' || key === 'corpus2') return stress2Lineage(level, metadata, context);
+    if (key === 'stress2' || key === 'corpus2') return stress2Lineage(level);
     if (key === 'published') {
         return {
             stratum: 'published-selection-history-mixed',
