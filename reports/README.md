@@ -38,13 +38,15 @@ Check:
 - level-blindness versus confirmation/generalization status;
 - `workSpent`/budget comparability and deadline censoring;
 - family/generator dependence and independent unit;
+- evidence ancestry before counting confirmations: family generation, replay/imported hints, Solution Profiles, and path-derived diagnostics can be descendants of one observation rather than independent votes;
+- perturbation response versus latent cause: resistance across generated siblings/attempt profiles is a descriptive phenotype, not by itself proof of intrinsic combinatorial hardness or a specific missing capability;
 - later attribution/telemetry/provenance corrections;
 - proxy metric versus product objective;
 - explicit supersession/correction by newer evidence;
 - historical identity normalization and actual nonzero treatment participation;
 - whether a revert or null closed a premise, only one formulation, or merely a broken/non-participating treatment.
 
-Reproducible selected-on evidence remains selected-on evidence.
+Reproducible selected-on evidence remains selected-on evidence. See [`2026-09-14-historical-claim-lineage-audit-001.md`](2026-09-14-historical-claim-lineage-audit-001.md) for the ancestry-collapse audit behind these reuse rules.
 
 ## Current solver authorities
 
