@@ -7,7 +7,7 @@
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Method:** [`solver-research-operating-model.md`](solver-research-operating-model.md) and [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
-Do not duplicate the machine registry here. This file explains safe cross-asset use. The older catalogue is frozen at [`archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md).
+Do not duplicate the machine registry here. This file explains safe cross-asset use. The older catalogue is frozen at [`archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md). Human/editor-parent contrasts remain variant-family data; [`human-parent-contrast-research.md`](human-parent-contrast-research.md) owns their source/exposure interpretation.
 
 ## Cheap discovery first
 
@@ -49,7 +49,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 | Operational traces | encountered decision | How did searches diverge? |
 | Exact/reference labels | level × state/prefix | Is selected material feasible? |
 | Offline replay atlas | labelled state × probe | Can a candidate reasoner explain/use exact labels? |
-| Variant families | parent × controlled transform | Which controlled structural changes flip behavior? |
+| Variant families, including human/editor-parent contrasts | parent × controlled transform | Which controlled structural changes flip behavior? |
 | Experiment manifests | run/arm/shard | Which code/data/protocol produced an observation? |
 | Raw logs/baselines | raw run/snapshot | What happened before interpretation? |
 | Research-status index | report/workstream/experiment | Has this been tested/renamed? |
@@ -57,7 +57,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, hint provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Use the smallest join that answers the gate.
+Useful joins include census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, hint provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Human-parent joins preserve parent source/exposure and use whole parents as independent units. Use the smallest join that answers the gate.
 
 ### Four-resource lineage recipe
 
@@ -85,7 +85,7 @@ Hints, known solutions, exact labels, census winners, historical costs, family o
 
 Solver-blind generation does not make later corpus membership independent. Current C1 is 23 surviving old A-F rows plus 79 random-generator rows selected for historical solver success, so whole C1 is not cross-generator transfer against C2. Current C2 combines 328 survivors from a historical solver-negative complement with 1,372 later replacements; it is a strong development laboratory, not one prospective untouched draw. See [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md).
 
-A residual or participant cohort supports the conditional question it was selected for, not unconditional mechanic prevalence. Level-blindness alone does not establish sample or distributional generalization.
+A residual or participant cohort supports the conditional question it was selected for, not unconditional mechanic prevalence. Level-blindness alone does not establish sample or distributional generalization. Human/editor parents add a distinct source, not automatic independence: siblings remain correlated, preserved witnesses prove solvability only, and a parent whose outcomes influenced design is development evidence for descendants.
 
 ### Solution profiles are sample profiles
 
@@ -107,7 +107,7 @@ Historical capability may survive code drift as forensic nomination, but current
 
 ## Asset maintenance
 
-When a durable evidence family changes, update [`solver-research-data-assets.json`](solver-research-data-assets.json), not parallel prose. Registry entries should own stable ID/status, grain/independent unit, locations/authorities, query entry points, join keys, related assets, evidence roles, and leakage/freshness/selection caveats.
+When a durable evidence family changes, update [`solver-research-data-assets.json`](solver-research-data-assets.json), not parallel prose. Registry entries should own stable ID/status, grain/independent unit, locations/authorities, query entry points, join keys, related assets, evidence roles, and leakage/freshness/selection caveats. Human/editor contrasts stay under `variant-family-data` unless they create a genuinely separate persisted interface.
 
 When a focused resource audit changes scientific semantics, also update its audit-grade declaration under [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy the closeout gate in [`solver-research-resource-contract.md`](solver-research-resource-contract.md). Do not mark unaudited resources “audited” by filling unknown fields with guesses.
 
