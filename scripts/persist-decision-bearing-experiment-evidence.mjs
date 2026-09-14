@@ -57,7 +57,7 @@ function findDecisionBearingManifests(root) {
     .filter(({ manifest }) => manifest?.kind === 'pathfinder-solver-experiment-result' && manifest?.schemaVersion === 3 && manifest?.decisionBearing === true);
 }
 
-function copyEvidenceFile(source, artifactRoot, destinationRoot, logicalRelative, files, compressAboveBytes) {
+function copyEvidenceFile(source, artifactRoot, destinationRoot, logicalRelative, files, compressAboveBytes, { allowCompression = true } = {}) {
   const resolved = path.resolve(source);
   if (!isInside(artifactRoot, resolved)) throw new Error(`evidence path escapes artifact root: ${source}`);
   if (!fs.existsSync(resolved)) throw new Error(`decision-bearing evidence file is missing: ${source}`);
@@ -65,16 +65,17 @@ function copyEvidenceFile(source, artifactRoot, destinationRoot, logicalRelative
   if (stat.isDirectory()) {
     for (const child of walk(resolved)) {
       const nested = path.join(logicalRelative, path.relative(resolved, child));
-      copyEvidenceFile(child, artifactRoot, destinationRoot, nested, files, compressAboveBytes);
+      copyEvidenceFile(child, artifactRoot, destinationRoot, nested, files, compressAboveBytes, { allowCompression });
     }
     return;
   }
 
   const bytes = fs.readFileSync(resolved);
   const relative = logicalRelative.replaceAll('\\', '/');
-  const shouldCompress = bytes.length > compressAboveBytes;
+  const shouldCompress = allowCompression && bytes.length > compressAboveBytes;
   const storedRelative = shouldCompress ? `${relative}.gz` : relative;
-  const destination = path.join(destinationRoot, storedRelative);
+  const destination = path.resolve(destinationRoot, storedRelative);
+  if (!isInside(destinationRoot, destination)) throw new Error(`retained evidence path escapes destination root: ${storedRelative}`);
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   if (shouldCompress) fs.writeFileSync(destination, zlib.gzipSync(bytes, { level: 9, mtime: 0 }));
   else fs.writeFileSync(destination, bytes);
@@ -103,11 +104,12 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
     fs.mkdirSync(destinationRoot, { recursive: true });
 
     const files = [];
-    copyEvidenceFile(manifestFile, artifactRoot, destinationRoot, 'manifest.json', files, compressAboveBytes);
+    copyEvidenceFile(manifestFile, artifactRoot, destinationRoot, 'manifest.json', files, compressAboveBytes, { allowCompression: false });
     for (const entry of manifest.entries || []) {
       if (entry?.missing || !entry?.published) continue;
       const source = path.resolve(artifactRoot, entry.published);
-      const logical = path.join('evidence', entry.role || 'entry', entry.published);
+      const role = safeSegment(entry.role, 'entry');
+      const logical = path.join('evidence', role, entry.published);
       copyEvidenceFile(source, artifactRoot, destinationRoot, logical, files, compressAboveBytes);
     }
 
@@ -153,7 +155,7 @@ function selfTest() {
       experiment: { experimentId: 'fixture/experiment', workflowFamily: 'fixture', workflowRunId: '123', workflowRunAttempt: '2', resolvedSha: 'a'.repeat(40), configurationHash: `sha256:${'b'.repeat(64)}` },
       population: { identityHash: `sha256:${'c'.repeat(64)}` },
       researchOutcome: { outcome: 'completed-positive' },
-      entries: [{ role: 'primary', source: 'fixture', published: 'result.json', missing: false }],
+      entries: [{ role: '../primary', source: 'fixture', published: 'result.json', missing: false }],
     };
     fs.writeFileSync(path.join(artifact, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
     fs.writeFileSync(path.join(ignored, 'manifest.json'), JSON.stringify({ ...manifest, decisionBearing: false }));
@@ -164,10 +166,15 @@ function selfTest() {
     const bundle = JSON.parse(fs.readFileSync(path.join(destination, 'bundle.json'), 'utf8'));
     assert.equal(bundle.decisionBearing, true);
     assert.equal(bundle.files.length, 2);
+    const manifestRecord = bundle.files.find(file => file.source === 'manifest.json');
+    assert.ok(manifestRecord);
+    assert.equal(manifestRecord.compression, 'none');
+    assert.equal(manifestRecord.stored, 'manifest.json');
     const primaryRecord = bundle.files.find(file => file.source === 'result.json');
     assert.ok(primaryRecord);
     assert.equal(primaryRecord.sha256, sha256(primary));
     assert.equal(primaryRecord.compression, 'gzip');
+    assert.ok(primaryRecord.stored.startsWith('evidence/primary/'));
     assert.deepEqual(zlib.gunzipSync(fs.readFileSync(path.join(destination, primaryRecord.stored))), primary);
     assert.equal(fs.existsSync(path.join(output, 'experiment__run-123__attempt-2')), false);
     console.log('persist decision-bearing experiment evidence self-test passed');
