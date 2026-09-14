@@ -13,6 +13,10 @@ on:
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
+      - 'Solver broad confirmation cohort'
+      - 'Solver two-phase residual confirmation'
+      - 'Static portfolio confirmation A/B'
+      - 'Solver combine sweep runs (cross-run reconciliation)'
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -28,8 +32,8 @@ on:
         required: false
         default: ''
 
-# Source runs may finish together. Keep one semantic writer for the canonical hint store so two
-# provenance updates to the same level can never devolve into last-writer-wins JSON commits.
+# Source runs may finish together. Keep one semantic writer for canonical solver evidence so two
+# provenance/retention updates can never devolve into last-writer-wins generated-file commits.
 concurrency:
   group: canonical-solver-hint-persistence
   cancel-in-progress: false
@@ -37,7 +41,7 @@ concurrency:
 jobs:
   harvest:
     # Harvest even from a partially failed/cancelled run: shard jobs write reports incrementally and
-    # upload in always() steps, so useful solves can exist before the overall workflow turns red.
+    # upload in always() steps, so useful evidence can exist before the overall workflow turns red.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -76,7 +80,7 @@ jobs:
           # artifact, which is exactly the shape the semantic importers expect.
           gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir artifact-staging
 
-      - name: Merge all recoverable hint and decision-bearing experiment evidence onto latest main
+      - name: Merge recoverable solver evidence onto latest main
         shell: bash
         env:
           SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
@@ -87,36 +91,51 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
-          # Never rebase competing JSON edits line-by-line. On a race, reset to the new main and
-          # replay every semantic importer from the immutable source artifacts.
+          # Broad/residual confirmation and reconciliation populations are experiment evidence, not
+          # canonical hint sources. They still pass through the durable decision-bearing retention
+          # layer, but deliberately skip all three hint importers.
+          HARVEST_HINTS=1
+          case "$SOURCE_WORKFLOW" in
+            'Solver broad confirmation cohort'|\
+            'Solver two-phase residual confirmation'|\
+            'Static portfolio confirmation A/B'|\
+            'Solver combine sweep runs (cross-run reconciliation)')
+              HARVEST_HINTS=0
+              ;;
+          esac
+
+          # Never rebase competing generated evidence line-by-line. On a race, reset to the new main
+          # and replay every semantic importer from the immutable source artifacts.
           for attempt in 1 2 3 4; do
             git fetch origin main
             git reset --hard origin/main
 
-            # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
-            # canonical hint files in shard artifacts. Merge them structurally and referee-check
-            # every incoming path across published, corpus-1 and corpus-2 hint stores.
-            node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
-              --staging-dir=artifact-staging \
-              --source-run-id="$SOURCE_RUN_ID" \
-              --source-workflow="$SOURCE_WORKFLOW"
+            if [[ "$HARVEST_HINTS" == '1' ]]; then
+              # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
+              # canonical hint files in shard artifacts. Merge them structurally and referee-check
+              # every incoming path across published, corpus-1 and corpus-2 hint stores.
+              node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
+                --staging-dir=artifact-staging \
+                --source-run-id="$SOURCE_RUN_ID" \
+                --source-workflow="$SOURCE_WORKFLOW"
 
-            # Artifact-only level-blind workflows still retain solved paths and winning attempts in
-            # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
-            # quarantined on main, never discarded or attributed to the wrong level revision.
-            node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
-              --staging-dir=artifact-staging \
-              --source-run-id="$SOURCE_RUN_ID" \
-              --source-workflow="$SOURCE_WORKFLOW"
+              # Artifact-only level-blind workflows still retain solved paths and winning attempts in
+              # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
+              # quarantined on main, never discarded or attributed to the wrong level revision.
+              node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
+                --staging-dir=artifact-staging \
+                --source-run-id="$SOURCE_RUN_ID" \
+                --source-workflow="$SOURCE_WORKFLOW"
 
-            # Direct/isolated tools serialize their valid paths too. Keep them with
-            # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
-            # capability evidence.
-            node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
-              --staging-dir=artifact-staging \
-              --source-run-id="$SOURCE_RUN_ID" \
-              --source-workflow="$SOURCE_WORKFLOW" \
-              --source-sha="$SOURCE_SHA"
+              # Direct/isolated tools serialize their valid paths too. Keep them with
+              # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
+              # capability evidence.
+              node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
+                --staging-dir=artifact-staging \
+                --source-run-id="$SOURCE_RUN_ID" \
+                --source-workflow="$SOURCE_WORKFLOW" \
+                --source-sha="$SOURCE_SHA"
+            fi
 
             # A decision-bearing v3 result has already passed the experiment contract, population
             # integrity and research-outcome gates. Preserve that exact manifest plus its published
