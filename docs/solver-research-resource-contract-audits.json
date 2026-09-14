@@ -31,6 +31,7 @@
       "selectionConditioning": [
         "hint storage is success-selected at the path/event level",
         "variant-parent replay can create large dependent rediscovery clouds",
+        "variant-parent replay can also populate the same stored-path sample later summarized by Solution Profiles, so replay provenance and profile support can be two representations of one lineage",
         "external, witness, guided, isolated, exhaustive, randomized and production-retry contexts are distinct facets rather than one trust rank"
       ],
       "admissibleEvidencePurposes": [
@@ -60,6 +61,7 @@
         "scripts/hint-query.mjs and shared provenance applicability/dependency helpers",
         "scripts/stress/hint-provenance-evidence-report.mjs",
         "solution-profile provenance bucketing and representative selection",
+        "scripts/cross-resource-observability-audit.mjs for family/replay/profile ancestry checks",
         "winning-path/residual/portal-parity/crossing-slack research consumers that select stored paths",
         "any current-capability or historical-cost analysis joining hint provenance to solver evidence"
       ],
@@ -68,7 +70,8 @@
         "reports/2026-09-13-historical-evidence-reevaluation-ledger.md"
       ],
       "auditAuthorities": [
-        "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md"
+        "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md",
+        "reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md"
       ],
       "prospectiveProducerFixes": [
         "where practical, reference the originating experiment/run manifest so attempted denominator, failures, protocol identity and work semantics can be recovered"
@@ -103,6 +106,7 @@
         "generation is selected by operator eligibility, placement attempts, witness/referee checks and deduplication",
         "historical family census often retained whole-ladder winners rather than per-technique counterfactual outcomes",
         "replayed parent solutions are derivative evidence rather than independent rediscovery",
+        "variant-to-parent replay can contribute paths to the current Solution Profile sample, making a family-to-current-profile join downstream-dependent unless path ancestry is filtered or modeled",
         "mixed-era observations can differ because solver/config/budget changed rather than because the variant changed"
       ],
       "admissibleEvidencePurposes": [
@@ -111,7 +115,7 @@
         "forensic localization of structural cliffs",
         "not a substitute for current-code evaluation when only historical solver outcomes are available"
       ],
-      "dependenceModel": "Sibling variants share parent ancestry, generator campaign, transformation logic and often replayed solution evidence. Treat parent as the independent unit for generalization and keep campaign/mode denominators visible for prevalence claims.",
+      "dependenceModel": "Sibling variants share parent ancestry, generator campaign, transformation logic and often replayed solution evidence. Treat parent as the independent unit for generalization and keep campaign/mode denominators visible for prevalence claims. When family replay contributed the paths summarized by a current Solution Profile, family and profile evidence share causal ancestry rather than providing independent corroboration.",
       "missingnessSemantics": [
         "missing per-technique historical outcomes are unavailable counterfactuals, not failures",
         "missing run identity/config/budget prevents treating mixed-era observations as comparable",
@@ -130,6 +134,7 @@
       "consumerInventory": [
         "scripts/family-index.mjs and family query/show/coverage tools",
         "family census and analysis tooling",
+        "scripts/cross-resource-observability-audit.mjs for family/replay/profile ancestry checks",
         "solver workstreams using family variants for causal follow-up, retention, repair or generalization",
         "research-asset-query registry consumers"
       ],
@@ -139,7 +144,8 @@
       ],
       "auditAuthorities": [
         "reports/2026-09-12-variant-library-evidence-audit-001.md",
-        "reports/2026-09-13-variant-library-resource-integration-audit-002.md"
+        "reports/2026-09-13-variant-library-resource-integration-audit-002.md",
+        "reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md"
       ],
       "prospectiveProducerFixes": [
         "retain invocation-local requested/attempted/accepted/budget counters inside each generationRuns record",
@@ -167,6 +173,7 @@
       ],
       "selectionConditioning": [
         "profiles summarize the stored known-solution sample, whose membership depends on discovery/provenance history",
+        "variant-parent replay is a major upstream contributor to current stored samples and can make a full profile downstream evidence of the family pipeline",
         "provenance-source composition can change apparent diversity/order/chronology",
         "nearest-neighbour/profile analyses can add further analyst selection pressure and remain exploratory until independently calibrated"
       ],
@@ -176,7 +183,7 @@
         "historical/forensic study of stored solution samples",
         "not whole-solution-space truth, structural rigidity proof, calibrated confidence, or direct production routing"
       ],
-      "dependenceModel": "Solutions within a level are a sample from one puzzle and often share discovery lineage. Treat support/chronology/provenance composition as part of the observation; do not turn solution count into independent puzzle support.",
+      "dependenceModel": "Solutions within a level are a sample from one puzzle and often share discovery lineage. Treat support/chronology/provenance composition as part of the observation; do not turn solution count into independent puzzle support. When the family pipeline is the putative cause, distinguish replay-first from later replay rediscovery and prefer a lineage-filtered non-replay-first sample or explicitly classify the full current profile as downstream/dependent evidence.",
       "missingnessSemantics": [
         "unsupported sparse axes are unavailable, not zero",
         "one-path pairwise diversity/distinctiveness is unsupported rather than measured zero",
@@ -196,6 +203,7 @@
       "consumerInventory": [
         "scripts/stress/solution-profile-lib.mjs",
         "stress:solution-profile and stress:solution-profile-compare",
+        "scripts/cross-resource-observability-audit.mjs for profile-materialization and replay-ancestry checks",
         "census/profile joins and nearest-profile exploratory analyses",
         "historical reports that consumed legacy rigidity, plateau, completeness or nearest-profile fields"
       ],
@@ -204,7 +212,8 @@
         "reports/2026-09-13-historical-evidence-reevaluation-ledger.md"
       ],
       "auditAuthorities": [
-        "reports/2026-09-13-solution-profile-resource-audit-001.md"
+        "reports/2026-09-13-solution-profile-resource-audit-001.md",
+        "reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md"
       ],
       "prospectiveProducerFixes": [
         "separate mechanics-applicability/comparable-axis coverage from statistical sample/stability support instead of allowing one nominal coverage measure to imply both"
@@ -228,6 +237,7 @@
         "data/stress/README.md",
         "scripts/stress/generate.mjs and scripts/stress/generate-random.mjs",
         "docs/solver-corpus-selection-provenance.md",
+        "scripts/corpus-selection-lineage.mjs for the current standing C1/C2 selection strata",
         "decision-bearing population manifests/reports"
       ],
       "selectionConditioning": [
@@ -261,7 +271,9 @@
         "pre-contract decision exposure often requires report/manifest archaeology because raw mentions cannot distinguish influence from bookkeeping"
       ],
       "consumerInventory": [
-        "scripts/corpus-query.mjs and stress corpus validation/benchmark tooling",
+        "scripts/corpus-query.mjs and scripts/corpus-selection-lineage.mjs",
+        "stress corpus validation/benchmark tooling",
+        "scripts/cross-resource-observability-audit.mjs for selection-stratified ancestry joins",
         "docs/solver-evaluation-evidence.md and solver-corpus-selection-provenance.md",
         "managed confirmation/transfer population manifests",
         "all solver research reports that infer beyond exact tested stress rows"
@@ -277,7 +289,8 @@
         "reports/2026-09-13-stress-corpus-research-resource-audit.md",
         "reports/2026-09-13-stress-corpus-population-validity-audit.md",
         "reports/2026-09-13-stress-corpus-selection-history-reconstruction-audit.md",
-        "reports/2026-09-13-decision-exposure-genealogy-audit-001.md"
+        "reports/2026-09-13-decision-exposure-genealogy-audit-001.md",
+        "reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md"
       ],
       "prospectiveProducerFixes": [
         "record selection/conditioning events separately from generation ancestry, including which side/outcome conditioned membership",

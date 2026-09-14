@@ -17,7 +17,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 node scripts/tooling-census.mjs --compact --query=<term>
 ```
 
-Use `research-asset-query --id=<asset-id>` for exact registry detail. Compact results now expose `contractGrade`, `independentUnit`, and audit authorities when a resource has been audited; `--full` includes the complete audited-resource declaration.
+Use `research-asset-query --id=<asset-id>` for exact registry detail. Compact results expose `contractGrade`, `independentUnit`, and audit authorities when audited; `--full` includes the complete declaration.
 
 ## Required evidence preflight
 
@@ -57,7 +57,15 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include census × lifecycle, census × profiles, census × variants/traces/static descriptors, benchmark × lifecycle, benchmark/history × capability memory, hint provenance × profile/census, structural fingerprint × persisted evidence, exact labels × traces/prefix survival, and manifests × decision-bearing runs. These are opportunities, not mandatory ritual. Use the smallest join that answers the gate.
+Useful joins include census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, hint provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Use the smallest join that answers the gate.
+
+### Four-resource lineage recipe
+
+For corpus × family × provenance × profile questions, treat the join as one causal lineage: corpus selection defines the population; family identity the intervention; provenance how paths entered the sample; the Solution Profile summarizes that sample. A replayed parent path may therefore appear as family evidence, provenance, and profile support without becoming three observations.
+
+The September 14 census found every current published/C1/C2 parent replay-touched and replay as the earliest dated discovery for roughly three quarters of stored paths. When family effects are the question, distinguish **replay-touched** from **replay-first** and prefer non-replay-first profile evidence, or label the full profile downstream/dependent. Full profiles remain valid descriptions of the current known sample.
+
+Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters. Missing or partial family mounts remain unavailable, not negative evidence. See the [`audit`](../reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md) and [`machine summary`](../reports/2026-09-14-cross-resource-observability-summary-001.json).
 
 ## Three different fingerprints
 

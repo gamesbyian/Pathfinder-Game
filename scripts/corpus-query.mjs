@@ -6,7 +6,12 @@ const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name
 const number = name => { const raw = value(name); return raw == null ? null : Number(raw); };
 const source = value('corpus') ?? 'stress2';
 const { path, levels, metadata } = loadCorpus(process.cwd(), source);
-const descriptors = levels.map(describeLevel);
+const descriptors = levels.map((level, position) => describeLevel(level, {
+    source,
+    metadata,
+    position,
+    totalLevels: levels.length,
+}));
 const ids = (value('id') ?? value('ids') ?? '').split(',').filter(Boolean);
 let matches = filterLevelDescriptors(descriptors, {
     ids,
@@ -18,6 +23,7 @@ let matches = filterLevelDescriptors(descriptors, {
     action: value('action'),
     generatorVersion: value('generator-version'),
     corpusName: value('corpus-name'),
+    selectionStratum: value('selection-stratum'),
     minReqLen: number('min-req-len'), maxReqLen: number('max-req-len'),
     minReqInt: number('min-req-int'), maxReqInt: number('max-req-int'),
 });
@@ -25,7 +31,7 @@ const sampleSize = number('sample');
 if (sampleSize != null) matches = deterministicSample(matches, sampleSize, value('seed') ?? 'pathfinder');
 
 const hasFilter = ids.length || value('tag') || value('mechanic') || value('batch') || value('origin') ||
-    value('method') || value('action') || value('generator-version') || value('corpus-name') || sampleSize != null ||
+    value('method') || value('action') || value('generator-version') || value('corpus-name') || value('selection-stratum') || sampleSize != null ||
     number('min-req-len') != null || number('max-req-len') != null || number('min-req-int') != null || number('max-req-int') != null;
 
 if (args.includes('--full')) {
