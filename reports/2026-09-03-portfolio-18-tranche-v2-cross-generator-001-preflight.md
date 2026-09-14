@@ -2,9 +2,9 @@
 
 > **Status:** concluded-positive
 > **Last evidence:** 2026-09-03 — GHA runs [`33718270281`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718270281) (dispatch A) and [`33718272194`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/33718272194) (dispatch B), both complete.
-> **Decision (2026-09-13 corrected interpretation):** the recorded whole-Corpus-1 totals remain valid, but Corpus 1 was not a clean different-generator population. On the genuine 23-row A-F stratum all three arms solve 22/23; `portfolio-18-tranche-v2` spends 29.92% more aggregate work than `full-menu`. The favorable whole-C1 work result is carried by 79 migrated random-uniform rows selected for historical solver success. This run does **not** establish tranche-v2 work-saving cross-generator transfer.
+> **Decision:** the recorded whole-Corpus-1 totals remain valid, but Corpus 1 was not a clean different-generator population. On the genuine 23-row A-F stratum all three arms solve 22/23; `portfolio-18-tranche-v2` spends 29.92% more aggregate work than `full-menu`. The favorable whole-C1 work result is carried by 79 migrated random-uniform rows selected for historical solver success. This run does **not** establish tranche-v2 work-saving cross-generator transfer.
 > **Remaining gate:** none for this transfer check itself. Per its own stop condition, no v3 cap map or repeat dispatch is warranted from a tie — this is not a regression to chase.
-> **Evidence role (corrected 2026-09-13):** historical development/forensic evidence with a failed population-role premise; not a completed cross-generator transfer gate.
+> **Evidence role:** historical development/forensic evidence with a failed population-role premise; not a completed cross-generator transfer gate.
 
 ## 2026-09-13 population-role correction
 
