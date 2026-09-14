@@ -1,9 +1,9 @@
 # Historical evidence re-evaluation after the corpus and solution-profile audits
 
-> **Status:** active
-> **Last evidence:** 2026-09-13 — forensic sweep after the stress-corpus selection-history and solution-profile resource audits, including historical C1/profile consumers and static-portfolio transfer evidence.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-13 — PR #1788 reconciled the live queue, future-work authorities and research-method docs; the follow-up decision-exposure genealogy found no additional promoted verdict that loses its evidence role.
 > **Decision:** retain exact row-level solver observations unless their execution was broken, but narrow or supersede claims whose population role or analytical instrument no longer supports the original inference. No blanket rerun of solver research is warranted.
-> **Remaining gate:** reconcile the live solver queue, future-work authorities and major research-method docs against these dispositions; perform any cheap required recomputations/rechecks, then close this ledger as the durable audit-to-queue bridge.
+> **Remaining gate:** none. The audit-to-queue bridge is reconciled; future profile/corpus questions reopen only under the conditional gates recorded below. See [`2026-09-13-decision-exposure-genealogy-audit-001.md`](2026-09-13-decision-exposure-genealogy-audit-001.md).
 > **Trigger:** the 2026-09-13 stress-corpus selection-history audit and solution-profile resource audit.
 > **Scope:** historical solver-research claims whose scientific interpretation depended on corpus independence/selection or legacy solution-profile semantics.
 > **Not in scope:** replaying every solver A/B. Exact solve/work observations remain observations unless the population role, instrument, treatment participation, or execution itself was material to the claim.
@@ -42,17 +42,20 @@ A corpus filename is not an evidence role. A profile field is not automatically 
 | Straight paired solver A/Bs on exact frozen rows, with real treatment participation and comparable budgets | **stands** | Corpus-selection concerns can narrow generalization, but they do not erase which exact levels each arm solved or how much comparable work it spent. | Preserve row-level gains/losses and costs. Reclassify the evidence role only when an old report claimed more than its population licenses. |
 | Current-residual / mechanic-enriched studies | **stands, claim narrows unless prospectively representative** | A residual is selected by everything the solver already knows. It is excellent for finding remaining capability, but poor evidence for “portal levels in general” or another mechanic-wide prevalence claim. | Phrase conclusions as properties of the tested residual unless a representative population independently confirms the broader claim. |
 | Existing in-envelope population used as confirmation | **claim-relative** | “Envelope” is not a permanent holdout stamp. Once its outcomes influenced a treatment or descendant, those rows become development evidence for that decision lineage. | Record whether the exact treatment/ancestor consumed the population before calling it confirmation. |
+| Managed two-phase residual confirmations | **stands as conditional confirmation when execution is valid** | Phase-2 membership is selected by a control outcome, so it is outcome-conditioned; treatment outcomes remain unseen during selection. `confirm-residual-003` therefore supports the conditional control-failure question, while the earlier miswired residual runs remain void. | Do not call these populations outcome-neutral. Preserve the control-outcome-conditioned / treatment-outcome-independent distinction. See the decision-exposure genealogy. |
+| Later reach/starvation-conditioned confirmation populations | **stands as conditional confirmation** | Goal-attraction fresh-work-pool and repair six-seed populations were selected from historical control-side opportunity evidence while explicitly excluding candidate-specific development/tuning rows. Their reports already reject unconditional prevalence/effect interpretations. | No rerun. Preserve their conditional inference scope and treatment-lineage exclusions. |
 | WS1 September 11-12 stage-4/5 solution-space mediation and first-divergence work | **stands** | These analyses replayed their own recorded winning paths/search-state telemetry and prespecified descriptors. They did not depend on the legacy nearest-profile distance or whole-C1-as-independent premise. | No audit-driven repeat required. Keep normal n=2/mechanism-scope limitations already recorded by those reports. |
 
 ## What genuinely needs repeating
 
-No major already-promoted solver treatment has been identified whose treatment verdict must be rerun solely because of these two audits.
+No major already-promoted solver treatment has been identified whose treatment verdict must be rerun solely because of these audits.
 
 The queue is mostly cheaper than that:
 
 - one already-completed population re-stratification for the September-3 static portfolio transfer;
 - two historical C1/profile analyses that must be treated as superseded or recomputed before reuse;
-- old nearest-profile, rigidity, plateau, completeness and stale-profile interpretations that must be regenerated only when a live research claim actually depends on them.
+- old nearest-profile, rigidity, plateau, completeness and stale-profile interpretations that must be regenerated only when a live research claim actually depends on them;
+- one vocabulary correction for two-phase residual populations: control-outcome-conditioned is not outcome-neutral.
 
 A new experiment becomes necessary only when the corrected analysis leaves a live decision unanswered and no existing prospectively suitable population can answer it.
 
@@ -63,12 +66,17 @@ Decision-bearing reports should state, separately:
 - exact population identity/revision or frozen ID vector;
 - generation ancestry;
 - later selection history, including solver-outcome/residual/curation selection;
+- **which variable conditioned selection**: control outcome, treatment outcome, participation/reach, mechanics/difficulty, manual inspection, or another rule;
 - whether the population has already influenced this treatment or an ancestor;
 - observed result on the tested rows;
-- inferential entitlement: development, confirmation, transfer/challenge, or descriptive/forensic only;
+- inferential entitlement: development, conditional confirmation, confirmation, transfer/challenge, or descriptive/forensic only;
 - for solution-profile evidence, sample size/support/chronology and whether the compared axis is actually observed on both sides.
 
 A phrase such as “Corpus 1”, “Corpus 2”, “random”, “holdout”, “exhaustive”, “rigid”, or “nearest” is not sufficient metadata by itself.
+
+## Closeout
+
+PR #1788 carried the corpus/profile corrections into the live solver queue, future-work reservoir, research-data authorities and report conventions. The follow-up decision-exposure genealogy then checked the stronger evidence roles most vulnerable to hidden reuse. It found no additional promoted treatment whose verdict must be withdrawn or rerun. The remaining gaps are prospective resource-schema concerns and belong in the research-resource contract rather than another archaeology pass.
 
 ## Bottom line
 
