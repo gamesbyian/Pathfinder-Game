@@ -17,8 +17,8 @@
  * Defaults:
  *   --parent-corpus=data/levels.json
  *   --parent-exposure=unknown
- *   family output under one shared tmp/human-parent-contrasts/families/ ID namespace
- *   research context under tmp/human-parent-contrasts/contexts/<question>/
+ *   one cumulative family per parent+mode under tmp/human-parent-contrasts/families/
+ *   question/run context under tmp/human-parent-contrasts/contexts/<question>/
  *
  * Confirmation/transfer claims require --parent-exposure=locked-untouched. This does not magically
  * prove independence; it forces the caller to make the claim explicit before outcomes exist.
@@ -75,12 +75,16 @@ const slug = question
     .slice(0, 72) || 'question';
 const safeParent = parent.replace(/[^A-Za-z0-9._-]+/g, '_');
 const safeMode = mode.replace(/[^A-Za-z0-9._-]+/g, '_');
+const safeSeed = (values.get('--seed') || 'default').replace(/[^A-Za-z0-9._-]+/g, '_');
 const familyDir = path.join('tmp', 'human-parent-contrasts', 'families');
 const contextDir = path.join('tmp', 'human-parent-contrasts', 'contexts', slug);
-const defaultOut = path.join(familyDir, `family-${safeParent}-${safeMode}-${slug}.json`);
+// family-generate's canonical familyId is parent+witness-index+mode, not research question. Keep all
+// default runs for the same parent+mode in one cumulative file/manifest so its sibling-ID counter and
+// fingerprint dedupe see the complete family rather than creating parallel shadow families.
+const defaultOut = path.join(familyDir, `family-${safeParent}-${safeMode}.json`);
 const out = values.get('--out') || defaultOut;
 const manifestOut = values.get('--manifest-out') || out.replace(/\.json$/i, '-manifest.json');
-const contextOut = values.get('--context-out') || path.join(contextDir, `family-${safeParent}-${safeMode}-research-context.json`);
+const contextOut = values.get('--context-out') || path.join(contextDir, `family-${safeParent}-${safeMode}-seed-${safeSeed}-research-context.json`);
 
 const wrapperOnly = new Set([
     '--question', '--evidence-role', '--parent-exposure', '--context-out', '--dry-run',
@@ -137,6 +141,7 @@ if (!existsSync(manifestOut)) {
     process.exit(1);
 }
 const familyManifest = JSON.parse(readFileSync(manifestOut, 'utf8'));
+const currentGenerationRun = familyManifest.generationRuns?.at(-1) ?? null;
 const completedContext = {
     ...context,
     createdTimestamp: new Date().toISOString(),
@@ -149,8 +154,9 @@ const completedContext = {
         ...context.generation,
         familyId: familyManifest.familyId ?? null,
         generatorVersion: familyManifest.generatorVersion ?? null,
-        acceptedVariantCount: familyManifest.acceptedCount ?? null,
-        generationRuns: familyManifest.generationRuns ?? [],
+        cumulativeAcceptedVariantCount: familyManifest.acceptedCount ?? null,
+        currentGenerationRun,
+        generatedVariantIds: currentGenerationRun?.variantIds ?? [],
     },
 };
 mkdirSync(path.dirname(contextOut), { recursive: true });
