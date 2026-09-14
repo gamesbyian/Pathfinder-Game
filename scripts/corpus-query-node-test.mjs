@@ -13,8 +13,8 @@ assert.equal(CORPUS_ALIASES.envelope, 'data/stress/stress-levels-envelope.json',
     'envelope must remain a first-class corpus alias');
 
 const levels = [
-    { id: 'A', grid: { w: 5, h: 5 }, reqLen: 12, reqInt: 1, gates: [{ x: 1, y: 1 }], portals: [], mustCross: [], stressMeta: { featureTags: ['small'], generationBatch: 'A' }, provenance: { origin: 'procedural', history: [{ action: 'generated', method: 'stress-corpus-generator', detail: { generatorVersion: '1.0.0', corpusName: 'batch-driven-v1' } }] } },
-    { id: 'B', grid: { w: 10, h: 10 }, reqLen: 80, reqInt: 8, gates: [{ x: 1, y: 1 }], portals: [{ x1: 1, y1: 2, x2: 9, y2: 9 }], mustCross: [{ x: 5, y: 5 }], stressMeta: { featureTags: ['portals', 'crossing-rich'], archetype: 'hard-crossing' }, provenance: { origin: 'procedural', history: [{ action: 'generated', method: 'stress-corpus-random-generator', detail: { generatorVersion: '1.1.0', corpusName: 'random-uniform-v1' } }] } },
+    { id: 'A', grid: { w: 5, h: 5 }, reqLen: 12, reqInt: 1, gates: [{ x: 1, y: 1 }], portals: [], mustCross: [], stressMeta: { featureTags: ['small'], generationBatch: 'A' }, provenance: { origin: 'procedural', history: [{ action: 'generated', method: 'stress-corpus-generator', detail: { generatorVersion: '1.0.0', corpusName: 'batch-driven-v1' }, timestamp: '2026-07-08T00:00:00.000Z' }] } },
+    { id: 'B', grid: { w: 10, h: 10 }, reqLen: 80, reqInt: 8, gates: [{ x: 1, y: 1 }], portals: [{ x1: 1, y1: 2, x2: 9, y2: 9 }], mustCross: [{ x: 5, y: 5 }], stressMeta: { featureTags: ['portals', 'crossing-rich'], archetype: 'hard-crossing' }, provenance: { origin: 'procedural', history: [{ action: 'generated', method: 'stress-corpus-random-generator', detail: { generatorVersion: '1.1.0', corpusName: 'random-uniform-v1' }, timestamp: '2026-07-09T00:00:00.000Z' }] } },
     { id: 'C', grid: { w: 8, h: 8 }, reqLen: 60, reqInt: 6, gates: [{ x: 1, y: 1 }], portals: [], mustCross: [{ x: 4, y: 4 }], stressMeta: { featureTags: ['crossing-rich'] }, provenance: { origin: 'human', history: [{ action: 'authored', method: 'editor' }] } },
 ];
 const items = levels.map(describeLevel);
@@ -41,6 +41,21 @@ assert.equal(summary.evidenceAncestry.origins.procedural, 2);
 assert.equal(summary.evidenceAncestry.origins.human, 1);
 assert.equal(summary.evidenceAncestry.generatorVersions['1.1.0'], 1);
 assert.equal(summary.evidenceAncestry.generatorVersions['(missing)'], 1);
+
+const c1Items = levels.slice(0, 2).map(level => describeLevel(level, { source: 'stress1' }));
+assert.equal(c1Items[0].selectionLineage.stratum, 'c1-af-retained');
+assert.equal(c1Items[1].selectionLineage.stratum, 'c1-migrated-random-solver-positive');
+assert.deepEqual(filterLevelDescriptors(c1Items, { selectionStratum: 'c1-migrated-random-solver-positive' }).map(item => item.id), ['B']);
+assert.equal(summarizeDescriptors(c1Items).evidenceAncestry.selectionStrata['c1-af-retained'], 1);
+assert.equal(summarizeDescriptors(c1Items).evidenceAncestry.historicalOutcomeConditioning['historical-production-success'], 1);
+
+const c2Meta = { appendHistory: [{ appendedAt: '2026-07-11T12:21:23.704Z' }] };
+const c2Old = describeLevel(levels[1], { source: 'stress2', metadata: c2Meta });
+const c2Replacement = describeLevel({ ...levels[1], id: 'D', provenance: { ...levels[1].provenance, history: [{ ...levels[1].provenance.history[0], timestamp: '2026-07-11T12:21:23.704Z' }] } }, { source: 'stress2', metadata: c2Meta });
+assert.equal(c2Old.selectionLineage.stratum, 'c2-original-random-solver-negative-survivor');
+assert.equal(c2Replacement.selectionLineage.stratum, 'c2-july11-replacement');
+assert.equal(c2Old.selectionLineage.historicalOutcomeConditioning, 'historical-production-failure');
+assert.equal(c2Replacement.selectionLineage.historicalOutcomeConditioning, 'none-known');
 
 // loadCorpus is the shared shape boundary for research tools. Both historical top-level arrays and
 // current wrapper objects must resolve to the same levels collection when a direct path is supplied;
