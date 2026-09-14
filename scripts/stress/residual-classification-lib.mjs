@@ -1,9 +1,9 @@
-export const RESIDUAL_CLASSIFICATION_SCHEMA_VERSION = 1;
+export const RESIDUAL_CLASSIFICATION_SCHEMA_VERSION = 2;
 
 export const RESIDUAL_CLASS_LABELS = Object.freeze({
     1: 'known rescuer not offered',
     2: 'known rescuer offered but not reached or materially starved',
-    3: 'known rescuer reached with comparable work but failed',
+    3: 'known rescuer dispatched/reached; target-action dose not established by this classifier',
     4: 'no T1 winner but a historical production-context candidate exists',
     5: 'no known rescuer after cross-evidence reconciliation',
 });
@@ -31,22 +31,41 @@ export function classifyKnownRescuer(win, { offeredLadder = new Set(), dispatche
     let familyReached = null;
     let familyStarved = null;
     let offered = null;
+    let observability;
 
     if (family === 'beam' || family === 'dfs') {
         offered = offeredLadder.has(win.identity);
-        if (!offered) classification = 1;
-        else if (!dispatched) classification = 2;
-        else classification = 3;
+        if (!offered) {
+            classification = 1;
+            observability = 'not-offered';
+        } else if (!dispatched) {
+            classification = 2;
+            observability = 'offered-not-dispatched';
+        } else {
+            classification = 3;
+            observability = 'dispatched-dose-unverified';
+        }
     } else {
         const stages = FAMILY_STAGES[family] ?? [];
         familyReached = stages.some(stage => reachedSet.has(stage));
         familyStarved = stages.some(stage => starvedSet.has(stage));
-        if (!familyReached && !dispatched) classification = 1;
-        else if (dispatched && !familyStarved) classification = 3;
-        else classification = 2;
+        if (!familyReached && !dispatched) {
+            classification = 1;
+            observability = 'family-unreached';
+        } else if (dispatched && !familyStarved) {
+            classification = 3;
+            // This classifier only has family-stage reach/starvation plus exact dispatch identity.
+            // It does not join per-attempt workSpent/nodes for the exact action. A stronger
+            // comparable-work claim must come from the equal-work/production-reach join or
+            // equivalent row-level evidence.
+            observability = 'exact-dispatched-family-not-starved-dose-unverified';
+        } else {
+            classification = 2;
+            observability = familyStarved ? 'family-reached-starved' : 'family-reached-exact-undispatched';
+        }
     }
 
-    return { ...win, family, offered, dispatched, familyReached, familyStarved, class: classification };
+    return { ...win, family, offered, dispatched, familyReached, familyStarved, observability, class: classification };
 }
 
 export function classifyResidualLevel({
