@@ -13,6 +13,10 @@ on:
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
+      - 'Solver broad confirmation cohort'
+      - 'Solver two-phase residual confirmation'
+      - 'Static portfolio confirmation A/B'
+      - 'Solver combine sweep runs (cross-run reconciliation)'
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -20,16 +24,16 @@ on:
         description: 'Existing Actions run id to re-harvest/backfill without rerunning the solver.'
         required: true
       source_workflow:
-        description: 'Optional source workflow label for provenance/pending-evidence notes.'
+        description: 'Optional expected source workflow name; when supplied it must match the Actions run.'
         required: false
-        default: 'manual backfill'
+        default: ''
       source_sha:
-        description: 'Optional source solver SHA for isolated-tool provenance when the artifact itself does not record it.'
+        description: 'Optional expected source SHA; when supplied it must match the Actions run.'
         required: false
         default: ''
 
-# Source runs may finish together. Keep one semantic writer for the canonical hint store so two
-# provenance updates to the same level can never devolve into last-writer-wins JSON commits.
+# Source runs may finish together. Keep one semantic writer for canonical solver evidence so two
+# provenance/retention updates can never devolve into last-writer-wins generated-file commits.
 concurrency:
   group: canonical-solver-hint-persistence
   cancel-in-progress: false
@@ -37,7 +41,7 @@ concurrency:
 jobs:
   harvest:
     # Harvest even from a partially failed/cancelled run: shard jobs write reports incrementally and
-    # upload in always() steps, so useful solves can exist before the overall workflow turns red.
+    # upload in always() steps, so useful evidence can exist before the overall workflow turns red.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -59,6 +63,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Self-test durable experiment evidence retention
+        run: node scripts/persist-decision-bearing-experiment-evidence.mjs --self-test
+
+      - name: Resolve source run identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
+          EXPECTED_WORKFLOW: ${{ inputs.source_workflow }}
+          EXPECTED_SHA: ${{ inputs.source_sha }}
+        run: |
+          set -euo pipefail
+          source_json="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID")"
+          source_workflow="$(jq -r '.name' <<<"$source_json")"
+          source_sha="$(jq -r '.head_sha' <<<"$source_json")"
+          if [[ -n "$EXPECTED_WORKFLOW" && "$EXPECTED_WORKFLOW" != "$source_workflow" ]]; then
+            echo "Expected source workflow '$EXPECTED_WORKFLOW' but run $SOURCE_RUN_ID belongs to '$source_workflow'." >&2
+            exit 1
+          fi
+          if [[ -n "$EXPECTED_SHA" && "$EXPECTED_SHA" != "$source_sha" ]]; then
+            echo "Expected source SHA '$EXPECTED_SHA' but run $SOURCE_RUN_ID resolved to '$source_sha'." >&2
+            exit 1
+          fi
+          printf 'SOURCE_WORKFLOW=%s\n' "$source_workflow" >> "$GITHUB_ENV"
+          printf 'SOURCE_SHA=%s\n' "$source_sha" >> "$GITHUB_ENV"
+
       - name: Download every artifact from the source solver run
         shell: bash
         env:
@@ -73,56 +103,80 @@ jobs:
           # artifact, which is exactly the shape the semantic importers expect.
           gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir artifact-staging
 
-      - name: Merge all recoverable hint evidence onto latest main
+      - name: Merge recoverable solver evidence onto latest main
         shell: bash
         env:
           SOURCE_RUN_ID: ${{ github.event.workflow_run.id || inputs.source_run_id }}
-          SOURCE_WORKFLOW: ${{ github.event.workflow_run.name || inputs.source_workflow || 'manual backfill' }}
-          SOURCE_SHA: ${{ github.event.workflow_run.head_sha || inputs.source_sha }}
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
-          # Never rebase competing JSON edits line-by-line. On a race, reset to the new main and
-          # replay every semantic importer from the immutable source artifacts.
+          # Broad/residual confirmation and reconciliation populations are experiment evidence, not
+          # canonical hint sources. They still pass through the durable decision-bearing retention
+          # layer, but deliberately skip all three hint importers.
+          HARVEST_HINTS=1
+          case "$SOURCE_WORKFLOW" in
+            'Solver broad confirmation cohort'|\
+            'Solver two-phase residual confirmation'|\
+            'Static portfolio confirmation A/B'|\
+            'Solver combine sweep runs (cross-run reconciliation)')
+              HARVEST_HINTS=0
+              ;;
+          esac
+
+          # Never rebase competing generated evidence line-by-line. On a race, reset to the new main
+          # and replay every semantic importer from the immutable source artifacts.
           for attempt in 1 2 3 4; do
             git fetch origin main
             git reset --hard origin/main
 
-            # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
-            # canonical hint files in shard artifacts. Merge them structurally and referee-check
-            # every incoming path across published, corpus-1 and corpus-2 hint stores.
-            node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
-              --staging-dir=artifact-staging \
-              --source-run-id="$SOURCE_RUN_ID" \
-              --source-workflow="$SOURCE_WORKFLOW"
+            if [[ "$HARVEST_HINTS" == '1' ]]; then
+              # Workflows that used --save-hints, including the CP-SAT harvesters, already carry
+              # canonical hint files in shard artifacts. Merge them structurally and referee-check
+              # every incoming path across published, corpus-1 and corpus-2 hint stores.
+              node scripts/run-bundled.mjs scripts/merge-hint-artifacts.mjs -- \
+                --staging-dir=artifact-staging \
+                --source-run-id="$SOURCE_RUN_ID" \
+                --source-workflow="$SOURCE_WORKFLOW"
 
-            # Artifact-only level-blind workflows still retain solved paths and winning attempts in
-            # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
-            # quarantined on main, never discarded or attributed to the wrong level revision.
-            node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
-              --staging-dir=artifact-staging \
-              --source-run-id="$SOURCE_RUN_ID" \
-              --source-workflow="$SOURCE_WORKFLOW"
+              # Artifact-only level-blind workflows still retain solved paths and winning attempts in
+              # their shard reports. Reconstruct canonical provenance. Corpus hash mismatches are
+              # quarantined on main, never discarded or attributed to the wrong level revision.
+              node scripts/run-bundled.mjs scripts/harvest-level-blind-report-hints.mjs -- \
+                --staging-dir=artifact-staging \
+                --source-run-id="$SOURCE_RUN_ID" \
+                --source-workflow="$SOURCE_WORKFLOW"
 
-            # Direct/isolated tools serialize their valid paths too. Keep them with
-            # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
-            # capability evidence.
-            node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
-              --staging-dir=artifact-staging \
-              --source-run-id="$SOURCE_RUN_ID" \
-              --source-workflow="$SOURCE_WORKFLOW" \
-              --source-sha="$SOURCE_SHA"
+              # Direct/isolated tools serialize their valid paths too. Keep them with
+              # isolatedTechnique=true so they cannot be mistaken for normal production-ladder
+              # capability evidence.
+              node scripts/run-bundled.mjs scripts/harvest-isolated-report-hints.mjs -- \
+                --staging-dir=artifact-staging \
+                --source-run-id="$SOURCE_RUN_ID" \
+                --source-workflow="$SOURCE_WORKFLOW" \
+                --source-sha="$SOURCE_SHA"
+            fi
 
-            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ 2>/dev/null; then
-              echo 'No new canonical hint/provenance evidence to persist.'
+            # A decision-bearing v3 result has already passed the experiment contract, population
+            # integrity and research-outcome gates. Preserve that exact manifest plus its published
+            # primary/include evidence before Actions retention can erase the rows needed to
+            # reconstruct the verdict. Non-decision-bearing benchmark artifacts are ignored.
+            node scripts/persist-decision-bearing-experiment-evidence.mjs \
+              --staging-dir=artifact-staging \
+              --out-root=reports/stress/experiment-evidence
+
+            if git diff --quiet -- data/hints/ data/stress/hints/ data/stress/hints-random/ reports/stress/pending-solver-evidence/ reports/stress/experiment-evidence/ 2>/dev/null; then
+              echo 'No new canonical hint/provenance or decision-bearing experiment evidence to persist.'
               exit 0
             fi
 
             git add data/hints/ data/stress/hints/ data/stress/hints-random/
             if [ -d reports/stress/pending-solver-evidence ]; then
               git add reports/stress/pending-solver-evidence/
+            fi
+            if [ -d reports/stress/experiment-evidence ]; then
+              git add reports/stress/experiment-evidence/
             fi
             git commit -m "Harvest solver evidence: ${SOURCE_WORKFLOW} (${SOURCE_RUN_ID})"
             if git push origin HEAD:main; then
