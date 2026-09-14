@@ -131,6 +131,8 @@ assert.equal(normalizeResearchQuestionStatus('active-candidate'), 'active');
 assert.equal(normalizeResearchQuestionStatus('closed-tested-form'), 'closed');
 assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'question', status: 'active' }).map(x => x.id), ['WS2-CURRENT']);
 assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow-up' }).map(x => x.id), ['WS2-FOLLOWUP']);
+assert.deepEqual(queryResearchQuestions(questionRegistry, { query: 'bounded follow up' }).map(x => x.id), ['WS2-FOLLOWUP'],
+    'ordinary spaced vocabulary must discover a hyphenated question');
 assert.deepEqual(queryResearchQuestions(questionRegistry, { kind: 'experiment' }), [],
     'question query helper must not leak questions into other compact kinds');
 const invalidRelations = JSON.parse(JSON.stringify(questionRegistry));
@@ -138,6 +140,26 @@ invalidRelations.questions[0].implies = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidRelations), [
     'questions[0].implies references unknown question WS2-MISSING',
 ]);
+const invalidSupersession = JSON.parse(JSON.stringify(questionRegistry));
+invalidSupersession.questions[0].supersedes = ['WS2-MISSING'];
+assert.deepEqual(validateResearchQuestionRegistry(invalidSupersession), [
+    'questions[0].supersedes references unknown question WS2-MISSING',
+]);
+
+const repositoryRegistry = loadResearchQuestionRegistry(process.cwd());
+assert.deepEqual(validateResearchQuestionRegistry(repositoryRegistry), [],
+    'tracked solver research question relations must not contain dangling question-id edges');
+const idsFor = filters => queryResearchQuestions(repositoryRegistry, filters).map(entry => entry.id);
+assert(idsFor({ query: 'portal coarse', status: 'active' }).includes('WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION'),
+    'ordinary portal vocabulary must expose the live allocation successor, not only the closed global form');
+assert.deepEqual(idsFor({ query: 'admissible order', status: 'deferred-reopen' }), ['WS2-ADMISSIBLE-ORDER-RETRY-REPRICING'],
+    'plumbing availability must not make admissible-order repricing active or falsely closed');
+assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICAL-FULL-POOL'),
+    'ordinary full-pool vocabulary must find the already-run categorical projection');
+assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), ['WS2-OPEN-PATH-TOPOLOGY-SIGNATURE'],
+    'the current topology query must route to the open-path successor rather than the coverage-null fixed-endpoint form');
+assert(idsFor({ query: 'must turn', status: 'active' }).includes('WS2-MUST-TURN-LATE-ADDITIVE'),
+    'ordinary must-turn vocabulary must find the live economics gate');
 
 await import('./corpus-query-node-test.mjs');
 console.log('research status index check passed');

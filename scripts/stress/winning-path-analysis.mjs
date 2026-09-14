@@ -41,7 +41,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { readLevelsWithHints } from '../level-data-io.mjs';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
-import { selectRepresentativeHints } from './representative-hint-selector.mjs';
+import { describeHintEvidence, selectRepresentativeHints } from './representative-hint-selector.mjs';
 
 installBrowserStubs();
 const { createSolver, SOLVER_TESTING_API } = await import('../../modules/solver.ts');
@@ -101,6 +101,7 @@ for (const { raw, idx } of sample) {
         (raw.hintRecords || []).filter(hint => hint?.path?.length >= 4),
         { limit: 1, evidencePurpose: 'solution-atlas' },
     )[0];
+    const representativeDescriptor = describeHintEvidence(representative, { evidencePurpose: 'solution-atlas' });
     const path0 = representative.path;
 
     const prodLevel = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber: idx + 1 });
@@ -160,7 +161,12 @@ for (const { raw, idx } of sample) {
         levelId, coldSolved, pathLength: path0.length,
         representativeEvidence: {
             purpose: 'solution-atlas',
-            provenanceEntries: representative.provenance?.length || 0,
+            selectionRule: 'selectRepresentativeHints(limit=1,evidencePurpose=solution-atlas)',
+            pathSignature: representativeDescriptor.signature,
+            structuralFamily: representativeDescriptor.structuralFamily,
+            dependencyStrata: [...representativeDescriptor.dependencyStrata].sort(),
+            origins: [...representativeDescriptor.origins].sort(),
+            provenanceEntries: representativeDescriptor.provenanceEntries,
         },
         stepsMeasured: steps.length, unrankedSteps: steps.length - rankedSteps.length,
         rank1Fraction: rankedSteps.length ? rank1Count / rankedSteps.length : null,
