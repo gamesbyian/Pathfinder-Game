@@ -41,6 +41,14 @@ function compact(asset) {
         relatedAssets: asset.relatedAssets,
         affordances: asset.affordances,
         caveats: asset.caveats,
+        decisionSafety: audited ? {
+            selectionConditioning: audited.selectionConditioning,
+            dependenceModel: audited.dependenceModel,
+            missingnessSemantics: audited.missingnessSemantics,
+            freshnessRevisionContract: audited.freshnessRevisionContract,
+            knownInformationLoss: audited.knownInformationLoss,
+            prospectiveProducerFixes: audited.prospectiveProducerFixes,
+        } : null,
         auditAuthorities: audited?.auditAuthorities ?? null,
     };
 }
