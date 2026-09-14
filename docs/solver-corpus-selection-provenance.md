@@ -2,6 +2,7 @@
 
 > **Status:** current evidence-interpretation authority for selection history of standing stress populations.
 > **Population structure:** [`../reports/2026-09-13-stress-corpus-selection-history-reconstruction-audit.md`](../reports/2026-09-13-stress-corpus-selection-history-reconstruction-audit.md).
+> **Machine classification:** [`../scripts/corpus-selection-lineage.mjs`](../scripts/corpus-selection-lineage.mjs).
 > **Evidence roles:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 > **Generation/workflow contract:** [`../data/stress/README.md`](../data/stress/README.md).
 > **Historical re-evaluation:** [`../reports/2026-09-13-historical-evidence-reevaluation-ledger.md`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md).
@@ -36,6 +37,8 @@ Thus current Corpus 2 is temporally heterogeneous:
 
 - 328 old rows from a solver-negative complement;
 - 1,372 later replacement rows not selected by that original solver outcome.
+
+The cleanup's append generator preserved every survivor and continued numeric IDs after the highest retained row, `R01997`; **`R01998` is the first replacement ID**. That historical identity cut is the durable machine-readable separator used by `scripts/corpus-selection-lineage.mjs`. It is preferable to copied per-row generation timestamps, which do not encode later curation, and to a moving `current row count - 1372` position boundary, which would change after future appends. The ordinary corpus-query test guards that the standing corpus still resolves to the independently reconstructed 328 / 1,372 split.
 
 Corpus 2 remains an excellent large development/capability laboratory. It is not one prospective untouched sample merely because all rows share a filename and broad generator family.
 
