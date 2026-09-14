@@ -1,7 +1,7 @@
 # Cross-resource observability and ancestry audit 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-13 — shared corpus-selection lineage classifier and cross-resource observability runner implemented; manifest-only family evaluation missingness and replay-family identity checks hardened before accepting empirical output.
+> **Last evidence:** 2026-09-13 — shared corpus-selection lineage, family missingness/replay identity, and tracked Solution Profile compatibility checks implemented before accepting empirical output.
 > **Decision:** investigate the four audited research resources as one evidence system, with special attention to cross-resource coverage, shared ancestry, selection into observability, and apparently independent signals that descend from one historical event.
 > **Remaining gate:** ingest the empirical coverage/ancestry run, classify the highest-value clean and contaminated joins, and reconcile any durable compatibility changes.
 > **Evidence role:** forensic/discovery; existing data only unless a later bounded question genuinely requires new solver compute.
@@ -38,6 +38,7 @@ The audit runner is `scripts/cross-resource-observability-audit.mjs`, with pure 
 - the shared provenance origin/dependency-stratum taxonomy for observation ancestry;
 - `scripts/corpus-selection-lineage.mjs` for the standing C1/C2 selection strata established by the September 13 reconstruction;
 - the existing family-index parser for family manifests;
+- `scripts/cross-resource-profile-integrity.mjs` to verify tracked published/C1 schema-v3 profile rows against current hint/path/chronology support at the same corpus positions;
 - support-shape facts from the same known-solution sample consumed by Solution Profiles, without pretending C2 has a tracked profile library or that any sample is the latent complete solution space.
 
 The family side deliberately distinguishes **not mounted** from **mounted with no parent record**. The empirical runner fetches only `*-manifest.json` blobs from the research branch, enough to establish parent/family/variant coverage without buying a 2.5 GB checkout. Because that bounded mount intentionally excludes family evaluation logs, evaluated/solved counts remain `unknown` rather than being reported as zero.
@@ -77,9 +78,17 @@ Variant replay provenance already preserves family and parent identity through i
 
 This matters because a profile may be replay-exposed even when the family trove is not mounted, while a mounted manifest lets us distinguish a real family -> replay -> stored-path lineage from a stale/malformed reference. It also supplies a direct integrity check on the proposed cross-resource ancestry graph without counting the replay as independent evidence.
 
+### F5 — tracked profile compatibility belongs at the join boundary
+
+Published and C1 have tracked schema-v3 Solution Profile libraries, but those persisted rows are historically keyed by corpus position. A cross-resource join should not infer compatibility merely because the library file is current-looking.
+
+Repair: `scripts/cross-resource-profile-integrity.mjs` checks each tracked row against the current level/hint sidecars at the same corpus position: schema/source identity, row position, hint count, combined path count, distinct-path count, dated-hint count, and chronology completeness. The empirical audit will therefore surface stale or misaligned profile materialization separately from profile sampling limitations. C2 remains explicitly `derivable-not-tracked`; absence of a tracked C2 library is not a missing row or negative profile observation.
+
 ## Execution note
 
 The first temporary runner attempt failed during Node setup because the branch-only workflow referenced a nonexistent `.nvmrc`. No dependencies, family data, analysis, or evidence run occurred. The runner now uses the repository's normal Node 20 convention. The failed setup attempt is execution plumbing, not an audit result.
+
+The first manifest materializer also fetched individual partial-clone blobs serially. It was replaced before accepting evidence with an exact-path sparse worktree so manifest blobs are fetched as a batch while variant level files/evaluation logs remain unmaterialized. The temporary workflow uses a cancel-in-progress concurrency group so only the newest audit revision is relevant.
 
 ## Pending empirical questions
 
@@ -87,5 +96,6 @@ The first temporary runner attempt failed during Node setup because the branch-o
 - How often has variant replay actually touched the stored sample used by profiles, and how often is replay the earliest known discovery of a stored path rather than merely a later rediscovery event?
 - Are family-covered levels systematically richer in hints/provenance than non-family levels?
 - Do replay family IDs reconcile cleanly against the mounted family manifests?
+- Do tracked published/C1 profile rows still agree exactly with current hint/path/chronology support?
 - How many apparent four-resource cases remain after requiring whole-parent family identity and dependency-aware provenance accounting?
 - Which low-replay four-resource cases give the cleanest existing intervention + phenotype + population combinations for mechanism follow-up?
