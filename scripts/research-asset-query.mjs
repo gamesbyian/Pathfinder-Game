@@ -9,7 +9,10 @@ const id = value('id').trim();
 const full = args.includes('--full');
 const limit = Number(value('limit') || 12);
 const registryPath = path.join(process.cwd(), 'docs', 'solver-research-data-assets.json');
+const contractPath = path.join(process.cwd(), 'docs', 'solver-research-resource-contract-audits.json');
 const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+const contract = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
+const auditedById = new Map(contract.auditedResources.map(entry => [entry.assetId, entry]));
 
 function flatten(value) {
     if (value == null) return [];
@@ -19,21 +22,35 @@ function flatten(value) {
 }
 
 function searchable(asset) {
-    return flatten(asset).join('\n').toLowerCase();
+    const audited = auditedById.get(asset.id);
+    return flatten(audited ? { ...asset, auditedResourceContract: audited } : asset).join('\n').toLowerCase();
 }
 
 function compact(asset) {
+    const audited = auditedById.get(asset.id);
     return {
         id: asset.id,
         name: asset.name,
         status: asset.status,
+        contractGrade: audited ? 'audited' : 'catalogue',
         grain: asset.grain,
+        independentUnit: audited?.independentUnit ?? null,
         evidenceRoles: asset.evidenceRoles,
         joinKeys: asset.joinKeys,
         queryEntryPoints: asset.queryEntryPoints,
         relatedAssets: asset.relatedAssets,
         affordances: asset.affordances,
         caveats: asset.caveats,
+        auditAuthorities: audited?.auditAuthorities ?? null,
+    };
+}
+
+function detailed(asset) {
+    const audited = auditedById.get(asset.id);
+    return {
+        ...asset,
+        contractGrade: audited ? 'audited' : 'catalogue',
+        auditedResourceContract: audited ?? null,
     };
 }
 
@@ -51,9 +68,10 @@ if (query) {
 const selected = matches.slice(0, Number.isFinite(limit) && limit > 0 ? limit : 12);
 console.log(JSON.stringify({
     registry: 'docs/solver-research-data-assets.json',
+    auditedContract: 'docs/solver-research-resource-contract-audits.json',
     query: query || null,
     id: id || null,
     matched: matches.length,
     returned: selected.length,
-    assets: full ? selected : selected.map(compact),
+    assets: full ? selected.map(detailed) : selected.map(compact),
 }, null, 2));

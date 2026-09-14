@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { normalizeRoutingRegime } from '../modules/solver/routing-regime-normalization.mjs';
+import { classifyCorpusSelectionLineage } from './corpus-selection-lineage.mjs';
 
 // Corpora on disk carry a mix of legacy stressMeta.archetype/navDensity (older generated levels)
 // and canonical stressMeta.routingRegime/requiredPathCoverageRatio (scripts/stress/generate.mjs's
@@ -47,7 +48,7 @@ function provenanceDescriptor(level) {
     };
 }
 
-export function describeLevel(level) {
+export function describeLevel(level, context = {}) {
     const counts = {
         gates: count(level, 'gates'), falseGoals: count(level, 'falseGoals'), blocks: count(level, 'blocks'),
         mustPass: count(level, 'mustPass'), mustCross: count(level, 'mustCross'), filters: count(level, 'filters'),
@@ -57,6 +58,12 @@ export function describeLevel(level) {
     const area = (level.grid?.w ?? 0) * (level.grid?.h ?? 0);
     const objects = Object.values(counts).reduce((sum, value) => sum + value, 0);
     const meta = level.stressMeta ?? {};
+    const selectionLineage = classifyCorpusSelectionLineage(
+        context.source,
+        level,
+        context.metadata ?? null,
+        { position: context.position, totalLevels: context.totalLevels },
+    );
     return {
         id: level.id,
         grid: [level.grid?.w ?? null, level.grid?.h ?? null],
@@ -69,6 +76,7 @@ export function describeLevel(level) {
         requiredPathCoverageRatio: meta.requiredPathCoverageRatio ?? meta.navDensity ?? null,
         predictedChallenge: meta.predictedSolverChallenge ?? null,
         provenance: provenanceDescriptor(level),
+        selectionLineage,
     };
 }
 
@@ -98,6 +106,7 @@ export function filterLevelDescriptors(items, filters = {}) {
         (!filters.mechanic || hasMechanic(item, filters.mechanic)) &&
         (!filters.batch || String(item.batch ?? '').toLowerCase() === String(filters.batch).toLowerCase()) &&
         (!filters.origin || String(item.provenance.origin ?? '').toLowerCase() === String(filters.origin).toLowerCase()) &&
+        (!filters.selectionStratum || String(item.selectionLineage?.stratum ?? '').toLowerCase() === String(filters.selectionStratum).toLowerCase()) &&
         containsInsensitive(item.provenance.methods, filters.method) &&
         containsInsensitive(item.provenance.actions, filters.action) &&
         containsInsensitive(item.provenance.generatorVersions, filters.generatorVersion) &&
@@ -146,6 +155,8 @@ export function summarizeDescriptors(items) {
             generatorVersions: categorical(flatten(items.map(item => item.provenance.generatorVersions))),
             corpusNames: categorical(flatten(items.map(item => item.provenance.corpusNames))),
             generationBatches: categorical(items.map(item => item.batch)),
+            selectionStrata: categorical(items.map(item => item.selectionLineage?.stratum)),
+            historicalOutcomeConditioning: categorical(items.map(item => item.selectionLineage?.historicalOutcomeConditioning)),
         },
     };
 }

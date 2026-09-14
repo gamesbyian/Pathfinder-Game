@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-09-14",
+  "evidenceRole": "forensic-discovery-existing-data",
+  "acceptedRun": {
+    "branch": "chatgpt/cross-resource-observability-2026-09-13",
+    "analyzerCommit": "4b71031003f5a32243ea97c1f619e0c0fa20a087",
+    "workflowRun": 34799898992,
+    "artifactId": 10331251606,
+    "artifactDigest": "sha256:517ff9ad642db339ac68f2c53b51c33747d3083f9456227be905c511ecfd80f6",
+    "familyMount": "generation manifests only; evaluation artifacts intentionally not loaded"
+  },
+  "sanityGate": {
+    "passed": true,
+    "selectionStrata": {
+      "c1-af-retained": 23,
+      "c1-migrated-random-solver-positive": 79,
+      "c2-original-random-solver-negative-survivor": 328,
+      "c2-july11-replacement": 1372,
+      "published-selection-history-mixed": 160
+    }
+  },
+  "family": {
+    "parents": 1962,
+    "families": 9864,
+    "variants": 97154,
+    "evaluationEvidenceLoaded": false,
+    "currentParentsWithManifest": 1962,
+    "replayFamilyLevelLineages": 7639,
+    "matchedReplayFamilyLevelLineages": 7639,
+    "unmatchedReplayFamilyLevelLineages": 0,
+    "replayParentMismatchLevels": 0
+  },
+  "storedSolutionSample": {
+    "levels": 1962,
+    "hints": 266997,
+    "replayTouchedHints": 206558,
+    "replayFirstHints": 201339,
+    "replayOnlyHints": 200773,
+    "pathfinderTouchedHints": 58660,
+    "unattributedHints": 6071,
+    "replayTouchedLevels": 1962,
+    "replayFirstLevels": 1940,
+    "replayOnlyLevels": 1930,
+    "lowReplayFourResourceLevels": 0
+  },
+  "profiles": {
+    "trackedLevels": 262,
+    "derivableLevels": 1962,
+    "published": {
+      "rows": 160,
+      "compatible": true,
+      "schemaVersion": 3,
+      "algorithm": "sample-support-v2"
+    },
+    "stress1": {
+      "rows": 102,
+      "compatible": true,
+      "schemaVersion": 3,
+      "algorithm": "sample-support-v2"
+    },
+    "stress2": "derivable-not-tracked"
+  },
+  "bySelectionStratum": {
+    "published-selection-history-mixed": {
+      "levels": 160,
+      "medianHints": 341.5,
+      "medianFamilies": 5.0,
+      "medianVariants": 37.0,
+      "medianReplayFirstFraction": 0.7853,
+      "aggregateHints": 59896,
+      "aggregateReplayFirstHints": 45212,
+      "aggregateReplayFirstFraction": 0.7548,
+      "aggregateReplayOnlyFraction": 0.7532,
+      "completeChronologyLevels": 38
+    },
+    "c1-af-retained": {
+      "levels": 23,
+      "medianHints": 450.0,
+      "medianFamilies": 5.0,
+      "medianVariants": 37.0,
+      "medianReplayFirstFraction": 0.5354,
+      "aggregateHints": 9609,
+      "aggregateReplayFirstHints": 4872,
+      "aggregateReplayFirstFraction": 0.507,
+      "aggregateReplayOnlyFraction": 0.5064,
+      "completeChronologyLevels": 23
+    },
+    "c1-migrated-random-solver-positive": {
+      "levels": 79,
+      "medianHints": 331.0,
+      "medianFamilies": 5.0,
+      "medianVariants": 47.0,
+      "medianReplayFirstFraction": 0.5302,
+      "aggregateHints": 24206,
+      "aggregateReplayFirstHints": 13609,
+      "aggregateReplayFirstFraction": 0.5622,
+      "aggregateReplayOnlyFraction": 0.5601,
+      "completeChronologyLevels": 79
+    },
+    "c2-original-random-solver-negative-survivor": {
+      "levels": 328,
+      "medianHints": 39.0,
+      "medianFamilies": 5.0,
+      "medianVariants": 52.0,
+      "medianReplayFirstFraction": 0.9231,
+      "aggregateHints": 26553,
+      "aggregateReplayFirstHints": 21748,
+      "aggregateReplayFirstFraction": 0.819,
+      "aggregateReplayOnlyFraction": 0.817,
+      "completeChronologyLevels": 328
+    },
+    "c2-july11-replacement": {
+      "levels": 1372,
+      "medianHints": 55.0,
+      "medianFamilies": 5.0,
+      "medianVariants": 52.0,
+      "medianReplayFirstFraction": 0.9165,
+      "aggregateHints": 146733,
+      "aggregateReplayFirstHints": 115898,
+      "aggregateReplayFirstFraction": 0.7899,
+      "aggregateReplayOnlyFraction": 0.7874,
+      "completeChronologyLevels": 1372
+    }
+  },
+  "lineageAwareCandidates": {
+    "criteria": "complete chronology, >=10 stored paths, replay-first fraction <= 0.25; nomination only, not independence proof",
+    "count": 20,
+    "examples": [
+      {
+        "id": "R03279",
+        "stratum": "c2-july11-replacement",
+        "hints": 12,
+        "replayTouchedHints": 12,
+        "replayFirstHints": 0,
+        "replayOnlyHints": 0,
+        "pathfinderTouchedHints": 12,
+        "families": 5,
+        "variants": 47,
+        "replayFirstFraction": 0.0
+      },
+      {
+        "id": "R01553",
+        "stratum": "c2-original-random-solver-negative-survivor",
+        "hints": 11,
+        "replayTouchedHints": 1,
+        "replayFirstHints": 0,
+        "replayOnlyHints": 0,
+        "pathfinderTouchedHints": 11,
+        "families": 5,
+        "variants": 67,
+        "replayFirstFraction": 0.0
+      },
+      {
+        "id": "R02843",
+        "stratum": "c2-july11-replacement",
+        "hints": 11,
+        "replayTouchedHints": 1,
+        "replayFirstHints": 0,
+        "replayOnlyHints": 0,
+        "pathfinderTouchedHints": 3,
+        "families": 5,
+        "variants": 42,
+        "replayFirstFraction": 0.0
+      },
+      {
+        "id": "S00115",
+        "stratum": "c1-af-retained",
+        "hints": 56,
+        "replayTouchedHints": 32,
+        "replayFirstHints": 1,
+        "replayOnlyHints": 1,
+        "pathfinderTouchedHints": 55,
+        "families": 5,
+        "variants": 37,
+        "replayFirstFraction": 0.0179
+      },
+      {
+        "id": "S00030",
+        "stratum": "c1-af-retained",
+        "hints": 453,
+        "replayTouchedHints": 193,
+        "replayFirstHints": 34,
+        "replayOnlyHints": 34,
+        "pathfinderTouchedHints": 419,
+        "families": 5,
+        "variants": 44,
+        "replayFirstFraction": 0.0751
+      },
+      {
+        "id": "R02716",
+        "stratum": "c2-july11-replacement",
+        "hints": 17,
+        "replayTouchedHints": 3,
+        "replayFirstHints": 2,
+        "replayOnlyHints": 2,
+        "pathfinderTouchedHints": 8,
+        "families": 5,
+        "variants": 52,
+        "replayFirstFraction": 0.1176
+      },
+      {
+        "id": "R03188",
+        "stratum": "c2-july11-replacement",
+        "hints": 17,
+        "replayTouchedHints": 3,
+        "replayFirstHints": 2,
+        "replayOnlyHints": 2,
+        "pathfinderTouchedHints": 15,
+        "families": 5,
+        "variants": 47,
+        "replayFirstFraction": 0.1176
+      },
+      {
+        "id": "P00143",
+        "stratum": "published-selection-history-mixed",
+        "hints": 14,
+        "replayTouchedHints": 14,
+        "replayFirstHints": 2,
+        "replayOnlyHints": 2,
+        "pathfinderTouchedHints": 12,
+        "families": 5,
+        "variants": 47,
+        "replayFirstFraction": 0.1429
+      },
+      {
+        "id": "R02290",
+        "stratum": "c2-july11-replacement",
+        "hints": 14,
+        "replayTouchedHints": 4,
+        "replayFirstHints": 2,
+        "replayOnlyHints": 2,
+        "pathfinderTouchedHints": 9,
+        "families": 5,
+        "variants": 47,
+        "replayFirstFraction": 0.1429
+      },
+      {
+        "id": "R01636",
+        "stratum": "c1-migrated-random-solver-positive",
+        "hints": 85,
+        "replayTouchedHints": 42,
+        "replayFirstHints": 13,
+        "replayOnlyHints": 13,
+        "pathfinderTouchedHints": 72,
+        "families": 6,
+        "variants": 54,
+        "replayFirstFraction": 0.1529
+      }
+    ]
+  },
+  "interpretation": [
+    "Family-generation coverage is universal across the current published/C1/C2 population; family presence is not a useful discriminator.",
+    "Current Solution Profile samples are frequently downstream of variant-to-parent replay, so family evidence and current profile phenotype are not generally independent evidence streams.",
+    "Replay-touched is not the same as replay-first: later replay rediscovery does not erase an earlier non-replay discovery.",
+    "C1 historical solver-positive rows have much richer stored solution samples than C2 historical solver-negative survivors despite similarly broad family campaigns; profile richness is an observability/selection variable, not a latent solution-space-size estimate.",
+    "Tracked published/C1 schema-v3 profile materializations exactly match the current hint/path/chronology support checked by this audit.",
+    "No family-evaluation outcome claim is made by this manifest-only run."
+  ]
+}

@@ -1,9 +1,9 @@
 # Stress-corpus population-validity audit
 
 > **Status:** concluded-positive
-> **Last evidence:** 2026-09-13 — fresh 2,162-row population census, witness-free nearest-neighbour scan, generator-code review, and corpus-history archaeology.
-> **Decision:** keep the standing stress corpora as valuable challenge/development targets, but stop treating Corpus 2 or envelope as neutral samples of Pathfinder space. Preserve generator, retention epoch, and claim scope when interpreting results.
-> **Remaining gate:** a real decision-exposure genealogy remains unfinished; build one only from decision-bearing manifests/reports, not raw level-id mentions. Purpose-specific symmetry/near-equivalence analysis remains available when a live decision needs it.
+> **Last evidence:** 2026-09-13 — fresh 2,162-row population census, witness-free nearest-neighbour scan, generator-code review, corpus-history archaeology, and bounded decision-exposure genealogy over decision-bearing population records.
+> **Decision:** keep the standing stress corpora as valuable challenge/development targets, but stop treating Corpus 2 or envelope as neutral samples of Pathfinder space. Preserve generator, retention epoch, selection history, treatment-lineage exposure, and claim scope when interpreting results.
+> **Remaining gate:** none for generic population validity. The decision-exposure genealogy is complete at the level justified by current claims; purpose-specific symmetry/near-equivalence analysis remains available when a live decision needs it. See [`2026-09-13-decision-exposure-genealogy-audit-001.md`](2026-09-13-decision-exposure-genealogy-audit-001.md).
 
 ## Bottom line
 
@@ -132,7 +132,7 @@ The nearest-neighbour results do **not** justify an invented “effective N.” 
 
 A deeper symmetry/near-equivalence clustering pass should be purpose-specific. Run it when a decision actually depends on whether a gain is spread across genuinely different structures, not as a standing ceremony.
 
-## Research exposure: the naive measurement failed
+## Research exposure: the naive measurement failed, the decision genealogy did not
 
 A first attempt to estimate row-level research exposure by scanning reports/docs/workflows/scripts for explicit level IDs was rejected.
 
@@ -140,16 +140,13 @@ Generated aggregate artifacts contain large lists of corpus IDs, so raw mention 
 
 This is a **measurement failure**, not evidence that every row has independently influenced solver design.
 
-A useful exposure genealogy would instead consume decision-bearing experiment manifests/reports and record, at minimum:
+The follow-up [`decision-exposure genealogy`](2026-09-13-decision-exposure-genealogy-audit-001.md) therefore used decision-bearing experiment manifests/reports and treatment ancestry rather than mention counts. It asked whether outcomes from a population actually changed candidate design, thresholds, routing, stop rules or descendants before the same population was later given a stronger evidence role.
 
-- population/content hash;
-- candidate/treatment identity;
-- whether outcomes were inspected;
-- whether they changed candidate design, thresholds, routing, or stop rules;
-- parent/descendant decision relationship; and
-- whether exposure was aggregate, residual-conditioned, or row-specific.
+That pass found no second September-3-style population-role failure. Managed broad confirmations were genuinely fresh for the candidate that consumed them; spent/void cohorts are recorded as such; the topology challenge used an independent construction family after the candidate was frozen; the envelope reservation remains unmaterialized and untouched; later goal-attraction and six-seed confirmations explicitly exclude their candidate-specific development rows.
 
-Until such a ledger is justified by a live decision, the current authority's coarse label of C2 as heavily mined development data is safer than false precision.
+It did find one vocabulary defect worth preserving for the resource contract: two-phase control-failure residuals are **control-outcome-conditioned**, even though treatment outcomes remain unavailable during selection. That makes them valid **conditional confirmation**, not outcome-neutral populations. The old managed-population boolean/prose is too coarse to express this distinction cleanly.
+
+A universal row-by-row exposure graph is still unnecessary. Broad C2 is already classified as heavily mined development data. Reconstruct deeper genealogy only when a future decision depends on proving that a particular stronger-role population is untouched for a particular treatment lineage.
 
 ## Consequences for solver research
 
@@ -159,12 +156,13 @@ Until such a ledger is justified by a live decision, the current authority's coa
 4. **Use published/player-facing evidence for player-facing claims.** Stress success alone cannot establish that distribution.
 5. **Use topology composition for genuinely different construction evidence only within its supported mechanic scope.** The present audit strengthens, rather than replaces, the existing transfer rules.
 6. **Treat corpus name as insufficient historical identity.** Frozen experiments should record content hashes and commits/manifests.
-7. **Do not add a weighted solve objective by default.** The project's goal is solves. Coverage descriptors are secondary interpretation instruments, not a new scoreboard.
+7. **Record the variable that conditioned population selection.** Control failure, treatment success, stage reach, starvation, residual membership and ordinary fresh sampling are scientifically different forms of selection.
+8. **Do not add a weighted solve objective by default.** The project's goal is solves. Coverage descriptors are secondary interpretation instruments, not a new scoreboard.
 
 ## Durable artifact
 
 `scripts/stress/corpus-population-audit.mjs` is retained as a read-only population diagnostic. It reports population shape, mechanic support/co-occurrence, witness-grammar descriptors where construction witnesses exist, wrapper generation episodes, and witness-free comparable nearest-neighbour structure.
 
-It intentionally does not run the solver, mutate corpus data, infer effective sample size, or fabricate a decision-exposure score.
+It intentionally does not run the solver, mutate corpus data, infer effective sample size, or fabricate a decision-exposure score. Decision-lineage exposure is separately recorded in [`2026-09-13-decision-exposure-genealogy-audit-001.md`](2026-09-13-decision-exposure-genealogy-audit-001.md).
 
 This report should be read as Phase B of [`2026-09-13-stress-corpus-research-resource-audit.md`](2026-09-13-stress-corpus-research-resource-audit.md): Phase A established integrity/provenance plumbing; this phase establishes the narrower population claims those healthy files are entitled to support.

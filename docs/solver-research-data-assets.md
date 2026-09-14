@@ -3,12 +3,11 @@
 
 > **Status:** human evidence-topology guide.
 > **Structured detail:** [`solver-research-data-assets.json`](solver-research-data-assets.json) owns per-asset locations, authorities, query entry points, join keys, relationships, roles, and caveats.
+> **Resource contract:** [`solver-research-resource-contract.md`](solver-research-resource-contract.md) defines catalogue-grade versus audit-grade resource semantics; [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) contains audit-grade declarations keyed to registry IDs.
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Method:** [`solver-research-operating-model.md`](solver-research-operating-model.md) and [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
 Do not duplicate the machine registry here. This file explains safe cross-asset use. The older catalogue is frozen at [`archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-research-data-assets-2026-09-04-pre-consolidation.md).
-
-Human/editor-parent controlled contrasts use the existing **variant-family data** asset contract rather than creating a parallel evidence store. Their source/selection interpretation is owned by [`human-parent-contrast-research.md`](human-parent-contrast-research.md); generated descendants still join through normal parent/variant identity and provenance.
 
 ## Cheap discovery first
 
@@ -18,7 +17,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 node scripts/tooling-census.mjs --compact --query=<term>
 ```
 
-Use `research-asset-query --id=<asset-id>` for exact registry detail.
+Use `research-asset-query --id=<asset-id>` for exact registry detail. Compact results expose `contractGrade`, `independentUnit`, and audit authorities when audited; `--full` includes the complete declaration.
 
 ## Required evidence preflight
 
@@ -50,7 +49,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 | Operational traces | encountered decision | How did searches diverge? |
 | Exact/reference labels | level × state/prefix | Is selected material feasible? |
 | Offline replay atlas | labelled state × probe | Can a candidate reasoner explain/use exact labels? |
-| Variant families, including human/editor-parent contrasts | parent × controlled transform | Which controlled structural changes flip behavior, and does the relation survive across whole parent sources? |
+| Variant families | parent × controlled transform | Which controlled structural changes flip behavior? |
 | Experiment manifests | run/arm/shard | Which code/data/protocol produced an observation? |
 | Raw logs/baselines | raw run/snapshot | What happened before interpretation? |
 | Research-status index | report/workstream/experiment | Has this been tested/renamed? |
@@ -58,7 +57,15 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include census × lifecycle, census × profiles, census × variants/traces/static descriptors, benchmark × lifecycle, benchmark/history × capability memory, hint provenance × profile/census, structural fingerprint × persisted evidence, exact labels × traces/prefix survival, and manifests × decision-bearing runs. Human-parent descendants use the same variant-family joins; preserve parent source/exposure and analyze whole parents when the claim needs independent units. These are opportunities, not mandatory ritual. Use the smallest join that answers the gate.
+Useful joins include census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, hint provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Use the smallest join that answers the gate.
+
+### Four-resource lineage recipe
+
+For corpus × family × provenance × profile questions, treat the join as one causal lineage: corpus selection defines the population; family identity the intervention; provenance how paths entered the sample; the Solution Profile summarizes that sample. A replayed parent path may therefore appear as family evidence, provenance, and profile support without becoming three observations.
+
+The September 14 census found every current published/C1/C2 parent replay-touched and replay as the earliest dated discovery for roughly three quarters of stored paths. When family effects are the question, distinguish **replay-touched** from **replay-first** and prefer non-replay-first profile evidence, or label the full profile downstream/dependent. Full profiles remain valid descriptions of the current known sample.
+
+Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters. Missing or partial family mounts remain unavailable, not negative evidence. See the [`audit`](../reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md) and [`machine summary`](../reports/2026-09-14-cross-resource-observability-summary-001.json).
 
 ## Three different fingerprints
 
@@ -80,15 +87,13 @@ Solver-blind generation does not make later corpus membership independent. Curre
 
 A residual or participant cohort supports the conditional question it was selected for, not unconditional mechanic prevalence. Level-blindness alone does not establish sample or distributional generalization.
 
-Human/editor-parent generation adds a genuinely different **parent source** from the procedural stress generators, but it does not erase selection. Descendants of one parent remain correlated, preserved witnesses prove solvability only, and a parent family whose outcomes influenced treatment design becomes development evidence for descendants of that decision. See [`human-parent-contrast-research.md`](human-parent-contrast-research.md).
-
 ### Solution profiles are sample profiles
 
 Profile fields summarize stored known solutions with explicit support. Missing/unsupported axes remain unavailable. `observedSingleOrder` is sampled agreement, not structural rigidity. `hasExhaustiveSearchEvent` records an event, not unrestricted whole-space enumeration/persistence. Saturation/plateau claims require adequate dated chronology. Sparse nearest-profile identity is exploratory even under schema v3 and needs independent calibration before decision-bearing use. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`profile audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
 
 ### Independence, missingness, and hint provenance
 
-Variant siblings, generator batches, rediscoveries, and multiple rows from one level are not automatically independent; hold out whole families/parents when needed. For human/editor controlled contrasts, the parent family is the usual independent unit and parent exposure must be explicit. Missing provenance is unknown: an absent baseline/capability-memory row is no observation, not failure.
+Variant siblings, generator batches, rediscoveries, and multiple rows from one level are not automatically independent; hold out whole families/parents when needed. Missing provenance is unknown: an absent baseline/capability-memory row is no observation, not failure.
 
 Declare the evidence purpose before consuming provenance: `positive-oracle`, `solution-atlas`, `current-production-capability`, `technique-performance`, or `longitudinal-process`. Use shared applicability/dependency-stratum helpers rather than a local “trusted hint” predicate.
 
@@ -104,8 +109,8 @@ Historical capability may survive code drift as forensic nomination, but current
 
 When a durable evidence family changes, update [`solver-research-data-assets.json`](solver-research-data-assets.json), not parallel prose. Registry entries should own stable ID/status, grain/independent unit, locations/authorities, query entry points, join keys, related assets, evidence roles, and leakage/freshness/selection caveats.
 
-Human/editor controlled contrasts intentionally remain under the existing `variant-family-data` asset rather than minting a new asset ID: the generated records/manifests use the same family identity/provenance contract. Add a new registry asset only if the apparatus later creates a genuinely separate persisted evidence interface.
+When a focused resource audit changes scientific semantics, also update its audit-grade declaration under [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy the closeout gate in [`solver-research-resource-contract.md`](solver-research-resource-contract.md). Do not mark unaudited resources “audited” by filling unknown fields with guesses.
 
 Capability memory is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the current question.
 
-Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry.
+Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry or resource contract.
