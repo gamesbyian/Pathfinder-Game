@@ -1,4 +1,5 @@
 const RANDOM_CORPUS_NAME = 'random-uniform-v1';
+const SQUARE_CLEANUP_APPEND_SEED = 20260711;
 
 function history(level) {
     return Array.isArray(level?.provenance?.history) ? level.provenance.history : [];
@@ -51,16 +52,23 @@ function stress1Lineage(level) {
     };
 }
 
-function stress2Lineage(level, metadata, context) {
+function squareCleanupAppend(metadata) {
     const appendHistory = Array.isArray(metadata?.appendHistory) ? metadata.appendHistory : [];
-    const appendedRows = appendHistory.reduce((sum, entry) => sum + (Number.isInteger(entry?.count) ? entry.count : 0), 0);
+    if (!appendHistory.length) return null;
+    return appendHistory.find(entry => entry?.masterSeed === SQUARE_CLEANUP_APPEND_SEED) ?? appendHistory[0];
+}
+
+function stress2Lineage(level, metadata, context) {
+    const cleanupAppend = squareCleanupAppend(metadata);
+    const appendedRows = Number.isInteger(cleanupAppend?.count) ? cleanupAppend.count : 0;
     const position = context?.position;
     const totalLevels = context?.totalLevels;
 
     // The July-11 append implementation preserved every surviving row byte-for-byte and appended
     // replacements after them. Row provenance was copied from the original random generator and
-    // therefore cannot distinguish the two eras. The wrapper's appendHistory count plus current
+    // therefore cannot distinguish the two eras. The square-cleanup append count plus current
     // array position is the durable reconstruction boundary: 328 retained rows + 1,372 appended.
+    // Do not sum later appendHistory entries: a future append must not retroactively move this cut.
     if (Number.isInteger(position) && Number.isInteger(totalLevels) && appendedRows > 0 && appendedRows < totalLevels) {
         const firstAppendedPosition = totalLevels - appendedRows;
         if (position < firstAppendedPosition) {
