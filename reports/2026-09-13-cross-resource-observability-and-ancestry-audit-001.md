@@ -1,13 +1,13 @@
 # Cross-resource observability and ancestry audit 001
 
 > **Status:** active
-> **Last evidence:** 2026-09-13 — audit opened from current `main` after the hint-provenance, variant-family, solution-profile, stress-corpus, decision-exposure, and Resource Research Contract work.
+> **Last evidence:** 2026-09-13 — shared corpus-selection lineage classifier and cross-resource observability runner implemented; bounded manifest-only family census dispatched on the audit branch.
 > **Decision:** investigate the four audited research resources as one evidence system, with special attention to cross-resource coverage, shared ancestry, selection into observability, and apparently independent signals that descend from one historical event.
-> **Remaining gate:** produce a reproducible cross-resource coverage/ancestry inventory and classify the highest-value clean and contaminated joins.
+> **Remaining gate:** ingest the empirical coverage/ancestry run, classify the highest-value clean and contaminated joins, and reconcile any durable compatibility changes.
 > **Evidence role:** forensic/discovery; existing data only unless a later bounded question genuinely requires new solver compute.
-> **Selection:** all current published/C1/C2 levels for on-main resources, plus existing variant-family parent/evidence metadata where queryable without new generation.
-> **Population identity:** current tracked published/stress corpora at branch base; exact variant-family data remain the audited off-main resource and are not bulk-materialized merely for this audit.
-> **Selection history:** preserve corpus generation/selection ancestry, hint discovery/replay ancestry, profile sample/provenance support, and variant parent/generation/evaluation ancestry separately.
+> **Selection:** all current published/C1/C2 levels for on-main resources, plus existing variant-family manifests from the audited off-main resource; no new variants or solver outcomes.
+> **Population identity:** current tracked published/stress corpora at branch base; variant-family manifests are read from `claude/variant-levels-solver-insights-tpk4qg` without materializing the full historical trove.
+> **Selection history:** preserve corpus generation/selection ancestry, hint discovery/replay ancestry, profile sample/provenance support, and variant parent/generation ancestry separately.
 > **Inference scope:** characterize evidence availability/dependence and nominate bounded mechanism questions; do not infer solver efficacy from resource richness or historical stored successes.
 
 ## Questions
@@ -32,17 +32,41 @@ The dangerous feedback loop is: selected corpus parent -> generated/inspected fa
 
 ## Method
 
-Prefer current shared readers and identities. The audit should add one bounded read-only script if existing query tools cannot answer coverage/ancestry questions reproducibly. It should not duplicate family-index, provenance, profile, or corpus semantics.
+The audit runner is `scripts/cross-resource-observability-audit.mjs`, with pure aggregation in `scripts/cross-resource-observability-lib.mjs`. It uses:
 
-Planned outputs:
+- `readLevelsWithHints()` for current stored accepted paths;
+- the shared provenance origin/dependency-stratum taxonomy for observation ancestry;
+- `scripts/corpus-selection-lineage.mjs` for the standing C1/C2 selection strata established by the September 13 reconstruction;
+- the existing family-index parser for family manifests;
+- support-shape facts from the same known-solution sample consumed by Solution Profiles, without pretending C2 has a tracked profile library or that any sample is the latent complete solution space.
 
-1. per-level resource-coverage matrix for on-main resources;
-2. corpus-selection/provenance/profile-support stratification;
-3. explicit identification of variant-replay/profile feedback where detectable;
-4. family-parent coverage join when the off-main index is available, with missing family data represented as unavailable rather than no-family evidence;
-5. ranked clean/contaminated multi-resource case classes;
-6. small compatibility/query improvements only where the analysis exposes recurring friction.
+The family side deliberately distinguishes **not mounted** from **mounted with no parent record**. The empirical runner fetches only `*-manifest.json` blobs from the research branch, enough to establish parent/family/variant coverage without buying a 2.5 GB checkout or pretending absent evaluation logs are failures.
 
-## Findings
+The per-level matrix records stored-path count, provenance-event count, within-path dependency strata, replay-touched/replay-only/replay-first paths, chronology support, tracked-versus-derivable profile status, corpus selection stratum, and family-parent coverage. Summary output stratifies those facts by corpus, selection stratum, and historical solver-outcome conditioning.
 
-Pending.
+## Findings so far
+
+### F1 — selection provenance was authoritative but not composable
+
+The stress-corpus audit established four standing stress strata that materially change inference:
+
+- C1 A-F retained survivors;
+- C1 migrated random rows selected for historical solver success;
+- C2 original random rows retained from the historical solver-negative complement;
+- C2 July-11 replacement rows.
+
+That correction existed in prose/report authority, while `corpus-query` exposed generation ancestry only. A profile/provenance/family analysis therefore had to re-implement or manually remember the most important corpus-selection fact.
+
+Repair on this branch: `scripts/corpus-selection-lineage.mjs` owns the current offline classification, and `corpus-query` exposes `selectionLineage`, summary counts, and `--selection-stratum=` filtering. This is research metadata only and is explicitly not a legal cold-solver feature.
+
+### F2 — family absence needs a three-state interpretation
+
+A normal `main` checkout does not contain the canonical large family resource. Therefore “no indexed family” has two very different meanings: the family resource was not mounted, or it was mounted and the parent truly had no manifest. The cross-resource tool keeps those states separate. This is the same missingness discipline learned from provenance/profile auditing, applied at the resource-availability level.
+
+## Pending empirical questions
+
+- How concentrated is family-parent coverage across the four standing C1/C2 selection strata?
+- How often has variant replay actually touched the stored sample used by profiles, and how often is replay the earliest known discovery of a stored path rather than merely a later rediscovery event?
+- Are family-covered levels systematically richer in hints/provenance than non-family levels?
+- How many apparent four-resource cases remain after requiring whole-parent family identity and dependency-aware provenance accounting?
+- Which low-replay four-resource cases give the cleanest existing intervention + phenotype + population combinations for mechanism follow-up?
