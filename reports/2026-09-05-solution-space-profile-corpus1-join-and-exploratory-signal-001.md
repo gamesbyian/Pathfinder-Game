@@ -1,19 +1,27 @@
-# Solution-space profiles join safely to census corpus1 by array position, not the `level` field's literal value; production-solved signal is exploratory only (n=7 unsolved)
+# Solution-space profiles join safely to census corpus1 by array position; the old production-solved association is superseded
 
-> **Status:** inconclusive
-> **Last evidence:** 2026-09-05 — joined `reports/stress/solution-profile-corpus1.json` (102 rows) to `reports/stress/technique-niches/2026-09-03/level-capability.json`'s `corpus1` rows (102 rows) via `data/stress/stress-levels.json`'s file-order `levels` array, no new dispatch
-> **Decision:** the join methodology is established and safe (102/102 rows matched, no ambiguity) — see Method. The substantive question (does solution-space diversity predict production-solved status) gets only exploratory support: `pairwiseDistinctiveness.meanDistance` (path diversity) and raw hint/path count are much higher for production-solved corpus1 levels (0.340 vs 0.136, standardized diff 1.48; and 15.2 vs 6.6 paths, standardized diff 1.00) than unsolved ones, but corpus1 has only **7** production-unsolved levels, so this is a small-sample descriptive signal, not a confirmed effect, and no larger-n replication corpus exists (`solution-space-profiles` has no corpus2/1,700-level equivalent file committed).
-> **Remaining gate:** would need either a materially larger unsolved-corpus1 sample (not available) or a `solution-profile-corpus2.json` generation (new dispatch, out of scope for this local-only session) to move past exploratory.
-> **Evidence role:** discovery — first use this session of the previously-untapped `solution-space-profiles` research-data asset (status `current`, never inspected before this report)
-> **Selection:** whole corpus1 population (102 levels), not a sample
+> **Status:** superseded analytical result; join-method finding retained
+> **Last evidence:** 2026-09-13 re-evaluation against the stress-corpus selection-history audit and solution-profile resource audit; original analysis was 2026-09-05.
+> **Decision:** the 102/102 position-to-ID join is valid and reusable. The reported association between legacy profile diversity and `productionSolved` must not be used as evidence of a solvability relationship. Seventy-nine of the 102 Corpus-1 rows were historically admitted because an earlier solver solved them, so this analysis conditions the population on a close ancestor of its outcome. Its strongest profile axes also used legacy support/rigidity semantics corrected by schema v3.
+> **Remaining gate:** none for this old analysis. Do not generate a Corpus-2 profile library merely to “replicate” it. A future profile-versus-solvability study must start with a prospectively defined population and current support-aware profile semantics.
+> **Evidence role:** forensic only for the old feature/outcome table; durable engineering evidence for the safe join method.
+> **Selection:** census of the then-current 102-row Corpus-1 container, which is ancestry-mixed and historically solver-outcome-selected.
 
-## Method
+## 2026-09-13 re-evaluation
 
-`reports/stress/solution-profile-corpus1.json`'s per-level `level` field is a **1-indexed array position** into whatever levels file it was generated from (`scripts/stress/solution-profile-lib.mjs`'s `regenerateCorpusProfile`: `levels[levelNumber - 1]`), **not** the level's actual id string — a naming trap for any future naive join, since the census's `corpus1` rows in `level-capability.json` use real id strings (`S00001`, `R00408`, etc., 78 `R`-prefixed + 24 `S`-prefixed). Confirmed the mapping is safe by cross-checking: `data/stress/stress-levels.json`'s `levels` array is read by `readLevelsWithHints` in unmodified file order (no re-sort), so position `i+1` in the profile file corresponds exactly to `stress-levels.json.levels[i].id`. Verified `stress-levels.json` has the identical 102-level, 78-R/24-S composition as census `corpus1`, and joined by extracting `stress-levels.json`'s ids in file order and matching by position — 102/102 rows matched with no ambiguity.
+The original report already recognized n=7 unsolved, effort-investment confounding and possible reversed causality. The later corpus reconstruction adds a more fundamental problem: 79 current C1 rows descend from random-generator levels migrated into C1 on 2026-07-10 specifically because the then-current solver solved them. Comparing current `productionSolved` against profile features inside that container therefore conditions on historical solver success before the analysis begins.
 
-Computed standardized mean differences (mean difference / pooled SD) between production-solved and production-unsolved corpus1 levels for the solution-profile's `combined` fields: `pairwiseDistinctiveness.meanDistance`, raw `pathCount`/`hintCount`, `cellVisitFrequency.entropy`, `turnDistribution.turnRateMean`/`cwFraction`, and `mustCrossOrder.rigid`/`distinctFirstEntryOrders`.
+The solution-profile audit independently invalidates treating two headline descriptors at face value: unsupported sparse diversity axes previously contributed concrete values, and `mustCrossOrder.rigid` described agreement among observed solutions rather than a proven structural property. Those issues do not falsify the literal old means below; they remove the old table's scientific entitlement to characterize latent solvability.
 
-## Result
+See `reports/2026-09-13-historical-evidence-reevaluation-ledger.md`, `reports/2026-09-13-solution-profile-resource-audit-001.md`, and `docs/solver-corpus-selection-provenance.md`.
+
+## Method finding that survives
+
+`reports/stress/solution-profile-corpus1.json`'s per-level `level` field is a **1-indexed array position** into the levels file used to generate it, not the level's persistent id. Mapping through `data/stress/stress-levels.json`'s file-order `levels` array produced 102/102 unambiguous matches to the census's real level ids. That join lesson remains valid independently of the later analytical correction.
+
+## Original 2026-09-05 analysis
+
+The analysis computed standardized mean differences between production-solved and production-unsolved C1 rows for the legacy `combined` profile fields: `pairwiseDistinctiveness.meanDistance`, raw `pathCount`/`hintCount`, `cellVisitFrequency.entropy`, `turnDistribution.turnRateMean`/`cwFraction`, and `mustCrossOrder.rigid`/`distinctFirstEntryOrders`.
 
 | feature | solved mean (n=95) | unsolved mean (n=7) | standardized diff |
 |---|---:|---:|---:|
@@ -27,13 +35,27 @@ Computed standardized mean differences (mean difference / pooled SD) between pro
 | `edgeUsageFrequency.entropy` | 6.679 | 6.617 | 0.143 |
 | `cellVisitFrequency.touchedCells` | 98.98 | 97.71 | 0.047 |
 
-## Interpretation
+These numbers are retained as historical measurements of the legacy stored sample. They are **not** a current estimate of how latent solution-space diversity relates to solver difficulty.
 
-The two largest effects (`pairwiseDistinctiveness.meanDistance` and raw hint/path count) point the same direction: production-solved corpus1 levels have a richer, more diverse recorded solution space. But this is very plausibly reversed causality or a measurement artifact rather than a real solvability driver — a level's hint/path count in this legacy corpus reflects how much historical search effort was invested in that level (including from `isolatedOracleSolved` capability work), and a currently production-unsolved level is mechanically less likely to have accumulated many diverse solution paths regardless of any latent structural property. With only 7 unsolved rows, this cannot distinguish "harder levels have less diverse recorded solution spaces" from "harder levels simply received less historical solving effort, hence fewer recorded paths." `mustCrossOrder.rigid` (100% rigid among the 5 unsolved levels with any must-cross order, vs. 78.9% among the 38 solved ones) is directionally consistent with a real difficulty signal (rigid ordering more common where the level is unsolved) but again n=5 is far too small to weight heavily.
+## Why the old interpretation no longer survives
 
-## What this does not establish
+Three confounds now have direct evidence:
 
-- Does not establish a causal or even a reliable correlational signal — n=7 unsolved is too small for the two headline effects to be trusted as anything beyond descriptive/exploratory.
-- No `solution-profile-corpus2.json` (1,700-level) exists in the repo to attempt a larger-n replication; generating one would require new dispatch (running `npm run stress:solution-profile` against corpus2's hint stash), out of scope for this local-only session.
-- Does not test whether the `hintCount`/diversity confound (effort-invested vs. structural difficulty) can be disentangled — a natural follow-up would condition on a proxy for "how many distinct solving attempts were made" rather than raw stored-hint count.
-- The join methodology finding (position-based, not literal-`level`-value) is the more durable and immediately reusable output of this report regardless of the substantive signal's weakness.
+1. **Population selection:** most C1 rows were selected by historical solver success.
+2. **Evidence accumulation:** hint/path count and apparent diversity depend on how much and what kind of search effort accumulated accepted solutions.
+3. **Profile semantics:** schema-v2 distance/rigidity could treat missing support as a measurement and sampled agreement as a structural claim.
+
+The old n=7 unsolved contrast cannot separate these effects. Stratifying to the genuine A-F 23 would reduce the population further and still leave historical/profile-accumulation confounds. There is no value in polishing this correlation with a better statistic on the same selected container.
+
+## What this report still establishes
+
+- The profile-to-census C1 join by file position was technically correct and complete at 102/102 rows.
+- The historical stored samples differed descriptively between the 95 rows then solved and 7 then unsolved under the legacy feature definitions.
+- The original analysis was appropriately cautious about causal interpretation, even though it did not yet know the decisive corpus-selection history.
+
+## What it does not establish
+
+- A causal or reliable correlational relationship between solution-profile diversity and solver solvability.
+- That whole Corpus 1 is a representative or independent population for such a relationship.
+- That `mustCrossOrder.rigid` was a puzzle-level rigidity property.
+- That generating `solution-profile-corpus2.json` is the next scientific step. A larger selected population does not repair the design by itself.
