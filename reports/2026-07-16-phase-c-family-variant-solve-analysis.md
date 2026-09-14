@@ -1,9 +1,9 @@
 # Phase C: solving Phase B's denser family/variant sets (2026-07-16)
 
 > **Status:** superseded
-> **Last evidence:** 2026-08-08 — intervention guidance reconciled with Phase D and the current synthesis
-> **Decision:** retain the fragile/robust classification, but do not act on this report's suggestion to temper `SCORE_INTERSECTION_SETUP`; later ablations found different rescuing terms across fragile families
-> **Remaining gate:** see [`2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](2026-08-08-symmetry-orientation-sensitivity-synthesis.md)
+> **Last evidence:** 2026-09-14 — historical claim-lineage audit narrowed the causal interpretation of perturbation robustness
+> **Decision:** retain `fragile` / `robust` only as descriptive perturbation-response labels under this tested family/solver/budget. Do not infer intrinsic combinatorial hardness or a specific missing capability from sibling/technique resistance alone; later ablations also supersede the suggestion to temper `SCORE_INTERSECTION_SETUP`.
+> **Remaining gate:** see [`2026-08-08-symmetry-orientation-sensitivity-synthesis.md`](2026-08-08-symmetry-orientation-sensitivity-synthesis.md) and [`2026-09-14-historical-claim-lineage-audit-001.md`](2026-09-14-historical-claim-lineage-audit-001.md)
 
 ## Setup
 
@@ -34,58 +34,54 @@ solve."
 | R02579 | 0 | 1 | 0 | 0 | 0 |
 | **R00440** | **0** | **0** | **0** | **0** | **0** |
 
-## The finding: `dfs-plain` is not one population, it's (at least) two
+## The finding: `dfs-plain` contains different perturbation-response phenotypes
 
-The 11 seeds split sharply by how they respond to perturbation, not by badness or archetype:
+The 11 selected seeds split sharply by how they respond to the tested perturbations, not by badness or archetype:
 
 - **Fragile** (R02248 above all, also R02795/R00156/R02960 to lesser degrees): a large fraction of
-  *any* perturbation type — symmetry, local-mutant, swap, shuffle, re-embed alike — flips the level
+  perturbation types — symmetry, local-mutant, swap, shuffle, re-embed — flip the tested sibling
   solvable. R02248 solved in 35/45 of its own variants (78%) across every mutation type tried. This
   matches its already-documented diagnosis (`reports/2026-07-16-r02248-orientation-scoring-
-  interaction.md`): a narrow, specific scoring-term × structure interaction, not a deep
-  computational wall — nudge the structure almost any way and the interaction breaks.
-- **Robust** (R00440 above all, also R02579 and to a lesser extent R02239/R02452/R00059): little to
-  no perturbation helps. **R00440 solved in 0 of 45 variants across all 5 mutation types** — every
-  symmetry orientation, every single-object relocation, every swap, every reshuffle, every grid
-  enlargement stayed unsolved. R02579 solved in only 1/45. Checked whether this is one specific
-  technique failing uniformly (which would itself be a fixable, narrow signal): it isn't — R00440's
-  variants exercise 10 different attempt profiles/techniques (repair, both beam and DFS variants of
-  `intersectionHarvest`/`objectiveFirst`/`mustCrossFirst`/`perimeterSweep`/`harvestThenFinish`) with
-  badness ranging 2–108 (median ~44); R02579 exercises 12 techniques with badness 3–42 (median ~24).
-  A wide spread of techniques all getting stuck at varying, often-substantial distances is the
-  signature of genuine combinatorial hardness — a large, genuinely constrained search space — not a
-  single narrow bug a scoring tweak would fix.
+  interaction.md`): on that worked case, a narrow scoring-term × structure interaction is visible
+  under direct ablation.
+- **Robust to this intervention set** (R00440 above all, also R02579 and to a lesser extent
+  R02239/R02452/R00059): little to no tested perturbation helps. **R00440 solved in 0 of 45 variants
+  across all 5 mutation types** and R02579 solved in only 1/45. Their variants also exercise a wide
+  spread of attempt profiles/techniques and badness values. That is useful evidence that these
+  parents resist this particular perturbation/search menu, but it does **not** establish intrinsic
+  combinatorial hardness, independence among techniques, or which missing capability would solve
+  them.
 
 ## Reading
 
-This directly answers the practical question this whole investigation started from (a solver that
-takes minutes isn't worth it if the real target is ~20-30s): the `dfs-plain` cluster isn't a single
-target for one fix. The **fragile subgroup** is where a scoring/heuristic change has real leverage —
-a small, targeted change (in R02248's case, tempering `SCORE_INTERSECTION_SETUP`'s interaction with
-orientation) could plausibly unlock a meaningful slice of currently-unsolved levels within budget,
-mirroring how trivially R02248's own variants already flip. The **robust subgroup** (best
-represented by R00440, 0/45) is not a good target for a scoring fix — no structural nudge helps, and
-many different techniques all fail at different distances, suggesting the puzzle is simply hard at
-its core. Any future work aimed at "solve more within a practical budget" should prioritize
-diagnosing what's fixable in the fragile group's shared failure shape over trying to force robust-group
-levels to solve faster. **Later Phase D evidence supersedes the term-specific suggestion above:**
-five fragile families implicated five primary navigation/attraction terms, so the general candidate
-is bounded search diversity rather than tempering `SCORE_INTERSECTION_SETUP` globally. The robust
-group may be better addressed by accepting the difficulty (or
-flagging it for level-design review, since a level nothing short of exhaustive search can crack
-within a practical time budget may not be a good level to have shipped in the first place, regardless
-of the solver's own limitations).
+This directly answers the practical question this investigation started from: the selected
+`dfs-plain` cases are not one homogeneous intervention target. The **fragile subgroup** is useful
+discovery material for scoring/search-diversity mechanisms because small controlled changes often
+produce solve-status cliffs. The **robust subgroup** is useful as a contrasting perturbation-response
+phenotype, but its cause remains unknown. Forty-five correlated siblings from one parent are not 45
+independent causal demonstrations, generated siblings are conditioned on the family producer's
+eligibility/witness/validation rules, and multiple solver profiles can share representation,
+ordering, scoring, pruning, or predecessor-state limitations.
+
+**Later Phase D evidence supersedes the term-specific suggestion:** five selected fragile families
+implicated different primary navigation/attraction terms, so the useful general question became
+bounded search diversity rather than globally tempering `SCORE_INTERSECTION_SETUP`. The 2026-09-14
+claim-lineage audit further narrows the old robust interpretation: resistance here nominates cases
+for a changed-premise capability study only if a live question needs them; it is not evidence that
+nothing short of exhaustive search can crack the parent.
 
 ## Caveats
 
 - n=11 seeds, not a statistically rigorous sample of `dfs-plain`'s 843 levels — this is a first,
   informative pass, not a corpus-wide claim about what fraction is fragile vs. robust.
-- "Fragile" here means *some* perturbation-induced structural change breaks the difficulty, not that
-  the *parent itself* has a known fix — R02795/R00156/R02960 don't have a documented root-cause
-  diagnosis the way R02248 does; that would need the same ablation-sweep treatment R02248/R01465
-  already got.
+- family rows are correlated; the parent is the independent unit for cross-parent generalization.
+- "Fragile" means some tested perturbation-induced structural change breaks the observed solver
+  difficulty, not that the parent itself has a known fix. R02795/R00156/R02960 required separate
+  ablation work rather than inheriting R02248's mechanism.
+- "Robust" means resistance to the tested generated intervention set under this solver/budget. It
+  does not mean intrinsic hardness or absence of a compact untested capability.
 - Symmetry variants are the cleanest signal (a small, exhaustive, structure-preserving set — 7 per
   seed) since they change nothing about the puzzle's actual constraints, only orientation; the other
   modes introduce real puzzle-content changes (different mustCross/block placement etc.), so a solve
-  there confirms perturbation *can* help but conflates "orientation sensitivity" with "any structural
-  sensitivity."
+  there confirms perturbation *can* help but conflates orientation sensitivity with broader
+  structural sensitivity.
