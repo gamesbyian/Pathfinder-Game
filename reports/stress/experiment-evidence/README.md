@@ -2,7 +2,7 @@
 
 This directory is the tracked closeout store for **decision-bearing v3 solver experiment evidence** whose original GitHub Actions artifacts may expire.
 
-It is populated through `scripts/persist-decision-bearing-experiment-evidence.mjs` by the repository's serialized evidence harvesters.
+It is populated by `scripts/persist-decision-bearing-experiment-evidence.mjs` through the repository's existing serialized `.github/workflows/harvest-solver-evidence.yml` writer.
 
 ## Admission rule
 
@@ -34,18 +34,19 @@ The bundle is intended to retain enough primary evidence to recompute the decisi
 
 ## Automatic harvest
 
-Two workflow surfaces share the same repository-wide evidence-writer lock:
+`.github/workflows/harvest-solver-evidence.yml` watches both canonical hint/provenance solver workflows and maintained decision-bearing confirmation/reconciliation workflows.
 
-- `.github/workflows/harvest-solver-evidence.yml` retains decision-bearing v3 bundles encountered in the canonical solver/hint workflows it already harvests; and
-- `.github/workflows/harvest-decision-bearing-experiment-evidence.yml` retains bundles from fresh broad/residual confirmation, static-portfolio confirmation, and cross-run reconciliation workflows without sending those generated populations through canonical hint importers.
+For canonical hint-producing sources it runs the existing hint/provenance importers and then the durable experiment retention layer.
 
-Both reset to current `main` and replay immutable source artifacts on a push race, so re-harvesting the same source run is deterministic and does not merge generated evidence JSON line-by-line.
+For broad/residual confirmation, static-portfolio confirmation, and cross-run reconciliation sources it deliberately skips the hint importers and runs only durable experiment retention. Fresh generated confirmation populations therefore cannot become canonical hint sources merely because they share the same serialized evidence writer.
+
+The workflow resets to current `main` and replays immutable source artifacts on a push race, so re-harvesting the same source run is deterministic and does not merge generated evidence JSON line-by-line.
 
 ## Backfill without solver compute
 
-While an existing source run's artifacts still exist, manually dispatch **Harvest decision-bearing experiment evidence** with `source_run_id`. It downloads the existing artifacts and applies the same admission rule. No solver rerun is needed.
+While an existing source run's artifacts still exist, manually dispatch **Harvest solver hint evidence** with `source_run_id` and, when the source workflow is not one of the canonical hint producers, the matching `source_workflow` label.
 
-The older **Harvest solver hint evidence** manual dispatch also retains a decision-bearing v3 bundle when the source run is one of the canonical hint/provenance workflow families.
+The workflow downloads the existing artifacts and applies the same admission rule. For experiment-only source labels it skips hint importers. No solver rerun is needed.
 
 Historical experiments whose primary artifacts have already expired remain historically unreconstructable at the missing layer. Do not fabricate replacement rows from current defaults or rerun old science merely to make this directory look complete.
 
