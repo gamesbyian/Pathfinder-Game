@@ -3,6 +3,7 @@
 
 > **Status:** human evidence-topology guide.
 > **Structured detail:** [`solver-research-data-assets.json`](solver-research-data-assets.json) owns per-asset locations, authorities, query entry points, join keys, relationships, roles, and caveats.
+> **Resource contract:** [`solver-research-resource-contract.md`](solver-research-resource-contract.md) defines catalogue-grade versus audit-grade resource semantics; [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) contains audit-grade declarations keyed to registry IDs.
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **Method:** [`solver-research-operating-model.md`](solver-research-operating-model.md) and [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 
@@ -16,7 +17,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 node scripts/tooling-census.mjs --compact --query=<term>
 ```
 
-Use `research-asset-query --id=<asset-id>` for exact registry detail.
+Use `research-asset-query --id=<asset-id>` for exact registry detail. Compact results now expose `contractGrade`, `independentUnit`, and audit authorities when a resource has been audited; `--full` includes the complete audited-resource declaration.
 
 ## Required evidence preflight
 
@@ -100,6 +101,8 @@ Historical capability may survive code drift as forensic nomination, but current
 
 When a durable evidence family changes, update [`solver-research-data-assets.json`](solver-research-data-assets.json), not parallel prose. Registry entries should own stable ID/status, grain/independent unit, locations/authorities, query entry points, join keys, related assets, evidence roles, and leakage/freshness/selection caveats.
 
+When a focused resource audit changes scientific semantics, also update its audit-grade declaration under [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy the closeout gate in [`solver-research-resource-contract.md`](solver-research-resource-contract.md). Do not mark unaudited resources “audited” by filling unknown fields with guesses.
+
 Capability memory is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the current question.
 
-Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry.
+Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry or resource contract.

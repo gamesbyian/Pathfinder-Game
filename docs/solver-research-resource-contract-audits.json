@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "registry": "docs/solver-research-data-assets.json",
+  "contractDocument": "docs/solver-research-resource-contract.md",
+  "requiredAuditedResources": [
+    "hint-provenance",
+    "variant-family-data",
+    "solution-space-profiles",
+    "stress-corpora"
+  ],
+  "auditedResources": [
+    {
+      "assetId": "hint-provenance",
+      "independentUnit": [
+        "claim-dependent; provenance events are not independent by default",
+        "for support-volume claims collapse repeated rediscovery within provenance dependency strata before counting support"
+      ],
+      "identityLayers": [
+        "level structural revision",
+        "accepted hint path",
+        "provenance event",
+        "producer/origin plus orthogonal facets",
+        "solver/configuration/run context",
+        "provenance dependency stratum"
+      ],
+      "producerAuthority": [
+        "modules/domain/hint-types.ts",
+        "scripts/level-data-io.mjs",
+        "scripts/hint-query.mjs"
+      ],
+      "selectionConditioning": [
+        "hint storage is success-selected at the path/event level",
+        "variant-parent replay can create large dependent rediscovery clouds",
+        "external, witness, guided, isolated, exhaustive, randomized and production-retry contexts are distinct facets rather than one trust rank"
+      ],
+      "admissibleEvidencePurposes": [
+        "positive-oracle: every referee-valid stored path remains usable regardless of producer",
+        "solution-atlas: known geometry/basin evidence may include context-bound, replayed, witness, external, guided, randomized or unattributed paths",
+        "current-production-capability: requires an explicitly comparable cold Pathfinder discovery under the named current/equivalent regime",
+        "technique-performance: provenance can provide positive success/cost context but requires the originating attempted population, failures, comparable workSpent and protocol identity",
+        "longitudinal-process: attributed/versioned discovery history can retain context-bound evidence whose current capability meaning is unresolved"
+      ],
+      "dependenceModel": "Raw provenance-event volume is not support volume. Repeated same-regime/config rediscoveries and family replay clouds share causal ancestry; use the shared dependency-stratum helper before interpreting corroboration.",
+      "missingnessSemantics": [
+        "absent legacy booleans are unknown, not modern false",
+        "missing producer/config/run/work context is unknown and cannot be upgraded into current-capability or performance evidence",
+        "absence of a provenance event does not establish solver failure"
+      ],
+      "freshnessRevisionContract": [
+        "age alone does not make an event stale",
+        "current-capability/performance use requires audited code/config/scheduler/work equivalence or bounded current replay",
+        "context.levelRevision must match the intended structural puzzle revision when revision identity matters"
+      ],
+      "knownInformationLoss": [
+        "many legacy successful discoveries lack the attempted denominator and failures needed for technique-performance inference",
+        "many legacy events lack enough execution context to prove current-production comparability",
+        "dependency strata conservatively group dependence but cannot reconstruct independent experimental units that were never recorded"
+      ],
+      "consumerInventory": [
+        "scripts/hint-query.mjs and shared provenance applicability/dependency helpers",
+        "scripts/stress/hint-provenance-evidence-report.mjs",
+        "solution-profile provenance bucketing and representative selection",
+        "winning-path/residual/portal-parity/crossing-slack research consumers that select stored paths",
+        "any current-capability or historical-cost analysis joining hint provenance to solver evidence"
+      ],
+      "historicalClaimBlastRadius": [
+        "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md",
+        "reports/2026-09-13-historical-evidence-reevaluation-ledger.md"
+      ],
+      "auditAuthorities": [
+        "reports/2026-09-11-hint-provenance-evidence-relevance-audit-001.md"
+      ],
+      "prospectiveProducerFixes": [
+        "where practical, reference the originating experiment/run manifest so attempted denominator, failures, protocol identity and work semantics can be recovered"
+      ]
+    },
+    {
+      "assetId": "variant-family-data",
+      "independentUnit": [
+        "parent family for broad generalization",
+        "generated variant may be the observation unit only for within-parent transformation questions"
+      ],
+      "identityLayers": [
+        "parent puzzle (parentCorpus,parentId)",
+        "generation event/family",
+        "generated variant record (parentCorpus,parentId,variantId)",
+        "puzzle content identity/hash",
+        "transformation context",
+        "aggregate observation",
+        "evaluation run plus solver/config/budget/seed",
+        "solver attempt/result",
+        "accepted solution",
+        "replay/transfer event",
+        "derived claim/report"
+      ],
+      "producerAuthority": [
+        "docs/variant-level-research.md",
+        "data/families/README.md",
+        "scripts/family-index.mjs",
+        "family generation/run manifests"
+      ],
+      "selectionConditioning": [
+        "generation is selected by operator eligibility, placement attempts, witness/referee checks and deduplication",
+        "historical family census often retained whole-ladder winners rather than per-technique counterfactual outcomes",
+        "replayed parent solutions are derivative evidence rather than independent rediscovery",
+        "mixed-era observations can differ because solver/config/budget changed rather than because the variant changed"
+      ],
+      "admissibleEvidencePurposes": [
+        "causal-discovery under controlled transformation with parent/family dependence preserved",
+        "family confirmation when whole parents are held out appropriately",
+        "forensic localization of structural cliffs",
+        "not a substitute for current-code evaluation when only historical solver outcomes are available"
+      ],
+      "dependenceModel": "Sibling variants share parent ancestry, generator campaign, transformation logic and often replayed solution evidence. Treat parent as the independent unit for generalization and keep campaign/mode denominators visible for prevalence claims.",
+      "missingnessSemantics": [
+        "missing per-technique historical outcomes are unavailable counterfactuals, not failures",
+        "missing run identity/config/budget prevents treating mixed-era observations as comparable",
+        "absence of rejected generated candidates prevents reconstructing an unbiased proposal-to-accepted denominator for some campaigns"
+      ],
+      "freshnessRevisionContract": [
+        "decision-bearing historical outcomes should be rerun or explicitly reconciled on current solver/config semantics",
+        "join generated records by parent/variant/content identity and evaluation context rather than variantId alone",
+        "off-main dataset branch is a data location, not evidence freshness"
+      ],
+      "knownInformationLoss": [
+        "appendable generationRuns historically omit invocation-local requestedCount, generationAttempts, acceptedCount and attemptBudget needed to reconstruct per-run acceptance rates",
+        "older family census artifacts often omit per-technique counterfactual outcomes",
+        "some campaigns do not preserve rejected candidates or sufficient selection denominators"
+      ],
+      "consumerInventory": [
+        "scripts/family-index.mjs and family query/show/coverage tools",
+        "family census and analysis tooling",
+        "solver workstreams using family variants for causal follow-up, retention, repair or generalization",
+        "research-asset-query registry consumers"
+      ],
+      "historicalClaimBlastRadius": [
+        "reports/2026-09-12-variant-library-evidence-audit-001.md",
+        "reports/2026-09-13-variant-library-resource-integration-audit-002.md"
+      ],
+      "auditAuthorities": [
+        "reports/2026-09-12-variant-library-evidence-audit-001.md",
+        "reports/2026-09-13-variant-library-resource-integration-audit-002.md"
+      ],
+      "prospectiveProducerFixes": [
+        "retain invocation-local requested/attempted/accepted/budget counters inside each generationRuns record",
+        "preserve per-technique outcome/context when a family evaluation is intended to support technique counterfactuals"
+      ]
+    },
+    {
+      "assetId": "solution-space-profiles",
+      "independentUnit": [
+        "level plus provenance-source/sample-support context",
+        "individual stored solutions are repeated observations of one puzzle, not independent levels"
+      ],
+      "identityLayers": [
+        "level structural revision",
+        "stored accepted solution path",
+        "provenance source bucket",
+        "observed sample/support set",
+        "profile schema and algorithm version",
+        "comparison target plus comparable-axis support"
+      ],
+      "producerAuthority": [
+        "docs/solver-solution-profile.md",
+        "scripts/stress/solution-profile-lib.mjs",
+        "solution-profile schemaVersion 3 and sample-support-v2 algorithm semantics"
+      ],
+      "selectionConditioning": [
+        "profiles summarize the stored known-solution sample, whose membership depends on discovery/provenance history",
+        "provenance-source composition can change apparent diversity/order/chronology",
+        "nearest-neighbour/profile analyses can add further analyst selection pressure and remain exploratory until independently calibrated"
+      ],
+      "admissibleEvidencePurposes": [
+        "support-aware offline description of known sampled solutions",
+        "exploratory comparison/stratification when only axes observed on both sides are used",
+        "historical/forensic study of stored solution samples",
+        "not whole-solution-space truth, structural rigidity proof, calibrated confidence, or direct production routing"
+      ],
+      "dependenceModel": "Solutions within a level are a sample from one puzzle and often share discovery lineage. Treat support/chronology/provenance composition as part of the observation; do not turn solution count into independent puzzle support.",
+      "missingnessSemantics": [
+        "unsupported sparse axes are unavailable, not zero",
+        "one-path pairwise diversity/distinctiveness is unsupported rather than measured zero",
+        "missing chronology is unavailable rather than saturated/plateaued",
+        "hasExhaustiveSearchEvent marks an event and does not imply complete whole-space enumeration/persistence"
+      ],
+      "freshnessRevisionContract": [
+        "schema-v3 content-sensitive hintSignature replaces count-only freshness",
+        "profile reuse requires matching level revision plus profile schema/algorithm/provenance taxonomy semantics",
+        "old nearest-profile identities should be recomputed before decision-bearing reuse"
+      ],
+      "knownInformationLoss": [
+        "many historical/published samples lack complete dated chronology; chronology-dependent axes cannot be reconstructed from storage order",
+        "legacy profiles encoded unsupported sparse axes and old rigid/provablyExhaustive semantics that cannot be retroactively made into measurements",
+        "sparse samples remain intrinsically unstable even after semantic repair"
+      ],
+      "consumerInventory": [
+        "scripts/stress/solution-profile-lib.mjs",
+        "stress:solution-profile and stress:solution-profile-compare",
+        "census/profile joins and nearest-profile exploratory analyses",
+        "historical reports that consumed legacy rigidity, plateau, completeness or nearest-profile fields"
+      ],
+      "historicalClaimBlastRadius": [
+        "reports/2026-09-13-solution-profile-resource-audit-001.md",
+        "reports/2026-09-13-historical-evidence-reevaluation-ledger.md"
+      ],
+      "auditAuthorities": [
+        "reports/2026-09-13-solution-profile-resource-audit-001.md"
+      ],
+      "prospectiveProducerFixes": [
+        "separate mechanics-applicability/comparable-axis coverage from statistical sample/stability support instead of allowing one nominal coverage measure to imply both"
+      ]
+    },
+    {
+      "assetId": "stress-corpora",
+      "independentUnit": [
+        "claim-dependent level observation stratified by generator/source/selection history",
+        "rows sharing generator/retention ancestry are not automatically independent confirmations of a broad mechanism"
+      ],
+      "identityLayers": [
+        "level content/structural fingerprint",
+        "corpus container and revision/content hash",
+        "generation event/seed/batch/epoch",
+        "later selection/migration/retention event",
+        "decision-bearing experimental population",
+        "treatment-lineage exposure state"
+      ],
+      "producerAuthority": [
+        "data/stress/README.md",
+        "scripts/stress/generate.mjs and scripts/stress/generate-random.mjs",
+        "docs/solver-corpus-selection-provenance.md",
+        "decision-bearing population manifests/reports"
+      ],
+      "selectionConditioning": [
+        "generator acceptance is conditioned on witness generation, mechanic placement, schema/referee validity and novelty retention",
+        "current Corpus 1 includes 79 random rows historically selected because the then-current solver solved them",
+        "current Corpus 2 includes 328 survivors of the historical solver-negative complement plus 1372 later square-grid replacements",
+        "residual/reach/starvation/mechanic-enriched experimental cohorts support conditional questions only",
+        "a population becomes development evidence for descendants after inspected outcomes influence treatment design"
+      ],
+      "admissibleEvidencePurposes": [
+        "standing stress corpora as explicit development/challenge targets for the project objective",
+        "confirmation only when the exact population was untouched for the treatment lineage and the claim matches its conditioning",
+        "cross-distribution transfer only from a materially independent source/generator with relevant mechanic support",
+        "forensic reconstruction of historical solve/work observations on exact rows"
+      ],
+      "dependenceModel": "No exact duplicate does not mean independent observations. Rows share witness grammar, generator parameters, acceptance/novelty logic and retention epochs; preserve those strata when evidence volume is used to support generalization.",
+      "missingnessSemantics": [
+        "corpus filename does not supply missing generation or selection provenance",
+        "uninspected/absent solver outcome is unknown rather than failure",
+        "a non-participating conditional treatment is inconclusive rather than a clean null",
+        "raw level-id mentions do not establish decision exposure"
+      ],
+      "freshnessRevisionContract": [
+        "decision-bearing populations require exact content identity/hash plus solver/config/protocol identity",
+        "historical corpus names are insufficient across major replacement events such as the 2026-07-11 square-grid cleanup",
+        "latest pointers are conveniences and do not prove compatibility or untouched status"
+      ],
+      "knownInformationLoss": [
+        "historical corpus wrappers do not always separate per-generation-run counters from cumulative/current container metadata",
+        "older curation/selection events were not uniformly encoded as first-class machine-readable row history",
+        "pre-contract decision exposure often requires report/manifest archaeology because raw mentions cannot distinguish influence from bookkeeping"
+      ],
+      "consumerInventory": [
+        "scripts/corpus-query.mjs and stress corpus validation/benchmark tooling",
+        "docs/solver-evaluation-evidence.md and solver-corpus-selection-provenance.md",
+        "managed confirmation/transfer population manifests",
+        "all solver research reports that infer beyond exact tested stress rows"
+      ],
+      "historicalClaimBlastRadius": [
+        "reports/2026-09-13-stress-corpus-research-resource-audit.md",
+        "reports/2026-09-13-stress-corpus-population-validity-audit.md",
+        "reports/2026-09-13-stress-corpus-selection-history-reconstruction-audit.md",
+        "reports/2026-09-13-decision-exposure-genealogy-audit-001.md",
+        "reports/2026-09-13-historical-evidence-reevaluation-ledger.md"
+      ],
+      "auditAuthorities": [
+        "reports/2026-09-13-stress-corpus-research-resource-audit.md",
+        "reports/2026-09-13-stress-corpus-population-validity-audit.md",
+        "reports/2026-09-13-stress-corpus-selection-history-reconstruction-audit.md",
+        "reports/2026-09-13-decision-exposure-genealogy-audit-001.md"
+      ],
+      "prospectiveProducerFixes": [
+        "record selection/conditioning events separately from generation ancestry, including which side/outcome conditioned membership",
+        "record which descendant decisions consumed a managed population when that affects later confirmation status",
+        "preserve per-generation-run statistics rather than hybrid cumulative/latest wrapper fields"
+      ]
+    }
+  ]
+}
