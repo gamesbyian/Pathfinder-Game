@@ -12,7 +12,7 @@ Before opening a materially new solver question, run:
 node scripts/research-status-index.mjs --compact --query=<term>
 ```
 
-Question records now appear beside matching reports/experiments. `--kind=question` restricts the output to this registry.
+Question records now appear beside matching reports/experiments. `--kind=question` restricts the output to this registry. Question lookup treats hyphens/underscores and ordinary spaces as equivalent, so researcher vocabulary such as `must turn`, `full pool`, or `admissible order` can discover canonical hyphenated identities. Optional `aliases` on a sparse question record are appropriate only when ordinary vocabulary is genuinely different rather than merely differently punctuated, for example `topology` versus `topological`.
 
 Keep the registry sparse. Add or update a question when at least one of these is true:
 
@@ -33,8 +33,12 @@ A result closeout asks both directions:
 
 Update the relation registry only for material edges. A negative treatment can therefore remain closed while its calibration/control value stays discoverable. This is the missing distinction that capability memory alone cannot represent.
 
+Question-ID relation fields are mechanically checked for dangling targets where their values are question identities (`implies`, `triggeredBy`, `negativeControlFor`, `calibratedBy`, `calibrates`, `supersedes`, `duplicateOf`). `constrainedBy` remains intentionally mixed because some constraints are stable questions while others are dated reports or authority documents.
+
 ## State semantics
 
 `active-candidate` and `active-diagnostic` indicate live questions, not priority rank. `deferred-reopen` preserves a question with an explicit trigger/reopen boundary but does not authorize current execution. `closed-tested-form` means the stated form is answered; its evidence may still have outgoing relationships. `reopensOn` records the changed premise/evidence needed to revisit it.
+
+Do not use `closed-tested-form` for a causal question that the nominal experiment failed to observe. If execution or participation made the intended question unanswered, preserve that question as deferred/open as appropriate and close only the actually tested form in dated evidence.
 
 Stable IDs identify questions, not implementation names. If wording evolves while the causal question stays the same, keep the ID. If the causal question changes materially, create a new ID and relate it through `implies`, `triggeredBy`, `supersedes`, or `duplicateOf` as appropriate.
