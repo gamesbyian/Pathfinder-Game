@@ -70,7 +70,9 @@ For stress corpus × variant family × hint provenance × solution profile quest
 
 A family replay that adds a parent-valid path can therefore appear once as family evidence, again as provenance, and again inside the resulting profile. That is one lineage, not corroboration. Conversely, a controlled family transform that changes a support-aware profile axis **without** contributing the profiled paths can be useful causal nomination. Prefer whole-parent comparisons, explicit selection strata, provenance-balanced/profile-support-aware measurements, then current solver evidence on an appropriately independent population.
 
-Use `scripts/cross-resource-observability-audit.mjs` for bounded coverage/lineage inventories when this distinction is material. Missing family mounts or partial evidence mounts remain unavailable, not negative evidence.
+The September 14 cross-resource census found this dependence is not hypothetical: every current published/C1/C2 parent is replay-touched, and replay is the earliest fully dated discovery for roughly three quarters of stored accepted paths. When the family pipeline is the putative cause, distinguish **replay-touched** from **replay-first**. Later replay rediscovery does not erase an earlier non-replay discovery. Prefer a lineage-filtered profile/sample built from non-replay-first paths, or explicitly classify the full current profile as downstream/dependent evidence. Full profiles remain valid for the descriptive question “what does the known sample look like now?”
+
+Use `scripts/cross-resource-observability-audit.mjs` for bounded coverage/lineage inventories when this distinction is material. Missing family mounts or partial evidence mounts remain unavailable, not negative evidence. See [`the cross-resource ancestry audit`](../reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md) and its [`accepted machine summary`](../reports/2026-09-14-cross-resource-observability-summary-001.json).
 
 ## Three different fingerprints
 
