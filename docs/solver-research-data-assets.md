@@ -59,6 +59,19 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 Useful joins include census × lifecycle, census × profiles, census × variants/traces/static descriptors, benchmark × lifecycle, benchmark/history × capability memory, hint provenance × profile/census, structural fingerprint × persisted evidence, exact labels × traces/prefix survival, and manifests × decision-bearing runs. These are opportunities, not mandatory ritual. Use the smallest join that answers the gate.
 
+### Four-resource lineage recipe
+
+For stress corpus × variant family × hint provenance × solution profile questions, do **not** treat agreement as four independent witnesses. Read the join as a causal lineage:
+
+1. corpus selection history defines the population and conditioning;
+2. family parent/transform identity defines the intervention unit;
+3. hint provenance/dependency strata identify how accepted paths entered the sample, including family replay;
+4. the Solution Profile describes that support-aware stored-path sample, not an independent observation of the puzzle.
+
+A family replay that adds a parent-valid path can therefore appear once as family evidence, again as provenance, and again inside the resulting profile. That is one lineage, not corroboration. Conversely, a controlled family transform that changes a support-aware profile axis **without** contributing the profiled paths can be useful causal nomination. Prefer whole-parent comparisons, explicit selection strata, provenance-balanced/profile-support-aware measurements, then current solver evidence on an appropriately independent population.
+
+Use `scripts/cross-resource-observability-audit.mjs` for bounded coverage/lineage inventories when this distinction is material. Missing family mounts or partial evidence mounts remain unavailable, not negative evidence.
+
 ## Three different fingerprints
 
 1. **Structural level fingerprint** (`modules/domain/level-fingerprint.ts`): puzzle-structure identity/deduplication.
