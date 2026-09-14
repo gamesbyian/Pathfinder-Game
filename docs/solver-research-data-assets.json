@@ -40,7 +40,7 @@
         { "kind": "tracked-directory", "path": "data/stress/hints-random" },
         { "kind": "tracked-directory", "path": "data/stress/hints-envelope" }
       ],
-      "authorities": ["data/stress/README.md", "docs/solver-evaluation-evidence.md", "docs/solver-level-blindness.md"],
+      "authorities": ["data/stress/README.md", "docs/solver-corpus-selection-provenance.md", "docs/solver-evaluation-evidence.md", "docs/solver-level-blindness.md"],
       "queryEntryPoints": ["node scripts/corpus-query.mjs", "npm run stress:validate-witnesses", "npm run stress:measure-solver"],
       "joinKeys": ["corpus", "level.id", "level.provenance", "stressMeta generation fields"],
       "evidenceRoles": ["development", "confirmation", "challenge", "forensic"],
@@ -55,6 +55,7 @@
         "Corpus 2 has been heavily mined and is a development/capability laboratory rather than untouched evidence.",
         "Corpus 1 includes 79 current random-uniform rows selected for historical solver success; whole Corpus 1 is not a cross-generator source relative to Corpus 2.",
         "Current Corpus 2 includes 328 survivors from the historical solver-negative random complement plus 1,372 later replacement rows.",
+        "Generation provenance and population-selection provenance are separate; a solver-blind generator does not make a later outcome-selected corpus independent.",
         "Rows from the same generator or family may not be independent for a broad claim."
       ]
     },
@@ -115,26 +116,30 @@
     },
     {
       "id": "solution-space-profiles",
-      "name": "Offline solution-space fingerprints/profiles",
+      "name": "Offline known-solution sample profiles",
       "status": "current",
-      "grain": ["level", "provenance-source-bucket"],
+      "grain": ["level", "provenance-source-bucket", "sample-support"],
       "locations": [
         { "kind": "tracked", "path": "reports/stress/solution-profile-published.json" },
         { "kind": "tracked", "path": "reports/stress/solution-profile-corpus1.json" }
       ],
-      "authorities": ["docs/solver-solution-profile.md", "scripts/stress/solution-profile-lib.mjs"],
+      "authorities": ["docs/solver-solution-profile.md", "scripts/stress/solution-profile-lib.mjs", "reports/2026-09-13-solution-profile-resource-audit-001.md"],
       "queryEntryPoints": ["npm run stress:solution-profile-compare", "npm run stress:solution-profile"],
       "joinKeys": ["corpus", "level.id", "provenance source bucket"],
       "evidenceRoles": ["discovery", "offline-label"],
       "relatedAssets": ["hint-provenance", "technique-census", "production-benchmarks", "variant-family-data", "static-level-descriptors"],
       "affordances": [
-        "Measure path-mode diversity, rigidity, footprint, objective-satisfaction depth, portal use, turn structure, must-cross order, and discovery saturation.",
-        "Compare solver response with independent descriptions of known solution-space structure.",
+        "Measure sampled path-mode diversity, footprint, objective-satisfaction depth, portal use, turn structure, observed must-cross order agreement, and supported discovery chronology.",
+        "Compare solver response with support-aware descriptions of the stored known-solution sample.",
         "Stratify profile summaries by provenance source to expose sampling artifacts."
       ],
       "caveats": [
-        "Profiles are derived from known solutions and are forbidden direct production-routing inputs.",
-        "Homogeneous stored hints do not prove the true solution space is rigid unless provenance establishes exhaustive search.",
+        "Profiles summarize stored known-solution samples and are forbidden direct production-routing inputs.",
+        "Use schema-v3 support-aware comparison; unsupported sparse axes are unavailable evidence rather than zero-valued measurements.",
+        "Observed single-order agreement does not prove structural rigidity, even when an exhaustive-search provenance event exists.",
+        "hasExhaustiveSearchEvent records an event under local conditions and does not prove unrestricted whole-puzzle enumeration or persistence of the complete solution space.",
+        "Saturation/plateau interpretation requires adequate dated chronology; incomplete chronology leaves the longitudinal axis unavailable.",
+        "Sparse nearest-profile identity remains exploratory and should be independently calibrated before decision-bearing similarity claims.",
         "Similarity may encode family/generator ancestry rather than a causal solver mechanism."
       ]
     },
@@ -403,7 +408,7 @@
       ],
       "caveats": [
         "Older artifacts may predate current manifest schemas and must remain explicitly historical/unknown where fields are absent.",
-        "A valid manifest establishes provenance/comparability, not efficacy or independence."
+        "A valid manifest establishes execution provenance/comparability, not efficacy, population independence, or the inferential role of a corpus. Human/report preflight must still record selection history and inference scope."
       ]
     },
     {
@@ -452,7 +457,7 @@
         "Expose evidence that is not already linked from the active workstream narrative."
       ],
       "caveats": [
-        "The index routes to evidence; it does not replace reading the decisive report/artifact.",
+        "The index routes to evidence; it does not replace reading the owning report/artifact.",
         "Legacy reports without structured metadata remain searchable but have weaker machine-readable status."
       ]
     },
@@ -510,8 +515,8 @@
       "id": "hint-provenance-to-solution-profiles",
       "assets": ["hint-provenance", "solution-space-profiles"],
       "join": "levelId plus evidence-purpose-filtered provenance source/facets/dependency stratum and, when needed, hint path signature",
-      "questions": ["Is apparent solution-space rigidity a property of the puzzle or of the discovery source?", "Do technique-response cohorts differ by independently sampled solution mode?"],
-      "boundary": "Declare solution-atlas or another explicit purpose before selection; raw provenance-event volume is not independent support. Offline diagnosis only; provenance/profile labels do not become runtime routing inputs."
+      "questions": ["Is apparent sampled solution-order agreement stable across discovery sources, or source-biased?", "Do technique-response cohorts differ by independently supported known-solution modes?"],
+      "boundary": "Declare solution-atlas or another explicit purpose before selection; raw provenance-event volume is not independent support. Source corroboration can expose sampling bias but does not prove whole-space rigidity or completeness. Offline diagnosis only; provenance/profile labels do not become runtime routing inputs."
     },
     {
       "id": "hint-provenance-to-benchmarks",
@@ -538,8 +543,8 @@
       "id": "census-to-solution-structure",
       "assets": ["technique-census", "solution-space-profiles", "static-level-descriptors"],
       "join": "corpus + levelId",
-      "questions": ["Do stable technique niches correspond to basin width, rigidity, turn/portal structure, or objective-satisfaction depth?", "Can an offline association be translated into a simpler legal level/state descriptor?"],
-      "boundary": "Any descriptor selected from these joins is development evidence and requires independent confirmation."
+      "questions": ["Do stable technique niches correspond to supported sampled diversity, turn/portal structure, observed must-cross order agreement, or objective-satisfaction depth?", "Can an offline association be translated into a simpler legal level/state descriptor?"],
+      "boundary": "Profile axes must be support-aware and population selection history must be preserved. Any descriptor selected from these joins is development evidence and requires independent confirmation."
     },
     {
       "id": "census-to-variants",
@@ -573,8 +578,8 @@
       "id": "benchmarks-to-static-features",
       "assets": ["production-benchmarks", "static-level-descriptors", "stress-corpora"],
       "join": "corpus + levelId",
-      "questions": ["Which legal level features stratify current failures or budget-edge solves?", "Are solver-response differences confounded by generator batch, geometry, or mechanic envelope?"],
-      "boundary": "Observational feature correlations nominate hypotheses; selected thresholds require held-out confirmation."
+      "questions": ["Which legal level features stratify current failures or budget-edge solves?", "Are solver-response differences confounded by generator batch, geometry, mechanic envelope, or later population selection?"],
+      "boundary": "Observational feature correlations nominate hypotheses; selected thresholds require held-out confirmation. Selected residuals do not estimate unconditional prevalence."
     },
     {
       "id": "capability-memory-to-current-residual",
@@ -595,7 +600,7 @@
       "assets": ["experiment-manifests", "production-benchmarks", "lifecycle-telemetry", "variant-family-data", "raw-logs-and-baselines", "solver-capability-memory"],
       "join": "runId/experimentId/output artifact plus solver ref and level selection hash",
       "questions": ["Are two purported A/B arms actually comparable?", "Which code/data/protocol produced this result?", "Can a historical artifact be safely joined to current evidence?"],
-      "boundary": "Provenance/comparability is necessary but does not establish statistical independence or efficacy."
+      "boundary": "Execution provenance/comparability is necessary but does not establish efficacy, population independence, or inferential entitlement. Preserve selection history separately."
     },
     {
       "id": "research-index-to-evidence",

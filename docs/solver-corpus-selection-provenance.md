@@ -4,6 +4,7 @@
 > **Population structure:** [`../reports/2026-09-13-stress-corpus-selection-history-reconstruction-audit.md`](../reports/2026-09-13-stress-corpus-selection-history-reconstruction-audit.md).
 > **Evidence roles:** [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
 > **Generation/workflow contract:** [`../data/stress/README.md`](../data/stress/README.md).
+> **Historical re-evaluation:** [`../reports/2026-09-13-historical-evidence-reevaluation-ledger.md`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md).
 
 Generation provenance and population-selection provenance answer different questions.
 
@@ -61,5 +62,6 @@ Therefore the historical statement that tranche-v2's no-regression/work-saving p
 5. For broad transfer claims, prefer a materially independent current construction/source such as topology composition or genuinely independent human/editor material, with treatment outcomes untouched during selection.
 6. Freeze exact level content and source revision for decision-bearing runs. A mutable corpus name is not sufficient historical identity.
 7. Treat the July-10 solve/fail split as historical selection evidence, not a runtime solver feature. It must never steer cold production solving.
+8. In every decision-bearing report, state separately **what happened on the tested rows** and **what the population is entitled to support as an inference**. A corrected evidence role can narrow an old claim without erasing its exact solve/work observations.
 
 The correction does not change the project's operational objective: every current stress-corpus solve still counts. It changes only what aggregate corpus outcomes are scientifically entitled to prove.

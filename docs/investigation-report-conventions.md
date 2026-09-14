@@ -20,9 +20,14 @@ For **decision-bearing solver research**, also state near the status block:
 ```markdown
 > **Evidence role:** discovery | tuning | confirmation | transfer | forensic
 > **Selection:** prespecified | observational | selected after inspecting <population/results/candidates>
+> **Population identity:** exact corpus/content revision, frozen ID/hash, or other reproducible identity
+> **Selection history:** generation ancestry plus later solver-outcome/residual/curation/other selection relevant to this claim
+> **Inference scope:** what this population and instrument are actually entitled to support beyond the literal tested rows
 ```
 
-If several candidates, thresholds, profiles, seeds, populations, metrics, or explanations were tried before the reported winner was chosen, say so and give the meaningful candidate count/range when available. Do not make a selected-on population look like an untouched confirmatory test.
+If several candidates, thresholds, profiles, seeds, populations, metrics, or explanations were tried before the reported winner was chosen, say so and give the meaningful candidate count/range when available. Do not make a selected-on population look like an untouched confirmatory test. `Population identity` and `Selection history` are separate on purpose: a level may be generated solver-blind and later enter a corpus because of solver outcome. A corpus filename alone is not either field.
+
+For solution-profile evidence, also state material sample support/chronology limits when the claim depends on diversity, ordering, saturation, or similarity. `observedSingleOrder` is sampled agreement; `hasExhaustiveSearchEvent` is an event marker; neither is whole-space proof. Sparse nearest-profile identity is exploratory unless independently calibrated under current schema-v3 semantics.
 
 For top-level dated reports created on or after **2026-08-20**, `npm run check:documentation-links` enforces the core status block. A generated top-level dated report may opt out only with `<!-- report-metadata: generated -->` immediately after its title. Generated collection reports use their collection/generator conventions.
 
@@ -34,7 +39,7 @@ For top-level dated reports created on or after **2026-08-20**, `npm run check:d
 - **Transfer:** evidence from a materially different construction/source distribution reserved to test a broader generalization claim. A new seed from the same generator is confirmation, not cross-distribution transfer. Once exact failures are inspected and used to redesign the treatment, those cases become development data for later iterations.
 - **Forensic:** replay/bisection/diagnosis of historical behavior. It can establish mechanism or provenance but is not automatically current capability evidence.
 
-The same artifact can support different claims at different roles, but the report must state which claim it is being used to support.
+The same artifact can support different claims at different roles, but the report must state which claim it is being used to support. Record the literal observed result separately from this inferential entitlement: narrowing an old evidence role does not erase an exact solve/work observation.
 
 ## Rules
 
@@ -49,6 +54,7 @@ The same artifact can support different claims at different roles, but the repor
 - A negative result closes the tested form, not every imaginable descendant. Conversely, do not indefinitely rescue a null hypothesis by changing one more threshold, budget, seed, or cohort. Reopen only when new evidence changes the mechanism premise or the original treatment was demonstrably invalid.
 - **Absence of a solve gain is not automatically evidence of no mechanism.** If participation/activation was near zero, classify the treatment as non-participating/inconclusive for the intended mechanism rather than “negative.” Once participation is demonstrated and the outcome remains null/negative, close that form unless new evidence changes the premise.
 - Report the intended population, actual coverage, exclusions/missing rows, deadline truncation/errors, and whether the population itself was selected because it showed the effect.
+- A residual, participant, difficulty-enriched, mechanic-enriched, or solver-outcome-selected cohort supports its conditional question. Do not silently convert its result into an estimate of unconditional mechanic prevalence or unseen-level effect size.
 - Family/variant rows are correlated. State the independent unit and group/split by parent when the claim depends on generalization.
 - Cross-technique cost comparisons use `workSpent`; raw nodes remain within-technique diagnostics. If treatment buys additive work, report the larger envelope rather than describing the gain as free.
 - External algorithms/frameworks are comparators or hypothesis sources, not automatic gold standards. Report encoding/feature/support differences and compare at a meaningful resource/correctness boundary before concluding a custom approach is inferior/superior.
@@ -60,14 +66,16 @@ For expensive decision-bearing work, write down enough of the intended test befo
 
 1. treatment/configuration being tested;
 2. control/baseline and code/ref identity;
-3. evidence role and population selection rule;
-4. primary outcome and work/cost envelope;
-5. smallest result that would close the form, nominate follow-up, or justify confirmation;
-6. planned handling of multiple candidates/thresholds if the run is a sweep;
-7. stop condition for escalating to a larger population;
-8. any external/reference baseline and what differences make the comparison fair or limited.
+3. evidence role, exact population identity/revision, generation ancestry, later selection history, prior use for this treatment lineage, and population selection rule;
+4. the intended inference scope, separately from the literal row-level observation the run will produce;
+5. primary outcome and work/cost envelope;
+6. smallest result that would close the form, nominate follow-up, or justify confirmation;
+7. planned handling of multiple candidates/thresholds if the run is a sweep;
+8. stop condition for escalating to a larger population;
+9. any external/reference baseline and what differences make the comparison fair or limited;
+10. for profile-based analysis, which axes have enough sample support and whether chronology-dependent axes are actually available.
 
-This is lightweight precommitment, not ceremony. It exists to prevent broad sweeps from becoming retrospective threshold-fishing exercises. For confirmation versus cross-generator transfer and block-consumption rules, use [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md).
+This is lightweight precommitment, not ceremony. It exists to prevent broad sweeps from becoming retrospective threshold-fishing exercises. For confirmation versus cross-generator transfer and block-consumption rules, use [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Current stress-corpus selection authority is [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md); current profile semantics are [`solver-solution-profile.md`](solver-solution-profile.md).
 
 ## Where information belongs
 
@@ -94,15 +102,16 @@ Before calling an investigation complete:
 
 1. Set the final status and remove stale active wording.
 2. Link final evidence and separate measurement from inference.
-3. State evidence role, selection procedure, intended/actual population, and material alternatives tried for decision-bearing solver work.
+3. State evidence role, selection procedure, exact population identity/revision, generation ancestry, later selection history, intended/actual coverage, inference scope, and material alternatives tried for decision-bearing solver work.
 4. State whether the treatment actually participated enough to support the claimed positive/negative mechanism verdict.
-5. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
-6. Ensure feature/flag descriptions do not advertise a stale gate.
-7. Update the authoritative topic/tool contract if reusable behavior changed.
-8. Add predecessor/successor links for follow-ups.
-9. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
-10. If a selected/tuned positive is being promoted, satisfy the proportional confirmation/transfer gate in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) or explicitly limit the claim.
-11. Archive concluded plans/notebooks when they make current-state retrieval harder.
-12. Run `npm run check:documentation-links`.
+5. For profile evidence, state support/chronology limits and avoid turning sampled agreement, exhaustive events, or sparse nearest-neighbour matches into puzzle-level truth.
+6. Update the current surface that owns the decision: queue, opt-in ledger, or deferred-work index as appropriate.
+7. Ensure feature/flag descriptions do not advertise a stale gate.
+8. Update the authoritative topic/tool contract if reusable behavior changed.
+9. Add predecessor/successor links for follow-ups.
+10. If implementation changed after the decisive A/B, explicitly decide whether the verdict still applies; otherwise record a new gate.
+11. If a selected/tuned positive is being promoted, satisfy the proportional confirmation/transfer gate in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) or explicitly limit the claim.
+12. Archive concluded plans/notebooks when they make current-state retrieval harder.
+13. Run `npm run check:documentation-links`.
 
 This convention is prospective. Older reports need not be reformatted unless revised, but stale status discovered in them must still be reconciled with current authorities.
