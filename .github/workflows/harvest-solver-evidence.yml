@@ -13,10 +13,6 @@ on:
       - 'method-probe sweep (isolated single-method corpus test)'
       - 'Technique capability census (isolated single-/paired-/flag-technique, full budget)'
       - 'cpsat-hint-harvest-sweep (broaden CP-SAT hint coverage)'
-      - 'Solver broad confirmation cohort'
-      - 'Solver two-phase residual confirmation'
-      - 'Static portfolio confirmation A/B'
-      - 'Solver combine sweep runs (cross-run reconciliation)'
     types: [completed]
   workflow_dispatch:
     inputs:
