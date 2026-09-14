@@ -41,6 +41,7 @@ jobs:
           ref='refs/remotes/origin/variant-research'
           research_root="$GITHUB_WORKSPACE/tmp/variant-manifests"
           manifest_list="$GITHUB_WORKSPACE/tmp/variant-manifest-paths.txt"
+          mkdir -p "$GITHUB_WORKSPACE/tmp"
 
           git -c protocol.version=2 fetch --depth=1 --filter=blob:none origin \
             'refs/heads/claude/variant-levels-solver-insights-tpk4qg:refs/remotes/origin/variant-research'
