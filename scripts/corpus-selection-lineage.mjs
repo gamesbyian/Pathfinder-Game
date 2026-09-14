@@ -90,7 +90,7 @@ function stress2Lineage(level) {
  * Current standing-corpus selection lineage established by the 2026-09-13 reconstruction audit.
  * This is offline evidence metadata only and must never become a cold-solver routing feature.
  */
-export function classifyCorpusSelectionLineage(source, level, metadata = null, context = {}) {
+export function classifyCorpusSelectionLineage(source, level) {
     const key = String(source ?? '').toLowerCase();
     if (key === 'stress1' || key === 'corpus1') return stress1Lineage(level);
     if (key === 'stress2' || key === 'corpus2') return stress2Lineage(level);
