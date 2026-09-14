@@ -17,7 +17,7 @@ node scripts/research-status-index.mjs --compact --query=<term>
 node scripts/tooling-census.mjs --compact --query=<term>
 ```
 
-Use `research-asset-query --id=<asset-id>` for exact registry detail. Compact results now expose `contractGrade`, `independentUnit`, and audit authorities when a resource has been audited; `--full` includes the complete audited-resource declaration.
+Use `research-asset-query --id=<asset-id>` for exact registry detail. Compact results expose `contractGrade`, `independentUnit`, and audit authorities when audited; `--full` includes the complete declaration.
 
 ## Required evidence preflight
 
@@ -57,22 +57,15 @@ Mining many assets/features or historical regimes creates selection pressure; di
 
 ## High-value joins
 
-Useful joins include census × lifecycle, census × profiles, census × variants/traces/static descriptors, benchmark × lifecycle, benchmark/history × capability memory, hint provenance × profile/census, structural fingerprint × persisted evidence, exact labels × traces/prefix survival, and manifests × decision-bearing runs. These are opportunities, not mandatory ritual. Use the smallest join that answers the gate.
+Useful joins include census × lifecycle/profiles/variants/traces, benchmark × lifecycle/capability memory, hint provenance × profiles/census, fingerprints × persisted evidence, exact labels × traces/prefix survival, and manifests × runs. Use the smallest join that answers the gate.
 
 ### Four-resource lineage recipe
 
-For stress corpus × variant family × hint provenance × solution profile questions, do **not** treat agreement as four independent witnesses. Read the join as a causal lineage:
+For corpus × family × provenance × profile questions, treat the join as one causal lineage: corpus selection defines the population; family identity the intervention; provenance how paths entered the sample; the Solution Profile summarizes that sample. A replayed parent path may therefore appear as family evidence, provenance, and profile support without becoming three observations.
 
-1. corpus selection history defines the population and conditioning;
-2. family parent/transform identity defines the intervention unit;
-3. hint provenance/dependency strata identify how accepted paths entered the sample, including family replay;
-4. the Solution Profile describes that support-aware stored-path sample, not an independent observation of the puzzle.
+The September 14 census found every current published/C1/C2 parent replay-touched and replay as the earliest dated discovery for roughly three quarters of stored paths. When family effects are the question, distinguish **replay-touched** from **replay-first** and prefer non-replay-first profile evidence, or label the full profile downstream/dependent. Full profiles remain valid descriptions of the current known sample.
 
-A family replay that adds a parent-valid path can therefore appear once as family evidence, again as provenance, and again inside the resulting profile. That is one lineage, not corroboration. Conversely, a controlled family transform that changes a support-aware profile axis **without** contributing the profiled paths can be useful causal nomination. Prefer whole-parent comparisons, explicit selection strata, provenance-balanced/profile-support-aware measurements, then current solver evidence on an appropriately independent population.
-
-The September 14 cross-resource census found this dependence is not hypothetical: every current published/C1/C2 parent is replay-touched, and replay is the earliest fully dated discovery for roughly three quarters of stored accepted paths. When the family pipeline is the putative cause, distinguish **replay-touched** from **replay-first**. Later replay rediscovery does not erase an earlier non-replay discovery. Prefer a lineage-filtered profile/sample built from non-replay-first paths, or explicitly classify the full current profile as downstream/dependent evidence. Full profiles remain valid for the descriptive question “what does the known sample look like now?”
-
-Use `scripts/cross-resource-observability-audit.mjs` for bounded coverage/lineage inventories when this distinction is material. Missing family mounts or partial evidence mounts remain unavailable, not negative evidence. See [`the cross-resource ancestry audit`](../reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md) and its [`accepted machine summary`](../reports/2026-09-14-cross-resource-observability-summary-001.json).
+Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters. Missing or partial family mounts remain unavailable, not negative evidence. See the [`audit`](../reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md) and [`machine summary`](../reports/2026-09-14-cross-resource-observability-summary-001.json).
 
 ## Three different fingerprints
 
