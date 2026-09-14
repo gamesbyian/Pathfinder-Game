@@ -28,9 +28,10 @@ Before broad compute or a new dataset:
 1. Read the current workstream/gate.
 2. Query assets that could **falsify, stratify, contextualize, independently challenge, or expose complementary prior capability relevant to** the premise.
 3. Name the join keys and independent unit before writing an ad hoc join.
-4. Preserve corpus/source/generator/family/provenance context needed to interpret the result.
-5. Prefer an existing evidence join over generation when it can answer the gate.
-6. Record materially relevant assets considered and rejected when that prevents rediscovery.
+4. Preserve **generation ancestry, later population-selection history, prior decision use, and exact population identity/revision** when they affect interpretation. A corpus filename does not supply these automatically.
+5. For solution-profile evidence, state which axes are actually supported by the observed sample and whether chronology is complete enough for any longitudinal claim.
+6. Prefer an existing evidence join over generation when it can answer the gate.
+7. Record materially relevant assets considered and rejected when that prevents rediscovery.
 
 Do not mine every available axis. Searching many assets/features creates selection pressure; discovered relationships are development evidence until appropriately confirmed. The same applies to mining many historical solver regimes or failed treatments through capability memory.
 
@@ -38,10 +39,10 @@ Do not mine every available axis. Searching many assets/features creates selecti
 
 | Asset family | Natural grain | Main question |
 |---|---|---|
-| Published/stress levels | level, source/generator | What population/construction is this? |
+| Published/stress levels | level, source/generator/selection history | What population/construction/selection process is this? |
 | Hint provenance | path discovery | Who/what found this path, under which config/work/context? |
 | Structural level fingerprint | level structure | Are observations from the same structural revision? |
-| Solution-space profiles | level × provenance source | What do known solutions look like and how diverse are they? |
+| Solution-space profiles | level × provenance source × sample support | What do the **known sampled solutions** look like and how diverse are they? |
 | Technique census/capability map | level × technique/config | What isolated capability exists at measured dose? |
 | Production benchmarks | run × level | What does the real solver solve and spend? |
 | Solver capability memory | baseline × candidate policy × level | Which complementary capabilities were demonstrated or displaced, and how much overlap survives against a named residual? |
@@ -64,7 +65,7 @@ The registry contains the durable asset IDs and exact relationships behind this 
 Common useful joins include:
 
 - **census × lifecycle:** isolated capability versus actual production reach/work;
-- **census × solution profile:** technique response versus known solution-space structure;
+- **census × solution profile:** technique response versus sampled known-solution structure, with profile-axis support exposed;
 - **census × static descriptors:** technique response versus legal level features;
 - **census × variants:** controlled transformations that flip technique response;
 - **census × traces:** outcome differences versus actual behavioral differences;
@@ -83,7 +84,7 @@ These are opportunities, not mandatory joins. Use the smallest join that answers
 Do not collapse these:
 
 1. **Structural level fingerprint** (`modules/domain/level-fingerprint.ts`): versioned puzzle-structure identity/deduplication.
-2. **Solution-space profile/fingerprint** (`solver-solution-profile.md`): offline summary of known accepted paths.
+2. **Solution-space profile/fingerprint** (`solver-solution-profile.md`): offline summary of sampled known accepted paths.
 3. **Solver determinism fingerprint** (`scripts/solver-fingerprint.mjs`): versioned execution/search-behavior regression signature.
 
 Solver determinism fingerprints are schema-bound evidence. Schema v2 includes canonical action/stage/seed identity; v1 and v2 are not interchangeable baselines. Only the first fingerprint family is a structural identity primitive. None permits per-level production steering from historical results.
@@ -96,9 +97,17 @@ Hints, known solutions, exact labels, census winners, historical costs, family o
 
 A historical capability signature is especially easy to overread: intersection with today's residual is a **nomination**, not proof that the historical policy still solves under current code/budget semantics. `scripts/solver-capability-memory.mjs` labels this distinction explicitly.
 
+### Generation provenance is not selection provenance
+
+A row can be generated solver-blind and later enter a corpus because of solver outcome, curation, residual membership, difficulty, novelty, or another measured response. Preserve both histories. Current C1 is 23 surviving old A-F rows plus 79 random-generator rows selected for historical solver success; whole C1 is therefore not cross-generator transfer against C2. Current C2 combines 328 survivors from the historical solver-negative complement with 1,372 later replacements; it remains a strong development/capability laboratory, not one prospective untouched draw. See [`solver-corpus-selection-provenance.md`](solver-corpus-selection-provenance.md).
+
 ### Level-blindness is not generalization
 
-A policy can be level-blind and still be overfit to repeatedly mined Corpus 2 or a narrow generator. Same-generator fresh data confirms a sample; materially different construction/source is required for broader distributional transfer claims.
+A policy can be level-blind and still be overfit to repeatedly mined Corpus 2 or a narrow generator. Same-generator fresh data confirms a sample; materially different construction/source is required for broader distributional transfer claims. A residual or participant cohort supports a conditional claim about that selected population, not unconditional mechanic prevalence.
+
+### Solution profiles are sample profiles
+
+Profile fields summarize the stored known-solution sample with explicit support. Missing/unsupported axes stay unavailable rather than becoming zero-valued evidence. `observedSingleOrder` is sample agreement, not structural rigidity. `hasExhaustiveSearchEvent` says an exhaustive-search event occurred under its recorded local conditions; it does not prove unrestricted whole-puzzle enumeration or complete persistence. Saturation/plateau comparisons require adequate dated chronology. Sparse nearest-profile identity remains exploratory even under schema v3 and should be independently calibrated before any decision-bearing similarity claim. See [`solver-solution-profile.md`](solver-solution-profile.md) and the [`2026-09-13 audit`](../reports/2026-09-13-solution-profile-resource-audit-001.md).
 
 ### Preserve independent units
 
