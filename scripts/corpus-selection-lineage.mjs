@@ -51,16 +51,19 @@ function stress1Lineage(level) {
     };
 }
 
-function stress2Lineage(level, metadata) {
-    const generated = generatedAt(level);
-    const appendTimes = (metadata?.appendHistory ?? [])
-        .map(entry => Date.parse(entry?.appendedAt))
-        .filter(Number.isFinite)
-        .sort((a, b) => a - b);
-    const replacementStart = appendTimes[0] ?? null;
+function stress2Lineage(level, metadata, context) {
+    const appendHistory = Array.isArray(metadata?.appendHistory) ? metadata.appendHistory : [];
+    const appendedRows = appendHistory.reduce((sum, entry) => sum + (Number.isInteger(entry?.count) ? entry.count : 0), 0);
+    const position = context?.position;
+    const totalLevels = context?.totalLevels;
 
-    if (generated != null && replacementStart != null) {
-        if (generated < replacementStart) {
+    // The July-11 append implementation preserved every surviving row byte-for-byte and appended
+    // replacements after them. Row provenance was copied from the original random generator and
+    // therefore cannot distinguish the two eras. The wrapper's appendHistory count plus current
+    // array position is the durable reconstruction boundary: 328 retained rows + 1,372 appended.
+    if (Number.isInteger(position) && Number.isInteger(totalLevels) && appendedRows > 0 && appendedRows < totalLevels) {
+        const firstAppendedPosition = totalLevels - appendedRows;
+        if (position < firstAppendedPosition) {
             return {
                 stratum: 'c2-original-random-solver-negative-survivor',
                 selectionConditioning: ['historical-production-failure', 'square-grid-retention'],
@@ -86,12 +89,13 @@ function stress2Lineage(level, metadata) {
 
 /**
  * Current standing-corpus selection lineage established by the 2026-09-13 reconstruction audit.
- * This is offline evidence metadata only and must never become a cold-solver routing feature.
+ * `context.position` is zero-based corpus-array position; `context.totalLevels` is the current row
+ * count. This is offline evidence metadata only and must never become a cold-solver routing feature.
  */
-export function classifyCorpusSelectionLineage(source, level, metadata = null) {
+export function classifyCorpusSelectionLineage(source, level, metadata = null, context = {}) {
     const key = String(source ?? '').toLowerCase();
     if (key === 'stress1' || key === 'corpus1') return stress1Lineage(level);
-    if (key === 'stress2' || key === 'corpus2') return stress2Lineage(level, metadata);
+    if (key === 'stress2' || key === 'corpus2') return stress2Lineage(level, metadata, context);
     if (key === 'published') {
         return {
             stratum: 'published-selection-history-mixed',
