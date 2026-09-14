@@ -62,7 +62,8 @@ Class 1/2/3 has no already-legal no-contention batch. Repeat only after a materi
 | **Repair restart near-miss allocation** | Fresh legal population or changed allocation contract revives the replicated 64M `bestBadness<=6` signal. |
 | **Beam continuation / cross-policy handoff** | A distinct complementary policy or earned live-future selection mechanism appears. |
 | **Temporal/displaced-capability niches** | A material boundary change or repeated unrelated losses reveal a stable old-only/mechanism-specific basin. |
-| **Research infrastructure** | A measured consumer limitation or recurring bespoke join remains after existing helpers are extended; require bounded cost and decision value. |
+| **Generator/editor-envelope niches** | A joinable finer envelope or envelope-specific mechanism claim appears; preserve source/selection role rather than treating an envelope label as independence. |
+| **Research infrastructure** | Typed producer→consumer artifacts require a measured consumer limitation, novel timely information, bounded cost, independent control, and matched-work benefit; add a query layer only if recurring joins remain bespoke after helper extension. |
 | **Class-1 compact beam-menu exposure** | A materially different work/allocation contract creates real headroom. |
 | **Representation-sensitivity lineage survival** | After WS2 priority work, or a clean current solve cliff, measure known-live lineage survival with geometry/interface controls, recurrence on two independent parents, and held-out third-parent prediction before intervention. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
 
