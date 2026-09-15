@@ -35,5 +35,5 @@ runWorkerMain(async ({ solveCorpusPath, levelIndex, solveOpts }) => {
     if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
         result.refereeValid = Solver.validateCandidatePath(prepared, result.solution).ok;
     }
-    return { result };
+    return { result, researchFeatures: { hasMustTurn: (prepared.mustPassTurnDirs?.size ?? 0) > 0 } };
 });

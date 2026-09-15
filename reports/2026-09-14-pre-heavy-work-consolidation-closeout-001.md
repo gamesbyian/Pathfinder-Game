@@ -1,9 +1,10 @@
 # Pre-heavy-work consolidation closeout 001
 
-> **Status:** complete
-> **Date:** 2026-09-14
-> **Scope:** bounded research consolidation before substantial solver/runtime implementation or expensive experiment work
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-14 — bounded consolidation of current retained evidence
 > **Decision:** hand the live queue back to implementation with Class 4 first, Class 2 second, Class 5 third. No evidence from this pass changes WS2 priority.
+> **Remaining gate:** implement and canary Class 4, then materialize/run Class 2; Class 5 remains third
+> **Scope:** bounded research consolidation before substantial solver/runtime implementation or expensive experiment work
 
 ## Executive closeout
 

@@ -101,6 +101,8 @@ export interface WholeLadderRetryTierInput {
     workStart: number;
     /** Subdivide node ceiling into cumulative per-config staircase steps. */
     staircase: boolean;
+    /** Experiment shells may deliberately fund a behavior-identical control retry. */
+    allowBehaviorIdentical?: boolean;
 }
 export interface WholeLadderRetryTierResult {
     attempts: Attempt[];
@@ -119,9 +121,9 @@ export interface WholeLadderRetryTierResult {
  */
 export async function runWholeLadderRetryTier(input: WholeLadderRetryTierInput): Promise<WholeLadderRetryTierResult> {
     const { stageId, proxyOverrides, activeGates, mainConfigs, level, prep, yieldFn, runLadder,
-        totalBudgetMs, nodeCeiling, workBudget, workStart, staircase } = input;
+        totalBudgetMs, nodeCeiling, workBudget, workStart, staircase, allowBehaviorIdentical = false } = input;
     const originalCfg = prep._cfg;
-    if (!retryTierOverridesChangeBehavior(originalCfg, proxyOverrides)) {
+    if (!allowBehaviorIdentical && !retryTierOverridesChangeBehavior(originalCfg, proxyOverrides)) {
         return { attempts: [], solution: null };
     }
     const effectiveWorkStart = retryTierEffectiveWorkStart(stageId, originalCfg, workStart, prep._workMeter.units);

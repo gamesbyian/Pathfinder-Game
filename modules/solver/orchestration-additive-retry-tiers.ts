@@ -16,7 +16,7 @@ import { withSolverStage } from './stage-policy.js';
 import { buildRetryTierAblationOverride, runWholeLadderRetryTier } from './stage-executors.js';
 import type { NormalizedLevel } from '../domain/types.js';
 import type { PrepLevel, AttemptConfig, AblationConfig } from './types.js';
-import { REPAIR_LATE_MUSTTURN_BIASED_RETRY_NODE_BUDGET } from './stage-budget.js';
+import { PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_NODE_BUDGET, REPAIR_LATE_MUSTTURN_BIASED_RETRY_NODE_BUDGET } from './stage-budget.js';
 import type { StageBudgetPlan, computeShrinkRecoveryBudget } from './stage-budget.js';
 import { runAttempt } from './orchestration-run-attempt.js';
 import { runInterleavedAttempts, runGateSerialAttempts } from './orchestration-main-search.js';
@@ -875,6 +875,35 @@ export async function runAdditiveRetryTiers({
         } finally {
             prep._workCap = originalWorkCap;
         }
+    }
+
+    // Class-4 isolation shell. This is deliberately the final executable tier: all predecessor
+    // attempts have completed, runWholeLadderRetryTier reconstructs each search from its gate and
+    // restores the caller configuration, and only the retry-local proxy enables the treatment.
+    // Its node and work scopes start at entry, so no earlier stage donates or loses allocation.
+    if (!result.solution
+        && level.portalMap.size > 0
+        && cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY === true) {
+        const entryNodes = prep._metrics!.nodesExpanded;
+        const retry = await runWholeLadderRetryTier({
+            stageId: 'portal-coarse-state-merge-dead-last-retry',
+            proxyOverrides: {
+                STRATEGY_PORTAL_COARSE_STATE_MERGE:
+                    cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT === true,
+            },
+            activeGates, mainConfigs, level, prep, yieldFn,
+            runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
+            totalBudgetMs: timeBudgetMs,
+            nodeCeiling: entryNodes + PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_NODE_BUDGET,
+            workBudget: scaledStageWorkBudget(workBudget, 1, MIN_ATTEMPT_WORK),
+            workStart: prep._workMeter.units,
+            staircase: true,
+            // Both matched arms execute the same funded shell. The control is intentionally a
+            // clean, behavior-identical rerun; only the retry-local treatment selector differs.
+            allowBehaviorIdentical: true,
+        });
+        result.attempts.push(...retry.attempts);
+        if (retry.solution) result.solution = retry.solution;
     }
 
     return { earlyTiersHitNodeCeiling };
