@@ -23,7 +23,7 @@ Do not infer independence from `supportedPaths`, `supportedFamilies` or raw prov
 
 Identity-bound exact/reference labels remain bound to their original witness path. Never replace those witnesses with generic representatives merely to make the metadata uniform.
 
-**Prospective producer gap:** historical/current compact outputs are not sufficient to reconstruct every replay-first/dependency-collapsed oracle-set view after the fact. When a future decision-bearing prefix-survival study actually needs that sensitivity, add a compact oracle-set manifest carrying the conditioning identity above. Do not fabricate missing historical ancestry, dump full provenance into every row, or create a universal result schema merely because the observer exists. The corresponding reopen condition is tracked in [`solver-future-work.md`](solver-future-work.md).
+**Prospective producer boundary:** historical/current compact outputs are not sufficient to reconstruct every replay-first/dependency-collapsed oracle-set view after the fact. `scripts/known-prefix-oracle-set-manifest.mjs` now provides an inactive compact manifest with pure path-set and conditioning-path-set identities, plus scientific-conditioning and full-manifest identities that incorporate producer and ancestry/dependence metadata. Instantiate it only when a future decision-bearing prefix-survival study needs that sensitivity. Do not fabricate missing historical ancestry or dump full provenance into every row. The corresponding reopen condition is tracked in [`solver-future-work.md`](solver-future-work.md).
 
 ## Interpretation
 

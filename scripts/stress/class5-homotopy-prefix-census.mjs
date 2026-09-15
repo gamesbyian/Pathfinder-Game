@@ -15,6 +15,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints } from '../level-data-io.mjs';
+import { class5B2ExactLabel } from './class5-b2-exact-prefix-labels.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
     const [k, ...v] = x.split('='); return [k, v.join('=')];
@@ -27,22 +28,6 @@ const { createSolver, SOLVER_TESTING_API: api } = await import('../../modules/so
 const Solver = createSolver();
 const { PACK } = api;
 
-const B2_EXACT = new Map(Object.entries({
-    S00001: { 'top-rank1': 'dead', 'witness-culled': 'live' },
-    S00028: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00030: { 'top-rank1': 'dead', 'witness-culled': 'live', 'cutoff-survivor': 'live' },
-    S00035: { 'witness-culled': 'live' },
-    S00048: { 'top-rank1': 'dead', 'witness-culled': 'live', 'cutoff-survivor': 'live' },
-    S00095: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00099: { 'witness-culled': 'live' },
-    S00108: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00120: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00140: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00058: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00060: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00064: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00104: { 'top-rank1': 'dead', 'witness-culled': 'live' },
-}));
 function roleOf(c) {
     if (c.source?.role) return c.source.role;
     const id = String(c.id);
@@ -51,7 +36,7 @@ function roleOf(c) {
     if (id.includes('retained-near-cutoff')) return 'cutoff-survivor';
     return 'other';
 }
-function exactLabel(c) { return B2_EXACT.get(c.levelId)?.[roleOf(c)] ?? null; }
+function exactLabel(c) { return class5B2ExactLabel(c.levelId, roleOf(c)); }
 function xyOfPacked(k) { return [k & 0xFFFF, (k >>> 16) & 0xFFFF]; }
 function packedPrefix(prefix) {
     return Array.isArray(prefix[0]) ? prefix.map(([x, y]) => PACK(x - 1, y - 1)) : prefix.map(Number);
