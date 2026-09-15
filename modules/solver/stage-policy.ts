@@ -35,6 +35,7 @@ const rows = [
     ['late-repair-must-turn-biased-retry', 122, 'opt-in', 'retry', 'ordinary late repair participated and failed; must-turn present; experiment flag enabled', 'configured-repair', 'fixed-node-cap', 'late-repair-must-turn-biased-retry'],
     ['guidance-goal-distance-retry', 125, 'production-default', 'retry', 'goal-attraction legacy-distance retry enabled', 'configured-main', 'additive-node-headroom', 'guidance-goal-distance-retry'],
     ['late-repair-multiseed-retry', 128, 'production-default', 'retry', 'late-repair-search multi-seed retry enabled and late-repair-search itself eligible', 'configured-repair', 'additive-node-headroom', 'late-repair-multiseed-retry'],
+    ['portal-coarse-state-merge-dead-last-retry', 129, 'opt-in', 'retry', 'portal level, dead-last retry shell enabled, and every promoted stage failed', 'configured-main', 'fixed-node-cap', 'portal-coarse-state-merge-dead-last-retry'],
     ['legacy-latency-portfolio-pass', 20, 'experiment-only', 'legacy-latency-portfolio', 'portfolio pass includes config', 'portfolio', 'portfolio-pass', null],
     ['legacy-latency-portfolio-fallback', 130, 'experiment-only', 'legacy-latency-portfolio', 'portfolio passes did not solve', 'configured-main', 'caller-main', null],
     ['static-portfolio', 20, 'experiment-only', 'static-portfolio', 'schedulerMode "static-portfolio" with opts.staticPortfolio set', 'portfolio', 'portfolio-pass', null],

@@ -231,6 +231,8 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 && !hasRepairConfig
                 && (level.mustPassTurnDirs?.size ?? 0) > 0
                 && cfg?.STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY === true,
+            portalCoarseStateMergeDeadLastRetryEligible: level.portalMap.size > 0
+                && cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY === true,
         });
         const runnable = new Map<string, boolean>(
             solverStagePlan
@@ -258,6 +260,7 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
             // own repair attempt as a multi-seed extension of late-repair-search, so it shares that
             // tier's structural precondition (no configured repair fallback), not repair-fallback's.
             ['late-repair-multiseed-retry', !hasRepairConfig],
+            ['portal-coarse-state-merge-dead-last-retry', hasMainConfig && level.portalMap.size > 0],
         ]);
         const order = [...runnable.keys()];
         const lastTechnique = solveResult.attempts.length ? classify(solveResult.attempts.at(-1)!) : null;

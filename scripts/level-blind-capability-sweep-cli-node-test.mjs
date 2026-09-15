@@ -38,6 +38,7 @@ await writeFile(corpusPath, JSON.stringify([{
 await execFile(process.execPath, [
     'scripts/run-bundled.mjs', 'scripts/level-blind-capability-sweep.mjs',
     `--corpus=${corpusPath}`, '--budget-ms=5000', '--lifecycle-telemetry',
+    '--experiment-id=fixture-experiment', '--research-question=fixture-question', '--preflight=reports/fixture.md',
     `--out=${outFile}`, `--summary-out=${summaryOutFile}`,
 ], { cwd: ROOT });
 
@@ -51,10 +52,19 @@ assert.ok(typeof report.summary.commit === 'string' && report.summary.commit.len
 assert.equal(report.summary.corpus, path.relative(ROOT, corpusPath),
     'maintained raw report wrapper must persist corpus identity');
 assert.equal(report.summary.lifecycleTelemetry, true);
+assert.equal(report.summary.experimentId, 'fixture-experiment');
+assert.equal(report.summary.researchQuestion, 'fixture-question');
+assert.equal(report.summary.preflight, 'reports/fixture.md');
 assert.ok(report.levels[0].stageLifecycle && typeof report.levels[0].stageLifecycle === 'object');
 assert.ok(report.levels[0].attempts.length > 0);
 assert.ok(report.levels[0].attempts.every(attempt => Number.isFinite(attempt.workSpent)),
     '--lifecycle-telemetry must persist per-attempt workSpent needed by the production-reach join');
+assert.deepEqual(report.levels[0].class2ControlEligibility, {
+    hasMustTurn: false,
+    ordinaryLateRepairParticipated: false,
+    childStructuralEligible: false,
+    childInsertionPointReached: false,
+}, 'the maintained producer must persist canonical control-side Class-2 participation evidence');
 
 const winningConfig = report.levels[0].winningConfig;
 assert.ok(typeof winningConfig === 'string' && winningConfig.length > 0);

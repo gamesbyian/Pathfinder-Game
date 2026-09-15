@@ -69,6 +69,8 @@ export const FEATURES: Record<string, string> = {
     STRATEGY_MECHANIC_BUCKET_RETENTION:      'Mechanic-bucket beam retention keyed by (flipperUsedMask, mustCrossMask)',
     STRATEGY_COARSE_STATE_MERGE:       'Coarse state merge by (position + selected constraint-state); not exact equivalence deduplication',
     STRATEGY_PORTAL_COARSE_STATE_MERGE: 'Production default-OFF; opt-in: enables beam coarse-state merge on portal-bearing levels (search.ts), which is unconditionally disabled there otherwise. Unlike the portal-free STRATEGY_COARSE_STATE_MERGE, the merge key folds in each candidate\'s used-portal-pair identity (BeamNode.usedPortalPairs) so it cannot alias candidates that consumed different portal pairs — reports/2026-09-09-portal-beam-used-pair-aliasing-measurement-001.md measured that aliasing as material under a plain count/transient key. Pending the fixed-work A/B against the current no-portal-merge control. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
+    STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY: 'Production default-OFF Class-4 experiment shell: after every promoted retry fails on a portal level, rerun the clean main ladder with portal coarse-state merge enabled only inside a fresh additive retry scope.',
+    STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT: 'Production default-OFF Class-4 arm selector. Read only by the enabled dead-last retry shell: false is the funded control retry, true enables portal coarse-state merge inside that retry. It never globally enables the merge.',
     STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION: 'Production default-ON: coarse state merge retains a near-tied runner-up as well as the collision winner (COARSE_STATE_NEAR_TIE_RETENTION_MARGIN in search.ts). Its paired last-resort recovery is STRATEGY_COARSE_STATE_NEAR_TIE_RETENTION_RETRY.',
     STRATEGY_REPAIR_ELITE_PREFIX_DFS: 'Production default-OFF; closed retained opt-in: bounded deterministic completion DFS from repair elite prefixes. Current disposition: docs/solver-opt-in-experiment-ledger.md.',
     STRATEGY_REPAIR_BEAM_SEED: "Production default-OFF; closed retained opt-in: seed repair's initial elite pool from a bounded beam frontier. Current disposition: docs/solver-opt-in-experiment-ledger.md.",
@@ -150,6 +152,8 @@ export const FEATURES: Record<string, string> = {
 export const OPT_IN_FEATURES = new Set([
     'PRUNE_PORTAL_PARITY_ENVELOPE',
     'STRATEGY_PORTAL_COARSE_STATE_MERGE',
+    'STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY',
+    'STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT',
     'STRATEGY_REPAIR_ELITE_PREFIX_DFS',
     'STRATEGY_REPAIR_TURN_BIAS',
     'STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY',
