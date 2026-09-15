@@ -18,6 +18,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { class5B2ExactLabel } from './class5-b2-exact-prefix-labels.mjs';
 import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { readLevelsWithHints } from '../level-data-io.mjs';
@@ -52,24 +53,6 @@ function roleOf(c) {
     return 'other';
 }
 
-// Decision table from reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md, including the
-// 2026-08-15 flipping-filter rerun. Null/timeout rows are intentionally absent.
-const B2_EXACT = new Map(Object.entries({
-    S00001: { 'top-rank1': 'dead', 'witness-culled': 'live' },
-    S00028: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00030: { 'top-rank1': 'dead', 'witness-culled': 'live', 'cutoff-survivor': 'live' },
-    S00035: { 'witness-culled': 'live' },
-    S00048: { 'top-rank1': 'dead', 'witness-culled': 'live', 'cutoff-survivor': 'live' },
-    S00095: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00099: { 'witness-culled': 'live' },
-    S00108: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00120: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    S00140: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00058: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00060: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00064: { 'top-rank1': 'live', 'witness-culled': 'live' },
-    R00104: { 'top-rank1': 'dead', 'witness-culled': 'live' },
-}));
 function exactLabel(c) {
     const role = roleOf(c);
     if (c.levelId === 'R03229') {
@@ -77,7 +60,7 @@ function exactLabel(c) {
         if (role === 'top-rank1' || role === 'cutoff-survivor') return 'dead';
         return null;
     }
-    return B2_EXACT.get(c.levelId)?.[role] ?? null;
+    return class5B2ExactLabel(c.levelId, role);
 }
 function keysOf(prefix) {
     if (!Array.isArray(prefix) || prefix.length === 0) throw new Error('empty prefix');

@@ -26,7 +26,7 @@ The 2026-09-14 inference audits add four earned conditional actions. Do not inte
 |---|---|
 | **Accepted-path representative sensitivity** | A live mechanism depends on one representative/path-set view. Then run the frozen seven-level Audit-3 substitution cohort with unchanged solver/config/budget. |
 | **Class-3 exact-action dose resolution** | Triage depends on whether the 37 rows are comparable-work failures. Historical atlas data lacks per-attempt `workSpent`; use retained current evidence or the smallest current-code measurement that can change triage. Until then: dose-unverified. |
-| **Known-prefix oracle-set manifest** | A decision-bearing prefix-survival study needs replay/dependency-stratified path-set sensitivity. Add a compact conditioning-set manifest; do not reconstruct history or dump full provenance. |
+| **Known-prefix oracle-set manifest** | **MACHINERY IMPLEMENTED / INACTIVE.** A decision-bearing prefix-survival study needs replay/dependency-stratified path-set sensitivity. Instantiate the compact conditioning-set manifest only then; do not reconstruct history or dump full provenance. |
 | **Experiment producer maturation** | When a decision-bearing workflow is touched or a recurring consumer gap appears, finish Audit-1 producer semantics: v3 contract at execution, resolved treatment identity, compact participation derived from retained rows, owning question/preflight link where known, and execution failure separate from scientific outcome. Durable primary-row retention is now canonical. |
 
 Frozen solve/work facts stand unless execution/participation was invalid; retest only when corrected scope leaves a live decision unanswered.
