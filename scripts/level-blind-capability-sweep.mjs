@@ -46,6 +46,10 @@ const saveHints = flags.has('--save-hints');
 const strictTotalWorkBudget = flags.has('--strict-total-work-budget');
 const attemptBudgetTelemetry = flags.has('--attempt-budget-telemetry');
 const lifecycleTelemetry = flags.has('--lifecycle-telemetry');
+const experimentId = argMap.get('--experiment-id') ?? null;
+const researchQuestion = argMap.get('--research-question') ?? null;
+const preflight = argMap.get('--preflight') ?? null;
+const declaredStageOrder = argMap.get('--stage-order')?.split(',').map(value => value.trim()).filter(Boolean) ?? null;
 const runStartedAt = new Date().toISOString();
 // --main-search-late-reserve-* is canonical; --main-loop-late-reserve-* is accepted as a legacy
 // alias for one migration window (naming-cleanup-ledger.json), same dual-read shape as the
@@ -240,6 +244,7 @@ function writeReport() {
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         workBudget: Number.isFinite(workBudget) ? workBudget : null,
         workers, enableFlags, disableFlags, strictTotalWorkBudget, attemptBudgetTelemetry, lifecycleTelemetry, runStartedAt,
+        experimentId, researchQuestion, preflight, declaredStageOrder,
         mainSearchLateReserveFraction: Number.isFinite(mainSearchLateReserveFraction) ? mainSearchLateReserveFraction : null,
         mainSearchLateReserveConfigCount: Number.isFinite(mainSearchLateReserveConfigCount) ? mainSearchLateReserveConfigCount : null,
         admissibleOrderNodeReserveFraction: Number.isFinite(admissibleOrderNodeReserveFraction) ? admissibleOrderNodeReserveFraction : null,
@@ -288,6 +293,17 @@ try {
             const original = rawLevels[levelNumber - 1];
             const result = workerResult.result;
             const row = buildRow(levelNumber, original?.id ?? null, result, 'production');
+            const lateRepair = row.stageLifecycle?.['late-repair-search'];
+            const lateMustTurn = row.stageLifecycle?.['late-repair-must-turn-biased-retry'];
+            const lateRepairParticipated = lateRepair?.reached === true
+                && (Number(lateRepair.actualWork ?? 0) > 0 || Number(lateRepair.actualNodes ?? 0) > 0);
+            row.class2ControlEligibility = {
+                hasMustTurn: workerResult.researchFeatures?.hasMustTurn === true,
+                ordinaryLateRepairParticipated: lateRepairParticipated,
+                childStructuralEligible: lateMustTurn?.mechanicallyEligible === true,
+                childInsertionPointReached: lateRepairParticipated
+                    && !row.attempts.some(attempt => attempt.stageId === 'late-repair-search' && attempt.ok === true),
+            };
             if (saveHints) {
                 row.hintAppended = hintCapture.record(hintLevels[levelNumber - 1], result);
                 if (row.hintAppended) {

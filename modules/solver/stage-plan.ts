@@ -19,6 +19,7 @@ export interface SolverStagePlanInput {
     earlyRepairSearchShrunkTierCount?: number;
     /** Pre-dispatch structural eligibility for the default-off late must-turn retry. */
     lateRepairMustTurnBiasedRetryEligible?: boolean;
+    portalCoarseStateMergeDeadLastRetryEligible?: boolean;
 }
 
 /** Eligibility fields owned by StageBudgetPlan. */
@@ -41,12 +42,13 @@ function budgetPlanEligibility(id: SolverStageId, plan: StageBudgetPlan): boolea
 }
 
 export function buildSolverStagePlan(input: SolverStagePlanInput): SolverStagePlan {
-    const { budgetPlan, mainSearchEligible, earlyRepairSearchShrunkTierCount, lateRepairMustTurnBiasedRetryEligible } = input;
+    const { budgetPlan, mainSearchEligible, earlyRepairSearchShrunkTierCount, lateRepairMustTurnBiasedRetryEligible, portalCoarseStateMergeDeadLastRetryEligible } = input;
     return SOLVER_STAGE_IDS.map((id): SolverStagePlanEntry => {
         if (id === 'main-search') return { spec: solverStageSpec(id), eligible: mainSearchEligible };
         if (id === 'late-repair-must-turn-biased-retry') {
             return { spec: solverStageSpec(id), eligible: !!lateRepairMustTurnBiasedRetryEligible };
         }
+        if (id === 'portal-coarse-state-merge-dead-last-retry') return { spec: solverStageSpec(id), eligible: !!portalCoarseStateMergeDeadLastRetryEligible };
         if (id === 'repair-shrink-recovery') {
             const eligible = earlyRepairSearchShrunkTierCount === undefined
                 ? undefined

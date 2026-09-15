@@ -97,6 +97,39 @@ test('runWholeLadderRetryTier: every returned attempt is tagged with the canonic
     assert.deepEqual(result.solution, [1, 2, 3]);
 });
 
+test('Class-4 dead-last shell keeps portal coarse merge retry-local and emits its stable identity', async () => {
+    const prep = prepLevel(makeLineLevel());
+    const originalCfg = { STRATEGY_PORTAL_COARSE_STATE_MERGE: false, STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY: true };
+    prep._cfg = originalCfg;
+    let treatmentDuringRetry = false;
+    const result = await runWholeLadderRetryTier({
+        stageId: 'portal-coarse-state-merge-dead-last-retry', proxyOverrides: { STRATEGY_PORTAL_COARSE_STATE_MERGE: true },
+        activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
+        runLadder: async () => { treatmentDuringRetry = prep._cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE === true; return { solution: null, attempts: [fakeAttempt({ workSpent: 12, nodesExpanded: 8 })] }; },
+        totalBudgetMs: 1000, nodeCeiling: 50_000_100, workBudget: 67_000_000, workStart: 100, staircase: true,
+    });
+    assert.equal(treatmentDuringRetry, true);
+    assert.equal(prep._cfg, originalCfg, 'the caller/predecessor configuration must be restored');
+    assert.equal(originalCfg.STRATEGY_PORTAL_COARSE_STATE_MERGE, false, 'the global treatment must stay disabled');
+    assert.equal(result.attempts[0].stageId, 'portal-coarse-state-merge-dead-last-retry');
+    assert.equal(result.attempts[0].workSpent, 12, 'participation work telemetry survives the shell');
+});
+
+test('runWholeLadderRetryTier can execute an explicitly funded behavior-identical control shell', async () => {
+    const prep = prepLevel(makeLineLevel());
+    prep._cfg = { STRATEGY_PORTAL_COARSE_STATE_MERGE: false };
+    let dispatched = false;
+    const result = await runWholeLadderRetryTier({
+        stageId: 'portal-coarse-state-merge-dead-last-retry', proxyOverrides: { STRATEGY_PORTAL_COARSE_STATE_MERGE: false },
+        activeGates: [1], mainConfigs: [], level: makeLineLevel(), prep, yieldFn: null,
+        runLadder: async () => { dispatched = true; return { solution: null, attempts: [fakeAttempt()] }; },
+        totalBudgetMs: 1000, nodeCeiling: 100, workBudget: 100, workStart: 0, staircase: false,
+        allowBehaviorIdentical: true,
+    });
+    assert.equal(dispatched, true);
+    assert.equal(result.attempts[0].stageId, 'portal-coarse-state-merge-dead-last-retry');
+});
+
 test('runWholeLadderRetryTier: staircase=true passes cumulative entry/0 to runLadder and strips mainSearchLateReserve; staircase=false passes undefined/undefined and keeps it', async () => {
     const prep = prepLevel(makeLineLevel());
     prep._metrics = { nodesExpanded: 4242 };

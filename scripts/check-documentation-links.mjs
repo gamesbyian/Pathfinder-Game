@@ -236,7 +236,7 @@ const reportMetadataPattern = new RegExp(
   '> \\*\\*Remaining gate:\\*\\* .+',
   'm',
 );
-// These five reports were merged together as the first inference-audit program before the strict
+// These reports were merged during the inference-audit/pre-heavy-work closeout before the strict
 // top-level report metadata check was exercised on their combined tree. Their current scientific
 // state was reconciled in the program closeout and current authorities were updated. Keep this as a
 // bounded historical compatibility bridge only: every newly created or materially revised report
@@ -247,6 +247,7 @@ const mergedInferenceAuditMetadataCompatibility = new Set([
   '2026-09-14-inference-audit-program-reconciliation-closeout-001.md',
   '2026-09-14-question-state-propagation-attention-allocation-audit-001.md',
   '2026-09-14-resource-contract-meta-audit-001.md',
+  '2026-09-14-pre-heavy-work-consolidation-closeout-001.md',
 ]);
 for (const name of readdirSync(resolve(ROOT, 'reports')).filter((name) => /^\d{4}-\d{2}-\d{2}-.+\.md$/.test(name))) {
   if (name.slice(0, 10) < '2026-08-20') continue;

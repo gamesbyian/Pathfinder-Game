@@ -34,6 +34,7 @@ test('race.mjs intentionally supports a documented SUBSET of the full sequential
         'coarse-state-near-tie-retention-disabled-retry', 'admissible-order-alternate-tiebreak-retry', 'connectivity-axis-prune-disabled-retry',
         'repair-elite-prefix-dfs-retry', 'must-cross-neighbor-prune-disabled-retry', 'late-repair-search',
         'late-repair-must-turn-biased-retry', 'guidance-goal-distance-retry', 'late-repair-multiseed-retry',
+        'portal-coarse-state-merge-dead-last-retry',
         'legacy-latency-portfolio-pass', 'legacy-latency-portfolio-fallback',
         // 'static-portfolio' (2026-09-03, orchestration.ts's runStaticPortfolio): an opt-in
         // standalone schedulerMode, only entered when opts.staticPortfolio is set — same
