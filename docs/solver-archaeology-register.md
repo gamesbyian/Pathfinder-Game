@@ -31,7 +31,7 @@ The 2026-09-16 level-blindness audit adds one interpretive rule for every histor
 
 ### Topological / homotopy completion classes
 
-**Status:** historical fixed-endpoint form unresolved by coverage; open-path topology premise earned by the 2026-09-16 controlled fork pilot in open PR #1821.
+**Status:** historical fixed-endpoint form unresolved by coverage; open-path topology premise earned by the 2026-09-16 controlled fork pilot, merged in PR #1821.
 
 July 2026 work progressed from a rejected cell-overlap proxy to actual winding-number signatures around connected obstacle-cluster centroids. The corrected probe found multiple homotopy classes on 12/19 must-cross-heavy published levels and found 16.6% of cross-class hint pairs treated as similar by the then-current diversity metric. The July 23 planning consolidation called homotopy-class signatures the highest-priority research build. Alias searches through `homotopy`, `winding`, topological/path-class vocabulary, branches, and later planning found no implementation descendant or clean closure.
 
