@@ -41,7 +41,7 @@ When speed becomes active, evaluate representative latency and total CPU/work-we
 
 ## Capability-acquisition frontier
 
-Boundary: **431 class-5** misses with no known admissible/T1 candidate and **123 class-4** misses with historical candidates. Freshness-reconcile before reuse. [`atlas`](../reports/2026-09-12-repair-turn-biased-t1-census-misclassification-001.md)
+Boundary after the 2026-09-16 Class-4 promotion refresh: **390 class-5** misses with no known admissible/T1 candidate and **71 class-4** misses with historical candidates; total residual is 531, with Classes 1-5 = 17/30/23/71/390. Freshness-reconcile after future promotions before reuse. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
 Naive `swap`/`cs`, generic scorer tuning, six-summary future-feasibility, connectivity/dead-cause reuse, August low-cardinality categorical quotas, and fixed-endpoint homotopy are closed in tested forms. Homotopy is coverage-null, not premise-false. [`homotopy`](../reports/2026-09-13-class5-homotopy-prefix-census-result-001.md)
 
@@ -51,18 +51,19 @@ Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smalle
 
 | Priority | Question | Reopen condition / boundary |
 |---:|---|---|
-| 1 | **Open-path topological completion signature** | Apply the implemented observer to existing exact labels; stop on contrast starvation before any tiny human-parent intervention. |
-| 2 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving intervention. |
-| 3 | **Cross-attempt basin overlap** | Allocation depends on whether actions/retries reach distinct basins; parents are independent units. |
-| 4 | **Dependency-conditioned repair descent shadow** | WS6 implicates an early/interior commitment append-only continuation cannot revise. |
-| 5 | **Certified forced-chain traversal census** | WS7 finds material cost inside post-prune one-successor chains. |
-| 6 | **Partial-order / commuting excursion replay** | Exact/accepted-path evidence suggests redundant obligation ordering and no clean natural pair exists. |
+| 1 | **Open-path topological completion signature** | **STOPPED ON CONTRAST STARVATION.** The implemented observer was joined to existing exact labels (28 rows / 26 controlled strata) and found zero natural LIVE/DEAD contrasts. Reopen only from a separately justified intervention/question; do not repeat the same natural-evidence join. |
+| 2 | **Full-pool categorical-state projection** | **STRONGEST BOUNDED PREMISE-GENERATION CANDIDATE, NOT AN ACTIVE TREATMENT.** First reconcile the unfinished four-parent exact-extinction observer against current exact-label semantics and September Class-5 evidence. If still nonredundant, run the retained read-only projection before inventing another scalar feature or human-parent intervention. [`reconciliation`](../reports/2026-09-16-post-ws2-premise-generation-reconciliation-001.md) |
+| 3 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving intervention. |
+| 4 | **Cross-attempt basin overlap** | Allocation depends on whether actions/retries reach distinct basins; parents are independent units. |
+| 5 | **Dependency-conditioned repair descent shadow** | WS6 implicates an early/interior commitment append-only continuation cannot revise. |
+| 6 | **Certified forced-chain traversal census** | WS7/current profiling finds material cost inside post-prune one-successor chains. |
+| 7 | **Partial-order / commuting excursion replay** | Exact/accepted-path evidence suggests redundant obligation ordering and no clean natural pair exists. |
 
 Historical dirty negatives: [`solver-archaeology-register.md`](solver-archaeology-register.md).
 
 ## Secondary solve-harvest trigger
 
-Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased repair remains live: six guidance rows, with `R02768` + `R02180` solved by the 7M late tier; eligible-population economics is the gate. [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md)
+Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased late repair demonstrated capability/placement evidence on `R02768` + `R02180`, but its frozen 60-row 7M economics A/B is **CLOSED NEGATIVE**: identical 17/60 solved sets, 100% downstream displacement, zero marginal gains, +6.5% work. Reopen requires a materially different placement/selector premise or changed allocation contract. [`result`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
 
 ## Deferred questions
 
