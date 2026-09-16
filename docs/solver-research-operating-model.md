@@ -115,7 +115,7 @@ A live handoff needs measured consumer limitation, producer information the cons
 
 ## Family and accepted-path evidence
 
-Family work uses the off-main variant-family dataset for controlled diagnosis, not production lookup or independent-row bulk statistics. New family generation follows [`variant-level-research.md`](solver-level-blindness.md).
+Family work uses the off-main variant-family dataset for controlled diagnosis, not production lookup or independent-row bulk statistics. New family generation follows [`variant-level-research.md`](variant-level-research.md).
 
 For a valid human/AI/oracle/variant path: referee-validate and record provenance; keep it out of the cold solve; locate first unchanged-search divergence/rejection/extinction; identify the generic boundary; test a generic mechanism. If the candidate is a reusable fixed descriptor/relation, require recurrence across unrelated parents before production change. If the candidate is a generic procedure that derives per-instance proofs, conflicts, topology state, decompositions, or plans, the semantic outputs may be unique to each level; require sound derivation plus useful solve/work behavior across independent evaluation levels instead. One vivid path is a case study, not a population.
 
