@@ -38,6 +38,22 @@ These are not independent queue items. They survive only behind evidence gates e
 
 Obligation-first planning remains nested under H1's specific event/order tests. Certified forced-chain traversal already has its own census gate below. Card-E continuation/handoff sizing remains the active handoff premise rather than a new architecture project.
 
+## Unearned architecture and research-method hypotheses
+
+Preserve these for discoverability, not priority. They are assumption-breaking descendants with no current execution authorization. [`moonshot harvest`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md)
+
+| Question | Reopen condition |
+|---|---|
+| Complete-path large-neighborhood search | A small offline study shows plausible relaxed complete paths lie structurally close to accepted solutions and can be repaired by bounded regional surgery more cheaply than prefix rediscovery. |
+| H1 optionality search | H1 first yields recurring completion-regime/event-order structure, then LIVE siblings demonstrably retain more distinct feasible regimes than stronger-scoring DEAD siblings after ordinary progress controls. |
+| Interpretable program synthesis as premise generation | A frozen exact-labelled sibling corpus and tiny legal expression language are available; synthesized predicates must survive parent-held-out validation and be translated into named causal hypotheses before any runtime use. |
+| Adversarial counterexample generation | A frozen solver hypothesis needs sharper falsification and the generator can produce independent solver/exact disagreement contrasts without construction artifacts encoding the answer. |
+| Cooperative blackboard portfolio | Card-E or another handoff study first shows repeated value in shared within-invocation artifacts; only then test exchange of generic frontiers, conflicts, infeasible regions, or completion contracts. |
+| Per-level search-plan compilation | At least two genuinely different solver architectures are independently justified, and cold current-input structural facts plausibly select between them better than a fixed portfolio. |
+| Declarative mechanic automata | Multiple otherwise-earned architectures are blocked by duplicated mechanic-state reasoning and a migration study shows the compositional gain can justify rewrite-scale cost. |
+
+The moonshot report also preserves CEGAR/path compilation, backward abstraction, separator contracts, behavioral-state quotienting, DEAD-core extraction, and cold exact-proof ideas. Their nearer-term forms already have homes in H1/H3, the recovered architectural descendants above, or the premise-generation stack and should not be duplicated here.
+
 ## Capability-acquisition frontier
 
 Post-2026-09-16 Class-4 promotion boundary: **390 Class-5** misses with no known admissible/T1 candidate and **71 Class-4** historical-candidate misses; residual 531, Classes 1-5 = 17/30/23/71/390. Refresh after future promotions. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
