@@ -9,6 +9,8 @@ This is not a second queue or experiment diary. Carry forward only unexplained r
 
 Closed work reopens only for a changed causal premise/treatment. Query existing variant families first for structural questions; skip family mining when allocation, participation, runtime cost, or exact feasibility is the real gate. If existing families lack the needed source/contrast, use the question-first human/editor-parent apparatus rather than bulk generation. [`variant guide`](variant-level-research.md), [`human contrasts`](human-parent-contrast-research.md)
 
+For architectural speed, distinguish an implemented exact-form negative from a profile-led deferment or architecture deferment. A neighboring failed optimization can justify postponing implementation but cannot close an untested treatment by analogy. Runtime/compiler-sensitive negatives expire only after a material Node/V8, bundler/module, representation, object-shape, or search-core change **and** a current profile again shows the hotspot. [`speed authority`](solver-architectural-speed-opportunities.md), [`methodology review`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
+
 ## Audit-derived conditional work
 
 The 2026-09-13 corpus/profile audits add conditional items, not top-priority work. [`re-evaluation`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md)
@@ -30,6 +32,22 @@ The 2026-09-14 inference audits add four earned conditional actions. Do not inte
 | **Experiment producer maturation** | When a decision-bearing workflow is touched or a recurring consumer gap appears, finish Audit-1 producer semantics: v3 contract at execution, resolved treatment identity, compact participation derived from retained rows, owning question/preflight link where known, and execution failure separate from scientific outcome. Durable primary-row retention is now canonical. |
 
 Frozen solve/work facts stand unless execution/participation was invalid; retest only when corrected scope leaves a live decision unanswered.
+
+## Architectural-speed conditional stack
+
+These are **not current queue items**. They are legitimate profile-gated candidates whose historical status was previously overstated. No implementation is earned until current-head profiling and opportunity sizing justify it.
+
+| Question | Reopen condition / boundary |
+|---|---|
+| **Fixed neighbor slots / `getNeighbors` allocation avoidance** | Current-head beam profiling shows neighbor generation/allocation materially contributes to end-to-end cost and a simple fixed-slot treatment has worthwhile expected removable cost. The fused-candidate negative did not test neighbor generation. |
+| **Batched candidate/object layout** | Current-head allocation/layout profiling plus a concrete batching design predicts material end-to-end value. The fused per-candidate kernel did not test batching. |
+| **Beam checkpoint/materialization** | Replay is again a material end-to-end bucket and a concrete snapshot/delta design can plausibly remove enough replay after write/read/storage overhead. "Not the largest hotspot" is not a negative result. |
+| **DFS transposition with cheap fingerprinting** | Current DFS work shows material revisit rate and a substantially cheaper incremental signature than historical exact-signature probes. Treat old evidence as prioritization, not family-wide falsification. |
+| **Beam quickselect / alternate cull selection** | Current profiling makes sort/cull selection material after other architecture changes. Historical non-implementation was sensible triage, not falsification. |
+| **Native/WASM compact kernel** | A compact kernel owns material time, crosses a small stable state boundary, and a disposable end-to-end prototype is cheap. Broad migration remains architecturally deferred. |
+| **Runtime-sensitive exact-form retest** | A material runtime/bundler/representation/search-core change has occurred **and** current profiling shows the old hotspot remains relevant. Then reclassify the affected historical result as stale/reprofile before deciding whether to rerun. |
+
+When a speed campaign becomes active, evaluate both representative per-level latency and **total CPU/work-weighted runtime over the retained solve population**, with search-mechanism stratification where useful. Do not let many trivial solves hide a hard-tail compute win or vice versa.
 
 ## Capability-acquisition frontier
 
@@ -76,5 +94,7 @@ Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased repair re
 ## Demoted forms
 
 Do not reopen unchanged without materially new evidence: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; whole C1 as transfer or C2 as untouched evidence; current connectivity/quota forms without changed premise; broad alternative-search frameworks or rotate/mirror/canonicalization before earned lineage diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency, generic detour libraries, bulk variants/human descendants, or full-corpus A/Bs for falsified ideas.
+
+For speed specifically, "demoted" must not silently mean "experimentally falsified": exact-form negatives, profile-led deferments, architectural deferments, and stale/reprofile cases are tracked separately in [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
 Keep this file short: questions, boundaries, reopen conditions.
