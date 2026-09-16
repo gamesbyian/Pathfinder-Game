@@ -1,8 +1,9 @@
 # Post-merge moonshot recovery and prioritization 001
 
-> **Status:** documentation/research-priority reconciliation
-> **Date:** 2026-09-16
-> **Authority boundary:** `docs/solver-optimization-workstreams.md` remains the live queue authority; `docs/solver-future-work.md` remains the deferred/reopen authority.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-16 — reconciled the recovered moonshot material against the merged Card-E, topology, and H1 state.
+> **Decision:** preserve the full ideation harvest, keep live authority documents lean, and route radical descendants through explicit evidence gates rather than immediate implementation.
+> **Remaining gate:** execute the live queue in `docs/solver-optimization-workstreams.md`; assumption-breaking descendants reopen only under the conditions recorded in `docs/solver-future-work.md`.
 
 ## Why this reconciliation was needed
 
@@ -54,33 +55,19 @@ This ordering reflects evidence maturity. It deliberately does **not** let more 
 
 ## Future-work nursery
 
-`docs/solver-future-work.md` now carries an explicit assumption-breaking nursery with reopen conditions. The most important preserved independent descendants are:
-
-- complete-path LNS as a genuinely different search object;
-- adversarial counterexample generation as a research-acceleration method;
-- interpretable program synthesis as automated premise nomination;
-- behavioral-state quotienting as a route to discovering the right state equivalence relation;
-- separator/AND-OR decomposition as an alternative factorization of hard levels;
-- cooperative blackboard exchange only after reusable cross-solver artifacts show value;
-- per-level architecture compilation only after complementary solver architectures actually exist;
-- declarative mechanic automata only after repeated architecture work demonstrates shared contract value.
+`docs/solver-future-work.md` carries the compact authority-facing gates. The most important preserved independent descendants are complete-path LNS, adversarial counterexample generation, interpretable program synthesis, behavioral-state quotienting, separator/AND-OR decomposition, cooperative blackboard exchange, per-level architecture compilation, and declarative mechanic automata.
 
 H1 optionality, CEGAR planning, backward abstraction, learned nogoods, and bounded exact production queries remain descendants of more primitive evidence and are not duplicated as immediate projects.
 
 ## Protocol clarifications retained
 
-Two assumption-breaking protocol conclusions are now explicit in the live authority:
+Two assumption-breaking protocol conclusions are retained:
 
 1. **Exact computation is not itself forbidden in production.** Historical exact labels, known solutions, identity/provenance leakage, and stored witnesses are forbidden runtime steering inputs. A generic current-level/current-state exact computation could become legal only after soundness, bounded cost, and end-to-end economics are demonstrated.
 2. **Radical architectures enter through cheap falsifiers.** Census, observer, tiny-state laboratory, or economics replay first; implementation-shaped queue debt only after the phenomenon exists.
 
 ## Net result
 
-No moonshot idea from the closed branches is now silently lost. Every idea is either:
-
-- represented in the current active premise stack;
-- nested under an already-live premise such as H1/H3;
-- preserved with an explicit reopen condition in `solver-future-work.md`; or
-- retained in the full moonshot harvest as non-authoritative architecture history.
+No moonshot idea from the closed branches is silently lost. Every idea is either represented in the current premise stack, nested under a live premise such as H1/H3, preserved with a reopen condition in `docs/solver-future-work.md`, or retained in the full moonshot harvest as non-authoritative architecture history.
 
 The active queue remains conservative despite the expanded idea space.
