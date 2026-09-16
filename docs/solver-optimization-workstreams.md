@@ -11,7 +11,7 @@ Program lens: **capability composition** exposes/selects/allocates demonstrated 
 
 ## Data-audit guardrail
 
-The 2026-09-13 audits change evidence interpretation, not execution order. Corpus 1 is not cross-generator transfer (79/102 rows descend from success-selected random levels); Corpus 2 is a mixed development laboratory. Residual/participant claims are population-conditional. Solution profiles describe sampled known solutions: use schema-v3 supported axes, don't equate sampled agreement or exhaustive events with structural/whole-space proof, and treat sparse nearest matches as exploratory. Live Class-2/Class-4 gates don't depend on the invalid transfer/profile premises and must not wait for family generation. Human/editor contrasts are supporting instruments only when they can change a ranked decision. See [`corpus provenance`](solver-corpus-selection-provenance.md), [`profile authority`](solver-solution-profile.md), [`re-evaluation ledger`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md).
+Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development laboratory. Residual/participant claims are population-conditional. Solution profiles describe sampled known solutions: use schema-v3 supported axes, do not treat sampled agreement/exhaustive events as structural proof, and keep sparse nearest matches exploratory. Human/editor contrasts are supporting instruments only when they can change a ranked decision. See [`corpus provenance`](solver-corpus-selection-provenance.md), [`profile authority`](solver-solution-profile.md), [`re-evaluation ledger`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md).
 
 ## Current execution priority
 
@@ -19,78 +19,75 @@ The 2026-09-13 audits change evidence interpretation, not execution order. Corpu
 
 **State:** ACTIVE / FIRST PRIORITY.
 
-**Production boundary:** run `35066677597` (post-promotion) is **101/102 C1 + 1,169/1,700 C2**, residual 531 (vs prior `34683011115`: +121/-0). Atlas classes 1-5: 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
+**Production boundary:** run `35066677597` is **101/102 C1 + 1,169/1,700 C2**, residual 531; atlas Classes 1-5 = 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-**Class 1-3 rejoin:** class 1 has no menu headroom; class 3 is exposed/dispatched, not a proven comparable-work negative. Must-turn-biased late-repair economics **CLOSED NEGATIVE** (2026-09-16): frozen 60-row cohort reproduced the identical 17/60 solved set in both arms (100% downstream displacement, zero of 43 gain rows rescued, +6.5% work). `R02768`/`R02180` remain capability/placement evidence only; reopen needs a different placement/selector. [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md), [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
+**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, not a proven comparable-work negative. Must-turn-biased late repair economics are **CLOSED NEGATIVE**: frozen 60-row cohort, identical 17/60 solved sets, zero marginal gains, +6.5% work. `R02768`/`R02180` remain placement/capability evidence only. [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
 
-**Class 4: PROMOTED** (2026-09-16). Dead-last additive retry canary passed (7/8 freshness rows, `R01273` unaffected); the 113-row allocation population then reproduced **86 referee-valid gains / 0 losses**, byte-identical non-target stages, net lower aggregate `workSpent`. `STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY`(+`_TREATMENT`) default-ON; global merge stays closed; `R03365` remains a dose miss. [`canary`](../reports/2026-09-16-class4-dead-last-frozen-canary-001.md), [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
+**Class 4: PROMOTED.** Dead-last portal coarse-state retry reproduced **86 referee-valid gains / 0 losses** on 113 allocation rows with byte-identical non-target stages and lower aggregate `workSpent`; default ON. Global merge remains closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
-**Class 5:** prior generic capability forms and fixed-endpoint homotopy are closed. The research-only open-path observer's offline join to exact-labelled material found 28 rows / 26 strata and **zero natural LIVE/DEAD contrasts**. A controlled same-board/same-endpoint human-parent topological-fork preflight is now frozen to manufacture the missing contrast without changing the production solver. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md)
+**Class 5:** natural open-path exact labels were contrast-starved: 28 rows / 26 strata, zero LIVE/DEAD contrasts. A frozen same-board/same-endpoint human-parent topological-fork preflight now targets that missing contrast. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md)
 
-**Card-E: sizing CONFIRMED, state-selection descendant CLOSED NEGATIVE** (2026-09-16). An independent 156-row score-width-culled population (5.6x the original 28) reproduced 17/156 (10.9%, CI 6.9-16.8%) reconstructable-but-unexposed, cross-class/regime. Two mechanism-earned descriptor families both failed a depth-controlled likelihood-ratio test (3.11/3.47 vs 5.99 critical); no legal signal beats generic depth, so **no handoff pilot is implemented**. Reopen only with a new descriptor family or after the exposed within-pool candidate-selection sub-problem is solved. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
+**Card-E:** sizing confirmed on 156 rows, with 17/156 reconstructable-but-unexposed. Its two tested state-selection descriptor families failed depth-controlled likelihood-ratio tests, so no handoff pilot follows. Reopen only with a new descriptor family or after the within-pool candidate-selection sub-problem changes materially. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
 **Current premise execution order:**
 
 1. run the frozen controlled open-path topology pilot;
-2. run the frozen H1 relational event-feasibility prespec as the strongest independent Class-5 premise;
-3. if those expose exact-DEAD siblings but no compact causal relation, run a **minimal DEAD-core / minimum-relaxation diagnostic** before inventing another scorer or retry;
-4. H2 structural stasis and H3 dependency-defined repair remain bounded observers/premise generators;
-5. behavioral-state quotienting and separator/decomposition stay behind tiny evidence-first probes, not implementation projects.
+2. run the frozen H1 relational event-feasibility prespec;
+3. if exact-DEAD contrasts remain causally opaque, run minimal DEAD-core / minimum-relaxation diagnosis;
+4. keep H2 structural stasis and H3 dependency-defined repair bounded;
+5. only then consider tiny behavioral-state quotient and separator/decomposition probes.
 
-The assumption-breaking architecture nursery is recorded in [`solver-future-work.md`](solver-future-work.md) and the [`moonshot harvest`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md). It does not displace the frozen topology/H1 work merely because its ideas are more radical.
+The assumption-breaking architecture harvest is preserved in [`solver-future-work.md`](solver-future-work.md), [`moonshot report`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md), and [`post-merge reconciliation`](../reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md). Radical ideas do not leapfrog frozen decision-bearing work.
 
-**Next WS2 treatment gates:** none currently earned. The next work is premise acquisition/diagnosis, not a production treatment. Class 1-3 reopen needs a new must-turn placement/selector premise or changed class-1 allocation contract.
+**Next WS2 treatment gates:** none currently earned. The next work is premise acquisition/diagnosis, not a production treatment. Class 1-3 reopen requires a changed placement/selector premise or allocation contract.
 
-**Side observation:** 22% non-portal `coarse-state-merge-removed` in the Card-E draw is an unvalidated WS4 nomination, not a treatment gate.
-
-**Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, goal-attraction-disabled retry, and portal coarse-state **dead-last additive retry** are **PROMOTED**. Portal coarse-state **global merge**, repair late-probe `7->6` seeds, and late must-turn-biased repair (**economics**, 2026-09-16) are **CLOSED NEGATIVE**. Solve-local connectivity reason reuse is **CLOSED IN CURRENT POPULATION**. Fixed-endpoint homotopy winding is **CLOSED COVERAGE-NULL**. The August four-parent quota projection is **CLOSED NEGATIVE** (207 pools; no exact-live rescue), not unfinished. Admissible-order retry repricing is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md), [`premise harvest`](../reports/2026-09-16-post-ws2-premise-harvest-001.md)
+**Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, goal-attraction-disabled retry, and portal coarse-state dead-last additive retry are **PROMOTED**. Portal coarse-state global merge, repair late-probe `7->6`, and late must-turn-biased repair are **CLOSED NEGATIVE**. Solve-local connectivity reason reuse is **CLOSED IN CURRENT POPULATION**. Fixed-endpoint homotopy is **CLOSED COVERAGE-NULL**. August low-cardinality quota projection is **CLOSED NEGATIVE** over 207 pools. Admissible-order retry repricing is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE PRODUCTION SELECTOR GATE.
 
-Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path, and capability-memory evidence to distinguish not-exposed from exposed-and-failed, and technique-relative response from shared failure. Production selectors need legal current-level/current-solve signals and confirmation proportional to selection pressure.
+Use capability, lifecycle, provenance, profile, family, census, trace, accepted-path, and capability-memory evidence to distinguish not-exposed from exposed-and-failed and technique-relative response from shared failure. Production selectors need legal current-level/current-solve signals and confirmation proportional to selection pressure.
 
-For a new structural selector premise, query controlled families first. Family flips nominate; they do not license a selector. Existing variant families are the cheap first pass; a nominated relation needing human-origin causal replication or a broader claim uses whole-parent human/editor contrasts with held-out parents before strong/global promotion. Any profile-derived premise must use current support-aware semantics; legacy nearest-neighbour identity, sampled rigidity, incomplete-chronology saturation, and exhaustive-event markers are not selector features. The September structural-response ladder already ran through operational first divergence; don't restart its earlier mediator stages. [`provenance`](../reports/2026-09-12-cross-hint-provenance-relations-001.md), [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
+Query controlled families first for new structural selector premises. Existing variant families are the cheap first pass; human/editor contrasts are for missing source/causal contrast. Legacy nearest-neighbour identity, sampled rigidity, incomplete-chronology saturation, and exhaustive-event markers are not selector features. The September structural-response ladder already ran through first divergence; do not restart earlier stages. [`stage 5`](../reports/2026-09-12-ws1-stage5-first-divergence-result-001.md)
 
 ## Workstream state
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Frozen controlled topology pilot first, then frozen H1 relational event-feasibility prespec. No production treatment is earned. If exact-DEAD contrasts still lack a compact explanation, minimum-relaxation/DEAD-core diagnosis is the next assumption-breaking probe. |
-| 1 | Automatic action selection | **SUPPORTING** | Reopen only from a new legal signal/relation. The structural-response ladder is complete; Card-E's descriptors did not survive depth-control. |
-| 6/7 | Repair reachability / architectural speed | **SUPPORTING** | Current first-loss evidence says exposure, not unusually high operator incapability, is the distinctive repair problem. No implementation-speed candidate is earned; fresh profiling gates speed work. [`audit`](../reports/2026-09-15-solver-performance-evidence-lineage-audit-001.md) |
-| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure; treat parents, not descendants, as independent human-family units. |
-| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not tail entitlement. |
-| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | August low-cardinality full-pool quota projection is closed negative; reopen only for changed recurring mechanism evidence, not the stale `unfinished` claim. |
-| 5 | Exact/reference model | **ON DEMAND** | Offline truth for acquisition questions, DEAD-core/minimum-relaxation diagnosis, behavioral-equivalence probes, and controlled descendant boundaries. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Topology pilot, then H1 prespec. If exact-DEAD contrasts remain unexplained, minimum-relaxation/DEAD-core diagnosis. No production treatment is earned |
+| 1 | Automatic action selection | **SUPPORTING** | Reopen only from a new legal signal/relation; Card-E descriptors did not survive depth control |
+| 6/7 | Repair reachability / architectural speed | **SUPPORTING** | Exposure, not unusually high operator incapability, is the distinctive repair problem; fresh profiling gates speed work |
+| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units and scale confirmation with selection pressure |
+| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not tail entitlement |
+| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed recurring mechanism evidence |
+| 5 | Exact/reference model | **ON DEMAND** | Offline truth for acquisition questions, DEAD-core diagnosis, behavioral-equivalence probes, and controlled descendants |
 
 ## Standing research rules
 
 - Use `workSpent` across techniques; nodes are within-technique diagnostics. New actions/configs normally compete inside total work.
 - Level-blindness is not generalization. IDs, historical outcomes, hints, family labels, and capability-memory membership never become runtime routing inputs.
-- Exact reasoning is not intrinsically illegal in production; historical exact labels, known solutions, identities, and stored witnesses are. A generic current-level/current-state exact query must still earn soundness, bounded cost, and end-to-end economics before runtime use.
+- Exact computation is not intrinsically illegal in production; historical exact labels, known solutions, identities, and stored witnesses are. Any generic current-state exact query must still earn soundness, bounded cost, and end-to-end economics.
 - Corpus/container names are not evidence roles. Preserve generation ancestry, later selection history, prior decision use, and exact population identity.
 - Selected residuals/participant cohorts support their conditional question, not unconditional mechanic prevalence.
-- Separate observed result from inferential entitlement; narrowing an evidence role does not erase row-level solve/work facts.
-- Profile evidence requires supported axes and honest chronology; missing stays unknown, sampled agreement is not rigidity, and exhaustive events are not whole-space proof.
-- Preserve **disposition** separately from **capability signature**. Historical gains intersecting current residual are nominations until reconciled.
+- Separate observed result from inferential entitlement. Preserve **disposition** separately from **capability signature**.
+- Profile evidence requires supported axes and honest chronology; missing stays unknown, sampled agreement is not rigidity, exhaustive events are not whole-space proof.
 - A historical null/revert is not a premise verdict until participation, measurement integrity, and formulation are established.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
-- For performance evidence distinguish **SUPPORTED_EXACT_FORM**, **FALSIFIED_EXACT_FORM**, **DEFERRED_LOW_VALUE**, **ARCHITECTURALLY_DEFERRED**, **STALE_REPROFILE**, **EVIDENCE_INCOMPLETE**, and **BEHAVIOR_CHANGE_NOT_PURE_SPEED**. Opportunity sizing can terminate work without inventing a treatment result. [`speed authority`](solver-architectural-speed-opportunities.md)
-- When speed becomes active, freeze the retained solve boundary and report total `workSpent`, total wall/CPU, pre-winner work/cost, winning action, redundant earlier action cost, displaced capability, DFS/beam/repair contribution, participation/dose, current hotspot shares, representative short/hard latency, and total retained-population compute.
+- For performance evidence distinguish **SUPPORTED_EXACT_FORM**, **FALSIFIED_EXACT_FORM**, **DEFERRED_LOW_VALUE**, **ARCHITECTURALLY_DEFERRED**, **STALE_REPROFILE**, **EVIDENCE_INCOMPLETE**, and **BEHAVIOR_CHANGE_NOT_PURE_SPEED**. [`speed authority`](solver-architectural-speed-opportunities.md)
+- When speed becomes active, freeze the retained solve boundary and report total `workSpent`, wall/CPU, pre-winner cost, winning action, redundant earlier cost, displaced capability, DFS/beam/repair contribution, participation/dose, hotspot shares, representative latency, and total retained-population compute.
 - Hold out independent units and scale confirmation with tuning/selection pressure. For generated human/editor descendants, the parent family is the usual independent unit.
-- Reusable rows require matching protocol identity; nominal stage reach or dispatch is not participation. A comparable-work negative requires exact-action work/dose evidence. Timeout/errors are indeterminate, not ordinary failures.
-- Refresh residual-derived views after material promotion or provenance reinterpretation before reusing class counts.
-- A validated hint prefix proves that prefix live, not alternatives dead. A preserved construction witness proves solvability, not solution-space rigidity or DEAD alternatives. Exact labels are offline truth, never runtime steering.
+- Reusable rows require matching protocol identity; nominal stage reach is not participation. Comparable-work negatives require exact-action work/dose evidence. Timeout/errors are indeterminate.
+- Refresh residual-derived views after material promotion or provenance reinterpretation.
+- A validated hint prefix proves that prefix LIVE, not alternatives DEAD. Exact labels are offline truth, never runtime steering.
 - A single-level microscope may generate a premise, never a production exception.
-- Compact signatures/fingerprints may nominate recurring states/responses; they do not prove semantic equivalence without a sufficiency argument.
+- Compact signatures may nominate recurring states/responses; they do not prove semantic equivalence without a sufficiency argument.
 - Scheduler fairness/participation is diagnostic, not an objective. Measure marginal value and displaced capability before reallocating.
 - Use explicit provenance/config fields for decision-bearing joins, not convenience labels/summary booleans.
 - Reconcile old questions before new compute; prefer the smallest information-value test.
-- For archaeology-derived reopenings, search forward from the exact experiment vocabulary, parents, and intended output before promoting an `unfinished` claim; the 2026-09-16 descendant sweep found a supposedly missing August full-pool result already completed and negative.
-- For controlled structural response, query existing variant families before new generation/broad compute when they can change the decision. If natural/existing families lack the needed source or clean contrast, use the question-first human/editor-parent apparatus rather than bulk generation. [`variant resource`](variant-level-research.md), [`human contrasts`](human-parent-contrast-research.md)
-- Radical architecture ideas enter through cheap falsifiers: a census, exact-labelled observer, small-state laboratory, or economics replay. Do not create implementation-shaped queue debt before the phenomenon exists.
+- For archaeology-derived reopenings, search forward from the exact experiment vocabulary before promoting an `unfinished` claim.
+- Query existing variant families before new generation when they can change the decision; use human/editor-parent apparatus for missing clean contrasts. [`variant resource`](variant-level-research.md)
+- Radical architectures enter through cheap falsifiers: census, exact-labelled observer, tiny-state laboratory, or economics replay before implementation-shaped queue debt.
 
 ## Cheap evidence routing
 
