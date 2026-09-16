@@ -45,6 +45,15 @@ console.log(`Aggregate workSpent (solved subset): ${sum(withWork.filter(l => l.o
 console.log(`Aggregate workSpent (unsolved subset): ${sum(withWork.filter(l => !l.ok)).toLocaleString()}`);
 console.log(`Aggregate nodesExpanded (all levels): ${levels.reduce((a, l) => a + (l.nodesExpanded || 0), 0).toLocaleString()}`);
 
+// A claimed solve (row.ok) is only decision-bearing evidence once independently referee-checked
+// (Solver.validateCandidatePath); row.ok alone is the solver's own claim. Printed unconditionally
+// (not gated behind --stage) because the artifact-download blob-storage block this whole script
+// exists to sidestep (see file header) applies just as much to correctness verification as to
+// economics -- a promotion-adjacent gain claim read only from this log must not silently assume
+// referee validity.
+const solvedNotRefereeValid = solved.filter(l => l.refereeValid !== true);
+console.log(`Solved rows with refereeValid !== true: ${solvedNotRefereeValid.length}${solvedNotRefereeValid.length ? ' (' + solvedNotRefereeValid.map(l => l.id).join(', ') + ')' : ''}`);
+
 const statusCounts = new Map();
 for (const l of unsolved) statusCounts.set(l.status, (statusCounts.get(l.status) || 0) + 1);
 console.log(`Unsolved status breakdown: ${[...statusCounts.entries()].map(([s, n]) => `${s}=${n}`).join(', ') || '(none unsolved)'}`);
