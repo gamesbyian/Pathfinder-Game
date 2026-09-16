@@ -90,8 +90,8 @@
       "owner": "WS2",
       "state": "active-candidate",
       "aliases": ["portal coarse allocation", "dead last portal retry", "portal coarse exposure"],
-      "answeredBy": [],
-      "result": "Global placement is closed negative, but current capability is fresh on the prespecified class-4 sample. The live question is allocation/economics: first pass a canary containing the eight freshness rows, R01273, and non-portal controls; only then consider the 113-row nominated population.",
+      "answeredBy": ["reports/2026-09-16-class4-dead-last-frozen-canary-001.md"],
+      "result": "Canary passed 2026-09-16: 7/8 freshness rows solved and referee-valid through the real orchestration ladder, R01273 byte-identical with zero retry engagement, zero non-portal participation, no earlier-stage/retry-envelope divergence, wall deadline nonbinding. R03365 remains a genuine dose miss. Global placement stays closed negative. The live question is now the earned 113-row allocation population's economics, not the canary.",
       "triggeredBy": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
       "constrainedBy": ["WS2-PORTAL-COARSE-GLOBAL-MERGE"],
       "constrains": [
