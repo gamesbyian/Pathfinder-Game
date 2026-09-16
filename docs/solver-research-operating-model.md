@@ -41,7 +41,7 @@ These are gates, not aspirations.
 
 ## Capability and evidence roles
 
-The product case is an unseen editor level. Cold solves may use mechanics, current state/telemetry, and generic code/config only. Forbidden steering includes saved hints/solutions, prior winners/configs/seeds, historical solve/cost/family outcomes, per-level special cases/caches, IDs/corpus position, and practical identity recognition through fingerprints/nearest-neighbor replay.
+The product case is an unseen editor level. Cold solves may use mechanics, current state/telemetry, and generic code/config only. Forbidden steering includes saved hints/solutions, prior winners/configs/seeds, historical solve/cost/family outcomes, persistent exact-level special cases/caches surviving from prior invocations, IDs/corpus position, and practical identity recognition through fingerprints/nearest-neighbor replay. Solve-local caches, proofs, conflicts, canonical forms, decompositions, and plans derived only from legal current inputs are level-blind legal in principle; their soundness and economics remain separate gates. See [`solver-level-blindness.md`](solver-level-blindness.md).
 
 Use three renewable roles, defined fully in [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md):
 
@@ -115,9 +115,9 @@ A live handoff needs measured consumer limitation, producer information the cons
 
 ## Family and accepted-path evidence
 
-Family work uses the off-main variant-family dataset for controlled diagnosis, not production lookup or independent-row bulk statistics. New family generation follows [`variant-level-research.md`](variant-level-research.md).
+Family work uses the off-main variant-family dataset for controlled diagnosis, not production lookup or independent-row bulk statistics. New family generation follows [`variant-level-research.md`](solver-level-blindness.md).
 
-For a valid human/AI/oracle/variant path: referee-validate and record provenance; keep it out of the cold solve; locate first unchanged-search divergence/rejection/extinction; identify the generic boundary; test a generic mechanism; require recurrence across unrelated parents before production change. One vivid path is a case study, not a population.
+For a valid human/AI/oracle/variant path: referee-validate and record provenance; keep it out of the cold solve; locate first unchanged-search divergence/rejection/extinction; identify the generic boundary; test a generic mechanism. If the candidate is a reusable fixed descriptor/relation, require recurrence across unrelated parents before production change. If the candidate is a generic procedure that derives per-instance proofs, conflicts, topology state, decompositions, or plans, the semantic outputs may be unique to each level; require sound derivation plus useful solve/work behavior across independent evaluation levels instead. One vivid path is a case study, not a population.
 
 ## Promotion contract
 
