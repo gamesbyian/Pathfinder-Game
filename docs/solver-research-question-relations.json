@@ -189,11 +189,12 @@
       "id": "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE",
       "question": "Can a mathematically defensible open-path topological signature/reference encode already-incurred commitment and distinguish exact-LIVE from exact-DEAD material without arbitrary endpoint-closure signal?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "concluded-positive",
       "aliases": ["topology", "open path topology", "H signature", "topological acquisition"],
-      "answeredBy": [],
-      "result": "This is the current Class-5 acquisition gate. Generic diversity, six scalar future-feasibility summaries, current-population dead-cause reuse and low-cardinality full-pool quota forms are closed in their tested forms; fixed-endpoint winding was coverage-null. The live question is whether a rigorous open-path representation exists before buying new labels or changing runtime search.",
+      "answeredBy": ["reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md"],
+      "result": "Yes, on a controlled construction. A frozen same-board/same-endpoint human-parent topological-fork pilot found 4 exact-resolved LIVE/DEAD-discordant pairs across 2 independent human parents (P00124, P00137), all matched on every non-history mechanic field the runtime already tracks, all control checks valid, each discordant pair phase-distinct by exactly one full turn (opposite sides of a single board puncture). This earns a microscope step, not production routing of the raw phase coordinate.",
       "triggeredBy": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
+      "implies": ["WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR"],
       "constrainedBy": [
         "WS2-GENERIC-STRUCTURAL-DIVERSITY",
         "WS2-SIMPLE-FUTURE-FEASIBILITY",
@@ -204,6 +205,22 @@
         "Require an invariance argument and endpoint-identity controls before treating any H-signature as decision-bearing.",
         "First use existing exact-labelled material; if natural contrast remains starved after the representation is defined, use the smallest controlled human-parent topology intervention and exact-label the relevant states.",
         "Generated solvable witnesses do not substitute for exact DEAD labels, and a complete-solution topology axis does not itself justify an in-loop feature."
+      ],
+      "reopensOn": null
+    },
+    {
+      "id": "WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR",
+      "question": "Which generic current-input topology successor is useful after the earned open-path contrast: a compact reusable puncture-side descriptor, a richer per-instance topology derivation, or neither?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "aliases": ["topology descriptor", "puncture-side descriptor", "per-instance topology", "topology reasoning"],
+      "answeredBy": [],
+      "result": "Not yet tested. The current earned evidence is 4 discordant single-puncture cases across 2 parents. Microscope those cases without assuming that the only legitimate successor is one recurring compact descriptor: compare a reusable descriptor route with generic per-instance winding/phase, separator-side, region-accessibility, topology-aware canonicalization, or exact-impossibility reasoning derived solely from the current puzzle/current invocation.",
+      "triggeredBy": ["WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"],
+      "constrains": [
+        "Do not route production directly on raw phase. Any hard use requires an appropriate soundness/invariance argument; any soft use still needs predictive value beyond generic difficulty/work.",
+        "A reusable fixed descriptor must recur and confirm on independent parents. A generic per-instance derivation procedure may emit board-specific outputs that never recur, but the procedure must generalize across independent evaluation levels.",
+        "For either route, bound construction/use cost and prove end-to-end solve/work economics before promotion."
       ],
       "reopensOn": null
     },
