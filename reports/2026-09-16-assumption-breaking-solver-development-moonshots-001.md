@@ -1,9 +1,9 @@
 # Assumption-breaking solver development moonshots 001
 
-> **Status:** ideation / architecture hypothesis harvest only
-> **Date:** 2026-09-16
-> **Authority:** not a work queue, not an experiment authorization, and not a replacement for `docs/solver-optimization-workstreams.md` or `docs/solver-future-work.md`
-> **Purpose:** challenge assumptions that survived because the current solver family is effective, not because alternatives were proved inferior.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-16 — hypothesis harvest recovered after PR #1817 was closed rather than merged.
+> **Decision:** preserve these ideas as non-authoritative architecture/research hypotheses; live priority is governed by `docs/solver-optimization-workstreams.md` and reopen conditions by `docs/solver-future-work.md`.
+> **Remaining gate:** none from this report. Each descendant must pass its own cheap falsifier/evidence gate before implementation.
 
 ## Why this pass
 
@@ -280,15 +280,9 @@ This is the least immediate idea here because its migration cost is enormous. It
 
 Do **not** add these twelve ideas to the active queue. Their value is in widening the hypothesis space without destroying the repo's hard-won evidence discipline.
 
-The highest-information cheap work is:
+The historical harvest ranked minimal DEAD-core extraction, separator/decomposition census, behavioral-state quotient probing, cold exact-query economics, then a CEGAR micro-prototype. **Current live ordering is newer and authoritative:** run the frozen controlled topology pilot, then the frozen H1 prespec; use minimum-relaxation/DEAD-core diagnosis next if those yield unexplained DEAD contrasts. See `docs/solver-optimization-workstreams.md` and `reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md`.
 
-1. **minimal DEAD-core extraction** — because even a negative teaches whether Class-5 failure has compact causal explanations;
-2. **separator/decomposition census** — cheap static evidence about whether a radically different algorithmic factorization is available;
-3. **behavioral-state quotient probe** — asks whether the solver is searching the wrong state space;
-4. **cold exact-query economics replay** — tests the protocol-level assumption that production exact reasoning is too expensive before building it;
-5. **CEGAR micro-prototype** only if H1/DEAD-core evidence shows recurring relational completion constraints.
-
-The best independent competing solver-family bet is complete-path LNS. The highest-upside integrated architecture is CEGAR + backward abstraction + conflict learning. The most provocative protocol change is allowing bounded exact current-input reasoning to become a first-class production primitive when its measured value exceeds its cost.
+The best independent competing solver-family bet remains complete-path LNS. The highest-upside integrated architecture is CEGAR + backward abstraction + conflict learning. The most provocative protocol change is allowing bounded exact current-input reasoning to become a first-class production primitive when its measured value exceeds its cost.
 
 ## Core conclusion
 
