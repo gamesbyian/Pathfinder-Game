@@ -40,7 +40,7 @@ These 44 rows (6 class-4, 38 class-5; 40 intersection-heavy, 2 must-cross-heavy,
 
 ## Confirmation pass (Step 1b, width=5000, not used for filtering)
 
-Ran `--beam-width=5000 --node-budget=6000000` on the frozen 156-row cohort to confirm width-insensitivity (matching both original reports' method). [Result folded in below / see artifacts — confirmatory only, does not change cohort membership or any decision.]
+Ran `--beam-width=5000 --node-budget=6000000` on the frozen 156-row cohort to confirm width-insensitivity (matching both original reports' method). **150/156 (96%) remain `score-width-culled` at the higher width**; 5/156 shift to a different loss cause (coarse-state-merge becoming reachable at the wider frontier) and 1/156 (`R03365`) solves outright at this elevated single-technique budget. Among the 150 still-culled rows, the width-5000 cull depth moves out by a median of **1 step** and mean of **2.4 steps** relative to width-2000 (range 0-34) — a clean replication of both original reports' "2.5x width buys only a handful of extra steps, not proportional headroom" finding, now on 5.6x more levels. This is confirmatory only; it does not change cohort membership, the frozen phenotype screen, or any decision above.
 
 ## Step 2: natural repair exposure (30k and 300k dose)
 
@@ -117,6 +117,7 @@ In both cases, adding the mechanism-earned features did **not** improve fit beyo
 - [`draw pool`](stress/card-e-sizing-draw-pool-001.json) — 200-id stratified draw with provenance/features.
 - [`frozen cohort`](stress/card-e-sizing-frozen-cohort-001.json) — 156-row score-width-culled Card-E population plus excluded-row bookkeeping.
 - [`beam survival, width=2000`](stress/card-e-sizing-beam-width2000-001.json) — Step 1a raw output (200 rows) and score-width forensics.
+- [`beam survival, width=5000`](stress/card-e-sizing-beam-width5000-001.json) — Step 1b confirmatory raw output (frozen 156-row cohort).
 - [`repair rollback census, 30k`](stress/card-e-sizing-repair-rollback-census-30k-001.json) / [`300k`](stress/card-e-sizing-repair-rollback-census-300k-001.json) — Step 2 natural-exposure census.
 - [`retreat file`](stress/card-e-sizing-retreat-file-001.json) — synthetic seeded-reachability input (156 entries).
 - [`operator reachability`](stress/card-e-sizing-repair-operator-reachability-001.json) — Step 3 raw output including referee/replay verification per solve.
