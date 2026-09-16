@@ -1,106 +1,84 @@
 <!-- agent-context-budget: warn=8000 max=10500 -->
 # Solver architectural speed opportunities
 
-> **Status:** supporting program; no current candidate is nominated.
+> **Status:** supporting program; no current implementation candidate is nominated.
 > **Priority:** [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **History:** [`archive/snapshots/solver-architectural-speed-opportunities-2026-09-04-pre-consolidation.md`](archive/snapshots/solver-architectural-speed-opportunities-2026-09-04-pre-consolidation.md) plus dated reports.
+> **2026-09-15 audits:** [`negative review`](../reports/2026-09-15-speed-negative-methodology-review-001.md), [`full lineage audit`](../reports/2026-09-15-solver-performance-evidence-lineage-audit-001.md).
 
-This document keeps only current speed-research rules, surviving opportunities, and closed forms. Experimental chronology belongs in reports/archive.
+This file owns current performance methodology/dispositions. Chronology and detailed measurements belong in reports. The live queue remains `solver-optimization-workstreams.md`.
 
-## Working rule
+## Evidence vocabulary
 
-Internal representation, traversal plumbing, object shape, module boundaries, and implementation language are not compatibility contracts. Correctness, level-blindness, deterministic work semantics, and measured solve/search behavior are.
+- **SUPPORTED_EXACT_FORM:** implemented treatment produced a trustworthy representative end-to-end speed gain, with work/search parity where pure speed was claimed.
+- **FALSIFIED_EXACT_FORM:** implemented treatment lost under an adequate representative protocol.
+- **DEFERRED_LOW_VALUE:** profiling/opportunity sizing makes implementation unattractive; no losing implementation is implied.
+- **ARCHITECTURALLY_DEFERRED:** no compact/economical treatment boundary is apparent; no empirical negative is implied.
+- **STALE_REPROFILE:** historical result may not transfer after material runtime, bundler, representation, object-shape, search-core, or workload change.
+- **EVIDENCE_INCOMPLETE:** current disposition/magnitude lacks decision-grade lineage.
+- **BEHAVIOR_CHANGE_NOT_PURE_SPEED:** treatment changes search ordering/extent and must be judged as solver policy.
 
-Profile first. A pure implementation speedup should preserve logical search decisions and `workSpent`; changed ordering/search extent is a behavior experiment and needs matched-work evaluation. Microbenchmarks nominate work but do not establish end-to-end value.
+Pure implementation speed preserves logical search/work while reducing CPU/wall cost. Profiles and microbenchmarks nominate work; they do not establish end-to-end value. A failed adjacent treatment may reduce value-of-information but cannot falsify an unimplemented mechanism.
 
-Implementation speed creates latency headroom. The scheduler, not the speed optimization, decides whether that headroom should buy additional search.
+## Historical positives
 
-## Current dispositions
+| Treatment | Status | Scope |
+|---|---|---|
+| July bit-parallel connectivity + pooled urgency context + flood-fill closure hoist | **SUPPORTED_EXACT_FORM historically** | Fixed-work interleaved A/B: about -27.1% published and -13.2% hard-C2 sample with identical node work. Current marginal magnitude is **STALE_REPROFILE**. |
+| Beam parent-tree frontier walk | **BEHAVIOR_CHANGE_NOT_PURE_SPEED** | Replay fell sharply, but mid-phase traversal order changed and `R00526` was lost. Treat as current search policy, not a semantics-preserving kernel win. |
+| Lazy beam dedup/diversity key construction | **SUPPORTED_EXACT_FORM historically** | Identical deterministic work/search plus material end-to-end improvement. |
+| Mixed-radix numeric beam keys | **SUPPORTED_EXACT_FORM historically / STALE_REPROFILE magnitude** | Strong parity/timing evidence; later radix-boundary fixes mean current code is not byte-identical to the measured form. |
+| Dense `staticNeighborKeys` | **SUPPORTED_EXACT_FORM within measured role** | Short/batch overhead improved; individual hard-tail movement was near noise. |
+| Remove `cellDenseIndex` | **EVIDENCE_INCOMPLETE as speed-positive** | First short run improved, replication reversed sign; source report explicitly found no reliable wall-time gain. Landed for simpler representation/no hard-tail cost. |
 
-### Scoring specialization
+Evidence: [`July hot path`](../reports/2026-07-30-solver-hot-path-pure-speed.md), [`lazy keys`](../reports/2026-08-23-beam-dedup-key-lazy-build-experiment.md), [`numeric keys`](../reports/2026-08-23-beam-dedup-numeric-key-arena.md), [`dense static neighbors`](../reports/2026-08-23-dense-static-neighbor-keys.md), [`dense follow-up`](../reports/2026-08-26-dense-index-architecture-followup.md).
 
-A bounded plain/default/no-template fast path preserved solve/node traces but did not improve representative end-to-end wall time. That branch-deletion specialization is **closed negative**.
+## Negative/deferred dispositions
 
-Reopen scorer specialization only with a materially different mechanism that removes/fuses measured computation rather than deleting statically impossible branches from the same generic scorer.
+| Family | Status | Boundary / reopen condition |
+|---|---|---|
+| Static plain/default scorer branch deletion | **FALSIFIED_EXACT_FORM** | Parity held; no representative end-to-end gain. Reopen scorer work only for a materially different remove/fuse mechanism backed by fresh profiling. |
+| Mechanic-free fused per-candidate apply/evaluate/undo | **FALSIFIED_EXACT_FORM** | Exact branch-inlining form lost; does not test neighbor generation or batching. |
+| Fixed neighbor slots / `getNeighbors` | **DEFERRED_LOW_VALUE** | Cost share measured, no treatment implemented. Fused-kernel negative did not include neighbor generation. |
+| Batched candidate/object layout | **DEFERRED_LOW_VALUE** | Allocation share measured, batching/layout untested. |
+| Naive six-array densification with repeated `denseIndex()` | **FALSIFIED_EXACT_FORM** | Hard-tail regression; hoisted/shared row calculation is distinct. |
+| Beam checkpoint/materialization | **DEFERRED_LOW_VALUE / STALE_REPROFILE** | Replay measured historically; no snapshot treatment ran. Reopen only if replay is currently material and expected net savings survive snapshot overhead. |
+| Exact beam transposition as speed reservoir | **DEFERRED_LOW_VALUE via strong opportunity sizing** | Sound-signature observer found ~0.019% exact duplicate slots; no production exact-dedup treatment A/B ran. |
+| Remove coarse beam merge | **BEHAVIOR_CHANGE_NOT_PURE_SPEED** | Corrected non-binding test produced real solve divergence. Merge is width/diversity policy, not exact-equivalence machinery. |
+| Broad DFS transposition | **DEFERRED_LOW_VALUE / STALE_REPROFILE** | Sound revisit rate mostly modest and exact signatures costly. Cheap incremental fingerprint is a distinct treatment. |
+| Reusable `UndoToken` | **FALSIFIED_EXACT_FORM** | About 4.6% slower under tested JS/V8/object shape. |
+| Beam quickselect | **DEFERRED_LOW_VALUE** | Sort was too small to justify implementation. |
+| Custom numeric hash arena vs native numeric `Map` | **FALSIFIED_EXACT_FORM** | Tested arena did not beat native numeric `Map`; runtime/layout sensitive. |
+| Unconditional stronger surround/adjacent-turn MST | **FALSIFIED_EXACT_FORM** | Fewer nodes but worse wall/capability economics. Gated/cheaper forms are different treatments. |
+| Broad native/WASM candidate kernel | **ARCHITECTURALLY_DEFERRED** | Current mutable state boundary is too broad. Reopen for a compact hot kernel with small stable boundary and cheap end-to-end prototype. |
 
-Evidence: [`../reports/2026-08-26-current-head-specialized-scorer-pilot.md`](../reports/2026-08-26-current-head-specialized-scorer-pilot.md).
+Evidence anchors: [`scorer`](../reports/2026-08-26-current-head-specialized-scorer-pilot.md), [`fused kernel`](../reports/2026-08-27-fused-plain-candidate-kernel-pilot.md), [`getNeighbors`](../reports/2026-09-02-getneighbors-allocation-share-pilot.md), [`batching`](../reports/2026-09-02-batched-candidates-allocation-share-pilot.md), [`beam dedup`](../reports/2026-08-06-beam-state-dedup-sound-signature-audit.md), [`DFS`](../reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md), [`substrate`](../reports/2026-08-24-speed-substrate-static-audit.md).
 
-### Candidate apply/evaluate/undo fusion
+## Future speed campaign
 
-Profiling established candidate generation/apply/undo as a major beam cost center. The bounded mechanic-free fused JS kernel preserved decisions but regressed/failed to improve end-to-end time and had narrow eligibility. That exact per-candidate branch-inlining form is **closed negative**.
+When solve acquisition is no longer dominant, activate two linked programs without creating a second queue.
 
-Two nearby allocation-avoidance descendants were also closed by value-of-information measurement before implementation:
+**Algorithmic efficiency first:** freeze a retained solve boundary, then use WS1/WS2/WS6/WS7 to reduce machine-independent `workSpent`: action selection/ladder ordering, redundant retry/action cost, routing, repair futility/reachability, forced-chain traversal, pruning economics, and only earned resumability/handoff questions.
 
-- fixed neighbor-slot replacement: `getNeighbors` itself was only a minority of candidate-generation cost;
-- batched-candidate/object-allocation restructuring: targeted allocation share was also too small relative to the already-negative superset.
+**Implementation efficiency second:** once that logical-search boundary is stable enough to optimize, profile current HEAD on the retained workload and nominate only measured CPU/wall cost centers. Historical scoring, replay, allocation/layout, indexing, state plumbing and native/WASM ideas are hypotheses, not a standing backlog.
 
-A future hot-loop candidate needs a materially different mechanism, not another reshuffling of the same dead branches/allocations.
+Activation baseline should retain: solve boundary, total `workSpent`, total wall/CPU, work and wall/CPU before winner, winning action/config, redundant earlier-action cost, displaced capability, DFS/beam/repair contribution, participation/dose, current replay/forced-chain/major-hotspot shares, representative short/hard latency, and total retained-population compute.
 
-Evidence: [`../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md`](../reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md), [`../reports/2026-08-27-fused-plain-candidate-kernel-pilot.md`](../reports/2026-08-27-fused-plain-candidate-kernel-pilot.md), [`../reports/2026-09-02-getneighbors-allocation-share-pilot.md`](../reports/2026-09-02-getneighbors-allocation-share-pilot.md), [`../reports/2026-09-02-batched-candidates-allocation-share-pilot.md`](../reports/2026-09-02-batched-candidates-allocation-share-pilot.md).
+## Measurement contract
 
-### Dense level-local indexing
+For pure-speed candidates:
 
-Dense indexing remains viable only when it removes both storage and hot indirection:
+1. current-head profile identifies a material target;
+2. representative short/hard workloads are included;
+3. deterministic work/node limits are pinned and wall deadlines are non-binding;
+4. solve/search parity is required before timing interpretation;
+5. timing is interleaved and repeated sufficiently for the claimed effect;
+6. end-to-end and total retained-population compute are reported, not only microbenchmarks/geometric means;
+7. allocation/GC is inspected for representation changes;
+8. nested hot-loop timers are treated as perturbative unless observer overhead is measured.
 
-- removing the large `cellDenseIndex` indirection while retaining row-major `staticNeighborKeys` was positive on published short solves and approximately flat on the hard Corpus-2 sample;
-- naively converting six mechanic arrays to dense storage regressed the hard sample, likely because repeated `denseIndex()` arithmetic moved into hot readers.
-
-Future dense-storage work must be profile-led and should hoist/reuse row calculation per hot key rather than independently recomputing it for each metadata read.
-
-Evidence: [`../reports/2026-08-26-dense-index-architecture-followup.md`](../reports/2026-08-26-dense-index-architecture-followup.md).
-
-### Beam materialization/replay
-
-Do not build snapshots/checkpoint-plus-delta materialization merely because parent replay exists. Measure current replay share first. Reopen only if replay is again a material end-to-end cost center.
-
-### Work-meter/secondary overhead
-
-Only optimize meter/accounting/secondary plumbing when profiling shows material cost. Exact budget/provenance semantics must survive unchanged.
-
-## Native/WASM boundary
-
-Broad per-candidate native/WASM migration is closed under the current solver shape: enough mutable mechanic/path/search state crosses the boundary that avoiding frequent crossings becomes a search-core migration rather than a compact kernel optimization.
-
-Reopen only when all are true:
-
-- a compact kernel owns material end-to-end time;
-- inputs/state cross a small stable boundary;
-- a disposable prototype is cheap;
-- logical work/decisions can be preserved or precisely compared.
-
-Measure boundary/copy/setup/JIT cost and both short-solve and long-hard workloads. A fast microkernel without representative end-to-end gain is negative evidence.
-
-Evidence: [`../reports/2026-08-24-speed-substrate-static-audit.md`](../reports/2026-08-24-speed-substrate-static-audit.md).
-
-## Other closed unchanged forms
-
-Do not retest without new profile/mechanism evidence:
-
-- exact DFS/beam transposition/dedup as a major speed opportunity when measured true beam duplicates remain negligible;
-- removing coarse beam dedup, which also performs survivor compression/diversity management;
-- fixed-width numeric beam signatures that assume obsolete mechanic cardinalities;
-- `UndoToken` object pooling;
-- beam quickselect when sort is not dominant;
-- sparse→dense conversion justified only by cache-locality intuition;
-- naive multi-array dense conversion with repeated hot `denseIndex()` calls;
-- pre-resolving ablation gates while retaining the same scorer;
-- custom hash tables merely because native `Map` looks high-level.
-
-Dated reports own exact historical measurements.
-
-## Measurement protocol
-
-A speed candidate should normally provide:
-
-1. current-HEAD profile showing the target is material;
-2. representative short and hard workloads;
-3. pinned deterministic work / non-binding deadlines;
-4. solve/node/search-signature parity before timing is interpreted when the candidate claims pure speed;
-5. interleaved repeated timing, not a single wall-clock observation;
-6. end-to-end movement large enough to matter beyond the microbenchmark.
-
-If behavior changes, stop calling it a pure speed optimization and evaluate it through the solver research/promotion process.
+Use `workSpent` across techniques; nodes are within-technique diagnostics; wall/CPU measures implementation cost. A binding wall cap can erase treatment differences, and fewer nodes can still cost more CPU.
 
 ## Reopen gate
 
-No speed implementation is currently earned by this document. Reopen when a fresh profile identifies a material hotspot and a candidate has a mechanism materially different from the closed forms above.
+No implementation-speed candidate is currently earned. Reopen only when a fresh current-head profile identifies a material cost center and a concrete treatment has worthwhile expected removable end-to-end cost. Exact-form negatives constrain unchanged treatments; deferred candidates remain legitimate when fresh evidence earns them.
