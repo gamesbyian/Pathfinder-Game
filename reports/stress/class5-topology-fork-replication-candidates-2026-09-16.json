@@ -1,0 +1,1240 @@
+{
+  "schemaVersion": 1,
+  "kind": "class5-controlled-topology-fork-candidates",
+  "generatedAt": "2026-09-16T21:17:17.964Z",
+  "solverRef": "9216c0b0e0f86b2574aed7eeb1d3cb6c98f53b59",
+  "preflight": "docs/solver-class5-controlled-topology-acquisition-preflight.md",
+  "construction": "scripts/stress/class5-topology-fork-construct.mjs",
+  "corpus": "data/levels.json",
+  "requestedParents": [
+    "P00137",
+    "P00140"
+  ],
+  "params": {
+    "maxPairsPerBoard": 2,
+    "maxTotalPairs": 6,
+    "minSegLen": 2,
+    "maxSegLen": 16,
+    "searchNodeBudget": 150000,
+    "maxWitnessesPerParent": 10,
+    "altsPerWindow": 8,
+    "maxWindowAttemptsPerParent": 500
+  },
+  "parentReports": [
+    {
+      "parentId": "P00137",
+      "status": "admissible-pairs-found",
+      "acceptedPairs": 2,
+      "windowAttempts": 100,
+      "witnessesTried": 10,
+      "punctureCount": 3,
+      "rejectionReasons": {
+        "fingerprintMismatch": 0,
+        "touchesForbidden": 158,
+        "notSimple": 0,
+        "alternateSearchExhausted": 71,
+        "noPhaseDelta": 27
+      }
+    },
+    {
+      "parentId": "P00140",
+      "status": "admissible-pairs-found",
+      "acceptedPairs": 2,
+      "windowAttempts": 498,
+      "witnessesTried": 10,
+      "punctureCount": 8,
+      "rejectionReasons": {
+        "fingerprintMismatch": 0,
+        "touchesForbidden": 71,
+        "notSimple": 0,
+        "alternateSearchExhausted": 397,
+        "noPhaseDelta": 99
+      }
+    }
+  ],
+  "candidateCount": 4,
+  "parentFamiliesRepresented": [
+    "P00137",
+    "P00140"
+  ],
+  "guardrails": [
+    "No production solver result or exact label was consulted to accept/reject any parent, anchor, or segment.",
+    "Both prefixes of every pair are frozen here, before any exact-label request."
+  ],
+  "candidates": [
+    {
+      "pairId": "P00137-w1-A2-B9",
+      "parentId": "P00137",
+      "witnessIndex": 1,
+      "anchorA": {
+        "index": 2,
+        "key": 196610,
+        "xy": [
+          3,
+          4
+        ]
+      },
+      "anchorB": {
+        "index": 9,
+        "key": 65537,
+        "xy": [
+          2,
+          2
+        ]
+      },
+      "segmentLength": 7,
+      "original": {
+        "id": "P00137-w1-A2-B9-original",
+        "pathKeys": [
+          131073,
+          131074,
+          196610,
+          196609,
+          196608,
+          131072,
+          65536,
+          0,
+          1,
+          65537
+        ],
+        "pathXY": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 65537,
+          "endpointGeometryKey": "65537|-2,-1;-4,-1;-5,-5",
+          "referenceSetIdentity": "board-obstacles-v1:131075,131077,393222",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 131075,
+              "phaseTurns": 0.07379180882521663,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": 0.5737918088252166
+            },
+            {
+              "punctureKey": 131077,
+              "phaseTurns": 0.03898956518868467,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": 0.5389895651886847
+            },
+            {
+              "punctureKey": 393222,
+              "phaseTurns": 0.017611643738638633,
+              "liftedStartTurns": 0.6073883562613613,
+              "liftedEndTurns": 0.6249999999999999
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 1,
+          "crossCounts": [
+            0
+          ],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "alternate": {
+        "id": "P00137-w1-A2-B9-alternate",
+        "pathKeys": [
+          131073,
+          131074,
+          196610,
+          196611,
+          196612,
+          131076,
+          65540,
+          65539,
+          65538,
+          65537
+        ],
+        "pathXY": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 65537,
+          "endpointGeometryKey": "65537|-2,-1;-4,-1;-5,-5",
+          "referenceSetIdentity": "board-obstacles-v1:131075,131077,393222",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 131075,
+              "phaseTurns": -0.9262081911747834,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": -0.42620819117478337
+            },
+            {
+              "punctureKey": 131077,
+              "phaseTurns": 0.03898956518868466,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": 0.5389895651886847
+            },
+            {
+              "punctureKey": 393222,
+              "phaseTurns": 0.01761164373863865,
+              "liftedStartTurns": 0.6073883562613613,
+              "liftedEndTurns": 0.625
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 1,
+          "crossCounts": [
+            0
+          ],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "maxPhaseDelta": 1,
+      "phaseDeltasByPuncture": [
+        1,
+        6.938893903907228e-18,
+        1.734723475976807e-17
+      ],
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "selfIntersectionCountBoth": 0
+    },
+    {
+      "pairId": "P00137-w1-A2-B10",
+      "parentId": "P00137",
+      "witnessIndex": 1,
+      "anchorA": {
+        "index": 2,
+        "key": 196610,
+        "xy": [
+          3,
+          4
+        ]
+      },
+      "anchorB": {
+        "index": 10,
+        "key": 65538,
+        "xy": [
+          3,
+          2
+        ]
+      },
+      "segmentLength": 8,
+      "original": {
+        "id": "P00137-w1-A2-B10-original",
+        "pathKeys": [
+          131073,
+          131074,
+          196610,
+          196609,
+          196608,
+          131072,
+          65536,
+          0,
+          1,
+          65537,
+          65538
+        ],
+        "pathXY": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            2,
+            4
+          ],
+          [
+            1,
+            4
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            3,
+            2
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 65538,
+          "endpointGeometryKey": "65538|-1,-1;-3,-1;-4,-5",
+          "referenceSetIdentity": "board-obstacles-v1:131075,131077,393222",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 131075,
+              "phaseTurns": 0.125,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": 0.625
+            },
+            {
+              "punctureKey": 131077,
+              "phaseTurns": 0.051208191174783375,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": 0.5512081911747834
+            },
+            {
+              "punctureKey": 393222,
+              "phaseTurns": 0.035223287477277265,
+              "liftedStartTurns": 0.6073883562613613,
+              "liftedEndTurns": 0.6426116437386385
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 1,
+          "crossCounts": [
+            0
+          ],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "alternate": {
+        "id": "P00137-w1-A2-B10-alternate",
+        "pathKeys": [
+          131073,
+          131074,
+          196610,
+          262146,
+          262147,
+          196611,
+          196612,
+          131076,
+          65540,
+          65539,
+          65538
+        ],
+        "pathXY": [
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            3,
+            5
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            5,
+            4
+          ],
+          [
+            5,
+            3
+          ],
+          [
+            5,
+            2
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            3,
+            2
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 65538,
+          "endpointGeometryKey": "65538|-1,-1;-3,-1;-4,-5",
+          "referenceSetIdentity": "board-obstacles-v1:131075,131077,393222",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 131075,
+              "phaseTurns": -0.875,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": -0.375
+            },
+            {
+              "punctureKey": 131077,
+              "phaseTurns": 0.05120819117478336,
+              "liftedStartTurns": 0.5,
+              "liftedEndTurns": 0.5512081911747834
+            },
+            {
+              "punctureKey": 393222,
+              "phaseTurns": 0.035223287477277286,
+              "liftedStartTurns": 0.6073883562613613,
+              "liftedEndTurns": 0.6426116437386387
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 1,
+          "crossCounts": [
+            0
+          ],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "maxPhaseDelta": 1,
+      "phaseDeltasByPuncture": [
+        1,
+        1.3877787807814457e-17,
+        2.0816681711721685e-17
+      ],
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "selfIntersectionCountBoth": 0
+    },
+    {
+      "pairId": "P00140-w2-A0-B15",
+      "parentId": "P00140",
+      "witnessIndex": 2,
+      "anchorA": {
+        "index": 0,
+        "key": 458759,
+        "xy": [
+          8,
+          8
+        ]
+      },
+      "anchorB": {
+        "index": 15,
+        "key": 3,
+        "xy": [
+          4,
+          1
+        ]
+      },
+      "segmentLength": 15,
+      "original": {
+        "id": "P00140-w2-A0-B15-original",
+        "pathKeys": [
+          458759,
+          458760,
+          458761,
+          393225,
+          327689,
+          262153,
+          196617,
+          131081,
+          65545,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3
+        ],
+        "pathXY": [
+          [
+            8,
+            8
+          ],
+          [
+            9,
+            8
+          ],
+          [
+            10,
+            8
+          ],
+          [
+            10,
+            7
+          ],
+          [
+            10,
+            6
+          ],
+          [
+            10,
+            5
+          ],
+          [
+            10,
+            4
+          ],
+          [
+            10,
+            3
+          ],
+          [
+            10,
+            2
+          ],
+          [
+            10,
+            1
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            4,
+            1
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 3,
+          "endpointGeometryKey": "3|-1,-1;-1,-2;-1,-3;-1,-4;-3,-5;-2,-6;-2,-7;-2,-8",
+          "referenceSetIdentity": "board-obstacles-v1:65540,131076,196612,262148,327686,393221,458757,524293",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 65540,
+              "phaseTurns": -0.5512081911747834,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": -0.375
+            },
+            {
+              "punctureKey": 131076,
+              "phaseTurns": -0.4877813740139013,
+              "liftedStartTurns": 0.16398956518868468,
+              "liftedEndTurns": -0.32379180882521663
+            },
+            {
+              "punctureKey": 196612,
+              "phaseTurns": -0.44879180882521663,
+              "liftedStartTurns": 0.14758361765043326,
+              "liftedEndTurns": -0.30120819117478337
+            },
+            {
+              "punctureKey": 262148,
+              "phaseTurns": -0.41398956518868474,
+              "liftedStartTurns": 0.125,
+              "liftedEndTurns": -0.28898956518868474
+            },
+            {
+              "punctureKey": 327686,
+              "phaseTurns": -0.5122186259860987,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": -0.3360104348113153
+            },
+            {
+              "punctureKey": 393221,
+              "phaseTurns": -0.375,
+              "liftedStartTurns": 0.07379180882521663,
+              "liftedEndTurns": -0.30120819117478337
+            },
+            {
+              "punctureKey": 458757,
+              "phaseTurns": -0.2942927663914524,
+              "liftedStartTurns": 0,
+              "liftedEndTurns": -0.2942927663914524
+            },
+            {
+              "punctureKey": 524293,
+              "phaseTurns": -0.21519775636346802,
+              "liftedStartTurns": 0.9262081911747834,
+              "liftedEndTurns": 0.7110104348113153
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 0,
+          "crossCounts": [],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "alternate": {
+        "id": "P00140-w2-A0-B15-alternate",
+        "pathKeys": [
+          458759,
+          458758,
+          524294,
+          589830,
+          589829,
+          589828,
+          524292,
+          458756,
+          393220,
+          327684,
+          327683,
+          262147,
+          196611,
+          131075,
+          65539,
+          3
+        ],
+        "pathXY": [
+          [
+            8,
+            8
+          ],
+          [
+            7,
+            8
+          ],
+          [
+            7,
+            9
+          ],
+          [
+            7,
+            10
+          ],
+          [
+            6,
+            10
+          ],
+          [
+            5,
+            10
+          ],
+          [
+            5,
+            9
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            4,
+            1
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 3,
+          "endpointGeometryKey": "3|-1,-1;-1,-2;-1,-3;-1,-4;-3,-5;-2,-6;-2,-7;-2,-8",
+          "referenceSetIdentity": "board-obstacles-v1:65540,131076,196612,262148,327686,393221,458757,524293",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 65540,
+              "phaseTurns": 0.44879180882521663,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": 0.625
+            },
+            {
+              "punctureKey": 131076,
+              "phaseTurns": 0.5122186259860987,
+              "liftedStartTurns": 0.16398956518868468,
+              "liftedEndTurns": 0.6762081911747834
+            },
+            {
+              "punctureKey": 196612,
+              "phaseTurns": 0.5512081911747834,
+              "liftedStartTurns": 0.14758361765043326,
+              "liftedEndTurns": 0.6987918088252166
+            },
+            {
+              "punctureKey": 262148,
+              "phaseTurns": 0.5860104348113153,
+              "liftedStartTurns": 0.125,
+              "liftedEndTurns": 0.7110104348113153
+            },
+            {
+              "punctureKey": 327686,
+              "phaseTurns": 0.4877813740139013,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": 0.6639895651886847
+            },
+            {
+              "punctureKey": 393221,
+              "phaseTurns": 0.625,
+              "liftedStartTurns": 0.07379180882521663,
+              "liftedEndTurns": 0.6987918088252166
+            },
+            {
+              "punctureKey": 458757,
+              "phaseTurns": 0.7057072336085476,
+              "liftedStartTurns": 0,
+              "liftedEndTurns": 0.7057072336085476
+            },
+            {
+              "punctureKey": 524293,
+              "phaseTurns": 0.784802243636532,
+              "liftedStartTurns": 0.9262081911747834,
+              "liftedEndTurns": 1.7110104348113155
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 0,
+          "crossCounts": [],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "maxPhaseDelta": 1,
+      "phaseDeltasByPuncture": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "selfIntersectionCountBoth": 0
+    },
+    {
+      "pairId": "P00140-w2-A0-B16",
+      "parentId": "P00140",
+      "witnessIndex": 2,
+      "anchorA": {
+        "index": 0,
+        "key": 458759,
+        "xy": [
+          8,
+          8
+        ]
+      },
+      "anchorB": {
+        "index": 16,
+        "key": 2,
+        "xy": [
+          3,
+          1
+        ]
+      },
+      "segmentLength": 16,
+      "original": {
+        "id": "P00140-w2-A0-B16-original",
+        "pathKeys": [
+          458759,
+          458760,
+          458761,
+          393225,
+          327689,
+          262153,
+          196617,
+          131081,
+          65545,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2
+        ],
+        "pathXY": [
+          [
+            8,
+            8
+          ],
+          [
+            9,
+            8
+          ],
+          [
+            10,
+            8
+          ],
+          [
+            10,
+            7
+          ],
+          [
+            10,
+            6
+          ],
+          [
+            10,
+            5
+          ],
+          [
+            10,
+            4
+          ],
+          [
+            10,
+            3
+          ],
+          [
+            10,
+            2
+          ],
+          [
+            10,
+            1
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            5,
+            1
+          ],
+          [
+            4,
+            1
+          ],
+          [
+            3,
+            1
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 2,
+          "endpointGeometryKey": "2|-2,-1;-2,-2;-2,-3;-2,-4;-4,-5;-3,-6;-3,-7;-3,-8",
+          "referenceSetIdentity": "board-obstacles-v1:65540,131076,196612,262148,327686,393221,458757,524293",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 65540,
+              "phaseTurns": -0.6024163823495667,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": -0.42620819117478337
+            },
+            {
+              "punctureKey": 131076,
+              "phaseTurns": -0.5389895651886847,
+              "liftedStartTurns": 0.16398956518868468,
+              "liftedEndTurns": -0.375
+            },
+            {
+              "punctureKey": 196612,
+              "phaseTurns": -0.4911671385559327,
+              "liftedStartTurns": 0.14758361765043326,
+              "liftedEndTurns": -0.3435835209054994
+            },
+            {
+              "punctureKey": 262148,
+              "phaseTurns": -0.44879180882521674,
+              "liftedStartTurns": 0.125,
+              "liftedEndTurns": -0.32379180882521674
+            },
+            {
+              "punctureKey": 327686,
+              "phaseTurns": -0.5335965474361447,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": -0.35738835626136134
+            },
+            {
+              "punctureKey": 393221,
+              "phaseTurns": -0.39758361765043326,
+              "liftedStartTurns": 0.07379180882521663,
+              "liftedEndTurns": -0.32379180882521663
+            },
+            {
+              "punctureKey": 458757,
+              "phaseTurns": -0.3144405292045783,
+              "liftedStartTurns": 0,
+              "liftedEndTurns": -0.3144405292045783
+            },
+            {
+              "punctureKey": 524293,
+              "phaseTurns": -0.23330831678473743,
+              "liftedStartTurns": 0.9262081911747834,
+              "liftedEndTurns": 0.692899874390046
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 0,
+          "crossCounts": [],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "alternate": {
+        "id": "P00140-w2-A0-B16-alternate",
+        "pathKeys": [
+          458759,
+          458758,
+          524294,
+          589830,
+          589829,
+          589828,
+          524292,
+          458756,
+          393220,
+          327684,
+          327683,
+          262147,
+          196611,
+          131075,
+          65539,
+          65538,
+          2
+        ],
+        "pathXY": [
+          [
+            8,
+            8
+          ],
+          [
+            7,
+            8
+          ],
+          [
+            7,
+            9
+          ],
+          [
+            7,
+            10
+          ],
+          [
+            6,
+            10
+          ],
+          [
+            5,
+            10
+          ],
+          [
+            5,
+            9
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            5,
+            7
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            4,
+            4
+          ],
+          [
+            4,
+            3
+          ],
+          [
+            4,
+            2
+          ],
+          [
+            3,
+            2
+          ],
+          [
+            3,
+            1
+          ]
+        ],
+        "observation": {
+          "schemaVersion": 1,
+          "endpointKey": 2,
+          "endpointGeometryKey": "2|-2,-1;-2,-2;-2,-3;-2,-4;-4,-5;-3,-6;-3,-7;-3,-8",
+          "referenceSetIdentity": "board-obstacles-v1:65540,131076,196612,262148,327686,393221,458757,524293",
+          "branchCutTurns": 0,
+          "phases": [
+            {
+              "punctureKey": 65540,
+              "phaseTurns": 0.39758361765043326,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": 0.5737918088252166
+            },
+            {
+              "punctureKey": 131076,
+              "phaseTurns": 0.4610104348113153,
+              "liftedStartTurns": 0.16398956518868468,
+              "liftedEndTurns": 0.625
+            },
+            {
+              "punctureKey": 196612,
+              "phaseTurns": 0.5088328614440674,
+              "liftedStartTurns": 0.14758361765043326,
+              "liftedEndTurns": 0.6564164790945005
+            },
+            {
+              "punctureKey": 262148,
+              "phaseTurns": 0.5512081911747834,
+              "liftedStartTurns": 0.125,
+              "liftedEndTurns": 0.6762081911747834
+            },
+            {
+              "punctureKey": 327686,
+              "phaseTurns": 0.46640345256385524,
+              "liftedStartTurns": 0.17620819117478337,
+              "liftedEndTurns": 0.6426116437386387
+            },
+            {
+              "punctureKey": 393221,
+              "phaseTurns": 0.6024163823495667,
+              "liftedStartTurns": 0.07379180882521663,
+              "liftedEndTurns": 0.6762081911747834
+            },
+            {
+              "punctureKey": 458757,
+              "phaseTurns": 0.6855594707954217,
+              "liftedStartTurns": 0,
+              "liftedEndTurns": 0.6855594707954217
+            },
+            {
+              "punctureKey": 524293,
+              "phaseTurns": 0.7666916832152626,
+              "liftedStartTurns": 0.9262081911747834,
+              "liftedEndTurns": 1.692899874390046
+            }
+          ],
+          "portalExcluded": false
+        },
+        "fingerprint": {
+          "ints": 0,
+          "mpVisitedMask": 0,
+          "mustCrossMask": 0,
+          "crossCounts": [],
+          "flipperUsedMask": 0,
+          "portalJumps": 0,
+          "surroundMask": 0,
+          "mustTurnMask": 0,
+          "adjTurnMask": 0
+        }
+      },
+      "maxPhaseDelta": 1,
+      "phaseDeltasByPuncture": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "selfIntersectionCountBoth": 0
+    }
+  ]
+}
