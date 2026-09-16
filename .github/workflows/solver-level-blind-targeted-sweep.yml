@@ -118,6 +118,26 @@ on:
         description: 'Minimum FRACTION (0-1) of dispatched levels on which required_participation_stage must expand nodes or spend work. Used only when required_participation_stage is set. An absolute floor like min_participating_levels=1 is trivially satisfied on a large population; this scales with population size instead. Blank/0 disables the rate check (min_participating_levels alone still applies).'
         required: false
         default: ''
+      lifecycle_telemetry:
+        description: 'If true, passes --lifecycle-telemetry so results carry per-stage reach/participation/work (stageLifecycle). Blank/false preserves existing behavior for diagnostic dispatches that do not need it.'
+        required: false
+        default: 'false'
+      attempt_budget_telemetry:
+        description: 'If true, passes --attempt-budget-telemetry so each attempt record carries its resolved budget/ceiling. Blank/false preserves existing behavior.'
+        required: false
+        default: 'false'
+      experiment_id:
+        description: 'Optional --experiment-id to stamp onto the resolved arm identity (summary.experimentId), for decision-bearing A/Bs that join results through armIdentityFromSweep. Blank preserves existing behavior.'
+        required: false
+        default: ''
+      research_question:
+        description: 'Optional --research-question to stamp onto the resolved arm identity (summary.researchQuestion). Blank preserves existing behavior.'
+        required: false
+        default: ''
+      preflight:
+        description: 'Optional --preflight (report path) to stamp onto the resolved arm identity (summary.preflight). Blank preserves existing behavior.'
+        required: false
+        default: ''
       concurrency_suffix:
         description: 'Optional suffix appended to this workflow''s concurrency group. Set distinct values on paired A/B dispatches when they should run concurrently.'
         required: false
@@ -260,6 +280,11 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
+          [ "${{ inputs.attempt_budget_telemetry }}" = "true" ] && extra+=("--attempt-budget-telemetry")
+          [ -n "${{ inputs.experiment_id }}" ] && extra+=("--experiment-id=${{ inputs.experiment_id }}")
+          [ -n "${{ inputs.research_question }}" ] && extra+=("--research-question=${{ inputs.research_question }}")
+          [ -n "${{ inputs.preflight }}" ] && extra+=("--preflight=${{ inputs.preflight }}")
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
@@ -359,6 +384,11 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
+          [ "${{ inputs.attempt_budget_telemetry }}" = "true" ] && extra+=("--attempt-budget-telemetry")
+          [ -n "${{ inputs.experiment_id }}" ] && extra+=("--experiment-id=${{ inputs.experiment_id }}")
+          [ -n "${{ inputs.research_question }}" ] && extra+=("--research-question=${{ inputs.research_question }}")
+          [ -n "${{ inputs.preflight }}" ] && extra+=("--preflight=${{ inputs.preflight }}")
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
@@ -660,6 +690,11 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
+          [ "${{ inputs.attempt_budget_telemetry }}" = "true" ] && extra+=("--attempt-budget-telemetry")
+          [ -n "${{ inputs.experiment_id }}" ] && extra+=("--experiment-id=${{ inputs.experiment_id }}")
+          [ -n "${{ inputs.research_question }}" ] && extra+=("--research-question=${{ inputs.research_question }}")
+          [ -n "${{ inputs.preflight }}" ] && extra+=("--preflight=${{ inputs.preflight }}")
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()

@@ -9,6 +9,6 @@ Workers: 2
 Flags: enable=STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY,STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT disable=(none)
 Admissible-order node reserve fraction: (production default)
 Admissible-order non-default retry budget fraction: (production default)
-Completed: 1/11
-Solved: 1/1
+Completed: 11/11
+Solved: 10/11
 Hints saved: no
