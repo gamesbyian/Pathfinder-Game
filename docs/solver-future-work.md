@@ -43,7 +43,7 @@ Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smalle
 
 | Priority | Question | Reopen condition / boundary |
 |---:|---|---|
-| 1 | **Open-path topological completion signature** | **OBSERVER IMPLEMENTED; EVALUATION GATE LIVE.** Apply the lifted, endpoint-conditioned, board-derived observer to existing exact labels. Stop on contrast starvation before considering a tiny human-parent intervention. |
+| 1 | **Open-path topological completion signature** | **CONTROLLED-ACQUISITION PREFLIGHT DESIGNED.** Natural exact labels are contrast-starved. When WS2 reaches Class 5, run the frozen tiny same-board/same-endpoint human-parent topological-fork pilot, exact-label both prefixes, and apply its stop/advance rules. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) |
 | 2 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving human-parent intervention then exact-label. |
 | 3 | **Cross-attempt basin overlap** | Allocation depends on whether actions/retries reach distinct basins; parents are the independent units. |
 | 4 | **Dependency-conditioned repair descent shadow** | WS6 implicates an early/interior commitment append-only continuation cannot revise; prefer controlled obligation relocation/order changes. |
