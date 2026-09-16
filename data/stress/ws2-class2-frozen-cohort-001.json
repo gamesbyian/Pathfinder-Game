@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "kind": "ws2-class2-frozen-cohort",
+  "seed": "ws2-class2-freeze-2026-09-16",
+  "selectionVersion": "v1",
+  "corpusHash": "sha256:89cd0b6380a6d585e43411139a0805078e78f883d02f37e7ae3513f4be55b414",
+  "baseSha": "873b792d8f6353fbaa99d3d3e7918e5be2368ef0",
+  "controlConfig": {
+    "flags": [],
+    "envelope": {
+      "nodeBudget": 50000000,
+      "workBudget": 67000000,
+      "budgetMs": 86400000,
+      "strictTotalWorkBudget": false
+    },
+    "schedulerMode": "production"
+  },
+  "treatmentConfig": {
+    "flags": [
+      "STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY"
+    ],
+    "envelope": {
+      "nodeBudget": 50000000,
+      "workBudget": 67000000,
+      "budgetMs": 86400000,
+      "strictTotalWorkBudget": false
+    },
+    "schedulerMode": "production"
+  },
+  "controlConfigHash": "sha256:55f0d645949b9ad5b723f66c50d0bd12aadc2e98a7e7db2f560373ef17969720",
+  "treatmentConfigHash": "sha256:3b90a59a78ab6c450d3ebad86debd409661ae369dcf3e1b7ab1e764e51e5df8b",
+  "envelope": {
+    "nodeBudget": 50000000,
+    "workBudget": 67000000,
+    "budgetMs": 86400000,
+    "strictTotalWorkBudget": false
+  },
+  "stageOrder": [
+    "explicit-prime",
+    "early-repair-search",
+    "main-search",
+    "repair-fallback",
+    "goal-attraction-disabled-retry",
+    "repair-shrink-recovery",
+    "admissible-order-fallback",
+    "coarse-state-near-tie-retention-disabled-retry",
+    "admissible-order-alternate-tiebreak-retry",
+    "connectivity-axis-prune-disabled-retry",
+    "repair-elite-prefix-dfs-retry",
+    "must-cross-neighbor-prune-disabled-retry",
+    "late-repair-search",
+    "late-repair-must-turn-biased-retry",
+    "guidance-goal-distance-retry",
+    "late-repair-multiseed-retry",
+    "portal-coarse-state-merge-dead-last-retry",
+    "legacy-latency-portfolio-pass",
+    "legacy-latency-portfolio-fallback",
+    "static-portfolio"
+  ],
+  "schedulerMode": "production",
+  "workerConfig": {
+    "workers": 4
+  },
+  "workerCount": 4,
+  "entries": [
+    {
+      "id": "R01761",
+      "stratum": "gain"
+    },
+    {
+      "id": "R01568",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02950",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02408",
+      "stratum": "gain"
+    },
+    {
+      "id": "R00656",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02737",
+      "stratum": "gain"
+    },
+    {
+      "id": "R00672",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03161",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02856",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02282",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02571",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02011",
+      "stratum": "gain"
+    },
+    {
+      "id": "R01764",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02345",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03265",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02387",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03328",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02498",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02928",
+      "stratum": "gain"
+    },
+    {
+      "id": "R01652",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02781",
+      "stratum": "gain"
+    },
+    {
+      "id": "R00466",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02802",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02501",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03021",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02798",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03259",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03178",
+      "stratum": "gain"
+    },
+    {
+      "id": "R00513",
+      "stratum": "gain"
+    },
+    {
+      "id": "R00720",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03288",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02772",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02219",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03115",
+      "stratum": "gain"
+    },
+    {
+      "id": "R03289",
+      "stratum": "gain"
+    },
+    {
+      "id": "R01016",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02789",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02453",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02322",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02903",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02069",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02541",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02359",
+      "stratum": "gain"
+    },
+    {
+      "id": "R02244",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02670",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R01905",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02600",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R00039",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02573",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R01909",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02296",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02987",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02382",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02723",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02198",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R03099",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02323",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02553",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R02522",
+      "stratum": "collateral"
+    },
+    {
+      "id": "R03318",
+      "stratum": "collateral"
+    }
+  ],
+  "populationHash": "sha256:d7317810a89a797fa1ef176fc1f3cb78bbc74f23a50334169fe27403131b681e",
+  "freezeIdentityHash": "sha256:58e38ada3af580cb3b6e1c7bfae87edb45420a2a0d79feb71500f9be61e80f59",
+  "counts": {
+    "gain": 43,
+    "collateral": 17,
+    "total": 60
+  }
+}
