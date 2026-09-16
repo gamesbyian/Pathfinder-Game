@@ -5,7 +5,7 @@ Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-op
 
 Not a second queue: keep unexplained residue plus a reopen condition. Closed work needs a changed premise/treatment. Existing variants precede new generation; human/editor parents fill contrast gaps. Speed implementation requires fresh current-head profiling. [`speed authority`](solver-architectural-speed-opportunities.md)
 
-Level-blindness constrains provenance, not specificity. A generic cold procedure may derive instance-specific exact facts, proofs, conflicts, decompositions, canonical forms, or search plans from the current puzzle/current invocation. Cross-parent recurrence is required when claiming a reusable fixed descriptor, not automatically when the production candidate is a generic per-instance derivation procedure. [`boundary audit`](../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md)
+Level-blindness constrains provenance, not specificity. A generic cold procedure may derive instance-specific exact facts, proofs, conflicts, decompositions, canonical forms, or search plans from the current puzzle/current invocation. Cross-parent recurrence is required when claiming a reusable fixed descriptor, not automatically when the production candidate is a generic per-instance derivation procedure. [`boundary audit`](../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md) [`topology reconsideration`](../reports/2026-09-16-level-blindness-audit-topology-reconsideration-001.md)
 
 ## Audit-derived conditional work
 
@@ -18,7 +18,7 @@ Level-blindness constrains provenance, not specificity. A generic cold procedure
 | Class-3 exact-action dose | Triage needs comparable-work failure; atlas rows lack per-attempt `workSpent` |
 | Known-prefix oracle-set manifest | A decision-bearing prefix study needs path-set sensitivity |
 | Experiment producer maturation | A decision-bearing producer is touched or a recurring consumer gap appears |
-| Heuristic-to-theorem subdomain audit | After the frozen topology/H1 gates, or sooner if one of those exposes an exact relation already approximated by scoring/routing; inspect parity, flippers, must-cross interfaces, intersection arithmetic, topology and landmarks for identifiable sound subdomains before inventing another scalar heuristic |
+| Heuristic-to-theorem subdomain audit | After the earned topology microscope/H1 gates, or sooner if one exposes an exact relation already approximated by scoring/routing; inspect parity, flippers, must-cross interfaces, intersection arithmetic, topology and landmarks for identifiable sound subdomains before inventing another scalar heuristic |
 | Solve-local knowledge rediscovery | A handoff/cache/proof-store question becomes live; first measure whether distinct attempts/stages repeatedly recompute the same expensive sound facts or failure certificates |
 
 Frozen solve/work facts stand unless execution/participation was invalid.
@@ -37,6 +37,7 @@ Evidence-gated descendants. [`reconciliation`](../reports/2026-09-16-recovered-s
 | Reusable learned conflicts / nogoods | H1/H3 or DEAD-core diagnosis finds recurring compact DEAD relations across unrelated parents |
 | Per-instance online conflict derivation | A bounded current-state proof/core procedure can derive sound solve-local conflicts cheaply enough to reject equivalent future failure; individual clauses/cores need not recur across levels, but the derivation/use procedure must show value across evaluation levels |
 | Bounded exact current-state production query / opportunistic exactification | Small sound offline query answers an earned question, or a tractability signal identifies residual states where a bounded complete method can finish/prove something cheaply; then bound runtime and prove economics. Do not require the exact answer/relation itself to recur across levels |
+| Per-instance open-path topology reasoning | The earned controlled topology contrast survives microscope/invariance checks and a generic current-input topology procedure can derive board-specific completion-relevant state cheaply enough for retention, pruning, lower bounds, decomposition, or routing. Do not require one semantic puncture-side relation to recur if the generic procedure's value transfers |
 | Choice-bearing macro-actions | Mechanism-specific premise shows repeated route structure beyond certified one-successor chains |
 | Complete-path LNS | Relaxed whole-path candidates show accepted solutions are locally reachable by structural surgery |
 | Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; rules remain hypothesis nominations |
@@ -45,7 +46,7 @@ Evidence-gated descendants. [`reconciliation`](../reports/2026-09-16-recovered-s
 | Per-level search-plan compilation | Different architectures show complementary legal niches predictable from current-input structure; the compiled plan may be unique to the level because the compiler, not the plan, is the generic production capability |
 | Declarative mechanic automata | Repeated earned descendants need a shared mechanic-state contract enough to justify rewrite-scale migration |
 
-H1 optionality/CEGAR remain H1 descendants. Separate reusable cross-level relations from generic procedures that derive per-instance proofs/conflicts/orders. Current-state exact computation may be legal; historical labels/witnesses/identity are not runtime steering inputs. Mechanics-derived canonicalization/transposition/symmetry is likewise legal when it never performs historical lookup.
+H1 optionality/CEGAR remain H1 descendants. Separate reusable cross-level relations from generic procedures that derive per-instance proofs/conflicts/orders/topology. Current-state exact computation may be legal; historical labels/witnesses/identity are not runtime steering inputs. Mechanics-derived canonicalization/transposition/symmetry is likewise legal when it never performs historical lookup.
 
 ## Capability-acquisition frontier
 
@@ -59,9 +60,9 @@ Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smalle
 
 | Priority | Question | Boundary |
 |---:|---|---|
-| 1 | **Controlled open-path topological completion contrast** | **PREFLIGHT DESIGNED.** Run frozen same-board/same-endpoint human-parent forks; exact-label both prefixes; apply stop/advance rules. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) |
+| 1 | **Open-path topology / path-history representation** | **PREMISE EARNED in open PR #1821.** Controlled same-board/same-endpoint forks produced 4 exact LIVE/DEAD-discordant pairs across 2 independent human parents with matched mechanic-progress controls and one-turn puncture-side separation. Next: microscope first loss and compare both (a) compact reusable descriptors and (b) richer generic per-instance topology procedures. Compactness/semantic recurrence are not level-blindness requirements. No production routing of raw phase yet. [`reconsideration`](../reports/2026-09-16-level-blindness-audit-topology-reconsideration-001.md) |
 | 2 | **H1 residual event-feasibility / completion regimes** | **PRESPEC FROZEN; strongest independent acquisition premise.** Test individual/joint realizability and nominated obligation orders. No feature sweep. Keep its frozen recurring-relation advancement bar for a reusable descriptor, but also record whether exact per-instance answers are decision-useful enough to nominate a separate online-query economics pilot. [`prespec`](../reports/2026-09-16-h1-event-feasibility-prespec-001.md) |
-| 3 | **Minimal DEAD-core / minimum-relaxation diagnosis** | If 1/2 expose DEAD contrasts without a compact relation, relax tiny semantic commitment sets. Score separately: (a) recurring cores that can become reusable generic abstractions, and (b) per-instance core derivation useful enough for solve-local conflict learning even when individual cores differ across parents |
+| 3 | **Minimal DEAD-core / minimum-relaxation diagnosis** | If topology/H1 expose DEAD contrasts without a compact relation, relax tiny semantic commitment sets. Score separately: (a) recurring cores that can become reusable generic abstractions, and (b) per-instance core derivation useful enough for solve-local conflict learning even when individual cores differ across parents |
 | 4 | **H2 marginal information velocity / structural stasis** | Advance only if structural novelty per `workSpent` predicts marginal value beyond generic difficulty/work |
 | 5 | **H3 dependency-defined repair commitment interface** | Require recurring coupled commitments smaller than rollback distance |
 | 6 | **Behavioral-state quotient / residual-language probe** | Tiny exact-probe first; advance only if future behavior admits a materially coarser compact equivalence |
