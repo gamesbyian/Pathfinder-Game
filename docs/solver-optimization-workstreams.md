@@ -19,7 +19,7 @@ The 2026-09-13 audits change evidence interpretation, not execution order. Corpu
 
 **State:** ACTIVE / FIRST PRIORITY.
 
-**Production boundary:** run `34683011115` (100/102 C1 + 1,048/1,700 C2) is **STALE post-promotion** (class-4 promotion below adds 86 solves the atlas doesn't reflect). Prior atlas (2026-09-16 refresh): 22/39/37/159/395 across classes 1-5. **Next:** full-corpus control refresh under current HEAD, then rejoin atlas/capability-memory before reusing old counts. [`atlas`](../reports/2026-09-12-ws2-post-refresh-residual-atlas-and-capability-memory-census-001.md), [`atlas refresh`](../reports/2026-09-16-class4-residual-atlas-refresh-and-113-freeze-001.md)
+**Production boundary:** run `35066677597` (post-promotion, 2026-09-16) is **101/102 C1 + 1,169/1,700 C2**, residual 531. vs prior boundary `34683011115`: +121 gains / 0 losses. Atlas classes 1-5: 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
 **Class 1-3 rejoin:** class 1 has no menu headroom; class 3 is exposed/dispatched, not a proven comparable-work negative. Must-turn-biased late-repair economics **CLOSED NEGATIVE** (2026-09-16): frozen 60-row cohort reproduced the identical 17/60 solved set in both arms (100% downstream displacement into later stages, zero of 43 gain rows rescued, +6.5% work). `R02768`/`R02180` remain capability/placement evidence only. Reopen needs a materially different placement/selector. [`pilot`](../reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md), [`economics result`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
 
@@ -27,7 +27,7 @@ The 2026-09-13 audits change evidence interpretation, not execution order. Corpu
 
 **Class 5:** prior generic capability forms and fixed-endpoint homotopy are closed. The research-only open-path observer's offline join to exact-labelled material found 28 rows / 26 strata and **zero natural LIVE/DEAD contrasts** — stops on contrast starvation, no runtime routing. A human-parent intervention needs a separately justified question and new labels. [`bounded closeout`](../reports/2026-09-15-ws2-bounded-preparation-closeout-001.md)
 
-**Next WS2 gates:** (1) production-boundary refresh under current HEAD, rejoin atlas/capability-memory; (2) Class-5 acquisition, offline observer only, reopen needs a justified human-parent question; (3) Class 1-3 reopen needs a new must-turn placement/selector premise or changed class-1 allocation contract.
+**Next WS2 gates:** none currently earned. Class-5 acquisition stays offline/contrast-starved, reopen needs a justified human-parent question; Class 1-3 reopen needs a new must-turn placement/selector premise or changed class-1 allocation contract.
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, goal-attraction-disabled retry, and portal coarse-state **dead-last additive retry** (2026-09-16) are **PROMOTED**. Portal coarse-state **global merge**, repair late-probe `7->6` seeds, and late must-turn-biased repair (**economics**, 2026-09-16) are **CLOSED NEGATIVE**. Solve-local connectivity reason reuse is **CLOSED IN CURRENT POPULATION**. Fixed-endpoint homotopy winding is **CLOSED COVERAGE-NULL**. Admissible-order retry repricing is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
 
