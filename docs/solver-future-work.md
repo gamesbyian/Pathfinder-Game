@@ -54,7 +54,7 @@ Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smalle
 
 | Priority | Question | Boundary |
 |---:|---|---|
-| 1 | **Controlled open-path topological completion contrast** | **PREFLIGHT DESIGNED.** Run frozen same-board/same-endpoint human-parent forks; exact-label both prefixes; apply stop/advance rules. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) |
+| 1 | **Controlled open-path topological completion contrast** | **PREMISE EARNED, MICROSCOPE NEXT.** 4 LIVE/DEAD-discordant pairs across 2 independent parents; derive a compact puncture-side descriptor, then a bounded pilot before promotion. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) · [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md) |
 | 2 | **H1 residual event-feasibility / completion regimes** | **PRESPEC FROZEN; strongest independent acquisition premise.** Test individual/joint realizability and nominated obligation orders. No feature sweep. [`prespec`](../reports/2026-09-16-h1-event-feasibility-prespec-001.md) |
 | 3 | **Minimal DEAD-core / minimum-relaxation diagnosis** | If 1/2 expose DEAD contrasts without a compact relation, relax tiny semantic commitment sets and seek recurring cores across independent parents |
 | 4 | **H2 marginal information velocity / structural stasis** | Advance only if structural novelty per `workSpent` predicts marginal value beyond generic difficulty/work |

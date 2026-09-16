@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 1,
+  "kind": "class5-controlled-topology-fork-analysis",
+  "generatedAt": "2026-09-16T21:20:32.687Z",
+  "preflight": "docs/solver-class5-controlled-topology-acquisition-preflight.md",
+  "sourceCandidates": [
+    "reports/stress/class5-topology-fork-candidates-2026-09-16.json",
+    "reports/stress/class5-topology-fork-replication-candidates-2026-09-16.json"
+  ],
+  "sourceLabels": [
+    "reports/stress/class5-topology-fork-exact-labels-2026-09-16.json",
+    "reports/stress/class5-topology-fork-replication-exact-labels-2026-09-16.json"
+  ],
+  "summary": {
+    "totalPairs": 10,
+    "resolvedPairs": 10,
+    "unresolvedPairs": 0,
+    "unresolvedFraction": 0,
+    "discordantPairs": 4,
+    "independentParentFamilies": 5,
+    "discordantParentFamilies": 2,
+    "allValidControls": true,
+    "decision": "premise-earned"
+  },
+  "parentSummary": [
+    {
+      "parentId": "P00075",
+      "pairs": 2,
+      "discordant": 0,
+      "labels": [
+        "live/live",
+        "live/live"
+      ]
+    },
+    {
+      "parentId": "P00124",
+      "pairs": 2,
+      "discordant": 2,
+      "labels": [
+        "live/dead",
+        "live/dead"
+      ]
+    },
+    {
+      "parentId": "P00136",
+      "pairs": 2,
+      "discordant": 0,
+      "labels": [
+        "live/live",
+        "live/live"
+      ]
+    },
+    {
+      "parentId": "P00137",
+      "pairs": 2,
+      "discordant": 2,
+      "labels": [
+        "live/dead",
+        "live/dead"
+      ]
+    },
+    {
+      "parentId": "P00140",
+      "pairs": 2,
+      "discordant": 0,
+      "labels": [
+        "live/live",
+        "live/live"
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "pairId": "P00075-w2-A0-B5",
+      "parentId": "P00075",
+      "anchorA": {
+        "index": 0,
+        "key": 327681,
+        "xy": [
+          2,
+          6
+        ]
+      },
+      "anchorB": {
+        "index": 5,
+        "key": 262147,
+        "xy": [
+          4,
+          5
+        ]
+      },
+      "segmentLength": 5,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "live",
+      "bothResolved": true,
+      "discordant": false,
+      "originalReason": "optimal",
+      "alternateReason": "optimal",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": true
+    },
+    {
+      "pairId": "P00075-w5-A0-B5",
+      "parentId": "P00075",
+      "anchorA": {
+        "index": 0,
+        "key": 327681,
+        "xy": [
+          2,
+          6
+        ]
+      },
+      "anchorB": {
+        "index": 5,
+        "key": 262147,
+        "xy": [
+          4,
+          5
+        ]
+      },
+      "segmentLength": 5,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "live",
+      "bothResolved": true,
+      "discordant": false,
+      "originalReason": "optimal",
+      "alternateReason": "optimal",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": true
+    },
+    {
+      "pairId": "P00124-w1-A0-B15",
+      "parentId": "P00124",
+      "anchorA": {
+        "index": 0,
+        "key": 327682,
+        "xy": [
+          3,
+          6
+        ]
+      },
+      "anchorB": {
+        "index": 15,
+        "key": 524294,
+        "xy": [
+          7,
+          9
+        ]
+      },
+      "segmentLength": 15,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "dead",
+      "bothResolved": true,
+      "discordant": true,
+      "originalReason": "optimal",
+      "alternateReason": "infeasible",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": null
+    },
+    {
+      "pairId": "P00124-w1-A0-B16",
+      "parentId": "P00124",
+      "anchorA": {
+        "index": 0,
+        "key": 327682,
+        "xy": [
+          3,
+          6
+        ]
+      },
+      "anchorB": {
+        "index": 16,
+        "key": 524293,
+        "xy": [
+          6,
+          9
+        ]
+      },
+      "segmentLength": 16,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "dead",
+      "bothResolved": true,
+      "discordant": true,
+      "originalReason": "optimal",
+      "alternateReason": "infeasible",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": null
+    },
+    {
+      "pairId": "P00136-w2-A6-B12",
+      "parentId": "P00136",
+      "anchorA": {
+        "index": 6,
+        "key": 262148,
+        "xy": [
+          5,
+          5
+        ]
+      },
+      "anchorB": {
+        "index": 12,
+        "key": 393224,
+        "xy": [
+          9,
+          7
+        ]
+      },
+      "segmentLength": 6,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "live",
+      "bothResolved": true,
+      "discordant": false,
+      "originalReason": "optimal",
+      "alternateReason": "optimal",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": true
+    },
+    {
+      "pairId": "P00136-w2-A3-B10",
+      "parentId": "P00136",
+      "anchorA": {
+        "index": 3,
+        "key": 65540,
+        "xy": [
+          5,
+          2
+        ]
+      },
+      "anchorB": {
+        "index": 10,
+        "key": 262152,
+        "xy": [
+          9,
+          5
+        ]
+      },
+      "segmentLength": 7,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "live",
+      "bothResolved": true,
+      "discordant": false,
+      "originalReason": "optimal",
+      "alternateReason": "optimal",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": true
+    },
+    {
+      "pairId": "P00137-w1-A2-B9",
+      "parentId": "P00137",
+      "anchorA": {
+        "index": 2,
+        "key": 196610,
+        "xy": [
+          3,
+          4
+        ]
+      },
+      "anchorB": {
+        "index": 9,
+        "key": 65537,
+        "xy": [
+          2,
+          2
+        ]
+      },
+      "segmentLength": 7,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "dead",
+      "bothResolved": true,
+      "discordant": true,
+      "originalReason": "optimal",
+      "alternateReason": "infeasible",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": null
+    },
+    {
+      "pairId": "P00137-w1-A2-B10",
+      "parentId": "P00137",
+      "anchorA": {
+        "index": 2,
+        "key": 196610,
+        "xy": [
+          3,
+          4
+        ]
+      },
+      "anchorB": {
+        "index": 10,
+        "key": 65538,
+        "xy": [
+          3,
+          2
+        ]
+      },
+      "segmentLength": 8,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "dead",
+      "bothResolved": true,
+      "discordant": true,
+      "originalReason": "optimal",
+      "alternateReason": "infeasible",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": null
+    },
+    {
+      "pairId": "P00140-w2-A0-B15",
+      "parentId": "P00140",
+      "anchorA": {
+        "index": 0,
+        "key": 458759,
+        "xy": [
+          8,
+          8
+        ]
+      },
+      "anchorB": {
+        "index": 15,
+        "key": 3,
+        "xy": [
+          4,
+          1
+        ]
+      },
+      "segmentLength": 15,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "live",
+      "bothResolved": true,
+      "discordant": false,
+      "originalReason": "optimal",
+      "alternateReason": "optimal",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": true
+    },
+    {
+      "pairId": "P00140-w2-A0-B16",
+      "parentId": "P00140",
+      "anchorA": {
+        "index": 0,
+        "key": 458759,
+        "xy": [
+          8,
+          8
+        ]
+      },
+      "anchorB": {
+        "index": 16,
+        "key": 2,
+        "xy": [
+          3,
+          1
+        ]
+      },
+      "segmentLength": 16,
+      "maxPhaseDelta": 1,
+      "controlFingerprintMatch": true,
+      "endpointGeometryKeyMatch": true,
+      "portalExcludedBoth": true,
+      "originalLabel": "live",
+      "alternateLabel": "live",
+      "bothResolved": true,
+      "discordant": false,
+      "originalReason": "optimal",
+      "alternateReason": "optimal",
+      "originalRefereeValid": true,
+      "alternateRefereeValid": true
+    }
+  ]
+}
