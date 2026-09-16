@@ -1,6 +1,6 @@
 # Class-5 cross-resource hypothesis harvest 001
 
-> **Status:** concluded premise-generation synthesis; three observer questions promoted as bounded candidates, no production treatment authorized
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-16 — current 531-row residual (390 Class 5), September exact LIVE/DEAD future-feasibility null, first-loss/repair exposure lineage, historical stagnation and repair-retreat evidence, and current research-resource contract
 > **Decision:** the strongest unexplained residue is relational rather than scalar. Preserve Card E as the only active WS2 execution gate; stage the three cards below as independent premise generators that may be pursued with read-only/offline evidence before any solver treatment.
 > **Remaining gate:** Card E sizing remains live. Of the new cards, Card H1 is the strongest independent acquisition hypothesis; H2 and H3 remain bounded observers until their own recurrence bars are cleared.

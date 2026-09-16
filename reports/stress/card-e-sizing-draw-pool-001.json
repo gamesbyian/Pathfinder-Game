@@ -1,0 +1,3211 @@
+{
+  "seed": "card-e-sizing-population-2026-09-16",
+  "generatedAt": "2026-09-16T18:34:44.870Z",
+  "sourcePool": "post-16-residual-atlas.json (35066677597 baseline) class4+class5, excl original-28 + PRUNE_MC_PORTAL_FORCED_NEIGHBOR excludedGains(21) + 5 timing-calibration ids",
+  "class4Count": 65,
+  "class5Count": 135,
+  "ids": [
+    "R00142",
+    "R00143",
+    "R00169",
+    "R00180",
+    "R00193",
+    "R00303",
+    "R00312",
+    "R00440",
+    "R00449",
+    "R00512",
+    "R00532",
+    "R00536",
+    "R00537",
+    "R00555",
+    "R00561",
+    "R00573",
+    "R00632",
+    "R00912",
+    "R00963",
+    "R01044",
+    "R01105",
+    "R01132",
+    "R01174",
+    "R01179",
+    "R01280",
+    "R01344",
+    "R01380",
+    "R01382",
+    "R01397",
+    "R01417",
+    "R01426",
+    "R01467",
+    "R01492",
+    "R01516",
+    "R01571",
+    "R01576",
+    "R01600",
+    "R01625",
+    "R01698",
+    "R01718",
+    "R01735",
+    "R01738",
+    "R01765",
+    "R01792",
+    "R01854",
+    "R01872",
+    "R01953",
+    "R01999",
+    "R02024",
+    "R02026",
+    "R02032",
+    "R02035",
+    "R02059",
+    "R02074",
+    "R02083",
+    "R02103",
+    "R02104",
+    "R02140",
+    "R02150",
+    "R02166",
+    "R02177",
+    "R02199",
+    "R02201",
+    "R02203",
+    "R02215",
+    "R02226",
+    "R02230",
+    "R02231",
+    "R02270",
+    "R02272",
+    "R02282",
+    "R02286",
+    "R02295",
+    "R02302",
+    "R02318",
+    "R02330",
+    "R02337",
+    "R02345",
+    "R02346",
+    "R02351",
+    "R02366",
+    "R02387",
+    "R02388",
+    "R02395",
+    "R02404",
+    "R02422",
+    "R02425",
+    "R02429",
+    "R02437",
+    "R02448",
+    "R02453",
+    "R02469",
+    "R02470",
+    "R02471",
+    "R02472",
+    "R02486",
+    "R02499",
+    "R02500",
+    "R02501",
+    "R02527",
+    "R02539",
+    "R02550",
+    "R02558",
+    "R02592",
+    "R02594",
+    "R02596",
+    "R02607",
+    "R02613",
+    "R02619",
+    "R02621",
+    "R02625",
+    "R02629",
+    "R02631",
+    "R02633",
+    "R02640",
+    "R02642",
+    "R02643",
+    "R02656",
+    "R02666",
+    "R02676",
+    "R02701",
+    "R02703",
+    "R02718",
+    "R02728",
+    "R02744",
+    "R02747",
+    "R02748",
+    "R02758",
+    "R02766",
+    "R02772",
+    "R02780",
+    "R02793",
+    "R02810",
+    "R02818",
+    "R02828",
+    "R02833",
+    "R02838",
+    "R02839",
+    "R02854",
+    "R02857",
+    "R02879",
+    "R02887",
+    "R02890",
+    "R02904",
+    "R02920",
+    "R02928",
+    "R02935",
+    "R02938",
+    "R02942",
+    "R02944",
+    "R02951",
+    "R02953",
+    "R02954",
+    "R02974",
+    "R03004",
+    "R03008",
+    "R03016",
+    "R03021",
+    "R03024",
+    "R03029",
+    "R03030",
+    "R03032",
+    "R03033",
+    "R03046",
+    "R03053",
+    "R03069",
+    "R03070",
+    "R03092",
+    "R03098",
+    "R03103",
+    "R03115",
+    "R03117",
+    "R03131",
+    "R03163",
+    "R03166",
+    "R03168",
+    "R03172",
+    "R03175",
+    "R03177",
+    "R03178",
+    "R03191",
+    "R03193",
+    "R03194",
+    "R03203",
+    "R03209",
+    "R03220",
+    "R03270",
+    "R03276",
+    "R03282",
+    "R03283",
+    "R03292",
+    "R03300",
+    "R03315",
+    "R03322",
+    "R03330",
+    "R03343",
+    "R03346",
+    "R03353",
+    "R03365",
+    "R03368"
+  ],
+  "rows": [
+    {
+      "id": "R00142",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 78,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00143",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 132,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00180",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 132,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00312",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 132,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00440",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 127,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00536",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 109,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 7,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00537",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 93,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 4,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00573",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 104,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00632",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 99,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00912",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 120,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01105",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 120,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01179",
+      "primaryClass": 4,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 81,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 3,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01380",
+      "primaryClass": 4,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 132,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 3,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01382",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 117,
+        "reqInt": 10,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 6,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01397",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 101,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 7,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01516",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 115,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01571",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 97,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 4,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01738",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 121,
+        "reqInt": 10,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01854",
+      "primaryClass": 4,
+      "routingRegime": "general",
+      "features": {
+        "reqLen": 83,
+        "reqInt": 2,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01872",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 92,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02032",
+      "primaryClass": 4,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 94,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 3,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02074",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 129,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 8,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02103",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 102,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 6,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02150",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 81,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 16,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02215",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 119,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 8,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02286",
+      "primaryClass": 4,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 60,
+        "reqInt": 0,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02302",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 97,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02337",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 84,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 5,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02346",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 75,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02351",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 108,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 6,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02388",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 89,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02437",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 122,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02448",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 76,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02472",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 152,
+        "reqInt": 16,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 8,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02500",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 108,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02558",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 83,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 5,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02596",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02613",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 84,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 6,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02631",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 105,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02703",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 110,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02718",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 88,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02758",
+      "primaryClass": 4,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 74,
+        "reqInt": 2,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 2,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02772",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02810",
+      "primaryClass": 4,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 114,
+        "reqInt": 1,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02833",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 104,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 6,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02890",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 127,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02928",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 81,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02951",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 116,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02953",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 4,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02974",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 86,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03024",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 70,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 4,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03029",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 105,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 5,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03030",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 114,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03033",
+      "primaryClass": 4,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 84,
+        "reqInt": 0,
+        "gates": 1,
+        "mustPass": 16,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03046",
+      "primaryClass": 4,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 87,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03092",
+      "primaryClass": 4,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 73,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03103",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 90,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 4,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03115",
+      "primaryClass": 4,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 71,
+        "reqInt": 2,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03168",
+      "primaryClass": 4,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 77,
+        "reqInt": 1,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03194",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 112,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03203",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 88,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 7,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03276",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 109,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03343",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 104,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 6,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03365",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 120,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 8,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03368",
+      "primaryClass": 4,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 120,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00963",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 120,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02201",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 92,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 4,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02629",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 120,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 8,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02793",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 113,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01735",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 96,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01467",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 100,
+        "reqInt": 10,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02166",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 109,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 4,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R01999",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 104,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 7,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02935",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 103,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 6,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03166",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 123,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01344",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 126,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 6,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R00449",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 109,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 6,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02083",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 124,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03193",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 101,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 4,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02140",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 7,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01792",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 127,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02666",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 110,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 6,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R00303",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 115,
+        "reqInt": 16,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02429",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 122,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03209",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 89,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02828",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 126,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01765",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 87,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 4,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02748",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 95,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02944",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 119,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 4,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R00193",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 133,
+        "reqInt": 12,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02592",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 138,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 8,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02550",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 83,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02676",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 82,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03131",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 101,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 4,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01417",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 142,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 7,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02270",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 99,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R00555",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 133,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 8,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02486",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 114,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02282",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 131,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03117",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 128,
+        "reqInt": 13,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02527",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 128,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03175",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 96,
+        "reqInt": 10,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 7,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02744",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 77,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02766",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 103,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01174",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 145,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 6,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02395",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 88,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02539",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 127,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 7,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02470",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 97,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 16,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02366",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 105,
+        "reqInt": 12,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 8,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02035",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 99,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02619",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 108,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 7,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02104",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 126,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02330",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 104,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 8,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02607",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 86,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03098",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 90,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02199",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 111,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03292",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 99,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R03322",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 83,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03172",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 120,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 6,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02818",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 111,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01426",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 124,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 6,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00512",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 90,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02295",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 163,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 6,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02318",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 118,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02177",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 115,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01280",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 97,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 4,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02857",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 107,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03346",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 108,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02938",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 145,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 7,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01600",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 108,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03032",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 105,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02854",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 129,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03016",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 138,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03177",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 86,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01576",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 100,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 4,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02226",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 128,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 16,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02471",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 107,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 8,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03330",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 104,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01718",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 78,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02839",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 77,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 0,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03070",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 117,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02594",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 133,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02272",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 101,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02642",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 133,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02422",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 109,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01492",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 94,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01044",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 151,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 7,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00561",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 82,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 5,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02024",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 145,
+        "reqInt": 10,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02230",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 132,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 5,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02499",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 138,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 8,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02656",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 82,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 5,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R03069",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 105,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03004",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 142,
+        "reqInt": 11,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03270",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 87,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 4,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R01625",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 90,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02203",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 100,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 6,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03053",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 103,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 6,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03163",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 115,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 7,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00169",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02920",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 100,
+        "reqInt": 10,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03008",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 140,
+        "reqInt": 14,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02404",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 134,
+        "reqInt": 7,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02469",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 116,
+        "reqInt": 8,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 8,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02345",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 111,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02701",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 88,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 6,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03220",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 138,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02954",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 113,
+        "reqInt": 12,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 8,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03191",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 105,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 5,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R03021",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 108,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02728",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02747",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 138,
+        "reqInt": 6,
+        "gates": 1,
+        "mustPass": 16,
+        "mustCross": 6,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02425",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 4,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 4,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R03315",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 90,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02942",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 137,
+        "reqInt": 15,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03300",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 101,
+        "reqInt": 5,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 5,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "starved"
+    },
+    {
+      "id": "R02887",
+      "primaryClass": 5,
+      "routingRegime": "intersection-heavy",
+      "features": {
+        "reqLen": 107,
+        "reqInt": 9,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 5,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02633",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02625",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02501",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 107,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02640",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 75,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02621",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 99,
+        "reqInt": 2,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02059",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 82,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 15,
+        "mustCross": 0,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03178",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 106,
+        "reqInt": 0,
+        "gates": 1,
+        "mustPass": 14,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03283",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 131,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02026",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 75,
+        "reqInt": 0,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02453",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 96,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02780",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 118,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02879",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 97,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02838",
+      "primaryClass": 5,
+      "routingRegime": "multi-portal",
+      "features": {
+        "reqLen": 95,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 0,
+        "portals": 10,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01953",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 121,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 3,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01698",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 78,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 3,
+        "portals": 14,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02904",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 101,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 11,
+        "mustCross": 3,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03282",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 110,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 16,
+        "mustCross": 3,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02231",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 8,
+        "mustCross": 3,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R01132",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 74,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 7,
+        "mustCross": 3,
+        "portals": 8,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R00532",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 111,
+        "reqInt": 2,
+        "gates": 1,
+        "mustPass": 6,
+        "mustCross": 2,
+        "portals": 12,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02643",
+      "primaryClass": 5,
+      "routingRegime": "must-cross-heavy",
+      "features": {
+        "reqLen": 114,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 12,
+        "mustCross": 3,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R02387",
+      "primaryClass": 5,
+      "routingRegime": "general",
+      "features": {
+        "reqLen": 97,
+        "reqInt": 2,
+        "gates": 1,
+        "mustPass": 5,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    },
+    {
+      "id": "R03353",
+      "primaryClass": 5,
+      "routingRegime": "general",
+      "features": {
+        "reqLen": 91,
+        "reqInt": 3,
+        "gates": 1,
+        "mustPass": 13,
+        "mustCross": 0,
+        "portals": 0,
+        "flippers": 0
+      },
+      "bucket": "capped"
+    }
+  ]
+}
