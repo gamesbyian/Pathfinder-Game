@@ -3,33 +3,41 @@
 
 Deferred/reopen questions only. Current priority: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); method: [`solver-research-operating-model.md`](solver-research-operating-model.md); dispositions: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Reconcile old questions with `research-status-index --compact` before new compute.
 
-This is not a second queue or experiment diary. Carry forward only unexplained residue plus a concrete reopen condition.
+This is not a second queue or experiment diary. Carry forward unexplained residue plus a concrete reopen condition.
 
-## New-premise routing
+## Reopen rules
 
-Closed work reopens only for a changed causal premise/treatment. Query existing variant families first for structural questions; skip family mining when allocation, participation, runtime cost, or exact feasibility is the real gate. If existing families lack the needed source/contrast, use the question-first human/editor-parent apparatus rather than bulk generation. [`variant guide`](variant-level-research.md), [`human contrasts`](human-parent-contrast-research.md)
+Closed work reopens only for a changed premise/treatment. Query existing variant families first for structural questions; skip family mining when allocation, participation, runtime cost, or exact feasibility is the gate. If existing families lack the needed contrast, use the question-first human/editor-parent apparatus rather than bulk generation. [`variant guide`](variant-level-research.md), [`human contrasts`](human-parent-contrast-research.md)
+
+For speed, distinguish exact-form negatives from profile-led or architectural deferments. A neighboring failed optimization can lower priority but cannot falsify an untested treatment. Runtime-sensitive results expire only after a material environment/representation change and a current profile again shows the hotspot. [`speed authority`](solver-architectural-speed-opportunities.md)
 
 ## Audit-derived conditional work
 
-The 2026-09-13 corpus/profile audits add conditional items, not top-priority work. [`re-evaluation`](../reports/2026-09-13-historical-evidence-reevaluation-ledger.md)
+| Question | Reopen condition / boundary |
+|---|---|
+| **Profile-instrument calibration** | A live mechanism needs profile evidence; use schema-v3 support-aware semantics and held-out controls. |
+| **Prospective profile-vs-solvability** | A concrete decision needs it; use a prospectively defined population/current semantics. |
+| **Independent transfer for omitted mechanics** | A broad claim is blocked by omitted mechanics; prefer locked human/editor parents or the smallest independent construction capability. |
+| **`portfolio-18-flat-2m` old-generator nomination** | Static allocation resumes and cheap independent evidence can test the old-generator tie at lower work. |
+| **Accepted-path representative sensitivity** | A live mechanism depends on one path-set view; run the frozen Audit-3 substitution cohort unchanged. |
+| **Class-3 exact-action dose resolution** | Triage depends on comparable-work failure; historical atlas data lacks per-attempt `workSpent`. |
+| **Known-prefix oracle-set manifest** | A decision-bearing prefix study needs replay/dependency-stratified path-set sensitivity. Machinery exists but stays inactive until then. |
+| **Experiment producer maturation** | A decision-bearing workflow is touched or a recurring consumer gap appears; finish v3 execution identity/participation/failure semantics then. |
+
+Frozen solve/work facts stand unless execution/participation was invalid; retest only when corrected scope leaves a live decision unanswered.
+
+## Architectural-speed conditional stack
+
+These are not current queue items. Current-head profiling must earn implementation.
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Profile-instrument calibration** | A live mechanism needs profile evidence. Use schema-v3 support-aware semantics, structural-similarity controls, and unrelated held-out-family validation. |
-| **Prospective profile-vs-solvability** | A concrete decision needs it. Use a prospectively defined population/current semantics; do not repeat the selected-C1 correlation. |
-| **Independent transfer for omitted mechanics** | A broad claim is blocked by omitted mechanics. Prefer locked human/editor parents; otherwise add the smallest independent construction capability. Whole C1 cannot substitute. |
-| **`portfolio-18-flat-2m` old-generator nomination** | Static allocation resumes and cheap independent evidence can test the old-generator 22/23 tie at ~27.5% less work. |
+| **Neighbor/candidate allocation** | Current beam profiling shows `getNeighbors` or candidate-object layout materially contributes to end-to-end cost and a concrete treatment has worthwhile removable cost. Historical fused-kernel work did not test these forms. |
+| **Replay / DFS transposition / cull selection** | The relevant current bucket is material and a concrete treatment has favorable expected net value. Historical evidence is prioritization, not family-wide falsification. |
+| **Native/WASM compact kernel** | A compact kernel owns material time, crosses a small stable state boundary, and a cheap end-to-end prototype is available. |
+| **Runtime-sensitive retest** | A material runtime/bundler/representation/search-core change occurred and current profiling again nominates the old hotspot. |
 
-The 2026-09-14 inference audits add four earned conditional actions. Do not interrupt live WS2 gates for them. [`program closeout`](../reports/2026-09-14-inference-audit-program-reconciliation-closeout-001.md)
-
-| Question / repair | Reopen condition / boundary |
-|---|---|
-| **Accepted-path representative sensitivity** | A live mechanism depends on one representative/path-set view. Then run the frozen seven-level Audit-3 substitution cohort with unchanged solver/config/budget. |
-| **Class-3 exact-action dose resolution** | Triage depends on whether the 37 rows are comparable-work failures. Historical atlas data lacks per-attempt `workSpent`; use retained current evidence or the smallest current-code measurement that can change triage. Until then: dose-unverified. |
-| **Known-prefix oracle-set manifest** | **MACHINERY IMPLEMENTED / INACTIVE.** A decision-bearing prefix-survival study needs replay/dependency-stratified path-set sensitivity. Instantiate the compact conditioning-set manifest only then; do not reconstruct history or dump full provenance. |
-| **Experiment producer maturation** | When a decision-bearing workflow is touched or a recurring consumer gap appears, finish Audit-1 producer semantics: v3 contract at execution, resolved treatment identity, compact participation derived from retained rows, owning question/preflight link where known, and execution failure separate from scientific outcome. Durable primary-row retention is now canonical. |
-
-Frozen solve/work facts stand unless execution/participation was invalid; retest only when corrected scope leaves a live decision unanswered.
+When speed becomes active, evaluate representative latency and total CPU/work-weighted runtime over the retained solve population. [`methodology review`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
 
 ## Capability-acquisition frontier
 
@@ -43,10 +51,10 @@ Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smalle
 
 | Priority | Question | Reopen condition / boundary |
 |---:|---|---|
-| 1 | **Open-path topological completion signature** | **OBSERVER IMPLEMENTED; EVALUATION GATE LIVE.** Apply the lifted, endpoint-conditioned, board-derived observer to existing exact labels. Stop on contrast starvation before considering a tiny human-parent intervention. |
-| 2 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving human-parent intervention then exact-label. |
-| 3 | **Cross-attempt basin overlap** | Allocation depends on whether actions/retries reach distinct basins; parents are the independent units. |
-| 4 | **Dependency-conditioned repair descent shadow** | WS6 implicates an early/interior commitment append-only continuation cannot revise; prefer controlled obligation relocation/order changes. |
+| 1 | **Open-path topological completion signature** | Apply the implemented observer to existing exact labels; stop on contrast starvation before any tiny human-parent intervention. |
+| 2 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving intervention. |
+| 3 | **Cross-attempt basin overlap** | Allocation depends on whether actions/retries reach distinct basins; parents are independent units. |
+| 4 | **Dependency-conditioned repair descent shadow** | WS6 implicates an early/interior commitment append-only continuation cannot revise. |
 | 5 | **Certified forced-chain traversal census** | WS7 finds material cost inside post-prune one-successor chains. |
 | 6 | **Partial-order / commuting excursion replay** | Exact/accepted-path evidence suggests redundant obligation ordering and no clean natural pair exists. |
 
@@ -60,21 +68,22 @@ Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased repair re
 
 | Question | Reopen condition / boundary |
 |---|---|
-| **Admissible-order retry repricing (`1.0 -> 0.18`)** | Residual again isolates ordered-systemic loss and a canary proves fraction-differentiated target-stage work. |
+| **Admissible-order retry repricing (`1.0 -> 0.18`)** | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work. |
 | **Richer static graph/placement selectors** | A recurring trace/first-loss descriptor appears; existing families first, whole-parent human/editor replication if needed. |
-| **Stability-aware portfolios** | WS1 finds a compact held-out signal beyond current work/coverage evidence. |
-| **Latent response dimensions / biclusters** | Simpler analysis leaves stable unexplained structure; whole-parent families first. |
-| **Repair restart near-miss allocation** | Fresh legal population/changed contract revives the replicated 64M `bestBadness<=6` signal. |
+| **Stability-aware portfolios / latent response dimensions** | Simpler analysis leaves stable unexplained structure or WS1 finds a compact held-out signal. |
+| **Repair restart near-miss allocation** | Fresh legal population/changed contract revives the replicated 64M near-miss signal. |
 | **Beam continuation / cross-policy handoff** | A complementary policy or earned live-future mechanism appears. |
 | **Temporal/displaced-capability niches** | A boundary change or repeated unrelated losses reveal a stable basin. |
-| **Human/editor-envelope niches** | A mechanism needs human-shaped geometry or mechanics/topology omitted by procedural transfer; use whole-parent denominators. |
-| **Research infrastructure** | Add producer/consumer/query plumbing only after a measured recurring limitation. Audit-specific producer conditions are above. |
+| **Human/editor-envelope niches** | A mechanism needs human-shaped geometry or mechanics/topology omitted by procedural transfer. |
+| **Research infrastructure** | Add plumbing only after a measured recurring limitation. |
 | **Class-1 compact beam-menu exposure** | A materially different work/allocation contract creates real headroom. |
-| **Representation-sensitivity lineage survival** | After WS2 priority work, or on a clean current cliff, measure known-live lineage survival with geometry/interface controls and unrelated-parent replication. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
-| **Counterfactual displaced-capability recurrence** | Multiple unrelated accepted changes lose the same phenotype; test whole human/editor parents before broadening. |
+| **Representation-sensitivity lineage survival** | After WS2 priority work, or on a clean current cliff, measure known-live lineage survival with geometry/interface controls. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
+| **Counterfactual displaced-capability recurrence** | Multiple unrelated accepted changes lose the same phenotype; test whole parents before broadening. |
 
 ## Demoted forms
 
-Do not reopen unchanged without materially new evidence: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; whole C1 as transfer or C2 as untouched evidence; current connectivity/quota forms without changed premise; broad alternative-search frameworks or rotate/mirror/canonicalization before earned lineage diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency, generic detour libraries, bulk variants/human descendants, or full-corpus A/Bs for falsified ideas.
+Do not reopen unchanged without materially new evidence: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; whole C1 as transfer or C2 as untouched evidence; current connectivity/quota forms without changed premise; broad alternative-search frameworks before earned lineage diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency, generic detour libraries, bulk variants/human descendants, or full-corpus A/Bs for falsified ideas.
+
+For speed, "demoted" must not silently mean experimentally falsified; see [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
 Keep this file short: questions, boundaries, reopen conditions.

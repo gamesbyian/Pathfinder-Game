@@ -2,10 +2,10 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-14.
+> **Reconciled:** 2026-09-15.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
-Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Human/editor contrasts: [`human-parent-contrast-research.md`](human-parent-contrast-research.md).
+Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Human/editor contrasts: [`human-parent-contrast-research.md`](human-parent-contrast-research.md). Architectural speed: [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
 Program lens: **capability composition** exposes/selects/allocates demonstrated capability; **capability acquisition** creates generic capability where no known action succeeds.
 
@@ -49,7 +49,7 @@ For a new structural selector premise, query controlled families first. Family f
 |---:|---|---|---|
 | 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 dead-last canary/113-row allocation; Class-2 60-row economics A/B; Class-5 open-path topological-signature gate. |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; existing families first, human-parent contrasts when source transfer/clean intervention can change promotion. |
-| 6/7 | Repair reachability / architectural speed | **SUPPORTING** | Reopen for an earned mechanism/current cost signal; human-parent contrasts can isolate repair commitments, not manufacture a speed premise. |
+| 6/7 | Repair reachability / architectural speed | **SUPPORTING** | No speed implementation currently earned. Reopen speed only from a fresh material current-head hotspot plus a concrete treatment whose expected removable end-to-end cost justifies implementation; exact-form negatives constrain unchanged treatments, while `getNeighbors`, batching, replay materialization, DFS transposition, quickselect, and compact native kernels remain profile-gated/deferred rather than falsely closed. |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure; treat parents, not descendants, as independent human-family units. |
 | 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not tail entitlement. |
 | 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for a changed recurring mechanism premise; controlled human-parent cliffs may supply recurrence/held-out prediction evidence. |
@@ -66,6 +66,8 @@ For a new structural selector premise, query controlled families first. Family f
 - Preserve **disposition** separately from **capability signature**. Historical gains intersecting current residual are nominations until reconciled.
 - A historical null/revert is not a premise verdict until participation, measurement integrity, and formulation are established.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
+- For speed research, distinguish **FALSIFIED_EXACT_FORM**, **DEFERRED_LOW_VALUE**, **ARCHITECTURALLY_DEFERRED**, and **STALE_REPROFILE**. Do not close an untested speed treatment by analogy to a neighboring failed implementation. Runtime/compiler-sensitive negatives expire only after a material environment/representation change plus a current profile that makes the hotspot relevant again. [`speed review`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
+- When speed becomes an active objective, report both representative per-level latency and total CPU/work-weighted runtime over the retained solve population; many trivial levels must not hide hard-tail compute economics.
 - Hold out independent units and scale confirmation with tuning/selection pressure. For generated human/editor descendants, the parent family is the usual independent unit.
 - Reusable rows require matching protocol identity; nominal stage reach or dispatch is not participation. A comparable-work negative requires exact-action work/dose evidence. Timeout/errors are indeterminate, not ordinary failures.
 - Refresh residual-derived views after material promotion or provenance reinterpretation before reusing class counts.
