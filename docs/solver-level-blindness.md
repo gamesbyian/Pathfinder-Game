@@ -10,13 +10,29 @@ For fixed puzzle mechanics, solver revision, configuration, seed policy, and bud
 
 The solver may use the current puzzle, current-invocation state/telemetry, generic code/configuration, and policies learned offline from populations. It may not use saved facts about the exact level.
 
+**Level-blindness constrains provenance, not specificity.** A fact derived solely from the current puzzle/current invocation may be arbitrarily specific to that puzzle, including an exact proof, learned conflict, decomposition, canonical form, search plan, or exhaustive subproblem result. The procedure may generalize while its outputs remain instance-specific: production may derive different proofs, clauses, plans, abstractions, or exact answers on every unseen level.
+
+A useful shorthand is: **specific to this level is legal; known about this level from before is not.** Legality is separate from soundness and economics: a current-input computation can be level-blind yet still be too weak, unsound for a hard action, or too expensive to ship.
+
 ## Allowed runtime inputs
 
 - current gameplay fields: grid, gates/goal, requirements, obstacles, obligations, landmarks, filters, flippers, portals, etc.;
 - current solver code/configuration, budgets, and generic experiment flags;
 - seeds from the generic current-solve seed policy;
 - state, diagnostics, elites, partial paths, and other artifacts created during this invocation;
-- generic static/dynamic policy learned offline, provided its production inputs are legal current-level/current-solve features.
+- caches, proofs, conflicts, continuations, canonical forms, decompositions, and other derived facts created from legal inputs during this invocation, including explicit cross-attempt/cross-technique handoffs;
+- generic static/dynamic policy learned offline, provided its production inputs are legal current-level/current-solve features;
+- bounded exact/current-state computation, provided its inputs are legal and its soundness/cost contract is appropriate to how the result is consumed.
+
+## Cache and proof-store vocabulary
+
+Keep three runtime/storage categories distinct:
+
+1. **Persistent historical per-level state:** caches, checkpoints, continuations, learned clauses, witnesses, winners, or other exact-level artifacts surviving from an earlier invocation. Forbidden for cold capability steering.
+2. **Current-invocation experience caches:** solve-local memoized observations or search experience derived only from legal current inputs. Level-blind legal, but semantically weak unless the cache key and consumer justify what may safely be reused.
+3. **Current-invocation proof-bearing facts/conflicts:** sound bounds, impossibility facts, exact subproblem answers, canonical equivalences, or learned conflicts derived during the solve. Level-blind legal when their derivation and reuse are sound; promotion still depends on construction/reuse cost and end-to-end value.
+
+“Per-level cache” should therefore be read as shorthand only for **persistent historical exact-level state**, never as a categorical ban on solve-local memoization.
 
 ## Forbidden exact-level inputs
 
@@ -25,13 +41,25 @@ A capability solve must not use:
 - prior winning search action/scoring profile/ordering bias/gate/seed/attempt;
 - saved solutions or hints as guidance;
 - historical solved status, timing, nodes, badness, family outcome, capability-memory membership, or old gain/loss membership for allocation/routing;
-- exact-level attempt caches;
+- exact-level attempt caches, checkpoints, continuations, or learned state surviving from a previous solve invocation;
 - `primeAttempt`, `--prime-winner`, or equivalent winner replay;
 - corpus position or permanent level ID as policy/seed input;
 - provenance, generator/stress metadata, stored witnesses, or other research-only fields;
 - a fingerprint/nearest-neighbor mechanism whose practical effect is to recognize the exact historical level or family and replay its known treatment.
 
+Mechanics-derived hashes, canonical forms, transposition keys, symmetry classes, and substructure identities are not forbidden merely because they are highly specific or unique. They are legal when used only to reason about the current invocation; joining them to historical exact-level/family outcomes or replay policies is forbidden.
+
 `--prime-winner` remains available only for explicit historical re-verification/replay. It must not feed production/editor solves, the principal capability workflow, or headline solver scores.
+
+## Exact-computation taxonomy
+
+Keep three categories distinct:
+
+1. **Historical exact data:** saved labels, solutions, witnesses, and exact-level outcomes. Offline only; never runtime steering.
+2. **Offline exact computation:** CP-SAT/reference/exhaustive work used as research or validation evidence.
+3. **Online exact computation from current inputs:** potentially legal production behavior. Promotion still requires soundness, bounded cost, and end-to-end solve/work value.
+
+A research experiment may require a relation to recur across unrelated parents before promoting a fixed generic descriptor. That recurrence requirement does not automatically apply to a generic derivation procedure whose per-instance proofs/conflicts/plans are expected to differ across levels. In that case the procedure, not each semantic output, is the object that must generalize and earn confirmation.
 
 ## Research-data boundary
 
@@ -129,3 +157,5 @@ This workflow does **not** by itself certify that the tested population was unto
 The headline metric is **level-blind solver capability** on the named population. Historical exact-level re-verification counts and capability-memory nomination counts may be reported but are not capability baselines.
 
 The historical Corpus-2 **725/1700** figure used winner priming and is re-verification evidence only. The 2026-08-11 unprimed neighbor-budget A/B is decision-bearing Corpus-2 capability evidence: **611/1700 control -> 665/1700 treatment** at matched 36M-node / 48.24M-work budgets with a non-binding deadline. It should not be retroactively described as an untouched generalization test.
+
+Architecture-audit rationale and concrete overshoot findings: [`../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md`](../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md).

@@ -25,19 +25,21 @@ Historical vocabulary families currently known to matter include: `archetype -> 
 
 The stale-branch sweep performed during this archaeology found the obvious solver/research branches inspected to be ancestors of `main` with zero unique commits ahead. Therefore branch-shaped residue is a lower-priority seam unless another artifact points to unique work.
 
+The 2026-09-16 level-blindness audit adds one interpretive rule for every historical entry below: **level-blindness constrains provenance, not specificity**. A generic current-input procedure may legally derive an exact, board-specific fact even if that fact never recurs on another level. Cross-parent recurrence is evidence for a reusable fixed descriptor; it is not a legality requirement for a generic per-instance proof/query/topology/conflict procedure. Historical exact labels, witnesses, outcomes, and persistent per-level state still remain offline-only steering inputs. See `docs/solver-level-blindness.md`.
+
 ## Premises requiring a proper look
 
 ### Topological / homotopy completion classes
 
-**Status:** premise unresolved; strongest apparent orphan.
+**Status:** historical fixed-endpoint form unresolved by coverage; open-path topology premise earned by the 2026-09-16 controlled fork pilot, merged in PR #1821.
 
 July 2026 work progressed from a rejected cell-overlap proxy to actual winding-number signatures around connected obstacle-cluster centroids. The corrected probe found multiple homotopy classes on 12/19 must-cross-heavy published levels and found 16.6% of cross-class hint pairs treated as similar by the then-current diversity metric. The July 23 planning consolidation called homotopy-class signatures the highest-priority research build. Alias searches through `homotopy`, `winding`, topological/path-class vocabulary, branches, and later planning found no implementation descendant or clean closure.
 
-**What is proved:** complete solutions contain a topological diversity axis that the older solution-diversity metric could miss.
+**What is proved:** complete solutions contain a topological diversity axis that the older solution-diversity metric could miss. The later controlled open-path fork pilot additionally found exact LIVE/DEAD discordance under matched endpoint/mechanic-progress controls across two independent human parents, earning topology as a real microscope premise.
 
-**Not proved:** homotopy class predicts LIVE/DEAD frontier fate, increases solve rate, or provides a useful runtime key. The historical puncture point was the obstacle-cluster centroid, explicitly approximate for concave clusters, and no checked-in winding analyzer was found on current `main`.
+**Not proved:** a particular compact homotopy descriptor predicts LIVE/DEAD frontier fate broadly, increases solve rate, or provides a useful production key. The historical puncture point was the obstacle-cluster centroid, explicitly approximate for concave clusters.
 
-**Smallest next question:** on exact-labelled extinction cases, do known completions of the last LIVE branch occupy a topological completion class absent from completions represented by the retained DEAD population? Reconstruct the tiny offline observer and include a robustness check for puncture choice; no in-loop topology feature unless this relation recurs.
+**Smallest next question:** microscope the earned controlled forks and compare two successor shapes: (a) a compact reusable cross-level descriptor, which needs recurrence/invariance evidence, and (b) a generic current-input topology procedure whose winding/phase/separator-side/accessibility output may be unique to the board. Neither route licenses raw phase as a production key; both still need soundness, predictive value, and economics.
 
 ### Completion-regime / categorical future structure
 
@@ -49,7 +51,7 @@ The July turn-landmark-dense chain strengthens this interpretation. Existing-tec
 
 An August state-conditioned must-cross-anchoring proposal points the same way. Unconditional stronger early must-cross attraction was already contradicted by cases such as L92, where successful paths deliberately deferred obligations while constructing intersection geometry. No clean descendant implemented the old choose-target/defer classifier, but its scientific question is absorbed here: a pending obligation's correct role can be categorical and phase-dependent rather than monotone urgency.
 
-**Smallest next question:** seek a recurring categorical distinction in exact-labelled LIVE-vs-DEAD states before adding another scalar feasibility feature.
+**Smallest next question:** test whether exact-labelled LIVE/DEAD siblings differ in completion-regime feasibility. A recurring categorical relation can support a reusable descriptor; a bounded generic per-instance feasibility query can remain viable even if the exact regime answer differs on every level, provided its derivation is sound and its solve/work economics are favorable.
 
 ### Residual-interface equivalence / partial-order commutativity
 
@@ -59,19 +61,19 @@ The August 6 frontier triage nominated two cheap offline ideas: mine accepted so
 
 The same tooling also emitted `commutingCandidate`, but only when two subpaths had the same sorted obligation multiset in a different order. Archaeology found no descendant that performed the original decision-bearing test: swap/reorder the excursions and measure legality, future completion feasibility/count/topology, solver work, and which mechanics break commutativity. Candidate counting is not evidence of partial-order equivalence.
 
-**Boundary:** keep generic gadget mining closed absent a changed mechanic-conditioned premise. If current exact-labelled or accepted-path evidence independently points to redundant obligation ordering, the smallest legitimate descendant is an offline swap/replay observer. Do not infer equivalence from obligation-multiset identity alone.
+**Boundary:** keep generic gadget mining closed absent a changed mechanic-conditioned premise. If current exact-labelled or accepted-path evidence independently points to redundant obligation ordering, the smallest legitimate descendant is an offline swap/replay observer or bounded exact current-state commutativity query. A fixed reusable commutativity rule needs recurrence; a generic sound per-instance query need not return the same relation across parents. Do not infer equivalence from obligation-multiset identity alone.
 
 ### Unfinished August full-pool categorical-state projection
 
-**Status:** genuinely unfinished experiment; high-value observer gate.
+**Status:** superseded archaeology claim; the experiment was later found to have been executed and is closed in its tested low-cardinality form.
 
 The August 24 beam-extinction descriptor line reached four exact A/D `DEAD top-ranked / LIVE alternative` parents (`S00001`, `S00030`, `S00048`, `R00104`). Pairwise scalar/simple-interface stories did not recur: MustCross first-pass phase distinguished only one pair, local required-axis corridor availability distinguished none, and other cheap state differences were heterogeneous.
 
-The historical response was disciplined: stop pairwise feature accretion and capture the **full ranked extinction pools**. Compare a tiny prespecified family of already-maintained categorical/interface-state keys at unchanged width, reporting bucket count, singleton share, guaranteed slots, exact-LIVE survival, random-reserve control, and modest width-only control. Tooling was extended specifically to retain the full pools and the exact intended output path was documented.
+The historical response was disciplined: stop pairwise feature accretion and capture the **full ranked extinction pools**. Compare a tiny prespecified family of already-maintained categorical/interface-state keys at unchanged width, reporting bucket count, singleton share, guaranteed slots, exact-LIVE survival, random-reserve control, and modest width-only control.
 
-No committed full-pool artifact, projection result, or later verdict was found. The old branch contains no unique later execution. This is not a negative result.
+Later archaeology correction found the full-pool projection had in fact run over 207 ranked pools and the prespecified low-cardinality quota keys did not retain the available exact-LIVE alternatives or beat generic reserve/width controls. The earlier "unfinished" classification is therefore superseded.
 
-**Boundary:** current WS4 generic retention forms stay closed. First reconcile this historical counterfactual against current Class-5 exact-labelled evidence. If it remains non-redundant, run it read-only; do not jump directly to a quota/crowding policy.
+**Boundary:** do not rerun that same low-cardinality fixed-width quota projection. A successor needs a materially new representation premise, including the now-earned topology route or a generic per-instance derivation procedure, rather than more fields fitted to the same four parents.
 
 ### Future intersection commitments / Intersection Opportunity Graph lineage
 
@@ -83,7 +85,7 @@ A later descendant reappeared as **intersection blueprint planning**: select loc
 
 **Live premise:** LIVE and DEAD states with the same intersection deficit may differ in which future crossing plans remain realizable.
 
-**Smallest next question:** observer/reference-model comparison of realizable future crossing commitments on exact-labelled sibling states. Do not restore synthetic must-cross or blueprint production behavior as the first experiment.
+**Smallest next question:** observer/reference-model comparison of realizable future crossing commitments on exact-labelled sibling states. If a compact relation recurs, it may nominate a reusable abstraction; if only board-specific realizability answers are useful, a bounded generic current-state query remains a separate legal route. Do not restore synthetic must-cross or blueprint production behavior as the first experiment.
 
 ### Constrained-event / arbitrary-target feasibility oracle
 
@@ -93,9 +95,9 @@ March briefly generalized search so an arbitrary cell could be treated as a cons
 
 That sequence is a **dirty revert, not a negative result**. It tells us the broad trap-search refactor was not retained; it does not establish that target-relative feasibility queries were unsound, too expensive, or uninformative.
 
-**Possible use:** offline microscope for questions such as whether a state can still complete through a candidate crossing region, portal family, missing must-cross axis, chokepoint, or other structural event.
+**Possible use:** microscope questions such as whether a state can still complete through a candidate crossing region, portal family, missing must-cross axis, chokepoint, or other structural event.
 
-**Boundary:** research instrumentation first, not a second production solver. If revived, expose the smallest read-only query needed by an already-earned microscope question rather than recreating the March trap-search architecture.
+**Boundary:** revive as the smallest read-only query needed by an already-earned microscope question, not as a broad second solver. Offline instrumentation is the first evidence step, but level-blindness does not forbid later production use: a bounded current-input exact query may advance if its model/answer is sound for the consumer, its runtime is bounded, and end-to-end economics justify it. Historical exact labels or saved query answers remain forbidden runtime steering.
 
 ### Cross-attempt basin overlap and anti-redundancy
 
@@ -105,7 +107,7 @@ April already built portfolio-diversity telemetry including `pairwiseStateOverla
 
 May L92 investigation independently reported retries with pairwise overlap near 1.0 and implemented a prefix-divergence guard. That treatment repeatedly suffered control-plane failures: `forbiddenPrefixes` was omitted from an internal allowlist, timeout-prefix history was lost across hint-ladder iterations, a raw `attempts[]` passthrough caused a catastrophic serialization regression, and a later shallow projection had to restore the transport safely. The archaeology did not find a clean general verdict showing correctly delivered basin-divergence behavior was useless.
 
-**Smallest next question:** rebuild the observer only, using current canonical action identities and explicit participation checks, and measure trajectory/state-population overlap between nominally different current actions/retries on residual misses. Determine whether portfolio breadth is real or mostly nominal before changing behavior.
+**Smallest next question:** rebuild the observer only, using current canonical action identities and explicit participation checks, and measure trajectory/state-population overlap between nominally different current actions/retries on residual misses. Also measure repeated derivation of the same expensive sound facts/failure certificates. Current-invocation sharing is level-blind legal; the question is whether rediscovery cost is material and whether any shared key/fact is sound enough to reuse.
 
 ### Progress-conditioned continuation / allocation
 
@@ -217,7 +219,7 @@ Historical retry-response work adds a second caution. March-April code used node
 
 **Status:** useful diagnostic pattern.
 
-Where an independent accepted path exists, compare its prefix against production search to identify the first point a valid route is pruned, merged, scored below width, or never offered. Treat one level as premise generation only, then seek recurring phenotype.
+Where an independent accepted path exists, compare its prefix against production search to identify the first point a valid route is pruned, merged, scored below width, or never offered. Treat one level as premise generation only. For a reusable fixed descriptor, seek recurrence across unrelated parents; for a generic per-instance derivation procedure, seek soundness and useful economics across independent evaluations even when each derived fact is unique.
 
 ### Bulk dead-branch separation versus incremental pruning
 
@@ -241,11 +243,11 @@ The July axis-reach probe rebuilt historical CP-SAT-labelled branch states and s
 
 July rejected a coarse global nogood signature because the same key could occur on both a dead end and a successful path. August later found high exact dead-end recurrence inside repair and shipped a solve-local exact-state experience cache net-positive, but later archaeology corrected the interpretation: this was **experience memory inside an incomplete randomized search**, not logical UNSAT learning.
 
-The August learned-certificate programme then measured a much more relevant native failure population. In its dominant connectivity-rejection cluster, exact-state fingerprints repeated across 52.6% of records while reached-set and normalized boundary-blocker shapes repeated across **83.1% / 82.2%**. The experiment stopped because cross-level transfer was weak; roughly **91.2% of recurring-record benefit was level-local**. That is a clean negative for the original cross-level certificate ambition, but positive evidence for the current solve-local recurrence question.
+The August learned-certificate programme then measured a much more relevant native failure population. In its dominant connectivity-rejection cluster, exact-state fingerprints repeated across 52.6% of records while reached-set and normalized boundary-blocker shapes repeated across **83.1% / 82.2%**. The experiment stopped because cross-level transfer was weak; roughly **91.2% of recurring-record benefit was level-local**. That is a clean negative for the original cross-level certificate ambition, but positive evidence for the current solve-local recurrence question. Under the corrected level-blindness boundary, level-local benefit is not disqualifying by itself because a current invocation may derive and reuse its own facts.
 
-Historical progressive contradiction probes and dead-state reasoning therefore support the current narrow gate: first rejoin that August Stage-B population on current Class-5 misses, rather than pay for a fresh generic recurrence census. If the recurrence survives, ask whether repeated shapes reduce to a small **logically sound cause**, whether matching it is cheaper than a fresh connectivity check, and whether material repeated work would actually be avoided. Shape equality is not itself a nogood.
+Historical progressive contradiction probes and dead-state reasoning therefore support two distinct successors. For reusable abstractions, first rejoin the August Stage-B population and ask whether recurring shapes reduce to a small **logically sound cause** across unrelated parents. Separately, if a bounded generic core/proof procedure can derive sound solve-local conflicts, individual clauses/cores may differ on every level; then measure repeated-equivalent failure avoided and construction/matching cost within the same invocation. Shape equality is not itself a nogood.
 
-Only a positive cause-reduction/economic gate earns shadow-testing of the smallest solve-local reason key. No broad CDCL/LCG framework is earned. The current diagnostic's directly verified recurrence instance remains an existence proof, not a rate estimate, because most prefix bisections abstained.
+Only a positive soundness/economic gate earns shadow-testing of the smallest solve-local reason key. No broad CDCL/LCG framework is earned. The current diagnostic's directly verified recurrence instance remains an existence proof, not a rate estimate, because most prefix bisections abstained.
 
 ### Final-mile completable-state discrimination
 
@@ -277,7 +279,7 @@ May supplied a direct semantic counterexample rather than another implementation
 
 July repeated the lesson quantitatively. A crude transposition signature first appeared to show roughly 92-99% duplicate node visits. Once full visited identity and edge/axis history were restored, true reconvergence fell to roughly 0.5-16%, usually around 1-2%; the most dramatic coarse “duplicate” case had the least true duplication. A later beam measurement found sound duplicate elimination at only about 0.019% of roughly 11.4M candidates. The apparent optimization opportunity was largely an artifact of asserted equivalence.
 
-**General lesson:** Pathfinder future equivalence has been path-history-sensitive from the beginning. Global coarse memoization should be understood as a capability-altering representation/merge policy, not an innocent cache optimization. A sound full-state memo has little demonstrated collapse value on the measured hard cases; an aggressively compact memo gains reuse precisely by asserting equivalences that require independent validation. Any compact Class-5 key, response fingerprint, residual-interface identity, or coarse representation should therefore be used to nominate cases and tested against exact-live alternatives before it becomes a merge/prune/steering key.
+**General lesson:** Pathfinder future equivalence has been path-history-sensitive from the beginning. Global coarse memoization should be understood as a capability-altering representation/merge policy, not an innocent cache optimization. A sound full-state memo has little demonstrated collapse value on the measured hard cases; an aggressively compact memo gains reuse precisely by asserting equivalences that require independent validation. This is a soundness/economics warning, not a level-blindness objection: mechanics-derived canonicalization, symmetry, and transposition keys are legal current-input tools even when unique to one level, but any equivalence they assert must be justified for the consumer and must repay their cost.
 
 ### Coarse-state merge / near-tie retention
 
@@ -371,7 +373,7 @@ One August confirmation-workflow bug demonstrates why resolved arm identity belo
 - generic scheduler fairness/participation floors without displaced-capability evidence;
 - standalone adaptive must-cross urgency/anchoring policy absent a changed categorical completion premise.
 
-These require a materially changed causal premise and the current authority's reopen condition, not historical curiosity.
+These require a materially changed causal premise and the current authority's reopen condition, not historical curiosity. Mechanics-derived symmetry/canonicalization/transposition as current-input tools are not banned by this list; they still need a sound equivalence contract and measured economics.
 
 ## Session archaeology reports
 
