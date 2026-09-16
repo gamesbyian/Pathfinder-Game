@@ -121,8 +121,7 @@ state = {
 
 - `distMap`, `goalDistArr` (`0xFFFF = unreachable/Infinity`).
 - `mpDistArrs[]`, `mcDistArrs[]`, `objDistArrs[]`.
-- `cellDenseIndex`: packed key -> dense live-cell row + 1 (`0` means no live non-block/non-goose cell).
-- `staticNeighborKeys`: flat fixed-stride `Int32Array` sized `liveCellCount * 4`; `staticNeighborKeys[(cellDenseIndex[packedKey]-1)*4+d]` stores `neighborKey+1`, with 0 meaning no static neighbor. It excludes blocks/geese/false-goals/gates/wrong regular-filter axis. This replaces the former `KEY_SPACE * 4` adjacency allocation without changing neighbor semantics. See [`../reports/2026-08-23-dense-static-neighbor-keys.md`](../reports/2026-08-23-dense-static-neighbor-keys.md).
+- `staticNeighborKeys`: flat fixed-stride `Int32Array` sized `gridW * gridH * 4`; `staticNeighborKeys[denseIndex(packedKey, gridW)*4+d]` stores `neighborKey+1`, with 0 meaning no static neighbor. Block/goose rows remain zero. The former 1 MiB `cellDenseIndex` indirection was removed in 2026-08-26; the removal simplified representation without establishing a reliable wall-time gain. See [`../reports/2026-08-23-dense-static-neighbor-keys.md`](../reports/2026-08-23-dense-static-neighbor-keys.md) and [`../reports/2026-08-26-dense-index-architecture-followup.md`](../reports/2026-08-26-dense-index-architecture-followup.md).
 - `mustPassIndex`, `mustCrossIndex`, `flipperIndexMap`, `flipperInitAxes`.
 - `mcPairDist`, `mpPairDist`, `mcApproachDistMaps`.
 - `surroundNeighborIndex`, `surroundInitNeighborMasks`, `surroundNeighborDistMaps`.
@@ -253,8 +252,8 @@ Tools: `solver:legacy-latency-portfolio-report`, `solver:legacy-latency-portfoli
 ## Memory / hot path
 
 - **Flattening done:** MP/MC caches, `staticNeighbors -> staticNeighborKeys`, flipper approach distances, `mustTurnCellIndex`, `gateSet -> gateFlags`; removed `objectiveKeyToIndex`. Multi-value `adjTurnCellIndex`/`surroundNeighborIndex` remain Maps.
-- **Allocation:** `buildCurUrgencyContext` pooling won ~11–12% full-corpus wall; `UndoToken` pooling was **4.6% slower** at identical nodes and is closed absent a materially different representation. The later architecture audit found no current `getNeighbors` array-allocation hotspot and no material beam-allocation signal; reopen only after a refreshed profile identifies a concrete site.
-- **Dense indexing:** cache-locality hypothesis was weak (15×15 456 vs 449 ms), but allocation cost was large. Distance arrays use `gridW*gridH` via `denseIndex`; `staticNeighborKeys` now uses `liveCellCount*4` via `cellDenseIndex`, removing the former 16.8 MB per-level adjacency allocation while preserving packed-key neighbor values. With state reuse/zero-absent encoding, prior batch work improved ~40%; the adjacency conversion adds a further measured speed win, strongest on many-quick-solves workloads. Still packed-key-indexed: state `visited`/`edgeUsage`, `buildIndexArr`, `gateFlags`/`reachBlockedArr`.
+- **Allocation:** `buildCurUrgencyContext` pooling won ~11–12% full-corpus wall; `UndoToken` pooling was **4.6% slower** at identical nodes and is closed absent a materially different representation. Historical profiling found `getNeighbors` and candidate-object allocation modest rather than dominant; they remain profile-gated, not experimentally falsified.
+- **Dense indexing:** distance arrays and `staticNeighborKeys` use row-major `denseIndex`; `staticNeighborKeys` is `gridW*gridH*4` and the former 1 MiB `cellDenseIndex` lookup is gone. Its removal simplified representation without a reproducible wall-time gain. Packed-key-indexed hot/state arrays remain where their own economics differ.
 - Architecture-level continuations, prior negatives, and evaluation rules: [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
 
 ## Work-budget determinism
@@ -289,7 +288,7 @@ Report: [`reports/2026-07-30-admissible-order-node-reserve.md`](../reports/2026-
 
 ## Remaining speed work
 
-See [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md) for the current architecture-level list and closed negatives. There is no current architecture-level speed candidate: `getNeighbors` allocation removal, beam-phase allocation cleanup, and broad dense-index continuation are closed or conditional on a new profile/mechanism. Current solve-capability priority belongs in [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
+See [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md). There is no current implementation-speed candidate. Neighbor allocation, candidate layout, replay/materialization, DFS transposition and related forms are profile-gated/deferred unless the speed authority records an exact-form negative; future implementation work begins from a fresh current-head profile.
 
 ## MST-bound scratch-buffer bug
 
