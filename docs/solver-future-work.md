@@ -52,14 +52,15 @@ Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smalle
 | Priority | Question | Reopen condition / boundary |
 |---:|---|---|
 | 1 | **Open-path topological completion signature** | **STOPPED ON CONTRAST STARVATION.** The implemented observer was joined to existing exact labels (28 rows / 26 controlled strata) and found zero natural LIVE/DEAD contrasts. Reopen only from a separately justified intervention/question; do not repeat the same natural-evidence join. |
-| 2 | **Full-pool categorical-state projection** | **STRONGEST BOUNDED PREMISE-GENERATION CANDIDATE, NOT AN ACTIVE TREATMENT.** First reconcile the unfinished four-parent exact-extinction observer against current exact-label semantics and September Class-5 evidence. If still nonredundant, run the retained read-only projection before inventing another scalar feature or human-parent intervention. [`reconciliation`](../reports/2026-09-16-post-ws2-premise-generation-reconciliation-001.md) |
-| 3 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving intervention. |
-| 4 | **Cross-attempt basin overlap** | Allocation depends on whether actions/retries reach distinct basins; parents are independent units. |
-| 5 | **Dependency-conditioned repair descent shadow** | WS6 implicates an early/interior commitment append-only continuation cannot revise. |
-| 6 | **Certified forced-chain traversal census** | WS7/current profiling finds material cost inside post-prune one-successor chains. |
-| 7 | **Partial-order / commuting excursion replay** | Exact/accepted-path evidence suggests redundant obligation ordering and no clean natural pair exists. |
+| 2 | **Beam full-pool categorical projection** | **CLOSED NEGATIVE, NOT UNFINISHED.** PR #1474 / commit `9d0f876` projected 207 captured pools from `S00001`, `S00030`, `S00048`, `R00104`; baseline plus the tested +MustPass, +adjacent-turn and +MustCross-first-pass quota keys rescued no exact-live alternative at fixed width. Preserve capture tooling; reopen only for materially new independent evidence or a different bounded survivor mechanism. [`reconciliation`](../reports/2026-09-16-post-ws2-premise-harvest-001.md) |
+| 3 | **Card-E continuation / handoff sizing** | **EARNED PREMISE-GENERATION GATE.** On the 28-row first-loss frontier, repair natural exposure stayed shallow/dose-insensitive while 4 exact beam-cull states were repair-reconstructable when seeded. The historical map requires a materially larger independent sample before any handoff design. Execute from the live workstream authority. [`harvest`](../reports/2026-09-16-post-ws2-premise-harvest-001.md) |
+| 4 | **Future-intersection / arbitrary-target feasibility** | Exact labels nominate a specific event-feasibility distinction; if natural cases cannot isolate it, use the smallest witness-preserving intervention. |
+| 5 | **Cross-attempt basin overlap** | Allocation must actually depend on whether actions/retries reach distinct basins. Observer restoration is conditional; canonical action identities + participation checks first, no anti-redundancy treatment from historical anecdotes. |
+| 6 | **Dependency-conditioned repair descent shadow** | WS6 implicates a recurring early/interior commitment append-only continuation cannot revise; current first-loss frontier instead points primarily to exposure, so do not promote from operator-incapability counts alone. |
+| 7 | **Certified forced-chain traversal census** | WS7/current profiling finds material cost inside post-prune one-successor chains. Historical static geometry was already discouraging; profiling must earn a modern dynamic census. |
+| 8 | **Partial-order / commuting excursion replay** | Exact/accepted-path evidence suggests redundant obligation ordering and no clean natural pair exists. |
 
-Historical dirty negatives: [`solver-archaeology-register.md`](solver-archaeology-register.md).
+Historical dirty negatives: [`solver-archaeology-register.md`](solver-archaeology-register.md). Descendant-lineage correction: [`premise harvest`](../reports/2026-09-16-post-ws2-premise-harvest-001.md).
 
 ## Secondary solve-harvest trigger
 
@@ -73,7 +74,7 @@ Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased late repa
 | **Richer static graph/placement selectors** | A recurring trace/first-loss descriptor appears; existing families first, whole-parent human/editor replication if needed. |
 | **Stability-aware portfolios / latent response dimensions** | Simpler analysis leaves stable unexplained structure or WS1 finds a compact held-out signal. |
 | **Repair restart near-miss allocation** | Fresh legal population/changed contract revives the replicated 64M near-miss signal. |
-| **Beam continuation / cross-policy handoff** | A complementary policy or earned live-future mechanism appears. |
+| **Beam continuation / cross-policy handoff** | **Sizing gate active in WS2 premise generation.** Do not implement from the historical 4/28 nomination. Larger independent recurrence must first earn an offline legal state-selection rule, then a matched-work handoff. |
 | **Temporal/displaced-capability niches** | A boundary change or repeated unrelated losses reveal a stable basin. |
 | **Human/editor-envelope niches** | A mechanism needs human-shaped geometry or mechanics/topology omitted by procedural transfer. |
 | **Research infrastructure** | Add plumbing only after a measured recurring limitation. |
