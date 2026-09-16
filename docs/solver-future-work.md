@@ -3,89 +3,73 @@
 
 Deferred/reopen questions only. Current priority: [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); method: [`solver-research-operating-model.md`](solver-research-operating-model.md); dispositions: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Reconcile old questions with `research-status-index --compact` before new compute.
 
-This is not a second queue or experiment diary. Carry forward unexplained residue plus a concrete reopen condition.
+This is not a second queue. Carry forward only an unexplained residue plus a concrete reopen condition. Closed work reopens only for a changed premise/treatment. Existing variant families come before new generation when they can answer the question; human/editor parents are for source/contrast gaps, not bulk search.
 
-## Reopen rules
-
-Closed work reopens only for a changed premise/treatment. Query existing variant families first for structural questions; skip family mining when allocation, participation, runtime cost, or exact feasibility is the gate. If existing families lack the needed contrast, use the question-first human/editor-parent apparatus rather than bulk generation. [`variant guide`](variant-level-research.md), [`human contrasts`](human-parent-contrast-research.md)
-
-For speed, distinguish exact-form negatives from profile-led or architectural deferments. A neighboring failed optimization can lower priority but cannot falsify an untested treatment. Runtime-sensitive results expire only after a material environment/representation change and a current profile again shows the hotspot. [`speed authority`](solver-architectural-speed-opportunities.md)
+For speed, distinguish exact-form negatives from profile-led or architectural deferments. Current-head profiling must earn implementation. [`speed authority`](solver-architectural-speed-opportunities.md)
 
 ## Audit-derived conditional work
 
-| Question | Reopen condition / boundary |
+| Question | Reopen condition |
 |---|---|
-| **Profile-instrument calibration** | A live mechanism needs profile evidence; use schema-v3 support-aware semantics and held-out controls. |
-| **Prospective profile-vs-solvability** | A concrete decision needs it; use a prospectively defined population/current semantics. |
-| **Independent transfer for omitted mechanics** | A broad claim is blocked by omitted mechanics; prefer locked human/editor parents or the smallest independent construction capability. |
-| **`portfolio-18-flat-2m` old-generator nomination** | Static allocation resumes and cheap independent evidence can test the old-generator tie at lower work. |
-| **Accepted-path representative sensitivity** | A live mechanism depends on one path-set view; run the frozen Audit-3 substitution cohort unchanged. |
-| **Class-3 exact-action dose resolution** | Triage depends on comparable-work failure; historical atlas data lacks per-attempt `workSpent`. |
-| **Known-prefix oracle-set manifest** | A decision-bearing prefix study needs replay/dependency-stratified path-set sensitivity. Machinery exists but stays inactive until then. |
-| **Experiment producer maturation** | A decision-bearing workflow is touched or a recurring consumer gap appears; finish v3 execution identity/participation/failure semantics then. |
+| Profile calibration / prospective profile-vs-solvability | A live decision actually needs profile evidence; use schema-v3 support-aware semantics and prospective populations. |
+| Independent transfer for omitted mechanics | A broad claim is blocked by omitted mechanics; use the smallest independent construction or locked human/editor parents. |
+| `portfolio-18-flat-2m` old-generator nomination | Static allocation resumes and cheap independent evidence can test the lower-work tie. |
+| Accepted-path representative sensitivity | A live mechanism depends on one path-set view; run the frozen Audit-3 substitution cohort unchanged. |
+| Class-3 exact-action dose | Triage depends on comparable-work failure; historical atlas rows lack per-attempt `workSpent`. |
+| Known-prefix oracle-set manifest | A decision-bearing prefix study needs path-set sensitivity. Machinery exists but stays inactive until then. |
+| Experiment producer maturation | A decision-bearing producer is touched or a recurring consumer gap appears. |
 
-Frozen solve/work facts stand unless execution/participation was invalid; retest only when corrected scope leaves a live decision unanswered.
+Frozen solve/work facts stand unless execution/participation was invalid.
 
 ## Architectural-speed conditional stack
 
-These are not current queue items. Current-head profiling must earn implementation.
-
-| Question | Reopen condition / boundary |
-|---|---|
-| **Neighbor/candidate allocation** | Current beam profiling shows `getNeighbors` or candidate-object layout materially contributes to end-to-end cost and a concrete treatment has worthwhile removable cost. Historical fused-kernel work did not test these forms. |
-| **Replay / DFS transposition / cull selection** | The relevant current bucket is material and a concrete treatment has favorable expected net value. Historical evidence is prioritization, not family-wide falsification. |
-| **Native/WASM compact kernel** | A compact kernel owns material time, crosses a small stable state boundary, and a cheap end-to-end prototype is available. |
-| **Runtime-sensitive retest** | A material runtime/bundler/representation/search-core change occurred and current profiling again nominates the old hotspot. |
-
-When speed becomes active, evaluate representative latency and total CPU/work-weighted runtime over the retained solve population. [`methodology review`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
+Not current queue items. Reopen only after current profiling shows material cost and a concrete treatment has favorable expected value: neighbor/candidate allocation, replay/DFS transposition/cull selection, compact native/WASM kernels, or runtime-sensitive retests after a material environment/representation change. Evaluate representative latency plus total CPU/work over the retained solve population. [`methodology`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
 
 ## Capability-acquisition frontier
 
-Boundary after the 2026-09-16 Class-4 promotion refresh: **390 class-5** misses with no known admissible/T1 candidate and **71 class-4** misses with historical candidates; total residual is 531, with Classes 1-5 = 17/30/23/71/390. Freshness-reconcile after future promotions before reuse. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
+Post-2026-09-16 Class-4 promotion boundary: **390 Class-5** misses with no known admissible/T1 candidate and **71 Class-4** historical-candidate misses; residual 531, Classes 1-5 = 17/30/23/71/390. Refresh after future promotions. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-Naive `swap`/`cs`, generic scorer tuning, six-summary future-feasibility, connectivity/dead-cause reuse, August low-cardinality categorical quotas, and fixed-endpoint homotopy are closed in tested forms. Homotopy is coverage-null, not premise-false. [`homotopy`](../reports/2026-09-13-class5-homotopy-prefix-census-result-001.md)
+Closed tested neighbors include naive `swap`/`cs`, generic scorer tuning, six scalar future-feasibility summaries, current connectivity/dead-cause reuse, August low-cardinality categorical quotas, and fixed-endpoint homotopy. Homotopy is coverage-null, not premise-false.
 
-Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smallest generic capability -> bounded pilot -> independent validation**. A single-level microscope is discovery only. [`result`](../reports/2026-09-12-class5-microscope-branch-reconciliation-001.md)
+Acquisition funnel: **freshness -> controlled contrast -> first loss -> microscope -> smallest generic capability -> bounded pilot -> independent validation**.
 
-## Archaeology-derived reopen stack
+## Premise-generation stack
 
-| Priority | Question | Reopen condition / boundary |
+| Priority | Question | Boundary |
 |---:|---|---|
-| 1 | **Open-path topological completion signature** | **STOPPED ON CONTRAST STARVATION.** The implemented observer was joined to existing exact labels (28 rows / 26 controlled strata) and found zero natural LIVE/DEAD contrasts. Reopen only from a separately justified intervention/question; do not repeat the same natural-evidence join. |
-| 2 | **Beam full-pool categorical projection** | **CLOSED NEGATIVE, NOT UNFINISHED.** PR #1474 / commit `9d0f876` projected 207 captured pools from `S00001`, `S00030`, `S00048`, `R00104`; tested quota keys rescued no exact-live alternative at fixed width. Preserve capture tooling; reopen only for materially new evidence or a different survivor mechanism. [`reconciliation`](../reports/2026-09-16-post-ws2-premise-harvest-001.md) |
-| 3 | **Card-E continuation / handoff sizing** | **EARNED PREMISE-GENERATION GATE.** On the 28-row first-loss frontier, repair exposure stayed shallow/dose-insensitive while 4 exact beam-cull states were repair-reconstructable when seeded. A materially larger independent sample is required before handoff design. [`harvest`](../reports/2026-09-16-post-ws2-premise-harvest-001.md) |
-| 4 | **H1 residual event-feasibility / completion regimes** | **STRONGEST INDEPENDENT ACQUISITION PREMISE.** Six scalar future-feasibility summaries were null; test a tiny prespecified relational event vocabulary on exact LIVE/DEAD siblings: individual/joint event realizability and nominated obligation-order alternatives. No feature sweep or blueprint treatment. [`hypothesis harvest`](../reports/2026-09-16-class5-cross-resource-hypothesis-harvest-001.md) |
-| 5 | **H2 marginal information velocity / structural stasis** | **BOUNDED OBSERVER CANDIDATE.** Historical exact-deficit recurrence plus September 10x dose-insensitive repair exposure nominate checkpointed structural novelty per `workSpent`. Advance only if a legal stasis signal predicts marginal continuation value beyond generic difficulty/work. [`hypothesis harvest`](../reports/2026-09-16-class5-cross-resource-hypothesis-harvest-001.md) |
-| 6 | **H3 dependency-defined repair commitment interface** | **BOUNDED WS6 PREMISE GENERATOR.** Compare exact repair-retreat/seeded-reachability cases for recurring coupled commitment differences smaller than positional rollback distance. No new operator until a compact causal interface recurs. [`hypothesis harvest`](../reports/2026-09-16-class5-cross-resource-hypothesis-harvest-001.md) |
-| 7 | **Cross-attempt basin overlap** | Conditional on an allocation question such as H2 showing structural stasis. Restore observer only with canonical action identities and participation checks; no anti-redundancy treatment from historical anecdotes. |
-| 8 | **Certified forced-chain traversal census** | WS7/current profiling finds material cost inside post-prune one-successor chains. Profiling must earn a modern dynamic census. |
+| 1 | **Open-path topological completion signature** | **STOPPED ON CONTRAST STARVATION.** Existing exact material gave 28 rows / 26 controlled strata and zero natural LIVE/DEAD contrasts. Reopen only from a separately justified intervention/question. |
+| 2 | **Beam full-pool categorical projection** | **CLOSED NEGATIVE, NOT UNFINISHED.** PR #1474 / `9d0f876` projected 207 captured pools; tested quota keys rescued no exact-LIVE alternative at fixed width. Preserve capture tooling only for a materially new question. [`reconciliation`](../reports/2026-09-16-post-ws2-premise-harvest-001.md) |
+| 3 | **Card-E continuation / handoff sizing** | **EARNED GATE.** Repair exposure on the 28-row first-loss frontier stayed shallow/dose-insensitive while 4 exact beam-cull states were repair-reconstructable when seeded. Size on a materially larger independent population before any handoff design. [`harvest`](../reports/2026-09-16-post-ws2-premise-harvest-001.md) |
+| 4 | **H1 residual event-feasibility / completion regimes** | **STRONGEST INDEPENDENT ACQUISITION PREMISE.** Six scalar summaries were null. Test a tiny prespecified relational event vocabulary on exact LIVE/DEAD siblings: individual/joint event realizability and nominated obligation-order alternatives. No feature sweep or blueprint treatment. [`hypothesis harvest`](../reports/2026-09-16-class5-cross-resource-hypothesis-harvest-001.md) |
+| 5 | **H2 marginal information velocity / structural stasis** | **BOUNDED OBSERVER.** Exact-deficit recurrence plus September 10x dose-insensitive repair exposure nominate checkpointed structural novelty per `workSpent`. Advance only if a legal stasis signal predicts marginal continuation value beyond generic difficulty/work. [`hypothesis harvest`](../reports/2026-09-16-class5-cross-resource-hypothesis-harvest-001.md) |
+| 6 | **H3 dependency-defined repair commitment interface** | **BOUNDED WS6 PREMISE GENERATOR.** Compare exact repair-retreat/seeded cases for recurring coupled commitment differences smaller than rollback distance. No new operator until a compact causal interface recurs. [`hypothesis harvest`](../reports/2026-09-16-class5-cross-resource-hypothesis-harvest-001.md) |
+| 7 | **Cross-attempt basin overlap** | Conditional on a real allocation question, such as H2 finding structural stasis. Restore observer only with canonical action identities and participation checks. |
+| 8 | **Forced-chain traversal census** | Only after WS7/current profiling finds material dynamic cost in post-prune one-successor chains. |
 
-Partial-order / commuting-excursion replay is now nested under H1: run only when accepted-path/exact evidence nominates a specific order-flexibility question. Historical dirty negatives: [`solver-archaeology-register.md`](solver-archaeology-register.md). Cross-resource synthesis: [`hypothesis harvest`](../reports/2026-09-16-class5-cross-resource-hypothesis-harvest-001.md).
+Partial-order / commuting-excursion replay is nested under H1: use it only when exact/accepted-path evidence nominates a specific order-flexibility question. Historical dirty negatives live in [`solver-archaeology-register.md`](solver-archaeology-register.md).
 
 ## Secondary solve-harvest trigger
 
-Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased late repair demonstrated capability/placement evidence on `R02768` + `R02180`, but its frozen 60-row 7M economics A/B is **CLOSED NEGATIVE**: identical 17/60 solved sets, 100% downstream displacement, zero marginal gains, +6.5% work. Reopen requires a materially different placement/selector premise or changed allocation contract. [`result`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
+Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased late repair retains capability/placement evidence on `R02768` + `R02180`, but its frozen 60-row 7M economics A/B is **CLOSED NEGATIVE**: identical 17/60 solved sets, 100% downstream displacement, zero marginal gains, +6.5% work. Reopen only for a materially different placement/selector premise or allocation contract. [`result`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
 
 ## Deferred questions
 
-| Question | Reopen condition / boundary |
+| Question | Reopen condition |
 |---|---|
-| **Admissible-order retry repricing (`1.0 -> 0.18`)** | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work. |
-| **Richer static graph/placement selectors** | A recurring trace/first-loss descriptor appears; existing families first, whole-parent human/editor replication if needed. |
-| **Stability-aware portfolios / latent response dimensions** | Simpler analysis leaves stable unexplained structure or WS1 finds a compact held-out signal. |
-| **Repair restart near-miss allocation** | Fresh legal population/changed contract revives the replicated 64M near-miss signal. |
-| **Beam continuation / cross-policy handoff** | **Sizing gate active in WS2 premise generation.** Do not implement from the historical 4/28 nomination. Larger independent recurrence must first earn an offline legal state-selection rule, then a matched-work handoff. |
-| **Temporal/displaced-capability niches** | A boundary change or repeated unrelated losses reveal a stable basin. |
-| **Human/editor-envelope niches** | A mechanism needs human-shaped geometry or mechanics/topology omitted by procedural transfer. |
-| **Research infrastructure** | Add plumbing only after a measured recurring limitation. |
-| **Class-1 compact beam-menu exposure** | A materially different work/allocation contract creates real headroom. |
-| **Representation-sensitivity lineage survival** | After WS2 priority work, or on a clean current cliff, measure known-live lineage survival with geometry/interface controls. [`forensics`](../reports/2026-09-13-representation-sensitivity-fresh-forensics.md) |
-| **Counterfactual displaced-capability recurrence** | Multiple unrelated accepted changes lose the same phenotype; test whole parents before broadening. |
+| Admissible-order retry repricing | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work. |
+| Richer static graph/placement selectors | A recurring mechanism-specific trace/first-loss descriptor appears. |
+| Stability-aware portfolios / latent response dimensions | Simpler analysis leaves stable unexplained structure or WS1 finds a compact held-out signal. |
+| Repair restart near-miss allocation | Fresh legal population/changed contract revives the replicated 64M near-miss signal. |
+| Beam continuation / cross-policy handoff | **Card-E sizing is active.** Larger independent recurrence must first earn a legal offline state-selection rule, then a matched-work handoff. |
+| Temporal/displaced-capability niches | Boundary change or repeated unrelated losses reveal a stable basin. |
+| Human/editor-envelope niches | A mechanism needs human-shaped geometry/topology omitted by procedural transfer. |
+| Research infrastructure | Add plumbing only after a measured recurring limitation. |
+| Class-1 compact beam-menu exposure | A materially different work/allocation contract creates real headroom. |
+| Representation-sensitivity lineage survival | After WS2 priority work, or on a clean current cliff, measure known-live lineage survival with geometry/interface controls. |
+| Counterfactual displaced-capability recurrence | Multiple unrelated accepted changes lose the same phenotype; test whole parents before broadening. |
 
 ## Demoted forms
 
-Do not reopen unchanged without materially new evidence: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; whole C1 as transfer or C2 as untouched evidence; current connectivity/quota forms without changed premise; broad alternative-search frameworks before earned lineage diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency, generic detour libraries, bulk variants/human descendants, or full-corpus A/Bs for falsified ideas.
-
-For speed, "demoted" must not silently mean experimentally falsified; see [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
+Do not reopen unchanged without materially new evidence: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; whole C1 as transfer or C2 as untouched evidence; current connectivity/quota forms; broad alternative-search frameworks before earned lineage diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency; generic detour libraries; bulk variants/human descendants; full-corpus A/Bs for falsified ideas.
 
 Keep this file short: questions, boundaries, reopen conditions.
