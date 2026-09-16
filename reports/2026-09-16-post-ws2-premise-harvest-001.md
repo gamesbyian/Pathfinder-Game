@@ -1,7 +1,7 @@
 # Post-WS2 premise harvest 001
 
-> **Status:** concluded — one observer gate earned, two stale archaeology claims corrected
-> **Last evidence:** 2026-09-16 historical-descendant sweep against current `main`, including commits `9d0f876`, `5850b29`, `e34c40d`, `f460617`, and the current new-premise map
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-16 — historical-descendant sweep against current `main`, including commits `9d0f876`, `5850b29`, `e34c40d`, `f460617`, and the current new-premise map
 > **Decision:** reopen only the larger-sample Card-E continuation/handoff sizing measurement. Do not rerun the August full-pool categorical projection or September first-loss repair coverage; both were already completed. Keep basin-overlap as the next conditional observer after Card E, not a coequal active gate.
 > **Remaining gate:** freeze a materially larger independent first-loss population and repeat the already-defined pair of measurements: natural repair exposure plus repair operator reachability from the exact beam-cull-depth live state. No handoff implementation unless the reconstructable-but-unexposed phenomenon recurs at useful prevalence and a legal offline state-selection rule can be specified.
 > **Production authority:** none. This report opens research measurement only; production behavior remains the 2026-09-16 post-Class-4 boundary.

@@ -1,5 +1,10 @@
 # Post-WS2 premise-generation reconciliation
 
+> **Status:** superseded
+> **Last evidence:** 2026-09-16 — post-promotion residual refresh (531 C2 misses, Classes 1-5 = 17/30/23/71/390) and archaeology-stack reconciliation.
+> **Decision:** nominated the unfinished-looking August full-pool categorical projection as the strongest bounded premise-generation candidate. A later same-day sweep found it was already executed and closed negative, not unfinished; see the superseding report.
+> **Remaining gate:** none from this report. [`post-ws2-premise-harvest-001.md`](2026-09-16-post-ws2-premise-harvest-001.md) supersedes this nomination and is the current authority for premise-generation state.
+
 **Date:** 2026-09-16  
 **Scope:** bounded reconciliation after the Class-4 production promotion and Class-2 economics closeout.  
 **Authority:** `docs/solver-optimization-workstreams.md` remains the execution-priority authority; this report does not manufacture a new active gate.
