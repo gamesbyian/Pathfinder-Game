@@ -43,7 +43,7 @@ For a new structural selector premise, query controlled families first. Family f
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 dead-last retry PROMOTED (2026-09-16); Class-2 must-turn economics CLOSED NEGATIVE (2026-09-16); next is a post-promotion production-boundary refresh, then Class-5 open-path topological-signature gate. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | **None currently earned.** Post-promotion refresh is complete at 101/102 C1 + 1,169/1,700 C2; Class-5 natural open-path evidence is contrast-starved. Reopen only from a newly justified premise/changed allocation contract. [`premise reconciliation`](../reports/2026-09-16-post-ws2-premise-generation-reconciliation-001.md) |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; existing families first, human-parent contrasts when source transfer/clean intervention can change promotion. |
 | 6/7 | Repair reachability / architectural speed | **SUPPORTING** | No implementation-speed candidate is earned. When speed becomes active, algorithmic efficiency uses WS1/WS2/WS6/WS7 to preserve a retained solve boundary while reducing `workSpent`; implementation efficiency starts only from a fresh current-head profile. [`speed audit`](../reports/2026-09-15-solver-performance-evidence-lineage-audit-001.md) |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure; treat parents, not descendants, as independent human-family units. |
