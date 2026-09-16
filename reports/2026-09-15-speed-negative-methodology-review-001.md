@@ -1,171 +1,58 @@
 # Speed-negative methodology review (2026-09-15)
 
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-15 — historical negative claims reconciled against source treatments and the broader performance lineage audit.
+> **Decision:** preserve credible exact-form negatives while separating observer-only sizing, deferments, and behavior-changing policy treatments.
+> **Remaining gate:** none from this review; future speed work remains current-profile and reopen-condition gated.
+
 ## Purpose
 
-Hostile review of historical decisions that rejected solver speedups, broadly including pure implementation speed, reduced search work, traversal/materialization, allocation/layout, routing, pruning cost, transposition/dedup, and native/WASM migration.
+Hostile review of historical decisions that rejected solver speedups. The experiment layer is mostly credible; later summaries sometimes promoted narrower evidence into broader closure. The broader positive/negative reconciliation is [`2026-09-15-solver-performance-evidence-lineage-audit-001.md`](2026-09-15-solver-performance-evidence-lineage-audit-001.md).
 
-The main finding is not that the repo's performance experiments are generally bad. Most implemented, exact-form A/B negatives are credible. The weak layer is the later compression of narrow results into broader durable closure claims. Several entries currently mix an actually falsified implementation, a profile-led decision not to spend implementation effort, an architectural deferment without a prototype, a stale runtime-sensitive result, and observer-only opportunity sizing.
+## Disposition rules
 
-The broader positive/negative reconciliation now lives in [`2026-09-15-solver-performance-evidence-lineage-audit-001.md`](2026-09-15-solver-performance-evidence-lineage-audit-001.md).
+- **FALSIFIED_EXACT_FORM:** an implemented treatment lost under an adequate representative protocol.
+- **DEFERRED_LOW_VALUE:** profiling/opportunity sizing made implementation unattractive; no losing implementation is implied.
+- **ARCHITECTURALLY_DEFERRED:** no compact/economical treatment boundary is apparent; no empirical negative is implied.
+- **STALE_REPROFILE:** a historical result may not transfer after material runtime, bundler, representation, object-shape, search-core, or workload change.
+- **BEHAVIOR_CHANGE_NOT_PURE_SPEED:** treatment changes search ordering/extent and belongs in solver-policy economics.
 
-## Required disposition vocabulary
+A neighboring failed implementation may reduce value-of-information. It does not falsify a different unimplemented mechanism.
 
-Use the full performance vocabulary in [`../docs/solver-architectural-speed-opportunities.md`](../docs/solver-architectural-speed-opportunities.md). For negative/deferred work, the key distinctions are:
+## Corrected findings
 
-- **FALSIFIED_EXACT_FORM**: an actual treatment was implemented and lost under an adequate representative protocol.
-- **DEFERRED_LOW_VALUE**: profiling/opportunity sizing says expected value does not justify implementation now. This is not evidence that the candidate would lose.
-- **ARCHITECTURALLY_DEFERRED**: no compact/economical treatment boundary is currently apparent. This is not an empirical negative.
-- **STALE_REPROFILE**: an older result may no longer transfer after a material runtime, bundler, object-shape, representation, search-core, or workload change.
-- **BEHAVIOR_CHANGE_NOT_PURE_SPEED**: the treatment changes search decisions/order/extent and belongs in solver-policy economics rather than pure-speed evidence.
+| Family | Correct disposition | Evidence boundary |
+|---|---|---|
+| Plain/default scorer branch deletion | **FALSIFIED_EXACT_FORM** | Implemented with trace parity; no representative end-to-end gain. |
+| Mechanic-free fused apply/evaluate/undo | **FALSIFIED_EXACT_FORM** | Implemented, parity-clean, slower/flat on eligible populations. Does not test neighbor generation or batching. |
+| Fixed neighbor slots / `getNeighbors` | **DEFERRED_LOW_VALUE** | Cost share measured; no treatment implemented. Historical “superset” rationale was invalid. |
+| Batched candidate/object layout | **DEFERRED_LOW_VALUE** | Allocation share measured; batching/layout itself untested. |
+| Naive six-array densification | **FALSIFIED_EXACT_FORM** | Short sample improved but hard sample regressed. |
+| Beam replay/materialization | **DEFERRED_LOW_VALUE / STALE_REPROFILE** | Replay measured; no checkpoint/snapshot treatment ran. |
+| `UndoToken` pooling | **FALSIFIED_EXACT_FORM** | Implemented with parity; about 4.6% slower under tested JS/V8 shape. |
+| Beam quickselect | **DEFERRED_LOW_VALUE** | Sort profiled as small; quickselect not implemented. |
+| Exact beam transposition as speed reservoir | **DEFERRED_LOW_VALUE via strong opportunity sizing** | Sound-signature observer found ~0.019% exact duplicate slots; no production exact-dedup treatment A/B ran. |
+| Disable coarse beam merge | **BEHAVIOR_CHANGE_NOT_PURE_SPEED** | Corrected non-binding test produced real solve divergence. Merge is width/diversity policy, not exact equivalence. |
+| Broad DFS transposition | **DEFERRED_LOW_VALUE / STALE_REPROFILE** | Sound revisits generally modest; exact signature itself costly; no cheap table treatment ran. |
+| Custom numeric hash arena | **FALSIFIED_EXACT_FORM** | Tested arena did not beat native numeric `Map`; runtime/layout sensitive. |
+| Native/WASM broad candidate kernel | **ARCHITECTURALLY_DEFERRED** | Mutable state makes the boundary broad; no native prototype lost. |
+| Unconditional stronger MST tightening | **FALSIFIED_EXACT_FORM** | Broader evidence found fewer nodes but worse wall/capability economics. |
+| Connectivity-throttle / old routing forms | **BEHAVIOR_CHANGE_NOT_PURE_SPEED** | Historical treatments changed search policy and lost capability; they do not falsify adaptive allocation/routing as a class. |
 
-Do not call a candidate `FALSIFIED_EXACT_FORM` merely because an observer found a low opportunity ceiling or an adjacent/broader-looking optimization lost. Analogy and sizing may justify not spending engineering effort; they cannot manufacture an implementation result.
+Evidence anchors: [`scorer`](2026-08-26-current-head-specialized-scorer-pilot.md), [`fused kernel`](2026-08-27-fused-plain-candidate-kernel-pilot.md), [`getNeighbors`](2026-09-02-getneighbors-allocation-share-pilot.md), [`batching`](2026-09-02-batched-candidates-allocation-share-pilot.md), [`dense`](2026-08-26-dense-index-architecture-followup.md), [`July hot path`](2026-07-30-solver-hot-path-pure-speed.md), [`beam dedup`](2026-08-06-beam-state-dedup-sound-signature-audit.md), [`DFS`](2026-07-17-dfs-state-revisit-rate-transposition-premise.md), [`substrate`](2026-08-24-speed-substrate-static-audit.md), [`MST`](2026-07-30-mst-tightening-reverted-net-negative.md).
 
-## Findings by speed family
+## Measurement lessons
 
-### Scoring specialization
+**Binding wall caps:** the beam coarse-merge episode initially produced a null because both arms were wall-censored. Decision-bearing pure-speed work must pin deterministic search and keep wall deadlines non-binding.
 
-The 2026-08-26 plain/default/no-template fast path is a credible negative for that exact branch-deletion specialization. Search/node parity held and representative end-to-end timing did not improve. Three timing repetitions are thin for sub-1% effects in a noisy environment, so the result does not support the broader theory that scorer work is exhausted or that V8 has already optimized every useful form. Disposition: **FALSIFIED_EXACT_FORM** for branch deletion; other scorer mechanisms require a fresh measured cost/removal mechanism.
+**Selected populations:** the MST treatment initially looked attractive on unsolved-only rows, which could not reveal solved-to-unsolved regressions. Populations must expose both gains and losses relevant to the decision.
 
-Evidence: `reports/2026-08-26-current-head-specialized-scorer-pilot.md`.
+**Nodes are not compute:** MST tightening reduced nodes while increasing wall cost. Use `workSpent` for cross-technique algorithmic cost and wall/CPU for implementation cost.
 
-### Fused mechanic-free apply/evaluate/undo
+**Nested timers perturb hot loops:** prefer sampling profiles for discovery; quantify observer overhead before treating small timed sub-buckets as precise ceilings.
 
-The bounded mechanic-free fused JS kernel is a strong exact-form negative. It preserved decisions and regressed/failed to improve end-to-end time, with narrow eligibility. It does not falsify candidate-loop restructuring in general.
-
-Evidence: `reports/2026-08-27-fused-plain-candidate-kernel-pilot.md`.
-
-### Fixed neighbor slots / `getNeighbors`
-
-The September closeout overstated the evidence. The `getNeighbors` pilot measured a modest cost share and then relied partly on the fused candidate kernel as a "strict superset" negative. The cited fused-kernel experiment explicitly left neighbor generation untouched. Therefore the superset premise is false.
-
-Correct disposition: **DEFERRED_LOW_VALUE**, not experimentally closed. The repo knows the measured opportunity looked modest at that time; it does not know that a cheap fixed-slot implementation would lose.
-
-Evidence: `reports/2026-09-02-getneighbors-allocation-share-pilot.md`, `reports/2026-08-27-fused-plain-candidate-kernel-pilot.md`.
-
-### Batched candidates / candidate-object allocation
-
-The same lineage problem applies. The September report measured candidate-object construction/allocation share and used the negative fused kernel to support closure, but the fused pilot did not test batching/layout and explicitly left multi-candidate batching as a distinct untested mechanism.
-
-Correct disposition: **DEFERRED_LOW_VALUE**. A future current-head profile may nominate it, but it is not an empirical negative today.
-
-Evidence: `reports/2026-09-02-batched-candidates-allocation-share-pilot.md`, `reports/2026-08-27-fused-plain-candidate-kernel-pilot.md`.
-
-### Dense level-local indexing
-
-The evidence is mechanism-specific. Naively converting six remaining mechanic arrays to dense storage regressed the hard sample because repeated index arithmetic moved into hot readers. Disposition: **FALSIFIED_EXACT_FORM** for that naive multi-array conversion.
-
-The later `cellDenseIndex` removal must not be cited as a positive speed result. Its first published-short run was faster, but replication was slower by a similar amount; the source report explicitly concludes no reliable wall-time speedup was established. It landed for simpler representation/smaller working set with no hard-tail penalty.
-
-Evidence: `reports/2026-08-26-dense-index-architecture-followup.md`.
-
-### Beam materialization/replay
-
-Historical profiling found replay/materialization cost material enough to be nontrivial, but no checkpoint/snapshot implementation was tested. "Not the largest hotspot" is not a profitability test. A 12-16% cost center can still be worth optimizing if most of it is removable cheaply.
-
-Correct disposition: **DEFERRED_LOW_VALUE / STALE_REPROFILE**, not falsified. Reopen only if current-head replay is again material and a concrete snapshot/delta design has favorable expected overhead.
-
-Evidence: `reports/2026-08-27-beam-cost-breakdown-candidate-generation-dominant.md` and subsequent replay profiling.
-
-### `UndoToken` pooling
-
-This is a strong exact-form negative: implemented reusable token, parity/tests passed, and runtime was about 4.6% slower. Disposition: **FALSIFIED_EXACT_FORM** under the current JS/V8/object-shape regime. A material runtime or representation change plus a renewed hotspot can make it stale.
-
-Evidence: `reports/2026-07-30-solver-hot-path-pure-speed.md`.
-
-### Beam quickselect
-
-Quickselect was not implemented because profiling showed per-phase sort tiny relative to replay on the investigated hard beam case. That was sensible triage, not falsification.
-
-Correct disposition: **DEFERRED_LOW_VALUE**. Reprofile only if sort becomes material after other architecture changes.
-
-Evidence: `reports/2026-07-30-solver-hot-path-pure-speed.md`.
-
-### Beam exact duplicate elimination / transposition
-
-The final beam observer result is credible after correcting an initially invalid wall-capped experiment: true exact duplicates were negligible in the measured workload. The initial 2.5-second test incorrectly suggested no behavioral difference from disabling the shipped coarse merge because both arms were censored; a non-binding 120-second cap produced 19/75 divergences.
-
-However, the exact sound-signature work was an **observer/opportunity-sizing experiment**, not a production exact-dedup treatment A/B. Therefore the strict disposition for exact transposition as a speed reservoir is **DEFERRED_LOW_VALUE**, backed by a very low measured ceiling, not `FALSIFIED_EXACT_FORM`.
-
-Disabling the shipped coarse merge is a separate **BEHAVIOR_CHANGE_NOT_PURE_SPEED** treatment: it changed width/diversity management and cost real solves. Do not conflate coarse merge with exact equivalence.
-
-Evidence: `reports/2026-08-06-beam-state-dedup-sound-signature-audit.md`.
-
-### DFS transposition
-
-The DFS evidence is weaker: a small selected probe found mostly ~1-2% sound revisits with one 16% outlier, and exact signature construction materially perturbed throughput. No cheap production table was tested. A materially cheaper incremental fingerprint would be a different treatment.
-
-Correct disposition: **DEFERRED_LOW_VALUE / STALE_REPROFILE**, not broad falsification of DFS transposition.
-
-Evidence: `reports/2026-07-17-dfs-state-revisit-rate-transposition-premise.md`.
-
-### Custom numeric hash arena vs native `Map`
-
-The tested numeric arena did not beat native numeric `Map`. Disposition: **FALSIFIED_EXACT_FORM** under the measured Node/V8/runtime shape. Runtime/bundler/representation changes are explicit expiry triggers.
-
-### Native/WASM
-
-The current case is architectural, not empirical: mutable mechanic/path/search state makes a small boundary unattractive, so avoiding crossings becomes a search-core migration. That is a valid deferment but not a measured negative.
-
-Disposition: **ARCHITECTURALLY_DEFERRED**. Reopen when a compact hot kernel with a small stable state boundary appears and a disposable end-to-end prototype is cheap.
-
-Evidence: `reports/2026-08-24-speed-substrate-static-audit.md`.
-
-### Stronger surround/adjacent-turn MST bounds
-
-This is one of the strongest final negatives and one of the clearest historical methodology lessons. Initial targeted testing selected only unsolved levels, so regressions were impossible to observe by construction. Broader measurement then found lower node counts but sharply higher wall cost, and the relevant solved population produced more losses than gains. The final report correctly retained the structural premise while rejecting the unconditional treatment.
-
-Disposition: **FALSIFIED_EXACT_FORM** for unconditional per-candidate MST tightening. Throttled, gated, or genuinely cheaper implementations remain different treatments.
-
-Evidence: `reports/2026-07-30-mst-tightening-reverted-net-negative.md`.
-
-### Connectivity-throttle reductions
-
-Historical behavior-changing narrowing lost solves and was reverted. This rejects that schedule/treatment under that objective, not every adaptive connectivity schedule.
-
-Disposition: **BEHAVIOR_CHANGE_NOT_PURE_SPEED**; exact historical treatment negative, broader adaptive scheduling open only with a changed premise and current cost signal.
-
-### Automatic routing as a speed mechanism
-
-Old routing treatments were rejected on solve/capability outcomes. That does not establish that routing cannot reduce total work while preserving a chosen solve set. Workstream 1 remains a valid speed-adjacent mechanism if future selector work explicitly optimizes retained capability plus total work.
-
-Disposition: old selectors remain exact solver-policy negatives where documented; routing as a class is not speed-falsified.
-
-## Measurement weaknesses that must shape future speed work
-
-### Observer effect inside nested hot-loop timing
-
-As nested `hrtime` probes were added, the measured enclosing candidate-generation share itself moved noticeably. This is adequate for reconnaissance but not a precise opportunity ceiling for small sub-buckets. Prefer sampling/profile-first reconnaissance and use nested timers sparingly; when nested instrumentation is necessary, quantify instrumentation overhead.
-
-### Wall caps can erase treatment differences
-
-The August beam-dedup episode showed that a binding wall cap can make both arms look identical. Pure-speed comparisons need pinned deterministic work with non-binding deadlines.
-
-### Exact-form negative is not premise falsification
-
-The MST episode, dense-layout experiments, routing history, and fused-kernel history all show the same rule: a failed treatment does not erase a measured hotspot or causal premise. Future summaries must preserve premise, treatment, result, and inference scope separately.
-
-### Speed objective must include total compute, not only per-level geometric mean
-
-When a future speed campaign becomes active, report both typical per-level speed and **total CPU/work-weighted runtime over the retained solve population**. Many tiny levels can dominate a geometric mean while a small set of hard levels dominate actual compute. Stratify by active search mechanism/cost center as well as corpus identity.
-
-### Runtime/compiler results expire conditionally
-
-Performance conclusions about object pooling, native `Map`, inlining/module boundaries, allocation, and object shapes are contingent on Node/V8/bundling and representation. Do not rerun on a calendar. Mark these results stale only after a material runtime/bundler/search-core/representation change **and** a profile shows the hotspot is still relevant.
-
-## Canonical policy consequence
-
-The architectural-speed authority should:
-
-1. keep fixed neighbor slots and batched-candidate allocation **DEFERRED_LOW_VALUE**;
-2. keep beam materialization/replay and DFS transposition profile-gated/deferred;
-3. treat native/WASM as **ARCHITECTURALLY_DEFERRED**;
-4. preserve strong exact-form negatives: scorer branch deletion, fused mechanic-free candidate kernel, naive six-array densification, `UndoToken` pooling, tested numeric hash arena, and unconditional MST tightening;
-5. treat the exact beam-duplicate observer as strong opportunity sizing / **DEFERRED_LOW_VALUE**, not treatment falsification;
-6. keep coarse-merge removal separate as **BEHAVIOR_CHANGE_NOT_PURE_SPEED**;
-7. do not close a speed family by analogy to a different failed implementation;
-8. add explicit conditional-expiry rules for runtime/compiler/representation-sensitive negatives;
-9. optimize future speed work against retained capability plus representative latency and total compute/work over the retained population.
+**Runtime-sensitive evidence expires conditionally:** object pooling, native `Map`, inlining/module boundaries, allocation and object shapes depend on Node/V8/bundling and representation. Reprofile only after material change and only if the hotspot is still relevant.
 
 ## Queue consequence
 
-This review does **not** earn a new speed implementation and should not interrupt active WS2 gates. Workstreams 6/7 remain supporting. Implementation speed reopens only when a fresh current-head profile identifies a material end-to-end cost center and a concrete treatment differs materially from exact-form negatives. Algorithmic efficiency remains available through WS1/WS2/WS6/WS7 once the project explicitly changes objective from solve acquisition toward retained-boundary compute reduction.
+This review earns no speed implementation and does not interrupt WS2. Deferred candidates become eligible only when current profiling identifies material end-to-end cost and a concrete treatment has worthwhile expected removable value. Exact-form negatives remain closed to unchanged retests unless their evidence genuinely expires.
