@@ -49,11 +49,32 @@ For a new structural selector premise, query controlled families first. Family f
 |---:|---|---|---|
 | 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 dead-last canary/113-row allocation; Class-2 60-row economics A/B; Class-5 open-path topological-signature gate. |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; existing families first, human-parent contrasts when source transfer/clean intervention can change promotion. |
-| 6/7 | Repair reachability / architectural speed | **SUPPORTING** | No speed implementation currently earned. Reopen speed only from a fresh material current-head hotspot plus a concrete treatment whose expected removable end-to-end cost justifies implementation; exact-form negatives constrain unchanged treatments, while `getNeighbors`, batching, replay materialization, DFS transposition, quickselect, and compact native kernels remain profile-gated/deferred rather than falsely closed. |
+| 6/7 | Repair reachability / architectural speed | **SUPPORTING** | No implementation-speed candidate is currently earned. Algorithmic-efficiency work remains available through WS1/WS2/WS6/WS7; implementation efficiency reopens only from a fresh material current-head profile plus a concrete treatment with worthwhile removable end-to-end cost. |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure; treat parents, not descendants, as independent human-family units. |
 | 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not tail entitlement. |
 | 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for a changed recurring mechanism premise; controlled human-parent cliffs may supply recurrence/held-out prediction evidence. |
 | 5 | Exact/reference model | **ON DEMAND** | Offline truth for acquisition questions and controlled descendant boundaries. |
+
+## Eventual speed-campaign activation
+
+This is dormant while solve acquisition is the dominant objective. When a retained solve boundary is judged satisfactory, keep this file as the single queue and activate speed in two stages.
+
+### Stage A: algorithmic efficiency
+
+Freeze the retained solve set/boundary and reduce machine-independent work without silently sacrificing it.
+
+- **WS1 owns** action selection, ladder ordering, routing, and legal predictors of which action families can be skipped or delayed.
+- **WS2 owns** fixed-work repricing, winner economics, work before the winner, participation/dose, redundant earlier action cost, and displaced capability when retries/actions are reduced.
+- **WS6 owns** repair reachability/economics and dependency-conditioned evidence that later repair work is futile because of earlier commitments.
+- **WS7 owns** architecture-level machine-independent work removal such as a profile/observer-earned certified forced-chain traversal treatment and related traversal/search-structure economics.
+
+Preserved conditional questions such as cross-attempt basin overlap, forced-chain census, repair descent shadow, and resumability/handoff live in `solver-future-work.md`; they enter this queue only when their reopen condition is met. The same-policy portfolio continuation treatment is already closed null and must not be revived merely because continuation is cheaper than restart.
+
+### Stage B: implementation efficiency
+
+Only after the chosen logical-search boundary is stable enough to optimize, profile **current HEAD** on that retained workload. Then nominate measured CPU/wall cost centers. Do not promote historical hotspot rankings into a standing implementation queue. Representation, scorer/state plumbing, replay/materialization, allocation/layout, indexing, work-meter overhead, and native/WASM are candidate families only when current profiles earn them.
+
+Activation baseline should retain at least: retained solve set, total `workSpent`, total wall/CPU, work and wall/CPU before the winning action, winning action/config, redundant earlier action families, displaced capability, DFS/beam/repair contribution, participation/dose, replay/forced-chain/major-hotspot shares, representative short/hard latency, and total compute over the retained solve population. Many trivial levels must not wash out expensive hard-tail wins.
 
 ## Standing research rules
 
@@ -66,8 +87,8 @@ For a new structural selector premise, query controlled families first. Family f
 - Preserve **disposition** separately from **capability signature**. Historical gains intersecting current residual are nominations until reconciled.
 - A historical null/revert is not a premise verdict until participation, measurement integrity, and formulation are established.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
-- For speed research, distinguish **FALSIFIED_EXACT_FORM**, **DEFERRED_LOW_VALUE**, **ARCHITECTURALLY_DEFERRED**, and **STALE_REPROFILE**. Do not close an untested speed treatment by analogy to a neighboring failed implementation. Runtime/compiler-sensitive negatives expire only after a material environment/representation change plus a current profile that makes the hotspot relevant again. [`speed review`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
-- When speed becomes an active objective, report both representative per-level latency and total CPU/work-weighted runtime over the retained solve population; many trivial levels must not hide hard-tail compute economics.
+- For performance evidence, distinguish **SUPPORTED_EXACT_FORM**, **FALSIFIED_EXACT_FORM**, **DEFERRED_LOW_VALUE**, **ARCHITECTURALLY_DEFERRED**, **STALE_REPROFILE**, **EVIDENCE_INCOMPLETE**, and **BEHAVIOR_CHANGE_NOT_PURE_SPEED**. A profile/observer can constrain an opportunity without falsifying an unimplemented treatment. [`performance audit`](../reports/2026-09-15-solver-performance-evidence-lineage-audit-001.md)
+- Pure implementation-speed work pins deterministic search work, keeps wall deadlines non-binding, checks solve/search parity, uses interleaved repeated timing, and reports representative short/hard latency plus total compute over the retained solve population. Nested hot-loop timers are reconnaissance unless observer overhead is measured.
 - Hold out independent units and scale confirmation with tuning/selection pressure. For generated human/editor descendants, the parent family is the usual independent unit.
 - Reusable rows require matching protocol identity; nominal stage reach or dispatch is not participation. A comparable-work negative requires exact-action work/dose evidence. Timeout/errors are indeterminate, not ordinary failures.
 - Refresh residual-derived views after material promotion or provenance reinterpretation before reusing class counts.
