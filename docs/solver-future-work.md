@@ -5,6 +5,8 @@ Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-op
 
 Not a second queue: keep unexplained residue plus a reopen condition. Closed work needs a changed premise/treatment. Existing variants precede new generation; human/editor parents fill contrast gaps. Speed implementation requires fresh current-head profiling. [`speed authority`](solver-architectural-speed-opportunities.md)
 
+Level-blindness constrains provenance, not specificity. A generic cold procedure may derive instance-specific exact facts, proofs, conflicts, decompositions, canonical forms, or search plans from the current puzzle/current invocation. Cross-parent recurrence is required when claiming a reusable fixed descriptor, not automatically when the production candidate is a generic per-instance derivation procedure. [`boundary audit`](../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md)
+
 ## Audit-derived conditional work
 
 | Question | Reopen condition |
@@ -16,6 +18,8 @@ Not a second queue: keep unexplained residue plus a reopen condition. Closed wor
 | Class-3 exact-action dose | Triage needs comparable-work failure; atlas rows lack per-attempt `workSpent` |
 | Known-prefix oracle-set manifest | A decision-bearing prefix study needs path-set sensitivity |
 | Experiment producer maturation | A decision-bearing producer is touched or a recurring consumer gap appears |
+| Heuristic-to-theorem subdomain audit | After the frozen topology/H1 gates, or sooner if one of those exposes an exact relation already approximated by scoring/routing; inspect parity, flippers, must-cross interfaces, intersection arithmetic, topology and landmarks for identifiable sound subdomains before inventing another scalar heuristic |
+| Solve-local knowledge rediscovery | A handoff/cache/proof-store question becomes live; first measure whether distinct attempts/stages repeatedly recompute the same expensive sound facts or failure certificates |
 
 Frozen solve/work facts stand unless execution/participation was invalid.
 
@@ -30,17 +34,18 @@ Evidence-gated descendants. [`reconciliation`](../reports/2026-09-16-recovered-s
 | Question | Reopen condition |
 |---|---|
 | Bidirectional / backward abstraction | Compact sound residual/interface signature exists without recreating full path history |
-| Learned conflicts / nogoods | H1/H3 or DEAD-core diagnosis finds recurring compact DEAD relations across unrelated parents |
-| Bounded exact current-state production query | Small sound offline query answers an earned question; then bound runtime and prove economics |
+| Reusable learned conflicts / nogoods | H1/H3 or DEAD-core diagnosis finds recurring compact DEAD relations across unrelated parents |
+| Per-instance online conflict derivation | A bounded current-state proof/core procedure can derive sound solve-local conflicts cheaply enough to reject equivalent future failure; individual clauses/cores need not recur across levels, but the derivation/use procedure must show value across evaluation levels |
+| Bounded exact current-state production query / opportunistic exactification | Small sound offline query answers an earned question, or a tractability signal identifies residual states where a bounded complete method can finish/prove something cheaply; then bound runtime and prove economics. Do not require the exact answer/relation itself to recur across levels |
 | Choice-bearing macro-actions | Mechanism-specific premise shows repeated route structure beyond certified one-successor chains |
 | Complete-path LNS | Relaxed whole-path candidates show accepted solutions are locally reachable by structural surgery |
 | Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; rules remain hypothesis nominations |
 | Adversarial counterexample generation | Frozen hypothesis can be attacked by solver-belief vs exact-reality disagreement without construction leakage |
-| Cooperative blackboard portfolio | Two solver families expose reusable within-invocation artifacts with marginal value |
-| Per-level search-plan compilation | Different architectures show complementary legal niches predictable from current-input structure |
+| Cooperative blackboard portfolio | Two solver families expose reusable within-invocation artifacts with marginal value; proof-bearing solve-local facts are a distinct candidate from weak experience caches |
+| Per-level search-plan compilation | Different architectures show complementary legal niches predictable from current-input structure; the compiled plan may be unique to the level because the compiler, not the plan, is the generic production capability |
 | Declarative mechanic automata | Repeated earned descendants need a shared mechanic-state contract enough to justify rewrite-scale migration |
 
-H1 optionality/CEGAR remain H1 descendants. Conflict-driven search follows compact recurring DEAD cores. Current-state exact computation may be legal; historical labels/witnesses/identity are not runtime steering inputs.
+H1 optionality/CEGAR remain H1 descendants. Separate reusable cross-level relations from generic procedures that derive per-instance proofs/conflicts/orders. Current-state exact computation may be legal; historical labels/witnesses/identity are not runtime steering inputs. Mechanics-derived canonicalization/transposition/symmetry is likewise legal when it never performs historical lookup.
 
 ## Capability-acquisition frontier
 
@@ -55,13 +60,13 @@ Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smalle
 | Priority | Question | Boundary |
 |---:|---|---|
 | 1 | **Controlled open-path topological completion contrast** | **PREFLIGHT DESIGNED.** Run frozen same-board/same-endpoint human-parent forks; exact-label both prefixes; apply stop/advance rules. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) |
-| 2 | **H1 residual event-feasibility / completion regimes** | **PRESPEC FROZEN; strongest independent acquisition premise.** Test individual/joint realizability and nominated obligation orders. No feature sweep. [`prespec`](../reports/2026-09-16-h1-event-feasibility-prespec-001.md) |
-| 3 | **Minimal DEAD-core / minimum-relaxation diagnosis** | If 1/2 expose DEAD contrasts without a compact relation, relax tiny semantic commitment sets and seek recurring cores across independent parents |
+| 2 | **H1 residual event-feasibility / completion regimes** | **PRESPEC FROZEN; strongest independent acquisition premise.** Test individual/joint realizability and nominated obligation orders. No feature sweep. Keep its frozen recurring-relation advancement bar for a reusable descriptor, but also record whether exact per-instance answers are decision-useful enough to nominate a separate online-query economics pilot. [`prespec`](../reports/2026-09-16-h1-event-feasibility-prespec-001.md) |
+| 3 | **Minimal DEAD-core / minimum-relaxation diagnosis** | If 1/2 expose DEAD contrasts without a compact relation, relax tiny semantic commitment sets. Score separately: (a) recurring cores that can become reusable generic abstractions, and (b) per-instance core derivation useful enough for solve-local conflict learning even when individual cores differ across parents |
 | 4 | **H2 marginal information velocity / structural stasis** | Advance only if structural novelty per `workSpent` predicts marginal value beyond generic difficulty/work |
 | 5 | **H3 dependency-defined repair commitment interface** | Require recurring coupled commitments smaller than rollback distance |
 | 6 | **Behavioral-state quotient / residual-language probe** | Tiny exact-probe first; advance only if future behavior admits a materially coarser compact equivalence |
-| 7 | **Separator/decomposition census** | Census separators/interface width/mechanic leakage; build nothing unless low-complexity interfaces are common |
-| 8 | **Cross-attempt basin overlap** | Only for a real allocation question; restore canonical action identities and participation checks |
+| 7 | **Separator/decomposition census** | Census separators/interface width/mechanic leakage plus tractability/state-space indicators; build nothing unless low-complexity interfaces are common |
+| 8 | **Cross-attempt basin overlap** | Only for a real allocation question; restore canonical action identities and participation checks. If run, also measure repeated derivation of the same expensive failure/bound facts to size solve-local knowledge sharing |
 | 9 | **Forced-chain traversal census** | Only after WS7 profiling finds material cost in post-prune one-successor chains |
 
 Closed descendants: August categorical projection negative over 207 pools; Card-E found 17/156 reconstructable-but-unexposed but no descriptor family beating depth control. Partial-order/commuting replay remains nested under H1.
@@ -75,7 +80,7 @@ Class 1/2/3 has no legal no-contention batch. Must-turn-biased late repair's fro
 | Question | Reopen condition |
 |---|---|
 | Admissible-order retry repricing | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work |
-| Richer static graph/placement selectors | A recurring mechanism-specific trace/first-loss descriptor appears |
+| Richer static graph/placement selectors | A recurring mechanism-specific trace/first-loss descriptor appears, or exact structural preprocessing exposes a sound current-input property worth routing on |
 | Stability-aware portfolios / latent response dimensions | Simpler analysis leaves unexplained structure or WS1 finds a compact held-out signal |
 | Repair restart near-miss allocation | Fresh legal population/changed contract revives the 64M near-miss signal |
 | Beam continuation / cross-policy handoff | New descriptor family or changed within-pool selection problem; Card-E's tested descriptors are closed |
