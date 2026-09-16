@@ -25,13 +25,13 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Class 4: PROMOTED.** Dead-last portal coarse-state retry reproduced **86 referee-valid gains / 0 losses** on 113 allocation rows with byte-identical non-target stages and lower aggregate `workSpent`; default ON. Global merge remains closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
-**Class 5:** natural open-path exact labels were contrast-starved: 28 rows / 26 strata, zero LIVE/DEAD contrasts. A frozen same-board/same-endpoint human-parent topological-fork preflight now targets that missing contrast. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md)
+**Class 5:** natural open-path exact labels were contrast-starved (28 rows / 26 strata, zero LIVE/DEAD contrasts), so the frozen same-board/same-endpoint human-parent topological-fork preflight was executed. **PREMISE EARNED:** 4 exact-resolved LIVE/DEAD-discordant pairs across 2 independent human parents (`P00124`, `P00137`), all controls valid, phase-distinct by one full turn. This earns a microscope step, not production routing of raw phase coordinates. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) · [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 
 **Card-E:** sizing confirmed on 156 rows, with 17/156 reconstructable-but-unexposed. Its two tested state-selection descriptor families failed depth-controlled likelihood-ratio tests, so no handoff pilot follows. Reopen only with a new descriptor family or after the within-pool candidate-selection sub-problem changes materially. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
 **Current premise execution order:**
 
-1. run the frozen controlled open-path topology pilot;
+1. ~~run the frozen controlled open-path topology pilot~~ — done; earned a microscope step (derive the smallest generic descriptor from the 4 discordant cases; see `solver-future-work.md`), tracked separately from the items below;
 2. run the frozen H1 relational event-feasibility prespec;
 3. if exact-DEAD contrasts remain causally opaque, run minimal DEAD-core / minimum-relaxation diagnosis;
 4. keep H2 structural stasis and H3 dependency-defined repair bounded;
