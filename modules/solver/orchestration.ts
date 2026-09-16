@@ -231,8 +231,11 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
                 && !hasRepairConfig
                 && (level.mustPassTurnDirs?.size ?? 0) > 0
                 && cfg?.STRATEGY_REPAIR_LATE_MUSTTURN_BIASED_RETRY === true,
+            // `!cfg ||`: see the matching comment at this flag's other read site in
+            // orchestration-additive-retry-tiers.ts (a bare `cfg?.FLAG === true` reads a
+            // promoted-default-on flag as off whenever the caller omits `ablation` entirely).
             portalCoarseStateMergeDeadLastRetryEligible: level.portalMap.size > 0
-                && cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY === true,
+                && (!cfg || cfg.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY === true),
         });
         const runnable = new Map<string, boolean>(
             solverStagePlan

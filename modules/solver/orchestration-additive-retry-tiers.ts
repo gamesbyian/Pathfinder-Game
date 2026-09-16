@@ -881,15 +881,22 @@ export async function runAdditiveRetryTiers({
     // attempts have completed, runWholeLadderRetryTier reconstructs each search from its gate and
     // restores the caller configuration, and only the retry-local proxy enables the treatment.
     // Its node and work scopes start at entry, so no earlier stage donates or loses allocation.
+    // `!cfg ||` treats an entirely-absent ablation config as "production defaults" (matching every
+    // other default-on flag's read site, e.g. hard-prune-pipeline.ts's `!cfg || cfg.FLAG` for
+    // PRUNE_MC_NEIGHBOR_BUDGET): normalizeAblationConfig(null|undefined) short-circuits to `cfg =
+    // null` rather than a Proxy, so a bare `cfg?.FLAG === true` check would silently read a
+    // promoted-default-on flag as off for any caller that omits `ablation` entirely -- which is
+    // every real production caller (modules/input/solver-controller.ts, review-controller.ts) plus
+    // any research script that does not explicitly pass --enable-flags/--disable-flags.
     if (!result.solution
         && level.portalMap.size > 0
-        && cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY === true) {
+        && (!cfg || cfg.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY === true)) {
         const entryNodes = prep._metrics!.nodesExpanded;
         const retry = await runWholeLadderRetryTier({
             stageId: 'portal-coarse-state-merge-dead-last-retry',
             proxyOverrides: {
                 STRATEGY_PORTAL_COARSE_STATE_MERGE:
-                    cfg?.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT === true,
+                    !cfg || cfg.STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY_TREATMENT === true,
             },
             activeGates, mainConfigs, level, prep, yieldFn,
             runLadder: useInterleaving && activeGates.length > 1 ? runInterleavedAttempts : runGateSerialAttempts,
