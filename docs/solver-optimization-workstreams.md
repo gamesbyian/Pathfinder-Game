@@ -2,7 +2,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-14.
+> **Reconciled:** 2026-09-15.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Human/editor contrasts: [`human-parent-contrast-research.md`](human-parent-contrast-research.md).
@@ -25,13 +25,13 @@ The 2026-09-13 audits change evidence interpretation, not execution order. Corpu
 
 **Class 4:** corrected capability-memory union is 179 rows. Portal coarse-state merge nominates 113/123 class-4 rows; global merge remains closed after 12 losses. An 8-level freshness replay solved 8/8 referee-valid. The **default-off true-dead-last additive whole-ladder retry** and its synthetic-branch canary analyzer are implemented; the next action is the 8 freshness rows + `R01273` + non-portal controls canary. Only a pass earns the 113-row allocation test. If the additive form survives, human/editor portal parents are a useful transfer source because topology-composition v0.1 omits portals; do not insert that work before the current canary/allocation gate. [`freshness`](../reports/2026-09-13-class4-portal-coarse-freshness-replay-001.md), [`preflight`](../reports/2026-09-13-ws2-class2-class4-allocation-preflight-001.md)
 
-**Class 5:** prior generic capability forms and fixed-endpoint homotopy are closed as documented. The research-only lifted open-path observer passes its implementation fixtures, but its offline join to existing exact-labelled material found 28 rows in 26 endpoint/geometry/reference-controlled strata and **zero natural LIVE/DEAD contrasts**. This gate stops on contrast starvation; there is no separation claim and no runtime routing. Any tiny human-parent intervention needs a separately justified question and new exact labels. [`bounded closeout`](../reports/2026-09-15-ws2-bounded-preparation-closeout-001.md)
+**Class 5:** prior generic capability forms and fixed-endpoint homotopy are closed as documented. The research-only lifted open-path observer passes its implementation fixtures, but its offline join to existing exact-labelled material found 28 rows in 26 endpoint/geometry/reference-controlled strata and **zero natural LIVE/DEAD contrasts**. The controlled-acquisition preflight is now frozen: when Class 5 reaches execution, use a tiny human/editor-parent pilot to construct same-board, same-endpoint, equal-length topological-fork prefix pairs, freeze them before outcomes, exact-label both members, and stop/advance under the preregistered thresholds. This remains third behind the live Class-4 and Class-2 gates. [`bounded closeout`](../reports/2026-09-15-ws2-bounded-preparation-closeout-001.md), [`acquisition preflight`](solver-class5-controlled-topology-acquisition-preflight.md)
 
-**Next WS2 gates, in parallel:**
+**Next WS2 gates, in order:**
 
 1. **Class-4 allocation:** run/pass the frozen canary before the 113-row population.
 2. **Class-2 economics:** the deterministic participant-only cohort materializer and paired economics analyzer are implemented. Materialize/freeze the 60-row cohort, then run matched control/treatment at 7M `late-repair-must-turn-biased-retry`; require target-stage participation, gains/losses, downstream displacement, incremental `workSpent`, wall cost, and symmetric censoring.
-3. **Class-5 acquisition:** existing exact labels are contrast-starved under endpoint/geometry/reference controls. Keep the observer offline; only a separately justified tiny human-parent exact-label intervention can reopen the gate.
+3. **Class-5 acquisition:** execute the frozen tiny controlled-topology pilot only after the first two gates. Exact-label both members of every frozen pair; do not treat preserved witnesses as LIVE adjudication or expand automatically after a negative/starved pilot.
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, and goal-attraction-disabled retry are **PROMOTED**. Portal coarse-state **global merge** and repair late-probe `7->6` seeds are **CLOSED NEGATIVE**. Portal coarse-state **dead-last additive exposure** is open. Solve-local connectivity reason reuse is **CLOSED IN CURRENT POPULATION**. Fixed-endpoint homotopy winding is **CLOSED COVERAGE-NULL**. Admissible-order retry repricing is **DEFERRED**. Late must-turn-biased repair is **OPEN DEFAULT-OFF / INTEGRATION PROVEN**, pending economics. [`ledger`](solver-opt-in-experiment-ledger.md)
 
@@ -47,7 +47,7 @@ For a new structural selector premise, query controlled families first. Family f
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 dead-last canary/113-row allocation; Class-2 60-row economics A/B; Class-5 open-path topological-signature gate. |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Class-4 dead-last canary/113-row allocation; Class-2 60-row economics A/B; then frozen Class-5 controlled-topology acquisition pilot. |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen for a new legal signal/relation; existing families first, human-parent contrasts when source transfer/clean intervention can change promotion. |
 | 6/7 | Repair reachability / architectural speed | **SUPPORTING** | Reopen for an earned mechanism/current cost signal; human-parent contrasts can isolate repair commitments, not manufacture a speed premise. |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure; treat parents, not descendants, as independent human-family units. |
