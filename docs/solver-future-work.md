@@ -25,6 +25,19 @@ Frozen solve/work facts stand unless execution/participation was invalid.
 
 Not current queue items. Reopen only after current profiling shows material cost and a concrete treatment has favorable expected value: neighbor/candidate allocation, replay/DFS transposition/cull selection, compact native/WASM kernels, or runtime-sensitive retests after a material environment/representation change. Evaluate representative latency plus total CPU/work over the retained solve population. [`methodology`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
 
+## Recovered architectural descendants
+
+These are not independent queue items. They survive only behind evidence gates exposed by current premise work. [`reconciliation`](../reports/2026-09-16-recovered-solver-avenues-reconciliation-001.md)
+
+| Question | Reopen condition |
+|---|---|
+| Bidirectional / meet-in-the-middle completion rendezvous | H1 or another observer first yields a compact sound residual/interface signature that can define forward/backward compatibility without recreating full path history. |
+| Learned relational conflicts / nogoods | H1/H3 first show a recurring compact DEAD relation across unrelated levels, with a sound current-state interpretation and plausible lookup-vs-avoided-work economics. |
+| Bounded exact current-state residual query in production | An already-earned offline question is usefully answered by a small sound query using only current level/state data; then bound runtime and prove end-to-end economics before production use. Exact labels/known solutions remain offline. |
+| Choice-bearing corridor / event-to-event macro-actions | A mechanism-specific premise shows repeated useful route structure beyond certified one-successor chains. Evaluate as search-policy behavior, not pure speed. |
+
+Obligation-first planning remains nested under H1's specific event/order tests. Certified forced-chain traversal already has its own census gate below. Card-E continuation/handoff sizing remains the active handoff premise rather than a new architecture project.
+
 ## Capability-acquisition frontier
 
 Post-2026-09-16 Class-4 promotion boundary: **390 Class-5** misses with no known admissible/T1 candidate and **71 Class-4** historical-candidate misses; residual 531, Classes 1-5 = 17/30/23/71/390. Refresh after future promotions. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
