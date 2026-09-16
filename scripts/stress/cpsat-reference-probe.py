@@ -473,6 +473,7 @@ for c in grid:
 # runs, and a portal destination can never itself be a flipper cell -- one-object-per-cell), so
 # `horiz[t-1]`/`horiz[t]` (already defined above) are exactly the right entry/exit-axis literals;
 # no new move-typing machinery is needed the way portal support required `is_jump`/`is_normal`.
+before_pairs = {}   # (i, j) -> the b literal below, kept for --pin's flip-order event (E-FLIP-ORDER)
 for i, (c_i, ax_i) in enumerate([] if (core_only or no_flippers) else flip_filters):
     if c_i not in idx: continue
     entry_time_i = sum(t * x[t][c_i] for t in range(N))
@@ -487,6 +488,7 @@ for i, (c_i, ax_i) in enumerate([] if (core_only or no_flippers) else flip_filte
         m.AddBoolAnd([y[c_i], y[c_j], lt]).OnlyEnforceIf(b)
         m.AddBoolOr([y[c_i].Not(), y[c_j].Not(), lt.Not()]).OnlyEnforceIf(b.Not())
         before.append(b)
+        before_pairs[(i, j)] = b
     rank = sum(before) if before else 0
     half = m.NewIntVar(0, max(1, len(before)), f'fliphalf_{i}')
     parity = m.NewBoolVar(f'flipparity_{i}')   # rank is odd
@@ -566,6 +568,80 @@ if check_witness:
     # A witness shorter than the padded horizon (it used fewer than P jumps) legitimately pads out
     # to goal for the remaining slots -- that's the absorbing rule doing its job, not pinned here;
     # only pin the witness's own real nodes.
+
+# --pin=<json> (added for the H1 event-feasibility prespec,
+# reports/2026-09-16-h1-event-feasibility-prespec-001.md): adds ONE extra boolean constraint to
+# the already-built model, expressed only in terms of variables the model already constructs
+# above (x[t][c], is_jump[t], the flipper before_ij literals) -- this is deliberately not a new
+# model, just an additional query on top of the existing full-mechanic feasibility encoding. Every
+# event type below reuses an existing internal variable directly or via one small aggregation
+# (e.g. "does some timestep t have this cell-to-cell transition" from x[t-1][.]/x[t][.]); an event
+# type that needed a genuinely new derived variable (E-ORDER's cross-mechanic "satisfying
+# timestep" for an unnominated pair) is intentionally left unimplemented per the prespec's own
+# escape valve rather than motivating a parallel model -- E-ORDER is not needed until an accepted-
+# path artifact nominates a specific pair (prespec: "stays inactive absent such a nomination").
+pin_arg = next((a for a in sys.argv if a.startswith('--pin=')), None)
+if pin_arg:
+    pin = json.loads(pin_arg.split('=', 1)[1])
+    ptype = pin['type']
+    want = bool(pin.get('value', True))
+
+    def _cell(coord):
+        return (coord[0] - 1, coord[1] - 1)
+
+    def _pin_transition_exists(entry_c, target_c, tag):
+        # OR_t (x[t-1][entry_c] AND x[t][target_c]) -- E-CROSS-VIA / E-PASS-VIA's shared shape.
+        if entry_c not in idx or target_c not in idx:
+            print(f'{level_id}: pin cell not in model'); sys.exit(5)
+        lits = []
+        for t in range(1, N):
+            lit = m.NewBoolVar(f'pin_{tag}_{t}')
+            m.AddBoolAnd([x[t - 1][entry_c], x[t][target_c]]).OnlyEnforceIf(lit)
+            m.AddBoolOr([x[t - 1][entry_c].Not(), x[t][target_c].Not()]).OnlyEnforceIf(lit.Not())
+            lits.append(lit)
+        via = m.NewBoolVar(f'pin_{tag}_any')
+        if lits:
+            m.AddMaxEquality(via, lits)
+        else:
+            m.Add(via == 0)
+        return via
+
+    if ptype == 'cross-via':
+        axis_c, entry_c = _cell(pin['axis']), _cell(pin['entry'])
+        via = _pin_transition_exists(entry_c, axis_c, 'cv')
+        m.Add(via == (1 if want else 0))
+    elif ptype == 'pass-via':
+        cell_c, entry_c = _cell(pin['cell']), _cell(pin['entry'])
+        via = _pin_transition_exists(entry_c, cell_c, 'pv')
+        m.Add(via == (1 if want else 0))
+    elif ptype == 'flip-order':
+        key = (pin['i'], pin['j'])
+        if key not in before_pairs:
+            print(f'{level_id}: pin flip-order pair {key} not defined (need >=2 pending flippers)'); sys.exit(5)
+        m.Add(before_pairs[key] == (1 if want else 0))
+    elif ptype == 'portal-pair':
+        pair_id = pin['pairId']
+        if not (0 <= pair_id < len(portal_pairs)):
+            print(f'{level_id}: pin portal pair {pair_id} out of range'); sys.exit(5)
+        a, b = portal_pairs[pair_id]
+        lits = []
+        for t in range(1, N):
+            prev_occ = [x[t - 1][c] for c in (a, b) if c in idx]
+            if not prev_occ: continue
+            any_prev = m.NewBoolVar(f'pin_pp_prev_{t}')
+            m.AddMaxEquality(any_prev, prev_occ)
+            lit = m.NewBoolVar(f'pin_pp_{t}')
+            m.AddBoolAnd([is_jump[t], any_prev]).OnlyEnforceIf(lit)
+            m.AddBoolOr([is_jump[t].Not(), any_prev.Not()]).OnlyEnforceIf(lit.Not())
+            lits.append(lit)
+        uses_pair = m.NewBoolVar('pin_uses_pair')
+        if lits:
+            m.AddMaxEquality(uses_pair, lits)
+        else:
+            m.Add(uses_pair == 0)
+        m.Add(uses_pair == (1 if want else 0))
+    else:
+        print(f'{level_id}: unknown --pin type {ptype!r}'); sys.exit(2)
 
 solver = cp_model.CpSolver()
 solver.parameters.max_time_in_seconds = time_limit
