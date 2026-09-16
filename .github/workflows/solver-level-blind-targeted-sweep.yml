@@ -119,23 +119,11 @@ on:
         required: false
         default: ''
       lifecycle_telemetry:
-        description: 'If true, passes --lifecycle-telemetry so results carry per-stage reach/participation/work (stageLifecycle). Blank/false preserves existing behavior for diagnostic dispatches that do not need it.'
+        description: 'If true, passes --lifecycle-telemetry and --attempt-budget-telemetry together, so results carry per-stage reach/participation/work (stageLifecycle) and each attempt records its resolved budget/ceiling. Blank/false preserves existing behavior for diagnostic dispatches that do not need it. (Kept as one flag, not two, to stay under GitHub Actions'' 25-workflow_dispatch-input ceiling -- see experiment_provenance below for the same reasoning.)'
         required: false
         default: 'false'
-      attempt_budget_telemetry:
-        description: 'If true, passes --attempt-budget-telemetry so each attempt record carries its resolved budget/ceiling. Blank/false preserves existing behavior.'
-        required: false
-        default: 'false'
-      experiment_id:
-        description: 'Optional --experiment-id to stamp onto the resolved arm identity (summary.experimentId), for decision-bearing A/Bs that join results through armIdentityFromSweep. Blank preserves existing behavior.'
-        required: false
-        default: ''
-      research_question:
-        description: 'Optional --research-question to stamp onto the resolved arm identity (summary.researchQuestion). Blank preserves existing behavior.'
-        required: false
-        default: ''
-      preflight:
-        description: 'Optional --preflight (report path) to stamp onto the resolved arm identity (summary.preflight). Blank preserves existing behavior.'
+      experiment_provenance:
+        description: 'Optional resolved-identity stamp for decision-bearing A/Bs that join results through armIdentityFromSweep, as "experiment_id|research_question|preflight" (pipe-separated; trailing segments may be blank, e.g. "my-id|WS2-FOO|"). Combined into one input, rather than three, to stay under GitHub Actions'' 25-workflow_dispatch-input ceiling. Blank preserves existing behavior (all three CLI flags omitted).'
         required: false
         default: ''
       concurrency_suffix:
@@ -280,11 +268,13 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
-          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
-          [ "${{ inputs.attempt_budget_telemetry }}" = "true" ] && extra+=("--attempt-budget-telemetry")
-          [ -n "${{ inputs.experiment_id }}" ] && extra+=("--experiment-id=${{ inputs.experiment_id }}")
-          [ -n "${{ inputs.research_question }}" ] && extra+=("--research-question=${{ inputs.research_question }}")
-          [ -n "${{ inputs.preflight }}" ] && extra+=("--preflight=${{ inputs.preflight }}")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry" "--attempt-budget-telemetry")
+          if [ -n "${{ inputs.experiment_provenance }}" ]; then
+            IFS='|' read -r prov_experiment_id prov_research_question prov_preflight <<< "${{ inputs.experiment_provenance }}"
+            [ -n "$prov_experiment_id" ] && extra+=("--experiment-id=${prov_experiment_id}")
+            [ -n "$prov_research_question" ] && extra+=("--research-question=${prov_research_question}")
+            [ -n "$prov_preflight" ] && extra+=("--preflight=${prov_preflight}")
+          fi
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
@@ -384,11 +374,13 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
-          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
-          [ "${{ inputs.attempt_budget_telemetry }}" = "true" ] && extra+=("--attempt-budget-telemetry")
-          [ -n "${{ inputs.experiment_id }}" ] && extra+=("--experiment-id=${{ inputs.experiment_id }}")
-          [ -n "${{ inputs.research_question }}" ] && extra+=("--research-question=${{ inputs.research_question }}")
-          [ -n "${{ inputs.preflight }}" ] && extra+=("--preflight=${{ inputs.preflight }}")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry" "--attempt-budget-telemetry")
+          if [ -n "${{ inputs.experiment_provenance }}" ]; then
+            IFS='|' read -r prov_experiment_id prov_research_question prov_preflight <<< "${{ inputs.experiment_provenance }}"
+            [ -n "$prov_experiment_id" ] && extra+=("--experiment-id=${prov_experiment_id}")
+            [ -n "$prov_research_question" ] && extra+=("--research-question=${prov_research_question}")
+            [ -n "$prov_preflight" ] && extra+=("--preflight=${prov_preflight}")
+          fi
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
@@ -690,11 +682,13 @@ jobs:
           [ -n "${{ inputs.disable_flags }}" ] && extra+=("--disable-flags=${{ inputs.disable_flags }}")
           [ -n "${{ inputs.admissible_order_non_default_retry_budget_fraction }}" ] && extra+=("--admissible-order-non-default-retry-budget-fraction=${{ inputs.admissible_order_non_default_retry_budget_fraction }}")
           [ -n "${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}" ] && extra+=("--repair-late-probe-multi-seed-retry-seed-count=${{ inputs.repair_late_probe_multi_seed_retry_seed_count }}")
-          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry")
-          [ "${{ inputs.attempt_budget_telemetry }}" = "true" ] && extra+=("--attempt-budget-telemetry")
-          [ -n "${{ inputs.experiment_id }}" ] && extra+=("--experiment-id=${{ inputs.experiment_id }}")
-          [ -n "${{ inputs.research_question }}" ] && extra+=("--research-question=${{ inputs.research_question }}")
-          [ -n "${{ inputs.preflight }}" ] && extra+=("--preflight=${{ inputs.preflight }}")
+          [ "${{ inputs.lifecycle_telemetry }}" = "true" ] && extra+=("--lifecycle-telemetry" "--attempt-budget-telemetry")
+          if [ -n "${{ inputs.experiment_provenance }}" ]; then
+            IFS='|' read -r prov_experiment_id prov_research_question prov_preflight <<< "${{ inputs.experiment_provenance }}"
+            [ -n "$prov_experiment_id" ] && extra+=("--experiment-id=${prov_experiment_id}")
+            [ -n "$prov_research_question" ] && extra+=("--research-question=${prov_research_question}")
+            [ -n "$prov_preflight" ] && extra+=("--preflight=${prov_preflight}")
+          fi
           work="${{ inputs.work_budget }}"
           [ -z "$work" ] && work=$(( ${{ inputs.node_budget }} * 134 / 100 ))
           strict=()
