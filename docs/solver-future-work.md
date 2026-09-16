@@ -20,6 +20,8 @@ Level-blindness constrains provenance, not specificity. A generic cold procedure
 | Experiment producer maturation | A decision-bearing producer is touched or a recurring consumer gap appears |
 | Heuristic-to-theorem subdomain audit | After the earned topology microscope/H1 gates, or sooner if one exposes an exact relation already approximated by scoring/routing; inspect parity, flippers, must-cross interfaces, intersection arithmetic, topology and landmarks for identifiable sound subdomains before inventing another scalar heuristic |
 | Solve-local knowledge rediscovery | A handoff/cache/proof-store question becomes live; first measure whether distinct attempts/stages repeatedly recompute the same expensive sound facts or failure certificates |
+| Mechanics-derived canonicalization / symmetry / transposition | A sound current-input equivalence or canonicalization relation is identifiable and telemetry shows materially repeated equivalent states/work within one solve; advance only if the key never joins historical identity/family outcomes and the avoided work repays canonicalization cost |
+| Structural graph preprocessing | H1/topology/separator evidence exposes a sound current-input graph property with enough prevalence to affect search; first measure construction cost, reuse within the invocation, and downstream pruning/routing value before adding persistent preprocessing |
 
 Frozen solve/work facts stand unless execution/participation was invalid.
 
