@@ -11,7 +11,7 @@ For speed, current-head profiling must earn implementation. [`speed authority`](
 
 | Question | Reopen condition |
 |---|---|
-| Profile calibration / profile-vs-solvability | A live decision needs profile evidence; use schema-v3 support-aware prospective populations |
+| Profile calibration / profile-vs-solvability | A live decision needs profile evidence. Use schema-v3 supported axes and prospective populations; for calibration preserve provenance-dependency strata, ordinary structural-similarity comparison, comparable-axis coverage, and unrelated held-out-family validation. Old nearest-profile identities remain unusable |
 | Independent transfer for omitted mechanics | A broad claim is blocked by omitted mechanics; use the smallest independent construction or locked human/editor parents |
 | `portfolio-18-flat-2m` old-generator nomination | Static allocation resumes and cheap independent evidence can test the lower-work tie |
 | Accepted-path representative sensitivity | A live mechanism depends on one path-set view; run the frozen Audit-3 cohort |
@@ -81,9 +81,10 @@ Class 1/2/3 has no already-legal no-contention batch. Must-turn-biased late repa
 | Stability-aware portfolios / latent response dimensions | Simpler analysis leaves unexplained structure or WS1 finds a compact held-out signal |
 | Repair restart near-miss allocation | Fresh legal population/changed contract revives the 64M near-miss signal |
 | Beam continuation / cross-policy handoff | New descriptor family or changed within-pool selection problem; Card-E's tested descriptors are closed |
-| Temporal/displaced-capability niches | Boundary change or repeated unrelated losses reveal a stable basin |
-| Human/editor-envelope niches | A mechanism needs human-shaped geometry/topology omitted by procedural transfer |
-| Research infrastructure | Add plumbing only after a measured recurring limitation |
+| Non-portal coarse-state-merge recurrence | Card-E's frozen screen found 44/200 rows losing known-live support via `coarse-state-merge-removed`, concentrated outside portal levels. Treat as a WS4 reopening nomination only; investigate when a mechanism-specific question can distinguish this recurrence from ordinary difficulty. [`Card-E`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md) |
+| Temporal/displaced-capability niches | Boundary change or repeated unrelated losses reveal a stable basin; if unrelated accepted changes repeatedly lose the same phenotype, test whole parents before broadening |
+| Human/editor-envelope niches | A mechanism needs human-shaped geometry/topology omitted by procedural transfer; preserve source/selection role rather than treating an envelope label as independence |
+| Research infrastructure | Add plumbing only after a measured recurring limitation; prefer extending existing helpers and require bounded decision value |
 | Class-1 compact beam-menu exposure | A materially different work/allocation contract creates headroom |
 | Representation-sensitivity lineage survival | After WS2 priority work, measure known-live lineage survival with geometry/interface controls |
 
