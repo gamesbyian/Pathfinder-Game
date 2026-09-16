@@ -24,6 +24,16 @@ A useful shorthand is: **specific to this level is legal; known about this level
 - generic static/dynamic policy learned offline, provided its production inputs are legal current-level/current-solve features;
 - bounded exact/current-state computation, provided its inputs are legal and its soundness/cost contract is appropriate to how the result is consumed.
 
+## Cache and proof-store vocabulary
+
+Keep three runtime/storage categories distinct:
+
+1. **Persistent historical per-level state:** caches, checkpoints, continuations, learned clauses, witnesses, winners, or other exact-level artifacts surviving from an earlier invocation. Forbidden for cold capability steering.
+2. **Current-invocation experience caches:** solve-local memoized observations or search experience derived only from legal current inputs. Level-blind legal, but semantically weak unless the cache key and consumer justify what may safely be reused.
+3. **Current-invocation proof-bearing facts/conflicts:** sound bounds, impossibility facts, exact subproblem answers, canonical equivalences, or learned conflicts derived during the solve. Level-blind legal when their derivation and reuse are sound; promotion still depends on construction/reuse cost and end-to-end value.
+
+“Per-level cache” should therefore be read as shorthand only for **persistent historical exact-level state**, never as a categorical ban on solve-local memoization.
+
 ## Forbidden exact-level inputs
 
 A capability solve must not use:
