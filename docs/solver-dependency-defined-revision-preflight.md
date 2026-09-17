@@ -1,8 +1,9 @@
 # Dependency-defined revision preflight
 
-> **Status:** prepared premise-acquisition gate.
+> **Status:** first bounded observer EXECUTED / INCONCLUSIVE (population-limited). See [`result`](../reports/2026-09-17-lane-e-repair-retreat-commitment-probe-result-001.md).
 > **Purpose:** determine whether hard repair/search failures are controlled by a compact set of coupled earlier commitments rather than by geometric rollback distance or generic restart difficulty.
 > **Priority:** owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
+> **First observer result:** CP-SAT bisection on B2's only 2 qualifying same-parent dead/live pairs (sharing a literal common prefix) cleanly locates the exact point of no return in both, but both land 1-2 moves from the trajectory's own end -- a regime where rollback distance and a compact commitment predict the same thing, so neither case discriminates the premise. Critical move in both cases was a plain, non-mechanic-obligation move. Population (B2's common-prefix pairs) exhausted at n=2; needs the same blocked sibling constructor as Lanes B/D1/G2 to expand.
 
 ## Premise
 
