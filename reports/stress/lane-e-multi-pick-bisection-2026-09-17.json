@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-09-17T14:59:41.356Z",
+  "evidenceRole": "Lane E first bounded observer -- dependency-defined causal revision, within-trajectory CP-SAT bisection for the exact point of no return",
+  "corpus": "data/stress/stress-levels-random.json",
+  "b2Source": "reports/stress/class5-multi-pick-lane-e-input-2026-09-17.json",
+  "minCommonPrefix": 4,
+  "timeLimit": 60,
+  "solverRef": "2056e017827313fa46cf886b4c63c23a4e132cc2",
+  "method": "reuses scripts/stress/repair-retreat-binary-search.mjs's monotone --prefix CP-SAT bisection technique (reports/2026-08-12-repair-retreat-cpsat.md) against B2's exact-labelled dead states that share a literal common prefix with a same-parent live sibling",
+  "candidateCount": 4,
+  "results": [
+    {
+      "levelId": "R03147",
+      "role": "R03147:multi-pick-218",
+      "eliteLength": 11,
+      "naiveFirstDivergence": 4,
+      "divergences": [
+        {
+          "role": "R03147:multi-pick-262",
+          "commonPrefix": 4
+        }
+      ],
+      "pointOfNoReturn": {
+        "feasibleDepth": 3,
+        "infeasibleDepth": 4
+      },
+      "ropeBeyondNaiveDivergence": 0,
+      "rollbackDistanceFromEnd": 7,
+      "criticalMove": {
+        "family": "plain",
+        "intsAfterMove": 0,
+        "requiredLength": 105,
+        "requiredIntersections": 7
+      }
+    },
+    {
+      "levelId": "R03147",
+      "role": "R03147:multi-pick-975",
+      "eliteLength": 11,
+      "naiveFirstDivergence": 4,
+      "divergences": [
+        {
+          "role": "R03147:multi-pick-112",
+          "commonPrefix": 4
+        }
+      ],
+      "pointOfNoReturn": {
+        "feasibleDepth": 3,
+        "infeasibleDepth": 4
+      },
+      "ropeBeyondNaiveDivergence": 0,
+      "rollbackDistanceFromEnd": 7,
+      "criticalMove": {
+        "family": "plain",
+        "intsAfterMove": 0,
+        "requiredLength": 105,
+        "requiredIntersections": 7
+      }
+    },
+    {
+      "levelId": "R03147",
+      "role": "R03147:multi-pick-888",
+      "eliteLength": 11,
+      "naiveFirstDivergence": 4,
+      "divergences": [
+        {
+          "role": "R03147:multi-pick-112",
+          "commonPrefix": 4
+        }
+      ],
+      "pointOfNoReturn": {
+        "feasibleDepth": 3,
+        "infeasibleDepth": 4
+      },
+      "ropeBeyondNaiveDivergence": 0,
+      "rollbackDistanceFromEnd": 7,
+      "criticalMove": {
+        "family": "plain",
+        "intsAfterMove": 0,
+        "requiredLength": 105,
+        "requiredIntersections": 7
+      }
+    },
+    {
+      "levelId": "R03147",
+      "role": "R03147:multi-pick-892",
+      "eliteLength": 11,
+      "naiveFirstDivergence": 4,
+      "divergences": [
+        {
+          "role": "R03147:multi-pick-112",
+          "commonPrefix": 4
+        }
+      ],
+      "pointOfNoReturn": {
+        "feasibleDepth": 3,
+        "infeasibleDepth": 4
+      },
+      "ropeBeyondNaiveDivergence": 0,
+      "rollbackDistanceFromEnd": 7,
+      "criticalMove": {
+        "family": "plain",
+        "intsAfterMove": 0,
+        "requiredLength": 105,
+        "requiredIntersections": 7
+      }
+    }
+  ]
+}
