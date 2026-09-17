@@ -2,7 +2,7 @@
 # Solver optimization workstreams
 
 > **Status:** canonical live authority for solver research priority, state, and next gates.
-> **Reconciled:** 2026-09-16.
+> **Reconciled:** 2026-09-17.
 > **Scope:** improve cold level-blind solve count and/or machine-independent work while protecting correctness/generalization.
 
 Method: [`solver-research-operating-model.md`](solver-research-operating-model.md). Scheduling: [`solver-scheduling-policy.md`](solver-scheduling-policy.md). Evidence: [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md). Capability memory: [`solver-capability-memory.md`](solver-capability-memory.md). Human/editor contrasts: [`human-parent-contrast-research.md`](human-parent-contrast-research.md). Speed: [`solver-architectural-speed-opportunities.md`](solver-architectural-speed-opportunities.md).
@@ -21,7 +21,7 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Production boundary:** run `35066677597` is **101/102 C1 + 1,169/1,700 C2**, residual 531; atlas Classes 1-5 = 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, not proven negative. Must-turn-biased late repair is **CLOSED NEGATIVE** (60-row cohort, zero gains, +6.5% work); `R02768`/`R02180` remain placement evidence only. [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
+**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, **dose-unverified rather than proven negative**. The historical comparable-work-failure interpretation was explicitly withdrawn by the claim-lineage audit; any Class-3 closure needs exact-action work/dose evidence. Must-turn-biased late repair is **CLOSED NEGATIVE** (60-row cohort, zero gains, +6.5% work); `R02768`/`R02180` remain placement evidence only. [`lineage`](../reports/2026-09-14-historical-claim-lineage-audit-001.md) · [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
 
 **Class 4: PROMOTED.** Dead-last portal coarse-state retry reproduced **86 referee-valid gains / 0 losses** on 113 allocation rows with byte-identical non-target stages and lower aggregate `workSpent`; default ON. Global merge remains closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
@@ -37,11 +37,18 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 - **H2** ([`result`](../reports/2026-09-17-h2-structural-stasis-observer-result-001.md)): **CLOSED NEGATIVE** -- 2 stasis-signal forms, both near-zero correlation with 10x work's marginal gain.
 - **Behavioral quotient/Moonshot G** ([`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)): **MIXED**. A naive obligation-count signature mixes exact LIVE/DEAD same-board on B2 (falsified); the same style excl. length shows real cross-parent purity on Card-E beyond chance/the length confound — capability-memory only.
 
-**Current premise execution order:** 1-6, all above, done. Only separator/decomposition remains, ungated.
+**Current premise-acquisition execution order:**
 
-The assumption-breaking architecture harvest is preserved in [`solver-future-work.md`](solver-future-work.md), [`moonshot report`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md), and [`post-merge reconciliation`](../reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md). Radical ideas do not leapfrog frozen decision-bearing work.
+1. **Separator/decomposition census — ACTIVE NEXT.** Run the cheap census before building region/AND-OR/decomposition machinery. Measure static, mechanic-aware, portal-mediated and path-history-conditioned interfaces separately. [`preflight`](solver-separator-decomposition-census-preflight.md)
+2. **Fresh exact LIVE/DEAD sibling asset — EARNED / PREPARED.** The DEAD-core pilot exhausted B2 rather than closing the premise. Harvest a fresh residual-selected, label-blind sibling population and use it first to resolve core size/specificity; the same asset may support separately prespecified topology/exact microscopes. [`preflight`](solver-fresh-dead-sibling-harvest-preflight.md)
+3. **Topology per-instance microscope — PENDING ASSET/CENSUS.** Prefer generic current-input derivations (separator-side commitment, path-conditioned accessibility, topology-aware equivalence/impossibility) over another search for one universal raw phase feature. Advance only from a sound actionable consequence.
+4. **Class-3 exact-action dose reconciliation — BOUNDED REOPEN.** Only if the exact participation data are already recoverable cheaply, determine actual work/dose and displacement for the 23 current Class-3 rows. Do not rerun broad solver campaigns merely to complete a table. A systematic dose/placement failure would create a changed allocation premise; verified comparable dose with failure would finally close the ambiguity.
+5. **Card-E quotient hypothesis discovery — DISCOVERY ONLY.** If the cross-parent purity survives a small parent-held-out interpretable interaction search, distill the result into a named legal hypothesis and independently test it. Do not deploy a fitted classifier or treat the current quotient as equivalence.
+6. **Complete-path LNS cheapest falsifier — INDEPENDENT ARCHITECTURE NURSERY.** Before implementation, test whether plausible relaxed complete paths are structurally/edit-distance close enough to accepted solutions to make local surgery credible. Positive evidence earns a prototype; a null closes this route cheaply.
 
-**Next WS2 treatment gates:** none currently earned. The next work is premise acquisition/diagnosis, not a production treatment. Class 1-3 reopen requires a changed placement/selector premise or allocation contract.
+The assumption-breaking architecture harvest is preserved in [`solver-future-work.md`](solver-future-work.md), [`moonshot report`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md), and [`post-merge reconciliation`](../reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md). Radical ideas do not leapfrog the ordered falsifiers above.
+
+**Next WS2 treatment gates:** none currently earned. The next work is premise acquisition/diagnosis, not a production treatment. Class 1-3 reopen requires a changed placement/selector premise or allocation contract; Class 3 additionally remains eligible for a bounded dose reconciliation because its old comparable-work-negative interpretation is invalid.
 
 **Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, goal-attraction-disabled retry, and portal coarse-state dead-last additive retry are **PROMOTED**. Portal coarse-state global merge, repair late-probe `7->6`, and late must-turn-biased repair are **CLOSED NEGATIVE**; solve-local connectivity reason reuse is **CLOSED IN CURRENT POPULATION**; fixed-endpoint homotopy is **CLOSED COVERAGE-NULL**; August low-cardinality quota projection is **CLOSED NEGATIVE** (207 pools). Admissible-order retry repricing is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
 
@@ -57,13 +64,13 @@ Query controlled families first for new structural selector premises. Existing v
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | See "Current premise execution order" above. No production treatment is earned |
-| 1 | Automatic action selection | **SUPPORTING** | Reopen only from a new legal signal/relation; Card-E descriptors did not survive depth control |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Separator/decomposition census, then fresh exact sibling asset; no production treatment is earned |
+| 1 | Automatic action selection | **SUPPORTING** | Reopen only from a new legal signal/relation; Card-E interaction discovery is hypothesis-only until held-out |
 | 6/7 | Repair reachability / architectural speed | **SUPPORTING** | Exposure, not unusually high operator incapability, is the distinctive repair problem; fresh profiling gates speed work |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units and scale confirmation with selection pressure |
 | 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not tail entitlement |
 | 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed recurring mechanism evidence |
-| 5 | Exact/reference model | **ON DEMAND** | Offline truth for acquisition questions, DEAD-core diagnosis, behavioral-equivalence probes, and controlled descendants |
+| 5 | Exact/reference model | **ON DEMAND** | Offline truth for fresh sibling labelling, DEAD-core diagnosis, topology/exact microscopes and controlled descendants |
 
 ## Standing research rules
 
