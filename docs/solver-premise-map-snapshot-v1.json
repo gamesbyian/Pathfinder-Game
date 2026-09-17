@@ -1,10 +1,12 @@
 {
   "schemaVersion": 1,
   "snapshotId": "solver-premise-map-v1-2026-09-17",
-  "snapshotCommit": "700cf10b91a109a84f2642b4381d9fbf8e227e79",
+  "snapshotCommit": "e9601ffb8fa304d5ea91d054a9de6cb1bf8ff28e",
+  "validationRun": 35269390179,
   "parentCanonicalLineage": "chatgpt/solver-premise-space-third-pass-2026-09-17",
   "purpose": "Immutable input boundary for the first preregistered premise-map mining round. Mining results must not mutate this snapshot during the same round.",
   "propositionCount": 142,
+  "relationCount": 166,
   "canonicalPremiseFiles": [
     "docs/solver-premise-space-register.csv",
     "docs/solver-premise-space-extension-2026-09-17.csv",
@@ -26,6 +28,15 @@
     "scripts/audit-solver-premise-map.mjs",
     ".github/workflows/premise-map-hardening.yml"
   ],
+  "validationSummary": {
+    "discoveryLineageCoverage": "142/142",
+    "isolatedPropositions": 20,
+    "explicitTensions": 6,
+    "semanticSiblingFamilies": 4,
+    "implicitDefaults": 7,
+    "asymmetryFamilies": 7,
+    "ontologyStressTests": 6
+  },
   "miningRule": "All first-round mining lenses must read the files at snapshotCommit. Proposed map changes are outputs, not edits to the snapshot. Recursive mining starts only after the first round is closed and reviewed.",
   "admissionRuleForFutureMapVersion": "A changed proposition inventory requires a new snapshot id and must classify additions by semantic novelty class before becoming a new mining input."
 }
