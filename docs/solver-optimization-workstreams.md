@@ -29,10 +29,12 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Card-E:** sizing confirmed on 156 rows, with 17/156 reconstructable-but-unexposed. Its two tested state-selection descriptor families failed depth-controlled likelihood-ratio tests, so no handoff pilot follows. Reopen only with a new descriptor family or after the within-pool candidate-selection sub-problem changes materially. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
+**H1:** **CLOSED NEGATIVE.** 449-query population, 93.5% resolved: no compact recurring relation. `E-FLIP-ORDER`'s only strong effect reverses direction across parents; `E-CROSS-VIA`/`E-PASS-VIA` show no distance-to-goal split. Partial LIVE-state realizability survives as capability-memory evidence. [`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)
+
 **Current premise execution order:**
 
 1. ~~run the frozen controlled open-path topology pilot~~ — done; earned a microscope step (derive the smallest generic descriptor from the 4 discordant cases; see `solver-future-work.md`), tracked separately from the items below;
-2. run the frozen H1 relational event-feasibility prespec;
+2. ~~run the frozen H1 relational event-feasibility prespec~~ — done; closed negative in its tested bounded form (see H1 line above);
 3. if exact-DEAD contrasts remain causally opaque, run minimal DEAD-core / minimum-relaxation diagnosis;
 4. keep H2 structural stasis and H3 dependency-defined repair bounded;
 5. only then consider tiny behavioral-state quotient and separator/decomposition probes.
