@@ -22,11 +22,15 @@
  * the full phase integral's "which side overall" classification.
  *
  * Zero new solver compute: this is a pure re-analysis of the pilot's own already-committed,
- * already-audited fork-segment/phase/exact-label data (10 pairs, 0 abstains, 0 correctness alarms).
+ * already-audited fork-segment/phase/exact-label data. Defaults to the original 10-pair population
+ * (0 abstains, 0 correctness alarms); pass --candidates/--analysis to point at a larger population
+ * (e.g. after a fork-construction population extension) without editing this file.
  *
  * Usage:
  *   node scripts/stress/lane-f3-topology-cheap-side-descriptor.mjs \
  *     --out=reports/stress/lane-f3-topology-cheap-side-descriptor-2026-09-17.json
+ *   node scripts/stress/lane-f3-topology-cheap-side-descriptor.mjs \
+ *     --candidates=<file1>,<file2>,<file3> --analysis=<combined-analysis-file> --out=<out>
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
@@ -37,11 +41,11 @@ const argv = process.argv.slice(2);
 const arg = (n, d) => { const h = argv.find(a => a.startsWith(`--${n}=`)); return h === undefined ? d : h.slice(n.length + 3); };
 const OUT_FILE = arg('out', null);
 
-const candidatesFiles = [
+const candidatesFiles = (arg('candidates', [
     'reports/stress/class5-topology-fork-candidates-2026-09-16.json',
     'reports/stress/class5-topology-fork-replication-candidates-2026-09-16.json',
-];
-const analysisFile = 'reports/stress/class5-topology-fork-analysis-2026-09-16.json';
+].join(','))).split(',').map((s) => s.trim()).filter(Boolean);
+const analysisFile = arg('analysis', 'reports/stress/class5-topology-fork-analysis-2026-09-16.json');
 
 const analysis = JSON.parse(readFileSync(path.resolve(ROOT, analysisFile), 'utf8'));
 const discordantById = new Map(analysis.pairs.map((p) => [p.pairId, p]));

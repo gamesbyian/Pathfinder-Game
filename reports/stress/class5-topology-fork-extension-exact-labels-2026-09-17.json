@@ -1,0 +1,832 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-17T07:23:59.533Z",
+  "solverRef": "f5e268190fc4d44e0a271e6753b905c0836578f0",
+  "technique": "cpsat-reference-probe-explicit-prefix",
+  "sourceCases": "/tmp/lane-e2-scratch/f3-extra-cases.json",
+  "sourceFormat": "cases",
+  "coordinateConvention": "raw-level-1-based",
+  "requestedTimeLimitSec": 60,
+  "shardIndex": 1,
+  "shardCount": 1,
+  "selectedCaseCount": 8,
+  "summary": {
+    "cases": 8,
+    "live": 4,
+    "dead": 4,
+    "abstain": 0,
+    "correctnessAlarms": 0,
+    "inputAlarms": 0
+  },
+  "rows": [
+    {
+      "schemaVersion": 2,
+      "caseId": "P00009-w1-A1-B5-original",
+      "levelId": "P00009",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ]
+      ],
+      "pin": null,
+      "depth": 5,
+      "sourceLabel": "original-witness-route",
+      "referenceLabel": "live",
+      "referenceReason": "optimal",
+      "cpSatStatus": "OPTIMAL",
+      "timeLimitSec": 60,
+      "exitCode": 0,
+      "refereeValid": true,
+      "refereeReason": null,
+      "emittedPath": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ]
+      ]
+    },
+    {
+      "schemaVersion": 2,
+      "caseId": "P00009-w1-A1-B5-alternate",
+      "levelId": "P00009",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          7
+        ]
+      ],
+      "pin": null,
+      "depth": 5,
+      "sourceLabel": "alternate-fork-route",
+      "referenceLabel": "dead",
+      "referenceReason": "infeasible",
+      "cpSatStatus": "INFEASIBLE",
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "schemaVersion": 2,
+      "caseId": "P00009-w1-A0-B6-original",
+      "levelId": "P00009",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "pin": null,
+      "depth": 6,
+      "sourceLabel": "original-witness-route",
+      "referenceLabel": "live",
+      "referenceReason": "optimal",
+      "cpSatStatus": "OPTIMAL",
+      "timeLimitSec": 60,
+      "exitCode": 0,
+      "refereeValid": true,
+      "refereeReason": null,
+      "emittedPath": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ]
+      ]
+    },
+    {
+      "schemaVersion": 2,
+      "caseId": "P00009-w1-A0-B6-alternate",
+      "levelId": "P00009",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "pin": null,
+      "depth": 6,
+      "sourceLabel": "alternate-fork-route",
+      "referenceLabel": "dead",
+      "referenceReason": "infeasible",
+      "cpSatStatus": "INFEASIBLE",
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "schemaVersion": 2,
+      "caseId": "P00148-w0-A6-B10-original",
+      "levelId": "P00148",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "pin": null,
+      "depth": 10,
+      "sourceLabel": "original-witness-route",
+      "referenceLabel": "live",
+      "referenceReason": "optimal",
+      "cpSatStatus": "OPTIMAL",
+      "timeLimitSec": 60,
+      "exitCode": 0,
+      "refereeValid": true,
+      "refereeReason": null,
+      "emittedPath": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    {
+      "schemaVersion": 2,
+      "caseId": "P00148-w0-A6-B10-alternate",
+      "levelId": "P00148",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "pin": null,
+      "depth": 10,
+      "sourceLabel": "alternate-fork-route",
+      "referenceLabel": "dead",
+      "referenceReason": "infeasible",
+      "cpSatStatus": "INFEASIBLE",
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "schemaVersion": 2,
+      "caseId": "P00148-w0-A5-B10-original",
+      "levelId": "P00148",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "pin": null,
+      "depth": 10,
+      "sourceLabel": "original-witness-route",
+      "referenceLabel": "live",
+      "referenceReason": "optimal",
+      "cpSatStatus": "OPTIMAL",
+      "timeLimitSec": 60,
+      "exitCode": 0,
+      "refereeValid": true,
+      "refereeReason": null,
+      "emittedPath": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    {
+      "schemaVersion": 2,
+      "caseId": "P00148-w0-A5-B10-alternate",
+      "levelId": "P00148",
+      "corpus": "data/levels.json",
+      "prefix": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "pin": null,
+      "depth": 10,
+      "sourceLabel": "alternate-fork-route",
+      "referenceLabel": "dead",
+      "referenceReason": "infeasible",
+      "cpSatStatus": "INFEASIBLE",
+      "timeLimitSec": 60,
+      "exitCode": 0
+    }
+  ],
+  "caution": "CP-SAT labels are reference-model evidence, not native-solver solves. Illegal prefixes, timeouts, unsupported mechanics, model errors, and referee-rejected SAT witnesses remain abstentions."
+}
