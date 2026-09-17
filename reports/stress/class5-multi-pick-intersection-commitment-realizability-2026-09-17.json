@@ -1,0 +1,1103 @@
+{
+  "schemaVersion": 1,
+  "kind": "class5-multi-pick-intersection-commitment-realizability",
+  "generatedAt": "2026-09-17T15:40:26.775Z",
+  "solverRef": "6ae91603889e3d93c8c9e3637da68e8137478307",
+  "sourceLabels": "reports/stress/class5-production-search-frontier-multi-pick-exact-labels-2026-09-17.json",
+  "shardIndex": 1,
+  "shardCount": 1,
+  "timeLimit": 45,
+  "selectionRule": "same-parent LIVE/DEAD states with identical remaining-intersection-deficit AND remaining length, from the multi-pick exact-labelled population",
+  "summary": {
+    "deadStatesWithZeroFeasibleCommitments": 18,
+    "deadStatesTotal": 18,
+    "liveStatesWithAtLeastOneFeasibleCommitment": 2,
+    "liveStatesTotal": 2,
+    "correctnessAlarms": 0,
+    "totalQueries": 220
+  },
+  "results": [
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          1
+        ],
+        [
+          9,
+          1
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-262",
+      "levelId": "R03147",
+      "exactLabel": "live",
+      "candidateCount": 11,
+      "feasible": [
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          7
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          11,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          12,
+          3
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          6,
+          3
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          11,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          6,
+          5
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-112",
+      "levelId": "R03147",
+      "exactLabel": "live",
+      "candidateCount": 11,
+      "feasible": [
+        [
+          11,
+          7
+        ],
+        [
+          7,
+          9
+        ]
+      ],
+      "infeasible": [
+        [
+          12,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          6,
+          11
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          11,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          6,
+          7
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          4,
+          7
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          11,
+          8
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          7
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          3
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          1
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          7
+        ],
+        [
+          11,
+          7
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          11,
+          4
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          5
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          10,
+          2
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          11,
+          4
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "exactLabel": "dead",
+      "candidateCount": 11,
+      "feasible": [],
+      "infeasible": [
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          11,
+          2
+        ],
+        [
+          11,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          7,
+          4
+        ]
+      ],
+      "indeterminate": []
+    }
+  ]
+}

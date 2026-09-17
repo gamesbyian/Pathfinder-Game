@@ -54,7 +54,7 @@ Phase 0 retained-evidence rejoin found no fact family earning a Phase 1 observer
 
 See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for full status.
 
-1. **Future-intersection commitment realizability — POPULATION-LIMITED POSITIVE.** On 2 B2 parents with matched LIVE/DEAD pairs (identical remaining-intersection-deficit/length), both exact-DEAD states have zero confirmed-feasible commitments while all 3 LIVE siblings have >=1 (107 queries, 0 alarms). Matched population exhausted; needs Lane B's blocked constructor. [`result`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md)
+1. **Future-intersection commitment realizability — POSITIVE, REPLICATED AT SCALE.** B2: 2 matched DEAD 0-feasible vs 3 LIVE >=1 (107 queries). Multi-pick replication: 18 matched DEAD 0-feasible vs 2 LIVE >=1 (220 queries, 0 alarms). Consumer/economics untested. [`B2`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md) · [`replication`](../reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md)
 2. **Constrained-event feasibility — NARROWED POSITIVE.** Zero-compute re-analysis of H1's 449 queries: DEAD states trivially 100% infeasible (no information); LIVE states show a real signal (13.8% infeasible; 16/23 mixed) -- a within-state commitment-viability signal, not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
 3. **Residual-interface commutativity — POSITIVE.** Native-referee splice-and-validate, 12,277 pairs: length-matched legal 46.6% pooled, 0% on flipper-bearing levels vs 69.9% portal-only / 44.8% mechanic-free -- but NOT explained by the segment touching a flipper (flipper-avoiding segments there are also 0%); real support is 3 levels, not 10. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`breakdown+correction`](../reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md)
 
@@ -75,7 +75,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 ### Queue ordering and parallelism
 
-**All lanes A-G1 concluded** -- A/D/F3 bounded/narrowed/qualified positives, C population-limited negative, E negative (both regimes), F2 mixed, B core-negative/D1/G1-stage2 need multi-pick sampling, Class-3 an evidence gap. Only G2 remains deferred.
+**All lanes A-G1 concluded** -- A/D1/F3 bounded/replicated/qualified positives, C population-limited negative, E negative (both regimes), F2 mixed, B core-negative/G1-stage2 needs multi-pick sampling, Class-3 an evidence gap. Only G2 remains deferred.
 
 **No production treatment is earned.**
 
