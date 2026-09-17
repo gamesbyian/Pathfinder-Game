@@ -22,8 +22,8 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
 - **Classes 1-3:** class 1 has no menu headroom. Class 3 is exposed/dispatched but dose-unverified, not negative: 23 rows lack per-technique telemetry. Must-turn-biased late repair is **CLOSED NEGATIVE**. [`lineage`](../reports/2026-09-14-historical-claim-lineage-audit-001.md) · [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
-- **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
-- **Class 5:** topology work remains research-only; no raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
+- **Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses/113 rows; default ON, merge closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
+- **Class 5:** topology work remains research-only; Lane F3 population is 14 pairs/7 parents. No raw-phase production routing. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 - **Card-E:** 17/156 reconstructable-unexposed; both tested descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 - **Post-topology:** H1 event vocabulary closed; DEAD-core population-limited; H3/H2 closed negative; behavioral quotient mixed/capability-memory only. H3 allocation-value gap is positive: ascending length solves 16/17 Card-E rows at 20% budget. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md) · [`sim`](../reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md)
 
@@ -33,7 +33,7 @@ Cheap retained/offline premise tests may run in parallel. Expensive treatments r
 
 #### Lane A — separator / decomposition
 
-**CONCLUDED / BOUNDED POSITIVE.** 121/390 Class-5 levels have a non-trivial balanced narrow (width<=4) static/mechanic-aware interface; portal mediation is negative. Next gate is **interface-contract state size**, not another count: can crossing history compress into a small boundary contract? [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md)
+**CONCLUDED / BOUNDED POSITIVE.** 121/390 Class-5 levels have a non-trivial balanced narrow (width<=4) static/mechanic-aware interface; portal mediation is negative. Next gate is **interface-contract state size**, not another count: can crossing history compress into a small boundary contract? That gate is deferred onto Lane B's frozen population. [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
@@ -65,7 +65,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane G — independent search-object nursery
 
-**G1 complete-path LNS:** Stage 1 positive, Stage 2 method-limited. Existing solutions cluster (median Jaccard 0.11; 25 levels/2,235 pairs), but 3 naive construction attempts failed to create a fair candidate. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
+**G1 complete-path LNS:** Stage 1 positive, Stage 2 method-limited. Existing solutions cluster (median Jaccard 0.11; 25 levels/2,235 pairs), but 3 naive construction attempts failed to create a fair candidate. This converges on the sibling-constructor gap also seen in B/D1; no LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
@@ -79,11 +79,11 @@ P201-P206 were admitted as evidence/method premises; no new solver-mechanism pre
 
 Cross-cutting pass condition: at least two unrelated positives map to existing decision boundaries using the same contract fields without requiring a new subsystem, leaving a concrete soundness/participation/economics question. Otherwise keep them local. If D1 independently passes its local census, its next descendant is a retained-evidence consumer/economics falsifier before any live exact-query implementation. **No solver sweep or production treatment is earned.**
 
-Dispositions belong to [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) and genuinely deferred descendants to [`solver-future-work.md`](solver-future-work.md).
+Dispositions belong to [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) (strategy history) and [`solver-future-work.md`](solver-future-work.md) (closed/deferred forms with reopen triggers).
 
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed using capability/lifecycle/provenance/family/trace evidence. Reopen only from a cheap legal current-input signal that predicts allocation, never exact offline labels or historical family membership.
+**State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed using capability/lifecycle/provenance/family/trace evidence. The September structural-response ladder already ran through first divergence; do not restart earlier stages. Reopen only from a cheap legal current-input signal that predicts allocation, never exact offline labels or historical family membership.
 
 ## Workstream state
 
