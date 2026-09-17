@@ -77,6 +77,12 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 **All lanes A-G1 concluded** -- A/D1/F3 bounded/replicated/qualified positives, C population-limited negative, E negative (both regimes), F2 mixed, B core-negative/G1-stage2 needs multi-pick sampling, Class-3 an evidence gap. Only G2 remains deferred.
 
+#### Post-mining Phase-3 handoff — ACTIVE CHEAP GATE
+
+The first preregistered premise-map mining round and Phase-2 synthesis are complete. Reconciliation admitted P201-P206 as evidence/method premises but did **not** create a new solver-mechanism premise from the live-state anomaly. The earned next gate is a **read-only consumer-contract census** across the technically unrelated Lane A, D1, and F3 positives. Record producer, authority, independent unit, lifetime, smallest existing consumer, available/missing decision state, counterfactual action, abstention rule, and cost/displaced-work bound. [`handoff`](../reports/solver-premise-map-phase3/02-execution-handoff.md)
+
+Pass the cross-cutting hypothesis only if at least two unrelated positives map to existing decision boundaries with the same contract fields and without a new subsystem, leaving a concrete soundness/participation/economics question. Fail it if each requires unrelated new architecture; keep those positives local. If the census passes locally for D1, the next descendant is a retained-evidence consumer/economics falsifier before any production exact-query implementation. No new solver sweep is authorized by this handoff.
+
 **No production treatment is earned.**
 
 **Dispositions:** promoted/closed/deferred treatment history is owned by [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) (per-strategy) and [`solver-future-work.md`](solver-future-work.md)'s closed-forms table (retry/quota/homotopy/connectivity-reuse shapes); current default-ON additions include the Class-4 dead-last portal coarse-state retry.
@@ -91,7 +97,7 @@ Use capability/lifecycle/provenance/family/trace evidence to distinguish not-exp
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A-F concluded; G2 deferred until a compact sound signature emerges |
+| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | Phase-3 read-only consumer-contract census across Lane A/D1/F3; D1 consumer/economics falsifier only if earned |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen from a new legal current-input signal from the acquisition lanes |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | Lane E tests dependency-defined revision; fresh profiling gates speed work |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
