@@ -47,6 +47,8 @@ The round used the snapshot manifest and the v1-frozen canonical premise/relatio
 
 The Phase-1 execution discipline was read from `docs/solver-premise-map-mining-execution-plan.md` on PR #1849 because that PR was still open when this run began. The plan was used as execution guidance, not added to or substituted for the v1 mining universe.
 
+M9 additionally inspected the quarantined independent reconstruction's raw pre-reconciliation branch as discovery-lineage provenance, exactly as the preregistered M9 lens calls for. That material was used to determine what was independently rediscovered and how the two lineages partitioned the same territory. It did not expand the frozen proposition universe: only the v1 canonical premises, including the already-frozen reconciliation deltas P197-P200, were treated as premise-map objects in the mining round.
+
 ## Preregistration compliance
 
 ### Same snapshot
@@ -67,7 +69,7 @@ No canonical premise file, relation file, hardening overlay, snapshot manifest o
 
 ### No post-v1 candidate admission
 
-Post-v1 premise candidates were not used as mining inputs. M9 stayed within the frozen independent-reconstruction lineage P197-P200 preserved in extension `17c`.
+Post-v1 premise candidates were not admitted or treated as members of the frozen map. M9's inspection of the quarantined raw lineage was provenance archaeology, not candidate admission or recursive mining.
 
 ### No solver-queue mutation
 
