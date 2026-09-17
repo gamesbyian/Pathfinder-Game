@@ -1,9 +1,12 @@
 # Premise-map mining-method expressiveness audit
 
-> **Status:** initial non-blind audit complete.
-> **Date:** 2026-09-17
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-17 — audit completed against M1-M12 plus the Phase-2 synthesis design before shadow-mining reconciliation.
+> **Decision:** preserve this as a coordination-side instrument audit; do not treat it as a mining result or use it to seed blind discovery.
+> **Remaining gate:** none for this audit; later reconciliation may compare its predictions with independently closed shadow mining.
+>
 > **Scope:** the preregistered M1-M12 machinery plus the Phase-2 synthesis design from open PR #1849.
-> **Quarantine:** this artifact must not be shown to the blind shadow miner before that investigation closes.
+> **Quarantine:** this artifact was withheld from the blind shadow miner until that investigation closed.
 
 ## Question
 
