@@ -1,8 +1,9 @@
 # Fresh exact LIVE/DEAD sibling harvest preflight
 
-> **Status:** DESIGNED / NOT YET EXECUTED.
+> **Status:** EXECUTED / DEAD POPULATION EARNED, CONSTRUCTION GAP FOUND. See [`result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md).
 > **Question:** can the current residual supply a fresh, independently selected exact-labelled sibling population large enough to resolve the population-limited DEAD-core result and support the next topology / exact-reasoning microscopes?
-> **Queue position:** WS2 premise acquisition, immediately after or in parallel with the separator/decomposition census.
+> **Result summary:** yes for exact-DEAD (75 states / 25 independent parents, 0 correctness alarms) -- reusable for the census's deferred family-3 measurement. No for exact-LIVE: the seeded goal-distance-guided legal-walk constructor found zero LIVE siblings at any tested depth, confirmed a construction-method artifact (not a residual-structure finding) by a gate-only feasibility check showing real reachable LIVE capacity the walk cannot find. DEAD-core relaxation and "spares LIVE" testing need a production-search-quality constructor before they can be trusted here.
+> **Queue position:** WS2 premise acquisition. Its earned next descendant (a production-search-quality sibling constructor) is a separate, larger implementation task, not attempted in this pass.
 > **Evidence role:** reusable research asset acquisition. This is not a solver treatment.
 
 ## Why this asset is earned
