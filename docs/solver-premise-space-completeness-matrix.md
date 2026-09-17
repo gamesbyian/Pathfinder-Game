@@ -1,20 +1,27 @@
 # Solver premise-space completeness matrix
 
 > **Status:** descriptive completeness instrument; not a production queue.
-> **Companions:** `solver-premise-space-atlas.md`, `solver-premise-space-register.csv`, `solver-premise-space-extension-2026-09-17.csv`, `solver-premise-space-relations-v2.json`.
+> **Companions:** `solver-premise-space-atlas.md`, `solver-premise-space-register.csv`, `solver-premise-space-extension-2026-09-17.csv`, `solver-premise-space-extension-2026-09-17b.csv`, `solver-premise-space-extension-2026-09-17c.csv`, `solver-premise-space-relations-v3.json`.
 > **Purpose:** force premise discovery through orthogonal search axes so repository vocabulary cannot silently define the apparent idea-space.
 
 ## Why the first three-way split was insufficient
 
 `mechanism / architecture / epistemic` remains useful as a label, but it is not an exhaustive search procedure. A mechanism premise can also be a correctness, causality, prevalence, economics, or generalization question. An architecture premise can fail because its treatment never participated. An epistemic premise can apply at a node, stage, population, or architecture epoch.
 
-The durable completeness search therefore uses five independent axes:
+The durable completeness search therefore uses five primary independent axes:
 
 1. **system locus** — where the proposition acts;
 2. **claim type** — what must be true about that locus;
 3. **scope/lifetime** — state, branch, frontier, attempt, stage, invocation, level, population, distribution, architecture epoch, or research lineage;
 4. **evidence state** — unasked, implicit, supported, tested-form closed, semantics closed, blocked, population-limited, participation-invalid, economics-closed, stale/epoch-sensitive;
 5. **relation type** — semantic parent, tested form, support, narrowing, prerequisite, complement, causal predecessor, evidence dependency, and so on.
+
+The independent reconstruction on `chatgpt/independent-premise-space-2026-09-17` exposed two additional cross-cutting audit lenses that should not be forced into those five columns:
+
+6. **information authority** — what an item of information is licensed to do: referee truth, sound feasibility consequence, safe dominance, heuristic prediction, empirical failed-experience evidence, diagnostic correlation, scheduler prior, or inherited default;
+7. **mechanism/deployment maturity** — which gate a proposition has actually passed: phenomenon existence, representability, semantic soundness/fidelity, real-search participation, useful-work effect, complementary matched-cost value, schedulability, or production promotion.
+
+These lenses prevent two recurrent category errors. Strong diagnostic evidence does not automatically authorize pruning, and a mechanism that exists or works in an observer does not automatically constitute deployed solve capability.
 
 ## Claim types
 
@@ -113,7 +120,7 @@ The map is also uneven by scale.
 | architecture epoch | **thin** | systematic portability tagging of negatives and economics |
 | research lineage | medium | dead tooling/unresolved questions, supersession and closure scope |
 
-The largest lifetime gap remains **inside one invocation**: facts are often born close to the process that discovered them and die there.
+The largest lifetime gap remains **inside one invocation**: facts are often born close to the process that discovered them and die there. P200 generalizes this into an information-half-life question: for each fact or paid-for artifact, what is the correct lifetime and transfer radius rather than merely the lifetime implied by its current module boundary?
 
 ## Evidence-state taxonomy
 
@@ -151,6 +158,16 @@ Pairwise mechanic names are a poor exhaustive basis. Search shared future resour
 
 The standing question becomes: **which future resource is overcommitted, poorly represented, or incorrectly assumed independent?**
 
+## Research-function audit lens
+
+A second orthogonal sweep can ignore source-module names and ask which **research function** is being performed. The independent reconstruction recovered thirteen useful functions:
+
+`encode -> derive -> generate -> reject -> prefer -> retain -> remember -> allocate -> select -> transfer -> recognize -> measure -> infer from evidence`
+
+This is not a replacement ontology. It is an interface detector. Search for cases where one function succeeds but its output cannot reach the next useful function: a fact is derived but not transferred, an alternative is generated but never retained, a mechanism has reach but is not selected, or a valid measurement is over-generalized during evidence inference.
+
+P197 adds the corresponding authority check at every interface: even when information reaches a consumer, is that consumer licensed to use it as a prune, a ranking signal, a diagnostic, a routing prior, or only offline evidence?
+
 ## Priority negative-space clusters
 
 These are map gaps, not automatic queue promotions:
@@ -159,12 +176,12 @@ These are map gaps, not automatic queue promotions:
 2. **solution-space multiplicity/regime geometry** as context for difficulty and diagnosis;
 3. **shared-resource/global feasibility** rather than independent mechanic bounds;
 4. **sound state dominance / partial orders** between exact identity and lossy merge;
-5. **solve-local knowledge lifetime and communication**, including positive facts;
+5. **solve-local knowledge lifetime and communication**, including positive facts and artifact-specific information half-life;
 6. **causal failure explanation and selective revision**;
 7. **adaptive information acquisition**, including bounded exact queries chosen because uncertainty is expensive;
 8. **state-conditioned preprocessing/graph facts** after path history changes available space;
 9. **sequence/predecessor-conditioned action value** rather than action identity alone;
-10. **epistemic selection effects** from trace censoring, exact-model support, early-exit portfolios, and stale architecture epochs.
+10. **epistemic selection effects** from trace censoring, exact-model support, early-exit portfolios, stale architecture epochs, and the chosen unit of generalization.
 
 ## Completeness rule for future additions
 
@@ -178,5 +195,9 @@ When a new premise is proposed, do not only ask where it belongs by topic. Ask:
 6. Which earlier causal loss would make it irrelevant?
 7. Which evidence dependencies could make its apparent verdict invalid?
 8. Which shared resource or alternative future does it concern?
+9. What authority does the information have at the point where it is consumed?
+10. Which maturity/deployment gate has the mechanism actually passed?
+11. What is the intended identity-free unit of generalization?
+12. What is the intended information lifetime and transfer radius?
 
-A genuinely new idea should either populate a thin/empty cell, split an over-broad existing cell, or add a new relation among populated cells. If it does none of those, it is likely a renamed treatment rather than a new premise.
+A genuinely new idea should either populate a thin/empty cell, split an over-broad existing cell, add a new relation among populated cells, or expose a mismatch on one of the cross-cutting lenses. If it does none of those, it is likely a renamed treatment rather than a new premise.
