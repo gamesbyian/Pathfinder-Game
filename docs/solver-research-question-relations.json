@@ -172,6 +172,20 @@
       "reopensOn": "A different repair-retreat population (not Card-E's) or a length-matched/stratified design with more statistical power finds a commitment effect independent of remaining length."
     },
     {
+      "id": "WS2-H2-STRUCTURAL-STASIS",
+      "question": "Does a compact, cheaply-observable within-run stasis signal predict near-zero marginal continuation value from additional workSpent, beyond generic difficulty/depth/work controls?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "aliases": ["H2", "marginal information velocity", "structural stasis"],
+      "answeredBy": ["reports/2026-09-17-h2-structural-stasis-observer-result-001.md"],
+      "result": "No, not for the two tested signal forms. On a 28-level first-loss-frontier population (14 dev + 14 confirmation, reused from an unrelated exposure study), within-run stasis-fraction and distinct-badness-count both show near-zero, sign-inconsistent correlation with a 10x work escalation's marginal badness gain on dev (r=-0.16/-0.04) and on the untouched confirmation half (r=+0.02/+0.06) -- despite real marginal value existing (78.6% of levels gained, mean +4.96 badness).",
+      "constrains": [
+        "Do not build restart, early-termination, bandit, or dynamic-scheduling allocation from either tested stasis signal on this population.",
+        "The badness-based marginal-improvement finding itself (most levels gain from more work) is preserved as capability-memory context, not an allocation premise."
+      ],
+      "reopensOn": "A different structural-response dimension from H2's own candidate list (mechanic-progress/obligation-order signature, canonical state-family/branch-decision signature) or a different repair-stage population is tested."
+    },
+    {
       "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
       "question": "Can a recurring solve-local failure shape be reduced to a small sound dead cause with enough repeated-work value for bounded reason reuse?",
       "owner": "WS2",

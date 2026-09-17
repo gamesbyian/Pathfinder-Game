@@ -21,7 +21,7 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Production boundary:** run `35066677597` is **101/102 C1 + 1,169/1,700 C2**, residual 531; atlas Classes 1-5 = 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, not proven negative. Must-turn-biased late repair is **CLOSED NEGATIVE** (60-row cohort, zero marginal gains, +6.5% work); `R02768`/`R02180` remain placement evidence only. [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
+**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, not proven negative. Must-turn-biased late repair is **CLOSED NEGATIVE** (60-row cohort, zero gains, +6.5% work); `R02768`/`R02180` remain placement evidence only. [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
 
 **Class 4: PROMOTED.** Dead-last portal coarse-state retry reproduced **86 referee-valid gains / 0 losses** on 113 allocation rows with byte-identical non-target stages and lower aggregate `workSpent`; default ON. Global merge remains closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
@@ -29,23 +29,21 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Card-E:** 17/156 reconstructable-but-unexposed; its two tested descriptor families failed depth-controlled tests, so no handoff pilot follows. Reopen only with a new descriptor family. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
-**H1:** **CLOSED NEGATIVE.** 449-query population, 93.5% resolved: no compact recurring relation. `E-FLIP-ORDER`'s only strong effect reverses direction across parents; `E-CROSS-VIA`/`E-PASS-VIA` show no distance-to-goal split. Partial LIVE-state realizability survives as capability-memory evidence. [`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)
+**H1:** **CLOSED NEGATIVE.** 449-query population, 93.5% resolved: no compact recurring relation. `E-FLIP-ORDER` reverses direction across parents; `E-CROSS-VIA`/`E-PASS-VIA` show no distance-to-goal split. Partial LIVE-state realizability survives as capability-memory evidence. [`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)
 
-**DEAD-core:** **INCONCLUSIVE / population-limited.** Size-1 causal core found on 3/4 exact-DEAD B2 states (2 `mustCross`, 1 `mustPass`); too few to call type-recurrence, and the 4-state population is exhausted. [`result`](../reports/2026-09-17-dead-core-relaxation-pilot-001.md)
+**DEAD-core:** **INCONCLUSIVE / population-limited.** Size-1 causal core on 3/4 exact-DEAD B2 states (2 `mustCross`, 1 `mustPass`); too few for type-recurrence, population exhausted. [`result`](../reports/2026-09-17-dead-core-relaxation-pilot-001.md)
 
-**H3:** **CLOSED NEGATIVE.** On Card-E's 156-row population, remaining length dominates rescuability (d=-1.81) over any commitment interface; portal/intersection usage is only a weak secondary effect. [`result`](../reports/2026-09-17-h3-repair-commitment-interface-result-001.md)
+**H3:** **CLOSED NEGATIVE.** On Card-E's 156-row population, remaining length dominates rescuability (d=-1.81) over any commitment interface; portal/intersection usage is a weak secondary effect. [`result`](../reports/2026-09-17-h3-repair-commitment-interface-result-001.md)
 
-**Current premise execution order:**
+**H2:** **CLOSED NEGATIVE** (2 signal forms). 28-level dev/confirmation population: stasis-fraction and distinct-badness both near-zero correlation with 10x work's marginal gain, though 78.6% of levels gained. Neither predicts marginal value. [`result`](../reports/2026-09-17-h2-structural-stasis-observer-result-001.md)
 
-1-3. ~~topology pilot, H1 prespec, DEAD-core diagnosis~~ — all done (see the Class 5/H1/DEAD-core lines above and `solver-future-work.md` for topology's earned microscope step);
-4. ~~H3 dependency-defined repair~~ — done, closed negative (see H3 line above); H2 structural stasis in progress;
-5. only then consider tiny behavioral-state quotient and separator/decomposition probes.
+**Current premise execution order:** 1-5. ~~topology, H1, DEAD-core, H3, H2~~ — done (lines above); 6. only then tiny behavioral-state-quotient/separator probes (separator/decomposition stays ungated).
 
 The assumption-breaking architecture harvest is preserved in [`solver-future-work.md`](solver-future-work.md), [`moonshot report`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md), and [`post-merge reconciliation`](../reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md). Radical ideas do not leapfrog frozen decision-bearing work.
 
 **Next WS2 treatment gates:** none currently earned. The next work is premise acquisition/diagnosis, not a production treatment. Class 1-3 reopen requires a changed placement/selector premise or allocation contract.
 
-**Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, goal-attraction-disabled retry, and portal coarse-state dead-last additive retry are **PROMOTED**. Portal coarse-state global merge, repair late-probe `7->6`, and late must-turn-biased repair are **CLOSED NEGATIVE**. Solve-local connectivity reason reuse is **CLOSED IN CURRENT POPULATION**. Fixed-endpoint homotopy is **CLOSED COVERAGE-NULL**. August low-cardinality quota projection is **CLOSED NEGATIVE** over 207 pools. Admissible-order retry repricing is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
+**Dispositions:** must-cross neighbour-budget propagation, connectivity-volume portal check, `PRUNE_MC_PORTAL_FORCED_NEIGHBOR`, goal-attraction-disabled retry, and portal coarse-state dead-last additive retry are **PROMOTED**. Portal coarse-state global merge, repair late-probe `7->6`, and late must-turn-biased repair are **CLOSED NEGATIVE**; solve-local connectivity reason reuse is **CLOSED IN CURRENT POPULATION**; fixed-endpoint homotopy is **CLOSED COVERAGE-NULL**; August low-cardinality quota projection is **CLOSED NEGATIVE** (207 pools). Admissible-order retry repricing is **DEFERRED**. [`ledger`](solver-opt-in-experiment-ledger.md)
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -72,26 +70,19 @@ Query controlled families first for new structural selector premises. Existing v
 - Use `workSpent` across techniques; nodes are within-technique diagnostics. New actions/configs normally compete inside total work.
 - Level-blindness is not generalization. IDs, historical outcomes, hints, family labels, and capability-memory membership never become runtime routing inputs.
 - Exact computation is not intrinsically illegal in production; historical exact labels, known solutions, identities, and stored witnesses are. Any generic current-state exact query must still earn soundness, bounded cost, and end-to-end economics.
-- Corpus/container names are not evidence roles. Preserve generation ancestry, later selection history, prior decision use, and exact population identity.
-- Selected residuals/participant cohorts support their conditional question, not unconditional mechanic prevalence.
-- Separate observed result from inferential entitlement. Preserve **disposition** separately from **capability signature**.
+- Corpus/container names are not evidence roles: preserve generation ancestry, selection history, prior decision use, and exact population identity. Selected residuals/participant cohorts support only their conditional question, not unconditional mechanic prevalence.
+- Separate observed result from inferential entitlement (**disposition** vs **capability signature**). A historical null/revert is not a premise verdict until participation, measurement integrity, and formulation are established.
 - Profile evidence requires supported axes and honest chronology; missing stays unknown, sampled agreement is not rigidity, exhaustive events are not whole-space proof.
-- A historical null/revert is not a premise verdict until participation, measurement integrity, and formulation are established.
 - Clear negatives close tested forms absent a materially new premise; no-op/behavior-identical retries buy nothing.
 - For performance evidence distinguish **SUPPORTED_EXACT_FORM**, **FALSIFIED_EXACT_FORM**, **DEFERRED_LOW_VALUE**, **ARCHITECTURALLY_DEFERRED**, **STALE_REPROFILE**, **EVIDENCE_INCOMPLETE**, and **BEHAVIOR_CHANGE_NOT_PURE_SPEED**. [`speed authority`](solver-architectural-speed-opportunities.md)
-- When speed becomes active, freeze the retained solve boundary and report total `workSpent`, wall/CPU, pre-winner cost, winning action, redundant earlier cost, displaced capability, DFS/beam/repair contribution, participation/dose, hotspot shares, representative latency, and total retained-population compute.
+- When speed becomes active, freeze the retained solve boundary and report total `workSpent`, wall/CPU, pre-winner cost, winning action, displaced capability, participation/dose, hotspot shares, and total retained-population compute.
 - Hold out independent units and scale confirmation with tuning/selection pressure. For generated human/editor descendants, the parent family is the usual independent unit.
 - Reusable rows require matching protocol identity; nominal stage reach is not participation. Comparable-work negatives require exact-action work/dose evidence. Timeout/errors are indeterminate.
-- Refresh residual-derived views after material promotion or provenance reinterpretation.
-- A validated hint prefix proves that prefix LIVE, not alternatives DEAD. Exact labels are offline truth, never runtime steering.
-- A single-level microscope may generate a premise, never a production exception.
-- Compact signatures may nominate recurring states/responses; they do not prove semantic equivalence without a sufficiency argument.
-- Scheduler fairness/participation is diagnostic, not an objective. Measure marginal value and displaced capability before reallocating.
-- Use explicit provenance/config fields for decision-bearing joins, not convenience labels/summary booleans.
-- Reconcile old questions before new compute; prefer the smallest information-value test.
-- For archaeology-derived reopenings, search forward from the exact experiment vocabulary before promoting an `unfinished` claim.
-- Query existing variant families before new generation when they can change the decision; use human/editor-parent apparatus for missing clean contrasts. [`variant resource`](variant-level-research.md)
-- Radical architectures enter through cheap falsifiers: census, exact-labelled observer, tiny-state laboratory, or economics replay before implementation-shaped queue debt.
+- Refresh residual-derived views after material promotion or provenance reinterpretation. A validated hint prefix proves that prefix LIVE, not alternatives DEAD; exact labels are offline truth, never runtime steering.
+- A single-level microscope may generate a premise, never a production exception. Compact signatures may nominate recurring states/responses; they do not prove semantic equivalence without a sufficiency argument.
+- Scheduler fairness/participation is diagnostic, not an objective; measure marginal value and displaced capability before reallocating. Use explicit provenance/config fields for decision-bearing joins, not convenience labels/summary booleans.
+- Reconcile old questions before new compute; prefer the smallest information-value test. For archaeology-derived reopenings, search forward from the exact experiment vocabulary before promoting an `unfinished` claim.
+- Query existing variant families before new generation when they can change the decision; use human/editor-parent apparatus for missing clean contrasts. [`variant resource`](variant-level-research.md) Radical architectures enter through cheap falsifiers (census, exact-labelled observer, tiny-state laboratory, economics replay) before implementation-shaped queue debt.
 
 ## Cheap evidence routing
 
