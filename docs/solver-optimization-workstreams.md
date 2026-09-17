@@ -46,9 +46,9 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 2. **Handoff gate:** DEAD-core, Lane E work needing matched LIVE/DEAD Class-5 siblings, and Lane G stage 2 all need a **production-search-quality sibling constructor** first -- blocking three lines.
 3. A per-instance core/conflict need not recur across levels; recurrence is required only for a fixed reusable descriptor claim.
 
-#### Lane C — solve-local typed knowledge reuse
+#### Lane C — solve-local typed knowledge reuse, CONCLUDED / PHASE 0 NEGATIVE
 
-**OPEN / PREPARED.** Execute [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md). August Stage B found strong within-level abstraction recurrence (83.1% reached-shape sharing vs 52.6% exact-state sharing) but closed the cross-level checker (only 8.8% cross-level-spanning); level-blindness leaves a distinct solve-local premise. Gate order: rediscovery rate -> sound cheap lookup key/certificate -> price against derivation cost -> only then one typed within-invocation memo/handoff pilot. No generic blackboard until one fact family pays.
+Phase 0 retained-evidence rejoin found no fact family earning a Phase 1 observer: fact class B's only real candidate is already shipped/audited production infra, not a new opportunity; class C is correctly unmemoized; class D found no opportunistic recurrence. No generic blackboard. [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md)
 
 #### Lane D — per-instance relational feasibility, CONCLUDED (all 3 questions)
 
@@ -75,7 +75,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 ### Queue ordering and parallelism
 
-**A, B, Class-3 (F1), D, and G1 are concluded** -- A/D bounded/narrowed/real positives, B/G1-stage2 blocked on the sibling-constructor handoff, Class-3 an evidence gap. Remaining order: **C -> E -> F2/F3 (Card-E, topology).** D3 feeds E directly. C/E/F may run in parallel -- retained-evidence/offline observers.
+**A, B, Class-3 (F1), C, D, and G1 are concluded** -- A/D bounded/narrowed/real positives, C a Phase-0 negative, B/G1-stage2 blocked on the sibling-constructor handoff, Class-3 an evidence gap. Remaining order: **E -> F2/F3 (Card-E, topology).** D3 feeds E directly. E/F may run in parallel -- retained-evidence/offline observers.
 
 **No production treatment is earned.**
 
@@ -91,7 +91,7 @@ Use capability/lifecycle/provenance/family/trace evidence to distinguish not-exp
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A/B/Class-3/D concluded; run remaining lanes C, E, F2/F3, G in any order (parallel-safe) |
+| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A/B/Class-3/C/D concluded; run remaining lanes E, F2/F3, G in any order (parallel-safe) |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen from a new legal current-input signal from the acquisition lanes |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | Lane E tests dependency-defined revision; fresh profiling gates speed work |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |

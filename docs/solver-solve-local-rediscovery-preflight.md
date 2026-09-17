@@ -1,9 +1,10 @@
 # Solve-local fact rediscovery preflight
 
-> **Status:** DESIGNED / NOT YET EXECUTED.
+> **Status:** Phase 0 EXECUTED / CONCLUDED-NEGATIVE (no Phase 1 observer earned). See [`result`](../reports/2026-09-17-lane-c-phase0-retained-evidence-rejoin-result-001.md).
 > **Question:** does one cold solve repeatedly derive the same expensive sound or decision-useful current-instance facts across branches, attempts, or stages often enough that typed solve-local reuse could add capability or save material work?
 > **Priority:** supporting investigation only. Do not leapfrog the active solve-acquisition queue in `solver-optimization-workstreams.md`.
 > **Premise lineage:** [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md), [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md), and the August connectivity-certificate audits.
+> **Phase 0 result:** fact class A already closed. Fact class B's only real candidate (mustPass/mustCross lower-bound memo caches) is already production-shipped and already independently proven sound and valuable (2.3-4.8x speedup) -- not a new Lane C opportunity. Fact class C is confirmed correctly unmemoized (expected negative control). Fact class D found no opportunistic same-dependency-key recurrence across this session's own Lane A/B/D exact-query batches. No fact family clears the Phase-0 advance gate.
 
 ## Why this question is now worth asking
 
