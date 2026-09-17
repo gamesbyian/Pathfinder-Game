@@ -113,6 +113,17 @@ check_witness = '--check-witness' in sys.argv
 no_mustcross = '--no-mustcross' in sys.argv
 no_landmarks = '--no-landmarks' in sys.argv
 no_flippers = '--no-flippers' in sys.argv
+# --relax=<json {"mustCross":[[x,y],...],"mustPass":[[x,y],...]}> (added for the minimal DEAD-core
+# diagnosis, per docs/solver-future-work.md's "Minimal DEAD-core / minimum-relaxation diagnosis"):
+# drops the named individual obligations' own hard constraint, one commitment at a time, while
+# leaving every other cell of that same mechanic and every other mechanic exactly as required. This
+# is a strictly smaller ablation than --no-mustcross (which drops the WHOLE must-cross family) --
+# it exists to ask "does completion become possible if only THIS ONE commitment is relaxed", not
+# "is must-cross involved at all".
+relax_arg = next((a for a in sys.argv if a.startswith('--relax=')), None)
+relax = json.loads(relax_arg.split('=', 1)[1]) if relax_arg else {}
+relax_mustcross = {(c[0] - 1, c[1] - 1) for c in relax.get('mustCross', [])}
+relax_mustpass = {(c[0] - 1, c[1] - 1) for c in relax.get('mustPass', [])}
 corpus_arg = next((a for a in sys.argv if a.startswith('--corpus=')), None)
 corpus_path = corpus_arg.split('=', 1)[1] if corpus_arg else 'data/stress/stress-levels-random.json'
 
@@ -353,10 +364,10 @@ m.Add(real_N == L + 1 + jumps_used)
 
 m.Add(sum(y.values()) == real_N - req_int)                 # reqInt == nodes - distinctCells
 for c in must_pass:
-    if c in idx: m.Add(y[c] == 1)
+    if c in idx and c not in relax_mustpass: m.Add(y[c] == 1)
 if not core_only and not no_mustcross:
     for c in must_cross:
-        if c in idx: m.Add(visits[c] == 2)                 # crossCounts >= 2
+        if c in idx and c not in relax_mustcross: m.Add(visits[c] == 2)                 # crossCounts >= 2
 for g in gates:
     # A gate cell is illegal as a move target unconditionally (move-rules.ts: `gateKeys.includes
     # (targetKey)` rejects every gate, not just "the one already left"), including every OTHER

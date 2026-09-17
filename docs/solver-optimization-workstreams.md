@@ -31,11 +31,11 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **H1:** **CLOSED NEGATIVE.** 449-query population, 93.5% resolved: no compact recurring relation. `E-FLIP-ORDER`'s only strong effect reverses direction across parents; `E-CROSS-VIA`/`E-PASS-VIA` show no distance-to-goal split. Partial LIVE-state realizability survives as capability-memory evidence. [`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)
 
+**DEAD-core:** **INCONCLUSIVE / population-limited.** Size-1 causal core found on 3/4 exact-DEAD B2 states (2 `mustCross`, 1 `mustPass`); too few to call type-recurrence, and the 4-state population is exhausted. [`result`](../reports/2026-09-17-dead-core-relaxation-pilot-001.md)
+
 **Current premise execution order:**
 
-1. ~~run the frozen controlled open-path topology pilot~~ — done; earned a microscope step (derive the smallest generic descriptor from the 4 discordant cases; see `solver-future-work.md`), tracked separately from the items below;
-2. ~~run the frozen H1 relational event-feasibility prespec~~ — done; closed negative in its tested bounded form (see H1 line above);
-3. if exact-DEAD contrasts remain causally opaque, run minimal DEAD-core / minimum-relaxation diagnosis;
+1-3. ~~topology pilot, H1 prespec, DEAD-core diagnosis~~ — all done (see the Class 5/H1/DEAD-core lines above and `solver-future-work.md` for topology's earned microscope step);
 4. keep H2 structural stasis and H3 dependency-defined repair bounded;
 5. only then consider tiny behavioral-state quotient and separator/decomposition probes.
 
@@ -57,7 +57,7 @@ Query controlled families first for new structural selector premises. Existing v
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + allocation | **ACTIVE / FIRST** | Topology pilot, then H1 prespec. If exact-DEAD contrasts remain unexplained, minimum-relaxation/DEAD-core diagnosis. No production treatment is earned |
+| 2 | Residual capability + allocation | **ACTIVE / FIRST** | See "Current premise execution order" above. No production treatment is earned |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen only from a new legal signal/relation; Card-E descriptors did not survive depth control |
 | 6/7 | Repair reachability / architectural speed | **SUPPORTING** | Exposure, not unusually high operator incapability, is the distinctive repair problem; fresh profiling gates speed work |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units and scale confirmation with selection pressure |

@@ -143,6 +143,21 @@
       "reopensOn": "A materially different event family or joint-query formulation, or a board-specific (not rank-order) descriptor for the flip-order direction reversal."
     },
     {
+      "id": "WS2-DEAD-CORE-RELAXATION",
+      "question": "Does single-commitment constraint relaxation (per Moonshot A's cheapest falsifier) find small, board-independent-recurring causal cores for exact-DEAD states?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "aliases": ["DEAD-core", "minimum-relaxation", "moonshot A"],
+      "answeredBy": ["reports/2026-09-17-dead-core-relaxation-pilot-001.md"],
+      "result": "Discovery only, population-limited. A single-commitment relaxation (cpsat-reference-probe.py's new --relax hook) flips 3/4 exact-DEAD B2 states to feasible (2 via a mustCross axis, 1 via a mustPass cell); the 4th needs a joint/larger core. The 4-state B2 population is exhausted, too small to call type-recurrence, and the moonshot's own 'spares LIVE siblings' half is untested.",
+      "triggeredBy": ["WS2-H1-EVENT-FEASIBILITY"],
+      "constrains": [
+        "Do not build runtime conflict-driven pruning/nogood machinery from this pilot alone -- neither the recurring-type nor the spares-LIVE-siblings half of the moonshot's own falsifier is confirmed.",
+        "A fresh independently-labelled DEAD population is required before re-testing, not a re-derivation from this same 4-state set."
+      ],
+      "reopensOn": "A fresh, larger exact-labelled DEAD population (e.g. a new B2-style sibling harvest on the current Class-4/5 residual) becomes available."
+    },
+    {
       "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
       "question": "Can a recurring solve-local failure shape be reduced to a small sound dead cause with enough repeated-work value for bounded reason reuse?",
       "owner": "WS2",
