@@ -60,7 +60,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 #### Lane E — dependency-defined causal revision
 
-**OPEN / PREPARED.** Execute [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md). Broad positional/prefix repair is already weak; the changed premise: is a DEAD near-miss caused by a small dependency-defined earlier commitment set rather than path-distance rollback? First observer: on exact-labelled repair-retreat/dead-vs-rescuable cases, find the earliest divergent future-relevant commitment (turn/crossing/portal/flipper order, obligation order, separator side/topology, visit/edge-use). A compact causal interface earns one targeted revision prototype at equal work; whole-prefix blame closes the route.
+**CONCLUDED / INCONCLUSIVE (population-limited).** CP-SAT bisection on B2's only 2 qualifying same-parent dead/live pairs cleanly finds the exact point of no return in both, but both land 1-2 moves from the trajectory's own end -- rollback distance and a compact commitment predict the same thing there, so neither case discriminates the premise. Population exhausted at n=2. [`result`](../reports/2026-09-17-lane-e-repair-retreat-commitment-probe-result-001.md)
 
 #### Lane F — bounded exposure / representation reconciliations
 
@@ -75,7 +75,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 ### Queue ordering and parallelism
 
-**A, B, Class-3 (F1), C, D, and G1 are concluded** -- A/D bounded/narrowed/real positives, C a Phase-0 negative, B/G1-stage2 blocked on the sibling-constructor handoff, Class-3 an evidence gap. Remaining order: **E -> F2/F3 (Card-E, topology).** D3 feeds E directly. E/F may run in parallel -- retained-evidence/offline observers.
+**A, B, Class-3 (F1), C, D, E, and G1 are concluded** -- A/D bounded/narrowed/real positives, C/E population-limited negatives/inconclusive, B/E/G1-stage2 blocked on the sibling-constructor handoff, Class-3 an evidence gap. Remaining order: **F2/F3 (Card-E, topology).** Both parallel-safe retained-evidence/offline observers.
 
 **No production treatment is earned.**
 
@@ -91,7 +91,7 @@ Use capability/lifecycle/provenance/family/trace evidence to distinguish not-exp
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A/B/Class-3/C/D concluded; run remaining lanes E, F2/F3, G in any order (parallel-safe) |
+| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A/B/Class-3/C/D/E concluded; run remaining lanes F2/F3, G in any order (parallel-safe) |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen from a new legal current-input signal from the acquisition lanes |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | Lane E tests dependency-defined revision; fresh profiling gates speed work |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |

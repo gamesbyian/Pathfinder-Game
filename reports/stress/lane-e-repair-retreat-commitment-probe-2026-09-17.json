@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-09-17T07:00:39.357Z",
+  "evidenceRole": "Lane E first bounded observer -- dependency-defined causal revision, within-trajectory CP-SAT bisection for the exact point of no return",
+  "corpus": "data/stress/stress-levels.json",
+  "b2Source": "reports/stress/h1-event-feasibility-queries-2026-09-16.json",
+  "minCommonPrefix": 8,
+  "timeLimit": 120,
+  "solverRef": "d1b45933fec08e648ef4c96fdb8d3c63934f16d9",
+  "method": "reuses scripts/stress/repair-retreat-binary-search.mjs's monotone --prefix CP-SAT bisection technique (reports/2026-08-12-repair-retreat-cpsat.md) against B2's exact-labelled dead states that share a literal common prefix with a same-parent live sibling",
+  "candidateCount": 2,
+  "results": [
+    {
+      "levelId": "S00001",
+      "role": "top-rank1",
+      "eliteLength": 27,
+      "naiveFirstDivergence": 17,
+      "divergences": [
+        {
+          "role": "witness-culled",
+          "commonPrefix": 17
+        }
+      ],
+      "pointOfNoReturn": {
+        "feasibleDepth": 24,
+        "infeasibleDepth": 25
+      },
+      "ropeBeyondNaiveDivergence": 8,
+      "rollbackDistanceFromEnd": 2,
+      "criticalMove": {
+        "family": "plain",
+        "intsAfterMove": 3,
+        "requiredLength": 65,
+        "requiredIntersections": 6
+      }
+    },
+    {
+      "levelId": "S00048",
+      "role": "top-rank1",
+      "eliteLength": 24,
+      "naiveFirstDivergence": 14,
+      "divergences": [
+        {
+          "role": "witness-culled",
+          "commonPrefix": 14
+        },
+        {
+          "role": "cutoff-survivor",
+          "commonPrefix": 10
+        }
+      ],
+      "pointOfNoReturn": {
+        "feasibleDepth": 22,
+        "infeasibleDepth": 23
+      },
+      "ropeBeyondNaiveDivergence": 9,
+      "rollbackDistanceFromEnd": 1,
+      "criticalMove": {
+        "family": "plain",
+        "intsAfterMove": 2,
+        "requiredLength": 103,
+        "requiredIntersections": 7
+      }
+    }
+  ]
+}
