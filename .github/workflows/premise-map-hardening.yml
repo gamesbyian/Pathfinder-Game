@@ -3,13 +3,22 @@ name: Premise map hardening
 on:
   pull_request:
     paths:
+      - 'docs/solver-*.md'
+      - 'docs/variant-level-research.md'
+      - 'docs/human-parent-contrast-research.md'
+      - 'docs/technique-census-analysis.md'
       - 'docs/solver-premise-space-register.csv'
       - 'docs/solver-premise-space-extension-*.csv'
+      - 'docs/solver-premise-space-post-v1-candidates-*.csv'
       - 'docs/solver-premise-space-graph.json'
       - 'docs/solver-premise-space-relations*.json'
       - 'docs/solver-premise-map-hardening*.json'
       - 'docs/solver-premise-map-hardening*.md'
+      - 'docs/solver-premise-map-source-coverage*'
+      - 'data/stress/README.*'
+      - 'modules/solver/README.md'
       - 'scripts/audit-solver-premise-map.mjs'
+      - 'scripts/audit-solver-premise-source-coverage.mjs'
       - '.github/workflows/premise-map-hardening.yml'
   workflow_dispatch:
 
@@ -24,17 +33,21 @@ jobs:
         with:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
-            /docs/solver-premise-space-register.csv
-            /docs/solver-premise-space-extension-2026-09-17.csv
-            /docs/solver-premise-space-extension-2026-09-17b.csv
-            /docs/solver-premise-space-extension-2026-09-17c.csv
-            /docs/solver-premise-space-graph.json
-            /docs/solver-premise-space-relations-v2.json
-            /docs/solver-premise-space-relations-v3.json
-            /docs/solver-premise-map-hardening-overlay.json
+            /docs/
+            /data/stress/README.md
+            /modules/solver/README.md
+            /modules/solver/stage-plan.ts
+            /modules/solver/search-state.ts
+            /modules/solver/diversification.ts
+            /.github/workflows/README.md
+            /reports/2026-09-13-stress-corpus-population-validity-audit.md
+            /reports/2026-09-10-solver-system-audit.md
             /scripts/audit-solver-premise-map.mjs
+            /scripts/audit-solver-premise-source-coverage.mjs
       - uses: actions/setup-node@v7
         with:
           node-version: 20
       - name: Audit premise-map structure
         run: node scripts/audit-solver-premise-map.mjs
+      - name: Audit reciprocal premise-source coverage
+        run: node scripts/audit-solver-premise-source-coverage.mjs

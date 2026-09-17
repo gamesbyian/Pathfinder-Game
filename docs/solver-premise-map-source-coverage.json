@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Reciprocal source-to-premise coverage ledger for the frozen solver-premise-map v1. This does not mutate v1; it records whether source strata independently rediscover, extend, or escape the map.",
+  "frozenMap": "solver-premise-map-v1-2026-09-17",
+  "dispositions": [
+    "DIRECTLY_MAPPED",
+    "INDIRECTLY_MAPPED",
+    "REVIEWED_NO_NEW_PREMISE",
+    "NEW_PREMISE_CANDIDATE",
+    "ONTOLOGY_ESCAPE",
+    "OUT_OF_SCOPE",
+    "UNREVIEWED"
+  ],
+  "batches": [
+    {
+      "id": "B001",
+      "stratum": "research epistemology and evidence governance",
+      "selectionRule": "Current authorities governing inference, evaluation, and solver research method, selected without using premise IDs or graph thinness.",
+      "sources": [
+        {
+          "path": "docs/solver-research-inference-audit-framework.md",
+          "disposition": "NEW_PREMISE_CANDIDATE",
+          "candidateIds": ["PV1-001", "PV1-004", "PV1-005"],
+          "rediscovered": ["P151", "P158", "P167", "P181", "P188", "P192", "P197", "P198"],
+          "notes": "Exposed causal-ancestry/pseudoreplication, claim-propagation drift, and general rival-explanation discriminability as concepts not cleanly isolated in v1."
+        },
+        {
+          "path": "docs/solver-evaluation-evidence.md",
+          "disposition": "NEW_PREMISE_CANDIDATE",
+          "candidateIds": ["PV1-001", "PV1-002", "PV1-003"],
+          "rediscovered": ["P002", "P005", "P112", "P158", "P181", "P182", "P190", "P191", "P198"],
+          "notes": "Separates runtime/sample/distributional independence, treats dependent rediscoveries as non-independent support, and makes confirmation evidence consumable for descendants."
+        },
+        {
+          "path": "docs/solver-research-operating-model.md",
+          "disposition": "NEW_PREMISE_CANDIDATE",
+          "candidateIds": ["PV1-001", "PV1-002", "PV1-003", "PV1-005"],
+          "rediscovered": ["P003", "P123", "P132", "P137", "P151", "P154", "P187", "P192", "P197", "P198"],
+          "notes": "Strong convergence with v1; remaining novelty is in independence/ancestry/evidence-lifecycle/discriminability parent semantics."
+        }
+      ],
+      "newParents": 4,
+      "scopeSplits": 1,
+      "ontologyEscapees": 0,
+      "result": "Material novelty found. Research-evidence process was underrepresented relative to search mechanics."
+    },
+    {
+      "id": "B002",
+      "stratum": "runtime lifecycle, continuation, and budget semantics",
+      "selectionRule": "Current execution contracts for continuation and deterministic allocation, selected as runtime surfaces rather than premise-map neighbors.",
+      "sources": [
+        {
+          "path": "docs/solver-search-resumability.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P122", "P153", "P154", "P177", "P178", "P179", "P180", "P193", "P198", "P200"],
+          "notes": "Continuation ownership, censoring, policy-switch and handoff semantics are already represented at adequate parent/specialization levels."
+        },
+        {
+          "path": "docs/solver-budget-determinism.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P120", "P123", "P153", "P187", "P188", "P198"],
+          "notes": "Base-vs-total budget, deterministic currency, deadline censoring and finite-envelope displacement converge with existing premises."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "ontologyEscapees": 0,
+      "result": "Strong saturation signal from a heterogeneous runtime-contract batch."
+    },
+    {
+      "id": "B003",
+      "stratum": "human/editor family construction and clustered evidence",
+      "selectionRule": "A data-generation resource with different ancestry from synthetic stress generators, selected to probe distribution and independent-unit assumptions.",
+      "sources": [
+        {
+          "path": "docs/human-parent-contrast-research.md",
+          "disposition": "NEW_PREMISE_CANDIDATE",
+          "candidateIds": ["PV1-001", "PV1-002"],
+          "rediscovered": ["P006", "P112", "P114", "P158", "P168", "P190", "P191", "P199"],
+          "notes": "Confirms that descendant-row count and independent-parent count are distinct and that human-origin evidence is only one claim-relative distributional axis."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "ontologyEscapees": 0,
+      "result": "No additional parent beyond B001 candidates; cross-stratum independent support for PV1-001/PV1-002."
+    },
+    {
+      "id": "B004",
+      "stratum": "generator, corpus, and variant-family evidence semantics",
+      "selectionRule": "Durable contracts for bulk variant families and stress-corpus construction/selection, chosen to test distribution, transformation, and independence assumptions.",
+      "sources": [
+        {
+          "path": "docs/variant-level-research.md",
+          "disposition": "NEW_PREMISE_CANDIDATE",
+          "candidateIds": ["PV1-001", "PV1-002", "PV1-003", "PV1-007"],
+          "rediscovered": ["P006", "P112", "P114", "P144", "P158", "P165", "P168", "P181", "P190", "P191", "P199"],
+          "notes": "Strongly reinforces clustered independence and consumable holdout status. It also exposes full-search transformation equivariance as a specialization not cleanly isolated by v1 symmetry/canonicalization premises."
+        },
+        {
+          "path": "data/stress/README.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P002", "P005", "P112", "P114", "P158", "P181", "P190", "P191", "P198", "P199"],
+          "notes": "Mixed corpus ancestry, solver-outcome selection, generator support boundaries, construction-witness conditioning and cross-distribution limits are already represented."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "specializations": 1,
+      "ontologyEscapees": 0,
+      "result": "Distribution semantics largely saturated; one bounded transformation-equivariance specialization added as a candidate."
+    },
+    {
+      "id": "B005",
+      "stratum": "historical/removed tooling and vocabulary archaeology",
+      "selectionRule": "Current archaeology authority sampled from its method and major unresolved historical families, including pre-current vocabulary and dirty/unfinished treatment chains.",
+      "sources": [
+        {
+          "path": "docs/solver-archaeology-register.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P005", "P012", "P013", "P021", "P032", "P037", "P045", "P083", "P137", "P151", "P153", "P165", "P166", "P169", "P170", "P171", "P198"],
+          "notes": "Historical vocabulary drift, dirty reverts, silent treatment non-participation, unfinished experiment chains, dead tooling and changed architecture are already explicit premise-map territory. No new parent emerged from the sampled historical families."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "ontologyEscapees": 0,
+      "result": "Strong saturation signal from the historical stratum; the prior archaeology-based passes appear to have covered its major conceptual payload."
+    },
+    {
+      "id": "B006",
+      "stratum": "runtime code defaults and lifecycle implementation",
+      "selectionRule": "Implementation map plus representative stage-eligibility and mutable-search-state code, chosen without using premise graph centrality.",
+      "sources": [
+        {
+          "path": "modules/solver/README.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P151", "P152", "P177", "P193", "P195", "P197"],
+          "notes": "The code map reinforces stage identity, handoff, budget and research/production authority boundaries."
+        },
+        {
+          "path": "modules/solver/stage-plan.ts",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P154", "P173", "P177", "P186", "P193", "P195"],
+          "notes": "Pre-dispatch stage eligibility and mostly fixed stage plan are already covered by routing, handoff, stopping and upstream-revision premises/defaults."
+        },
+        {
+          "path": "modules/solver/search-state.ts",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P010", "P012", "P121", "P148", "P177", "P193", "P200"],
+          "notes": "Explicit mutable puzzle/search state and per-solve buffer lifetime reinforce state-sufficiency, cache/lifetime and cross-invocation ownership assumptions rather than adding a new conceptual parent."
+        },
+        {
+          "path": "modules/solver/diversification.ts",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P040", "P050", "P122", "P153", "P160", "P162", "P187", "P200"],
+          "notes": "Round-robin structural sampling, session-owned work, saved-hint boundaries and resumability converge with existing diversity/allocation/persistence premises."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "ontologyEscapees": 0,
+      "result": "Representative code-first sampling produced rediscovery rather than new parent premises, increasing confidence that recent independent code archaeology was effective."
+    }
+  ],
+  "candidateRegister": "docs/solver-premise-space-post-v1-candidates-2026-09-17.csv",
+  "confidenceStatement": {
+    "surfaceCoverage": "PARTIAL_AND_MEASURABLE",
+    "semanticSaturation": "IMPROVING_AFTER_EARLY_EPISTEMIC_NOVELTY",
+    "lineageIndependence": "IMPROVED_NOT_COMPLETE",
+    "ontologyEscapeRate": "ZERO_IN_SIX_BATCHES",
+    "historicalReach": "GOOD_CURRENT_AUTHORITY_SAMPLE",
+    "runtimeReach": "GOOD_REPRESENTATIVE_SAMPLE_NOT_EXHAUSTIVE",
+    "evidenceProcessReach": "MATERIALLY_IMPROVED_WITH_NEW_CANDIDATES",
+    "distributionReach": "GOOD_ACROSS_STRESS_VARIANT_AND_HUMAN_CONTRACTS"
+  },
+  "nextRequiredStrata": [
+    "scripts/workflows whose execution semantics can create hidden research premises",
+    "stratified dated-report spot checks against current synthesis authorities",
+    "uncited current solver documents surfaced by the executable reverse-source audit",
+    "one final heterogeneous batch after all above, used only as a saturation check"
+  ]
+}
