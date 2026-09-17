@@ -1,8 +1,9 @@
 # Separator / decomposition census preflight
 
-> **Status:** DESIGNED / NOT YET EXECUTED.
+> **Status:** EXECUTED / BOUNDED POSITIVE. See [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md).
 > **Question:** does the current Class-5 residual contain enough low-width structural separation, including path-history-conditioned separation, to justify a decomposition or interface-contract solver descendant?
-> **Queue position:** immediate WS2 premise-acquisition successor after the closed topology/H1/DEAD-core/H3/H2/behavioral-quotient ladder.
+> **Result summary:** families 1/2 (static, mechanic-aware) are a bounded positive — 121/390 (31.0%) Class-5 residual levels have a non-trivial, board-balanced (>=10% each side), width<=4 interface (54 also mechanic-aware). Family 4 (portal-mediated) is a clean negative (0.06% of interfaces, despite 69% portal-bearing levels). Family 3 (path-history-conditioned) was not computed — it needs a frozen legal prefix population, deferred to the fresh exact LIVE/DEAD sibling harvest. The interface contract-size question (does representing crossing state avoid recreating full path history?) is untested and gates any further descendant.
+> **Queue position:** WS2 premise-acquisition; its earned next descendant (local exact residual query — does the smaller side's local infeasibility predict exact-DEAD?) is deferred onto the fresh exact sibling harvest's population rather than a separate campaign.
 > **Evidence role:** census / premise falsifier. No solver treatment is authorized by this document.
 
 ## Why this is now the next cheap gate
