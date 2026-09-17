@@ -1,6 +1,6 @@
 # Fresh exact LIVE/DEAD sibling harvest preflight
 
-> **Status:** EXECUTED / HANDOFF GATE CLOSED. See [`naive-walk result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md), [`production-search result`](../reports/2026-09-17-production-search-sibling-construction-result-001.md).
+> **Status:** EXECUTED / HANDOFF GATE CLOSED, FIRST CONSUMER RUN. See [`naive-walk result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md), [`production-search result`](../reports/2026-09-17-production-search-sibling-construction-result-001.md), [`DEAD-core spares-LIVE result`](../reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md).
 > **Question:** can the current residual supply a fresh, independently selected exact-labelled sibling population large enough to resolve the population-limited DEAD-core result and support the next topology / exact-reasoning microscopes?
 > **Result summary:** yes for exact-DEAD (75 states / 25 independent parents, 0 correctness alarms) -- reusable for the census's deferred family-3 measurement. The naive goal-distance-guided walk found zero LIVE siblings at any depth, confirmed a construction-method artifact by a gate-only feasibility check. The named fix (a production-search-quality constructor using real `beamSearchFromGate`/`intersectionHarvest`/width=5000, zero solver-internal changes) also found 0/98 LIVE under single-pick sampling -- but a multi-pick follow-up (25 distinct frontier draws instead of 1) found `R03147`'s frontier has a real ~8% live fraction (2/25, referee-verified), while `R01600` stayed 0/25. **Single-draw-per-checkpoint sampling, not search quality, was the limiting factor.**
 > **Queue position:** WS2 premise acquisition. CLOSED as a handoff gate: DEAD-core/Lane D1/E/G1-stage2 may now proceed using a **multi-pick-per-parent** sampling design, not the wide-parent/single-sample design both harvests here used.
@@ -76,6 +76,8 @@ Use a two-stage harvest:
 The target is not a magic raw-state count. The decision-bearing requirement is enough exact-DEAD states across independent parents to test whether small cores remain common and enough matched LIVE siblings to test collateral/specificity.
 
 ## First consumer: DEAD-core confirmation
+
+**Run (2026-09-17):** size-1 pass on `R03147`'s 23 multi-pick exact-DEAD siblings (2 held-out exact-LIVE from the same frontier/depth) -- 0/215 relaxations flipped, 0 size-1 cores, 0 alarms. Clean core-negative on the strongest population produced so far; a size-2 pass remains unjustified (no near-miss observed) and unattempted. [`result`](../reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md)
 
 For every exact-DEAD state, apply the existing single-commitment relaxation hook first. Do not jump directly to combinatorial core search.
 

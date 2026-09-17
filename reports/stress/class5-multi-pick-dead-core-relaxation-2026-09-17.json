@@ -1,0 +1,2826 @@
+{
+  "schemaVersion": 1,
+  "kind": "class5-multi-pick-dead-core-relaxation",
+  "generatedAt": "2026-09-17T14:48:07.096Z",
+  "solverRef": "32253685306f0345cf30cc37d517b9fd2c714f4b",
+  "sourceLabels": "reports/stress/class5-production-search-frontier-multi-pick-exact-labels-2026-09-17.json",
+  "shardIndex": 1,
+  "shardCount": 1,
+  "timeLimit": 45,
+  "liveHoldout": [
+    {
+      "caseId": "R03147:multi-pick-262",
+      "levelId": "R03147"
+    },
+    {
+      "caseId": "R03147:multi-pick-112",
+      "levelId": "R03147"
+    }
+  ],
+  "summary": {
+    "total": 215,
+    "distinctDeadStatesTested": 23,
+    "flippedToLive": 0,
+    "stayedDead": 215,
+    "indeterminate": 0,
+    "correctnessAlarms": 0,
+    "statesWithAnySize1Core": 0
+  },
+  "rows": [
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-407",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-877",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-437",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1388",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-156",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-245",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1013",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-272",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-415",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-66",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-235",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1367",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-218",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-969",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-975",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1263",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1397",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-189",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-888",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-1161",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-892",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-946",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        1
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        9
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        7,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R03147:multi-pick-123",
+      "levelId": "R03147",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 45,
+      "exitCode": 0
+    }
+  ]
+}
