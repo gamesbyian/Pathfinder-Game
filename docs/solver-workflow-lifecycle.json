@@ -79,6 +79,13 @@
       "retirementTrigger": "retire when the owning research question closes or a shared workflow supersedes it"
     },
     {
+      "workflow": "premise-map-hardening.yml",
+      "role": "operational",
+      "status": "maintained",
+      "currentConsumer": "solver premise-map structural integrity and mining-input validation",
+      "retirementTrigger": "retire only if equivalent premise-map structural validation is absorbed into another maintained CI surface"
+    },
+    {
       "workflow": "solver-broad-confirmation.yml",
       "role": "evidence-producing",
       "status": "maintained",
