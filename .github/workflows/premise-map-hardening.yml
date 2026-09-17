@@ -3,6 +3,10 @@ name: Premise map hardening
 on:
   pull_request:
     paths:
+      - 'docs/solver-*.md'
+      - 'docs/variant-level-research.md'
+      - 'docs/human-parent-contrast-research.md'
+      - 'docs/technique-census-analysis.md'
       - 'docs/solver-premise-space-register.csv'
       - 'docs/solver-premise-space-extension-*.csv'
       - 'docs/solver-premise-space-post-v1-candidates-*.csv'
@@ -11,6 +15,8 @@ on:
       - 'docs/solver-premise-map-hardening*.json'
       - 'docs/solver-premise-map-hardening*.md'
       - 'docs/solver-premise-map-source-coverage*'
+      - 'data/stress/README.md'
+      - 'modules/solver/README.md'
       - 'scripts/audit-solver-premise-map.mjs'
       - 'scripts/audit-solver-premise-source-coverage.mjs'
       - '.github/workflows/premise-map-hardening.yml'
