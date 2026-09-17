@@ -1,65 +1,97 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active priority and state; [`solver-research-operating-model.md`](solver-research-operating-model.md) owns method. Use `research-status-index --compact` before new compute.
+Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active priority/state; [`solver-research-operating-model.md`](solver-research-operating-model.md) owns method. [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) owns the semantic-gap map; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) owns the distinction between a closed tested form and a closed premise.
 
-**Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, canonical forms, decompositions, topology state, or search plans from the current puzzle/current invocation. Cross-parent recurrence is required when claiming a reusable fixed descriptor, not automatically when the candidate is a generic per-instance derivation procedure. Legality does not establish soundness or economics. [`boundary audit`](../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md)
+**Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, decompositions, topology state, canonical forms, or search plans from current puzzle/current invocation inputs. Cross-parent recurrence is required for a fixed reusable descriptor claim, not for every generic per-instance derivation procedure.
 
-## Active-successor interpretation
+## Promoted out of future work
 
-Do not duplicate the active queue here. `solver-optimization-workstreams.md` owns the current premise-acquisition ladder. In particular, the separator/decomposition census and fresh exact LIVE/DEAD sibling harvest are now active/prepared gates with dedicated preflights; Class-3 exact-action dose is a bounded reconciliation question, not a historical comparable-work negative.
+The following are no longer merely deferred ideas; bounded premise-acquisition gates now live in `solver-optimization-workstreams.md`:
 
-Only note here what remains deferred beyond those active gates:
+- **solve-local typed knowledge rediscovery/reuse** via [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md);
+- **per-instance relational feasibility**, including future-intersection commitments, constrained-event feasibility, and actual residual-interface commutativity, via [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md);
+- **dependency-defined causal revision** via [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md);
+- **fresh exact LIVE/DEAD siblings / DEAD-core continuation**;
+- **topology per-instance microscope**;
+- **separator/interface-contract sizing after the pending census result**;
+- **complete-path LNS cheapest falsifier**;
+- **Class-3 exact-action dose reconciliation** and the bounded Card-E quotient discovery pass.
 
-- Open-path topology's earned successor has two forms to preserve: a compact reusable descriptor and a generic per-instance procedure whose outputs may be board-unique. Raw phase is not a production key; soundness/invariance, predictive value, independent confirmation, and economics still gate use.
-- H1's partial LIVE-state realizability and the behavioral-quotient's Card-E cross-parent purity both survive only as capability-memory nominations for a future, more expressive mechanism or a better-powered pass — neither earns production use now.
-- The DEAD-core line now has a large exact-DEAD population (75 states/25 parents, [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md)) but no trustworthy LIVE contrast: its naive sibling constructor cannot reach LIVE states. Reopen core-size/"spares LIVE" testing only once a production-search-quality sibling constructor exists; conflict-driven runtime machinery remains deferred until then.
+Do not duplicate those here. One exception worth flagging explicitly: the fresh exact sibling harvest produced a large exact-DEAD population (75 states/25 parents) but **no trustworthy LIVE contrast** — its naive goal-distance-greedy constructor cannot reach LIVE states even shallow, confirmed a construction-method artifact rather than a residual-structure finding. DEAD-core size/"spares LIVE" testing and Lane D/E work that needs matched LIVE/DEAD Class-5 siblings stay blocked until a production-search-quality sibling constructor exists (see [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md)).
 
-## Audit-derived deferred/reopen work
+## Deferred descendants of active premises
 
-| Question | Advance/reopen condition |
+These become eligible only after the active premise gate immediately above them is positive.
+
+| Descendant | Reopen / advancement condition |
 |---|---|
-| Heuristic-to-theorem subdomain audit | Topology/separator work exposes an exact relation already approximated by scoring/routing, or a current soft mechanism has an identifiable sound subdomain worth a prune, lower bound, forced move, decomposition, or exact-mode switch |
-| Solve-local knowledge rediscovery | A cache/handoff/proof-store question becomes live; first show distinct attempts or stages repeatedly recompute the same expensive sound fact or failure certificate |
-| Mechanics-derived canonicalization / symmetry / transposition | A sound current-input equivalence is identifiable and telemetry shows material repeated equivalent work inside one solve; historical identity/family lookup remains forbidden |
-| Structural graph preprocessing | Topology/separator evidence exposes a sound current-input graph property at useful prevalence; measure construction cost, solve-local reuse, and downstream value before adding persistent preprocessing |
-| Per-instance online conflict derivation | Fresh DEAD-core confirmation shows a bounded proof/core procedure can derive sound solve-local conflicts cheaply enough to reject equivalent future failure while sparing LIVE siblings; individual clauses/cores need not recur across levels |
-| Bounded exact residual query / opportunistic exactification | An earned question or tractability signal identifies residual states where a bounded complete method can prove/finish something cheaply; require bounded runtime and end-to-end value |
-| Per-level search-plan compilation | Two genuinely different architectures show complementary legal niches predictable from current-input structure; the compiler must generalize even if each compiled plan is unique |
+| General solve-local proof store / blackboard | One concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot |
+| Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
+| Production bounded exact-query service | One Lane-D query demonstrates decision-useful SAT/UNSAT-style answers at bounded cost with a concrete consumer that saves more work or gains solves |
+| Region/AND-OR decomposition engine | Narrow separators are confirmed and the exact/conservative interface contract stays compact under path/mechanic history |
+| Production topology-aware state relation | A microscope yields a sound actionable consequence beyond raw phase, such as path-conditioned accessibility, side commitment, equivalence, or impossibility |
+| Targeted local surgery / causal backjump operator | Dependency-defined revision observer finds compact actionable causal interfaces materially smaller than ordinary rollback/prefix difference |
+| Full complete-path LNS | Cheapest falsifier shows relaxed complete paths are locally repairable to accepted solutions often enough to justify implementation |
+| Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
-## Other deferred descendants
+## Other deferred architectural questions
 
 | Question | Reopen condition |
 |---|---|
-| Bidirectional / backward abstraction | A compact sound residual/interface signature exists without recreating full path history |
-| Choice-bearing macro-actions | A mechanism-specific premise shows repeated route structure beyond certified one-successor chains |
-| Complete-path LNS | Relaxed whole-path candidates show accepted solutions are locally reachable by structural surgery; run only the bounded cheapest falsifier before implementation |
-| Cooperative blackboard portfolio | Two solver families expose complementary within-invocation artifacts that a consumer cannot cheaply rediscover; start with one typed handoff, not a framework |
-| Declarative mechanic automata | Repeated earned descendants need one shared mechanic-state contract enough to justify rewrite-scale migration |
-| Adversarial counterexample generation | A frozen hypothesis can be attacked by solver-belief versus exact-reality disagreement without construction leakage |
+| Bidirectional / backward abstraction | A compact sound residual/interface signature emerges from decomposition, topology, or relational-feasibility work; do not reopen full MITM from scratch |
+| Choice-bearing macro-actions | A mechanism-specific observer shows repeated non-trivial route structure beyond one-successor chains and a macro can preserve exact transition semantics/work accounting |
+| Mechanics-derived canonicalization / symmetry / transposition | A sound current-input equivalence is identifiable and telemetry shows material repeated equivalent work inside one solve; naive exact transposition remains weak |
+| Structural graph preprocessing | An active separator/topology/relational premise exposes a sound graph property with enough reuse to repay construction |
+| Cooperative multi-engine search | Two solver families expose complementary typed artifacts that the other cannot cheaply derive; start from one handoff rather than a framework |
+| Declarative mechanic automata | Repeated active descendants need a shared mechanic-state contract enough to justify migration-scale complexity |
+| Adversarial counterexample generation | A frozen semantic hypothesis can be attacked through solver-belief versus exact-reality disagreement without construction leakage |
 | Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules remain nominations until independently confirmed |
+| Heuristic-to-theorem subdomain audit | An active microscope reveals a soft relation with a clearly identifiable exact subdomain worth a prune, lower bound, forced move, decomposition, or exact-mode switch |
 
-## Existing conditional work
+## Conditional composition/allocation work
 
-Keep these dormant until their stated premise changes:
+Keep these dormant unless an active acquisition lane produces a changed premise.
 
 | Question | Reopen condition |
 |---|---|
-| Profile calibration | A live decision needs profile evidence under schema-v3 supported axes and independent validation; old nearest-profile identity remains invalid |
-| Accepted-path representative sensitivity | A live mechanism depends materially on one accepted-path-set view |
-| Cross-attempt basin overlap | A real allocation/handoff question exists; restore canonical action identity and participation checks, and measure solve-local rediscovery at the same time |
-| Forced-chain traversal census | Current profiling shows material work spent in post-prune one-successor chains |
-| Richer static graph/placement selectors | A recurring mechanism-specific trace/first-loss signal appears, or exact structural preprocessing earns a routing premise |
+| Automatic selector/profile calibration | A new legal current-input relation predicts differentiated response among genuinely different actions under supported evidence |
+| Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
+| Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
 | Admissible-order retry repricing | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work |
-| Repair restart near-miss allocation | Fresh legal population or changed allocation contract revives the historical signal |
-| Non-portal coarse-state-merge recurrence | A mechanism-specific question independently nominates the 44/200 Card-E recurrence, not a generic reopen |
-| Independent transfer / `portfolio-18-flat-2m` / known-prefix manifest / producer maturation | A broad claim needs the smallest independent construction or locked parents; static allocation resumes; a prefix study needs path-set sensitivity; a producer is touched or a consumer gap appears |
-| Stability-aware portfolios / beam continuation / cross-policy handoff | Simpler analysis leaves unexplained structure, WS1 finds a compact held-out signal, or a new descriptor family appears (Card-E's tested ones are closed) |
-| Temporal/displaced-capability / human-editor-envelope niches | A stable basin or omitted human/editor geometry is independently nominated; never treat envelope label as independence |
-| Research infrastructure / Class-1 beam-menu / representation-sensitivity lineage | A measured recurring limitation, a materially different allocation contract, or post-WS2-priority lineage-survival measurement with geometry controls |
+| Repair restart near-miss allocation | A fresh population or changed allocation contract revives the historical signal; do not retest generic restart |
+| Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
+| Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
+| Independent transfer / human-editor-envelope niches | A broad claim needs independent construction/locked parents or a stable omitted geometry is independently nominated |
 
-## Closed forms
+## Closed forms that stay closed
 
-Do not reopen unchanged: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; global portal coarse-state merge; August low-cardinality categorical quotas; fixed-endpoint homotopy as a substitute for open-path topology; generic connectivity/dead-cause reuse on the current Class-5 residual; generic detour libraries; broad alternative-search frameworks before earned diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency; bulk variant generation; full-corpus A/Bs for already falsified forms; H1's frozen `cross-via`/`pass-via`/`flip-order`/`portal-pair` event vocabulary as a universal descriptor.
+Do not reopen unchanged:
 
-Keep this file short. Active execution state belongs in the workstream authority; chronology and measurements belong in dated reports; historical premise interpretation belongs in the archaeology register.
+- broad retries, seed fan-out, threshold widening, scorer/profile proliferation, universal beam widening;
+- global portal coarse-state merge;
+- late must-turn-biased repair and repair late-probe `7->6`;
+- August low-cardinality categorical quota projection;
+- fixed-endpoint homotopy as a substitute for open-path topology;
+- **cross-level** learned-connectivity reason checker from the August boundary-sketch experiment;
+- generic detour-gadget libraries;
+- historical blueprint production implementation / synthetic-must-cross formulation;
+- H1's frozen `cross-via` / `pass-via` / `flip-order` / `portal-pair` vocabulary as a universal descriptor;
+- naive exact transposition and full MITM without a materially new compact identity/interface premise;
+- broad alternative-search frameworks before their active cheap falsifier;
+- hazard/bandit/ML scheduling before a fixed-work marginal-value premise;
+- bulk variant generation without a frozen causal question.
+
+Important distinctions:
+
+- closing the **cross-level learned-connectivity checker** does not close the active solve-local rediscovery question;
+- closing generic detour gadgets does not close actual per-instance commutativity;
+- closing historical blueprint implementations does not close future-intersection realizability;
+- closing positional/prefix repair does not close dependency-defined causal revision;
+- closing H1's compact recurring vocabulary does not close bounded per-instance joint feasibility.
+
+## Research hygiene
+
+Before reviving anything from history, classify its old disposition: **FORM-CLOSED, DESCRIPTOR-CLOSED, CROSS-LEVEL-CLOSED, PARTICIPATION-INVALID, DIRTY-REVERT, POPULATION-LIMITED, ECONOMICS-CLOSED, SEMANTIC-CLOSED, or OPEN-PER-INSTANCE**. Only `SEMANTIC-CLOSED` blocks a materially different implementation that asks the same semantic question.
+
+Keep this file short. Active execution belongs in the workstream authority; measurements/chronology belong in dated reports; historical interpretation belongs in the archaeology register.
