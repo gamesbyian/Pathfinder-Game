@@ -21,22 +21,24 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Production boundary:** run `35066677597` is **101/102 C1 + 1,169/1,700 C2**, residual 531; atlas Classes 1-5 = 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, not a proven comparable-work negative. Must-turn-biased late repair economics are **CLOSED NEGATIVE**: frozen 60-row cohort, identical 17/60 solved sets, zero marginal gains, +6.5% work. `R02768`/`R02180` remain placement/capability evidence only. [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
+**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, not proven negative. Must-turn-biased late repair is **CLOSED NEGATIVE** (60-row cohort, zero marginal gains, +6.5% work); `R02768`/`R02180` remain placement evidence only. [`economics`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
 
 **Class 4: PROMOTED.** Dead-last portal coarse-state retry reproduced **86 referee-valid gains / 0 losses** on 113 allocation rows with byte-identical non-target stages and lower aggregate `workSpent`; default ON. Global merge remains closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
 **Class 5:** natural open-path exact labels were contrast-starved (28 rows / 26 strata, zero LIVE/DEAD contrasts), so the frozen same-board/same-endpoint human-parent topological-fork preflight was executed. **PREMISE EARNED:** 4 exact-resolved LIVE/DEAD-discordant pairs across 2 independent human parents (`P00124`, `P00137`), all controls valid, phase-distinct by one full turn. This earns a microscope step, not production routing of raw phase coordinates. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) · [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 
-**Card-E:** sizing confirmed on 156 rows, with 17/156 reconstructable-but-unexposed. Its two tested state-selection descriptor families failed depth-controlled likelihood-ratio tests, so no handoff pilot follows. Reopen only with a new descriptor family or after the within-pool candidate-selection sub-problem changes materially. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
+**Card-E:** 17/156 reconstructable-but-unexposed; its two tested descriptor families failed depth-controlled tests, so no handoff pilot follows. Reopen only with a new descriptor family. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
 **H1:** **CLOSED NEGATIVE.** 449-query population, 93.5% resolved: no compact recurring relation. `E-FLIP-ORDER`'s only strong effect reverses direction across parents; `E-CROSS-VIA`/`E-PASS-VIA` show no distance-to-goal split. Partial LIVE-state realizability survives as capability-memory evidence. [`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)
 
 **DEAD-core:** **INCONCLUSIVE / population-limited.** Size-1 causal core found on 3/4 exact-DEAD B2 states (2 `mustCross`, 1 `mustPass`); too few to call type-recurrence, and the 4-state population is exhausted. [`result`](../reports/2026-09-17-dead-core-relaxation-pilot-001.md)
 
+**H3:** **CLOSED NEGATIVE.** On Card-E's 156-row population, remaining length dominates rescuability (d=-1.81) over any commitment interface; portal/intersection usage is only a weak secondary effect. [`result`](../reports/2026-09-17-h3-repair-commitment-interface-result-001.md)
+
 **Current premise execution order:**
 
 1-3. ~~topology pilot, H1 prespec, DEAD-core diagnosis~~ — all done (see the Class 5/H1/DEAD-core lines above and `solver-future-work.md` for topology's earned microscope step);
-4. keep H2 structural stasis and H3 dependency-defined repair bounded;
+4. ~~H3 dependency-defined repair~~ — done, closed negative (see H3 line above); H2 structural stasis in progress;
 5. only then consider tiny behavioral-state quotient and separator/decomposition probes.
 
 The assumption-breaking architecture harvest is preserved in [`solver-future-work.md`](solver-future-work.md), [`moonshot report`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md), and [`post-merge reconciliation`](../reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md). Radical ideas do not leapfrog frozen decision-bearing work.
