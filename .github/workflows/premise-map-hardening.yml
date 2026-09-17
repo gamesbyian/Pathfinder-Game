@@ -15,7 +15,7 @@ on:
       - 'docs/solver-premise-map-hardening*.json'
       - 'docs/solver-premise-map-hardening*.md'
       - 'docs/solver-premise-map-source-coverage*'
-      - 'data/stress/README.md'
+      - 'data/stress/README.*'
       - 'modules/solver/README.md'
       - 'scripts/audit-solver-premise-map.mjs'
       - 'scripts/audit-solver-premise-source-coverage.mjs'
