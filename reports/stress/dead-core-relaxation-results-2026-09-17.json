@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "kind": "dead-core-relaxation-diagnosis",
+  "generatedAt": "2026-09-17T01:59:09.215Z",
+  "solverRef": "14e805dbe43cb82e77657438bf6144d946583f0b",
+  "sourceH1Queries": "reports/stress/h1-event-feasibility-queries-2026-09-16.json",
+  "moonshot": "reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md",
+  "summary": {
+    "total": 15,
+    "flippedToLive": 3,
+    "stayedDead": 12,
+    "indeterminate": 0,
+    "correctnessAlarms": 0
+  },
+  "rows": [
+    {
+      "caseId": "S00001:28:top-rank1:extinct",
+      "levelId": "S00001",
+      "commitment": "mustCross",
+      "cell": [
+        6,
+        9
+      ],
+      "cpSatStatus": "OPTIMAL",
+      "causesFlipToFeasible": true,
+      "timeLimitSec": 60,
+      "exitCode": 0,
+      "refereeValid": false
+    },
+    {
+      "caseId": "S00001:28:top-rank1:extinct",
+      "levelId": "S00001",
+      "commitment": "mustPass",
+      "cell": [
+        6,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "S00030:14:top-rank1:extinct",
+      "levelId": "S00030",
+      "commitment": "mustCross",
+      "cell": [
+        5,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "S00030:14:top-rank1:extinct",
+      "levelId": "S00030",
+      "commitment": "mustCross",
+      "cell": [
+        8,
+        6
+      ],
+      "cpSatStatus": "OPTIMAL",
+      "causesFlipToFeasible": true,
+      "timeLimitSec": 60,
+      "exitCode": 0,
+      "refereeValid": false
+    },
+    {
+      "caseId": "S00030:14:top-rank1:extinct",
+      "levelId": "S00030",
+      "commitment": "mustPass",
+      "cell": [
+        13,
+        2
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "S00030:14:top-rank1:extinct",
+      "levelId": "S00030",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        10
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "S00030:14:top-rank1:extinct",
+      "levelId": "S00030",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        12
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "S00048:25:top-rank1:extinct",
+      "levelId": "S00048",
+      "commitment": "mustCross",
+      "cell": [
+        10,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "S00048:25:top-rank1:extinct",
+      "levelId": "S00048",
+      "commitment": "mustCross",
+      "cell": [
+        9,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "S00048:25:top-rank1:extinct",
+      "levelId": "S00048",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        15
+      ],
+      "cpSatStatus": "OPTIMAL",
+      "causesFlipToFeasible": true,
+      "timeLimitSec": 60,
+      "exitCode": 0,
+      "refereeValid": false
+    },
+    {
+      "caseId": "S00048:25:top-rank1:extinct",
+      "levelId": "S00048",
+      "commitment": "mustPass",
+      "cell": [
+        9,
+        5
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R00104:36:top-rank1:extinct",
+      "levelId": "R00104",
+      "commitment": "mustCross",
+      "cell": [
+        8,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R00104:36:top-rank1:extinct",
+      "levelId": "R00104",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R00104:36:top-rank1:extinct",
+      "levelId": "R00104",
+      "commitment": "mustPass",
+      "cell": [
+        8,
+        5
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R00104:36:top-rank1:extinct",
+      "levelId": "R00104",
+      "commitment": "mustPass",
+      "cell": [
+        9,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 60,
+      "exitCode": 0
+    }
+  ]
+}
