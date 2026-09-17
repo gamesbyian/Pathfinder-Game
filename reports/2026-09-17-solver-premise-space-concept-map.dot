@@ -1,0 +1,38 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", pad="0.3", nodesep="0.35", ranksep="0.55", label="Pathfinder solver premise-space: where solves can be lost and where premise-space is thin", labelloc=t, fontsize=20, fontname="Arial"];
+  node [shape=box, style="rounded,filled", fillcolor="white", fontname="Arial", fontsize=10, margin="0.12,0.08"];
+  edge [fontname="Arial", fontsize=8, color="#666666", arrowsize=0.7];
+
+  rep [label="1. Representation\nHIGH leverage / thin\nstate sufficiency, topology, regimes", penwidth=2.5];
+  gen [label="2. Candidate generation\nHIGH leverage / medium attention\nsource absence vs search failure"];
+  inf [label="3. Exact inference & pruning\nHIGH leverage / mature locally\njoint feasibility still thin", penwidth=2.5];
+  rank [label="4. Ordering & ranking\nDENSEST region\nmany bounded negatives", fillcolor="#eeeeee"];
+  retain [label="5. Retention & merging\nmedium-high attention\nbehavioral equivalence open"];
+  control [label="6. Budget / routing / control\nHIGH leverage\nstatic mature, adaptive thin", penwidth=2.5];
+  arch [label="7. Search architecture\nVERY HIGH leverage / thin\nforward-prefix dominance", penwidth=3];
+  fail [label="8. Failure learning & revision\nVERY HIGH leverage / thin\ncausal cores, backjump, surgery", penwidth=3];
+  comp [label="9. Global obligation composition\nVERY HIGH leverage / thin\nindividually feasible ≠ jointly feasible", penwidth=3];
+  repair [label="10. Repair / continuation\nhigh leverage / mature capability\nsearch-object limits open"];
+  valid [label="11. Validation & evaluation\nmedium-high leverage\nwitness/population sensitivity"];
+
+  rep -> gen -> inf -> rank -> retain -> control -> arch -> fail -> comp -> repair -> valid;
+
+  diag [shape=ellipse, label="FIRST-LOSS LINEAGE\nP024 / P135\nWhich stage irreversibly loses each current miss?", penwidth=3, fillcolor="#f7f7f7"];
+  diag -> rep [style=dashed, label="classify"];
+  diag -> gen [style=dashed];
+  diag -> inf [style=dashed];
+  diag -> rank [style=dashed];
+  diag -> retain [style=dashed];
+  diag -> control [style=dashed];
+  diag -> valid [style=dashed];
+
+  epi [shape=ellipse, label="EPISTEMIC LAYER\npopulation • dose • stale evidence\nclosed form ≠ closed parent • sparse objective", fillcolor="#f7f7f7", penwidth=2];
+  epi -> diag [style=dotted];
+  epi -> arch [style=dotted];
+
+  adapt [shape=ellipse, label="MISSING MIDDLE\nRepresent → infer → remember → revise → reroute", penwidth=3, fillcolor="#f7f7f7"];
+  rep -> adapt [style=dashed];
+  comp -> adapt [style=dashed];
+  fail -> adapt [style=dashed];
+  adapt -> control [style=dashed];
+}

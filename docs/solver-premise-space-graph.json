@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "title": "Pathfinder solver premise graph",
+    "generated": "2026-09-16",
+    "scope": "Solve-count-oriented research premises, open questions, speculations, implicit architecture assumptions, and epistemic assumptions.",
+    "caveat": "Exhaustive with respect to inspected current authorities and latest capability-atlas work, not a proof that no undocumented thought ever existed.",
+    "nodeSource": "solver-premise-space-register.csv",
+    "note": "This repository form normalizes the original graph artifact by storing node metadata once in the CSV register and edges here."
+  },
+  "edges": [
+    ["P024","P020"],["P024","P040"],["P024","P030"],["P024","P060"],["P024","P001"],
+    ["P135","P024"],["P135","P113"],["P113","P061"],["P113","P075"],
+    ["P032","P034"],["P032","P033"],["P035","P081"],["P081","P082"],["P081","P083"],
+    ["P012","P093"],["P012","P011"],["P014","P074"],["P071","P072"],
+    ["P070","P071"],["P070","P073"],["P070","P074"],["P070","P143"],
+    ["P013","P053"],["P013","P092"],["P092","P149"],
+    ["P040","P041"],["P040","P042"],["P043","P040"],["P045","P040"],["P146","P040"],
+    ["P050","P053"],["P051","P064"],["P064","P133"],["P060","P065"],
+    ["P061","P063"],["P062","P063"],["P067","P083"],
+    ["P003","P084"],["P003","P132"],["P005","P137"],["P130","P131"],
+    ["P110","P112"],["P110","P113"],["P111","P005"],
+    ["P037","P136"],["P142","P136"],["P148","P067"],
+    ["P031","P030"],["P001","P150"],["P004","P135"],["P123","P065"],
+    ["P090","P032"],["P091","P032"],["P140","P013"],["P141","P053"],
+    ["P101","P073"],["P147","P082"]
+  ]
+}
