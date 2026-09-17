@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Template for any premise or relation proposed after solver-premise-map-v1. REWORDING_ONLY proposals do not receive new premise IDs.",
+  "candidate": {
+    "candidateId": "",
+    "semanticNoveltyClass": "NEW_PARENT | SPECIALIZATION | SCOPE_SPLIT | EVIDENCE_STATE_CHANGE | IMPLEMENTATION_FORM | RELATION_ONLY | REWORDING_ONLY",
+    "proposition": "",
+    "semanticParent": null,
+    "testedFormsOrSiblings": [],
+    "systemLocus": "",
+    "claimType": "",
+    "scopeLifetime": [],
+    "evidenceState": "",
+    "population": "",
+    "architectureEpoch": "",
+    "sourcePaths": [],
+    "discoveryLineages": [],
+    "informationAuthority": [],
+    "maturityStage": "",
+    "increaseConfidenceObservation": "",
+    "decreaseConfidenceObservation": "",
+    "splitPropositionObservation": "",
+    "productionUseAllowed": "yes | no | conditional",
+    "temporalDependencies": [],
+    "relations": [],
+    "contradictionsOrTensions": [],
+    "affectedResearchFunctions": [],
+    "intendedInformationLifetime": "",
+    "intendedTransferRadius": "",
+    "identityFreeGeneralizationUnit": "",
+    "notes": ""
+  },
+  "admissionRules": [
+    "REWORDING_ONLY does not receive a new premise ID.",
+    "IMPLEMENTATION_FORM must name a semantic parent.",
+    "A closure-like evidence state must state scope/population, evidence basis, and architecture epoch or explicit epoch-independence rationale.",
+    "Diagnostic correlation does not grant prune authority.",
+    "A mechanism is not production capability until its maturity stage and deployment boundary are explicit.",
+    "A new premise should populate a thin region, split a conflated abstraction, add a materially new relation, or expose a cross-cutting mismatch; vocabulary novelty is insufficient.",
+    "Mining-derived candidates remain proposals until admitted into a post-v1 map version."
+  ]
+}

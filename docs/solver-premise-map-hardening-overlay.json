@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Non-destructive hardening overlay for the canonical solver premise map. This file records cross-cutting metadata and audit structures that should not rewrite historical register rows.",
+  "canonicalPremiseFiles": [
+    "docs/solver-premise-space-register.csv",
+    "docs/solver-premise-space-extension-2026-09-17.csv",
+    "docs/solver-premise-space-extension-2026-09-17b.csv",
+    "docs/solver-premise-space-extension-2026-09-17c.csv"
+  ],
+  "canonicalRelationFiles": [
+    "docs/solver-premise-space-graph.json",
+    "docs/solver-premise-space-relations-v2.json",
+    "docs/solver-premise-space-relations-v3.json"
+  ],
+  "semanticNoveltyClasses": [
+    "NEW_PARENT",
+    "SPECIALIZATION",
+    "SCOPE_SPLIT",
+    "EVIDENCE_STATE_CHANGE",
+    "IMPLEMENTATION_FORM",
+    "RELATION_ONLY",
+    "REWORDING_ONLY"
+  ],
+  "discoveryLineages": [
+    "runtime-code-assumption",
+    "historical-documentation",
+    "historical-experiment",
+    "negative-result-archaeology",
+    "canonical-map-pass",
+    "hostile-completeness-pass",
+    "independent-reconstruction",
+    "hardening-inference"
+  ],
+  "fileDiscoveryLineages": {
+    "docs/solver-premise-space-register.csv": ["canonical-map-pass"],
+    "docs/solver-premise-space-extension-2026-09-17.csv": ["hostile-completeness-pass"],
+    "docs/solver-premise-space-extension-2026-09-17b.csv": ["hostile-completeness-pass"],
+    "docs/solver-premise-space-extension-2026-09-17c.csv": ["independent-reconstruction", "hostile-completeness-pass"]
+  },
+  "authorityClasses": [
+    "referee-truth",
+    "sound-feasibility-consequence",
+    "safe-dominance-or-equivalence",
+    "heuristic-prediction",
+    "empirical-experience",
+    "diagnostic-correlation",
+    "scheduler-prior",
+    "inherited-default",
+    "offline-research-only"
+  ],
+  "maturityStages": [
+    "phenomenon-observed",
+    "representable",
+    "semantically-sound-or-faithful",
+    "participates-in-real-search",
+    "changes-useful-work",
+    "adds-complementary-matched-cost-value",
+    "schedulable-economically",
+    "production-promoted"
+  ],
+  "temporalConditioningDimensions": [
+    "solver-architecture-epoch",
+    "work-budget-contract",
+    "production-participation-boundary",
+    "residual-population",
+    "corpus-or-generator-version",
+    "instrumentation-semantics"
+  ],
+  "contradictionCandidates": [
+    {
+      "id": "C001",
+      "kind": "conditional-tension",
+      "left": "P003",
+      "right": "P198",
+      "missingCondition": "maturity stage",
+      "question": "Can a zero unique-solve treatment still represent a useful capability that has not reached a deployment/economics stage?"
+    },
+    {
+      "id": "C002",
+      "kind": "conditional-tension",
+      "left": "P005",
+      "right": "P181",
+      "missingCondition": "architecture epoch and endogenous residual",
+      "question": "When does historical evidence remain portable after the solver and the surviving population both change?"
+    },
+    {
+      "id": "C003",
+      "kind": "conditional-tension",
+      "left": "P011",
+      "right": "P179",
+      "missingCondition": "future policy and work envelope",
+      "question": "Is a state equivalence claim absolute or only relative to the continuation policy available from that state?"
+    },
+    {
+      "id": "C004",
+      "kind": "strategy-tension",
+      "left": "P040",
+      "right": "P184",
+      "missingCondition": "immediate score value versus option value",
+      "question": "When should finite work follow current ranking and when should it preserve strategically distinct but temporarily poor-looking futures?"
+    },
+    {
+      "id": "C005",
+      "kind": "conditional-tension",
+      "left": "P151",
+      "right": "P188",
+      "missingCondition": "observer participation and observer effect",
+      "question": "Can a treatment be proven to participate while the instrumentation used to prove participation changes the encounter distribution?"
+    },
+    {
+      "id": "C006",
+      "kind": "strategy-tension",
+      "left": "P186",
+      "right": "P200",
+      "missingCondition": "abandonment value versus information half-life",
+      "question": "When should an unproductive action be abandoned versus retained because its accumulated state or information remains valuable to later work?"
+    }
+  ],
+  "semanticSiblingFamilies": [
+    {
+      "id": "S001",
+      "parent": "P032",
+      "name": "joint future feasibility",
+      "knownTestedForms": ["P033", "P034"],
+      "openSiblingClasses": [
+        "per-instance conflict/core derivation",
+        "shared-resource assignment feasibility",
+        "separator/interface feasibility",
+        "order-class feasibility",
+        "axis/crossing assignment feasibility"
+      ]
+    },
+    {
+      "id": "S002",
+      "parent": "P011",
+      "name": "future-state relation",
+      "knownTestedForms": ["P052", "P179", "P180"],
+      "openSiblingClasses": [
+        "proof-bearing dominance",
+        "policy-relative partial order",
+        "experience similarity without semantic merge",
+        "continuation-right-aware equivalence"
+      ]
+    },
+    {
+      "id": "S003",
+      "parent": "P135",
+      "name": "first-loss diagnosis",
+      "knownTestedForms": ["P183"],
+      "openSiblingClasses": [
+        "alternate-witness first loss",
+        "minimal intervention set",
+        "first lost completion regime",
+        "first irreversible resource overcommitment"
+      ]
+    },
+    {
+      "id": "S004",
+      "parent": "P162",
+      "name": "solve-local knowledge sharing",
+      "knownTestedForms": ["P177", "P193", "P200"],
+      "openSiblingClasses": [
+        "positive forced-fact store",
+        "negative conflict store",
+        "frontier continuation state",
+        "uncertainty/calibration state",
+        "cross-technique evidence transfer"
+      ]
+    }
+  ],
+  "implicitDefaults": [
+    {
+      "id": "D001",
+      "default": "stage order is fixed before the invocation",
+      "premiseQuestion": "Should stage order itself be revisable from solve-local evidence?",
+      "related": ["P154", "P186", "P194"]
+    },
+    {
+      "id": "D002",
+      "default": "first successful accepted solve terminates further portfolio work",
+      "premiseQuestion": "What capability/credit information is censored by first-success stopping?",
+      "related": ["P152", "P181", "P192"]
+    },
+    {
+      "id": "D003",
+      "default": "production beam work caps discard frontier state unless an explicit continuation mechanism is used",
+      "premiseQuestion": "Which search objects deserve persistence across budget boundaries?",
+      "related": ["P177", "P178", "P200"]
+    },
+    {
+      "id": "D004",
+      "default": "root preprocessing is largely static",
+      "premiseQuestion": "Which derived facts should be recomputed or revised after path history changes?",
+      "related": ["P155", "P195"]
+    },
+    {
+      "id": "D005",
+      "default": "the action grammar supplied to search is treated as given during most downstream work",
+      "premiseQuestion": "Can evidence justify revising the successor source itself?",
+      "related": ["P020", "P024", "P195"]
+    },
+    {
+      "id": "D006",
+      "default": "most search value is represented as candidate-path progress rather than information production",
+      "premiseQuestion": "When is an action valuable because of what it teaches rather than the path it produces?",
+      "related": ["P185"]
+    },
+    {
+      "id": "D007",
+      "default": "state fields primarily encode puzzle/path state rather than solve-local epistemic or work-history state",
+      "premiseQuestion": "Which learned facts, uncertainty, causal history, and continuation rights belong in the decision state?",
+      "related": ["P189", "P194", "P200"]
+    }
+  ],
+  "asymmetryFamilies": [
+    {"id":"A001","left":"reject","right":"recover","observation":"pruning and rejection semantics are substantially more mature than selective recovery of causally mistaken commitments"},
+    {"id":"A002","left":"negative knowledge","right":"positive knowledge","observation":"failure/conflict ideas are more explicit than durable positive forced-fact or opportunity knowledge"},
+    {"id":"A003","left":"choose next","right":"stop current","observation":"routing/scheduling is mature while evidence-driven abandonment is comparatively new"},
+    {"id":"A004","left":"node-local inference","right":"invocation-persistent inference","observation":"facts are commonly consumed near their producer and die at module boundaries"},
+    {"id":"A005","left":"solver-behavior measurement","right":"solution-space measurement","observation":"runtime telemetry is richer than systematic multiplicity/regime-volume characterization"},
+    {"id":"A006","left":"rank alternatives","right":"preserve option classes","observation":"scalar ranking research is denser than explicit regime/option-value representation"},
+    {"id":"A007","left":"static level descriptors","right":"dynamic causal state","observation":"routing/generalization has historically had easier access to static features than causal failure-state representations"}
+  ],
+  "ontologyStressTests": [
+    {
+      "id": "O001",
+      "decomposition": "information-flow",
+      "question": "For each expensive fact, who creates it, who may consume it, with what authority, for how long, and where is it lost?"
+    },
+    {
+      "id": "O002",
+      "decomposition": "decision-rights",
+      "question": "Which actor may prune, rank, route, stop, revise, validate, or only observe on the basis of each information class?"
+    },
+    {
+      "id": "O003",
+      "decomposition": "irreversibility",
+      "question": "Which commitments are reversible under remaining work and which irreversibly destroy completion regimes?"
+    },
+    {
+      "id": "O004",
+      "decomposition": "causal-intervention",
+      "question": "What minimal intervention changes the reachable accepted-solution set at each failure locus?"
+    },
+    {
+      "id": "O005",
+      "decomposition": "resource-conservation",
+      "question": "Which scarce future resources are jointly consumed by otherwise independent obligations?"
+    },
+    {
+      "id": "O006",
+      "decomposition": "role-separation",
+      "question": "Which claims belong to solver, observer, exact oracle, referee, generator, scheduler, or research analyst, and what breaks if those roles are conflated?"
+    }
+  ],
+  "miningLenses": [
+    "contradiction-clusters",
+    "graph-bottlenecks",
+    "high-centrality-weak-evidence",
+    "empty-semantic-sibling-space",
+    "failed-forms-under-open-parent",
+    "missing-cross-locus-edges",
+    "asymmetry-families",
+    "stale-or-epoch-sensitive-conclusions",
+    "independent-convergence-divergence",
+    "research-function-interface-loss",
+    "pressure-vector-outliers",
+    "ontology-escapees"
+  ]
+}

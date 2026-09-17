@@ -1,0 +1,40 @@
+name: Premise map hardening
+
+on:
+  pull_request:
+    paths:
+      - 'docs/solver-premise-space-register.csv'
+      - 'docs/solver-premise-space-extension-*.csv'
+      - 'docs/solver-premise-space-graph.json'
+      - 'docs/solver-premise-space-relations*.json'
+      - 'docs/solver-premise-map-hardening*.json'
+      - 'docs/solver-premise-map-hardening*.md'
+      - 'scripts/audit-solver-premise-map.mjs'
+      - '.github/workflows/premise-map-hardening.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /docs/solver-premise-space-register.csv
+            /docs/solver-premise-space-extension-2026-09-17.csv
+            /docs/solver-premise-space-extension-2026-09-17b.csv
+            /docs/solver-premise-space-extension-2026-09-17c.csv
+            /docs/solver-premise-space-graph.json
+            /docs/solver-premise-space-relations-v2.json
+            /docs/solver-premise-space-relations-v3.json
+            /docs/solver-premise-map-hardening-overlay.json
+            /scripts/audit-solver-premise-map.mjs
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Audit premise-map structure
+        run: node scripts/audit-solver-premise-map.mjs
