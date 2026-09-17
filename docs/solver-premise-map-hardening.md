@@ -3,7 +3,7 @@
 > **Status:** active hardening protocol before insight mining.
 > **Last evidence:** 2026-09-17 — canonical premise map contains 142 propositions across the baseline and three extension files, plus typed relations and completeness lenses.
 > **Decision:** harden the map as a dataset before using it as an idea generator.
-> **Remaining gate:** complete structural audit, freeze a versioned snapshot, and mine only from the frozen snapshot.
+> **Remaining gate:** complete structural and reciprocal source audits, freeze a versioned snapshot, and mine only from the frozen snapshot.
 
 ## Purpose
 
@@ -208,6 +208,30 @@ Mining methods should be declared before reading their results. Initial lenses a
 - pressure-vector outliers;
 - ontology escapees: important questions that remain difficult to represent.
 
+### H16 — reciprocal source coverage and saturation
+
+Proposition provenance proves only one direction: every proposition can point back to evidence or discovery lineage. It does not prove that every premise-bearing source region was ever sampled. Before mining, reverse that arrow:
+
+`repository surface -> premise-bearing claim/default/question -> mapped premise(s) or explicit disposition`
+
+Select source batches by repository stratum rather than by premise IDs, graph centrality or thin cells. Include current research authorities, runtime code/defaults, generators and corpora, historical/removed-tooling archaeology, workflow/evidence plumbing and dated reports. For each source record whether it is directly or indirectly mapped, reviewed with no new premise, yields a post-v1 premise candidate, escapes the ontology, is out of scope, or remains unreviewed.
+
+Completeness confidence is a vector, not a percentage. Track at least source-surface coverage, semantic saturation, causal independence of discovery lineages, ontology-escape rate, historical reach, runtime reach, evidence-process reach and distribution reach.
+
+Do not count documents as independent confirmations when they inherit one primary observation. Likewise, do not infer saturation merely because later passes use the same ontology and rediscover the same rows. Confidence rises when independently selected, heterogeneous source batches stop producing high-impact new parent premises while still rediscovering existing territory.
+
+A bounded pre-mining saturation gate is satisfied when major source strata have been sampled, no known major stratum is left unreviewed, and the final two heterogeneous batches produce no high-impact new parent premise. This is evidence of saturation, never proof that undocumented or never-imagined premises do not exist.
+
+The executable and machine-readable companions are:
+
+- `docs/solver-premise-map-source-coverage.md`;
+- `docs/solver-premise-map-source-coverage.json`;
+- `docs/solver-premise-map-source-coverage-addendum-2026-09-17.json`;
+- `docs/solver-premise-space-post-v1-candidates-2026-09-17.csv`;
+- `scripts/audit-solver-premise-source-coverage.mjs`.
+
+Post-v1 discoveries do not mutate the frozen v1 mining input. They are compared against the first mining round afterward, then admitted or rejected in a separately versioned map.
+
 ## Hardening completion rule
 
 The premise map is ready for insight mining when:
@@ -219,4 +243,7 @@ The premise map is ready for insight mining when:
 5. implicit production defaults have been inventoried;
 6. the current ontology has survived at least one deliberately alien stress test;
 7. a frozen snapshot manifest names the exact files and commit;
-8. mining lenses are preregistered separately from mining results.
+8. mining lenses are preregistered separately from mining results;
+9. reciprocal source coverage has sampled every major source stratum;
+10. causal ancestry is considered when judging independent rediscovery or support volume;
+11. the final two heterogeneous source batches produce no high-impact new parent premise, with residual uncertainty stated explicitly.
