@@ -54,9 +54,11 @@ function parseCsv(text) {
 function records(path) {
   const rows = parseCsv(readFileSync(path, 'utf8'));
   const header = rows.shift();
-  return rows
-    .map((values, index) => Object.fromEntries(header.map((key, i) => [key, values[i] ?? ''])))
-    .map(record => ({ ...record, __path: path, __row: index + 2 }));
+  return rows.map((values, index) => ({
+    ...Object.fromEntries(header.map((key, i) => [key, values[i] ?? ''])),
+    __path: path,
+    __row: index + 2,
+  }));
 }
 
 function normalizeText(value) {
