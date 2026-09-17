@@ -29,7 +29,7 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Card-E:** 17/156 reconstructable-but-unexposed; both tested descriptor families failed depth-controlled tests. Reopen only with a new descriptor family. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
-**Completed post-topology hypotheses:** H1 closed its tested compact event vocabulary; DEAD-core is population-limited; H3 repair-commitment interface and H2 stasis observer closed negative; behavioral quotient is mixed/capability-memory only. These outcomes narrow forms, not every broader semantic operation they touched. [`reconciliation matrix`](solver-capability-gap-stop-condition-reconciliation.md)
+**Completed post-topology hypotheses:** H1 closed its tested event vocabulary; DEAD-core is population-limited; H3/H2 closed negative; behavioral quotient is mixed/capability-memory only. These narrow forms, not every semantic operation touched. [`reconciliation matrix`](solver-capability-gap-stop-condition-reconciliation.md)
 
 ### Premise-acquisition lanes
 
@@ -38,12 +38,12 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 #### Lane A — separator / decomposition
 
 1. **Separator/decomposition census — CONCLUDED / BOUNDED POSITIVE.** 121/390 (31.0%) of current Class-5 levels have a non-trivial, board-balanced, narrow (width<=4) static/mechanic-aware interface; portal-mediation is a clean negative. [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md)
-2. **Next gate: interface-contract state size**, not another separator count -- does path/mechanic history crossing a narrow separator compress into a small enough boundary contract for region composition? Deferred onto Lane B's frozen population (family 3/path-history-conditioned separators need exactly that frozen-prefix population), not a separate campaign.
+2. **Next gate: interface-contract state size**, not another separator count -- does history crossing a narrow separator compress into a small enough boundary contract? Deferred onto Lane B's frozen population, not a separate campaign.
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
 1. **Fresh exact LIVE/DEAD sibling asset — CONCLUDED / DEAD POPULATION EARNED, CONSTRUCTION GAP FOUND.** 75-state, 25-independent-parent exact-DEAD population harvested and CP-SAT-labelled (0 alarms) — reusable for Lane A's deferred family-3 measurement. The naive goal-distance-greedy constructor found **zero** LIVE siblings even shallow, confirmed a construction artifact (not residual structure) by a gate-only check showing real reachable LIVE capacity the walk cannot find. A bounded 38-query relaxation probe found no causal cores, likely confounded by the same gap. [`result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md)
-2. **Handoff gate:** DEAD-core/"spares LIVE" testing and any Lane D/E work needing matched LIVE/DEAD Class-5 siblings need a **production-search-quality sibling constructor** first -- a separate, larger implementation task.
+2. **Handoff gate:** DEAD-core/"spares LIVE", Lane D/E work needing matched LIVE/DEAD Class-5 siblings, and Lane G's stage 2 all need a **production-search-quality sibling constructor** first -- a separate, larger implementation task, now blocking three independent lines.
 3. A per-instance core/conflict need not recur across levels; recurrence is required only for a fixed reusable descriptor claim.
 
 #### Lane C — solve-local typed knowledge reuse
@@ -69,12 +69,12 @@ Execute [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-i
 
 #### Lane G — independent search-object nursery
 
-1. **Complete-path LNS cheapest falsifier — OPEN.** Test whether plausible relaxed complete paths are structurally/edit-distance close enough to accepted solutions for local surgery to be credible. Positive evidence earns a prototype; null closes this route cheaply.
-2. **Backward/bidirectional abstraction remains deferred** until a compact sound residual/interface signature emerges from A/D/topology. Do not reopen full MITM.
+1. **Complete-path LNS cheapest falsifier — CONCLUDED / STAGE 1 POSITIVE, STAGE 2 METHOD-LIMITED.** Real solutions for one level cluster tightly (median Jaccard distance 0.11, 25 levels/2,235 pairs, zero new compute) -- a real prerequisite. But no cheap naive construction (3 attempts) could build a fair complete-length candidate to test distance-to-solution; converges on the same sibling-constructor gap as Lanes B/D1. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
+2. **Backward/bidirectional abstraction stays deferred** until a compact sound signature emerges from A/D/topology. Do not reopen full MITM.
 
 ### Queue ordering and parallelism
 
-**A, B, Class-3 (F1), and Lane D question 1 are concluded** (A bounded-positive, deferred onto B; B a real DEAD population blocked on a sibling-constructor handoff; Class-3 an evidence gap; D1 population-limited positive, same handoff). Remaining single-agent order: **D2/D3 -> C -> E -> F2/F3 (Card-E, topology) -> G.** With multiple agents, C/D/E/F/G may run in parallel -- all are retained-evidence/offline observers.
+**A, B, Class-3 (F1), D1, and G1 are concluded** -- A/D1 bounded/population-limited positives, B/G1-stage2 blocked on the same sibling-constructor handoff, Class-3 an evidence gap. Remaining single-agent order: **D2/D3 -> C -> E -> F2/F3 (Card-E, topology).** C/D/E/F may run in parallel with multiple agents -- all are retained-evidence/offline observers.
 
 **No production treatment is earned.**
 

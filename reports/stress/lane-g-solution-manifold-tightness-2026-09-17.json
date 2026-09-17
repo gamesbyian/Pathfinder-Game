@@ -1,0 +1,274 @@
+{
+  "generatedAt": "2026-09-17T06:04:13.561Z",
+  "evidenceRole": "Lane G cheapest-falsifier stage 1 -- solution-manifold tightness, zero new solver compute",
+  "corpus": "data/stress/stress-levels-random.json",
+  "hintsDir": "data/stress/hints-random",
+  "seed": "lane-g-manifold-pilot-001",
+  "minHints": 5,
+  "levelsRequested": 25,
+  "hintsPerLevelCap": 15,
+  "eligibleLevels": 1552,
+  "levelsSampled": 25,
+  "distanceMetric": "Jaccard distance (1 - |A intersect B| / |A union B|) over each path's visited-cell SET",
+  "overall": {
+    "totalPairs": 2235,
+    "mean": 0.13266751195618823,
+    "median": 0.11111111111111116,
+    "p10": 0.021505376344086002,
+    "p90": 0.28735632183908044,
+    "min": 0,
+    "max": 0.4954128440366973
+  },
+  "perLevel": [
+    {
+      "id": "R00901",
+      "totalHints": 99,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.2603707832236553,
+      "medianJaccardDistance": 0.25531914893617025,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.4954128440366973
+    },
+    {
+      "id": "R01492",
+      "totalHints": 26,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.010774410774410789,
+      "medianJaccardDistance": 0.02020202020202022,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.02020202020202022
+    },
+    {
+      "id": "R01558",
+      "totalHints": 99,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.1680772992194401,
+      "medianJaccardDistance": 0.16091954022988508,
+      "minJaccardDistance": 0.024691358024691357,
+      "maxJaccardDistance": 0.27956989247311825
+    },
+    {
+      "id": "R02037",
+      "totalHints": 67,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.05266387164425174,
+      "medianJaccardDistance": 0.04255319148936165,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.1428571428571429
+    },
+    {
+      "id": "R02123",
+      "totalHints": 10,
+      "sampledHints": 10,
+      "pairsCompared": 45,
+      "meanJaccardDistance": 0.06693503064808348,
+      "medianJaccardDistance": 0.06521739130434778,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.14583333333333337
+    },
+    {
+      "id": "R02182",
+      "totalHints": 34,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.09939900879860913,
+      "medianJaccardDistance": 0.11111111111111116,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.19696969696969702
+    },
+    {
+      "id": "R02190",
+      "totalHints": 223,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.18508867745444801,
+      "medianJaccardDistance": 0.1875,
+      "minJaccardDistance": 0.03389830508474578,
+      "maxJaccardDistance": 0.2941176470588235
+    },
+    {
+      "id": "R02313",
+      "totalHints": 66,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.07518865499647523,
+      "medianJaccardDistance": 0.07207207207207211,
+      "minJaccardDistance": 0.01851851851851849,
+      "maxJaccardDistance": 0.1709401709401709
+    },
+    {
+      "id": "R02369",
+      "totalHints": 5,
+      "sampledHints": 5,
+      "pairsCompared": 10,
+      "meanJaccardDistance": 0.03873822685979369,
+      "medianJaccardDistance": 0.048387096774193505,
+      "minJaccardDistance": 0.016393442622950838,
+      "maxJaccardDistance": 0.06399999999999995
+    },
+    {
+      "id": "R02439",
+      "totalHints": 119,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.16217466260919972,
+      "medianJaccardDistance": 0.12962962962962965,
+      "minJaccardDistance": 0.03883495145631066,
+      "maxJaccardDistance": 0.36585365853658536
+    },
+    {
+      "id": "R02502",
+      "totalHints": 52,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.20344621107914973,
+      "medianJaccardDistance": 0.2184873949579832,
+      "minJaccardDistance": 0.01869158878504673,
+      "maxJaccardDistance": 0.31746031746031744
+    },
+    {
+      "id": "R02505",
+      "totalHints": 41,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.16917544732626613,
+      "medianJaccardDistance": 0.18518518518518523,
+      "minJaccardDistance": 0.020408163265306145,
+      "maxJaccardDistance": 0.31034482758620685
+    },
+    {
+      "id": "R02512",
+      "totalHints": 104,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.08659935877282997,
+      "medianJaccardDistance": 0.06399999999999995,
+      "minJaccardDistance": 0.016393442622950838,
+      "maxJaccardDistance": 0.23357664233576647
+    },
+    {
+      "id": "R02546",
+      "totalHints": 42,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.09899146469127978,
+      "medianJaccardDistance": 0.08791208791208793,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.22448979591836737
+    },
+    {
+      "id": "R02553",
+      "totalHints": 25,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.10369705816733402,
+      "medianJaccardDistance": 0.13186813186813184,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.19148936170212771
+    },
+    {
+      "id": "R02708",
+      "totalHints": 448,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.2733904805434376,
+      "medianJaccardDistance": 0.28735632183908044,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.38888888888888884
+    },
+    {
+      "id": "R02724",
+      "totalHints": 11,
+      "sampledHints": 11,
+      "pairsCompared": 55,
+      "meanJaccardDistance": 0.1506584751387726,
+      "medianJaccardDistance": 0.18604651162790697,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.2068965517241379
+    },
+    {
+      "id": "R02828",
+      "totalHints": 6,
+      "sampledHints": 6,
+      "pairsCompared": 15,
+      "meanJaccardDistance": 0.05433037179011955,
+      "medianJaccardDistance": 0.048387096774193505,
+      "minJaccardDistance": 0.016393442622950838,
+      "maxJaccardDistance": 0.09448818897637801
+    },
+    {
+      "id": "R02839",
+      "totalHints": 5,
+      "sampledHints": 5,
+      "pairsCompared": 10,
+      "meanJaccardDistance": 0,
+      "medianJaccardDistance": 0,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0
+    },
+    {
+      "id": "R02858",
+      "totalHints": 67,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.10913048186069327,
+      "medianJaccardDistance": 0.10434782608695647,
+      "minJaccardDistance": 0.018181818181818188,
+      "maxJaccardDistance": 0.21311475409836067
+    },
+    {
+      "id": "R02895",
+      "totalHints": 371,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.2826983401042969,
+      "medianJaccardDistance": 0.2921348314606742,
+      "minJaccardDistance": 0.05128205128205132,
+      "maxJaccardDistance": 0.49504950495049505
+    },
+    {
+      "id": "R03172",
+      "totalHints": 36,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.031382073490553185,
+      "medianJaccardDistance": 0.033333333333333326,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.04958677685950408
+    },
+    {
+      "id": "R03230",
+      "totalHints": 206,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.1489404471820621,
+      "medianJaccardDistance": 0.13559322033898302,
+      "minJaccardDistance": 0.053097345132743334,
+      "maxJaccardDistance": 0.35820895522388063
+    },
+    {
+      "id": "R03335",
+      "totalHints": 30,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.16059237701962414,
+      "medianJaccardDistance": 0.08333333333333337,
+      "minJaccardDistance": 0.021505376344086002,
+      "maxJaccardDistance": 0.37168141592920356
+    },
+    {
+      "id": "R03345",
+      "totalHints": 21,
+      "sampledHints": 15,
+      "pairsCompared": 105,
+      "meanJaccardDistance": 0.023088023088023067,
+      "medianJaccardDistance": 0.030303030303030276,
+      "minJaccardDistance": 0,
+      "maxJaccardDistance": 0.030303030303030276
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "generatedAt": "2026-09-17T06:04:17.857Z",
+  "evidenceRole": "Lane G cheapest-falsifier stage 2 -- naive relaxed-candidate distance to nearest real solution",
+  "corpus": "data/stress/stress-levels-random.json",
+  "hintsDir": "data/stress/hints-random",
+  "seed": "lane-g-manifold-pilot-001",
+  "maxSteps": 400,
+  "method": "seeded goal-distance-guided, intersection-avoiding legal walk to completion (same construction as the fresh Class-5 sibling harvest, run to the goal instead of a fixed depth fraction)",
+  "distanceMetric": "Jaccard distance over visited-cell SET, same as stage 1",
+  "levelsSampled": 25,
+  "overall": {
+    "reachedCount": 0,
+    "totalLevels": 25,
+    "reachRate": 0
+  },
+  "perLevel": [
+    {
+      "id": "R00901",
+      "reachedGoal": false,
+      "candidateLength": 4,
+      "requiredLength": 92
+    },
+    {
+      "id": "R01492",
+      "reachedGoal": false,
+      "candidateLength": 31,
+      "requiredLength": 94
+    },
+    {
+      "id": "R01558",
+      "reachedGoal": false,
+      "candidateLength": 29,
+      "requiredLength": 83
+    },
+    {
+      "id": "R02037",
+      "reachedGoal": false,
+      "candidateLength": 16,
+      "requiredLength": 86
+    },
+    {
+      "id": "R02123",
+      "reachedGoal": false,
+      "candidateLength": 7,
+      "requiredLength": 93
+    },
+    {
+      "id": "R02182",
+      "reachedGoal": false,
+      "candidateLength": 33,
+      "requiredLength": 117
+    },
+    {
+      "id": "R02190",
+      "reachedGoal": false,
+      "candidateLength": 4,
+      "requiredLength": 62
+    },
+    {
+      "id": "R02313",
+      "reachedGoal": false,
+      "candidateLength": 32,
+      "requiredLength": 106
+    },
+    {
+      "id": "R02369",
+      "reachedGoal": false,
+      "candidateLength": 38,
+      "requiredLength": 124
+    },
+    {
+      "id": "R02439",
+      "reachedGoal": false,
+      "candidateLength": 25,
+      "requiredLength": 101
+    },
+    {
+      "id": "R02502",
+      "reachedGoal": false,
+      "candidateLength": 19,
+      "requiredLength": 109
+    },
+    {
+      "id": "R02505",
+      "reachedGoal": false,
+      "candidateLength": 74,
+      "requiredLength": 97
+    },
+    {
+      "id": "R02512",
+      "reachedGoal": false,
+      "candidateLength": 20,
+      "requiredLength": 128
+    },
+    {
+      "id": "R02546",
+      "reachedGoal": false,
+      "candidateLength": 9,
+      "requiredLength": 83
+    },
+    {
+      "id": "R02553",
+      "reachedGoal": false,
+      "candidateLength": 35,
+      "requiredLength": 84
+    },
+    {
+      "id": "R02708",
+      "reachedGoal": false,
+      "candidateLength": 17,
+      "requiredLength": 68
+    },
+    {
+      "id": "R02724",
+      "reachedGoal": false,
+      "candidateLength": 20,
+      "requiredLength": 85
+    },
+    {
+      "id": "R02828",
+      "reachedGoal": false,
+      "candidateLength": 16,
+      "requiredLength": 126
+    },
+    {
+      "id": "R02839",
+      "reachedGoal": false,
+      "candidateLength": 8,
+      "requiredLength": 77
+    },
+    {
+      "id": "R02858",
+      "reachedGoal": false,
+      "candidateLength": 41,
+      "requiredLength": 107
+    },
+    {
+      "id": "R02895",
+      "reachedGoal": false,
+      "candidateLength": 19,
+      "requiredLength": 77
+    },
+    {
+      "id": "R03172",
+      "reachedGoal": false,
+      "candidateLength": 34,
+      "requiredLength": 120
+    },
+    {
+      "id": "R03230",
+      "reachedGoal": false,
+      "candidateLength": 39,
+      "requiredLength": 117
+    },
+    {
+      "id": "R03335",
+      "reachedGoal": false,
+      "candidateLength": 11,
+      "requiredLength": 90
+    },
+    {
+      "id": "R03345",
+      "reachedGoal": false,
+      "candidateLength": 34,
+      "requiredLength": 60
+    }
+  ]
+}
