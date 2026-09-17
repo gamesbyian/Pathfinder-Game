@@ -1,7 +1,10 @@
 # Solver premise-space second pass
 
-**Date:** 2026-09-17  
-**Branch:** `chatgpt/solver-premise-space-atlas-2026-09-16`  
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-17 — hostile completeness re-pass over the premise-space atlas, current HEAD.
+> **Decision:** add premises P151-P176, the five-axis ontology (system locus / claim type / scope / evidence state / relation type), the typed relation vocabulary, and the mechanic-resource coupling view to the durable atlas; keep the original 92 propositions unrenumbered. No new workstream and no production treatment promoted from this pass alone.
+> **Remaining gate:** reconcile these additions into the durable atlas/completeness-matrix docs, then use the expanded ontology to classify future premises against current evidence before spending compute on any of them.
+
 **Purpose:** hostile completeness pass over the premise-space atlas, deliberately searching by the atlas's own groupings and then by orthogonal groupings that the first pass did not use.
 
 ## Bottom line
