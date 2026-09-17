@@ -4,75 +4,810 @@
   "branch": "chatgpt/premise-map-independent-peer-map-2026-09-17",
   "methodNote": "Constructed blind from underlying repository evidence and the pre-existing independent investigation on this lineage. Identifiers and relation vocabulary are local to this reconstruction.",
   "emergentRepresentation": {
-    "primarySpine": ["encode","derive","generate","reject","prefer","retain","remember","allocate","select","transfer","recognize","measure","infer"],
-    "crossCuttingAxes": ["epistemic authority","evidence scope","architecture/configuration dependence","temporal validity"],
+    "primarySpine": [
+      "encode",
+      "derive",
+      "generate",
+      "reject",
+      "prefer",
+      "retain",
+      "remember",
+      "allocate",
+      "select",
+      "transfer",
+      "recognize",
+      "measure",
+      "infer"
+    ],
+    "crossCuttingAxes": [
+      "epistemic authority",
+      "evidence scope",
+      "architecture/configuration dependence",
+      "temporal validity"
+    ],
     "warning": "The spine describes research functions, not modules. One mechanism may occupy several functions and one function may have several epistemic authorities."
   },
   "nodes": [
-    {"id":"P001","kind":"architectural-premise","label":"Search state defines an epistemic boundary","statement":"Fields retained in SolverSearchState implicitly assert which path history can matter to future legality, feasibility, ordering, repair, and identity.","status":"active","explicitness":"implicit-in-code","provenance":["modules/solver/search-state.ts","research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"]},
-    {"id":"P002","kind":"distinction","label":"State relatedness has multiple semantics","statement":"Logical future-equivalence, dominance, coarse survivor compression, empirical experience matching, and research clustering require different proof obligations and must not be collapsed.","status":"active","explicitness":"explicit-and-derived","provenance":["modules/solver/nogood-cache.ts","reports/2026-08-24-learned-failure-certificate-audit.md"]},
-    {"id":"P003","kind":"empirical-premise","label":"Repair revisits matching failed experience heavily","statement":"Within a repairSearchFromGate call, exact-signature failed-state recurrence is high on the measured repair-close population, making local failure memory economically plausible.","status":"supported-narrowly","scope":"repair-local, measured hard repair-close levels","provenance":["reports/2026-08-07-repair-nogood-cache.md"]},
-    {"id":"P004","kind":"boundary","label":"Repair nogood memory is experience, not proof","statement":"A recorded repair signature means one randomized continuation failed, not that the state is globally unsatisfiable.","status":"active-contract","provenance":["modules/solver/nogood-cache.ts","reports/2026-08-24-learned-failure-certificate-audit.md"]},
-    {"id":"P005","kind":"open-question","label":"How far can learned failure transfer?","statement":"What abstraction of failed experience remains useful across repair invocations, stages, search families, related levels, or processes without becoming unsound?","status":"open","provenance":["research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"]},
-    {"id":"P006","kind":"architectural-premise","label":"Constraint feasibility can be relational","statement":"Individually feasible obligations can be jointly incompatible; independent unary checks do not imply joint feasibility.","status":"supported-concrete-descendant","provenance":["modules/solver/joint-obligation-propagation.ts","reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md"]},
-    {"id":"P007","kind":"open-question","label":"What order of relational inference matters?","statement":"Pairwise obligation interactions are demonstrated, but the useful coverage and economics of broader pairwise or higher-order interaction reasoning remain open.","status":"open","provenance":["modules/solver/joint-obligation-propagation.ts","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P008","kind":"methodological-premise","label":"Observer evidence is not intervention evidence","statement":"A sound or predictive observer can establish existence, prevalence, or association without establishing work savings, solve-count gain, or schedulability.","status":"active","provenance":["modules/solver/joint-obligation-propagation.ts","modules/solver/known-solution-prefix-survival.ts","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P009","kind":"methodological-premise","label":"Mechanism maturity is staged","statement":"Phenomenon existence, representability, soundness, real-search firing, useful work reduction, complementary solves, scheduler exposure, and production promotion are separate evidential rungs.","status":"active","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P010","kind":"architectural-premise","label":"Diversity is distributed, not a scalar knob","statement":"Successor order, score geometry, beam retention, stochastic seed, search family, repair operator, retry composition, stage order, and work allocation create distinct forms of search diversity.","status":"active","provenance":["research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md","modules/solver/ablation-config.ts"]},
-    {"id":"P011","kind":"methodological-premise","label":"Nominal retries need behavioral distinctness","statement":"A separate retry identity does not justify work unless its effective configuration changes behavior relative to work already performed.","status":"active-contract","provenance":["modules/solver/stage-budget.ts"]},
-    {"id":"P012","kind":"open-question","label":"Continuation and restart are different interventions","statement":"Additional budget can preserve a frontier/history, restart a policy, change seed/profile, enter another family, or repair a near solution; these interventions need not have the same marginal value.","status":"partly-tested","provenance":["research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P013","kind":"architectural-premise","label":"Resumability requires accounting state as well as semantic state","statement":"A frontier representation sufficient to continue search semantics may still be insufficient to preserve canonical work accounting if reconstructing it incurs charged work.","status":"supported-narrowly","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P014","kind":"methodological-premise","label":"Known solutions enable causal support tracing","statement":"Witness-bearing levels can reveal where a valid lineage disappears through generation, pruning, merging, ranking, retention, or starvation, which solve/no-solve alone cannot localize.","status":"active-tooling","provenance":["modules/solver/known-solution-prefix-survival.ts"]},
-    {"id":"P015","kind":"boundary","label":"Known-support extinction is not global impossibility","statement":"Losing all tracked known prefixes does not prove no valid solution remains.","status":"active-contract","provenance":["modules/solver/known-solution-prefix-survival.ts"]},
-    {"id":"P016","kind":"open-question","label":"Does extinction cause predict the useful intervention?","statement":"After localizing where known-valid support disappears, it remains open whether that cause reliably predicts which solver treatment rescues the level.","status":"open","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P017","kind":"distinction","label":"Topology has logical, predictive, and diagnostic roles","statement":"Topological structure may license a sound feasibility check, a heuristic ordering/routing feature, or a post-hoc explanation; evidence in one role does not transfer automatically to the others.","status":"active","provenance":["modules/solver/topology.ts","reports/2026-08-24-learned-failure-certificate-audit.md"]},
-    {"id":"P018","kind":"negative-conclusion","label":"Cross-level connectivity certificate generalization failed in the tested form","statement":"The learned-failure certificate audit found geometric recurrence mostly within-level rather than across unrelated development parents, closing that cross-level bounded connectivity-reason direction as scoped.","status":"closed-tested-form","reopenCondition":"A materially different transferable representation or independent dead-interface population","provenance":["reports/2026-08-24-learned-failure-certificate-audit.md"]},
-    {"id":"P019","kind":"methodological-premise","label":"A sound prune and a learned reason have different economics","statement":"Once a normal prune fires, descendants are already removed; learned failure only pays if it recognizes related failure more cheaply elsewhere or earlier than an expensive scheduled check.","status":"active","provenance":["reports/2026-08-24-learned-failure-certificate-audit.md"]},
-    {"id":"P020","kind":"resource-premise","label":"Cross-technique capability depends on allocation","statement":"A technique's production value depends on intrinsic reach, coverage, complementarity, consumption, timing, and selection, not merely whether it can solve a target in isolation.","status":"active","provenance":["research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md","docs/solver-budget-determinism.md"]},
-    {"id":"P021","kind":"resource-premise","label":"Work is the cross-technique allocation currency","statement":"Canonical work, not raw nodes or wall time, is the repository's machine-independent cross-technique allocation measure.","status":"active-contract","provenance":["modules/solver/work-meter.ts","docs/solver-budget-determinism.md"]},
-    {"id":"P022","kind":"boundary","label":"Work is calibrated, not literal CPU equality","statement":"The work unit approximates comparable algorithmic cost across techniques and must not be read as identical physical CPU cost on every host.","status":"active-contract","provenance":["docs/solver-budget-determinism.md"]},
-    {"id":"P023","kind":"methodological-premise","label":"Base work and total work are distinct envelopes","statement":"Legacy base work can coexist with additive fresh stages, so matched causal experiments require strict-total containment or explicit accounting of total-work differences.","status":"active-contract","provenance":["docs/solver-budget-determinism.md"]},
-    {"id":"P024","kind":"methodological-premise","label":"Wall deadlines censor deterministic evidence","statement":"A binding wall deadline is latency interference, not ordinary unsolved-at-work evidence; deadline-truncated rows must be separated in decision-bearing comparisons.","status":"active-contract","provenance":["docs/solver-budget-determinism.md"]},
-    {"id":"P025","kind":"architectural-premise","label":"Scheduler semantics are part of the algorithm","statement":"Stage eligibility, order, reserve protection, fresh/shared work pools, and retry placement alter which capabilities receive meaningful exposure.","status":"active","provenance":["modules/solver/stage-budget.ts","modules/solver/orchestration.ts","modules/solver/ablation-config.ts"]},
-    {"id":"P026","kind":"negative-conclusion","label":"Broad exposure can regress by displacing protected work","statement":"A treatment can add a plausible action yet lose solves by changing protected suffix membership or starving a prior winner, so exposure negatives can be allocation negatives rather than mechanism negatives.","status":"supported-examples","provenance":["modules/solver/ablation-config.ts"]},
-    {"id":"P027","kind":"open-question","label":"Mechanism value versus portfolio value","statement":"How much observed value belongs to a mechanism intrinsically, and how much is conditional marginal value given the current portfolio and residual population?","status":"open","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P028","kind":"open-question","label":"Failure should be typed before being acted on","statement":"Natural exhaustion, budget censoring, stochastic continuation failure, support extinction, and proven infeasibility are different failure events and may imply different next actions.","status":"open","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md","docs/solver-budget-determinism.md"]},
-    {"id":"P029","kind":"open-question","label":"Can failure become an actionable posterior?","statement":"Can observed failure signatures update which next action receives marginal work without requiring an unsound hard classifier?","status":"open","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P030","kind":"methodological-premise","label":"Generalization unit need not be a static level feature","statement":"Level-blindness forbids identity leakage, but a valid generalizing object may be a dynamic failure state, obligation configuration, trajectory property, or current-board fact rather than a static level class.","status":"active-question","provenance":["docs/solver-optimization-workstreams.md","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P031","kind":"methodological-premise","label":"Historical negatives are architecture-relative","statement":"A prior negative is scoped to its mechanism, implementation, population, budget, scheduler, representation, measurement, and architecture unless evidence supports broader closure.","status":"active","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md","docs/solver-optimization-workstreams.md"]},
-    {"id":"P032","kind":"methodological-premise","label":"Measurement must match the causal proposition","statement":"Equal solved sets, equal nodes, observer correlation, or additive-budget gains may each miss the variable a hypothesis actually predicts; some apparent mechanism negatives are measurement negatives.","status":"active","provenance":["docs/solver-budget-determinism.md","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P033","kind":"architectural-premise","label":"Information has a lifetime and transfer radius","statement":"Frontiers, failed-state experience, near misses, witnesses, obligation conflicts, telemetry, and route classifications need not retain value for the same duration or across the same boundaries.","status":"derived-open-parent","provenance":["research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P034","kind":"open-question","label":"What information should cross stage boundaries?","statement":"Sophisticated scheduling coexists with intentionally local memory; the useful transferable subset of search-produced information remains underdetermined.","status":"open","provenance":["modules/solver/nogood-cache.ts","modules/solver/orchestration.ts","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P035","kind":"open-question","label":"Are hard residuals missing alternatives or losing them?","statement":"A residual may arise because a valid continuation is never generated, is pruned/merged, is ranked or retained away, or survives but is starved of downstream work; this decomposition may be more fundamental than technique labels.","status":"open","provenance":["modules/solver/known-solution-prefix-survival.ts","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P036","kind":"methodological-premise","label":"Generated witnesses change evidential strength","statement":"A witness-bearing generated corpus can establish search failure despite known solvability and enables support-lineage diagnostics that unknown-solvability populations cannot.","status":"active","provenance":["research/solver-premise-independent-2026-09-17/field-notes.md","modules/solver/known-solution-prefix-survival.ts"]},
-    {"id":"P037","kind":"tension","label":"Local optimization can conflict with global research visibility","statement":"Observer-only ideas may accumulate causal evidence without production exposure, while production mechanisms may accumulate solves without fine-grained attribution; ease of toggling can bias which questions are investigated.","status":"unresolved","provenance":["research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"]},
-    {"id":"P038","kind":"architectural-premise","label":"Default polarity is a research commitment","statement":"Default-on/off flags, sparse-config normalization, and null-config semantics determine what is actually exercised and therefore what 'current solver capability' means.","status":"active","provenance":["modules/solver/stage-budget.ts","modules/solver/ablation-config.ts"]},
-    {"id":"P039","kind":"methodological-premise","label":"Production promotion requires zero-regression and participation evidence","statement":"A treatment should show that it actually engaged under relevant work semantics and that apparent neutrality is not merely non-participation; promotion evidence is distinct from mechanism soundness.","status":"active-practice","provenance":["modules/solver/ablation-config.ts","research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"]},
-    {"id":"P040","kind":"representation-problem","label":"Concept status is multi-axis","statement":"A concept may be stated, observed, implemented, scheduled, starved, promoted, historically superseded, or rejected under narrow conditions; one scalar status loses essential topology.","status":"active","provenance":["research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"]}
+    {
+      "id": "P001",
+      "kind": "architectural-premise",
+      "label": "Search state defines an epistemic boundary",
+      "statement": "Fields retained in SolverSearchState implicitly assert which path history can matter to future legality, feasibility, ordering, repair, and identity.",
+      "status": "active",
+      "explicitness": "implicit-in-code",
+      "provenance": [
+        "modules/solver/search-state.ts",
+        "research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"
+      ]
+    },
+    {
+      "id": "P002",
+      "kind": "distinction",
+      "label": "State relatedness has multiple semantics",
+      "statement": "Logical future-equivalence, dominance, coarse survivor compression, empirical experience matching, and research clustering require different proof obligations and must not be collapsed.",
+      "status": "active",
+      "explicitness": "explicit-and-derived",
+      "provenance": [
+        "modules/solver/nogood-cache.ts",
+        "reports/2026-08-24-learned-failure-certificate-audit.md"
+      ]
+    },
+    {
+      "id": "P003",
+      "kind": "empirical-premise",
+      "label": "Repair revisits matching failed experience heavily",
+      "statement": "Within a repairSearchFromGate call, exact-signature failed-state recurrence is high on the measured repair-close population, making local failure memory economically plausible.",
+      "status": "supported-narrowly",
+      "scope": "repair-local, measured hard repair-close levels",
+      "provenance": [
+        "reports/2026-08-07-repair-nogood-cache.md"
+      ]
+    },
+    {
+      "id": "P004",
+      "kind": "boundary",
+      "label": "Repair nogood memory is experience, not proof",
+      "statement": "A recorded repair signature means one randomized continuation failed, not that the state is globally unsatisfiable.",
+      "status": "active-contract",
+      "provenance": [
+        "modules/solver/nogood-cache.ts",
+        "reports/2026-08-24-learned-failure-certificate-audit.md"
+      ]
+    },
+    {
+      "id": "P005",
+      "kind": "open-question",
+      "label": "How far can learned failure transfer?",
+      "statement": "What abstraction of failed experience remains useful across repair invocations, stages, search families, related levels, or processes without becoming unsound?",
+      "status": "open",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"
+      ]
+    },
+    {
+      "id": "P006",
+      "kind": "architectural-premise",
+      "label": "Constraint feasibility can be relational",
+      "statement": "Individually feasible obligations can be jointly incompatible; independent unary checks do not imply joint feasibility.",
+      "status": "supported-concrete-descendant",
+      "provenance": [
+        "modules/solver/joint-obligation-propagation.ts",
+        "reports/2026-09-11-joint-obligation-propagation-observer-pilot-001.md"
+      ]
+    },
+    {
+      "id": "P007",
+      "kind": "open-question",
+      "label": "What order of relational inference matters?",
+      "statement": "Pairwise obligation interactions are demonstrated, but the useful coverage and economics of broader pairwise or higher-order interaction reasoning remain open.",
+      "status": "open",
+      "provenance": [
+        "modules/solver/joint-obligation-propagation.ts",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P008",
+      "kind": "methodological-premise",
+      "label": "Observer evidence is not intervention evidence",
+      "statement": "A sound or predictive observer can establish existence, prevalence, or association without establishing work savings, solve-count gain, or schedulability.",
+      "status": "active",
+      "provenance": [
+        "modules/solver/joint-obligation-propagation.ts",
+        "modules/solver/known-solution-prefix-survival.ts",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P009",
+      "kind": "methodological-premise",
+      "label": "Mechanism maturity is staged",
+      "statement": "Phenomenon existence, representability, soundness, real-search firing, useful work reduction, complementary solves, scheduler exposure, and production promotion are separate evidential rungs.",
+      "status": "active",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P010",
+      "kind": "architectural-premise",
+      "label": "Diversity is distributed, not a scalar knob",
+      "statement": "Successor order, score geometry, beam retention, stochastic seed, search family, repair operator, retry composition, stage order, and work allocation create distinct forms of search diversity.",
+      "status": "active",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md",
+        "modules/solver/ablation-config.ts"
+      ]
+    },
+    {
+      "id": "P011",
+      "kind": "methodological-premise",
+      "label": "Nominal retries need behavioral distinctness",
+      "statement": "A separate retry identity does not justify work unless its effective configuration changes behavior relative to work already performed.",
+      "status": "active-contract",
+      "provenance": [
+        "modules/solver/stage-budget.ts"
+      ]
+    },
+    {
+      "id": "P012",
+      "kind": "open-question",
+      "label": "Continuation and restart are different interventions",
+      "statement": "Additional budget can preserve a frontier/history, restart a policy, change seed/profile, enter another family, or repair a near solution; these interventions need not have the same marginal value.",
+      "status": "partly-tested",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P013",
+      "kind": "architectural-premise",
+      "label": "Resumability requires accounting state as well as semantic state",
+      "statement": "A frontier representation sufficient to continue search semantics may still be insufficient to preserve canonical work accounting if reconstructing it incurs charged work.",
+      "status": "supported-narrowly",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P014",
+      "kind": "methodological-premise",
+      "label": "Known solutions enable causal support tracing",
+      "statement": "Witness-bearing levels can reveal where a valid lineage disappears through generation, pruning, merging, ranking, retention, or starvation, which solve/no-solve alone cannot localize.",
+      "status": "active-tooling",
+      "provenance": [
+        "modules/solver/known-solution-prefix-survival.ts"
+      ]
+    },
+    {
+      "id": "P015",
+      "kind": "boundary",
+      "label": "Known-support extinction is not global impossibility",
+      "statement": "Losing all tracked known prefixes does not prove no valid solution remains.",
+      "status": "active-contract",
+      "provenance": [
+        "modules/solver/known-solution-prefix-survival.ts"
+      ]
+    },
+    {
+      "id": "P016",
+      "kind": "open-question",
+      "label": "Does extinction cause predict the useful intervention?",
+      "statement": "After localizing where known-valid support disappears, it remains open whether that cause reliably predicts which solver treatment rescues the level.",
+      "status": "open",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P017",
+      "kind": "distinction",
+      "label": "Topology has logical, predictive, and diagnostic roles",
+      "statement": "Topological structure may license a sound feasibility check, a heuristic ordering/routing feature, or a post-hoc explanation; evidence in one role does not transfer automatically to the others.",
+      "status": "active",
+      "provenance": [
+        "modules/solver/topology.ts",
+        "reports/2026-08-24-learned-failure-certificate-audit.md"
+      ]
+    },
+    {
+      "id": "P018",
+      "kind": "negative-conclusion",
+      "label": "Cross-level connectivity certificate generalization failed in the tested form",
+      "statement": "The learned-failure certificate audit found geometric recurrence mostly within-level rather than across unrelated development parents, closing that cross-level bounded connectivity-reason direction as scoped.",
+      "status": "closed-tested-form",
+      "reopenCondition": "A materially different transferable representation or independent dead-interface population",
+      "provenance": [
+        "reports/2026-08-24-learned-failure-certificate-audit.md"
+      ]
+    },
+    {
+      "id": "P019",
+      "kind": "methodological-premise",
+      "label": "A sound prune and a learned reason have different economics",
+      "statement": "Once a normal prune fires, descendants are already removed; learned failure only pays if it recognizes related failure more cheaply elsewhere or earlier than an expensive scheduled check.",
+      "status": "active",
+      "provenance": [
+        "reports/2026-08-24-learned-failure-certificate-audit.md"
+      ]
+    },
+    {
+      "id": "P020",
+      "kind": "resource-premise",
+      "label": "Cross-technique capability depends on allocation",
+      "statement": "A technique's production value depends on intrinsic reach, coverage, complementarity, consumption, timing, and selection, not merely whether it can solve a target in isolation.",
+      "status": "active",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md",
+        "docs/solver-budget-determinism.md"
+      ]
+    },
+    {
+      "id": "P021",
+      "kind": "resource-premise",
+      "label": "Work is the cross-technique allocation currency",
+      "statement": "Canonical work, not raw nodes or wall time, is the repository's machine-independent cross-technique allocation measure.",
+      "status": "active-contract",
+      "provenance": [
+        "modules/solver/work-meter.ts",
+        "docs/solver-budget-determinism.md"
+      ]
+    },
+    {
+      "id": "P022",
+      "kind": "boundary",
+      "label": "Work is calibrated, not literal CPU equality",
+      "statement": "The work unit approximates comparable algorithmic cost across techniques and must not be read as identical physical CPU cost on every host.",
+      "status": "active-contract",
+      "provenance": [
+        "docs/solver-budget-determinism.md"
+      ]
+    },
+    {
+      "id": "P023",
+      "kind": "methodological-premise",
+      "label": "Base work and total work are distinct envelopes",
+      "statement": "Legacy base work can coexist with additive fresh stages, so matched causal experiments require strict-total containment or explicit accounting of total-work differences.",
+      "status": "active-contract",
+      "provenance": [
+        "docs/solver-budget-determinism.md"
+      ]
+    },
+    {
+      "id": "P024",
+      "kind": "methodological-premise",
+      "label": "Wall deadlines censor deterministic evidence",
+      "statement": "A binding wall deadline is latency interference, not ordinary unsolved-at-work evidence; deadline-truncated rows must be separated in decision-bearing comparisons.",
+      "status": "active-contract",
+      "provenance": [
+        "docs/solver-budget-determinism.md"
+      ]
+    },
+    {
+      "id": "P025",
+      "kind": "architectural-premise",
+      "label": "Scheduler semantics are part of the algorithm",
+      "statement": "Stage eligibility, order, reserve protection, fresh/shared work pools, and retry placement alter which capabilities receive meaningful exposure.",
+      "status": "active",
+      "provenance": [
+        "modules/solver/stage-budget.ts",
+        "modules/solver/orchestration.ts",
+        "modules/solver/ablation-config.ts"
+      ]
+    },
+    {
+      "id": "P026",
+      "kind": "negative-conclusion",
+      "label": "Broad exposure can regress by displacing protected work",
+      "statement": "A treatment can add a plausible action yet lose solves by changing protected suffix membership or starving a prior winner, so exposure negatives can be allocation negatives rather than mechanism negatives.",
+      "status": "supported-examples",
+      "provenance": [
+        "modules/solver/ablation-config.ts"
+      ]
+    },
+    {
+      "id": "P027",
+      "kind": "open-question",
+      "label": "Mechanism value versus portfolio value",
+      "statement": "How much observed value belongs to a mechanism intrinsically, and how much is conditional marginal value given the current portfolio and residual population?",
+      "status": "open",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P028",
+      "kind": "open-question",
+      "label": "Failure should be typed before being acted on",
+      "statement": "Natural exhaustion, budget censoring, stochastic continuation failure, support extinction, and proven infeasibility are different failure events and may imply different next actions.",
+      "status": "open",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md",
+        "docs/solver-budget-determinism.md"
+      ]
+    },
+    {
+      "id": "P029",
+      "kind": "open-question",
+      "label": "Can failure become an actionable posterior?",
+      "statement": "Can observed failure signatures update which next action receives marginal work without requiring an unsound hard classifier?",
+      "status": "open",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P030",
+      "kind": "methodological-premise",
+      "label": "Generalization unit need not be a static level feature",
+      "statement": "Level-blindness forbids identity leakage, but a valid generalizing object may be a dynamic failure state, obligation configuration, trajectory property, or current-board fact rather than a static level class.",
+      "status": "active-question",
+      "provenance": [
+        "docs/solver-optimization-workstreams.md",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P031",
+      "kind": "methodological-premise",
+      "label": "Historical negatives are architecture-relative",
+      "statement": "A prior negative is scoped to its mechanism, implementation, population, budget, scheduler, representation, measurement, and architecture unless evidence supports broader closure.",
+      "status": "active",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md",
+        "docs/solver-optimization-workstreams.md"
+      ]
+    },
+    {
+      "id": "P032",
+      "kind": "methodological-premise",
+      "label": "Measurement must match the causal proposition",
+      "statement": "Equal solved sets, equal nodes, observer correlation, or additive-budget gains may each miss the variable a hypothesis actually predicts; some apparent mechanism negatives are measurement negatives.",
+      "status": "active",
+      "provenance": [
+        "docs/solver-budget-determinism.md",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P033",
+      "kind": "architectural-premise",
+      "label": "Information has a lifetime and transfer radius",
+      "statement": "Frontiers, failed-state experience, near misses, witnesses, obligation conflicts, telemetry, and route classifications need not retain value for the same duration or across the same boundaries.",
+      "status": "derived-open-parent",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P034",
+      "kind": "open-question",
+      "label": "What information should cross stage boundaries?",
+      "statement": "Sophisticated scheduling coexists with intentionally local memory; the useful transferable subset of search-produced information remains underdetermined.",
+      "status": "open",
+      "provenance": [
+        "modules/solver/nogood-cache.ts",
+        "modules/solver/orchestration.ts",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P035",
+      "kind": "open-question",
+      "label": "Are hard residuals missing alternatives or losing them?",
+      "statement": "A residual may arise because a valid continuation is never generated, is pruned/merged, is ranked or retained away, or survives but is starved of downstream work; this decomposition may be more fundamental than technique labels.",
+      "status": "open",
+      "provenance": [
+        "modules/solver/known-solution-prefix-survival.ts",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P036",
+      "kind": "methodological-premise",
+      "label": "Generated witnesses change evidential strength",
+      "statement": "A witness-bearing generated corpus can establish search failure despite known solvability and enables support-lineage diagnostics that unknown-solvability populations cannot.",
+      "status": "active",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/field-notes.md",
+        "modules/solver/known-solution-prefix-survival.ts"
+      ]
+    },
+    {
+      "id": "P037",
+      "kind": "tension",
+      "label": "Local optimization can conflict with global research visibility",
+      "statement": "Observer-only ideas may accumulate causal evidence without production exposure, while production mechanisms may accumulate solves without fine-grained attribution; ease of toggling can bias which questions are investigated.",
+      "status": "unresolved",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"
+      ]
+    },
+    {
+      "id": "P038",
+      "kind": "architectural-premise",
+      "label": "Default polarity is a research commitment",
+      "statement": "Default-on/off flags, sparse-config normalization, and null-config semantics determine what is actually exercised and therefore what 'current solver capability' means.",
+      "status": "active",
+      "provenance": [
+        "modules/solver/stage-budget.ts",
+        "modules/solver/ablation-config.ts"
+      ]
+    },
+    {
+      "id": "P039",
+      "kind": "methodological-premise",
+      "label": "Production promotion requires zero-regression and participation evidence",
+      "statement": "A treatment should show that it actually engaged under relevant work semantics and that apparent neutrality is not merely non-participation; promotion evidence is distinct from mechanism soundness.",
+      "status": "active-practice",
+      "provenance": [
+        "modules/solver/ablation-config.ts",
+        "research/solver-premise-independent-2026-09-17/pass-history-negative-space.md"
+      ]
+    },
+    {
+      "id": "P040",
+      "kind": "representation-problem",
+      "label": "Concept status is multi-axis",
+      "statement": "A concept may be stated, observed, implemented, scheduled, starved, promoted, historically superseded, or rejected under narrow conditions; one scalar status loses essential topology.",
+      "status": "active",
+      "provenance": [
+        "research/solver-premise-independent-2026-09-17/pass-architecture-evidence.md"
+      ]
+    },
+    {
+      "id": "P041",
+      "kind": "methodological-premise",
+      "label": "Level blindness is an information-flow contract",
+      "statement": "Generalization is protected not only by intent but by physically withholding exact identity, history, hints, provenance, solved status, and research metadata from capability workers while allowing puzzle mechanics.",
+      "status": "active-contract",
+      "provenance": [
+        "scripts/level-blind-capability-worker.mjs",
+        "scripts/level-blind-capability-sweep.mjs"
+      ]
+    },
+    {
+      "id": "P042",
+      "kind": "methodological-premise",
+      "label": "Population identity is part of experimental identity",
+      "statement": "Commit, corpus bytes, selected positions, resolved configuration, and budget semantics must be sealed or recorded because a nominally identical A/B can become incomparable if its population or executable changes.",
+      "status": "active-practice",
+      "provenance": [
+        "scripts/level-blind-capability-sweep.mjs",
+        "docs/solver-evaluation-evidence.md"
+      ]
+    },
+    {
+      "id": "P043",
+      "kind": "execution-premise",
+      "label": "Parallel execution must preserve logical task identity",
+      "statement": "Offline worker pools may schedule dynamically by completion time, but results are re-associated with original task indices; throughput order must not become experimental order or level identity.",
+      "status": "active-infrastructure",
+      "provenance": [
+        "scripts/solver-worker-pool.mjs"
+      ]
+    },
+    {
+      "id": "P044",
+      "kind": "execution-premise",
+      "label": "Process and solve scopes are distinct accounting scopes",
+      "statement": "Child-process isolation and per-solve work meters prevent unrelated solves from sharing budget authority; multi-solve research sessions must aggregate explicit solve results rather than infer cost from realm-global counters.",
+      "status": "active-contract",
+      "provenance": [
+        "scripts/solver-worker-pool.mjs",
+        "modules/solver/work-meter.ts",
+        "docs/solver-budget-determinism.md"
+      ]
+    },
+    {
+      "id": "P045",
+      "kind": "methodological-premise",
+      "label": "Failure prevalence is not difficulty causation",
+      "statement": "Feature counts in unsolved populations require base-rate correction and confound control; observational association should select diagnostic targets, not be treated as causal mechanism evidence.",
+      "status": "active-practice",
+      "provenance": [
+        "scripts/stress/feature-solvability-analysis.mjs"
+      ]
+    },
+    {
+      "id": "P046",
+      "kind": "persistence-premise",
+      "label": "Research artifacts and puzzle inputs should remain separable",
+      "statement": "Hints and provenance are persisted outside canonical level mechanics and reattached by tooling, supporting both durable evidence and deliberate exclusion from level-blind solving.",
+      "status": "active-infrastructure",
+      "provenance": [
+        "scripts/level-data-io.mjs",
+        "scripts/level-blind-capability-sweep.mjs"
+      ]
+    }
   ],
   "relations": [
-    {"from":"P001","type":"conditions","to":"P002"},{"from":"P002","type":"guards-interpretation-of","to":"P004"},
-    {"from":"P003","type":"motivates","to":"P004"},{"from":"P004","type":"bounds","to":"P005"},{"from":"P006","type":"specializes","to":"P007"},
-    {"from":"P008","type":"guards-interpretation-of","to":"P006"},{"from":"P008","type":"supports","to":"P009"},{"from":"P009","type":"conditions","to":"P039"},
-    {"from":"P010","type":"conditions","to":"P011"},{"from":"P011","type":"narrows","to":"P010"},{"from":"P012","type":"depends-on","to":"P013"},
-    {"from":"P014","type":"enables","to":"P016"},{"from":"P015","type":"bounds","to":"P014"},{"from":"P017","type":"conditions","to":"P018"},
-    {"from":"P018","type":"does-not-close","to":"P019"},{"from":"P019","type":"explains","to":"P018"},{"from":"P020","type":"depends-on","to":"P021"},
-    {"from":"P021","type":"bounded-by","to":"P022"},{"from":"P023","type":"conditions","to":"P020"},{"from":"P024","type":"guards-evidence-for","to":"P020"},
-    {"from":"P025","type":"architecturally-conditions","to":"P020"},{"from":"P026","type":"demonstrates","to":"P025"},{"from":"P027","type":"depends-on","to":"P020"},
-    {"from":"P028","type":"motivates","to":"P029"},{"from":"P029","type":"could-enable","to":"P025"},{"from":"P030","type":"broadens","to":"P029"},
-    {"from":"P031","type":"guards-interpretation-of","to":"P018"},{"from":"P031","type":"guards-interpretation-of","to":"P026"},{"from":"P032","type":"guards-evidence-for","to":"P031"},
-    {"from":"P033","type":"parent-of","to":"P034"},{"from":"P034","type":"could-enable","to":"P029"},{"from":"P035","type":"is-diagnosed-by","to":"P014"},
-    {"from":"P035","type":"depends-on","to":"P001"},{"from":"P035","type":"depends-on","to":"P025"},{"from":"P036","type":"enables","to":"P014"},
-    {"from":"P037","type":"tensions-with","to":"P039"},{"from":"P038","type":"architecturally-conditions","to":"P025"},{"from":"P040","type":"requires","to":"P009"},
-    {"from":"P040","type":"requires","to":"P031"},{"from":"P004","type":"special-case-of","to":"P002"},{"from":"P014","type":"distinguishes","to":"P035"},
-    {"from":"P021","type":"measurement-basis-for","to":"P023"},{"from":"P017","type":"guards-interpretation-of","to":"P006"},{"from":"P012","type":"competes-with","to":"P034"},
-    {"from":"P033","type":"conditions","to":"P012"},{"from":"P030","type":"challenges","to":"P025"},{"from":"P032","type":"supports","to":"P027"}
+    {
+      "from": "P001",
+      "type": "conditions",
+      "to": "P002"
+    },
+    {
+      "from": "P002",
+      "type": "guards-interpretation-of",
+      "to": "P004"
+    },
+    {
+      "from": "P003",
+      "type": "motivates",
+      "to": "P004"
+    },
+    {
+      "from": "P004",
+      "type": "bounds",
+      "to": "P005"
+    },
+    {
+      "from": "P006",
+      "type": "specializes",
+      "to": "P007"
+    },
+    {
+      "from": "P008",
+      "type": "guards-interpretation-of",
+      "to": "P006"
+    },
+    {
+      "from": "P008",
+      "type": "supports",
+      "to": "P009"
+    },
+    {
+      "from": "P009",
+      "type": "conditions",
+      "to": "P039"
+    },
+    {
+      "from": "P010",
+      "type": "conditions",
+      "to": "P011"
+    },
+    {
+      "from": "P011",
+      "type": "narrows",
+      "to": "P010"
+    },
+    {
+      "from": "P012",
+      "type": "depends-on",
+      "to": "P013"
+    },
+    {
+      "from": "P014",
+      "type": "enables",
+      "to": "P016"
+    },
+    {
+      "from": "P015",
+      "type": "bounds",
+      "to": "P014"
+    },
+    {
+      "from": "P017",
+      "type": "conditions",
+      "to": "P018"
+    },
+    {
+      "from": "P018",
+      "type": "does-not-close",
+      "to": "P019"
+    },
+    {
+      "from": "P019",
+      "type": "explains",
+      "to": "P018"
+    },
+    {
+      "from": "P020",
+      "type": "depends-on",
+      "to": "P021"
+    },
+    {
+      "from": "P021",
+      "type": "bounded-by",
+      "to": "P022"
+    },
+    {
+      "from": "P023",
+      "type": "conditions",
+      "to": "P020"
+    },
+    {
+      "from": "P024",
+      "type": "guards-evidence-for",
+      "to": "P020"
+    },
+    {
+      "from": "P025",
+      "type": "architecturally-conditions",
+      "to": "P020"
+    },
+    {
+      "from": "P026",
+      "type": "demonstrates",
+      "to": "P025"
+    },
+    {
+      "from": "P027",
+      "type": "depends-on",
+      "to": "P020"
+    },
+    {
+      "from": "P028",
+      "type": "motivates",
+      "to": "P029"
+    },
+    {
+      "from": "P029",
+      "type": "could-enable",
+      "to": "P025"
+    },
+    {
+      "from": "P030",
+      "type": "broadens",
+      "to": "P029"
+    },
+    {
+      "from": "P031",
+      "type": "guards-interpretation-of",
+      "to": "P018"
+    },
+    {
+      "from": "P031",
+      "type": "guards-interpretation-of",
+      "to": "P026"
+    },
+    {
+      "from": "P032",
+      "type": "guards-evidence-for",
+      "to": "P031"
+    },
+    {
+      "from": "P033",
+      "type": "parent-of",
+      "to": "P034"
+    },
+    {
+      "from": "P034",
+      "type": "could-enable",
+      "to": "P029"
+    },
+    {
+      "from": "P035",
+      "type": "is-diagnosed-by",
+      "to": "P014"
+    },
+    {
+      "from": "P035",
+      "type": "depends-on",
+      "to": "P001"
+    },
+    {
+      "from": "P035",
+      "type": "depends-on",
+      "to": "P025"
+    },
+    {
+      "from": "P036",
+      "type": "enables",
+      "to": "P014"
+    },
+    {
+      "from": "P037",
+      "type": "tensions-with",
+      "to": "P039"
+    },
+    {
+      "from": "P038",
+      "type": "architecturally-conditions",
+      "to": "P025"
+    },
+    {
+      "from": "P040",
+      "type": "requires",
+      "to": "P009"
+    },
+    {
+      "from": "P040",
+      "type": "requires",
+      "to": "P031"
+    },
+    {
+      "from": "P004",
+      "type": "special-case-of",
+      "to": "P002"
+    },
+    {
+      "from": "P014",
+      "type": "distinguishes",
+      "to": "P035"
+    },
+    {
+      "from": "P021",
+      "type": "measurement-basis-for",
+      "to": "P023"
+    },
+    {
+      "from": "P017",
+      "type": "guards-interpretation-of",
+      "to": "P006"
+    },
+    {
+      "from": "P012",
+      "type": "competes-with",
+      "to": "P034"
+    },
+    {
+      "from": "P033",
+      "type": "conditions",
+      "to": "P012"
+    },
+    {
+      "from": "P030",
+      "type": "challenges",
+      "to": "P025"
+    },
+    {
+      "from": "P032",
+      "type": "supports",
+      "to": "P027"
+    },
+    {
+      "from": "P041",
+      "type": "operationalizes",
+      "to": "P030"
+    },
+    {
+      "from": "P041",
+      "type": "protects-evidence-for",
+      "to": "P039"
+    },
+    {
+      "from": "P042",
+      "type": "guards-evidence-for",
+      "to": "P031"
+    },
+    {
+      "from": "P043",
+      "type": "supports",
+      "to": "P042"
+    },
+    {
+      "from": "P044",
+      "type": "supports",
+      "to": "P021"
+    },
+    {
+      "from": "P045",
+      "type": "guards-interpretation-of",
+      "to": "P029"
+    },
+    {
+      "from": "P045",
+      "type": "guards-interpretation-of",
+      "to": "P030"
+    },
+    {
+      "from": "P046",
+      "type": "enables",
+      "to": "P041"
+    },
+    {
+      "from": "P046",
+      "type": "supports",
+      "to": "P036"
+    }
   ],
   "knownBlindSpotsAtThisCheckpoint": [
-    "worker/process and serialization boundaries not yet audited deeply",
-    "generator/corpus construction assumptions only partly represented",
-    "historical removed mechanisms and abandoned implementations need a hostile archaeology pass",
-    "preprocessing and level normalization assumptions need explicit inspection",
-    "the map has strong algorithm/evidence coverage but may still underweight execution substrate"
+    "historical removed mechanisms are sampled mainly through reports and preserved comments rather than a full deleted-code inventory",
+    "generator implementation itself was not exhaustively inspected; witness-bearing corpus assumptions are supported by the independent lineage and corpus/tooling evidence",
+    "mechanic-specific prune descendants are intentionally aggregated under derive/reject unless they expose a distinct parent premise",
+    "serialization of live resumable search state across processes remains largely unimplemented territory rather than a mature repository lineage"
   ]
 }
