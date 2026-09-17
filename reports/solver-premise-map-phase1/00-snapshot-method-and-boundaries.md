@@ -1,6 +1,6 @@
 # Phase 1 premise-map mining: snapshot, method, and boundaries
 
-Status: in progress
+Status: complete
 Date: 2026-09-17
 Phase: 1 only
 Snapshot: `solver-premise-map-v1-2026-09-17`
@@ -29,7 +29,7 @@ This round does not:
 - collapse M11 into a weighted priority score;
 - treat cross-lens replication as proof, priority, or a new premise.
 
-Each lens is recorded independently before any cross-lens replication index is produced. Later lenses may inspect the same frozen inputs and underlying pre-freeze source material, but may not use earlier lens outputs as evidence or as a new search space.
+Each lens was recorded independently before any cross-lens replication index was produced. Later lenses inspected the same frozen inputs and underlying pre-freeze source material as needed, but did not use earlier lens outputs as evidence or as a new search space.
 
 ## Evidence discipline
 
@@ -46,6 +46,6 @@ A Phase-1 finding records, where applicable:
 
 ## Lens execution order
 
-M1 through M12 are run in preregistered order. The ordering is administrative, not inferential. A later lens does not inherit an earlier lens's discoveries.
+M1 through M12 were run in preregistered order. The ordering was administrative, not inferential. A later lens did not inherit an earlier lens's discoveries.
 
-The Phase-1 closeout will only verify completion, record permitted cross-lens replication, state residual uncertainty, and demonstrate that the stop rule was respected.
+The Phase-1 closeout verifies completion, records permitted cross-lens replication, states residual uncertainty, and demonstrates that the stop rule was respected. See `14-phase1-closeout.md`.
