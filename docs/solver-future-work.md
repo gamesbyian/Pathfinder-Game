@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active priority and state; [`solver-research-operating-model.md`](solver-research-operating-model.md) owns method. Use `research-status-index --compact` before new compute.
+Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active priority and state; [`solver-research-operating-model.md`](solver-research-operating-model.md) owns method. Use `research-status-index --compact` before new compute. [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) is the descriptive map for stating a missing semantic operation and classifying its gap before attaching an implementation-shaped descendant.
 
 **Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, canonical forms, decompositions, topology state, or search plans from the current puzzle/current invocation. Cross-parent recurrence is required when claiming a reusable fixed descriptor, not automatically when the candidate is a generic per-instance derivation procedure. Legality does not establish soundness or economics. [`boundary audit`](../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md)
 
