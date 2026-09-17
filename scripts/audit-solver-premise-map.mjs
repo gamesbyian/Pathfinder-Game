@@ -68,7 +68,7 @@ function normalizeText(value) {
     .trim();
 }
 
-function normalizedRelations(path, data) {
+function normalizedRelations(data) {
   if (Array.isArray(data.edges)) {
     return data.edges.map(([from, to]) => ({ from, to, type: 'UNTYPED_ANCESTRY' }));
   }
@@ -109,7 +109,7 @@ const relationObjects = RELATION_FILES.map(path => ({ path, data: JSON.parse(rea
 const degree = new Map([...byId.keys()].map(id => [id, { in: 0, out: 0 }]));
 let relationCount = 0;
 for (const { path, data } of relationObjects) {
-  const relations = normalizedRelations(path, data);
+  const relations = normalizedRelations(data);
   if (!relations) {
     failures.push(`${path} has no recognized relation collection (edges, typedEdges, or relations)`);
     continue;
@@ -132,6 +132,21 @@ for (const field of ['semanticNoveltyClasses','discoveryLineages','authorityClas
 }
 if (JSON.stringify(overlay.canonicalPremiseFiles) !== JSON.stringify(PREMISE_FILES)) failures.push(`${OVERLAY}.canonicalPremiseFiles must match auditor canonical inputs`);
 if (JSON.stringify(overlay.canonicalRelationFiles) !== JSON.stringify(RELATION_FILES)) failures.push(`${OVERLAY}.canonicalRelationFiles must match auditor canonical inputs`);
+
+const lineageSet = new Set(overlay.discoveryLineages ?? []);
+for (const path of PREMISE_FILES) {
+  const lineages = overlay.fileDiscoveryLineages?.[path];
+  if (!Array.isArray(lineages) || lineages.length === 0) {
+    failures.push(`${OVERLAY}.fileDiscoveryLineages has no lineage for ${path}`);
+    continue;
+  }
+  for (const lineage of lineages) {
+    if (!lineageSet.has(lineage)) failures.push(`${OVERLAY}.fileDiscoveryLineages uses unknown lineage ${lineage} for ${path}`);
+  }
+}
+for (const premise of premises) {
+  if (!(overlay.fileDiscoveryLineages?.[premise.__path]?.length > 0)) failures.push(`${premise.id} inherits no discovery lineage from ${premise.__path}`);
+}
 
 function checkPremiseRef(value, where) {
   if (/^P\d{3}$/.test(value) && !byId.has(value)) failures.push(`${where} references unknown premise ${value}`);
@@ -168,6 +183,7 @@ const weakCentral = central.filter(([id]) => /open|implicit|under|thin|untested|
 
 console.log(`Premise map: ${premises.length} propositions across ${PREMISE_FILES.length} files.`);
 console.log(`Relation graph: ${relationCount} relations across ${RELATION_FILES.length} graph layers.`);
+console.log(`Discovery lineage coverage: ${premises.length}/${premises.length} premises inherit at least one lineage.`);
 console.log(`Isolated propositions: ${isolated.length}.`);
 console.log(`High-centrality premises with weak/open status: ${weakCentral.map(([id,d]) => `${id}(${d.in + d.out})`).join(', ') || 'none'}.`);
 console.log(`Hardening overlay: ${overlay.contradictionCandidates.length} tensions, ${overlay.semanticSiblingFamilies.length} sibling families, ${overlay.implicitDefaults.length} implicit defaults, ${overlay.asymmetryFamilies.length} asymmetries, ${overlay.ontologyStressTests.length} ontology stress tests.`);
