@@ -381,6 +381,19 @@ for g in gates:
         m.Add(visits[g] == 0).OnlyEnforceIf(x[0][g].Not())
 m.Add(visits[goal] == 1)
 
+# --pin-revisit=<json [[x,y],...]> commits the model to revisiting each named cell at least twice
+# (visits[c] >= 2) -- a generic future-intersection-commitment query, per Lane D of
+# docs/solver-per-instance-relational-feasibility-preflight.md ("can completion still realize the
+# remaining intersection deficit through THIS specific already-visited cell"). Distinct from
+# must-cross's own visits[c]==2 requirement above: this can target any current-input cell, not
+# just a must-cross axis, and is additive (a hypothetical commitment on top of the real rules, not
+# a relaxation of them).
+pin_revisit_arg = next((a for a in sys.argv if a.startswith('--pin-revisit=')), None)
+pin_revisit = {(c[0] - 1, c[1] - 1) for c in json.loads(pin_revisit_arg.split('=', 1)[1])} if pin_revisit_arg else set()
+for c in pin_revisit:
+    if c in idx:
+        m.Add(visits[c] >= 2)
+
 # Edge-axis reuse. The unit is a VISIT, not an entry.
 #
 # BUG FIXED 2026-07-31. This was `at most one ENTRY into a cell per axis`, which is strictly more

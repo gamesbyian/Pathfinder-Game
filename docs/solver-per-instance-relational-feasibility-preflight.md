@@ -1,8 +1,9 @@
 # Per-instance relational feasibility preflight
 
-> **Status:** prepared premise-acquisition gate.
+> **Status:** question 1 EXECUTED / POPULATION-LIMITED POSITIVE; questions 2-3 still prepared. See [`result`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md).
 > **Purpose:** test whether bounded current-input relational questions can distinguish LIVE from DEAD states where the production solver's scalar/local vocabulary cannot, without first building a new search architecture.
 > **Priority:** owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
+> **Question 1 result:** on the 2 B2 parents with a same-parent LIVE/DEAD pair matched on identical remaining-intersection-deficit and remaining-length, every exact-DEAD state has zero confirmed-feasible future-intersection commitments while every exact-LIVE sibling has >=1 (107 queries, 0 correctness alarms). Population now exhausted; expansion needs the same production-search-quality sibling constructor blocking `solver-fresh-dead-sibling-harvest-preflight.md`. No production prototype earned yet -- economics and a concrete cheapest consumer are untested.
 
 ## Premise
 
