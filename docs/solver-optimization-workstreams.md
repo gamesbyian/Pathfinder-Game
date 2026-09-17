@@ -83,7 +83,7 @@ Dispositions belong to [`solver-opt-in-experiment-ledger.md`](solver-opt-in-expe
 
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** SUPPORTING / NO ACTIVE SELECTOR GATE.** Distinguish not-exposed from exposed-and-failed using capability/lifecycle/provenance/family/trace evidence. Reopen only from a cheap legal current-input signal that predicts allocation, never exact offline labels or historical family membership.
+**State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed using capability/lifecycle/provenance/family/trace evidence. Reopen only from a cheap legal current-input signal that predicts allocation, never exact offline labels or historical family membership.
 
 ## Workstream state
 
