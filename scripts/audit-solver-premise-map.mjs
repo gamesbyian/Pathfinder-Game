@@ -9,7 +9,7 @@ const PREMISE_FILES = [
   'docs/solver-premise-space-extension-2026-09-17c.csv',
 ];
 const RELATION_FILES = [
-  'docs/solver-premise-space-relations.json',
+  'docs/solver-premise-space-graph.json',
   'docs/solver-premise-space-relations-v2.json',
   'docs/solver-premise-space-relations-v3.json',
 ];
@@ -54,7 +54,9 @@ function parseCsv(text) {
 function records(path) {
   const rows = parseCsv(readFileSync(path, 'utf8'));
   const header = rows.shift();
-  return rows.map((values, index) => Object.fromEntries(header.map((key, i) => [key, values[i] ?? '']))).map(record => ({ ...record, __path: path, __row: index + 2 }));
+  return rows
+    .map((values, index) => Object.fromEntries(header.map((key, i) => [key, values[i] ?? ''])))
+    .map(record => ({ ...record, __path: path, __row: index + 2 }));
 }
 
 function normalizeText(value) {
@@ -64,6 +66,17 @@ function normalizeText(value) {
     .replace(/\b(the|a|an|is|are|be|can|could|should|would|may|might|current|solver)\b/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function normalizedRelations(path, data) {
+  if (Array.isArray(data.edges)) {
+    return data.edges.map(([from, to]) => ({ from, to, type: 'UNTYPED_ANCESTRY' }));
+  }
+  if (Array.isArray(data.typedEdges)) {
+    return data.typedEdges.map(edge => ({ from: edge.source, to: edge.target, type: edge.relation }));
+  }
+  if (Array.isArray(data.relations)) return data.relations;
+  return null;
 }
 
 const failures = [];
@@ -94,9 +107,15 @@ for (const premise of premises) {
 
 const relationObjects = RELATION_FILES.map(path => ({ path, data: JSON.parse(readFileSync(path, 'utf8')) }));
 const degree = new Map([...byId.keys()].map(id => [id, { in: 0, out: 0 }]));
+let relationCount = 0;
 for (const { path, data } of relationObjects) {
-  if (!Array.isArray(data.relations)) failures.push(`${path} has no relations array`);
-  for (const relation of data.relations ?? []) {
+  const relations = normalizedRelations(path, data);
+  if (!relations) {
+    failures.push(`${path} has no recognized relation collection (edges, typedEdges, or relations)`);
+    continue;
+  }
+  relationCount += relations.length;
+  for (const relation of relations) {
     for (const endpoint of ['from', 'to']) {
       const value = relation[endpoint];
       if (/^P\d{3}$/.test(value) && !byId.has(value)) failures.push(`${path} relation references missing ${value}`);
@@ -111,6 +130,9 @@ if (overlay.schemaVersion !== 1) failures.push(`${OVERLAY} schemaVersion must be
 for (const field of ['semanticNoveltyClasses','discoveryLineages','authorityClasses','maturityStages','temporalConditioningDimensions','contradictionCandidates','semanticSiblingFamilies','implicitDefaults','asymmetryFamilies','ontologyStressTests','miningLenses']) {
   if (!Array.isArray(overlay[field]) || overlay[field].length === 0) failures.push(`${OVERLAY}.${field} must be a non-empty array`);
 }
+if (JSON.stringify(overlay.canonicalPremiseFiles) !== JSON.stringify(PREMISE_FILES)) failures.push(`${OVERLAY}.canonicalPremiseFiles must match auditor canonical inputs`);
+if (JSON.stringify(overlay.canonicalRelationFiles) !== JSON.stringify(RELATION_FILES)) failures.push(`${OVERLAY}.canonicalRelationFiles must match auditor canonical inputs`);
+
 function checkPremiseRef(value, where) {
   if (/^P\d{3}$/.test(value) && !byId.has(value)) failures.push(`${where} references unknown premise ${value}`);
 }
@@ -125,7 +147,9 @@ for (const family of overlay.semanticSiblingFamilies ?? []) {
   for (const child of family.knownTestedForms ?? []) checkPremiseRef(child, `sibling family ${family.id}.knownTestedForms`);
   if (!Array.isArray(family.openSiblingClasses) || family.openSiblingClasses.length === 0) failures.push(`sibling family ${family.id} has no open siblings`);
 }
-for (const item of overlay.implicitDefaults ?? []) for (const id of item.related ?? []) checkPremiseRef(id, `default ${item.id}.related`);
+for (const item of overlay.implicitDefaults ?? []) {
+  for (const id of item.related ?? []) checkPremiseRef(id, `default ${item.id}.related`);
+}
 
 const closedLike = premises.filter(p => /closed|negative|reduced|saturated/i.test(p.status));
 for (const premise of closedLike) {
@@ -137,11 +161,13 @@ for (const premise of closedLike) {
 }
 
 const isolated = [...degree.entries()].filter(([, d]) => d.in + d.out === 0).map(([id]) => id);
-const central = [...degree.entries()].sort((a, b) => (b[1].in + b[1].out) - (a[1].in + a[1].out)).slice(0, 15);
+const central = [...degree.entries()]
+  .sort((a, b) => (b[1].in + b[1].out) - (a[1].in + a[1].out))
+  .slice(0, 15);
 const weakCentral = central.filter(([id]) => /open|implicit|under|thin|untested|deferred/i.test(byId.get(id).status));
 
 console.log(`Premise map: ${premises.length} propositions across ${PREMISE_FILES.length} files.`);
-console.log(`Relation graph: ${relationObjects.reduce((n, entry) => n + (entry.data.relations?.length ?? 0), 0)} typed relations across ${RELATION_FILES.length} files.`);
+console.log(`Relation graph: ${relationCount} relations across ${RELATION_FILES.length} graph layers.`);
 console.log(`Isolated propositions: ${isolated.length}.`);
 console.log(`High-centrality premises with weak/open status: ${weakCentral.map(([id,d]) => `${id}(${d.in + d.out})`).join(', ') || 'none'}.`);
 console.log(`Hardening overlay: ${overlay.contradictionCandidates.length} tensions, ${overlay.semanticSiblingFamilies.length} sibling families, ${overlay.implicitDefaults.length} implicit defaults, ${overlay.asymmetryFamilies.length} asymmetries, ${overlay.ontologyStressTests.length} ontology stress tests.`);
