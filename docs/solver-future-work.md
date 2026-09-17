@@ -1,93 +1,71 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md); method: [`solver-research-operating-model.md`](solver-research-operating-model.md); dispositions: [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md). Use `research-status-index --compact` before new compute.
+Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active priority and state; [`solver-research-operating-model.md`](solver-research-operating-model.md) owns method. Use `research-status-index --compact` before new compute.
 
-Not a second queue: keep unexplained residue plus a reopen condition. Closed work needs a changed premise/treatment. Existing variants precede new generation; human/editor parents fill contrast gaps. Speed implementation requires fresh current-head profiling. [`speed authority`](solver-architectural-speed-opportunities.md)
+**Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, canonical forms, decompositions, topology state, or search plans from the current puzzle/current invocation. Cross-parent recurrence is required when claiming a reusable fixed descriptor, not automatically when the candidate is a generic per-instance derivation procedure. Legality does not establish soundness or economics. [`boundary audit`](../reports/2026-09-16-level-blindness-overshoot-architecture-audit-001.md)
 
-## Audit-derived conditional work
+## Active-successor interpretation
+
+Do not duplicate the active queue here. The workstream authority currently owns these live lines:
+
+- **Open-path topology:** premise earned. Preserve both successors: a compact reusable descriptor and a generic per-instance topology procedure whose outputs may be unique to a board. Raw phase is not a production key; soundness/invariance, predictive value, independent confirmation, and economics still gate use. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
+- **H1 event feasibility:** frozen prespec remains unchanged. A null on recurring compact relations closes that fixed-descriptor route, not a separate later generic online exact-query route if per-instance answers prove useful.
+- **DEAD-core/minimum relaxation:** track recurring cores for reusable abstraction separately from per-instance core extraction for solve-local conflict learning.
+- **H2/H3/behavioral-state quotient:** unchanged bounded next-in-order lines. H2 (marginal information velocity / structural stasis) advances only if structural novelty per `workSpent` predicts marginal value beyond generic difficulty/work. H3 (dependency-defined repair commitment interface) requires recurring coupled commitments smaller than rollback distance. The behavioral-state quotient / residual-language probe needs a tiny exact-probe first, advancing only if future behavior admits a materially coarser compact equivalence.
+
+## Audit-derived deferred/reopen work
+
+| Question | Advance/reopen condition |
+|---|---|
+| Heuristic-to-theorem subdomain audit | Topology/H1 exposes an exact relation already approximated by scoring/routing, or a current soft mechanism has an identifiable sound subdomain worth a prune, lower bound, forced move, decomposition, or exact-mode switch |
+| Solve-local knowledge rediscovery | A cache/handoff/proof-store question becomes live; first show distinct attempts or stages repeatedly recompute the same expensive sound fact or failure certificate |
+| Mechanics-derived canonicalization / symmetry / transposition | A sound current-input equivalence is identifiable and telemetry shows material repeated equivalent work inside one solve; historical identity/family lookup remains forbidden |
+| Structural graph preprocessing | Topology/H1/separator evidence exposes a sound current-input graph property at useful prevalence; measure construction cost, solve-local reuse, and downstream value before adding persistent preprocessing |
+| Per-instance online conflict derivation | A bounded proof/core procedure can derive sound solve-local conflicts cheaply enough to reject equivalent future failure; individual clauses/cores need not recur across levels |
+| Bounded exact residual query / opportunistic exactification | An earned question or tractability signal identifies residual states where a bounded complete method can prove/finish something cheaply; require bounded runtime and end-to-end value |
+| Per-level search-plan compilation | Two genuinely different architectures show complementary legal niches predictable from current-input structure; the compiler must generalize even if each compiled plan is unique |
+
+## Other deferred descendants
 
 | Question | Reopen condition |
 |---|---|
-| Profile calibration / profile-vs-solvability | If a live decision needs profile evidence: schema-v3 supported axes, prospective population, provenance-dependency strata, structural-similarity comparator, comparable-axis coverage, unrelated held-out-family validation. Old nearest-profile identities remain invalid |
-| Independent transfer for omitted mechanics | Broad claim blocked by omitted mechanics; use the smallest independent construction or locked human/editor parents |
-| `portfolio-18-flat-2m` old-generator nomination | Static allocation resumes and cheap independent evidence can test the lower-work tie |
-| Accepted-path representative sensitivity | A live mechanism depends on one path-set view; run the frozen Audit-3 cohort |
-| Class-3 exact-action dose | Triage needs comparable-work failure; atlas rows lack per-attempt `workSpent` |
-| Known-prefix oracle-set manifest | A decision-bearing prefix study needs path-set sensitivity |
-| Experiment producer maturation | A decision-bearing producer is touched or a recurring consumer gap appears |
-
-Frozen solve/work facts stand unless execution/participation was invalid.
-
-## Architectural-speed conditional stack
-
-Not current queue items. Reopen after profiling shows material cost and favorable expected value: neighbor/candidate allocation, replay/DFS transposition/cull selection, compact native/WASM kernels, or runtime-sensitive retests. Evaluate representative latency plus total retained-population CPU/work. [`methodology`](../reports/2026-09-15-speed-negative-methodology-review-001.md)
-
-## Recovered architectural descendants
-
-Evidence-gated descendants. [`reconciliation`](../reports/2026-09-16-recovered-solver-avenues-reconciliation-001.md) [`moonshots`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md) [`post-merge`](../reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md)
-
-| Question | Reopen condition |
-|---|---|
-| Bidirectional / backward abstraction | Compact sound residual/interface signature exists without recreating full path history |
-| Learned conflicts / nogoods | H1/H3 or DEAD-core diagnosis finds recurring compact DEAD relations across unrelated parents |
-| Bounded exact current-state production query | Small sound offline query answers an earned question; then bound runtime and prove economics |
-| Choice-bearing macro-actions | Mechanism-specific premise shows repeated route structure beyond certified one-successor chains |
+| Bidirectional / backward abstraction | A compact sound residual/interface signature exists without recreating full path history |
+| Choice-bearing macro-actions | A mechanism-specific premise shows repeated route structure beyond certified one-successor chains |
 | Complete-path LNS | Relaxed whole-path candidates show accepted solutions are locally reachable by structural surgery |
-| Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; rules remain hypothesis nominations |
-| Adversarial counterexample generation | Frozen hypothesis can be attacked by solver-belief vs exact-reality disagreement without construction leakage |
-| Cooperative blackboard portfolio | Two solver families expose reusable within-invocation artifacts with marginal value |
-| Per-level search-plan compilation | Different architectures show complementary legal niches predictable from current-input structure |
-| Declarative mechanic automata | Repeated earned descendants need a shared mechanic-state contract enough to justify rewrite-scale migration |
+| Cooperative blackboard portfolio | Two solver families expose complementary within-invocation artifacts that a consumer cannot cheaply rediscover; start with one typed handoff, not a framework |
+| Declarative mechanic automata | Repeated earned descendants need one shared mechanic-state contract enough to justify rewrite-scale migration |
+| Adversarial counterexample generation | A frozen hypothesis can be attacked by solver-belief versus exact-reality disagreement without construction leakage |
+| Interpretable program synthesis | Parent-held-out exact contrasts support a tiny stable DSL; synthesized rules remain nominations until independently confirmed |
 
-H1 optionality/CEGAR remain H1 descendants. Conflict-driven search follows compact recurring DEAD cores. Current-state exact computation may be legal; historical labels/witnesses/identity are not runtime steering inputs.
+## Existing conditional work
 
-## Capability-acquisition frontier
-
-Post-Class-4-promotion boundary: **390 Class-5**, **71 Class-4** historical-candidate misses; residual 531, Classes 1-5 = 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
-
-Closed neighbors: naive `swap`/`cs`, generic scorer tuning, six scalar future-feasibility summaries, connectivity/dead-cause reuse, August low-cardinality quotas, fixed-endpoint homotopy. Card-E sizing resolved; tested state-selection descriptors closed negative after depth control.
-
-Funnel: **freshness -> controlled contrast -> first loss -> microscope -> smallest generic capability -> bounded pilot -> independent validation**.
-
-## Premise-generation stack
-
-| Priority | Question | Boundary |
-|---:|---|---|
-| 1 | **Controlled open-path topological completion contrast** | **PREMISE EARNED, MICROSCOPE NEXT.** 4 LIVE/DEAD-discordant pairs across 2 independent parents; derive a compact puncture-side descriptor, then a bounded pilot before promotion. [`preflight`](solver-class5-controlled-topology-acquisition-preflight.md) · [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md) |
-| 2 | **H1 residual event-feasibility / completion regimes** | **PRESPEC FROZEN; strongest independent acquisition premise.** Test individual/joint realizability and nominated obligation orders. No feature sweep. [`prespec`](../reports/2026-09-16-h1-event-feasibility-prespec-001.md) |
-| 3 | **Minimal DEAD-core / minimum-relaxation diagnosis** | If 1/2 expose DEAD contrasts without a compact relation, relax tiny semantic commitment sets and seek recurring cores across independent parents |
-| 4 | **H2 marginal information velocity / structural stasis** | Advance only if structural novelty per `workSpent` predicts marginal value beyond generic difficulty/work |
-| 5 | **H3 dependency-defined repair commitment interface** | Require recurring coupled commitments smaller than rollback distance |
-| 6 | **Behavioral-state quotient / residual-language probe** | Tiny exact-probe first; advance only if future behavior admits a materially coarser compact equivalence |
-| 7 | **Separator/decomposition census** | Census separators/interface width/mechanic leakage; build nothing unless low-complexity interfaces are common |
-| 8 | **Cross-attempt basin overlap** | Only for a real allocation question; restore canonical action identities and participation checks |
-| 9 | **Forced-chain traversal census** | Only after WS7 profiling finds material cost in post-prune one-successor chains |
-
-Closed descendants: August categorical projection negative over 207 pools; Card-E found 17/156 reconstructable-but-unexposed but no descriptor family beating depth control. Partial-order/commuting replay remains nested under H1.
-
-## Secondary solve-harvest trigger
-
-Class 1/2/3 has no legal no-contention batch. Must-turn-biased late repair's frozen 60-row 7M A/B is **CLOSED NEGATIVE**: identical 17/60 solved sets, zero marginal gains, +6.5% work. `R02768` + `R02180` remain placement evidence. Reopen only for a different placement/selector premise or allocation contract. [`result`](../reports/2026-09-16-class2-must-turn-economics-result-001.md)
-
-## Deferred questions
+Keep these dormant until their stated premise changes:
 
 | Question | Reopen condition |
 |---|---|
+| Profile calibration | A live decision needs profile evidence under schema-v3 supported axes and independent validation; old nearest-profile identity remains invalid |
+| Accepted-path representative sensitivity | A live mechanism depends materially on one accepted-path-set view |
+| Class-3 exact-action dose | A current triage question needs comparable-work evidence; atlas dispatch/reach alone is insufficient |
+| Cross-attempt basin overlap | A real allocation/handoff question exists; restore canonical action identity and participation checks, and measure solve-local rediscovery at the same time |
+| Separator/decomposition census | A current topology/H1 result makes low-width interfaces a plausible mechanism; census first, build nothing until prevalence is established |
+| Forced-chain traversal census | Current profiling shows material work spent in post-prune one-successor chains |
+| Richer static graph/placement selectors | A recurring mechanism-specific trace/first-loss signal appears, or exact structural preprocessing earns a routing premise |
 | Admissible-order retry repricing | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work |
-| Richer static graph/placement selectors | A recurring mechanism-specific trace/first-loss descriptor appears |
+| Repair restart near-miss allocation | Fresh legal population or changed allocation contract revives the historical signal |
+| Non-portal coarse-state-merge recurrence | A mechanism-specific current question independently nominates the 44/200 Card-E recurrence rather than treating it as a generic reopen |
+| Independent transfer for omitted mechanics | A broad claim is blocked by omitted mechanics; use the smallest independent construction or locked human/editor parents |
+| `portfolio-18-flat-2m` old-generator nomination | Static allocation resumes and cheap independent evidence can test the lower-work tie |
+| Known-prefix oracle-set manifest / experiment producer maturation | A decision-bearing prefix study needs path-set sensitivity, or a decision-bearing producer is touched / a recurring consumer gap appears |
 | Stability-aware portfolios / latent response dimensions | Simpler analysis leaves unexplained structure or WS1 finds a compact held-out signal |
-| Repair restart near-miss allocation | Fresh legal population/changed contract revives the 64M near-miss signal |
-| Beam continuation / cross-policy handoff | New descriptor family or changed within-pool selection problem; Card-E's tested descriptors are closed |
-| Non-portal coarse-state-merge recurrence | Card-E screen: 44/200 `coarse-state-merge-removed`, concentrated outside portal levels. WS4 reopening nomination only; pursue with a mechanism-specific question. [`Card-E`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md) |
+| Beam continuation / cross-policy handoff | A new descriptor family or changed within-pool selection problem; Card-E's tested descriptors are closed |
 | Temporal/displaced-capability niches | Boundary change or unrelated losses reveal a stable basin; repeated same-phenotype losses require whole-parent testing before broadening |
 | Human/editor-envelope niches | Mechanism needs omitted human/editor geometry; preserve source/selection role, never treat envelope label as independence |
-| Research infrastructure | Add plumbing only after a measured recurring limitation |
-| Class-1 compact beam-menu exposure | A materially different work/allocation contract creates headroom |
+| Research infrastructure / Class-1 compact beam-menu exposure | Add plumbing only after a measured recurring limitation, or a materially different work/allocation contract creates headroom |
 | Representation-sensitivity lineage survival | After WS2 priority work, measure known-live lineage survival with geometry/interface controls |
 
-## Demoted forms
+## Closed forms
 
-Do not reopen unchanged: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; whole C1-as-transfer or C2-as-untouched; connectivity/quota forms without changed premise; broad alternative-search frameworks before earned diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency; generic detour libraries; bulk variants/human descendants; full-corpus A/Bs for falsified ideas.
+Do not reopen unchanged: broad retries/seed fan-out/threshold widening/scorer proliferation/universal width; legacy nearest-profile or sampled-rigidity claims; global portal coarse-state merge; August low-cardinality categorical quotas; fixed-endpoint homotopy as a substitute for open-path topology; generic connectivity/dead-cause reuse on the current Class-5 residual; generic detour libraries; broad alternative-search frameworks before earned diagnostics; hazard/bandit/ML scheduling before fixed-work marginal value; standalone must-cross urgency; bulk variant generation; full-corpus A/Bs for already falsified forms.
 
-Keep this file short: questions, priorities, boundaries, reopen conditions.
+Keep this file short. Active execution state belongs in the workstream authority; chronology and measurements belong in dated reports; historical premise interpretation belongs in the archaeology register.

@@ -210,16 +210,17 @@
     },
     {
       "id": "WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR",
-      "question": "Does a compact, generic, runtime-legal descriptor of which side of a nearby board puncture the current path already committed to predict completion feasibility beyond generic difficulty/work?",
+      "question": "Which generic current-input topology successor is useful after the earned open-path contrast: a compact reusable puncture-side descriptor, a richer per-instance topology derivation, or neither?",
       "owner": "WS2",
       "state": "active-diagnostic",
-      "aliases": ["topology descriptor", "puncture-side descriptor"],
+      "aliases": ["topology descriptor", "puncture-side descriptor", "per-instance topology", "topology reasoning"],
       "answeredBy": [],
-      "result": "Not yet tested. The current earned evidence is 4 discordant single-puncture cases across 2 parents; the next step is to microscope those cases into a compact descriptor candidate, then test it offline before any bounded solver pilot.",
+      "result": "Not yet tested. The current earned evidence is 4 discordant single-puncture cases across 2 parents. Microscope those cases without assuming that the only legitimate successor is one recurring compact descriptor: compare a reusable descriptor route with generic per-instance winding/phase, separator-side, region-accessibility, topology-aware canonicalization, or exact-impossibility reasoning derived solely from the current puzzle/current invocation.",
       "triggeredBy": ["WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"],
       "constrains": [
-        "A raw phase coordinate is research evidence, not a descriptor; require a compact, generic, invariance-checked summary before any solver-facing test.",
-        "Confirm on untouched independent parents before treating any candidate descriptor as decision-bearing."
+        "Do not route production directly on raw phase. Any hard use requires an appropriate soundness/invariance argument; any soft use still needs predictive value beyond generic difficulty/work.",
+        "A reusable fixed descriptor must recur and confirm on independent parents. A generic per-instance derivation procedure may emit board-specific outputs that never recur, but the procedure must generalize across independent evaluation levels.",
+        "For either route, bound construction/use cost and prove end-to-end solve/work economics before promotion."
       ],
       "reopensOn": null
     },
