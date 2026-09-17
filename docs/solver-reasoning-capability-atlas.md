@@ -198,11 +198,11 @@ Current evidence strengthens these intersections:
 
 - Class-5/no-known-candidate concentration supports capability acquisition rather than further composition alone.
 - controlled topology forks directly support the path-history-topology gap;
-- the DEAD-core pilot keeps causal-conflict learning open but population-limited;
+- the DEAD-core pilot keeps causal-conflict learning open but population-limited; the fresh 75-state/25-parent sibling harvest resolves the population limit but exposes a separate construction-method gap (no LIVE contrast yet reachable) -- see `solver-fresh-dead-sibling-harvest-preflight.md`;
 - H1 closed one compact event-feasibility vocabulary, narrowing rather than erasing joint-feasibility reasoning;
 - behavioral-state quotient work warns that low-dimensional state abstractions can mix LIVE/DEAD behavior while still leaving a weaker cross-parent Card-E signal;
-- the current separator/decomposition census is the correct falsifier for the decomposition gap; treat any unmerged result as pending until it lands on `main`;
-- Class-3 dose ambiguity is an **EXPOSURE** question, not evidence of missing semantic capability;
+- the separator/decomposition census landed a bounded positive (121/390 Class-5 levels, width<=4 interfaces) -- the decomposition gap's next question is interface-contract state size, not prevalence, per `solver-separator-decomposition-census-preflight.md`;
+- Class-3 dose ambiguity is an **EXPOSURE** question, concluded as an evidence gap (no cheap per-technique dose telemetry), not evidence of missing semantic capability;
 - the promoted portal coarse-state dead-last retry is **composition/allocation of existing capability**, not acquisition of a new reasoning primitive.
 
 ## Premise-generation protocol

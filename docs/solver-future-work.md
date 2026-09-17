@@ -18,7 +18,7 @@ The following are no longer merely deferred ideas; bounded premise-acquisition g
 - **complete-path LNS cheapest falsifier**;
 - **Class-3 exact-action dose reconciliation** and the bounded Card-E quotient discovery pass.
 
-Do not duplicate those here.
+Do not duplicate those here. One exception worth flagging explicitly: the fresh exact sibling harvest produced a large exact-DEAD population (75 states/25 parents) but **no trustworthy LIVE contrast** — its naive goal-distance-greedy constructor cannot reach LIVE states even shallow, confirmed a construction-method artifact rather than a residual-structure finding. DEAD-core size/"spares LIVE" testing and Lane D/E work that needs matched LIVE/DEAD Class-5 siblings stay blocked until a production-search-quality sibling constructor exists (see [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md)).
 
 ## Deferred descendants of active premises
 

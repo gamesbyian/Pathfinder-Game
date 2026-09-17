@@ -1,6 +1,6 @@
 # Solver capability atlas second-pass investigation 001
 
-> **Status:** concluded-positive.
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-16 — current solver capability atlas, level-blindness overshoot audit, solver archaeology register, learned-failure certificate audit, connectivity-rejection Stage B, current solver state/memory architecture, and open separator census PR #1827.
 > **Decision:** preserve a new stop-condition-reconciliation layer and a bounded solve-local fact-rediscovery preflight. Several historical negatives close reusable cross-level descriptors or dirty implementations, not the underlying per-instance reasoning capability. No production mechanism or live priority is promoted by this report.
 > **Remaining gate:** active execution priority remains `docs/solver-optimization-workstreams.md`; the newly designed rediscovery study runs only when it does not displace higher-value active premise acquisition or when existing retained evidence can answer Phase 0 cheaply.

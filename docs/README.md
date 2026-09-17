@@ -17,9 +17,13 @@ Task routing lives in [`../AGENTS.md`](../AGENTS.md). This file inventories owne
 | [`agent-context-routes.json`](agent-context-routes.json) | Required/optional agent-context routes and byte budgets |
 | [`solver-architecture.md`](solver-architecture.md) | Solver implementation and execution policy |
 | [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) | **Canonical solver-research priority, workstream state, and next gates** |
-| [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Semantic map of solver reasoning primitives versus Pathfinder computational demands; descriptive premise-generation aid, not a queue |
+| [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) | Semantic map of solver reasoning primitives vs. Pathfinder demands; descriptive premise-generation aid, not a queue |
 | [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) | Reconciles historical negative/closed experiments against capability gaps so descriptor/form/cross-level closure is not mistaken for semantic-premise closure |
 | [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md) | Bounded observer-first plan to measure repeated derivation and potential typed reuse of expensive current-instance facts within one cold solve |
+| [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md) | Bounded current-input relational queries (intersection realizability, event feasibility, interface commutativity) |
+| [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md) | Observer-first test of whether DEAD near-misses trace to a compact dependency-defined commitment set, not path-distance rollback |
+| [`solver-separator-decomposition-census-preflight.md`](solver-separator-decomposition-census-preflight.md) | Static/mechanic-aware/portal-mediated/path-history separator census on the current Class-5 residual; concluded |
+| [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md) | Fresh exact LIVE/DEAD sibling population for DEAD-core/topology/relational microscopes; concluded, construction gap found |
 | [`solver-research-operating-model.md`](solver-research-operating-model.md) | Research method, stop rules, promotion and selection discipline |
 | [`solver-archaeology-register.md`](solver-archaeology-register.md) | Historical solver premises, dispositions, vocabulary lineages, and reopen questions; **not** a priority authority |
 | [`solver-research-data-assets.md`](solver-research-data-assets.md) | Compact cross-asset topology and scientific boundaries |
@@ -80,3 +84,43 @@ Default orientation:
 2. [`solver-research-operating-model.md`](solver-research-operating-model.md)
 3. the specialist doc for the current gate
 4. compact evidence/tool queries before broad artifacts
+
+Add [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md) when population/holdout/generalization matters. Use [`solver-research-data-assets.md`](solver-research-data-assets.md) for cross-asset boundary guidance and [`solver-research-resource-contract.md`](solver-research-resource-contract.md) when a decision depends on a resource's independence, identity, conditioning, missingness, freshness, information loss, or audited consumer semantics. [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) is conditional on materially using frozen pre-cleanup evidence. Use [`solver-archaeology-register.md`](solver-archaeology-register.md) only when tracing historical premises/dispositions; it does not rank current work.
+
+The September 11 workflow/evidence remediation is complete. For current workflow/evidence maintenance, start from [`solver-evaluation-evidence.md`](solver-evaluation-evidence.md), [`solver-research-operating-model.md`](solver-research-operating-model.md), the maintained workflow lifecycle/indexes, and the workflow/scripts being changed. Use [`solver-workflow-remediation-review-handoff.md`](solver-workflow-remediation-review-handoff.md) for the completed program's conclusions; the remediation plan and implementation handoff are historical records, not active queues.
+
+### Research instruments
+
+These are reusable instruments, not priority authorities.
+
+| Doc | Instrument |
+|---|---|
+| [`technique-census-analysis.md`](technique-census-analysis.md) | Census/portfolio diagnostics |
+| [`solver-offline-replay-harness.md`](solver-offline-replay-harness.md) | Read-only exact/reference-labelled probes |
+| [`solver-known-solution-prefix-survival.md`](solver-known-solution-prefix-survival.md) | Known-solution-prefix survival observation |
+| [`human-parent-contrast-research.md`](human-parent-contrast-research.md) | Human/editor-origin controlled family generation for earned causal/transfer questions |
+| [`solver-search-resumability.md`](solver-search-resumability.md) | Opt-in beam continuation mechanism and current research dispositions |
+| [`solver-ablation.md`](solver-ablation.md) | Exploratory ablation lab |
+| [`solver-required-length-sweep.md`](solver-required-length-sweep.md) | Required-length sensitivity |
+
+## Compatibility and conditional references
+
+- [`solver-optimization-current-queue.md`](solver-optimization-current-queue.md) is a compatibility pointer to the workstream authority. Do not put mutable queue state there.
+- [`solver-research-post-naming-resumption.md`](solver-research-post-naming-resumption.md) translates frozen pre-cleanup evidence when historical names/contracts matter.
+
+## Completed naming-cleanup evidence
+
+Phase 0–15 is complete. Current naming authority is [`naming-and-vocabulary.md`](naming-and-vocabulary.md); future cross-boundary renames use [`change-recipes.md`](change-recipes.md). `npm run naming:status` provides targeted terminal/history status.
+
+| Frozen record | Role |
+|---|---|
+| [`naming-cleanup-phase-records/phase-15.md`](naming-cleanup-phase-records/phase-15.md) | Completed/frozen Phase-15 execution evidence |
+| [`naming-cleanup-phase-records/phase-15-preparation.md`](naming-cleanup-phase-records/phase-15-preparation.md) | Frozen Phase-15 preparation snapshot |
+
+`naming-cleanup-plan.md`, `naming-cleanup-ledger.json`, `naming-cleanup-history-and-lessons.md`, `naming-cleanup-process-hardening.md`, `naming-cleanup-future-phase-preparation.md`, `naming-cleanup-phase-record-template.md`, and `naming-cleanup-phase-records/` are implementation evidence, not ordinary current-task reading. Frozen reports keep historical names/paths where provenance requires it.
+
+## History
+
+Superseded plans, concluded experiments, and old authority states live in [`archive/snapshots/`](archive/snapshots/README.md). Other history: [`adr/`](adr/), [`archive/`](archive/README.md), [`history/development-journal.md`](history/development-journal.md), [`refactor-notes/`](refactor-notes/).
+
+`../CLAUDE.md` and `.github/copilot-instructions.md` are adapters to `../AGENTS.md`, not knowledge bases.

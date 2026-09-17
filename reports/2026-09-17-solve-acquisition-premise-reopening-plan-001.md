@@ -1,8 +1,9 @@
 # Solve-acquisition premise reopening plan 001
 
-> **Status:** concluded-positive / execution prepared
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-17 — current `main` after PR #1826 plus the current WS2/future-work authorities and the historical claim-lineage audit.
 > **Decision:** the previous topology/H1/DEAD-core/H3/H2/behavioral-quotient ladder is exhausted as an immediate treatment source. Preserve solve acquisition as the primary objective by opening the next premise gates in a bounded order: separator/decomposition census, fresh exact LIVE/DEAD sibling asset, per-instance topology / DEAD-core microscopes, bounded Class-3 dose reconciliation, Card-E interaction discovery, then the complete-path-LNS cheapest falsifier.
+> **Remaining gate:** execute the ordered ladder itself (see `docs/solver-optimization-workstreams.md`'s current premise-acquisition execution order for live status); this plan authorizes no treatment on its own.
 > **Production impact:** none. No new treatment is authorized by this plan.
 
 ## Why a new premise ladder is needed

@@ -1,7 +1,7 @@
 # Solver reasoning-capability atlas investigation 001
 
-> **Status:** concluded-positive.
-> **Last evidence:** 2026-09-16/17 current `main` at `4e0883ba254c7c25d23692861665a3fdd1f46ad2`, plus unmerged PR #1827 treated as pending evidence only.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-17 — current `main`, including the since-merged separator census (PR #1827) and fresh sibling harvest (PR #1829) results.
 > **Decision:** add a durable reasoning-capability atlas; do not create a new workstream or promote a production treatment from the atlas itself.
 > **Remaining gate:** use the atlas to classify future premises and reconcile newly exposed semantic gaps against current evidence before spending compute.
 
