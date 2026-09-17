@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "scope": "delta relations for P177-P196; companions solver-premise-space-relations-v2.json and 2026-09-17b extension",
+  "scope": "delta relations for P177-P200; companions solver-premise-space-relations-v2.json and 2026-09-17b/17c extensions",
   "relations": [
     {"from":"P177","type":"SEMANTIC_PARENT","to":"P178"},
     {"from":"P177","type":"SEMANTIC_PARENT","to":"P193"},
@@ -39,6 +39,16 @@
     {"from":"P195","type":"STRENGTHENS","to":"P160"},
     {"from":"P196","type":"EPISTEMIC_PREREQUISITE_FOR","to":"premise-space completeness claims"},
     {"from":"P196","type":"STRENGTHENS","to":"P177"},
+    {"from":"P197","type":"EPISTEMIC_PREREQUISITE_FOR","to":"prune/order/diagnostic promotion claims"},
+    {"from":"P197","type":"STRENGTHENS","to":"P189"},
+    {"from":"P198","type":"EPISTEMIC_PREREQUISITE_FOR","to":"production promotion claims"},
+    {"from":"P198","type":"STRENGTHENS","to":"P151"},
+    {"from":"P198","type":"STRENGTHENS","to":"P187"},
+    {"from":"P199","type":"SPECIALIZATION_OF","to":"P113"},
+    {"from":"P199","type":"STRENGTHENS","to":"P154"},
+    {"from":"P200","type":"SEMANTIC_PARENT","to":"P162"},
+    {"from":"P200","type":"SEMANTIC_PARENT","to":"P177"},
+    {"from":"P200","type":"STRENGTHENS","to":"P193"},
     {"from":"F4 antecedent commitment","type":"CAUSAL_PREDECESSOR","to":"F3 later sound rejection"},
     {"from":"F12 handoff loss","type":"ALTERNATIVE_EXPLANATION_FOR","to":"downstream capability absence"},
     {"from":"F14 measurement misdiagnosis","type":"DOES_NOT_FALSIFY_PARENT","to":"runtime mechanism premise"}
