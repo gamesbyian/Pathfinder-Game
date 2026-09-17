@@ -66,6 +66,10 @@ export function extractExplicitPrefixCases(document, { format = 'cases', corpus 
             sourceLabel: row.label ?? null,
             depth: row.depth ?? prefix.length - 1,
             source: row.source ?? null,
+            // Optional event-pinning hook (reports/2026-09-16-h1-event-feasibility-prespec-001.md):
+            // passed through verbatim to cpsat-reference-probe.py's own --pin=<json>. null/absent
+            // runs the plain prefix-feasibility query exactly as before this field existed.
+            pin: row.pin ?? null,
         };
     });
 }

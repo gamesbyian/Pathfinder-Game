@@ -104,13 +104,15 @@ for (const item of cases) {
     }
 
     const prefixJson = JSON.stringify(item.prefix);
-    const result = spawnSync('python3', [probePath, item.levelId, String(timeLimit), '--emit-path', `--corpus=${item.corpus}`, `--prefix=${prefixJson}`], {
+    const probeArgs = [probePath, item.levelId, String(timeLimit), '--emit-path', `--corpus=${item.corpus}`, `--prefix=${prefixJson}`];
+    if (item.pin) probeArgs.push(`--pin=${JSON.stringify(item.pin)}`);
+    const result = spawnSync('python3', probeArgs, {
         encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
     });
     const exitCode = result.status ?? (result.error ? -1 : 0);
     const classified = classifyProbeProcess({ stdout: result.stdout ?? '', stderr: result.stderr ?? '', exitCode });
     const row = {
-        schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix,
+        schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix, pin: item.pin ?? null,
         depth: item.depth, sourceLabel: item.sourceLabel, referenceLabel: classified.label, referenceReason: classified.reason,
         cpSatStatus: classified.status ?? null, timeLimitSec: timeLimit, exitCode,
     };
