@@ -4,6 +4,7 @@
 > **Purpose:** determine whether hard repair/search failures are controlled by a compact set of coupled earlier commitments rather than by geometric rollback distance or generic restart difficulty.
 > **Priority:** owned by [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md).
 > **First observer result:** CP-SAT bisection on B2's only 2 qualifying same-parent dead/live pairs (sharing a literal common prefix) cleanly locates the exact point of no return in both, but both land 1-2 moves from the trajectory's own end -- a regime where rollback distance and a compact commitment predict the same thing, so neither case discriminates the premise. Critical move in both cases was a plain, non-mechanic-obligation move. Population (B2's common-prefix pairs) exhausted at n=2; needs the same blocked sibling constructor as Lanes B/D1/G2 to expand.
+> **Follow-up checked:** mining Lane D3's commuting-candidate splice tool against B2's dead/live siblings (the natural next step both this preflight and the D3 report named) found **zero** dead-live commuting candidates across all 4 dead-bearing parents -- population too small/structurally divergent for that specific test, not merely uninformative. See `reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md`'s "Result 1."
 
 ## Premise
 
