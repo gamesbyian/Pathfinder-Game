@@ -4,6 +4,7 @@ import process from 'node:process';
 
 const SNAPSHOT_V1 = 'docs/solver-premise-map-snapshot-v1.json';
 const SNAPSHOT_V2 = 'docs/solver-premise-map-snapshot-v2.json';
+const ADMISSIONS = 'docs/solver-premise-map-v2-admissions.json';
 const NEW_PREMISE_FILE = 'docs/solver-premise-space-extension-2026-09-17d.csv';
 const NEW_RELATION_FILE = 'docs/solver-premise-space-relations-v4.json';
 const EXPECTED_NEW_IDS = ['P201', 'P202', 'P203', 'P204', 'P205', 'P206'];
@@ -11,13 +12,14 @@ const EXPECTED_NEW_IDS = ['P201', 'P202', 'P203', 'P204', 'P205', 'P206'];
 const failures = [];
 const warnings = [];
 
-for (const path of [SNAPSHOT_V1, SNAPSHOT_V2, NEW_PREMISE_FILE, NEW_RELATION_FILE]) {
+for (const path of [SNAPSHOT_V1, SNAPSHOT_V2, ADMISSIONS, NEW_PREMISE_FILE, NEW_RELATION_FILE]) {
   if (!existsSync(path)) failures.push(`missing v2 premise-map input: ${path}`);
 }
 if (failures.length) finish();
 
 const v1 = JSON.parse(readFileSync(SNAPSHOT_V1, 'utf8'));
 const v2 = JSON.parse(readFileSync(SNAPSHOT_V2, 'utf8'));
+const admissions = JSON.parse(readFileSync(ADMISSIONS, 'utf8'));
 
 if (v1.snapshotId !== 'solver-premise-map-v1-2026-09-17') failures.push(`unexpected v1 snapshot id: ${v1.snapshotId}`);
 if (v1.snapshotCommit !== 'e9601ffb8fa304d5ea91d054a9de6cb1bf8ff28e') failures.push(`frozen v1 snapshot commit changed: ${v1.snapshotCommit}`);
@@ -139,6 +141,24 @@ const admitted = v2.admissionProvenance?.admitted ?? [];
 if (JSON.stringify(admitted) !== JSON.stringify(EXPECTED_NEW_IDS)) failures.push(`snapshot admission provenance must list exactly ${EXPECTED_NEW_IDS.join(', ')}`);
 if (v2.admissionProvenance?.deferredCandidate !== 'PV1-007') failures.push(`v2 must preserve PV1-007 as deferred`);
 if (v2.admissionProvenance?.scopeOnlyCandidate !== 'PV1-002') failures.push(`v2 must preserve PV1-002 as scope-only`);
+
+if (admissions.schemaVersion !== 1 || admissions.mapVersion !== v2.snapshotId) failures.push(`${ADMISSIONS} must target ${v2.snapshotId} with schemaVersion 1`);
+const admissionRows = admissions.admissions ?? [];
+const admissionIds = admissionRows.map(item => item.premiseId);
+if (JSON.stringify(admissionIds) !== JSON.stringify(EXPECTED_NEW_IDS)) failures.push(`${ADMISSIONS} must record exactly ${EXPECTED_NEW_IDS.join(', ')}`);
+for (const item of admissionRows) {
+  for (const field of ['candidateId', 'semanticNoveltyClass', 'proposition', 'systemLocus', 'claimType', 'evidenceState', 'maturityStage', 'increaseConfidenceObservation', 'decreaseConfidenceObservation', 'productionUseAllowed']) {
+    if (item[field] === undefined || item[field] === null || String(item[field]).trim() === '') failures.push(`${ADMISSIONS} ${item.premiseId ?? '<unknown>'} missing ${field}`);
+  }
+  if (!Array.isArray(item.sourcePaths) || item.sourcePaths.length === 0) failures.push(`${ADMISSIONS} ${item.premiseId} missing sourcePaths`);
+  if (!Array.isArray(item.discoveryLineages) || item.discoveryLineages.length === 0) failures.push(`${ADMISSIONS} ${item.premiseId} missing discoveryLineages`);
+  if (!['NEW_PARENT', 'SPECIALIZATION', 'SCOPE_SPLIT', 'EVIDENCE_STATE_CHANGE', 'IMPLEMENTATION_FORM', 'RELATION_ONLY', 'REWORDING_ONLY'].includes(item.semanticNoveltyClass)) failures.push(`${ADMISSIONS} ${item.premiseId} invalid semanticNoveltyClass ${item.semanticNoveltyClass}`);
+  if (item.productionUseAllowed !== 'no') warnings.push(`${item.premiseId} productionUseAllowed=${item.productionUseAllowed}; Phase 3 admissions are expected to be non-production`);
+  if (byId.get(item.premiseId)?.proposition !== item.proposition) failures.push(`${item.premiseId} proposition differs between ${ADMISSIONS} and ${NEW_PREMISE_FILE}`);
+}
+const nonAdmissions = admissions.nonAdmissions ?? [];
+if (!nonAdmissions.some(item => item.candidateId === 'PV1-007' && /deferred/i.test(item.disposition ?? ''))) failures.push(`${ADMISSIONS} must preserve PV1-007 deferred disposition`);
+if (!nonAdmissions.some(item => item.candidateId === 'PV1-002' && /no premise id/i.test(item.disposition ?? ''))) failures.push(`${ADMISSIONS} must preserve PV1-002 no-ID disposition`);
 
 console.log(`Premise map v2: ${premises.length} propositions across ${v2.canonicalPremiseFiles.length} files.`);
 console.log(`Relation graph v2: ${relationCount} relations across ${v2.relationFiles.length} graph layers.`);
