@@ -1,9 +1,13 @@
 # Independent premise-space reconciliation
 
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-17 — independent reconstruction reconciled against merged #1830 and PR #1834; four materially distinct premises P197-P200 retained.
+> **Decision:** preserve the independent branch as provenance, do not merge its research notebook wholesale, and integrate only deltas that remain materially distinct after comparison with the canonical premise-map lineage.
+> **Remaining gate:** none for this reconciliation; future premise additions should continue on the canonical lineage rather than maintain a parallel map.
+
 **Date:** 2026-09-17  
 **Independent source branch:** `chatgpt/independent-premise-space-2026-09-17`  
 **Canonical continuation:** PR #1834 / `chatgpt/solver-premise-space-third-pass-2026-09-17`  
-**Decision:** preserve the independent branch as provenance, do not merge its research notebook wholesale, and integrate only deltas that remain materially distinct after comparison with merged #1830 and the third-pass continuation.
 
 ## Why this reconciliation exists
 
