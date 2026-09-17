@@ -1,9 +1,12 @@
 # Premise-map replication bootstrap
 
-Date: 2026-09-17
-Coordination branch: `chatgpt/premise-map-replication-plan-2026-09-17`
-Coordination PR: #1854
-Status: Stage 0 coordination complete; blind discovery tracks prepared but not executed by this contaminated session
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-17 — Stage 0 froze exact inputs, created both quarantined branches, and recorded the coordination session's contamination boundary.
+> **Decision:** use the two fresh-context branches for blind discovery; keep this coordination lineage out of both blind investigations until their closeouts.
+> **Remaining gate:** blind Track A and Track B closeout before reconciliation.
+>
+> Coordination branch: `chatgpt/premise-map-replication-plan-2026-09-17`
+> Coordination PR: #1854
 
 ## Verified live state at bootstrap
 
