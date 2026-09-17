@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "extends": "docs/solver-premise-map-source-coverage.json",
+  "purpose": "Final reciprocal-coverage batches needed before v1 insight mining. These batches were selected by source stratum, not premise-map graph shape.",
+  "batches": [
+    {
+      "id": "B007",
+      "stratum": "workflow execution and evidence lifecycle semantics",
+      "selectionRule": "Read the maintained workflow authority as an execution/evidence system rather than as experiment content.",
+      "sources": [
+        {
+          "path": ".github/workflows/README.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P005", "P151", "P152", "P153", "P158", "P181", "P188", "P192", "P197", "P198", "P200"],
+          "notes": "Workflow success is separated from scientific outcome; timeout from completed-negative; failed/cancelled runs may still contain valid completed evidence; immutable SHA, population identity, provenance and retention semantics are explicit. These are already covered by treatment-delivery, observability, censoring, evidence-state, authority and information-lifetime premises."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "specializations": 0,
+      "ontologyEscapees": 0,
+      "result": "No new parent. Workflow lifecycle semantics converge with v1 epistemic and execution premises."
+    },
+    {
+      "id": "B008",
+      "stratum": "dated report spot checks against current synthesis authorities",
+      "selectionRule": "One population/evidence report and one whole-system audit were selected before reading their premise implications, to test whether synthesis documents had erased decision-bearing concepts.",
+      "sources": [
+        {
+          "path": "reports/2026-09-13-stress-corpus-population-validity-audit.md",
+          "disposition": "NEW_PREMISE_CANDIDATE",
+          "candidateIds": ["PV1-001", "PV1-002", "PV1-003"],
+          "rediscovered": ["P002", "P005", "P006", "P112", "P114", "P158", "P168", "P181", "P190", "P191", "P199"],
+          "notes": "The report independently reinforces effective independence, claim-relative population role, treatment-lineage exposure, temporal corpus identity, and the fact that a population can become development evidence after influencing redesign. It adds no new parent beyond B001 candidates."
+        },
+        {
+          "path": "reports/2026-09-10-solver-system-audit.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P010", "P011", "P012", "P120", "P137", "P151", "P152", "P153", "P154", "P177", "P178", "P179", "P181", "P187", "P188", "P193", "P197", "P198", "P200"],
+          "notes": "Identity drift, fallback/treatment ambiguity, stage participation, budget displacement, continuation lifetime, provenance authentication, tri-state evidence, benchmark censoring and research-data reuse are all represented by v1 or the post-v1 epistemic candidates already found."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "specializations": 0,
+      "ontologyEscapees": 0,
+      "result": "Historical report detail did not expose a new parent after the epistemic additions; this is a meaningful anti-summary-loss saturation signal."
+    },
+    {
+      "id": "B009",
+      "stratum": "current research authorities outside the obvious premise-map source core",
+      "selectionRule": "Current methodological/resource documents selected because they can affect experimental conclusions despite not being solver mechanisms.",
+      "sources": [
+        {
+          "path": "docs/solver-experiment-opportunity-sizing.md",
+          "disposition": "NEW_PREMISE_CANDIDATE",
+          "candidateIds": ["PV1-008"],
+          "rediscovered": ["P002", "P004", "P151", "P153", "P158", "P188", "P198"],
+          "notes": "Exposes opportunity population as the causal denominator for detectability. This is retained as a specialization rather than a new parent."
+        },
+        {
+          "path": "docs/solver-corpus-selection-provenance.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P005", "P112", "P114", "P158", "P181", "P190", "P191"],
+          "notes": "Population locking, selection timing, outcome conditioning, replay identity and claim scope converge with existing population/evidence premises."
+        },
+        {
+          "path": "docs/solver-capability-gap-stop-condition-reconciliation.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P024", "P113", "P135", "P158", "P183", "P198"],
+          "notes": "Reachability ambiguity and bounded epistemic stop conditions are already represented by source presence, first-loss, causal residual and maturity/evidence premises."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "specializations": 1,
+      "ontologyEscapees": 0,
+      "result": "One useful detectability specialization, no new parent."
+    },
+    {
+      "id": "B010",
+      "stratum": "final heterogeneous saturation check",
+      "selectionRule": "Three deliberately heterogeneous sources: mutable runtime storage, offline labelled-state replay, and default-off mechanism disposition. Chosen to maximize conceptual distance from each other and from B001.",
+      "sources": [
+        {
+          "path": "docs/solver-mutable-storage-inventory.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P010", "P012", "P121", "P148", "P177", "P188", "P193", "P200"],
+          "notes": "Physical persistence versus semantic persistence, cross-attempt state history, cache warmth, ownership scope and concurrency all fit state-sufficiency, observability and information-lifetime premises."
+        },
+        {
+          "path": "docs/solver-offline-replay-harness.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P003", "P112", "P135", "P151", "P158", "P167", "P181", "P188", "P197", "P198"],
+          "notes": "Witness identity, abstention, supported-population coverage, selection/search-on-atlas disclosure, soundness authority and replay-to-production maturity are all represented."
+        },
+        {
+          "path": "docs/solver-opt-in-experiment-ledger.md",
+          "disposition": "REVIEWED_NO_NEW_PREMISE",
+          "candidateIds": [],
+          "rediscovered": ["P003", "P005", "P151", "P153", "P166", "P181", "P187", "P188", "P198"],
+          "notes": "Code retention is explicitly separated from promotion evidence; reopen conditions and mechanism/form scope converge with v1 evidence-state and maturity premises."
+        }
+      ],
+      "newParents": 0,
+      "scopeSplits": 0,
+      "specializations": 0,
+      "ontologyEscapees": 0,
+      "result": "Final heterogeneous batch produced no new parent, scope split, specialization, or ontology escape. Together with B008, this satisfies the predeclared two-batch no-high-impact-new-parent saturation condition."
+    }
+  ],
+  "closeout": {
+    "newParentYieldAfterB001": 0,
+    "laterScopeSplits": 0,
+    "laterSpecializations": 2,
+    "ontologyEscapeesAcrossB001ToB010": 0,
+    "finalTwoHeterogeneousBatchesHighImpactNewParents": 0,
+    "preMiningSaturationGate": "SATISFIED_WITH_RESIDUAL_UNCERTAINTY",
+    "residualUncertainty": [
+      "No finite archaeology can establish absence of undocumented or never-articulated premises.",
+      "Representative runtime-code sampling is not exhaustive line-by-line code proof.",
+      "The map remains historically conditioned by the solver and research apparatus that produced the repository.",
+      "Future architectures can create premise categories that have no clean ancestor in v1."
+    ]
+  }
+}
