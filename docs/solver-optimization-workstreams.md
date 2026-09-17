@@ -23,11 +23,11 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, **dose-unverified rather than proven negative** -- reconciliation **concluded this as an evidence gap** (all 23 rows lack per-technique work-tranche telemetry; closure needs new instrumentation). Must-turn-biased late repair is **CLOSED NEGATIVE**. [`lineage`](../reports/2026-09-14-historical-claim-lineage-audit-001.md) · [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
 
-**Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 referee-valid gains / 0 losses on 113 rows; default ON. Global merge remains closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
+**Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 referee-valid gains / 0 losses on 113 rows; default ON. Global merge closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
 **Class 5:** the human-parent topological-fork preflight earned a microscope step (now Lane F3 below, population since expanded to 14 pairs/7 parents), not production routing of raw phase. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 
-**Card-E:** 17/156 reconstructable-but-unexposed; both descriptor families failed. Reopen with a new family. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
+**Card-E:** 17/156 reconstructable-but-unexposed; both descriptor families failed. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
 **Completed post-topology hypotheses:** H1 closed its event vocabulary; DEAD-core is population-limited; H3/H2 closed negative; behavioral quotient mixed/capability-memory only -- narrow forms only. [`reconciliation matrix`](solver-capability-gap-stop-condition-reconciliation.md)
 
@@ -42,8 +42,8 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
-1. **Fresh exact LIVE/DEAD sibling asset — CONCLUDED / DEAD POPULATION EARNED, CONSTRUCTION GAP FOUND.** 75-state, 25-parent exact-DEAD population harvested and CP-SAT-labelled (0 alarms) — reusable for Lane A's family-3 measurement. The naive goal-distance-greedy constructor found **zero** LIVE siblings even shallow -- a gate-only check confirmed real reachable LIVE capacity it cannot find (construction artifact, not residual structure). A 38-query relaxation probe found no causal cores, likely confounded. [`result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md)
-2. **Handoff gate:** DEAD-core, Lane E, and Lane G stage 2 all need a **production-search-quality sibling constructor** first -- blocking three lines.
+1. **Fresh exact LIVE/DEAD sibling asset — CONCLUDED / DEAD POPULATION EARNED, CONSTRUCTION GAP FOUND.** 75-state, 25-parent exact-DEAD population harvested and CP-SAT-labelled (0 alarms) — reusable for Lane A's family-3 measurement. The naive goal-distance-greedy constructor found **zero** LIVE siblings even shallow -- a gate-only check confirmed real reachable LIVE capacity it cannot find (construction artifact). A 38-query relaxation probe found no causal cores, likely confounded. [`result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md)
+2. **Handoff gate:** DEAD-core, Lane E, and Lane G stage 2 need a **production-search-quality sibling constructor** first -- blocking three lines.
 3. A per-instance core/conflict need not recur across levels; recurrence is required only for a fixed reusable descriptor claim.
 
 #### Lane C — solve-local typed knowledge reuse, CONCLUDED / PHASE 0 NEGATIVE
@@ -56,7 +56,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 1. **Future-intersection commitment realizability — POPULATION-LIMITED POSITIVE.** On 2 B2 parents with matched LIVE/DEAD pairs (identical remaining-intersection-deficit/length), both exact-DEAD states have zero confirmed-feasible commitments while all 3 LIVE siblings have >=1 (107 queries, 0 alarms). Matched population exhausted; needs Lane B's blocked constructor. [`result`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md)
 2. **Constrained-event feasibility — NARROWED POSITIVE.** Zero-compute re-analysis of H1's 449 queries: DEAD states trivially 100% infeasible (no information); LIVE states show a real signal (13.8% infeasible; 16/23 mixed) -- a within-state commitment-viability signal, not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
-3. **Residual-interface commutativity — POSITIVE.** Native-referee splice-and-validate (no CP-SAT), 12,277 commuting-candidate pairs: length-matched pairs legal 46.6% of the time; failures are geometric/length only, never a lost obligation. Not yet tied to LIVE/DEAD fate -- feeds Lane E. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md)
+3. **Residual-interface commutativity — POSITIVE.** Native-referee splice-and-validate, 12,277 pairs: length-matched legal 46.6% pooled, but **0% (2,152/2,152) on flipper-bearing levels** vs 69.9% portal-only / 44.8% mechanic-free -- tracks history-dependent mechanics, not complexity. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`breakdown`](../reports/2026-09-17-lane-d3-mechanic-conditioned-breakdown-result-001.md)
 
 #### Lane E — dependency-defined causal revision
 
@@ -70,7 +70,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 #### Lane G — independent search-object nursery
 
-1. **Complete-path LNS cheapest falsifier — CONCLUDED / STAGE 1 POSITIVE, STAGE 2 METHOD-LIMITED.** Real solutions for one level cluster tightly (median Jaccard distance 0.11, 25 levels/2,235 pairs, zero new compute). No cheap naive construction (3 attempts) built a fair complete-length candidate to test; converges on the same sibling-constructor gap as Lanes B/D1. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
+1. **Complete-path LNS cheapest falsifier — CONCLUDED / STAGE 1 POSITIVE, STAGE 2 METHOD-LIMITED.** Real solutions for one level cluster tightly (median Jaccard distance 0.11, 25 levels/2,235 pairs, zero new compute). No naive construction (3 attempts) built a fair complete-length candidate to test; converges on the same sibling-constructor gap as Lanes B/D1. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
 2. **Backward/bidirectional abstraction stays deferred** until a compact sound signature emerges from A/D/topology. Do not reopen full MITM.
 
 ### Queue ordering and parallelism

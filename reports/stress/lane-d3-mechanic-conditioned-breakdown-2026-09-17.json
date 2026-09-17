@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-09-17T09:21:19.818Z",
+  "evidenceRole": "Mechanic-conditioned breakdown of Lane D3's residual-interface commutativity result -- zero new solver compute, pure join of already-committed per-candidate results to each level's static mechanic inventory",
+  "sourceResults": "reports/stress/lane-d-residual-interface-commutativity-2026-09-17.json",
+  "sourceCorpus": "data/stress/stress-levels-random.json",
+  "bucketDefinition": "mechanic-free = 0 portals/0 flippers; portal-only/flipper-only = exactly one family present; portal-and-flipper = both present. Bucketed per LEVEL (all of that level's candidates inherit its bucket), not per candidate segment.",
+  "rows": [
+    {
+      "bucket": "__all__",
+      "levelsInBucket": 25,
+      "allCandidates": 12277,
+      "allLegal": 1653,
+      "allLegalRate": 0.13464201352121855,
+      "lengthMatchedCandidates": 3121,
+      "lengthMatchedLegal": 1453,
+      "lengthMatchedLegalRate": 0.46555591156680554
+    },
+    {
+      "bucket": "flipper-only",
+      "levelsInBucket": 4,
+      "allCandidates": 950,
+      "allLegal": 0,
+      "allLegalRate": 0,
+      "lengthMatchedCandidates": 149,
+      "lengthMatchedLegal": 0,
+      "lengthMatchedLegalRate": 0
+    },
+    {
+      "bucket": "mechanic-free",
+      "levelsInBucket": 7,
+      "allCandidates": 6238,
+      "allLegal": 591,
+      "allLegalRate": 0.09474190445655659,
+      "lengthMatchedCandidates": 1320,
+      "lengthMatchedLegal": 591,
+      "lengthMatchedLegalRate": 0.44772727272727275
+    },
+    {
+      "bucket": "portal-and-flipper",
+      "levelsInBucket": 6,
+      "allCandidates": 1202,
+      "allLegal": 0,
+      "allLegalRate": 0,
+      "lengthMatchedCandidates": 418,
+      "lengthMatchedLegal": 0,
+      "lengthMatchedLegalRate": 0
+    },
+    {
+      "bucket": "portal-only",
+      "levelsInBucket": 8,
+      "allCandidates": 3887,
+      "allLegal": 1062,
+      "allLegalRate": 0.273218420375611,
+      "lengthMatchedCandidates": 1234,
+      "lengthMatchedLegal": 862,
+      "lengthMatchedLegalRate": 0.6985413290113452
+    }
+  ]
+}
