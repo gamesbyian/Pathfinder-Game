@@ -8,7 +8,10 @@ const PREMISE_FILES = [
   'docs/solver-premise-space-extension-2026-09-17b.csv',
   'docs/solver-premise-space-extension-2026-09-17c.csv',
 ];
-const LEDGER = 'docs/solver-premise-map-source-coverage.json';
+const LEDGERS = [
+  'docs/solver-premise-map-source-coverage.json',
+  'docs/solver-premise-map-source-coverage-addendum-2026-09-17.json',
+];
 const CANDIDATES = 'docs/solver-premise-space-post-v1-candidates-2026-09-17.csv';
 
 const explicitExtraSources = [
@@ -18,6 +21,12 @@ const explicitExtraSources = [
   'docs/technique-census-analysis.md',
   'data/stress/README.md',
   'modules/solver/README.md',
+  'modules/solver/stage-plan.ts',
+  'modules/solver/search-state.ts',
+  'modules/solver/diversification.ts',
+  '.github/workflows/README.md',
+  'reports/2026-09-13-stress-corpus-population-validity-audit.md',
+  'reports/2026-09-10-solver-system-audit.md',
 ];
 
 const premiseMapSelfFiles = new Set([
@@ -83,7 +92,7 @@ function currentSolverDocs() {
 }
 
 const failures = [];
-for (const path of [...PREMISE_FILES, LEDGER, CANDIDATES]) {
+for (const path of [...PREMISE_FILES, ...LEDGERS, CANDIDATES]) {
   if (!existsSync(path)) failures.push(`missing premise-source audit input: ${path}`);
 }
 if (failures.length) finish();
@@ -97,18 +106,20 @@ for (const premise of premises) {
   }
 }
 
-const ledger = JSON.parse(readFileSync(LEDGER, 'utf8'));
-const allowed = new Set(ledger.dispositions ?? []);
+const ledgerDocs = LEDGERS.map(path => ({ path, data: JSON.parse(readFileSync(path, 'utf8')) }));
+const allowed = new Set(ledgerDocs[0].data.dispositions ?? []);
 const reviewed = new Map();
-for (const batch of ledger.batches ?? []) {
-  for (const source of batch.sources ?? []) {
-    if (!source.path || reviewed.has(source.path)) {
-      failures.push(`duplicate or missing source path in coverage ledger: ${source.path ?? '<empty>'}`);
-      continue;
+for (const { path: ledgerPath, data: ledger } of ledgerDocs) {
+  for (const batch of ledger.batches ?? []) {
+    for (const source of batch.sources ?? []) {
+      if (!source.path || reviewed.has(source.path)) {
+        failures.push(`duplicate or missing source path in coverage ledgers: ${source.path ?? '<empty>'}`);
+        continue;
+      }
+      if (!allowed.has(source.disposition)) failures.push(`unknown disposition ${source.disposition} for ${source.path}`);
+      if (!existsSync(source.path)) failures.push(`${ledgerPath} references missing source ${source.path}`);
+      reviewed.set(source.path, { ...source, batchId: batch.id, ledgerPath });
     }
-    if (!allowed.has(source.disposition)) failures.push(`unknown disposition ${source.disposition} for ${source.path}`);
-    if (!existsSync(source.path)) failures.push(`coverage ledger references missing source ${source.path}`);
-    reviewed.set(source.path, { ...source, batchId: batch.id });
   }
 }
 
