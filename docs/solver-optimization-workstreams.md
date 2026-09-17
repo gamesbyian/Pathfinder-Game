@@ -21,9 +21,9 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, **dose-unverified rather than proven negative** -- reconciliation **concluded an evidence gap** (23 rows lack per-technique telemetry; closure needs new instrumentation). Must-turn-biased late repair is **CLOSED NEGATIVE**. [`lineage`](../reports/2026-09-14-historical-claim-lineage-audit-001.md) · [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
+**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, **dose-unverified not proven negative** -- reconciliation **concluded an evidence gap** (23 rows lack per-technique telemetry; needs new instrumentation). Must-turn-biased late repair is **CLOSED NEGATIVE**. [`lineage`](../reports/2026-09-14-historical-claim-lineage-audit-001.md) · [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
 
-**Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 referee-valid gains/0 losses on 113 rows; default ON. Merge closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
+**Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 gains/0 losses on 113 rows; default ON. Merge closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
 **Class 5:** the human-parent topological-fork preflight earned a microscope step (Lane F3, population now 14 pairs/7 parents), not production routing of raw phase. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 
@@ -42,9 +42,9 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
-1. **Fresh exact LIVE/DEAD sibling asset — CONCLUDED / HANDOFF GATE CLOSED.** 75-state, 25-parent exact-DEAD population (0 alarms) — reusable for Lane A family-3. Naive walk found zero LIVE (construction artifact). Real `beamSearchFromGate` also found 0/98 under single-pick sampling, but multi-pick (25 draws/frontier) found real LIVE siblings (2/25, referee-verified) -- sampling, not search quality, was limiting. [`naive`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md) · [`prod-search`](../reports/2026-09-17-production-search-sibling-construction-result-001.md)
-2. **Next gate:** DEAD-core/D1/E/G1-stage2 need multi-pick sampling.
-3. A per-instance core/conflict need not recur across levels; recurrence is required only for a fixed reusable descriptor claim.
+1. **Fresh exact LIVE/DEAD sibling asset — HANDOFF GATE CLOSED.** 75-state DEAD population (0 alarms). Naive walk found zero LIVE (construction artifact); real `beamSearchFromGate` single-pick also found 0/98, but multi-pick (25 draws/frontier) found real LIVE (2/25, referee-verified) -- sampling was limiting, not search quality. [`naive`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md) · [`prod-search`](../reports/2026-09-17-production-search-sibling-construction-result-001.md)
+2. **DEAD-core size-1 — CLEAN NEGATIVE.** 215-query relax on 23 matched DEAD siblings (2 held-out LIVE, same frontier/depth): 0 cores, 0 alarms -- size-2 unjustified. [`result`](../reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md)
+3. Per-instance cores need not recur; only a reusable descriptor claim needs recurrence.
 
 #### Lane C — solve-local typed knowledge reuse, CONCLUDED / PHASE 0 NEGATIVE
 
@@ -75,7 +75,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 ### Queue ordering and parallelism
 
-**All lanes A-G1 concluded** -- A/D/F3 bounded/narrowed/qualified positives, C/E population-limited negatives/inconclusive, F2 mixed, sibling-constructor handoff closed (B/E/G1-stage2 need multi-pick sampling), Class-3 an evidence gap. Only G2 remains deferred.
+**All lanes A-G1 concluded** -- A/D/F3 bounded/narrowed/qualified positives, C/E population-limited negatives/inconclusive, F2 mixed, B core-negative/D1/G1-stage2 need multi-pick sampling, Class-3 an evidence gap. Only G2 remains deferred.
 
 **No production treatment is earned.**
 
