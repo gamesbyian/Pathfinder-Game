@@ -19,17 +19,17 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **State:** ACTIVE / FIRST PRIORITY.
 
-**Production boundary:** run `35066677597` is **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5=17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
+**Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
-**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, **dose-unverified rather than proven negative** -- reconciliation **concluded this as an evidence gap** (all 23 rows lack per-technique telemetry; closure needs new instrumentation). Must-turn-biased late repair is **CLOSED NEGATIVE**. [`lineage`](../reports/2026-09-14-historical-claim-lineage-audit-001.md) · [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
+**Class 1-3:** class 1 has no menu headroom; class 3 is exposed/dispatched, **dose-unverified rather than proven negative** -- reconciliation **concluded an evidence gap** (23 rows lack per-technique telemetry; closure needs new instrumentation). Must-turn-biased late repair is **CLOSED NEGATIVE**. [`lineage`](../reports/2026-09-14-historical-claim-lineage-audit-001.md) · [`dose gap`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
 
-**Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 referee-valid gains / 0 losses on 113 rows; default ON. Global merge closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
+**Class 4: PROMOTED.** Dead-last portal coarse-state retry: 86 referee-valid gains/0 losses on 113 rows; default ON. Merge closed. [`promotion`](../reports/2026-09-16-class4-113-allocation-promotion-001.md)
 
-**Class 5:** the human-parent topological-fork preflight earned a microscope step (now Lane F3 below, population since expanded to 14 pairs/7 parents), not production routing of raw phase. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
+**Class 5:** the human-parent topological-fork preflight earned a microscope step (Lane F3, population now 14 pairs/7 parents), not production routing of raw phase. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
 
-**Card-E:** 17/156 reconstructable-but-unexposed; both descriptor families failed. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
+**Card-E:** 17/156 reconstructable-unexposed; both descriptors fail. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
-**Completed post-topology hypotheses:** H1 closed its event vocabulary; DEAD-core population-limited; H3/H2 closed negative; behavioral quotient mixed/capability-memory only. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md) H3's own allocation-value gap is now POSITIVE: length-ascending order solves 16/17 Card-E rows at 20% of unordered budget. [`sim`](../reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md)
+**Completed post-topology hypotheses:** H1 closed its event vocabulary; DEAD-core population-limited; H3/H2 closed negative; behavioral quotient mixed/capability-memory only. [`matrix`](solver-capability-gap-stop-condition-reconciliation.md) H3's allocation-value gap is now POSITIVE: ascending length solves 16/17 Card-E rows at 20% budget. [`sim`](../reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md)
 
 ### Premise-acquisition lanes
 
@@ -56,7 +56,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 1. **Future-intersection commitment realizability — POPULATION-LIMITED POSITIVE.** On 2 B2 parents with matched LIVE/DEAD pairs (identical remaining-intersection-deficit/length), both exact-DEAD states have zero confirmed-feasible commitments while all 3 LIVE siblings have >=1 (107 queries, 0 alarms). Matched population exhausted; needs Lane B's blocked constructor. [`result`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md)
 2. **Constrained-event feasibility — NARROWED POSITIVE.** Zero-compute re-analysis of H1's 449 queries: DEAD states trivially 100% infeasible (no information); LIVE states show a real signal (13.8% infeasible; 16/23 mixed) -- a within-state commitment-viability signal, not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
-3. **Residual-interface commutativity — POSITIVE.** Native-referee splice-and-validate, 12,277 pairs: length-matched legal 46.6% pooled, 0% on flipper-bearing levels vs 69.9% portal-only / 44.8% mechanic-free -- tracks history-dependent mechanics, not complexity. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`breakdown`](../reports/2026-09-17-lane-d3-mechanic-conditioned-breakdown-result-001.md)
+3. **Residual-interface commutativity — POSITIVE.** Native-referee splice-and-validate, 12,277 pairs: length-matched legal 46.6% pooled, 0% on flipper-bearing levels vs 69.9% portal-only / 44.8% mechanic-free -- but NOT explained by the segment touching a flipper (flipper-avoiding segments there are also 0%); real support is 3 levels, not 10. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`breakdown+correction`](../reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md)
 
 #### Lane E — dependency-defined causal revision
 
