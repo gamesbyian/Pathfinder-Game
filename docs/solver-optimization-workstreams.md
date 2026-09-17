@@ -29,15 +29,15 @@ Corpus 1 is not cross-generator transfer; Corpus 2 is a mixed development labora
 
 **Card-E:** 17/156 reconstructable-but-unexposed; its two tested descriptor families failed depth-controlled tests, so no handoff pilot follows. Reopen only with a new descriptor family. [`result`](../reports/2026-09-16-card-e-sizing-and-state-selection-001.md)
 
-**H1:** **CLOSED NEGATIVE.** 449-query population, 93.5% resolved: no compact recurring relation. `E-FLIP-ORDER` reverses direction across parents; `E-CROSS-VIA`/`E-PASS-VIA` show no distance-to-goal split. Partial LIVE-state realizability survives as capability-memory evidence. [`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)
+**Post-topology hypothesis queue (H1/DEAD-core/H3/H2/behavioral quotient): all done.**
 
-**DEAD-core:** **INCONCLUSIVE / population-limited.** Size-1 causal core on 3/4 exact-DEAD B2 states (2 `mustCross`, 1 `mustPass`); too few for type-recurrence, population exhausted. [`result`](../reports/2026-09-17-dead-core-relaxation-pilot-001.md)
+- **H1** ([`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)): **CLOSED NEGATIVE** -- 449-query B2 population, no compact recurring relation; `E-FLIP-ORDER` reverses direction across parents.
+- **DEAD-core** ([`result`](../reports/2026-09-17-dead-core-relaxation-pilot-001.md)): **INCONCLUSIVE/population-limited** -- size-1 causal core on 3/4 exact-DEAD B2 states, population exhausted.
+- **H3** ([`result`](../reports/2026-09-17-h3-repair-commitment-interface-result-001.md)): **CLOSED NEGATIVE** -- on Card-E's 156-row population, remaining length dominates rescuability (d=-1.81).
+- **H2** ([`result`](../reports/2026-09-17-h2-structural-stasis-observer-result-001.md)): **CLOSED NEGATIVE** -- 2 stasis-signal forms, both near-zero correlation with 10x work's marginal gain.
+- **Behavioral quotient/Moonshot G** ([`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)): **MIXED**. A naive obligation-count signature mixes exact LIVE/DEAD same-board on B2 (falsified); the same style excl. length shows real cross-parent purity on Card-E beyond chance/the length confound — capability-memory only.
 
-**H3:** **CLOSED NEGATIVE.** On Card-E's 156-row population, remaining length dominates rescuability (d=-1.81) over any commitment interface; portal/intersection usage is a weak secondary effect. [`result`](../reports/2026-09-17-h3-repair-commitment-interface-result-001.md)
-
-**H2:** **CLOSED NEGATIVE** (2 signal forms). 28-level dev/confirmation population: stasis-fraction and distinct-badness both near-zero correlation with 10x work's marginal gain, though 78.6% of levels gained. Neither predicts marginal value. [`result`](../reports/2026-09-17-h2-structural-stasis-observer-result-001.md)
-
-**Current premise execution order:** 1-5. ~~topology, H1, DEAD-core, H3, H2~~ — done (lines above); 6. only then tiny behavioral-state-quotient/separator probes (separator/decomposition stays ungated).
+**Current premise execution order:** 1-6, all above, done. Only separator/decomposition remains, ungated.
 
 The assumption-breaking architecture harvest is preserved in [`solver-future-work.md`](solver-future-work.md), [`moonshot report`](../reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md), and [`post-merge reconciliation`](../reports/2026-09-16-post-merge-moonshot-recovery-and-prioritization-001.md). Radical ideas do not leapfrog frozen decision-bearing work.
 
