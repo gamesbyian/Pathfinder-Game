@@ -126,7 +126,7 @@ for (const levelId of LEVEL_IDS) {
 }
 
 if (CASES_OUT_FILE) {
-    const cases = rows.map((r, i) => ({ id: `${r.levelId}:multi-pick-${r.frontierIndex}`, levelId: r.levelId, prefix: r.prefix }));
+    const cases = rows.map((r) => ({ id: `${r.levelId}:multi-pick-${r.frontierIndex}`, levelId: r.levelId, prefix: r.prefix }));
     const abs = path.resolve(ROOT, CASES_OUT_FILE);
     mkdirSync(path.dirname(abs), { recursive: true });
     writeFileSync(abs, JSON.stringify({ corpus: CORPUS_FILE, cases }, null, 1));

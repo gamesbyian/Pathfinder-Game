@@ -42,8 +42,8 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
-1. **Fresh exact LIVE/DEAD sibling asset — CONCLUDED / DEAD POPULATION EARNED, CONSTRUCTION GAP FOUND.** 75-state, 25-parent exact-DEAD population harvested/CP-SAT-labelled (0 alarms) — reusable for Lane A family-3. The naive goal-distance-greedy constructor found **zero** LIVE siblings even shallow -- a gate-only check confirmed real LIVE capacity it cannot find (construction artifact). A 38-query probe found no causal cores, likely confounded. [`result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md)
-2. **Handoff gate:** DEAD-core, Lane E, and Lane G stage 2 need a **production-search-quality sibling constructor** first -- blocking three lines.
+1. **Fresh exact LIVE/DEAD sibling asset — CONCLUDED / HANDOFF GATE CLOSED.** 75-state, 25-parent exact-DEAD population (0 alarms) — reusable for Lane A family-3. Naive walk found zero LIVE (construction artifact). Real `beamSearchFromGate` also found 0/98 under single-pick sampling, but multi-pick (25 draws/frontier) found real LIVE siblings (2/25, referee-verified) -- sampling, not search quality, was limiting. [`naive`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md) · [`prod-search`](../reports/2026-09-17-production-search-sibling-construction-result-001.md)
+2. **Next gate:** DEAD-core/D1/E/G1-stage2 need multi-pick sampling.
 3. A per-instance core/conflict need not recur across levels; recurrence is required only for a fixed reusable descriptor claim.
 
 #### Lane C — solve-local typed knowledge reuse, CONCLUDED / PHASE 0 NEGATIVE
@@ -75,7 +75,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 ### Queue ordering and parallelism
 
-**All lanes A-G1 concluded** -- A/D/F3 bounded/narrowed/qualified positives, C/E population-limited negatives/inconclusive, F2 mixed, B/E/G1-stage2 blocked on the sibling-constructor handoff, Class-3 an evidence gap. Only G2 remains deferred.
+**All lanes A-G1 concluded** -- A/D/F3 bounded/narrowed/qualified positives, C/E population-limited negatives/inconclusive, F2 mixed, sibling-constructor handoff closed (B/E/G1-stage2 need multi-pick sampling), Class-3 an evidence gap. Only G2 remains deferred.
 
 **No production treatment is earned.**
 
