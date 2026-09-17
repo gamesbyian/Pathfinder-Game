@@ -1,74 +1,141 @@
 # M9 — independent convergence and divergence
 
 Snapshot: `solver-premise-map-v1-2026-09-17` (`e9601ffb8fa304d5ea91d054a9de6cb1bf8ff28e`)
-Method: preregistered M9 only. The hardening overlay records `docs/solver-premise-space-extension-2026-09-17c.csv` as jointly originating in `independent-reconstruction` and `hostile-completeness-pass`. That frozen file contains P197-P200. M9 compares those independently reconstructed propositions with earlier frozen map structure. Convergence is treated as salience evidence, never truth or priority evidence.
+Method: preregistered M9 only. The primary independent lineage was the quarantined `chatgpt/independent-premise-space-2026-09-17` reconstruction, written before opening the recent premise-map quarantine. Its raw checkpoint/history work was compared with the frozen canonical map and the frozen reconciliation report. Convergence is treated as conceptual salience/reproducibility evidence, never as truth or priority.
 
-## M9.1 — P197 independently elevates an existing family of authority distinctions
+## Provenance
 
-P197 makes decision authority explicit: referee truth, sound feasibility consequence, safe dominance/equivalence, heuristic prediction, empirical experience, diagnostic correlation, scheduler prior, inherited default, and offline-only evidence do not inherit one another's permissions.
+The independent branch explicitly reconstructed from solver code, history, experiments, reports, tooling and corpora before reading the recent premise-mapping artifacts. Its checkpoint independently recovered a 13-function decomposition (`encode -> derive -> generate -> reject -> prefer -> retain -> remember -> allocate -> select -> transfer -> recognize -> measure -> infer-from-evidence`), an authority axis, a mechanism-maturity ladder, and a set of structurally generated questions. The later frozen reconciliation integrated only four surviving conceptual deltas as P197–P200 rather than merging the notebook wholesale.
 
-Earlier-map convergence is broad but distributed:
+## M9.1 — strong convergence on causal failure localization
 
-- P003 and P137 already constrain what negative evidence can conclude;
-- P031 distinguishes sound pruning from merely useful heuristics;
-- P151/P152 separate participation from attribution;
-- P189 requires provenance for reusable facts;
-- P187 separates apparent feature value from fixed-envelope production value.
+Independent formulation: distinguish missing alternatives, survival loss, first irreversible loss, and whether a known-valid continuation disappears at generation, prune, merge, score/width culling, retention, or downstream work.
 
-The independently reconstructed contribution is therefore not a wholly lineage-only topic. It repartitions several scattered correctness and evidence cautions into one cross-cutting *decision-rights* axis.
+Frozen canonical counterparts: P024, P135, P150, P161, P183, plus the F0–F14 first-loss taxonomy.
 
-Divergence: the earlier map mostly attaches authority to individual mechanisms or evidence failures. P197 asks for authority as a property of information classes across loci.
+Partition difference: the independent lineage organized this primarily as a *research-function flow* and witness-support destruction problem. The canonical map partitions it across diagnosis, solution multiplicity, counterfactual causality, and pipeline loci.
 
-Alternative interpretation: this is governance vocabulary rather than a solver premise. That reading is supported by its cross-cutting nature and does not reduce its value as a map-hardening dimension.
+Interpretation: strong independent convergence on the question, with a meaningful difference in decomposition. The function-flow view emphasizes interfaces; the canonical view emphasizes typed premises and causal validity.
 
-Confidence: high. Classification: `ONTOLOGY_ISSUE` / `RELATION_ONLY` rather than a novel runtime mechanism.
+Confidence: high. Classification: `DESCRIPTIVE` convergence.
 
-## M9.2 — P198 reconstructs a maturity ladder already latent in several earlier distinctions
+## M9.2 — strong convergence on representation as an epistemic boundary
 
-P198 separates phenomenon existence, representability, semantic soundness/fidelity, real-search participation, useful-work effect, complementary matched-cost value, schedulability, and production promotion.
+Independent formulation: state representation controls which distinctions can be observed, which claims can be made, and whether semantic versus work-accounting equivalence can be preserved. Beam resumability exposed a case where a representation adequate for search semantics was inadequate for canonical-work equivalence.
 
-Earlier-map convergence includes P003's warning against equating zero unique solve delta with uselessness, P151's participation requirement, P123's work accounting, P152's causal attribution, P187's fixed-envelope non-monotonicity, and P005/P137's evidence-portability/closure guards.
+Frozen canonical counterparts: P011, P052, P148, P156, P179, P180, P194, with authority P197.
 
-The independent reconstruction's distinctive move is ordinal decomposition. Earlier entries name several gates independently; P198 states that evidence at one gate does not automatically authorize claims at a later gate.
+Partition difference: the independent pass grouped logical equivalence, dominance, coarse merge, experience similarity and work-history state into a hierarchy of state relatedness. The canonical map represents these as separate propositions connected by scope/authority relations rather than one hierarchy object.
 
-Divergence: the old map is mechanism-centered. P198 is research-process-centered and therefore cuts across all mechanisms.
+Interpretation: convergence is strong, while the independent hierarchy remains an audit framing rather than a missing canonical premise.
 
-Alternative interpretation: maturity may not be strictly linear. Some gates can be investigated in parallel, and a cheap empirical treatment can show complementary value before a formal soundness proof if it is only heuristic. The useful convergence is in *separate permissions*, not necessarily one universal execution order.
+Confidence: high. Classification: `DESCRIPTIVE` / `RELATION_ONLY` framing.
 
-Confidence: high. Classification: `SCOPE_SPLIT` / `ONTOLOGY_ISSUE` around maturity semantics.
+## M9.3 — strong convergence on relational/joint feasibility
 
-## M9.3 — P199 converges on generalization pressure but changes the unit of analysis
+Independent formulation: residual failures may arise from interactions among obligations, topology, resources and future access even when each local constraint looks feasible in isolation. A concrete joint-obligation observer supplied an independently recovered example.
 
-P199 asks which identity-free unit supports reusable solver knowledge: static level features, dynamic failure states, trajectories, obligation configurations, causal loss classes, or combinations.
+Frozen canonical counterparts: P032, P090, P157, P163, P164 and tested forms P033/P034.
 
-Earlier-map anchors include P113 residual latent regimes, P130's demotion of named algorithms, P154 predecessor context, P161 multiplicity/regime structure, P167 policy-conditioned operational similarity, P176 solution-space topology, and P194 failed-work-history-sensitive decisions.
+Partition difference: the independent reconstruction grouped this under a sparse *relational inference* region and explicitly warned against saying joint reasoning was absent. The canonical map gives it a broad semantic parent plus narrower resource/derived-relation descendants.
 
-Convergence: both lineages reject level identity and simple algorithm labels as sufficient explanatory units.
+Interpretation: high convergence on parent territory; divergence is chiefly about how much of the relation space should be named as one family versus distributed among specific interaction forms.
 
-Divergence: the independent reconstruction explicitly separates *being level-blind* from *choosing the right non-identity generalization unit*. Earlier work contains many candidate units without making their competition the parent question.
+Confidence: high. Classification: `DESCRIPTIVE`.
 
-Alternative interpretation: there may be no privileged unit. Different decision roles may require different partitions, so P199 could eventually decompose into role-conditioned generalization questions rather than resolve to one representation.
+## M9.4 — strong convergence on failure knowledge, revision, and adaptive control
 
-Confidence: high. Classification: `SCOPE_SPLIT` with possible parent-ontology pressure.
+Independent formulation: convert failure from a terminal event into information that changes the next action; distinguish local failed-state experience from provable impossibility; use causal explanations to revise earlier commitments.
 
-## M9.4 — P200 independently unifies several persistence problems by lifetime and transfer radius
+Frozen canonical counterparts: P081/P082, P147, P185/P186, P194/P195, P197.
 
-P200 asks how long expensive facts/search artifacts remain useful and how far they should travel across nodes, attempts, stages, search families, processes, and related instances.
+Partition difference: the independent lineage linked failure semantics, information value, action selection and revisable grammar into one causal loop. The canonical map splits explanation, revision, information-seeking, stopping, work history and action grammar into separate premises.
 
-Earlier-map convergence is especially strong: P067 asks about shared knowledge across repeated work, P122 about continuation primitives, P162 about solve-local knowledge sharing, P177 about handoff loss, P178 about discarded beam frontier, P193 about explicit handoff contracts, and P189 about provenance.
+Interpretation: strong conceptual convergence, with the independent partition making the loop more visible and the canonical partition making different proof/authority obligations more explicit.
 
-Divergence: the earlier map describes several artifact-specific persistence problems. P200 reorganizes them around two orthogonal variables, information half-life and transfer radius, including the possibility that over-retention or over-transfer is harmful.
+Confidence: high. Classification: `DESCRIPTIVE`.
 
-Alternative interpretation: half-life/radius may be metaphorical wrappers over artifact-specific validity rules. If no common economics or invalidation model emerges, P200 may be better retained as a synthesis parent than implemented as a single abstraction.
+## M9.5 — strong convergence on continuation/restart and retained-state value
 
-Confidence: high. Classification: `ONTOLOGY_ISSUE` / parent synthesis.
+Independent formulation: the broad question is not merely “resume or restart,” but which pieces of already-paid search state have positive future value, which are liabilities, and what can be retained while changing policy.
 
-## Lineage-only and rediscovery accounting
+Frozen canonical counterparts: P122, P153, P177/P178, P186, P193/P194, P200.
 
-Within the frozen independent-reconstruction file, M9 finds no proposition with no earlier-map semantic anchor. P197-P200 are all *new explicit parents or dimensions built from concerns that existed in distributed form*. The independent lineage's value is therefore principally repartitioning and abstraction, not four isolated topic discoveries.
+Partition difference: the independent branch began from concrete beam resumability and restart experiments, then generalized upward to information half-life. The canonical third pass independently introduced lifecycle and work-history parents; reconciliation retained the broader lifetime/transfer-radius parent as P200.
 
-That does not reduce their novelty. A concern can be present as scattered local facts while the missing higher-order question remains absent. Conversely, independent convergence cannot be counted as replicated truth: both investigations may be exposed to the same architecture, documents, and experiment history.
+Interpretation: strong convergence plus one genuine independent delta that survived canonical subtraction, P200.
 
-## M9 boundary note
+Confidence: high. Classification: `DESCRIPTIVE`; P200 is already frozen, not newly admitted by M9.
 
-M9 uses only the frozen independent-reconstruction lineage preserved in the v1 snapshot. It does not inspect post-v1 premise-mapping work or admit later candidates. Its findings are not fed back into M1-M8 or forward as search seeds for M10-M12.
+## M9.6 — strong convergence on work allocation as capability semantics
+
+Independent formulation: canonical work is not merely a speed metric; allocation, continuation and retry semantics determine what capability is actually exposed. Additive-budget gains are not evidence for matched-work restart superiority.
+
+Frozen canonical counterparts: P060/P065, P123, P153, P181/P182, P187, P198.
+
+Partition difference: the independent lineage foregrounded historical experiment-design failures and maturity gates. The canonical map separates budget locus, marginal-value objective, dose comparability, survivor conditioning and non-monotone finite-envelope capability.
+
+Interpretation: high convergence. The independent historical examples supply provenance for why the canonical distinctions matter but do not create separate premises.
+
+Confidence: high. Classification: `DESCRIPTIVE`.
+
+## M9.7 — strong convergence on architecture/population-relative negatives
+
+Independent formulation: “was tried before” requires architecture/configuration/population qualifiers; evidence can cease to answer the current decision question after budget, repair, routing, retention or corpus changes.
+
+Frozen canonical counterparts: P005, P181/P182, P187/P188, P198.
+
+Partition difference: the independent reconstruction presents this as a temporal-validity doctrine emerging from concrete historical reversals. The canonical map distributes it among portability, endogenous residual, predecessor conditioning, instrumentation and maturity.
+
+Interpretation: strong convergence; no independent premise remains after reconciliation beyond maturity P198.
+
+Confidence: high. Classification: `DESCRIPTIVE`.
+
+## M9.8 — strong convergence on lifecycle/interface loss
+
+Independent formulation: research is dense on components and sparse at transformations between them: representation→prune safety, survivors→ranking, ranking→retention, retention→repair opportunity, telemetry→next action, observer→production policy, historical evidence→current authority.
+
+Frozen canonical counterparts: P177, P193, P200 and the research-function interface lens retained by the reconciliation.
+
+Partition difference: the independent pass made interfaces first-class through its function sequence; the canonical map made lifecycle/handoff premises first-class but retained the function vocabulary only as an audit lens.
+
+Interpretation: strong convergence with a deliberate ontology choice: function sequence is orthogonal audit structure, not replacement ontology.
+
+Confidence: high. Classification: `DESCRIPTIVE` / `ONTOLOGY_ISSUE` resolved in frozen authority as orthogonal lens.
+
+## M9.9 — independent-only material that survived canonical subtraction
+
+Four concepts survived reconciliation as materially distinct frozen premises:
+
+- P197 information authority: what an item of information is licensed to do;
+- P198 mechanism/deployment maturity: phenomenon→representation→soundness→participation→work effect→matched-cost complementarity→schedulability→promotion;
+- P199 unit of generalization: level features versus dynamic failure/search state, trajectory, obligation/resource configuration, causal class, or population regime;
+- P200 information half-life and transfer radius.
+
+These are the clearest evidence that the independent lineage contributed more than corroboration. They cut across the canonical locus/claim/scope/evidence structure rather than merely filling another technique family.
+
+Alternative interpretation: P197/P198/P199/P200 could be treated as governance dimensions rather than ordinary solver premises. The frozen map deliberately retains them as propositions while the overlay also uses authority/maturity as orthogonal lenses.
+
+Confidence: high. Classification: `DESCRIPTIVE` of frozen reconciliation.
+
+## M9.10 — independent formulations deliberately not duplicated
+
+The frozen reconciliation records several independent formulations that were *not* integrated because existing propositions adequately covered them: missing alternatives vs misallocated survival; mechanism value vs portfolio value; failure as actionable posterior; historical negatives as measurement negatives; hierarchy of state relatedness; higher-order obligation interaction.
+
+M9 treats these as evidence of convergence plus partitioning differences, not as latent missing IDs. Their absence from the canonical ID set is intentional deduplication, not a hole.
+
+Confidence: high. Classification: `DESCRIPTIVE`.
+
+## M9.11 — canonical-only appearance is difficult to interpret as non-salience
+
+The independent branch was a checkpointed investigation, not a finished exhaustive competing atlas. Therefore premises represented only in the canonical lineage cannot be safely labeled conceptually weak or non-salient. “Only one lineage” can mean the independent pass did not reach that territory before quarantine opened, that it grouped it under a broader parent, or that it encountered the issue but did not elevate it to a proposition.
+
+M9 therefore records one-lineage-only status as provenance, not negative evidence.
+
+Confidence: high. Classification: `DESCRIPTIVE` methodological guard.
+
+## M9 bounded conclusion
+
+The independent reconstruction strongly reproduces the frozen map's major conceptual regions while partitioning them differently: by research function, authority, maturity, and historical causal flow rather than primarily by locus/claim/scope/evidence relations. Four cross-cutting deltas survived subtraction as P197–P200. The strongest M9 value is therefore twofold: reproducibility of the broad conceptual shape and evidence that orthogonal decompositions expose interfaces/governance dimensions without requiring a second canonical ontology.
+
+No convergence count is converted into truth, priority, ranking, or a new premise. Nothing from M9 is fed into M10–M12.
