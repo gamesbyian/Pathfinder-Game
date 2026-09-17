@@ -13,7 +13,7 @@ Only note here what remains deferred beyond those active gates:
 
 - Open-path topology's earned successor has two forms to preserve: a compact reusable descriptor and a generic per-instance procedure whose outputs may be board-unique. Raw phase is not a production key; soundness/invariance, predictive value, independent confirmation, and economics still gate use.
 - H1's partial LIVE-state realizability and the behavioral-quotient's Card-E cross-parent purity both survive only as capability-memory nominations for a future, more expressive mechanism or a better-powered pass — neither earns production use now.
-- The DEAD-core line is population-limited rather than closed. Its active next step is the fresh exact sibling asset described in [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md); conflict-driven runtime machinery remains deferred until that gate resolves positively.
+- The DEAD-core line now has a large exact-DEAD population (75 states/25 parents, [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md)) but no trustworthy LIVE contrast: its naive sibling constructor cannot reach LIVE states. Reopen core-size/"spares LIVE" testing only once a production-search-quality sibling constructor exists; conflict-driven runtime machinery remains deferred until then.
 
 ## Audit-derived deferred/reopen work
 

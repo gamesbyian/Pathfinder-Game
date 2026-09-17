@@ -1,0 +1,513 @@
+{
+  "schemaVersion": 1,
+  "kind": "class5-fresh-dead-core-relaxation-diagnosis",
+  "generatedAt": "2026-09-17T04:56:51.876Z",
+  "solverRef": "2d811988c70c01f3291b9cbe45ca8e0c868511f5",
+  "sourceDeadRows": "reports/stress/class5-fresh-sibling-harvest-exact-labels-2026-09-17.json",
+  "sourceHarvest": "reports/stress/class5-fresh-sibling-harvest-population-2026-09-17.json",
+  "shardIndex": 1,
+  "shardCount": 1,
+  "summary": {
+    "total": 38,
+    "flippedToLive": 0,
+    "stayedDead": 38,
+    "indeterminate": 0,
+    "correctnessAlarms": 0
+  },
+  "rows": [
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        6,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        6,
+        5
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        11,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        2
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        1,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        5,
+        2
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        1,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        10
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-0",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        6,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        6,
+        5
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        10,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        11,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        3,
+        2
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        3
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        7
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        5,
+        2
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        12,
+        5
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        1,
+        8
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        10
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-1",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        6,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        6,
+        5
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        10,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustCross",
+      "cell": [
+        11,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        1,
+        6
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        4,
+        4
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        10,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        5,
+        2
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        10
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    },
+    {
+      "caseId": "R01945:fresh-sibling-2",
+      "levelId": "R01945",
+      "commitment": "mustPass",
+      "cell": [
+        11,
+        11
+      ],
+      "cpSatStatus": "INFEASIBLE",
+      "causesFlipToFeasible": false,
+      "timeLimitSec": 30,
+      "exitCode": 0
+    }
+  ]
+}
