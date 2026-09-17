@@ -7,13 +7,10 @@ Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-op
 
 ## Active-successor interpretation
 
-Do not duplicate the active queue here. The workstream authority currently owns these live lines:
+Do not duplicate the active queue here. `solver-optimization-workstreams.md`'s "Post-topology hypothesis queue" block owns the live one-line dispositions for topology/H1/DEAD-core/H3/H2/behavioral-quotient (all now closed/settled); their full result reports are the chronology of record. Only note here what does not fit there:
 
-- **Open-path topology:** premise earned. Preserve both successors: a compact reusable descriptor and a generic per-instance topology procedure whose outputs may be unique to a board. Raw phase is not a production key; soundness/invariance, predictive value, independent confirmation, and economics still gate use. [`result`](../reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md)
-- **H1 event feasibility:** **CLOSED NEGATIVE** on the frozen vocabulary. `E-FLIP-ORDER`'s effect (36% realizable) reverses direction between independent parents; `E-CROSS-VIA`/`E-PASS-VIA` (~88% realizable) show no distance-to-goal separation. Partial LIVE-state realizability survives as capability-memory evidence for a future, more expressive mechanism; do not widen this vocabulary combinatorially. A separate later generic online exact-query route (not this fixed-descriptor vocabulary) remains conceptually open if per-instance answers prove useful. [`result`](../reports/2026-09-17-h1-event-feasibility-result-001.md)
-- **DEAD-core/minimum relaxation:** **INCONCLUSIVE/population-limited.** A size-1 relaxation core exists on 3/4 exact-DEAD B2 states (2 `mustCross`, 1 `mustPass`); the 4-state population is exhausted and too small for a type-recurrence verdict. Reopens on a fresh, larger DEAD population, not runtime machinery. [`result`](../reports/2026-09-17-dead-core-relaxation-pilot-001.md)
-- **H3 dependency-defined repair:** **CLOSED NEGATIVE.** On Card-E's 156-row population, remaining length dominates rescuability (d=-1.81) over any commitment interface; portal/intersection usage is only a weak secondary effect surviving length control. [`result`](../reports/2026-09-17-h3-repair-commitment-interface-result-001.md)
-- **H2/behavioral-state quotient:** unchanged bounded next-in-order lines. H2 (marginal information velocity / structural stasis) advances only if structural novelty per `workSpent` predicts marginal value beyond generic difficulty/work. The behavioral-state quotient / residual-language probe needs a tiny exact-probe first, advancing only if future behavior admits a materially coarser compact equivalence.
+- Open-path topology's earned successor has two forms to preserve: a compact reusable descriptor and a generic per-instance procedure whose outputs may be board-unique. Raw phase is not a production key; soundness/invariance, predictive value, independent confirmation, and economics still gate use.
+- H1's partial LIVE-state realizability and the behavioral-quotient's Card-E cross-parent purity both survive only as capability-memory nominations for a future, more expressive mechanism or a better-powered pass — neither earns production use now.
 
 ## Audit-derived deferred/reopen work
 

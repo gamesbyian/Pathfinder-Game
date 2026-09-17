@@ -172,6 +172,34 @@
       "reopensOn": "A different repair-retreat population (not Card-E's) or a length-matched/stratified design with more statistical power finds a commitment effect independent of remaining length."
     },
     {
+      "id": "WS2-H2-STRUCTURAL-STASIS",
+      "question": "Does a compact, cheaply-observable within-run stasis signal predict near-zero marginal continuation value from additional workSpent, beyond generic difficulty/depth/work controls?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "aliases": ["H2", "marginal information velocity", "structural stasis"],
+      "answeredBy": ["reports/2026-09-17-h2-structural-stasis-observer-result-001.md"],
+      "result": "No, not for the two tested signal forms. On a 28-level first-loss-frontier population (14 dev + 14 confirmation, reused from an unrelated exposure study), within-run stasis-fraction and distinct-badness-count both show near-zero, sign-inconsistent correlation with a 10x work escalation's marginal badness gain on dev (r=-0.16/-0.04) and on the untouched confirmation half (r=+0.02/+0.06) -- despite real marginal value existing (78.6% of levels gained, mean +4.96 badness).",
+      "constrains": [
+        "Do not build restart, early-termination, bandit, or dynamic-scheduling allocation from either tested stasis signal on this population.",
+        "The badness-based marginal-improvement finding itself (most levels gain from more work) is preserved as capability-memory context, not an allocation premise."
+      ],
+      "reopensOn": "A different structural-response dimension from H2's own candidate list (mechanic-progress/obligation-order signature, canonical state-family/branch-decision signature) or a different repair-stage population is tested."
+    },
+    {
+      "id": "WS2-BEHAVIORAL-STATE-QUOTIENT",
+      "question": "Does a compact syntactic-state signature collapse without mixing known LIVE/DEAD (or a proxy outcome) behavior, across held-out parents (Moonshot G / behavioral-state quotient)?",
+      "owner": "WS2",
+      "state": "mixed",
+      "aliases": ["Moonshot G", "behavioral-state quotient", "future-language equivalence", "residual-language probe"],
+      "answeredBy": ["reports/2026-09-17-behavioral-state-quotient-probe-result-001.md"],
+      "result": "Two different answers on two populations. On B2 (28 exact-CP-SAT-labelled states, 14 parents), a naive pending-obligation-count signature mixes LIVE and DEAD on the SAME board in 3/9 multi-member groups -- a direct falsification, no held-out split needed. On Card-E (156 states, proxy rescuability label, one state per parent), the same style of signature (excluding remaining length) shows only 1/26 multi-member groups mixed, far purer than a random-shuffle null (p=0.0008) or a length-quintile-blocked null (p=0.0056) -- real cross-parent information beyond chance and beyond the known length confound.",
+      "constrains": [
+        "Do not build canonicalization, retention, or heuristic use from either result alone: B2's falsification does not rule out other signature forms, and Card-E's partial purity is a proxy-label correlate, not exact behavioral equivalence.",
+        "The Card-E cross-parent purity is preserved as capability-memory evidence only."
+      ],
+      "reopensOn": "A different signature form (canonical state-family, branch-decision signature) is tested, or a larger exact-labelled population allows a genuine held-out-parent confirmation split for the same-board falsification."
+    },
+    {
       "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
       "question": "Can a recurring solve-local failure shape be reduced to a small sound dead cause with enough repeated-work value for bounded reason reuse?",
       "owner": "WS2",

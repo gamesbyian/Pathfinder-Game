@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "kind": "behavioral-state-quotient-probe",
+  "generatedAt": "2026-09-17T03:41:18.502Z",
+  "hypothesis": "reports/2026-09-16-assumption-breaking-solver-development-moonshots-001.md#moonshot-g",
+  "populationA_B2": {
+    "source": "reports/stress/h1-event-feasibility-queries-2026-09-16.json",
+    "note": "28 exact-CP-SAT-labelled states, 14 parent levels, reused unmodified from H1.",
+    "signature": "(pendingCounts.mustCross, mustPass, flippers, portalPairs)",
+    "stateCount": 28,
+    "distinctSignatures": 18,
+    "multiMemberGroups": 9,
+    "mixedGroups": 3,
+    "crossParentPureGroups": 1,
+    "mixedGroupDetail": [
+      {
+        "sig": "[1,1,0,0]",
+        "members": [
+          {
+            "caseId": "S00001:28:top-rank1:extinct",
+            "levelId": "S00001",
+            "exactLabel": "dead"
+          },
+          {
+            "caseId": "S00001:28:culled-supported-rank126:extinct",
+            "levelId": "S00001",
+            "exactLabel": "live"
+          }
+        ]
+      },
+      {
+        "sig": "[2,2,3,1]",
+        "members": [
+          {
+            "caseId": "S00048:25:top-rank1:extinct",
+            "levelId": "S00048",
+            "exactLabel": "dead"
+          },
+          {
+            "caseId": "S00048:25:culled-supported-rank108:extinct",
+            "levelId": "S00048",
+            "exactLabel": "live"
+          },
+          {
+            "caseId": "S00048:25:retained-near-cutoff-rank100:extinct",
+            "levelId": "S00048",
+            "exactLabel": "live"
+          }
+        ]
+      },
+      {
+        "sig": "[1,3,0,0]",
+        "members": [
+          {
+            "caseId": "R00104:36:top-rank1:extinct",
+            "levelId": "R00104",
+            "exactLabel": "dead"
+          },
+          {
+            "caseId": "R00104:36:culled-supported-rank120:extinct",
+            "levelId": "R00104",
+            "exactLabel": "live"
+          }
+        ]
+      }
+    ],
+    "crossParentPureGroupDetail": [
+      {
+        "sig": "[0,0,0,1]",
+        "members": [
+          {
+            "caseId": "S00095:15:top-rank1:extinct",
+            "levelId": "S00095",
+            "exactLabel": "live"
+          },
+          {
+            "caseId": "S00099:11:culled-supported-rank179:extinct",
+            "levelId": "S00099",
+            "exactLabel": "live"
+          }
+        ]
+      }
+    ]
+  },
+  "populationB_CardE": {
+    "source": "reports/stress/h3-repair-commitment-interface-2026-09-17.json",
+    "note": "156 rows, one per distinct level (proxy rescuability label, not exact LIVE/DEAD); every multi-member group is inherently cross-parent.",
+    "signature": "(mustCrossPending, mustPassPending, portalJumpsUsed, ints) -- excludes lengthRemaining",
+    "stateCount": 156,
+    "distinctSignatures": 113,
+    "observed": {
+      "mixed": 1,
+      "multi": 26
+    },
+    "rawShuffleNull": {
+      "mean": 6.562,
+      "p5": 4,
+      "p50": 7,
+      "p95": 9,
+      "pValueAtMostObserved": 0.0008
+    },
+    "lengthQuintileBlockedNull": {
+      "mean": 4.689,
+      "p5": 2,
+      "p50": 5,
+      "p95": 7,
+      "pValueAtMostObserved": 0.0056
+    },
+    "trials": 5000
+  }
+}
