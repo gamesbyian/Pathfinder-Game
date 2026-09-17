@@ -1,8 +1,10 @@
 # Solver premise-map completeness hardening — 2026-09-17
 
-> **Status:** concluded-positive with explicit residual uncertainty
-> **Object:** frozen `solver-premise-map-v1-2026-09-17`
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-17 — ten reciprocal source batches completed; the final heterogeneous saturation batch produced no new parent, scope split, specialization, or ontology escape, and the dedicated premise-map validation passed.
 > **Decision:** the frozen v1 map is sufficiently hardened and semantically saturated to begin the preregistered first mining round. Do not claim absolute completeness. Keep post-v1 candidates outside that first round, then reconcile them afterward into a separately versioned map.
+> **Remaining gate:** none before first-round mining; preserve residual uncertainty and reconcile PV1-001 through PV1-008 only after the frozen-v1 mining round.
+> **Object:** frozen `solver-premise-map-v1-2026-09-17`
 
 ## Why another hardening pass was necessary
 
