@@ -1,8 +1,8 @@
 # Solver premise-space third pass
 
-> **Status:** concluded-positive / ontology expanded
+> **Status:** concluded-positive / ontology expanded and independently reconciled
 > **Base:** `main` at `ad8f86648d3f36198147b4c2121dff5f1961735c` (merged PR #1830)
-> **Decision:** add P177-P196, first-loss causal taxonomy F0-F14, typed v3 relation delta, and an explicit warning that lifecycle transitions and observation mechanisms are premise-bearing objects.
+> **Decision:** add P177-P196, first-loss causal taxonomy F0-F14, typed v3 relation delta, and an explicit warning that lifecycle transitions and observation mechanisms are premise-bearing objects. A later independent reconstruction was reconciled as P197-P200 without merging its notebook wholesale.
 > **Boundary:** research archaeology/documentation only; no production solver behavior change and no expensive experiment.
 
 ## Recovery and continuation
@@ -39,7 +39,7 @@ This pass therefore used six additional lenses:
 
 ## New propositions
 
-P177-P196 add 20 normalized propositions, bringing the descriptive inventory to **138**.
+P177-P196 add 20 normalized propositions, bringing the descriptive inventory to **138** before independent reconciliation.
 
 The most important additions are not algorithm proposals. They change the shape of the conceptual map.
 
@@ -257,62 +257,30 @@ The pass checked the current architectural flow, attempt policy, DFS/beam split,
 - production state excludes explicit solve-local epistemic/work-history state;
 - attempt configs are first-match/hand-tuned policy products;
 - beam merge is knowingly lossy and policy-specific;
-- live beam continuation is disposable in production despite a proved resumability primitive;
-- frontier state and learned evidence do not have a general cross-stage contract.
+- live beam continuation is disposable in production despite a proved resumability primitive.
 
-### Historical/epistemic material
+## Independent reconstruction reconciliation
 
-The pass reconciled merged premise-map work, current architecture, stress-corpus provenance/generator contracts, reasoning-capability atlas conclusions already merged via #1828, and the contemporaneous Lane D/LNS results visible in recent PR history. The latter reinforce rather than replace premise-map conclusions: per-instance relational queries are showing within-state decision signal, while cheap full-path construction remains method-limited.
+A separate investigation on `chatgpt/independent-premise-space-2026-09-17` deliberately quarantined this premise-map lineage and reconstructed the problem space from underlying code, history, reports, experiments, tooling and corpora. Its strong convergence on the regions above is useful evidence that the map's broad shape is not merely self-referential.
 
-### Parent versus tested form
+After subtracting concepts already present in #1830 and P177-P196, four materially distinct cross-cutting premises remained and were integrated as **P197-P200** in `solver-premise-space-extension-2026-09-17c.csv`:
 
-No new parent was declared closed from a child null. The third-pass relations explicitly preserve tested-form, specialization, dependency, confounding, and prerequisite distinctions.
+- **P197 information authority** — distinguish what a fact is licensed to do, not only whether it is true or supported;
+- **P198 mechanism/deployment maturity** — preserve the ladder from phenomenon existence through soundness, participation, economics, schedulability and production promotion;
+- **P199 unit of generalization** — level blindness does not imply static level features are the correct identity-free unit; dynamic failure states, trajectories, obligation configurations and causal classes may generalize better;
+- **P200 information half-life / transfer radius** — ask how long each paid-for fact or search artifact should survive and how far it should travel.
 
-### Empty/sparse cells
+The independent branch also recovered a useful 13-function audit vocabulary: encode, derive, generate, reject, prefer, retain, remember, allocate, select, transfer, recognize, measure, infer-from-evidence. This is retained in the completeness matrix as an orthogonal interface-detection lens rather than promoted to a competing ontology.
 
-The second-pass matrix's explicit empties around preprocessing revision and start/action persistence/revision were investigated rather than merely listed. P195 is the resulting parent premise. The broader discovery is that sparse **edges between rows** can matter even where both endpoint cells are populated.
+The independent notebook is intentionally **not** merged wholesale. It remains provenance demonstrating independent convergence. See `reports/2026-09-17-independent-premise-space-reconciliation-001.md` for the full overlap/delta disposition.
 
-## What would make this map embarrassingly incomplete?
+## Final inventory
 
-Plausible failure modes considered:
+The canonical descriptive inventory after reconciliation is **142 normalized propositions**:
 
-1. **The ontology only describes current runtime objects.** Mitigation: alternative search objects, information actions, and generator/state-space coverage remain explicit.
-2. **It confuses observations with causes.** Mitigation: counterfactual first-loss taxonomy and minimal-intervention requirement.
-3. **It ignores population formation.** Mitigation: endogenous residual and portfolio-conditioned survivor premises.
-4. **It assumes more capability is monotone.** Mitigation: non-monotone/displacement premise.
-5. **It treats stage boundaries as plumbing.** Mitigation: handoff/interface premises and F12.
-6. **It cannot represent questions about the observer.** Mitigation: instrumentation/missing-data premise and F14.
-7. **It makes witness-relative diagnosis universal.** Mitigation: solution multiplicity plus causal-loss distinction.
-8. **It inventories nodes but not relations.** Mitigation: typed v3 relation delta and ontology-edge meta-premise P196.
-9. **It overfits generated distributions.** Mitigation: solver-relevant coverage and construction-solvability selection premises.
-10. **It misses ideas that existed only in deleted/unindexed history or conversation.** This remains genuinely possible. The map can reduce the risk by making structural holes visible, but cannot prove recovery of undocumented thought.
+- 92 baseline propositions;
+- 26 second-pass additions (P151-P176);
+- 20 third-pass additions (P177-P196);
+- 4 independent-reconciliation additions (P197-P200).
 
-## Practical exhaustiveness assessment
-
-The map is now substantially more exhaustive as a **conceptual instrument** than as a historical transcript. It spans runtime mechanism, architecture, research epistemology, solution-space structure, population formation, lifecycle transitions, causal attribution, and ontology self-critique.
-
-The highest-value remaining incompleteness is no longer “there must be another list of heuristics somewhere.” It is empirical: the map still does not know the **distribution of causal first-loss classes**, the **geometry/multiplicity of accepted solution regimes**, the **prevalence of search-stage handoff losses**, or the **coverage of solver-relevant structural state across available generators**.
-
-Those are premise-generating unknowns, not arguments for immediately implementing a mechanism.
-
-## Artifacts added by this pass
-
-- `docs/solver-premise-space-extension-2026-09-17b.csv` — P177-P196;
-- `docs/solver-first-loss-causal-taxonomy.md` — F0-F14 causal-loss instrument;
-- `docs/solver-premise-space-relations-v3.json` — typed relation delta;
-- this report — methodology, negative-space findings, hostile completeness audit, and provenance.
-
-## Surfaces searched / limitations
-
-Searched/reconciled directly in this continuation:
-
-- merged PR #1830 and its durable premise-map artifacts;
-- current `main` architecture documentation;
-- second-pass completeness matrix and extension register;
-- stress-corpus/generator contract and selection-provenance discussion;
-- recent PR history around #1827-#1833, including reasoning-capability atlas, separator census, sibling harvest, relational-feasibility work, and complete-path LNS falsifier;
-- repository tree/workflow surface sufficiently to confirm the breadth of solver evidence infrastructure.
-
-The prior #1830 pass had already performed the deeper archaeology over current authorities, dead tooling, and historical lineages. This continuation did not rerun every historical commit diff from scratch. Local-only worktrees/stashes cannot be inspected through the GitHub connector; the recovery requirement was satisfied because the formerly stalled material was found durable in the merged remote PR before expansion.
-
-No expensive experiment was run.
+The next useful premise-map work should extend this canonical lineage rather than maintain parallel maps.
