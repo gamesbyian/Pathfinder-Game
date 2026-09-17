@@ -65,7 +65,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 #### Lane F — bounded exposure / representation reconciliations
 
 1. **Class-3 exact-action dose reconciliation — CONCLUDED / EVIDENCE GAP.** The cheap-evidence bar is not met (no committed per-technique work-tranche telemetry within the shared production budget). Stays dose-unverified until instrumentation is warranted; do not re-check without new telemetry. [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
-2. **Card-E quotient hypothesis discovery — DISCOVERY ONLY.** One small held-out interaction search may turn the mixed quotient result into a named legal hypothesis. No fitted runtime classifier.
+2. **Card-E quotient hypothesis discovery — CONCLUDED / MIXED (already run, reconciled).** `WS2-BEHAVIORAL-STATE-QUOTIENT` (Moonshot G): a prespecified obligation-count signature falsifies same-board on B2 (3/9 groups mix LIVE/DEAD) but survives permutation tests on Card-E (1/26 mixed vs. nulls, p<=0.006) -- real, board-independent, non-length signal, not canonicalization-worthy alone; no classifier built. [`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)
 3. **Topology per-instance microscope — OPEN, preferably joined to Lanes A/B/D.** Seek a sound actionable consequence (separator-side commitment, path-conditioned accessibility, topology-aware impossibility/equivalence). Do not hunt another universal raw phase feature.
 
 #### Lane G — independent search-object nursery
@@ -75,7 +75,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md) for f
 
 ### Queue ordering and parallelism
 
-**A, B, Class-3 (F1), C, D, E, and G1 are concluded** -- A/D bounded/narrowed/real positives, C/E population-limited negatives/inconclusive, B/E/G1-stage2 blocked on the sibling-constructor handoff, Class-3 an evidence gap. Remaining order: **F2/F3 (Card-E, topology).** Both parallel-safe retained-evidence/offline observers.
+**A, B, Class-3/F2 (F1), C, D, E, and G1 are concluded** -- A/D bounded/narrowed/real positives, C/E population-limited negatives/inconclusive, F2 mixed, B/E/G1-stage2 blocked on the sibling-constructor handoff, Class-3 an evidence gap. Remaining: **F3 (topology microscope)** only.
 
 **No production treatment is earned.**
 
@@ -91,7 +91,7 @@ Use capability/lifecycle/provenance/family/trace evidence to distinguish not-exp
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A/B/Class-3/C/D/E concluded; run remaining lanes F2/F3, G in any order (parallel-safe) |
+| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A/B/Class-3/C/D/E/F2 concluded; run remaining Lane F3, G in any order (parallel-safe) |
 | 1 | Automatic action selection | **SUPPORTING** | Reopen from a new legal current-input signal from the acquisition lanes |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | Lane E tests dependency-defined revision; fresh profiling gates speed work |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
