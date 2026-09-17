@@ -1,0 +1,426 @@
+{
+  "generatedAt": "2026-09-17T06:22:27.565Z",
+  "evidenceRole": "Lane D question 2 -- constrained-event feasibility, per-instance re-analysis of already-committed H1 query results, zero new solver compute",
+  "inputFile": "reports/stress/h1-event-feasibility-results-merged-2026-09-16.json",
+  "inputProvenance": "H1 cross-via/pass-via CP-SAT queries, 449 rows, 0 correctness alarms (see H1 own audit)",
+  "stateCount": 27,
+  "deadStateCount": 4,
+  "liveStateCount": 23,
+  "deadStates": {
+    "queries": 57,
+    "infeasible": 57,
+    "infeasibleRate": 1,
+    "note": "trivial by construction: a DEAD state has no completion at all, so every additional constraint remains infeasible. Zero new information."
+  },
+  "liveStates": {
+    "queries": 392,
+    "feasible": 309,
+    "infeasible": 54,
+    "unknown": 29,
+    "infeasibleRate": 0.1377551020408163,
+    "feasibleRate": 0.7882653061224489,
+    "unknownRate": 0.07397959183673469
+  },
+  "liveStateClassification": {
+    "fullyFeasibleCount": 5,
+    "fullyInfeasibleCount": 2,
+    "mixedCount": 16,
+    "fullyFeasible": [
+      "S00095:15:top-rank1:extinct",
+      "S00099:11:culled-supported-rank179:extinct",
+      "S00120:18:top-rank1:extinct",
+      "S00120:18:culled-supported-rank109:extinct",
+      "S00140:11:culled-supported-rank105:extinct"
+    ],
+    "fullyInfeasible": [
+      "R00060:18:top-rank1:extinct",
+      "R00060:18:culled-supported-rank124:extinct"
+    ],
+    "mixed": [
+      {
+        "caseId": "S00001:28:culled-supported-rank126:extinct",
+        "feasible": 7,
+        "infeasible": 1,
+        "unknown": 0,
+        "total": 8
+      },
+      {
+        "caseId": "S00028:15:top-rank1:extinct",
+        "feasible": 21,
+        "infeasible": 2,
+        "unknown": 3,
+        "total": 26
+      },
+      {
+        "caseId": "S00028:15:culled-supported-rank165:extinct",
+        "feasible": 26,
+        "infeasible": 3,
+        "unknown": 0,
+        "total": 29
+      },
+      {
+        "caseId": "S00030:14:culled-supported-rank109:extinct",
+        "feasible": 18,
+        "infeasible": 3,
+        "unknown": 0,
+        "total": 21
+      },
+      {
+        "caseId": "S00030:14:retained-near-cutoff-rank100:extinct",
+        "feasible": 17,
+        "infeasible": 4,
+        "unknown": 0,
+        "total": 21
+      },
+      {
+        "caseId": "S00035:10:culled-supported-rank160:extinct",
+        "feasible": 14,
+        "infeasible": 2,
+        "unknown": 2,
+        "total": 18
+      },
+      {
+        "caseId": "S00048:25:culled-supported-rank108:extinct",
+        "feasible": 16,
+        "infeasible": 2,
+        "unknown": 0,
+        "total": 18
+      },
+      {
+        "caseId": "S00048:25:retained-near-cutoff-rank100:extinct",
+        "feasible": 16,
+        "infeasible": 2,
+        "unknown": 0,
+        "total": 18
+      },
+      {
+        "caseId": "S00108:15:top-rank1:extinct",
+        "feasible": 6,
+        "infeasible": 2,
+        "unknown": 0,
+        "total": 8
+      },
+      {
+        "caseId": "S00108:15:culled-supported-rank111:extinct",
+        "feasible": 6,
+        "infeasible": 2,
+        "unknown": 0,
+        "total": 8
+      },
+      {
+        "caseId": "S00140:11:top-rank1:extinct",
+        "feasible": 3,
+        "infeasible": 1,
+        "unknown": 0,
+        "total": 4
+      },
+      {
+        "caseId": "R00058:11:top-rank1:extinct",
+        "feasible": 25,
+        "infeasible": 2,
+        "unknown": 8,
+        "total": 35
+      },
+      {
+        "caseId": "R00058:11:culled-supported-rank145:extinct",
+        "feasible": 14,
+        "infeasible": 4,
+        "unknown": 16,
+        "total": 34
+      },
+      {
+        "caseId": "R00064:9:top-rank1:extinct",
+        "feasible": 47,
+        "infeasible": 6,
+        "unknown": 0,
+        "total": 53
+      },
+      {
+        "caseId": "R00064:9:culled-supported-rank103:extinct",
+        "feasible": 47,
+        "infeasible": 6,
+        "unknown": 0,
+        "total": 53
+      },
+      {
+        "caseId": "R00104:36:culled-supported-rank120:extinct",
+        "feasible": 8,
+        "infeasible": 5,
+        "unknown": 0,
+        "total": 13
+      }
+    ]
+  },
+  "perState": [
+    {
+      "caseId": "S00001:28:top-rank1:extinct",
+      "levelId": "S00001",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "total": 8,
+      "feasible": 0,
+      "infeasible": 8,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00001:28:culled-supported-rank126:extinct",
+      "levelId": "S00001",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 8,
+      "feasible": 7,
+      "infeasible": 1,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00028:15:top-rank1:extinct",
+      "levelId": "S00028",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 26,
+      "feasible": 21,
+      "infeasible": 2,
+      "unknown": 3
+    },
+    {
+      "caseId": "S00028:15:culled-supported-rank165:extinct",
+      "levelId": "S00028",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 29,
+      "feasible": 26,
+      "infeasible": 3,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00030:14:top-rank1:extinct",
+      "levelId": "S00030",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "total": 18,
+      "feasible": 0,
+      "infeasible": 18,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00030:14:culled-supported-rank109:extinct",
+      "levelId": "S00030",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 21,
+      "feasible": 18,
+      "infeasible": 3,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00030:14:retained-near-cutoff-rank100:extinct",
+      "levelId": "S00030",
+      "role": "cutoff-survivor",
+      "exactLabel": "live",
+      "total": 21,
+      "feasible": 17,
+      "infeasible": 4,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00035:10:culled-supported-rank160:extinct",
+      "levelId": "S00035",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 18,
+      "feasible": 14,
+      "infeasible": 2,
+      "unknown": 2
+    },
+    {
+      "caseId": "S00048:25:top-rank1:extinct",
+      "levelId": "S00048",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "total": 18,
+      "feasible": 0,
+      "infeasible": 18,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00048:25:culled-supported-rank108:extinct",
+      "levelId": "S00048",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 18,
+      "feasible": 16,
+      "infeasible": 2,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00048:25:retained-near-cutoff-rank100:extinct",
+      "levelId": "S00048",
+      "role": "cutoff-survivor",
+      "exactLabel": "live",
+      "total": 18,
+      "feasible": 16,
+      "infeasible": 2,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00095:15:top-rank1:extinct",
+      "levelId": "S00095",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 1,
+      "feasible": 1,
+      "infeasible": 0,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00099:11:culled-supported-rank179:extinct",
+      "levelId": "S00099",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 1,
+      "feasible": 1,
+      "infeasible": 0,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00108:15:top-rank1:extinct",
+      "levelId": "S00108",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 8,
+      "feasible": 6,
+      "infeasible": 2,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00108:15:culled-supported-rank111:extinct",
+      "levelId": "S00108",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 8,
+      "feasible": 6,
+      "infeasible": 2,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00120:18:top-rank1:extinct",
+      "levelId": "S00120",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 6,
+      "feasible": 6,
+      "infeasible": 0,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00120:18:culled-supported-rank109:extinct",
+      "levelId": "S00120",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 6,
+      "feasible": 6,
+      "infeasible": 0,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00140:11:top-rank1:extinct",
+      "levelId": "S00140",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 4,
+      "feasible": 3,
+      "infeasible": 1,
+      "unknown": 0
+    },
+    {
+      "caseId": "S00140:11:culled-supported-rank105:extinct",
+      "levelId": "S00140",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 4,
+      "feasible": 4,
+      "infeasible": 0,
+      "unknown": 0
+    },
+    {
+      "caseId": "R00058:11:top-rank1:extinct",
+      "levelId": "R00058",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 35,
+      "feasible": 25,
+      "infeasible": 2,
+      "unknown": 8
+    },
+    {
+      "caseId": "R00058:11:culled-supported-rank145:extinct",
+      "levelId": "R00058",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 34,
+      "feasible": 14,
+      "infeasible": 4,
+      "unknown": 16
+    },
+    {
+      "caseId": "R00060:18:top-rank1:extinct",
+      "levelId": "R00060",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 3,
+      "feasible": 0,
+      "infeasible": 3,
+      "unknown": 0
+    },
+    {
+      "caseId": "R00060:18:culled-supported-rank124:extinct",
+      "levelId": "R00060",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 4,
+      "feasible": 0,
+      "infeasible": 4,
+      "unknown": 0
+    },
+    {
+      "caseId": "R00064:9:top-rank1:extinct",
+      "levelId": "R00064",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "total": 53,
+      "feasible": 47,
+      "infeasible": 6,
+      "unknown": 0
+    },
+    {
+      "caseId": "R00064:9:culled-supported-rank103:extinct",
+      "levelId": "R00064",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 53,
+      "feasible": 47,
+      "infeasible": 6,
+      "unknown": 0
+    },
+    {
+      "caseId": "R00104:36:top-rank1:extinct",
+      "levelId": "R00104",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "total": 13,
+      "feasible": 0,
+      "infeasible": 13,
+      "unknown": 0
+    },
+    {
+      "caseId": "R00104:36:culled-supported-rank120:extinct",
+      "levelId": "R00104",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "total": 13,
+      "feasible": 8,
+      "infeasible": 5,
+      "unknown": 0
+    }
+  ]
+}
