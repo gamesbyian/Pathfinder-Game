@@ -17,7 +17,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE/FIRST.
+**State:** ACTIVE / POST-MINING GATE CONCLUDED; no immediate implementation earned.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
@@ -33,7 +33,7 @@ Cheap retained/offline premise tests may run in parallel. Expensive treatments r
 
 #### Lane A — separator / decomposition
 
-**CONCLUDED / BOUNDED POSITIVE.** 121/390 Class-5 levels have a non-trivial balanced narrow (width<=4) static/mechanic-aware interface; portal mediation is negative. Next gate is **interface-contract state size**, not another count: can crossing history compress into a small boundary contract? That gate is deferred onto Lane B's frozen population. [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md)
+**CONCLUDED / BOUNDED POSITIVE; CONSUMER GATE STOPS AT REPRESENTATION.** 121/390 Class-5 levels have a non-trivial balanced narrow (width<=4) static/mechanic-aware interface; portal mediation is negative. The consumer-contract census confirms the remaining gate is still **interface-contract state size**: current puzzle state exists, but no compact dynamic cross-interface representation has been demonstrated. Do not feed raw separator width/balance directly into ranking. Reopen only when a bounded contract can preserve the relevant crossing/history obligations on a frozen legal-prefix population. [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md) · [`consumer census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
@@ -49,7 +49,7 @@ Cheap retained/offline premise tests may run in parallel. Expensive treatments r
 
 See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
-1. **D1 future-intersection commitment realizability: POSITIVE.** B2: 2 matched DEAD with zero feasible commitments vs 3 LIVE with >=1 (107 queries). Multi-pick: 18 matched DEAD zero vs 2 LIVE >=1 (220 queries, 0 alarms). Consumer/economics untested. [`B2`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md) · [`replication`](../reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md)
+1. **D1 future-intersection commitment realizability: POSITIVE / LOCAL CONSUMER EXISTS / RETAINED ECONOMICS GATE STOPS.** B2: 2 matched DEAD zero-feasible vs 3 LIVE >=1 (107 queries). Multi-pick: 18 matched DEAD zero vs 2 LIVE >=1 (220 queries, 0 alarms), but the 20-state replication is one-parent (`R03147`) evidence. The consumer census maps D1 cleanly to existing beam rank/retain state, ranking-only. Retained evidence cannot recover production eligibility frequency, actual cutoff/rank disagreements, descendant `workSpent`, or observed query-time cost, so no live prototype or production exact-query mechanism is earned. Reopen only from production-inert multi-parent observation retaining decision context, work ancestry and information cost. [`B2`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md) · [`replication`](../reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md) · [`economics`](../reports/solver-premise-map-consumer-contract/03-d1-retained-evidence-economics.md)
 2. **Constrained-event feasibility: NARROWED POSITIVE.** H1 re-analysis, 449 queries: DEAD infeasibility is trivial; LIVE states show within-state commitment viability (13.8% infeasible; 16/23 mixed), not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
 3. **Residual-interface commutativity: POSITIVE, NARROW SUPPORT.** 12,277 native-referee splice pairs: 46.6% legal pooled; 0% flipper-bearing vs 69.9% portal-only / 44.8% mechanic-free. The effect is not explained by segment-flipper contact; support is 3 levels, not 10. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`correction`](../reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md)
 
@@ -61,7 +61,7 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 1. **Class-3 dose: EVIDENCE GAP.** No committed per-technique work-tranche telemetry. Do not re-check without new telemetry. [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
 2. **Card-E quotient: MIXED.** Obligation-count signature falsifies same-board on B2 but survives Card-E permutation tests; real board-independent signal, insufficient for canonicalization/classifier. [`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)
-3. **F3 topology microscope: QUALIFIED POSITIVE.** Cheap side descriptor matches full winding phase when closest point is unique (8/8), but that subset has zero decision-relevant discordance. All 9 decisive-puncture discordant rows are tied; tied-discordant reliability is 7/9. No consumer earned. [`result 1`](../reports/2026-09-17-lane-f3-topology-cheap-side-descriptor-result-001.md) · [`result 2`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md)
+3. **F3 topology microscope: QUALIFIED POSITIVE / CONSUMER GATE STOPS AT DECISION-BEARING COVERAGE.** Cheap side descriptor matches full winding phase when closest point is unique (8/8), but that subset has zero decision-relevant discordance. All 9 decisive-puncture discordant rows are tied; tied-discordant reliability is 7/9 and the cheap local tie refinement does not improve it. No selector/prune consumer is earned. Reopen only on fresh independent parents if a reliable compact descriptor has non-zero decision-bearing discordance. [`result 1`](../reports/2026-09-17-lane-f3-topology-cheap-side-descriptor-result-001.md) · [`result 2`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md) · [`consumer census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
 
 #### Lane G — independent search-object nursery
 
@@ -69,17 +69,15 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
-### Queue ordering and post-mining handoff
+### Post-mining premise-map handoff closeout
 
-All A-G1 lanes concluded. A/D1/F3 are bounded/replicated/qualified positives; C is population-limited negative; E negative; F2 mixed; B core-negative; G1 Stage 2 needs better construction; Class 3 is an evidence gap. G2 remains deferred.
+The frozen-map mining execution plan's three phases are complete. P201-P206 were admitted as evidence/method premises; no additional solver-mechanism premise survives the post-mining consumer-contract work.
 
-#### Phase-3 handoff — ACTIVE CHEAP GATE
+The A/D1/F3 common-interface hypothesis **failed its own pass condition**: only D1 maps to a ready existing decision seam. A stops at compact boundary representation; F3 stops at reliable decision-bearing opportunity; D1 stops at retained-evidence economics. Shared producer/consumer vocabulary is useful research discipline, not evidence for a shared runtime bus/blackboard/subsystem. [`reconciliation`](../reports/solver-premise-map-consumer-contract/02-common-interface-reconciliation.md)
 
-P201-P206 were admitted as evidence/method premises; no new solver-mechanism premise was admitted from the live-state anomaly. Run a **read-only consumer-contract census** across technically distinct A, D1 and F3. For each record producer, authority, independent unit, lifetime, smallest existing consumer, decision state, counterfactual action, abstention, opportunity population, and cost/displaced-work bounds. [`handoff`](../reports/solver-premise-map-phase3/02-execution-handoff.md)
+No immediate post-mining solver implementation, new oracle campaign, shared signal subsystem, production treatment or new premise admission is earned. Reopen descendants only from the precise lane triggers above; do not recursively mine the mining outputs merely to keep the program active.
 
-Cross-cutting pass condition: at least two unrelated positives map to existing decision boundaries using the same contract fields without requiring a new subsystem, leaving a concrete soundness/participation/economics question. Otherwise keep them local. If D1 independently passes its local census, its next descendant is a retained-evidence consumer/economics falsifier before any live exact-query implementation. **No solver sweep or production treatment is earned.**
-
-Dispositions belong to [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) (strategy history) and [`solver-future-work.md`](solver-future-work.md) (closed/deferred forms with reopen triggers).
+Dispositions belong to [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) (strategy history) and [`solver-future-work.md`](solver-future-work.md) only when a genuinely deferred form has a precise reopen trigger. Current lane triggers remain here.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -89,7 +87,7 @@ Dispositions belong to [`solver-opt-in-experiment-ledger.md`](solver-opt-in-expe
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | Read-only A/D1/F3 consumer-contract census; D1 economics falsifier only if earned |
+| 2 | Residual capability + premise acquisition | **ACTIVE / POST-MINING GATE CONCLUDED** | No immediate implementation; reopen only from explicit A/D1/F3 evidence triggers above |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
