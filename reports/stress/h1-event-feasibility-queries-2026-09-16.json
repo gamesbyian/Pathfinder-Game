@@ -1,0 +1,7206 @@
+{
+  "schemaVersion": 1,
+  "kind": "h1-event-feasibility-frozen-queries",
+  "generatedAt": "2026-09-16T21:39:25.776Z",
+  "solverRef": "a22edf2ee36370a10ceb6299a9f965925dc48ad3",
+  "prespec": "reports/2026-09-16-h1-event-feasibility-prespec-001.md",
+  "sourceCases": "reports/stress/winning-lineage-extinction-adjacent-cases-2026-08-12.json",
+  "exactLabelProvenance": {
+    "sourceId": "class5-b2-exact-label-projection-v1",
+    "schemaVersion": 1,
+    "authorityReport": "reports/2026-08-12-b2-extinction-adjacent-cpsat-labels.md",
+    "sourceRunId": "31858783552",
+    "sourceWorkflow": "cpsat-explicit-prefix-oracle.yml",
+    "sourceCommitAsRecorded": "4efc2d1",
+    "exactLabelledPrefixes": 28
+  },
+  "eventTypesImplemented": [
+    "cross-via",
+    "pass-via",
+    "flip-order",
+    "portal-pair"
+  ],
+  "eventTypesOmitted": [
+    {
+      "type": "order",
+      "reason": "no accepted-path artifact nominates a specific cross-mechanic pair for any of these 28 states; stays inactive per the prespec"
+    }
+  ],
+  "stateCount": 28,
+  "totalQueryCount": 449,
+  "states": [
+    {
+      "caseId": "S00001:28:top-rank1:extinct",
+      "levelId": "S00001",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          2,
+          9
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          8
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 1,
+        "mustPass": 1,
+        "flippers": 0,
+        "portalPairs": 0
+      },
+      "queryCount": 8,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            7,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            5,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            6,
+            10
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            6,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            7,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            5,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            6,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            6,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "S00001:28:culled-supported-rank126:extinct",
+      "levelId": "S00001",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          2,
+          9
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          7
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 1,
+        "mustPass": 1,
+        "flippers": 0,
+        "portalPairs": 0
+      },
+      "queryCount": 8,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            7,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            5,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            6,
+            10
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            6,
+            9
+          ],
+          "entry": [
+            6,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            7,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            5,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            6,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            8
+          ],
+          "entry": [
+            6,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "S00028:15:top-rank1:extinct",
+      "levelId": "S00028",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          10,
+          15
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          11,
+          10
+        ],
+        [
+          11,
+          9
+        ],
+        [
+          11,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 3,
+        "mustPass": 3,
+        "flippers": 1,
+        "portalPairs": 2
+      },
+      "queryCount": 26,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            12,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            11,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            11,
+            5
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            9,
+            11
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            10,
+            10
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            10,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            8,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            9,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            3,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            1,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            2,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            2,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            6,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            11,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            9,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            10,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 1
+        }
+      ]
+    },
+    {
+      "caseId": "S00028:15:culled-supported-rank165:extinct",
+      "levelId": "S00028",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          10,
+          15
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          3,
+          14
+        ],
+        [
+          4,
+          14
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 3,
+        "mustPass": 4,
+        "flippers": 1,
+        "portalPairs": 1
+      },
+      "queryCount": 29,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            12,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            11,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            6
+          ],
+          "entry": [
+            11,
+            5
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            9,
+            11
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            10,
+            10
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            10,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            8,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            9,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            7
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            3,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            1,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            2,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            12
+          ],
+          "entry": [
+            2,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            6,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            11,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            9,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            10,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            7
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            6
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            5
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 1
+        }
+      ]
+    },
+    {
+      "caseId": "S00030:14:top-rank1:extinct",
+      "levelId": "S00030",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          8,
+          8
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 2,
+        "mustPass": 3,
+        "flippers": 1,
+        "portalPairs": 1
+      },
+      "queryCount": 18,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            6,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            4,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            5,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            5,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            7,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            12,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            13,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            13,
+            1
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            12,
+            10
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            11,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            11,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00030:14:culled-supported-rank109:extinct",
+      "levelId": "S00030",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 2,
+        "mustPass": 4,
+        "flippers": 1,
+        "portalPairs": 1
+      },
+      "queryCount": 21,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            6,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            4,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            5,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            5,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            7,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            12,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            13,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            13,
+            1
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            12,
+            10
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            11,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            11,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00030:14:retained-near-cutoff-rank100:extinct",
+      "levelId": "S00030",
+      "role": "cutoff-survivor",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 2,
+        "mustPass": 4,
+        "flippers": 1,
+        "portalPairs": 1
+      },
+      "queryCount": 21,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            6,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            4,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            5,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            7
+          ],
+          "entry": [
+            5,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            7,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            6
+          ],
+          "entry": [
+            7,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            12,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            13,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            2
+          ],
+          "entry": [
+            13,
+            1
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            12,
+            10
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            10
+          ],
+          "entry": [
+            11,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            11,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            12
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00035:10:culled-supported-rank160:extinct",
+      "levelId": "S00035",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          6,
+          13
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          11,
+          9
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 3,
+        "mustPass": 1,
+        "flippers": 1,
+        "portalPairs": 3
+      },
+      "queryCount": 18,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            11,
+            11
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            9,
+            11
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            11
+          ],
+          "entry": [
+            10,
+            10
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            9
+          ],
+          "entry": [
+            12,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            9
+          ],
+          "entry": [
+            10,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            9
+          ],
+          "entry": [
+            11,
+            10
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            11,
+            9
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            9
+          ],
+          "entry": [
+            6,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            9
+          ],
+          "entry": [
+            4,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            9
+          ],
+          "entry": [
+            5,
+            10
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            5,
+            9
+          ],
+          "entry": [
+            5,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            13,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            12,
+            9
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 1
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 2
+        }
+      ]
+    },
+    {
+      "caseId": "S00048:25:top-rank1:extinct",
+      "levelId": "S00048",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          13,
+          15
+        ],
+        [
+          14,
+          15
+        ],
+        [
+          15,
+          15
+        ],
+        [
+          15,
+          14
+        ],
+        [
+          15,
+          13
+        ],
+        [
+          14,
+          13
+        ],
+        [
+          13,
+          13
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          12
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          11,
+          14
+        ],
+        [
+          11,
+          15
+        ],
+        [
+          10,
+          15
+        ],
+        [
+          9,
+          15
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          8,
+          14
+        ],
+        [
+          8,
+          13
+        ],
+        [
+          8,
+          12
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 2,
+        "mustPass": 2,
+        "flippers": 3,
+        "portalPairs": 1
+      },
+      "queryCount": 18,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            9,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            10,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            10,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            9,
+            15
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            7,
+            15
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            8,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            10,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            9,
+            4
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 1,
+          "j": 0,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 0,
+          "j": 2,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00048:25:culled-supported-rank108:extinct",
+      "levelId": "S00048",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          13,
+          15
+        ],
+        [
+          14,
+          15
+        ],
+        [
+          15,
+          15
+        ],
+        [
+          15,
+          14
+        ],
+        [
+          15,
+          13
+        ],
+        [
+          14,
+          13
+        ],
+        [
+          13,
+          13
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          12
+        ],
+        [
+          9,
+          13
+        ],
+        [
+          9,
+          14
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          11,
+          14
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          9,
+          12
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          10
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 2,
+        "mustPass": 2,
+        "flippers": 3,
+        "portalPairs": 1
+      },
+      "queryCount": 18,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            9,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            10,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            10,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            9,
+            15
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            7,
+            15
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            8,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            10,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            9,
+            4
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 0,
+          "j": 1,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 1,
+          "j": 2,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00048:25:retained-near-cutoff-rank100:extinct",
+      "levelId": "S00048",
+      "role": "cutoff-survivor",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          13,
+          15
+        ],
+        [
+          14,
+          15
+        ],
+        [
+          15,
+          15
+        ],
+        [
+          15,
+          14
+        ],
+        [
+          15,
+          13
+        ],
+        [
+          14,
+          13
+        ],
+        [
+          13,
+          13
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          9,
+          13
+        ],
+        [
+          9,
+          12
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          11,
+          14
+        ],
+        [
+          10,
+          14
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          10
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 2,
+        "mustPass": 2,
+        "flippers": 3,
+        "portalPairs": 1
+      },
+      "queryCount": 18,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            9,
+            8
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            10,
+            9
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            10,
+            8
+          ],
+          "entry": [
+            10,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            9,
+            6
+          ],
+          "entry": [
+            9,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            9,
+            15
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            7,
+            15
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            15
+          ],
+          "entry": [
+            8,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            10,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            5
+          ],
+          "entry": [
+            9,
+            4
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 0,
+          "j": 1,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 1,
+          "j": 2,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00095:15:top-rank1:extinct",
+      "levelId": "S00095",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          7,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 0,
+        "flippers": 0,
+        "portalPairs": 1
+      },
+      "queryCount": 1,
+      "queries": [
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00095:15:culled-supported-rank133:extinct",
+      "levelId": "S00095",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 0,
+        "flippers": 0,
+        "portalPairs": 0
+      },
+      "queryCount": 0,
+      "queries": []
+    },
+    {
+      "caseId": "S00099:11:culled-supported-rank179:extinct",
+      "levelId": "S00099",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          2,
+          6
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          2,
+          13
+        ],
+        [
+          2,
+          12
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 0,
+        "flippers": 0,
+        "portalPairs": 1
+      },
+      "queryCount": 1,
+      "queries": [
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00108:15:top-rank1:extinct",
+      "levelId": "S00108",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          12,
+          5
+        ],
+        [
+          13,
+          5
+        ],
+        [
+          13,
+          4
+        ],
+        [
+          14,
+          4
+        ],
+        [
+          15,
+          4
+        ],
+        [
+          15,
+          5
+        ],
+        [
+          15,
+          6
+        ],
+        [
+          15,
+          7
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 2,
+        "flippers": 0,
+        "portalPairs": 1
+      },
+      "queryCount": 8,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            15,
+            8
+          ],
+          "entry": [
+            14,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            15,
+            8
+          ],
+          "entry": [
+            15,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            15,
+            8
+          ],
+          "entry": [
+            15,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            15,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            13,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            14,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            14,
+            4
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00108:15:culled-supported-rank111:extinct",
+      "levelId": "S00108",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          11,
+          5
+        ],
+        [
+          12,
+          5
+        ],
+        [
+          12,
+          6
+        ],
+        [
+          13,
+          6
+        ],
+        [
+          14,
+          6
+        ],
+        [
+          15,
+          6
+        ],
+        [
+          15,
+          7
+        ],
+        [
+          14,
+          7
+        ],
+        [
+          14,
+          6
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 2,
+        "flippers": 0,
+        "portalPairs": 1
+      },
+      "queryCount": 8,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            15,
+            8
+          ],
+          "entry": [
+            14,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            15,
+            8
+          ],
+          "entry": [
+            15,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            15,
+            8
+          ],
+          "entry": [
+            15,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            15,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            13,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            14,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            5
+          ],
+          "entry": [
+            14,
+            4
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        }
+      ]
+    },
+    {
+      "caseId": "S00120:18:top-rank1:extinct",
+      "levelId": "S00120",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          5
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 2,
+        "flippers": 0,
+        "portalPairs": 0
+      },
+      "queryCount": 6,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            7
+          ],
+          "entry": [
+            5,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            7
+          ],
+          "entry": [
+            3,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            7
+          ],
+          "entry": [
+            4,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            7,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            5,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            6,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "S00120:18:culled-supported-rank109:extinct",
+      "levelId": "S00120",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          6,
+          9
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 2,
+        "flippers": 0,
+        "portalPairs": 0
+      },
+      "queryCount": 6,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            7
+          ],
+          "entry": [
+            5,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            7
+          ],
+          "entry": [
+            3,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            7
+          ],
+          "entry": [
+            4,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            7,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            5,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            6,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "S00140:11:top-rank1:extinct",
+      "levelId": "S00140",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 1,
+        "flippers": 1,
+        "portalPairs": 0
+      },
+      "queryCount": 4,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            5
+          ],
+          "entry": [
+            7,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            5
+          ],
+          "entry": [
+            5,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            5
+          ],
+          "entry": [
+            6,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            5
+          ],
+          "entry": [
+            6,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "S00140:11:culled-supported-rank105:extinct",
+      "levelId": "S00140",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 1,
+        "flippers": 1,
+        "portalPairs": 0
+      },
+      "queryCount": 4,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            5
+          ],
+          "entry": [
+            4,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            5
+          ],
+          "entry": [
+            2,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            5
+          ],
+          "entry": [
+            3,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            5
+          ],
+          "entry": [
+            3,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "R00058:11:top-rank1:extinct",
+      "levelId": "R00058",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          2,
+          14
+        ],
+        [
+          2,
+          13
+        ],
+        [
+          2,
+          12
+        ],
+        [
+          3,
+          12
+        ],
+        [
+          4,
+          12
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          5,
+          12
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          7,
+          11
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 7,
+        "flippers": 5,
+        "portalPairs": 5
+      },
+      "queryCount": 35,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            11,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            9,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            10,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            10,
+            1
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            6,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            4,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            8,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            9,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            9,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            9,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            7,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            8,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            8,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            7,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            5,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            6,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            6,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            14
+          ],
+          "entry": [
+            8,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            14
+          ],
+          "entry": [
+            6,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            11,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            9,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            10,
+            4
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 0,
+          "j": 2,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 2,
+          "j": 1,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 1,
+          "j": 4,
+          "rankPair": [
+            2,
+            3
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 4,
+          "j": 3,
+          "rankPair": [
+            3,
+            4
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 0
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 1
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 2
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 3
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 4
+        }
+      ]
+    },
+    {
+      "caseId": "R00058:11:culled-supported-rank145:extinct",
+      "levelId": "R00058",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          2,
+          14
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          1,
+          12
+        ],
+        [
+          2,
+          12
+        ],
+        [
+          2,
+          13
+        ],
+        [
+          3,
+          13
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          3
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 7,
+        "flippers": 5,
+        "portalPairs": 4
+      },
+      "queryCount": 34,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            11,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            9,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            10,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            2
+          ],
+          "entry": [
+            10,
+            1
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            6,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            4,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            10,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            8,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            9,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            12
+          ],
+          "entry": [
+            9,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            9,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            7,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            8,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            3
+          ],
+          "entry": [
+            8,
+            2
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            7,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            5,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            6,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            6,
+            4
+          ],
+          "entry": [
+            6,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            14
+          ],
+          "entry": [
+            8,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            7,
+            14
+          ],
+          "entry": [
+            6,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            11,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            9,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            10,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            10,
+            5
+          ],
+          "entry": [
+            10,
+            4
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 4,
+          "j": 0,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 0,
+          "j": 3,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 3,
+          "j": 2,
+          "rankPair": [
+            2,
+            3
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 2,
+          "j": 1,
+          "rankPair": [
+            3,
+            4
+          ]
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 1
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 2
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 3
+        },
+        {
+          "type": "portal-pair",
+          "pairId": 4
+        }
+      ]
+    },
+    {
+      "caseId": "R00060:18:top-rank1:extinct",
+      "levelId": "R00060",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          7,
+          12
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 0,
+        "flippers": 4,
+        "portalPairs": 0
+      },
+      "queryCount": 3,
+      "queries": [
+        {
+          "type": "flip-order",
+          "i": 2,
+          "j": 4,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 4,
+          "j": 1,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 1,
+          "j": 0,
+          "rankPair": [
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "R00060:18:culled-supported-rank124:extinct",
+      "levelId": "R00060",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          7,
+          12
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          9,
+          12
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          7
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          10,
+          5
+        ],
+        [
+          10,
+          4
+        ],
+        [
+          10,
+          3
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          8,
+          2
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 0,
+        "flippers": 5,
+        "portalPairs": 0
+      },
+      "queryCount": 4,
+      "queries": [
+        {
+          "type": "flip-order",
+          "i": 1,
+          "j": 3,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 3,
+          "j": 2,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 2,
+          "j": 4,
+          "rankPair": [
+            2,
+            3
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 4,
+          "j": 0,
+          "rankPair": [
+            3,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "R00064:9:top-rank1:extinct",
+      "levelId": "R00064",
+      "role": "top-rank1",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          5,
+          12
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          7,
+          12
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          7,
+          9
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 15,
+        "flippers": 4,
+        "portalPairs": 0
+      },
+      "queryCount": 53,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            13,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            11,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            12,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            12,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            14
+          ],
+          "entry": [
+            13,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            14
+          ],
+          "entry": [
+            11,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            14
+          ],
+          "entry": [
+            12,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            3,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            1,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            2,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            2,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            14
+          ],
+          "entry": [
+            12,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            14
+          ],
+          "entry": [
+            13,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            10
+          ],
+          "entry": [
+            2,
+            10
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            10
+          ],
+          "entry": [
+            1,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            10
+          ],
+          "entry": [
+            1,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            12,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            10,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            11,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            14
+          ],
+          "entry": [
+            12,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            14
+          ],
+          "entry": [
+            10,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            14
+          ],
+          "entry": [
+            11,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            6,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            4,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            12
+          ],
+          "entry": [
+            13,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            12
+          ],
+          "entry": [
+            14,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            12
+          ],
+          "entry": [
+            14,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            5,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            3,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            4,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            4,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            14,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            12,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            13,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            13,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            13,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            12,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            12,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            13
+          ],
+          "entry": [
+            13,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            13
+          ],
+          "entry": [
+            14,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            11
+          ],
+          "entry": [
+            2,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            11
+          ],
+          "entry": [
+            1,
+            10
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            13,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            11,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            12,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            12,
+            5
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 0,
+          "j": 4,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 4,
+          "j": 3,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 3,
+          "j": 1,
+          "rankPair": [
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "R00064:9:culled-supported-rank103:extinct",
+      "levelId": "R00064",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          5,
+          9
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          5,
+          12
+        ],
+        [
+          6,
+          12
+        ],
+        [
+          7,
+          12
+        ],
+        [
+          7,
+          13
+        ],
+        [
+          8,
+          13
+        ],
+        [
+          9,
+          13
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 0,
+        "mustPass": 15,
+        "flippers": 4,
+        "portalPairs": 0
+      },
+      "queryCount": 53,
+      "queries": [
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            13,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            11,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            12,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            7
+          ],
+          "entry": [
+            12,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            14
+          ],
+          "entry": [
+            13,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            14
+          ],
+          "entry": [
+            11,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            14
+          ],
+          "entry": [
+            12,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            3,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            1,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            2,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            2,
+            6
+          ],
+          "entry": [
+            2,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            14
+          ],
+          "entry": [
+            12,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            14
+          ],
+          "entry": [
+            13,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            10
+          ],
+          "entry": [
+            2,
+            10
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            10
+          ],
+          "entry": [
+            1,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            10
+          ],
+          "entry": [
+            1,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            12,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            10,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            7
+          ],
+          "entry": [
+            11,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            14
+          ],
+          "entry": [
+            12,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            14
+          ],
+          "entry": [
+            10,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            11,
+            14
+          ],
+          "entry": [
+            11,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            6,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            4,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            14
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            5,
+            13
+          ],
+          "entry": [
+            5,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            12
+          ],
+          "entry": [
+            13,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            12
+          ],
+          "entry": [
+            14,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            12
+          ],
+          "entry": [
+            14,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            5,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            3,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            4,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            4,
+            4
+          ],
+          "entry": [
+            4,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            14,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            12,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            13,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            13,
+            5
+          ],
+          "entry": [
+            13,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            13,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            11,
+            8
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            12,
+            9
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            8
+          ],
+          "entry": [
+            12,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            13
+          ],
+          "entry": [
+            13,
+            13
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            14,
+            13
+          ],
+          "entry": [
+            14,
+            12
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            11
+          ],
+          "entry": [
+            2,
+            11
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            1,
+            11
+          ],
+          "entry": [
+            1,
+            10
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            13,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            11,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            12,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            12,
+            6
+          ],
+          "entry": [
+            12,
+            5
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 1,
+          "j": 0,
+          "rankPair": [
+            0,
+            1
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 0,
+          "j": 4,
+          "rankPair": [
+            1,
+            2
+          ]
+        },
+        {
+          "type": "flip-order",
+          "i": 4,
+          "j": 3,
+          "rankPair": [
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "R00104:36:top-rank1:extinct",
+      "levelId": "R00104",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          11,
+          9
+        ],
+        [
+          11,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 1,
+        "mustPass": 3,
+        "flippers": 0,
+        "portalPairs": 0
+      },
+      "queryCount": 13,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            7,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            4,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            2,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            3,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            3,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            5
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            5
+          ],
+          "entry": [
+            8,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            3
+          ],
+          "entry": [
+            10,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            3
+          ],
+          "entry": [
+            8,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            3
+          ],
+          "entry": [
+            9,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "R00104:36:culled-supported-rank120:extinct",
+      "levelId": "R00104",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "corpus": "data/stress/stress-levels.json",
+      "prefixXY": [
+        [
+          6,
+          6
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          11,
+          9
+        ],
+        [
+          11,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ]
+      ],
+      "pendingCounts": {
+        "mustCross": 1,
+        "mustPass": 3,
+        "flippers": 0,
+        "portalPairs": 0
+      },
+      "queryCount": 13,
+      "queries": [
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            9,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            7,
+            6
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            7
+          ]
+        },
+        {
+          "type": "cross-via",
+          "axis": [
+            8,
+            6
+          ],
+          "entry": [
+            8,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            4,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            2,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            3,
+            7
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            3,
+            6
+          ],
+          "entry": [
+            3,
+            5
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            5
+          ],
+          "entry": [
+            8,
+            6
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            8,
+            5
+          ],
+          "entry": [
+            8,
+            4
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            3
+          ],
+          "entry": [
+            10,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            3
+          ],
+          "entry": [
+            8,
+            3
+          ]
+        },
+        {
+          "type": "pass-via",
+          "cell": [
+            9,
+            3
+          ],
+          "entry": [
+            9,
+            2
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -122,10 +122,25 @@
       "state": "closed-tested-form",
       "answeredBy": ["reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"],
       "result": "No. Six prespecified summaries overlap LIVE/DEAD across 31 exact-labelled states on 15 levels; joint-obligation rejects are zero throughout.",
-      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-HOMOTOPY-COMPLETION-CLASSES"],
+      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-HOMOTOPY-COMPLETION-CLASSES", "WS2-H1-EVENT-FEASIBILITY"],
       "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
       "calibratedBy": ["WS2-MECHANIC-COMPOSITION-CAUSALITY"],
       "reopensOn": "A materially new mechanism-specific descriptor premise."
+    },
+    {
+      "id": "WS2-H1-EVENT-FEASIBILITY",
+      "question": "Does a compact categorical relation over individual/joint event realizability (which specific interface/order resolves a pending obligation) recur across unrelated parents, distinguishing LIVE from DEAD siblings where scalar summaries do not?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "aliases": ["H1", "event feasibility", "completion regime"],
+      "answeredBy": ["reports/2026-09-17-h1-event-feasibility-result-001.md"],
+      "result": "No. 449-query frozen population (28 B2 states, 93.5% resolved, 0 correctness alarms): E-FLIP-ORDER's only strong effect (36% realizable) reverses direction between independent parents (S00048/R00060 vs R00064); E-CROSS-VIA/E-PASS-VIA (~88% realizable) show no distance-to-goal separation. Partial LIVE-state realizability is real but not reducible to this vocabulary's compact relation.",
+      "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "constrains": [
+        "Do not widen this event vocabulary (cross-via/pass-via/flip-order/portal-pair) combinatorially to rescue a null; the prespec's own boundary pushes toward a more expressive search mechanism instead.",
+        "Partial LIVE-state event-blocking is preserved as capability-memory evidence, not a production descriptor."
+      ],
+      "reopensOn": "A materially different event family or joint-query formulation, or a board-specific (not rank-order) descriptor for the flip-order direction reversal."
     },
     {
       "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
