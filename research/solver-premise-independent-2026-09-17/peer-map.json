@@ -1,6 +1,6 @@
 {
   "title": "Independent peer conceptual map of Pathfinder solver research",
-  "status": "construction-in-progress",
+  "status": "construction-closed",
   "branch": "chatgpt/premise-map-independent-peer-map-2026-09-17",
   "methodNote": "Constructed blind from underlying repository evidence and the pre-existing independent investigation on this lineage. Identifiers and relation vocabulary are local to this reconstruction.",
   "emergentRepresentation": {
@@ -809,5 +809,13 @@
     "generator implementation itself was not exhaustively inspected; witness-bearing corpus assumptions are supported by the independent lineage and corpus/tooling evidence",
     "mechanic-specific prune descendants are intentionally aggregated under derive/reject unless they expose a distinct parent premise",
     "serialization of live resumable search state across processes remains largely unimplemented territory rather than a mature repository lineage"
-  ]
+  ],
+  "closeout": {
+    "declaration": "Independent construction closed before any comparison against another premise map.",
+    "hostileAudit": "research/solver-premise-independent-2026-09-17/hostile-completeness-audit.md",
+    "sourceCoverage": "research/solver-premise-independent-2026-09-17/source-coverage.md",
+    "comparisonPerformed": false,
+    "liveQueueMutated": false,
+    "canonicalMapMutated": false
+  }
 }
