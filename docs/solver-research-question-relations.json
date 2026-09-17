@@ -158,6 +158,20 @@
       "reopensOn": "A fresh, larger exact-labelled DEAD population (e.g. a new B2-style sibling harvest on the current Class-4/5 residual) becomes available."
     },
     {
+      "id": "WS2-H3-REPAIR-COMMITMENT-INTERFACE",
+      "question": "Is repair locality governed by a small set of coupled earlier commitments rather than rollback distance or prefix length?",
+      "owner": "WS2",
+      "state": "closed-tested-form",
+      "aliases": ["H3", "dependency-defined repair", "commitment interface"],
+      "answeredBy": ["reports/2026-09-17-h3-repair-commitment-interface-result-001.md"],
+      "result": "No, not on Card-E's 156-row rescuable/non-rescuable population. Remaining path length dominates rescuability (Cohen's d=-1.81; 30.2% reconstructable when remaining length <=80 vs 1.0% when >80), far exceeding any commitment-specific feature (largest secondary effect: portal-jumps-already-used, d=0.83, which partially but not fully survives controlling for remaining length).",
+      "constrains": [
+        "Do not build a dependency-conditioned neighbourhood, descent-aware observer, CP-LNS, or adaptive destroy severity from this population's descriptive differences.",
+        "The weak portal-jump/intersection-usage secondary signal is preserved as capability-memory evidence, not a standalone finding."
+      ],
+      "reopensOn": "A different repair-retreat population (not Card-E's) or a length-matched/stratified design with more statistical power finds a commitment effect independent of remaining length."
+    },
+    {
       "id": "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
       "question": "Can a recurring solve-local failure shape be reduced to a small sound dead cause with enough repeated-work value for bounded reason reuse?",
       "owner": "WS2",
