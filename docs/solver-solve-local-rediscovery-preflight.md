@@ -32,6 +32,8 @@ Potential facts:
 
 Existing August Stage-B evidence is a nomination source because the same reached/boundary shapes recurred strongly within levels. It is not enough by itself to prove a reusable key or economic win.
 
+**This fact class's own Phase 0 has already been run and closed.** `reports/2026-09-13-class5-dead-cause-current-population-rejoin-result-001.md` prespecified and tested exactly this population-survival question for the dominant connectivity-rejection cluster (goal-rejection, no pending must-pass/must-cross) on a 12-row current-Class-5 sample: only 1/12 levels met the required informativeness floor (needed >=6/12). The local recurrence signal is real on one level (`R03046`, 71-85% sharing) but does not survive broadly enough on the current residual to justify compact-cause extraction. Do not re-run this Phase 0 unchanged. The closure is population-scoped, not premise-scoped (`solver-capability-gap-stop-condition-reconciliation.md`'s `CROSS-LEVEL-CLOSED + OPEN-PER-INSTANCE`/`POPULATION-LIMITED` distinction applies): it reopens only with a materially changed residual or an independently nominated failure population. The fresh exact-DEAD sibling harvest (`solver-fresh-dead-sibling-harvest-preflight.md`, 75 states/25 parents, post-Class-4-promotion residual, with real exact labels the Sept-13 population lacked) is exactly such an independent nomination and is the natural way to reopen fact class A if this line is picked back up -- start fact-class rediscovery work on B/C/D instead of re-deriving this result.
+
 ### B. Admissible lower-bound results
 
 MustPass/MustCross lower bounds already memoize projected numeric values. Treat these as a **positive control** for what sound dependency-keyed reuse looks like.
