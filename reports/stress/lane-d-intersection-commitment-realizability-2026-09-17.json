@@ -1,0 +1,574 @@
+{
+  "schemaVersion": 1,
+  "kind": "lane-d-intersection-commitment-realizability",
+  "generatedAt": "2026-09-17T05:52:33.742Z",
+  "solverRef": "7f499ba2bbb723ae940ab91a5df2cb5bf5be560c",
+  "sourceH1Queries": "reports/stress/h1-event-feasibility-queries-2026-09-16.json",
+  "selectionRule": "same-parent LIVE/DEAD pairs with identical remaining-intersection-deficit AND remaining-length, from the already-committed B2 exact-label set",
+  "selectedParents": [
+    "S00030",
+    "R00104"
+  ],
+  "summary": {
+    "deadStatesWithZeroFeasibleCommitments": 2,
+    "deadStatesTotal": 2,
+    "liveStatesWithAtLeastOneFeasibleCommitment": 3,
+    "liveStatesTotal": 3,
+    "correctnessAlarms": 0
+  },
+  "results": [
+    {
+      "parentId": "S00030",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "candidateCount": 13,
+      "feasible": [],
+      "infeasible": [
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ]
+      ],
+      "indeterminate": [
+        {
+          "cell": [
+            3,
+            5
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            4,
+            5
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            5,
+            5
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            6,
+            5
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            7,
+            6
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            8,
+            7
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            8,
+            8
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        }
+      ]
+    },
+    {
+      "parentId": "S00030",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "candidateCount": 13,
+      "feasible": [
+        [
+          9,
+          9
+        ]
+      ],
+      "infeasible": [
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ]
+      ],
+      "indeterminate": [
+        {
+          "cell": [
+            2,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            3,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            4,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            5,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            6,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            7,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            8,
+            5
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            8,
+            6
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            9,
+            8
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        }
+      ]
+    },
+    {
+      "parentId": "S00030",
+      "role": "cutoff-survivor",
+      "exactLabel": "live",
+      "candidateCount": 13,
+      "feasible": [
+        [
+          9,
+          9
+        ]
+      ],
+      "infeasible": [
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ]
+      ],
+      "indeterminate": [
+        {
+          "cell": [
+            2,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            3,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            4,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            5,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            6,
+            4
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            8,
+            6
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        },
+        {
+          "cell": [
+            9,
+            8
+          ],
+          "reason": "cpsat-timeout-or-abstain"
+        }
+      ]
+    },
+    {
+      "parentId": "R00104",
+      "role": "top-rank1",
+      "exactLabel": "dead",
+      "candidateCount": 34,
+      "feasible": [],
+      "infeasible": [
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          10,
+          9
+        ],
+        [
+          11,
+          9
+        ],
+        [
+          11,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ]
+      ],
+      "indeterminate": []
+    },
+    {
+      "parentId": "R00104",
+      "role": "witness-culled",
+      "exactLabel": "live",
+      "candidateCount": 34,
+      "feasible": [
+        [
+          8,
+          6
+        ],
+        [
+          10,
+          9
+        ]
+      ],
+      "infeasible": [
+        [
+          6,
+          7
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          11,
+          9
+        ],
+        [
+          11,
+          8
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          10,
+          11
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          7,
+          10
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          6,
+          11
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          1,
+          11
+        ],
+        [
+          1,
+          10
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ]
+      ],
+      "indeterminate": []
+    }
+  ]
+}

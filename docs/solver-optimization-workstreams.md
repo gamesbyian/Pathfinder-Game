@@ -43,7 +43,7 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
 1. **Fresh exact LIVE/DEAD sibling asset — CONCLUDED / DEAD POPULATION EARNED, CONSTRUCTION GAP FOUND.** 75-state, 25-independent-parent exact-DEAD population harvested and CP-SAT-labelled (0 alarms) — reusable for Lane A's deferred family-3 measurement. The naive goal-distance-greedy constructor found **zero** LIVE siblings even shallow, confirmed a construction artifact (not residual structure) by a gate-only check showing real reachable LIVE capacity the walk cannot find. A bounded 38-query relaxation probe found no causal cores, likely confounded by the same gap. [`result`](../reports/2026-09-17-fresh-dead-sibling-harvest-result-001.md)
-2. **Handoff gate:** DEAD-core size/"spares LIVE" testing and any Lane D/E work needing matched LIVE/DEAD Class-5 siblings need a **production-search-quality sibling constructor** (real scorer/technique, not a naive walk) first -- a separate, larger implementation task.
+2. **Handoff gate:** DEAD-core/"spares LIVE" testing and any Lane D/E work needing matched LIVE/DEAD Class-5 siblings need a **production-search-quality sibling constructor** first -- a separate, larger implementation task.
 3. A per-instance core/conflict need not recur across levels; recurrence is required only for a fixed reusable descriptor claim.
 
 #### Lane C — solve-local typed knowledge reuse
@@ -52,7 +52,10 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 
 #### Lane D — per-instance relational feasibility
 
-**OPEN / PREPARED.** Execute [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md). Reopens semantic questions whose historical implementations/descriptors were narrower than the premise: future-intersection commitment realizability, constrained-event feasibility through a nominated interface, and residual-interface commutativity by actual swap/replay (not multiset similarity). Existing exact-labelled states first, then the fresh sibling asset. H1's null blocks only its frozen event vocabulary. A positive query earns only its cheapest consumer (prune/forced move/lower bound/decomposition/conflict/exact-mode switch); `UNKNOWN` is always non-decision-bearing.
+Execute [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md). A positive query earns only its cheapest consumer; `UNKNOWN` is always non-decision-bearing.
+
+1. **Future-intersection commitment realizability — CONCLUDED / POPULATION-LIMITED POSITIVE.** On the 2 B2 parents with same-parent LIVE/DEAD pairs matched on identical remaining-intersection-deficit and length, both exact-DEAD states have zero confirmed-feasible commitments while all 3 LIVE siblings have >=1 (107 queries, 0 alarms). B2's matched population is exhausted; expansion needs Lane B's blocked constructor. [`result`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md)
+2. **Constrained-event feasibility / residual-interface commutativity — OPEN.** Existing exact-labelled states first; H1's null blocks only its frozen event vocabulary.
 
 #### Lane E — dependency-defined causal revision
 
@@ -71,15 +74,15 @@ The queue is intentionally **not one long serial staircase**. Cheap retained-evi
 
 ### Queue ordering and parallelism
 
-**A, B, and Class-3 (F1) are concluded** (A bounded-positive, deferred onto B; B a real DEAD population blocked on a sibling-constructor handoff; Class-3 an evidence gap). Remaining single-agent order: **D (existing exact-labelled states, not the blocked Class-5 asset) -> C -> E -> F2/F3 (Card-E, topology) -> G.** With multiple agents, C/D/E/F/G may run in parallel -- all are retained-evidence/offline observers that don't touch production policy or Lane B's blocked asset.
+**A, B, Class-3 (F1), and Lane D question 1 are concluded** (A bounded-positive, deferred onto B; B a real DEAD population blocked on a sibling-constructor handoff; Class-3 an evidence gap; D1 population-limited positive, same handoff). Remaining single-agent order: **D2/D3 -> C -> E -> F2/F3 (Card-E, topology) -> G.** With multiple agents, C/D/E/F/G may run in parallel -- all are retained-evidence/offline observers.
 
-**No production treatment is currently earned.**
+**No production treatment is earned.**
 
 **Dispositions:** promoted/closed/deferred treatment history is owned by [`solver-opt-in-experiment-ledger.md`](solver-opt-in-experiment-ledger.md) (per-strategy) and [`solver-future-work.md`](solver-future-work.md)'s closed-forms table (retry/quota/homotopy/connectivity-reuse shapes); current default-ON additions include the Class-4 dead-last portal coarse-state retry.
 
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** SUPPORTING / NO ACTIVE PRODUCTION SELECTOR GATE.
+**State:** SUPPORTING / NO ACTIVE SELECTOR GATE.
 
 Use capability/lifecycle/provenance/family/trace evidence to distinguish not-exposed from exposed-and-failed; confirmation must scale with selection pressure. The September structural-response ladder already ran through first divergence; do not restart earlier stages. A result from Lane D, E, or Card-E may reopen WS1 only if it yields a cheap current-input signal predicting which action should receive work -- never exact offline labels or historical family membership.
 
@@ -88,11 +91,11 @@ Use capability/lifecycle/provenance/family/trace evidence to distinguish not-exp
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 2 | Residual capability + premise acquisition | **ACTIVE / FIRST** | A/B/Class-3 concluded; run remaining bounded lanes C-E, G and Card-E in any order (parallel-safe) |
-| 1 | Automatic action selection | **SUPPORTING** | Reopen from a new legal current-input response signal produced by the acquisition lanes |
-| 6/7 | Repair reachability / architectural speed | **SUPPORTING** | Lane E tests dependency-defined revision; fresh profiling gates pure speed work |
-| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units and scale confirmation with selection pressure |
-| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not tail entitlement |
-| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed recurring mechanism evidence |
+| 1 | Automatic action selection | **SUPPORTING** | Reopen from a new legal current-input signal from the acquisition lanes |
+| 6/7 | Repair reachability / speed | **SUPPORTING** | Lane E tests dependency-defined revision; fresh profiling gates speed work |
+| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
+| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement |
+| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed mechanism evidence |
 | 5 | Exact/reference model | **ON DEMAND / BUSIER** | Truth/query service for Lanes B-E microscopes |
 
 ## Standing research rules
