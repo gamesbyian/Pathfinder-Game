@@ -11,7 +11,7 @@ The original closeout intentionally left the final CI state pending. A subsequen
 
 ## Verified PR boundary
 
-PR #1852 is still open, mergeable, non-draft, and stacked directly on `chatgpt/phase2-premise-map-synthesis-2026-09-17` at `3c9a0edb78bebe049c4c128b907a5456508a767c`. Before this addendum its head was `7c7ddea740cae3a981e893d396d2caafb98c0610`, 13 commits ahead of the Phase-2 base.
+PR #1852 is still open, mergeable, non-draft, and stacked directly on `chatgpt/phase2-premise-map-synthesis-2026-09-17` at `3c9a0edb78bebe049c4c128b907a5456508a767c`. Before this verification work its head was `7c7ddea740cae3a981e893d396d2caafb98c0610`, 13 commits ahead of the Phase-2 base.
 
 The Phase-3 diff before this addendum contained exactly 12 files:
 
@@ -27,24 +27,27 @@ No frozen-v1 snapshot, v1 hardening overlay, mining preregistration, Phase-1 rep
 
 At verification time there were no submitted PR reviews and no inline review threads. CodeRabbit had skipped automatic review because the PR targets a non-default stacked base; that skip is not treated as review approval.
 
-## Validation state discovered after the original closeout
+## Validation defect and confirmed cause
 
-The final-head premise-map hardening workflow completed successfully. Its dedicated v1/v2/source-coverage validation therefore passed on the Phase-3 head.
+The premise-map hardening workflow completed successfully and ordinary CI's `deep-verification` job succeeded, but the `fast-gate` job failed at its final collected-outcome step.
 
-The ordinary CI workflow did **not** finish green on that same head:
+The failing underlying condition is now identified without relying on opaque job logs:
 
-- `deep-verification`: success;
-- `fast-gate`: failure;
-- the final collector step `Fail fast-gate if any validation failed` is the failing step.
+- `docs/solver-optimization-workstreams.md` declares `agent-context-budget: warn=10500 max=14000`;
+- the Phase-2 base blob is 13,979 bytes, only 21 bytes below the enforced maximum;
+- Phase 3's legitimate queue handoff enlarged it to 15,226 bytes;
+- `check:dead-scripts` transitively runs the mandatory agent-context budget checker, so the Phase-3 head necessarily failed that fast-gate subcheck.
 
-GitHub's job summary displays the individual continue-on-error validation steps with successful conclusions while the collector records an underlying non-success outcome. The available connector surface does not expose the job log/annotation text needed to identify which collected subcheck produced that non-success. Therefore this addendum does **not** invent a cause and does **not** claim Phase 3 fully validated.
+This explains the otherwise confusing Actions presentation in which continue-on-error substeps appear successful while the final collector records a failed underlying `outcome`.
 
-A context-budget regression is one plausible candidate because `check:dead-scripts` transitively runs `agent-context-budget.mjs` and Phase 3 enlarged the canonical workstreams authority, but that remains a hypothesis until the rerun/log evidence discriminates it from lint, validator, node-test, canary, or build failure.
+## Repair
 
-## Status correction
+Phase 3 does not weaken or raise the context budget. Instead, commit `924d6dccd704763fcd8926390130d8b89db8b342` compacts the canonical workstreams authority to 12,276 bytes while preserving its current lane dispositions, evidence links, Phase-3 handoff, production boundary, and standing research restrictions.
 
-Phase 3's semantic reconciliation, versioned-v2 admission, hardening workflow, and bounded queue handoff remain intact, but the phase is **not considered verification-clean while ordinary CI is red**.
+The inherited 13,979-byte state is itself a maintenance warning: the authority was already on a 21-byte cliff before Phase 3. The repair restores useful headroom rather than merely squeezing the new handoff under the limit.
 
-This addendum is itself a factual repository-state repair and intentionally triggers a fresh PR-head validation run. The next phase must not begin until the new head is checked at a natural checkpoint. If CI remains red, the failing subcheck must be identified and repaired on this branch before any consumer-contract execution branch is opened.
+## Current status
 
-No solver implementation, census execution, new premise admission, corpus mutation, or production promotion is authorized by this addendum.
+The semantic reconciliation, versioned-v2 admission, hardening workflow, and bounded queue handoff remain intact. The context-budget defect has been repaired on the existing Phase-3 branch, but Phase 3 is not declared verification-clean until the repaired head's ordinary CI and premise-map hardening have been checked at a natural checkpoint.
+
+No solver implementation, consumer-contract execution, new premise admission, corpus mutation, or production promotion is authorized by this verification repair.
