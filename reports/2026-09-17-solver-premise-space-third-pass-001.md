@@ -1,9 +1,12 @@
 # Solver premise-space third pass
 
-> **Status:** concluded-positive / ontology expanded and independently reconciled
-> **Base:** `main` at `ad8f86648d3f36198147b4c2121dff5f1961735c` (merged PR #1830)
-> **Decision:** add P177-P196, first-loss causal taxonomy F0-F14, typed v3 relation delta, and an explicit warning that lifecycle transitions and observation mechanisms are premise-bearing objects. A later independent reconstruction was reconciled as P197-P200 without merging its notebook wholesale.
-> **Boundary:** research archaeology/documentation only; no production solver behavior change and no expensive experiment.
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-17 — third-pass ontology expansion P177-P196 and independent reconciliation P197-P200 completed against the canonical premise-map lineage.
+> **Decision:** add P177-P196, first-loss causal taxonomy F0-F14, typed v3 relation delta, lifecycle/observer premise warnings, and reconcile the independent reconstruction as P197-P200 without merging its notebook wholesale.
+> **Remaining gate:** none for this premise-space pass; future additions should extend the canonical lineage rather than maintain parallel maps.
+
+**Base:** `main` at `ad8f86648d3f36198147b4c2121dff5f1961735c` (merged PR #1830)  
+**Boundary:** research archaeology/documentation only; no production solver behavior change and no expensive experiment.
 
 ## Recovery and continuation
 
