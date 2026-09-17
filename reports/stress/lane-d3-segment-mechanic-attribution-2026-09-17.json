@@ -1,0 +1,120 @@
+{
+  "generatedAt": "2026-09-17T09:29:06.545Z",
+  "evidenceRole": "Per-segment tightening of the Lane D3 mechanic-conditioned breakdown -- does commutativity failure track the SEGMENT touching a flipper cell, not just the level containing one",
+  "corpus": "data/stress/stress-levels-random.json",
+  "hintsDir": "data/stress/hints-random",
+  "seed": "lane-d-commutativity-wide-001",
+  "maxSpan": 25,
+  "sanityCheck": {
+    "note": "full (not just length-matched) totals, should match the original D3 run exactly",
+    "totalCommutingCandidates": 12277,
+    "totalLegalAfterSplice": 1653,
+    "matchesCommittedD3": true
+  },
+  "lengthMatchedTotalCandidates": 3121,
+  "lengthMatchedTotalLegal": 1453,
+  "segmentBuckets": [
+    {
+      "key": "segment-touches-portal-only",
+      "levelsInBucket": 5,
+      "candidates": 1623,
+      "legal": 862,
+      "legalRate": 0.5311152187307455
+    },
+    {
+      "key": "segment-touches-flipper",
+      "levelsInBucket": 3,
+      "candidates": 103,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "segment-touches-neither",
+      "levelsInBucket": 7,
+      "candidates": 1395,
+      "legal": 591,
+      "legalRate": 0.4236559139784946
+    }
+  ],
+  "levelBuckets": [
+    {
+      "key": "level:portal-and-flipper",
+      "levelsInBucket": 1,
+      "candidates": 418,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "level:mechanic-free",
+      "levelsInBucket": 3,
+      "candidates": 1320,
+      "legal": 591,
+      "legalRate": 0.44772727272727275
+    },
+    {
+      "key": "level:flipper-only",
+      "levelsInBucket": 2,
+      "candidates": 149,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "level:portal-only",
+      "levelsInBucket": 4,
+      "candidates": 1234,
+      "legal": 862,
+      "legalRate": 0.6985413290113452
+    }
+  ],
+  "crossTab": [
+    {
+      "key": "level:portal-and-flipper x segment-touches-portal-only",
+      "levelsInBucket": 1,
+      "candidates": 399,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "level:portal-and-flipper x segment-touches-flipper",
+      "levelsInBucket": 1,
+      "candidates": 19,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "level:mechanic-free x segment-touches-neither",
+      "levelsInBucket": 3,
+      "candidates": 1320,
+      "legal": 591,
+      "legalRate": 0.44772727272727275
+    },
+    {
+      "key": "level:flipper-only x segment-touches-flipper",
+      "levelsInBucket": 2,
+      "candidates": 84,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "level:flipper-only x segment-touches-neither",
+      "levelsInBucket": 2,
+      "candidates": 65,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "level:portal-only x segment-touches-neither",
+      "levelsInBucket": 2,
+      "candidates": 10,
+      "legal": 0,
+      "legalRate": 0
+    },
+    {
+      "key": "level:portal-only x segment-touches-portal-only",
+      "levelsInBucket": 4,
+      "candidates": 1224,
+      "legal": 862,
+      "legalRate": 0.704248366013072
+    }
+  ]
+}
