@@ -90,6 +90,37 @@ function searchTerms(question) {
         .filter(term => term.length >= 4);
 }
 
+
+export function rankCandidateAssetRelationships(question, relationships, {
+    candidateAssetIds = [],
+    limit = 8,
+} = {}) {
+    const terms = [...new Set(searchTerms(question))];
+    const candidateSet = new Set(candidateAssetIds.map(String));
+    return (relationships ?? []).map(relationship => {
+        const haystack = JSON.stringify({
+            id: relationship.id,
+            assets: relationship.assets,
+            questions: relationship.questions,
+            boundary: relationship.boundary,
+        }).toLowerCase();
+        const matchedTerms = terms.filter(term => haystack.includes(term));
+        const candidateAssetOverlap = (relationship.assets ?? []).filter(assetId => candidateSet.has(String(assetId)));
+        return {
+            id: relationship.id,
+            assets: relationship.assets ?? [],
+            questions: relationship.questions ?? [],
+            boundary: relationship.boundary ?? null,
+            score: matchedTerms.length * 2 + candidateAssetOverlap.length,
+            matchedTerms,
+            candidateAssetOverlap,
+        };
+    }).filter(row => row.score > 0)
+        .sort((a, b) => b.score - a.score || b.candidateAssetOverlap.length - a.candidateAssetOverlap.length
+            || a.id.localeCompare(b.id))
+        .slice(0, limit);
+}
+
 export function rankCandidateAssets(question, assets, { limit = 8, evidenceRole = null } = {}) {
     const terms = [...new Set(searchTerms(question))];
     return (assets ?? [])
