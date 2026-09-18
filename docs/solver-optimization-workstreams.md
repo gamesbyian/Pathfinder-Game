@@ -17,7 +17,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / POST-MINING GATE CONCLUDED; no immediate implementation earned.
+**State:** ACTIVE / POST-MINING GATE CONCLUDED; no immediate implementation earned. Reopen by explicit evidence gates, not backlog pressure.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
@@ -76,6 +76,8 @@ The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only 
 
 No immediate post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from the lane triggers above; do not recursively mine mining outputs merely to keep the program active.
 
+**Conditional reopen priority:** D1 first if its production-inert multi-parent observation contract can be satisfied, because an existing ranking consumer already exists; Lane A next if a compact dynamic interface contract is available to test; F3 only after fresh independent data demonstrates reliable decision-bearing discordance. This orders discriminating gates, not production treatments, and authorizes no standalone instrumentation campaign.
+
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed using capability/lifecycle/provenance/family/trace evidence. The September structural-response ladder already ran through first divergence; **do not restart earlier stages**. Reopen only from a cheap legal current-input signal predicting allocation, never exact offline labels or historical family membership.
@@ -84,7 +86,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / POST-MINING GATE CONCLUDED** | No immediate implementation; explicit A/D1/F3 reopen triggers only |
+| 2 | Residual capability + premise acquisition | **ACTIVE / POST-MINING GATE CONCLUDED** | Conditional gates: D1 -> A -> F3; none active |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
@@ -99,6 +101,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 - Separate semantic premise from tested form before transporting a negative. Offline/exact evidence may nominate/falsify a production premise; it cannot license runtime behavior.
 - Match protocol identity, not nominal stage reach; comparable-work negatives require exact-action dose; timeout/errors are indeterminate. Single-level microscopes may generate premises, never production exceptions.
 - Prefer the cheapest information-value test. Hold out independent units and scale confirmation with selection pressure. Hard consumers require soundness; correlation/signatures are not impossibility certificates or state equivalence.
+- Replication robustness strengthens premise provenance, not expected solve gain. Qualify raw graph/topology claims by representation history; reopen the fourth replication cell only for a concrete decision that cannot otherwise separate ontology artifact, mining-method artifact and robust concept.
 - No generic blackboard, production exact solver, CEGAR, LNS, decomposition engine or per-level compiler is earned by an open semantic gap: **positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned**.
 
 ## Cheap evidence routing
