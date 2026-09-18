@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { acquisitionStopRule, chooseAcquisitionRoute, inferAcquisitionNeed, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
+import { acquisitionStopRule, chooseAcquisitionRoute, generationGuidanceForRoute, inferAcquisitionNeed, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
 
 const d1 = {
     id: 'D1',
@@ -59,6 +59,9 @@ const ranked = rankCandidateAssets(
 assert.deepEqual(ranked.map(row => row.id), ['exact-reference-labels', 'operational-traces']);
 assert.match(acquisitionStopRule('NO_LEVEL_GENERATION'), /stop before generation/u);
 assert.match(acquisitionStopRule('FRESH_SAME_SOURCE'), /pilot first/u);
+assert.deepEqual(generationGuidanceForRoute('FRESH_SAME_SOURCE').candidateMethods.map(row => row.id), ['random']);
+assert.deepEqual(generationGuidanceForRoute('CROSS_SOURCE_TRANSFER').candidateMethods.map(row => row.id), ['random', 'topology']);
+assert.equal(generationGuidanceForRoute('NO_LEVEL_GENERATION').automaticGeneration, false);
 
 
 const tempDir = mkdtempSync(path.join(tmpdir(), 'pathfinder-acquisition-preflight-'));
@@ -102,6 +105,8 @@ try {
     const output = JSON.parse(run.stdout);
     assert.equal(output.route, 'REUSE_EXISTING');
     assert.equal(output.existing.mechanicallyEligibleBlocks, 1);
+    assert.equal(output.generationGuidance.automaticGeneration, false);
+    assert.equal(output.existing.explicitArtifactInputs, 1);
     assert.equal(output.opportunitySizing.opportunities, 1);
     assert.equal(output.opportunitySizing.total, 2);
     assert.ok(output.candidateAssets.assets.length > 0);
