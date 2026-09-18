@@ -18,7 +18,7 @@ writeFileSync(path.join(root, 'docs/solver-optimization-workstreams.md'), `# Sol
 ## Workstream state
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Current question | **ACTIVE** | Run current gate. | `WS2-CURRENT` |
+| 2 | Current question | **ACTIVE** | Run current gate. | \`WS2-CURRENT\` |
 `);
 writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Ledger
 ## Current production-default-OFF flags
