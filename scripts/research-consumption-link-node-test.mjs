@@ -10,6 +10,7 @@ const temp = mkdtempSync(path.join(tmpdir(), 'pathfinder-research-consumption-')
 try {
     const blockPath = path.join(temp, 'block.json');
     const out = path.join(temp, 'consumption.json');
+    const selectionPath = path.join(temp, 'selection.json');
     const populationIdentity = `sha256:${'4'.repeat(64)}`;
     const questionId = 'WS2-D1-PRODUCTION-INERT-OBSERVATION';
     writeFileSync(blockPath, JSON.stringify({
@@ -29,15 +30,23 @@ try {
             consumptionEvents: [],
         },
     }));
+    writeFileSync(selectionPath, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'research-cross-source-matched-selection',
+        selectionProcedure: { outcomeBlind: true },
+        sources: [{ name: 'random', file: blockPath, blockId: 'CONSUMPTION-TEST-BLOCK' }],
+        groups: [
+            { members: [{ source: 'random', id: 'R1' }] },
+            { members: [{ source: 'random', id: 'R2' }] },
+        ],
+    }));
 
     const run = spawnSync(process.execPath, [
         'scripts/research-consumption-link.mjs',
         `--block-artifact=${blockPath}`,
         `--question-id=${questionId}`,
-        '--decision-ref=tmp/matched-selection.json',
-        '--conditioning=static-descriptor-match',
-        '--scope=parent:R1',
-        '--scope=parent:R2',
+        `--selection-artifact=${selectionPath}`,
+        '--selection-source=random',
         '--opened-outcome-kind=solver-outcome',
         '--consumed-at=2026-09-18T05:00:00.000Z',
         `--out=${out}`,
@@ -48,6 +57,8 @@ try {
     assert.equal(sidecar.kind, 'pathfinder-research-consumption-link');
     assert.equal(sidecar.researchBlock.consumptionEvents.length, 2);
     assert.deepEqual(sidecar.recordedConsumption.scopes.map(scope => scope.id), ['R1', 'R2']);
+    assert.deepEqual(sidecar.recordedConsumption.conditioning, ['outcome-blind-static-descriptor-match']);
+    assert.equal(sidecar.recordedConsumption.selectionArtifact, selectionPath);
 
     const model = buildResearchRelations(process.cwd(), {
         artifactPaths: [blockPath, out],
