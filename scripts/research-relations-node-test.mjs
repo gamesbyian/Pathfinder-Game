@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 
 import {
+    buildResearchRelations,
     indexBy,
     leftJoin,
     queryRelation,
@@ -37,5 +38,12 @@ assert.deepEqual(summarizeIndependentSupport([
     largestUnitRows: 2,
     units: { P1: 2, P2: 1 },
 });
+
+const real = buildResearchRelations(process.cwd());
+assert.ok(real.relations.questions.some(row => row.id === 'WS2-D1-PRODUCTION-INERT-OBSERVATION'));
+assert.ok(real.relations.measurementOpportunities.some(row => row.id === 'MO-005'));
+assert.ok(real.relations.premiseAdmissions.some(row => row.premiseId === 'P201'));
+assert.ok(real.relations.assets.some(row => row.id === 'experiment-manifests'));
+assert.ok(real.relations.questions.every(row => row._researchSource?.relation === 'questions'));
 
 console.log('research-relations-node-test: ok');
