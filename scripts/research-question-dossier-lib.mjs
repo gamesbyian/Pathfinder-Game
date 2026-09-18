@@ -41,12 +41,20 @@ function questionRelations(question, allQuestions) {
         'implies', 'triggeredBy', 'negativeControlFor', 'calibratedBy', 'calibrates',
         'supersedes', 'duplicateOf',
     ];
-    const outgoing = relationFields.flatMap(field => (question[field] ?? []).map(id => ({ field, id })));
+    const knownIds = new Set(allQuestions.map(row => row.id));
+    const constrainedByQuestions = (question.constrainedBy ?? []).filter(value => knownIds.has(value));
+    const outgoing = [
+        ...relationFields.flatMap(field => (question[field] ?? []).map(id => ({ field, id }))),
+        ...constrainedByQuestions.map(id => ({ field: 'constrainedBy', id })),
+    ];
     const incoming = [];
     for (const candidate of allQuestions) {
         if (candidate.id === question.id) continue;
         for (const field of relationFields) {
             if ((candidate[field] ?? []).includes(question.id)) incoming.push({ field, id: candidate.id });
+        }
+        if ((candidate.constrainedBy ?? []).includes(question.id)) {
+            incoming.push({ field: 'constrainedBy', id: candidate.id });
         }
     }
     return { outgoing, incoming };
