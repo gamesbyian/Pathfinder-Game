@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "artifactType": "premise-map-measurement-opportunity-overlay",
+  "status": "post-reconciliation hardening; non-canonical premise layer",
+  "governingPremise": "P204",
+  "admissionRule": [
+    "live mapped ambiguity exists",
+    "observable can discriminate materially different live explanations",
+    "observable is not decision-equivalent to retained telemetry",
+    "collection does not silently assume the intervention being evaluated",
+    "population/censoring/observer-effect/work-cost/authority can be stated",
+    "result would change a research decision, reopen condition, or experiment design"
+  ],
+  "opportunities": [
+    {
+      "id": "MO-001",
+      "name": "regime search-state / trajectory overlap",
+      "mappedPremises": [
+        "P154",
+        "P167",
+        "P199"
+      ],
+      "status": "covered-parent; explicit measurement specialization",
+      "observable": "matched-context state/trajectory overlap and divergence locus between solver regimes",
+      "distinguishes": [
+        "renamed/redundant policies",
+        "early basin divergence",
+        "late ranking/retention divergence"
+      ],
+      "canonicalPremiseAdmission": "no"
+    },
+    {
+      "id": "MO-002",
+      "name": "heuristic rejection false-negative opportunity cost",
+      "mappedPremises": [
+        "P030",
+        "P031",
+        "P183",
+        "P204"
+      ],
+      "status": "covered-parent; explicit counterfactual measurement specialization",
+      "observable": "independently justified continuation opportunity lost specifically at heuristic rejection/gating decisions",
+      "distinguishes": [
+        "sound/no-op rejection",
+        "causal false-negative loss",
+        "harmless witness divergence"
+      ],
+      "canonicalPremiseAdmission": "no"
+    },
+    {
+      "id": "MO-003",
+      "name": "mechanism interaction residual",
+      "mappedPremises": [
+        "P133",
+        "P192"
+      ],
+      "status": "covered-parent; operational discriminator",
+      "observable": "matched-work A+B effect relative to an explicitly declared additive/null composition model, with gain/loss churn",
+      "distinguishes": [
+        "independent additive effects",
+        "positive synergy",
+        "negative interference/displacement"
+      ],
+      "canonicalPremiseAdmission": "no"
+    },
+    {
+      "id": "MO-004",
+      "name": "budget response / solve elasticity",
+      "mappedPremises": [
+        "P123",
+        "P154",
+        "P187"
+      ],
+      "status": "covered-parent; conditional experimental primitive",
+      "observable": "solve/capability response across a prespecified bounded work ladder",
+      "distinguishes": [
+        "absent capability",
+        "underdose/threshold",
+        "non-monotone displacement",
+        "portfolio-conditioned marginal value"
+      ],
+      "canonicalPremiseAdmission": "no"
+    },
+    {
+      "id": "MO-005",
+      "name": "residual distance-to-solution / progress representation",
+      "mappedPremises": [
+        "P135",
+        "P183",
+        "P185",
+        "P190",
+        "P199",
+        "P204"
+      ],
+      "status": "under-explicit measurement opportunity",
+      "observable": "a prespecified semantic/reference progress measure such as exact distance, witness decision distance, obligation deficit, remaining causal commitments, or calibrated completion headroom",
+      "distinguishes": [
+        "near-complete but misranked residual",
+        "superficial progress without viable completion basin",
+        "early generation failure",
+        "late allocation/ranking failure"
+      ],
+      "canonicalPremiseAdmission": "no; retain measurement opportunity until one representation proves decision-bearing"
+    },
+    {
+      "id": "MO-006",
+      "name": "cross-experiment gain/loss covariance and latent capability structure",
+      "mappedPremises": [
+        "P003",
+        "P133",
+        "P192",
+        "P199",
+        "P201"
+      ],
+      "status": "covered-parent; under-explicit measurement formulation",
+      "observable": "ancestry-aware covariance/clustering of per-level or independent-unit gain/loss vectors across experiments",
+      "distinguishes": [
+        "named mechanism classes",
+        "latent capability classes",
+        "shared-population pseudoreplication",
+        "portfolio-conditioned correlations"
+      ],
+      "canonicalPremiseAdmission": "no"
+    },
+    {
+      "id": "MO-007",
+      "name": "research-process yield / premise fertility",
+      "mappedPremises": [
+        "P198",
+        "P201",
+        "P204",
+        "P205",
+        "P206"
+      ],
+      "status": "under-explicit research-metrology opportunity",
+      "observable": "decision-changing information gained per research effort, preserved as multiple diagnostics rather than one scalar score",
+      "distinguishes": [
+        "high-effort low-information research region",
+        "productive premise refinement",
+        "duplicate/pseudoreplicated activity",
+        "capability acquisition with poor research attribution"
+      ],
+      "canonicalPremiseAdmission": "no; research-process layer only unless a future decision rule earns semantic admission"
+    }
+  ],
+  "saturation": {
+    "substantiallyCovered": [
+      "MO-001",
+      "MO-002",
+      "MO-003",
+      "MO-004",
+      "MO-006"
+    ],
+    "underExplicit": [
+      "MO-005",
+      "MO-007"
+    ],
+    "newCanonicalPremiseIds": [],
+    "broadMiningReopened": false,
+    "successorSnapshotEarnedByThisPass": false
+  }
+}
