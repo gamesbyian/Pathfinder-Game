@@ -1240,9 +1240,11 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // Observation-only forensic context. The lineage observer immediately reduces this
                 // to supported ranks/families, so compact artifacts do not retain the whole pool.
                 rankedPool: pool.map((c, rank) => ({ path: [..._reconstructBeamPath(c, [])],
-                    rank: rank + 1, score: c.score, insertionOrder: c.insOrd, ints: c.ints })),
+                    rank: rank + 1, score: c.score, insertionOrder: c.insOrd, ints: c.ints,
+                    mustCrossMask: c.mustCrossMask, flipperUsedMask: c.flipperUsedMask >>> 0 })),
                 culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
-                    score: c.score, ints: c.ints,
+                    score: c.score, ints: c.ints, mustCrossMask: c.mustCrossMask,
+                    flipperUsedMask: c.flipperUsedMask >>> 0,
                     scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
             });
             if (research) emit(effectiveMechanicBucketRetention ? 'post-mechanic-bucket-selection'
