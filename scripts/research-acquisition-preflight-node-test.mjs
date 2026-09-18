@@ -110,7 +110,7 @@ try {
     assert.equal(output.opportunitySizing.opportunities, 1);
     assert.equal(output.opportunitySizing.total, 2);
     assert.ok(output.candidateAssets.assets.length > 0);
-    assert.match(output.evidencePlan.stopRule, /supplied material/u);
+    assert.match(output.evidencePlan.stopRule, /existing material/u);
 } finally {
     rmSync(tempDir, { recursive: true, force: true });
 }
