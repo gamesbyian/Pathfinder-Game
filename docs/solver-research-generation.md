@@ -1,4 +1,4 @@
-<!-- agent-context-budget: warn=8500 max=11000 -->
+<!-- agent-context-budget: warn=12500 max=15000 -->
 # Solver research level generation
 
 > **Status:** current front door for choosing and composing full-level generation sources.
