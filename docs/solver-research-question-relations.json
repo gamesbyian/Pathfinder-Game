@@ -7,9 +7,13 @@
       "question": "Does the corrected class-1/2/3 residual contain already-demonstrated capability that can be collected without reopening a measured contention mechanism?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "answeredBy": ["reports/2026-09-12-class123-cheap-harvest-rejoin-001.md"],
+      "answeredBy": [
+        "reports/2026-09-12-class123-cheap-harvest-rejoin-001.md"
+      ],
       "result": "No direct batch. Class 1 has no reserve headroom; class 3 has exact dispatch/reach evidence but the atlas alone does not establish exact-action nonzero/comparable dose; class 2 mostly rejoins priced policies. The must-turn-biased descendant graduated to its own current treatment question.",
-      "implies": ["WS2-MUST-TURN-LATE-ADDITIVE"],
+      "implies": [
+        "WS2-MUST-TURN-LATE-ADDITIVE"
+      ],
       "constrains": [
         "Class-1 menu additions need a materially different allocation contract.",
         "Do not treat the class-3 atlas bucket as a comparable-work negative without exact-action work/dose evidence."
@@ -21,9 +25,14 @@
       "question": "Does the correctly integrated default-off 7M late must-turn-biased repair tier improve solve/work economics on its bounded eligible population without material collateral?",
       "owner": "WS2",
       "state": "closed-negative",
-      "answeredBy": ["reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md", "reports/2026-09-16-class2-must-turn-economics-result-001.md"],
+      "answeredBy": [
+        "reports/2026-09-13-must-turn-biased-repair-dose-pilot-001.md",
+        "reports/2026-09-16-class2-must-turn-economics-result-001.md"
+      ],
       "result": "No. The frozen 60-row cohort (43 gain + 17 collateral) reproduced the identical 17/60 solved set in both arms: treatment's 4 target-stage solves are exactly the ids a later stage already solves (100% downstream displacement), zero of 43 gain rows rescued, aggregate workSpent +6.5%. Closed negative on economics per the preflight's zero-gain stop rule. R02768/R02180 remain valid capability/placement evidence only, not economics evidence.",
-      "triggeredBy": ["WS2-CLASS123-CHEAP-HARVEST"],
+      "triggeredBy": [
+        "WS2-CLASS123-CHEAP-HARVEST"
+      ],
       "constrains": [
         "Stays default-OFF; do not widen the dose or retry this unconditional-exposure form without a materially different placement/selector premise.",
         "R02768/R02180 answer 'can it solve anything', not 'does it help under fixed work' -- do not conflate the two when citing this result."
@@ -40,7 +49,9 @@
         "reports/2026-09-12-capability-memory-union-reconciliation-001.md"
       ],
       "result": "No for class 5 under the bounded evidence: the corrected six-source union nominates 179/652 current residual rows, distributed 14/28/21/116/0 across classes 1-5, with zero reach into the 431 class-5 rows. The earlier prose value of a 65-row union is invalid and must not be reused. The union is coverage/complementarity evidence, not a count of independent causal confirmations.",
-      "implies": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
+      "implies": [
+        "WS2-CLASS4-PORTAL-COARSE-FRESHNESS"
+      ],
       "constrains": [
         "Do not make broader composition/portfolio mining the first explanation for class 5 without a materially new capability source.",
         "Do not generalize the class-5 zero-reach result into a claim that capability memory is low-yield for class 4; 116/123 class-4 rows are nominated by the six-source panel.",
@@ -53,14 +64,22 @@
       "question": "Should portal coarse-state merge be globally enabled on portal-bearing levels?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "aliases": ["portal coarse", "portal merge", "global portal coarse state"],
+      "aliases": [
+        "portal coarse",
+        "portal merge",
+        "global portal coarse state"
+      ],
       "answeredBy": [
         "reports/2026-09-09-portal-coarse-state-merge-ab-001-preflight.md",
         "reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"
       ],
       "result": "No in the tested global form. The frozen 954-level A/B produced 158 referee-valid gains and 12 losses, including a hard R01273 capability regression that persisted at 10x budget. Bounded second-survivor and predecessor-history subkey salvage shapes also failed their cheapest deterministic gate. Promotion/global placement is closed, while the large positive basin remains capability evidence.",
-      "implies": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
-      "negativeControlFor": ["WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION"],
+      "implies": [
+        "WS2-CLASS4-PORTAL-COARSE-FRESHNESS"
+      ],
+      "negativeControlFor": [
+        "WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION"
+      ],
       "constrains": [
         "Do not equate global promotion failure with absence of portal coarse-state capability.",
         "Do not retry the unchanged global merge or the failed bounded-subkey/retention-slot salvage shapes.",
@@ -73,11 +92,20 @@
       "question": "Does the September 9 portal coarse-state-merge positive basin still reproduce on current class-4 residual rows under current code and production-shaped work semantics?",
       "owner": "WS2",
       "state": "concluded-positive",
-      "answeredBy": ["reports/2026-09-13-class4-portal-coarse-freshness-replay-001.md"],
+      "answeredBy": [
+        "reports/2026-09-13-class4-portal-coarse-freshness-replay-001.md"
+      ],
       "result": "Fresh: 8/8 stratified-sampled class-4 rows solved and referee-valid under current code/production-matched budgets. Successor question is the least-disruptive allocation form: a dead-last additive whole-ladder retry, not another freshness check and not reopening the global merge.",
-      "triggeredBy": ["WS2-KNOWN-CAPABILITY-COMPLEMENTARITY", "WS2-PORTAL-COARSE-GLOBAL-MERGE"],
-      "implies": ["WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION"],
-      "constrainedBy": ["reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"],
+      "triggeredBy": [
+        "WS2-KNOWN-CAPABILITY-COMPLEMENTARITY",
+        "WS2-PORTAL-COARSE-GLOBAL-MERGE"
+      ],
+      "implies": [
+        "WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION"
+      ],
+      "constrainedBy": [
+        "reports/2026-09-11-portal-coarse-state-merge-r01273-collision-forensic-001.md"
+      ],
       "constrains": [
         "Do not reopen the globally enabled treatment: its 12 losses and hard R01273 capability regression remain valid controls.",
         "The successor allocation-form test must preserve ordinary production capability structurally through tier ordering and explicit work accounting."
@@ -89,11 +117,22 @@
       "question": "Can fresh portal coarse-state capability be exposed only in a true dead-last additive whole-ladder retry without unacceptable collateral or fixed-work displacement?",
       "owner": "WS2",
       "state": "concluded-positive",
-      "aliases": ["portal coarse allocation", "dead last portal retry", "portal coarse exposure"],
-      "answeredBy": ["reports/2026-09-16-class4-dead-last-frozen-canary-001.md", "reports/2026-09-16-class4-113-allocation-promotion-001.md"],
+      "aliases": [
+        "portal coarse allocation",
+        "dead last portal retry",
+        "portal coarse exposure"
+      ],
+      "answeredBy": [
+        "reports/2026-09-16-class4-dead-last-frozen-canary-001.md",
+        "reports/2026-09-16-class4-113-allocation-promotion-001.md"
+      ],
       "result": "Yes. Canary passed 2026-09-16 (7/8 freshness rows, R01273 byte-identical, zero non-portal participation), then the full earned 113-row allocation population reproduced 86 referee-valid gains / 0 losses with every non-target stage byte-identical between arms and net lower aggregate workSpent. PROMOTED to production default-ON 2026-09-16 (both STRATEGY_PORTAL_COARSE_STATE_MERGE_DEAD_LAST_RETRY and its _TREATMENT selector). Global placement stays closed negative. R03365 remains a genuine dose miss.",
-      "triggeredBy": ["WS2-CLASS4-PORTAL-COARSE-FRESHNESS"],
-      "constrainedBy": ["WS2-PORTAL-COARSE-GLOBAL-MERGE"],
+      "triggeredBy": [
+        "WS2-CLASS4-PORTAL-COARSE-FRESHNESS"
+      ],
+      "constrainedBy": [
+        "WS2-PORTAL-COARSE-GLOBAL-MERGE"
+      ],
       "constrains": [
         "The global merge form stays default-off and closed; this promotion only concerns the dead-last additive shell+treatment together.",
         "R01273 is a hard regression control for the closed global form, not evidence against this promoted form.",
@@ -111,8 +150,13 @@
         "reports/2026-09-12-class5-microscope-branch-reconciliation-001.md"
       ],
       "result": "Mechanic buckets can preserve fresh progress on selected solved siblings, but class-5 bucket canaries solve nothing and R03229 still prefers DEAD over LIVE. Progress diversity and viable future optionality are distinct.",
-      "implies": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
-      "negativeControlFor": ["WS2-SIMPLE-FUTURE-FEASIBILITY", "WS2-CATEGORICAL-FULL-POOL"],
+      "implies": [
+        "WS2-SIMPLE-FUTURE-FEASIBILITY"
+      ],
+      "negativeControlFor": [
+        "WS2-SIMPLE-FUTURE-FEASIBILITY",
+        "WS2-CATEGORICAL-FULL-POOL"
+      ],
       "reopensOn": "A new diversity axis tied to a recurring exact-live/exact-dead discriminator, not another generic bucket/width/scorer sweep."
     },
     {
@@ -120,11 +164,21 @@
       "question": "Can a small runtime-legal scalar summary of residual capacity, topology scarcity, or joint-obligation compatibility separate exact-LIVE from exact-DEAD extinction states?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "answeredBy": ["reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"],
+      "answeredBy": [
+        "reports/2026-09-12-future-feasibility-descriptor-rejoin-result-001.md"
+      ],
       "result": "No. Six prespecified summaries overlap LIVE/DEAD across 31 exact-labelled states on 15 levels; joint-obligation rejects are zero throughout.",
-      "implies": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-HOMOTOPY-COMPLETION-CLASSES", "WS2-H1-EVENT-FEASIBILITY"],
-      "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
-      "calibratedBy": ["WS2-MECHANIC-COMPOSITION-CAUSALITY"],
+      "implies": [
+        "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
+        "WS2-HOMOTOPY-COMPLETION-CLASSES",
+        "WS2-H1-EVENT-FEASIBILITY"
+      ],
+      "constrainedBy": [
+        "WS2-GENERIC-STRUCTURAL-DIVERSITY"
+      ],
+      "calibratedBy": [
+        "WS2-MECHANIC-COMPOSITION-CAUSALITY"
+      ],
       "reopensOn": "A materially new mechanism-specific descriptor premise."
     },
     {
@@ -132,10 +186,18 @@
       "question": "Does a compact categorical relation over individual/joint event realizability (which specific interface/order resolves a pending obligation) recur across unrelated parents, distinguishing LIVE from DEAD siblings where scalar summaries do not?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "aliases": ["H1", "event feasibility", "completion regime"],
-      "answeredBy": ["reports/2026-09-17-h1-event-feasibility-result-001.md"],
+      "aliases": [
+        "H1",
+        "event feasibility",
+        "completion regime"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-h1-event-feasibility-result-001.md"
+      ],
       "result": "No. 449-query frozen population (28 B2 states, 93.5% resolved, 0 correctness alarms): E-FLIP-ORDER's only strong effect (36% realizable) reverses direction between independent parents (S00048/R00060 vs R00064); E-CROSS-VIA/E-PASS-VIA (~88% realizable) show no distance-to-goal separation. Partial LIVE-state realizability is real but not reducible to this vocabulary's compact relation.",
-      "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "triggeredBy": [
+        "WS2-SIMPLE-FUTURE-FEASIBILITY"
+      ],
       "constrains": [
         "Do not widen this event vocabulary (cross-via/pass-via/flip-order/portal-pair) combinatorially to rescue a null; the prespec's own boundary pushes toward a more expressive search mechanism instead.",
         "Partial LIVE-state event-blocking is preserved as capability-memory evidence, not a production descriptor."
@@ -171,8 +233,14 @@
       "question": "Is repair locality governed by a small set of coupled earlier commitments rather than rollback distance or prefix length?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "aliases": ["H3", "dependency-defined repair", "commitment interface"],
-      "answeredBy": ["reports/2026-09-17-h3-repair-commitment-interface-result-001.md"],
+      "aliases": [
+        "H3",
+        "dependency-defined repair",
+        "commitment interface"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-h3-repair-commitment-interface-result-001.md"
+      ],
       "result": "No, not on Card-E's 156-row rescuable/non-rescuable population. Remaining path length dominates rescuability (Cohen's d=-1.81; 30.2% reconstructable when remaining length <=80 vs 1.0% when >80), far exceeding any commitment-specific feature (largest secondary effect: portal-jumps-already-used, d=0.83, which partially but not fully survives controlling for remaining length).",
       "constrains": [
         "Do not build a dependency-conditioned neighbourhood, descent-aware observer, CP-LNS, or adaptive destroy severity from this population's descriptive differences.",
@@ -185,8 +253,14 @@
       "question": "Does a compact, cheaply-observable within-run stasis signal predict near-zero marginal continuation value from additional workSpent, beyond generic difficulty/depth/work controls?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "aliases": ["H2", "marginal information velocity", "structural stasis"],
-      "answeredBy": ["reports/2026-09-17-h2-structural-stasis-observer-result-001.md"],
+      "aliases": [
+        "H2",
+        "marginal information velocity",
+        "structural stasis"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-h2-structural-stasis-observer-result-001.md"
+      ],
       "result": "No, not for the two tested signal forms. On a 28-level first-loss-frontier population (14 dev + 14 confirmation, reused from an unrelated exposure study), within-run stasis-fraction and distinct-badness-count both show near-zero, sign-inconsistent correlation with a 10x work escalation's marginal badness gain on dev (r=-0.16/-0.04) and on the untouched confirmation half (r=+0.02/+0.06) -- despite real marginal value existing (78.6% of levels gained, mean +4.96 badness).",
       "constrains": [
         "Do not build restart, early-termination, bandit, or dynamic-scheduling allocation from either tested stasis signal on this population.",
@@ -199,8 +273,15 @@
       "question": "Does a compact syntactic-state signature collapse without mixing known LIVE/DEAD (or a proxy outcome) behavior, across held-out parents (Moonshot G / behavioral-state quotient)?",
       "owner": "WS2",
       "state": "mixed",
-      "aliases": ["Moonshot G", "behavioral-state quotient", "future-language equivalence", "residual-language probe"],
-      "answeredBy": ["reports/2026-09-17-behavioral-state-quotient-probe-result-001.md"],
+      "aliases": [
+        "Moonshot G",
+        "behavioral-state quotient",
+        "future-language equivalence",
+        "residual-language probe"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-behavioral-state-quotient-probe-result-001.md"
+      ],
       "result": "Two different answers on two populations. On B2 (28 exact-CP-SAT-labelled states, 14 parents), a naive pending-obligation-count signature mixes LIVE and DEAD on the SAME board in 3/9 multi-member groups -- a direct falsification, no held-out split needed. On Card-E (156 states, proxy rescuability label, one state per parent), the same style of signature (excluding remaining length) shows only 1/26 multi-member groups mixed, far purer than a random-shuffle null (p=0.0008) or a length-quintile-blocked null (p=0.0056) -- real cross-parent information beyond chance and beyond the known length confound.",
       "constrains": [
         "Do not build canonicalization, retention, or heuristic use from either result alone: B2's falsification does not rule out other signature forms, and Card-E's partial purity is a proxy-label correlate, not exact behavioral equivalence.",
@@ -219,9 +300,15 @@
         "reports/2026-09-13-class5-dead-cause-current-population-rejoin-result-001.md"
       ],
       "result": "Historical solve-local structural recurrence is real, and current R03046 still shows strong cross-state reached/boundary recurrence. But the historical decision cluster does not survive broadly enough on the current Class-5 residual: only 1/12 deterministic sampled rows reached the preregistered >=25-record informativeness floor. Current-population cause extraction/reuse is therefore closed before implementation.",
-      "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
-      "constrainedBy": ["reports/2026-08-24-learned-failure-certificate-audit.md"],
-      "implies": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
+      "triggeredBy": [
+        "WS2-SIMPLE-FUTURE-FEASIBILITY"
+      ],
+      "constrainedBy": [
+        "reports/2026-08-24-learned-failure-certificate-audit.md"
+      ],
+      "implies": [
+        "WS2-HOMOTOPY-COMPLETION-CLASSES"
+      ],
       "constrains": [
         "Do not build a faster compact-cause extractor, memo, nogood, or reason-reuse treatment for the current Class-5 residual.",
         "Preserve R03046 and R00046 as mechanism evidence only; they do not establish population economics.",
@@ -234,15 +321,25 @@
       "question": "Do current exact-labelled extinction pools contain a recurring categorical/interface-state distinction that preserves LIVE material even though scalar future-feasibility summaries fail?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "aliases": ["categorical projection", "full pool", "full-pool survivor projection"],
+      "aliases": [
+        "categorical projection",
+        "full pool",
+        "full-pool survivor projection"
+      ],
       "answeredBy": [
         "reports/2026-08-25-beam-full-pool-survivor-projection.md",
         "reports/2026-09-13-class5-categorical-projection-archaeology-correction-001.md"
       ],
       "result": "The August full-pool projection was executed over 207 ranked pools. The prespecified low-cardinality fixed-width quota keys did not retain the available exact-LIVE alternatives and showed no recurring advantage over generic reserve/width controls. The September archaeology claim that this experiment was unfinished was incorrect and has been superseded.",
-      "triggeredBy": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
-      "constrainedBy": ["WS2-GENERIC-STRUCTURAL-DIVERSITY"],
-      "implies": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
+      "triggeredBy": [
+        "WS2-SIMPLE-FUTURE-FEASIBILITY"
+      ],
+      "constrainedBy": [
+        "WS2-GENERIC-STRUCTURAL-DIVERSITY"
+      ],
+      "implies": [
+        "WS2-HOMOTOPY-COMPLETION-CLASSES"
+      ],
       "constrains": [
         "Do not rerun the same low-cardinality fixed-width quota projection or fit more fields to the same four historical parents.",
         "A fresh categorical survivor test requires a materially new independently motivated descriptor or survivor mechanism."
@@ -287,11 +384,22 @@
       "question": "Can a mathematically defensible open-path topological signature/reference encode already-incurred commitment and distinguish exact-LIVE from exact-DEAD material without arbitrary endpoint-closure signal?",
       "owner": "WS2",
       "state": "concluded-positive",
-      "aliases": ["topology", "open path topology", "H signature", "topological acquisition"],
-      "answeredBy": ["reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md"],
+      "aliases": [
+        "topology",
+        "open path topology",
+        "H signature",
+        "topological acquisition"
+      ],
+      "answeredBy": [
+        "reports/2026-09-16-class5-controlled-topology-fork-pilot-result-001.md"
+      ],
       "result": "Yes, on a controlled construction. A frozen same-board/same-endpoint human-parent topological-fork pilot found 4 exact-resolved LIVE/DEAD-discordant pairs across 2 independent human parents (P00124, P00137), all matched on every non-history mechanic field the runtime already tracks, all control checks valid, each discordant pair phase-distinct by exactly one full turn (opposite sides of a single board puncture). This earns a microscope step, not production routing of the raw phase coordinate.",
-      "triggeredBy": ["WS2-HOMOTOPY-COMPLETION-CLASSES"],
-      "implies": ["WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR"],
+      "triggeredBy": [
+        "WS2-HOMOTOPY-COMPLETION-CLASSES"
+      ],
+      "implies": [
+        "WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR"
+      ],
       "constrainedBy": [
         "WS2-GENERIC-STRUCTURAL-DIVERSITY",
         "WS2-SIMPLE-FUTURE-FEASIBILITY",
@@ -341,7 +449,9 @@
         "reports/2026-09-12-class5-family-reference-comparison-001.md"
       ],
       "result": "The portal-terminal instrument is confounded; swap/cs rescue is also dominated by generic difficulty loosening. Clean/confounded cases remain useful calibration evidence.",
-      "calibrates": ["WS2-SIMPLE-FUTURE-FEASIBILITY"],
+      "calibrates": [
+        "WS2-SIMPLE-FUTURE-FEASIBILITY"
+      ],
       "reopensOn": "A manipulation that proves the specific edit, rather than generic loosening, caused the effect."
     },
     {
@@ -349,7 +459,11 @@
       "question": "Can admissible-order non-default retry work be repriced from 1.0 toward 0.18 without losing unique capability?",
       "owner": "WS2",
       "state": "deferred-reopen",
-      "aliases": ["admissible order", "retry repricing", "ordered systemic retry"],
+      "aliases": [
+        "admissible order",
+        "retry repricing",
+        "ordered systemic retry"
+      ],
       "answeredBy": [
         "reports/2026-08-28-admissible-order-work-cap-gap-discovery.md",
         "reports/2026-09-10-admissible-order-confirmation-006-artifact-recovery.md",
@@ -387,16 +501,20 @@
       "question": "Does one canonical provenance discovery-event identity appearing on multiple accepted paths reveal current determinism or provenance-schema defects?",
       "owner": "WS1",
       "state": "closed-tested-form",
-      "answeredBy": ["reports/2026-09-12-cross-hint-provenance-relations-001.md"],
+      "answeredBy": [
+        "reports/2026-09-12-cross-hint-provenance-relations-001.md"
+      ],
       "result": "No current determinism defect earned replay. Most collisions are legitimate replay/multi-output semantics; the 160 isolated-technique tail is historical technique-census source-cell under-resolution already repaired in current provenance.",
-      "constrains": ["Repeated paths sharing one event identity are dependent evidence unless producer semantics establish independence."],
+      "constrains": [
+        "Repeated paths sharing one event identity are dependent evidence unless producer semantics establish independence."
+      ],
       "reopensOn": "A current one-output producer yields a same-event/multiple-path collision after exact source/config context is present."
     },
     {
       "id": "WS2-D1-PRODUCTION-INERT-OBSERVATION",
       "question": "Does D1 future-intersection commitment realizability disagree with actual production beam rank/cutoff decisions often enough, across independent parents, to justify an economics test at the existing ranking consumer?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "closed-negative",
       "aliases": [
         "D1",
         "future-intersection commitment realizability",
@@ -404,9 +522,10 @@
       ],
       "answeredBy": [
         "reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md",
-        "reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md"
+        "reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md",
+        "reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md"
       ],
-      "result": "Premise positive, consumer known, economics unresolved. Exact realizability cleanly separates the retained matched states, but the multi-pick evidence is one-parent and lacks production eligibility frequency, actual rank/cutoff disagreement, descendant workSpent and measured information cost. PR #1863 added the shared bounded decision-observation seam needed to collect these quantities without changing ranking.",
+      "result": "No. A production-inert independent confirmation slice (24 real cull decisions, 120 eligible candidates, 1,960 revisit-cell CP-SAT queries, all 8 independent Class-5 parents, 84% definitive support) found 0 live results and therefore 0 cutoff-crossing disagreements with actual beam retention. The one-parent forensic discriminator does not recur on real production retention-boundary candidates. Closes the exact-query ranking-consumer path in its tested form; the underlying exact-realizability premise itself is not overturned.",
       "constrainedBy": [
         "docs/solver-d1-production-inert-evidence-preflight.md",
         "reports/solver-premise-map-consumer-contract/03-d1-retained-evidence-economics.md"
@@ -415,9 +534,15 @@
         "No exact-query production mechanism or ranking change before multi-parent production-inert opportunity and economics evidence.",
         "Count decision opportunities and independent parents separately from raw observation rows."
       ],
-      "reopensOn": null,
-    "premiseRefs": ["P091", "P065", "P206"],
-    "measurementOpportunities": ["MO-002"]
+      "reopensOn": "A materially different eligibility predicate, decision seam (different stage/technique than beam score-width/mechanic-bucket culling), or population showing nonzero cutoff-crossing disagreement -- not more parents under the same tested predicate.",
+      "premiseRefs": [
+        "P091",
+        "P065",
+        "P206"
+      ],
+      "measurementOpportunities": [
+        "MO-002"
+      ]
     },
     {
       "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
@@ -445,8 +570,12 @@
         "Treat near-unique/full-prefix signatures or unsound tied-case topology shortcuts as contract explosion, not success."
       ],
       "reopensOn": "A frozen, independently selected balanced-interface legal-prefix population with exact completion labels can test C0-C4 signature purity, independent-parent support, abstention, and compression.",
-    "premiseRefs": ["P014", "P074", "P093"],
-    "measurementOpportunities": []
+      "premiseRefs": [
+        "P014",
+        "P074",
+        "P093"
+      ],
+      "measurementOpportunities": []
     },
     {
       "id": "WS2-G1-COMPLETE-PATH-LNS",
@@ -468,8 +597,13 @@
         "Do not build full LNS until the repaired Stage-2 falsifier is positive under a frozen candidate-construction method."
       ],
       "reopensOn": "A production-search-derived frontier/partial-state construction can be completed or relaxed into a fair full candidate without answer leakage, after which distance-to-solution and local repairability can be measured.",
-    "premiseRefs": ["P073", "P143"],
-    "measurementOpportunities": ["MO-005"]
+      "premiseRefs": [
+        "P073",
+        "P143"
+      ],
+      "measurementOpportunities": [
+        "MO-005"
+      ]
     },
     {
       "id": "WS1-REMAINING-LENGTH-ALLOCATION",
@@ -493,8 +627,13 @@
         "The next test should be one independent shared-budget completion/repair population, preferably with a bounded work ladder, before opening a WS1 policy gate."
       ],
       "reopensOn": "An independent shared-budget population exposes the same legal current-input signal and a prespecified length-first order materially improves fixed-work outcome versus an unprioritized control.",
-    "premiseRefs": ["P065", "P123"],
-    "measurementOpportunities": ["MO-004"]
+      "premiseRefs": [
+        "P065",
+        "P123"
+      ],
+      "measurementOpportunities": [
+        "MO-004"
+      ]
     },
     {
       "id": "WS2-CLASS3-DOSE-EXPOSURE",
@@ -518,8 +657,34 @@
         "A future producer must record exact-action participation/work dose prospectively; the work-ladder reducer can analyze it once it exists."
       ],
       "reopensOn": "A prospective run records per-technique exact-action participation/work tranche on the Class-3 question population under a comparable protocol.",
-    "premiseRefs": ["P123", "P206"],
-    "measurementOpportunities": ["MO-004"]
+      "premiseRefs": [
+        "P123",
+        "P206"
+      ],
+      "measurementOpportunities": [
+        "MO-004"
+      ]
+    },
+    {
+      "id": "WS2-POST-D1-DISCRIMINATOR",
+      "question": "With D1 exact-query ranking closed negative, which smallest live discriminator (work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or a 2x2 interaction for a plausible producer/consumer pair) is justified next for WS2, if any?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "aliases": [
+        "post-D1 discriminator",
+        "smallest live discriminator"
+      ],
+      "answeredBy": [],
+      "result": null,
+      "constrainedBy": [
+        "docs/solver-optimization-workstreams.md"
+      ],
+      "constrains": [
+        "Do not fall through to Lane A/F3 automatically; use the smallest discriminating instrument first."
+      ],
+      "reopensOn": null,
+      "premiseRefs": [],
+      "measurementOpportunities": []
     }
   ]
 }

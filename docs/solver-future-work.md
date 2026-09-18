@@ -7,7 +7,7 @@ Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-op
 
 ## Promoted out of future work
 
-Do not duplicate active/concluded lanes here. Current dispositions: A representation-stopped; D1 economics-observation-stopped; F3 discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose gap; G1 candidate-completion-limited. Multi-pick removed the old no-LIVE and generic-constructor blocks.
+Do not duplicate active/concluded lanes here. Current dispositions: A representation-stopped; D1 closed-negative (0/120 production disagreements, 2026-09-18); F3 discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose gap; G1 candidate-completion-limited. Multi-pick removed the old no-LIVE and generic-constructor blocks.
 
 ## Deferred descendants of active premises
 
@@ -17,7 +17,7 @@ These become eligible only after the active premise gate immediately above them 
 |---|---|
 | General solve-local proof store / blackboard | One concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
-| Production bounded exact-query service | D1 first passes production-inert multi-parent observation with eligibility, rank/cutoff, work ancestry, information cost and independent-unit provenance; then test whether exact/cheap-proxy answers pay at the ranking consumer |
+| Production bounded exact-query service | D1's observation found 0/120 production disagreements (2026-09-18) -- closed for this predicate. Reopen only under a materially different predicate/seam/population |
 | Region/AND-OR decomposition engine | The prespecified C0-C4 separator contract falsifier yields a compact repeated exact-outcome-pure signature across independent parents without near-unique/full-prefix state |
 | Production topology-aware state relation | Fresh independent parents show a reliable compact descriptor with non-zero decision-bearing discordance; then seek a sound actionable consequence beyond raw phase |
 | Targeted local surgery / causal backjump operator | New independent evidence finds an actionable causal interface materially smaller than naive divergence/ordinary rollback; Lane E's tested form stays closed |

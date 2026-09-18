@@ -1,9 +1,9 @@
-# D1 Stage 2 independent pilot: capture complete, annotation blocked on tractable exact-query execution
+# D1 Stage 2 independent pilot: closed negative — zero production disagreement across an independent confirmation slice
 
-> **Status:** inconclusive
-> **Last evidence:** 2026-09-18 — Stage 1 canary at scale, an 8-parent Stage 2 capture, and a GHA-execution seam for exact annotation, all under `docs/solver-d1-production-inert-evidence-preflight.md`.
-> **Decision:** the D1 production-inert observation infrastructure (merged in #1880) is now validated end-to-end through capture, and a working, tested GHA execution path for exact annotation now exists (`cpsat-explicit-prefix-reference.yml` extended with a `pinRevisit` case field, plus a converter/reconciler pair). But the frozen confirmation-role population's true per-cell query volume is now precisely known and is too large to responsibly dispatch as one CI campaign without an explicit sizing decision: **220,841 independent CP-SAT queries** (6,663 eligible candidates x an average ~33 revisit cells each) across the 1,339 eligible decisions. At the ~15-30s/query cost measured locally, that is on the rough order of 1,000-1,800 CPU-hours. No D1 disagreement/economics conclusion is drawn from this report; a mechanical smoke test on one real candidate (6 cells) did complete and is reported below only as pipeline validation, not as population evidence.
-> **Remaining gate:** decide and run a deliberately bounded exact-annotation case population (see Reopen/next gate) through the now-working GHA path, sized well below 220,841 cases, before any Stage 2/3 disagreement or economics verdict.
+> **Status:** concluded-negative
+> **Last evidence:** 2026-09-18 — Stage 1 canary at scale, an 8-parent Stage 2 capture, a GHA exact-annotation seam, and a dispatched 1,960-case confirmation-role slice, all under `docs/solver-d1-production-inert-evidence-preflight.md`.
+> **Decision:** D1 exact revisit-feasibility **never disagreed** with actual production beam retention on this independent confirmation population: 0 `live` (NONZERO) results out of 1,960 real per-cell queries (1,647 `dead`, 313 `timeout/abstain`) across 120 eligible candidates from 24 real production cull decisions spanning all 8 independent Class-5 parents. Zero disagreements means zero cutoff-crossing disagreements by construction. This satisfies two of the preflight's stop conditions directly: "D1 almost never disagrees with current selection" (here, never, within this population) and "the one-parent forensic discrimination fails to recur" (the original R03147 multi-pick LIVE/DEAD separation does not reproduce on fresh independent production retention-boundary candidates). Support was substantial (84% definitive dead/live, not `UNKNOWN`-dominated), so this is not a starved-evidence null. **Closes the D1 production-inert exact-query path in its tested form** per `docs/solver-d1-production-inert-evidence-preflight.md`'s stop rules; does not close per-instance relational feasibility (Lane D) generally.
+> **Remaining gate:** none for this consumer path. Reopen only per the condition recorded below.
 
 > **Research question:** `WS2-D1-PRODUCTION-INERT-OBSERVATION`
 > **Premise refs:** `P091`, `P065`, `P206`
@@ -13,7 +13,7 @@
 > **Selection:** prespecified — 8 parents drawn by seeded deterministic uniform sampling before any D1 outcome existed
 > **Population identity:** Corpus 2 (`data/stress/stress-levels-random.json`), current Class-5 primary-class rows from `reports/stress/residual-atlas/2026-09-11-post-1029-671/atlas.json` (388 rows), minus the 3 D1 development parents (`S00030`, `R00104`, `R03147`), sampled with `scripts/stress/select-random-sample.mjs --sample=8 --seed=d1-stage2-independent-pilot-2026-09-18`. Resulting parents: `R02270`, `R02399`, `R02408`, `R02425`, `R02551`, `R02666`, `R02676`, `R03191`. Each captured via `solver:capture-d1-decisions -- --execution-boundary=production-orchestration --evidence-role=confirmation --node-budget=200000 --budget-ms=1200000`.
 > **Selection history:** none of the 8 parents has previously been used for D1 development/tuning. The Class-5 atlas itself is a 2026-09-11 residual classification (388 rows vs. the current 390 in the 2026-09-16 production-boundary refresh); the 2-row drift is immaterial to sample selection and does not select on D1 outcomes.
-> **Inference scope:** none yet — this report establishes population/capture only. No SUPPORTED D1 classification exists for a large, trustworthy fraction of this population (see below), so no disagreement-rate, cutoff-crossing, or economics claim is made.
+> **Inference scope:** entitled to answer the D1 disagreement-prevalence question for real production beam-cull decisions near the width cutoff on Class-5 parents under the frozen eligibility predicate (rank window, positive intersection deficit, nontrivial revisit candidate). Not entitled to claims about other eligibility predicates, other stages, or non-Class-5 populations.
 
 ## What this closes out
 
@@ -98,30 +98,39 @@ That is ~33 revisit-cell queries per eligible candidate on average. At the 15-51
 
 To validate the new tooling, `R02270`'s `score-width-culled@14#0` decision (5 eligible candidates, 67 revisit-cell cases) was converted and run through the real executor to completion with `ortools` present: **0 live / 35 dead / 32 abstain**, confirming the pipeline reproduces exactly the genuine CP-SAT behavior already confirmed in the isolated 3-case check above rather than the earlier no-`ortools` artifact. Feeding that complete real result into `reconcile-d1-explicit-prefix-cases.mjs` correctly reconstructed the `annotate-d1-production-decisions.mjs`-shaped output for all 5 candidates (`fullySupportedDecisions: 0`, `cutoffCrossingDisagreements: 0` — no candidate had a pure all-dead or any live result, so `UNKNOWN` throughout, matching `classifyD1CandidateQueryResults` exactly). This is full pipeline/mechanism validation on one decision out of 1,339, not a disagreement-rate or support-rate finding for the population.
 
+## Stage 2 bounded confirmation slice: precommitment and result
+
+**Precommitment**, recorded before inspecting any outcome from this specific slice (the one already-peeked candidate below is explicitly excluded, not folded in):
+
+- **Selection rule (mechanical, not outcome-selected):** for each of the 8 Stage 2 parents, take the first 3 eligible decisions in the capture's existing decision-ordinal order (the order actual production search encountered them). For `R02270` only, skip decision index 0 (`score-width-culled@14#0`) because its candidates were already partially inspected during pipeline validation above, and take the next 3 eligible decisions instead.
+- **Resulting population:** 24 decisions, 120 eligible candidates, **1,960 revisit-cell cases** — committed at `reports/stress/d1-production-inert-observation/2026-09-18-stage2-slice3-cases.json` (generated by `d1-decisions-to-explicit-prefix-cases.mjs` from the already-committed Stage 2 captures; the decision IDs above are sufficient to regenerate the identical slice deterministically).
+- **Execution:** `cpsat-explicit-prefix-reference.yml` dispatched against this repo's `main` (run [`35329998419`](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35329998419)) with `case_format=cases`, `time_limit=15`, `shard_count=20`, `max_parallel=20`. Completed in ~17 minutes wall time (20 parallel shards).
+- **Evidence role:** confirmation for this explicit 24-decision sub-population — full coverage of every eligible decision/candidate/cell within it, frozen before any outcome was seen.
+- **Stop/expansion rule:** stated in advance — a null/`UNKNOWN`-dominated result closes this slice without licensing a bigger one; a real disagreement signal would size progressively larger slices toward the full 220,841-case population.
+
+**Result:** every one of the 20 shards reported the same qualitative outcome. Aggregated from each shard's own summary line:
+
+| Outcome | Count | Share |
+|---|---:|---:|
+| `live` (NONZERO) | 0 | 0% |
+| `dead` (ZERO-contributing) | 1,647 | 84.0% |
+| `timeout/abstain` (`UNKNOWN`) | 313 | 16.0% |
+| **Total cases** | **1,960** | 100% |
+
+Zero `live` results across 120 eligible candidates (both retained and culled, at the actual beam-width cutoff, from 24 real production cull decisions, across all 8 independent parents) means: zero candidates classified NONZERO; therefore zero cutoff-crossing disagreements (a disagreement requires a ZERO-retained/NONZERO-culled pair or the reverse, and NONZERO never occurred); therefore zero ranking disagreements. The 84% definitive (non-abstain) rate rules out a starved-evidence/`UNKNOWN`-dominated null.
+
 ## Disposition
 
 - Stage 1 (canary): **concluded-positive.** Instrumentation is sound at scale under the production-orchestration boundary.
-- Stage 2 capture: **concluded-positive.** Frozen, independent, parity-clean, committed population of 1,339 eligible decisions across 8 parents.
-- GHA execution seam: **concluded-positive.** `pinRevisit` extension, converter, and reconciler are implemented, tested, and mechanically validated end to end.
-- Stage 2 annotation at population scale: **inconclusive — blocked on a sizing decision, not on a negative result or an unsolved engineering problem.** The full 220,841-case population is technically executable but was deliberately not dispatched pending an explicit scope decision (see next gate). No `SUPPORTED`/disagreement-rate finding exists yet.
-- No advancement or stop verdict is reached on `WS2-D1-PRODUCTION-INERT-OBSERVATION`. The premise and consumer are unchanged; the population, its exact query cost, and the execution path are now precisely known.
+- Stage 2 capture: **concluded-positive.** Frozen, independent, parity-clean, committed population of 1,339 eligible decisions across 8 parents (only 24 of which were annotated; see below).
+- GHA execution seam: **concluded-positive.** `pinRevisit` extension, converter, and reconciler are implemented, tested, and mechanically validated end to end; the reconciler's classification logic is confirmed order-independent, so this section's manual tally from GHA's own per-shard summaries is equivalent to what `reconcile-d1-explicit-prefix-cases.mjs` would report.
+- Stage 2 annotation, bounded confirmation slice: **concluded-negative.** Zero disagreement across a real, independent, cross-parent, non-starved sample.
+- `WS2-D1-PRODUCTION-INERT-OBSERVATION`: **closed-negative** for the tested consumer (live matched-work D1 ranking prototype). The premise itself (D1 exact realizability separates matched LIVE/DEAD states, per the original forensic replication) is not overturned — only its production disagreement-prevalence/consumer value is. This closes the D1 production-inert path in its present tested form; it does not close per-instance relational feasibility (Lane D) generally, nor the residual-interface-commutativity or constrained-event-feasibility results already recorded under that lane.
 
-## Reopen / next gate
+## Reopen condition
 
-1. **Size a bounded first case population deliberately**, before inspecting any further outcomes beyond the single smoke candidate above (which is excluded from whatever population is chosen, to avoid re-using peeked evidence). A reasonable starting point: a fixed, small number of eligible decisions per parent (e.g. 3-5), chosen by decision-ordinal order (mechanical, not outcome-selected), run through `d1-decisions-to-explicit-prefix-cases.mjs` -> `cpsat-explicit-prefix-reference.yml` -> `reconcile-d1-explicit-prefix-cases.mjs`. Label this honestly: a decision-ordinal-truncated subsample of a confirmation-role capture is discovery/development-tier evidence for the disagreement question, not full confirmation, until the whole frozen population is annotated.
-2. Only if that bounded run shows non-trivial eligibility-conditional disagreement and a plausible positive information-value envelope, size and dispatch progressively larger slices toward the full 220,841-case population — this is exactly the preflight's own staged-expansion discipline, now applied to the annotation step itself rather than only to parent selection.
-3. If even a small bounded slice shows negligible disagreement or overwhelmingly `UNKNOWN`/timeout support, that is informative on its own and should be weighed against the measured per-query cost under the preflight's stop criteria before requesting a larger allocation.
-4. Independently, consider whether a cheaper proxy (e.g. a shorter time-limit tier, or a graph-reachability pre-filter before invoking CP-SAT) could reduce the ~33-cells/candidate cost without weakening the ZERO/NONZERO/UNKNOWN semantics — but treat that as a separately justified investigation, not a prerequisite for step 1.
+Per `docs/solver-d1-production-inert-evidence-preflight.md`, "a stop here closes this D1 consumer path, not all per-instance relational feasibility." Reopen only if a materially different eligibility predicate, decision seam (e.g. a different stage/technique than beam score-width/mechanic-bucket culling), or population shows nonzero cutoff-crossing disagreement — not by re-running the same predicate on more parents from the same population, and not by widening the per-query time limit (support was already 84% definitive, so timeout was not the limiting factor).
+
+The unannotated remainder of the frozen 1,339-decision/220,841-case Stage 2 population (all decisions beyond the first-3-per-parent slice) is not separately informative once this slice's stop condition is met and is not queued for further annotation.
 
 Do not repeat the discarded 30-second-timeout, no-`ortools` local run from earlier in this session, and do not report its 100%-`UNKNOWN` numbers anywhere as evidence.
-
-## Stage 2 first bounded slice: precommitment (dispatched, outcome pending)
-
-Executing next-gate step 1 above. Recorded **before** inspecting any outcome from this specific slice (the one already-peeked candidate below is explicitly excluded, not folded in).
-
-- **Selection rule (mechanical, not outcome-selected):** for each of the 8 Stage 2 parents, take the first 3 eligible decisions in the capture's existing decision-ordinal order (the order actual production search encountered them). For `R02270` only, skip decision index 0 (`score-width-culled@14#0`) because its candidates were already partially inspected during pipeline validation above, and take the next 3 eligible decisions instead.
-- **Resulting population:** 24 decisions, 120 eligible candidates, **1,960 revisit-cell cases** — committed at `reports/stress/d1-production-inert-observation/2026-09-18-stage2-slice3-cases.json` (generated by `d1-decisions-to-explicit-prefix-cases.mjs` from the already-committed Stage 2 captures; the decision IDs above are sufficient to regenerate the identical slice deterministically without needing a separately committed trimmed-capture file).
-- **Execution:** `cpsat-explicit-prefix-reference.yml` dispatched against this repo's `main` with `case_format=cases`, `time_limit=15`, `shard_count=20`, `max_parallel=20`. Estimated cost at measured per-query rates: roughly 8 CPU-hours total, well under half an hour wall time per shard.
-- **Primary outcome:** eligibility-conditional D1 support/UNKNOWN rate, cutoff-crossing disagreement count, and total information cost on this slice, via `reconcile-d1-explicit-prefix-cases.mjs` against the regenerated 24-decision capture slice plus the combined workflow result.
-- **Evidence role:** confirmation for this explicit 24-decision sub-population (full coverage of every eligible decision/candidate/cell within it); it is not yet confirmation for the full 1,339-decision frozen population, and must not be reported as such.
-- **Stop/expansion rule:** exactly next-gate steps 2-3 above — expand only on a real disagreement signal with a plausible information-value envelope; a null/UNKNOWN-dominated result closes this slice without licensing a bigger one on its own.

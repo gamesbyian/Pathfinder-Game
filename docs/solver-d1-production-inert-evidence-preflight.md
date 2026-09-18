@@ -1,6 +1,6 @@
 # D1 production-inert evidence acquisition preflight
 
-> **Status:** READY / next solver-research evidence gate.
+> **Status:** EXECUTED / CLOSED-NEGATIVE (2026-09-18). Stages 1-2 ran to completion; the independent confirmation slice found 0/120 disagreements with production retention. See [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md) and `docs/solver-optimization-workstreams.md`. This document remains the authoritative method reference if the reopen condition is ever met.
 > **Authority:** `solver-optimization-workstreams.md` owns execution priority. This preflight authorizes observation only, not ranking changes, production exact queries, proxy search, or a live treatment.
 > **Purpose:** collect the missing decision-context and economics evidence required by the concluded D1 retained-evidence falsifier.
 
