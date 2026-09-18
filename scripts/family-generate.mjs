@@ -43,6 +43,8 @@ const { witnessFromLevelAndPath } = await import('./stress/witness-adapter.mjs')
 const { inheritedWitnessHint, transformedWitnessHint } = await import('./stress/witness-provenance.mjs');
 const { readLevelsWithHints, writeLevelsWithHints, hintsDirFor } = await import('./level-data-io.mjs');
 const { generatorImplementationProvenance } = await import('./generator-implementation-provenance.mjs');
+const { loadResearchQuestionRegistry } = await import('./research-question-relations-lib.mjs');
+const { assertResearchBlock } = await import('./solver-research-block-lineage.mjs');
 
 const GENERATOR_VERSION = '0.1.0';
 
@@ -64,6 +66,14 @@ const BLOCK_DELTA_MAX = Number(args.get('--block-delta-max') ?? 3);
 const GROUP_ARG = args.get('--group');
 const REEMBED_GRID_ARG = args.get('--re-embed-grid');
 const REEMBED_OFFSET_ARG = args.get('--re-embed-offset');
+const QUESTION_ID = args.get('--question-id') || null;
+const EVIDENCE_ROLE = args.get('--evidence-role') || 'development';
+const PARENT_EXPOSURE = args.get('--parent-exposure') || 'unknown';
+let ORIGIN_BLOCK_ID = args.get('--origin-block-id') || null;
+let ORIGIN_POPULATION_IDENTITY = args.get('--origin-population-identity') || null;
+const ORIGIN_BLOCK_ARTIFACT = args.get('--origin-block-artifact') || null;
+let originExpectedContentIdentity = null;
+let originQuestionId = null;
 
 const VALID_MODES = ['local-mutant', 'density-sweep', 'symmetry', 'swap', 'group-reshuffle', 'constrained-shuffle', 're-embed'];
 if (!VALID_MODES.includes(MODE)) {
@@ -76,6 +86,40 @@ if (MODE === 'group-reshuffle' && !GROUP_ARG) {
 }
 if (MODE === 're-embed' && !REEMBED_GRID_ARG) {
     console.error('--mode=re-embed requires --re-embed-grid=<W>x<H> (>= the parent grid in both dimensions)');
+    process.exit(2);
+}
+
+const EVIDENCE_ROLES = new Set(['development', 'confirmation', 'transfer']);
+const PARENT_EXPOSURES = new Set(['unknown', 'development', 'locked-untouched']);
+if (!EVIDENCE_ROLES.has(EVIDENCE_ROLE)) {
+    console.error('--evidence-role must be development, confirmation, or transfer');
+    process.exit(2);
+}
+if (!PARENT_EXPOSURES.has(PARENT_EXPOSURE)) {
+    console.error('--parent-exposure must be unknown, development, or locked-untouched');
+    process.exit(2);
+}
+if ((ORIGIN_BLOCK_ID || ORIGIN_POPULATION_IDENTITY || ORIGIN_BLOCK_ARTIFACT) && !QUESTION_ID) {
+    console.error('--origin-block-id/--origin-population-identity/--origin-block-artifact require --question-id');
+    process.exit(2);
+}
+if (!!ORIGIN_BLOCK_ID !== !!ORIGIN_POPULATION_IDENTITY) {
+    console.error('--origin-block-id and --origin-population-identity must be supplied together');
+    process.exit(2);
+}
+if ((ORIGIN_BLOCK_ID || ORIGIN_POPULATION_IDENTITY) && !ORIGIN_BLOCK_ARTIFACT) {
+    console.error('origin ancestry requires --origin-block-artifact; explicit id/population values are cross-checks only');
+    process.exit(2);
+}
+if (QUESTION_ID) {
+    const registry = loadResearchQuestionRegistry(process.cwd());
+    if (!registry.questions.some(question => question.id === QUESTION_ID)) {
+        console.error(`unknown --question-id=${QUESTION_ID}`);
+        process.exit(2);
+    }
+}
+if (EVIDENCE_ROLE !== 'development' && PARENT_EXPOSURE !== 'locked-untouched') {
+    console.error(`${EVIDENCE_ROLE} family generation requires --parent-exposure=locked-untouched`);
     process.exit(2);
 }
 
@@ -103,6 +147,35 @@ if (parentIndex === -1) {
 }
 const rawParent = parentLevels[parentIndex];
 const parentId = rawParent.id || `pos${parentIndex + 1}`;
+
+if (ORIGIN_BLOCK_ARTIFACT) {
+    const blockAbs = resolveFromRoot(ORIGIN_BLOCK_ARTIFACT);
+    if (!existsSync(blockAbs)) {
+        console.error(`missing --origin-block-artifact: ${ORIGIN_BLOCK_ARTIFACT}`);
+        process.exit(2);
+    }
+    const blockDoc = JSON.parse(readFileSync(blockAbs, 'utf8'));
+    const block = blockDoc?.researchBlock ?? blockDoc?.population?.researchBlock ?? null;
+    const populationIdentity = blockDoc?.populationIdentity ?? blockDoc?.population?.corpusIdentity ?? null;
+    assertResearchBlock(block, { populationIdentity });
+    if (ORIGIN_BLOCK_ID && ORIGIN_BLOCK_ID !== block.blockId) {
+        console.error('--origin-block-id conflicts with --origin-block-artifact');
+        process.exit(2);
+    }
+    if (ORIGIN_POPULATION_IDENTITY && ORIGIN_POPULATION_IDENTITY !== populationIdentity) {
+        console.error('--origin-population-identity conflicts with --origin-block-artifact');
+        process.exit(2);
+    }
+    const parentOffset = block.parentIds.indexOf(parentId);
+    if (parentOffset < 0) {
+        console.error(`parent ${parentId} is not a member of origin block ${block.blockId}`);
+        process.exit(2);
+    }
+    ORIGIN_BLOCK_ID = block.blockId;
+    ORIGIN_POPULATION_IDENTITY = populationIdentity;
+    originQuestionId = block.questionId;
+    originExpectedContentIdentity = block.parentContentIdentities[parentOffset];
+}
 
 // Defaults are MODE-qualified (not just parent-qualified): two different modes run against the
 // same parent with no explicit --out would otherwise silently overwrite each other's output file
@@ -607,6 +680,9 @@ async function main() {
     const ctx = { witness, cell: witnessCellData(witness), rng: mulberry32(SEED) };
     const parentFingerprintSource = getLevelFingerprintSource(rawParent);
     const parentContentHash = await getLevelFingerprint(rawParent);
+    if (originExpectedContentIdentity && originExpectedContentIdentity !== parentContentHash) {
+        throw new Error(`origin block parent content identity mismatch for ${parentId}`);
+    }
 
     const availableInstances = listInstances(baseExtras, mutationTypes);
     console.log(`Parent ${parentId}: witness ${witnessSelection.source} (len ${witness.path.length - witness.jumps.size}, ${witness.jumps.size} jump(s)), ${availableInstances.length} movable object instance(s) under strict inventory.`);
@@ -862,7 +938,26 @@ async function main() {
     const generationRun = {
         createdTimestamp: new Date().toISOString(), randomSeed: SEED,
         generatorVersion: GENERATOR_VERSION, generatorImplementation,
+        requestedCount,
+        acceptedCount: variantManifests.length,
+        generationAttempts: attempts,
+        attemptBudget,
         variantIds: variantManifests.map(variant => variant.variantId),
+        ...(QUESTION_ID ? {
+            researchContext: {
+                questionId: QUESTION_ID,
+                evidenceRole: EVIDENCE_ROLE,
+                parentExposure: PARENT_EXPOSURE,
+                independentUnit: 'parent-family',
+                parentId,
+                parentContentIdentity: parentContentHash,
+                originResearchBlock: ORIGIN_BLOCK_ID ? {
+                    blockId: ORIGIN_BLOCK_ID,
+                    populationIdentity: ORIGIN_POPULATION_IDENTITY,
+                    questionId: originQuestionId,
+                } : null,
+            },
+        } : {}),
     };
     const manifest = {
         schemaVersion: 2,

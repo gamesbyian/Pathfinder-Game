@@ -1,3 +1,5 @@
+import { assertResearchBlock } from '../solver-research-block-lineage.mjs';
+
 export function xmur3(str) {
     let h = 1779033703 ^ str.length;
     for (let i = 0; i < str.length; i++) {
@@ -62,4 +64,23 @@ export function frontierAncestryKey({
 }) {
     if (!solverCommit) throw new Error('frontierAncestryKey requires solverCommit');
     return [corpus, levelId, 'beam-frontier', profile, `width=${width}`, `depth=${depth}`, `solver=${solverCommit}`].join('|');
+}
+
+
+export function resolveInheritedResearchBlock(document, { levelIds = [], question = null, artifactRef = null } = {}) {
+    const researchBlock = document?.researchBlock ?? document?.population?.researchBlock ?? null;
+    const populationIdentity = document?.populationIdentity ?? document?.population?.corpusIdentity ?? null;
+    assertResearchBlock(researchBlock, { populationIdentity });
+    const parentSet = new Set(researchBlock.parentIds.map(String));
+    const missing = levelIds.filter(levelId => !parentSet.has(String(levelId)));
+    if (missing.length) throw new Error(`block artifact does not contain sampled parent(s): ${missing.join(', ')}`);
+    if (question && question !== researchBlock.questionId) {
+        throw new Error(`question=${question} conflicts with block questionId=${researchBlock.questionId}`);
+    }
+    return {
+        researchBlock,
+        populationIdentity,
+        blockArtifact: artifactRef,
+        resolvedQuestion: question || researchBlock.questionId,
+    };
 }

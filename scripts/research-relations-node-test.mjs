@@ -86,8 +86,17 @@ try {
         },
     }));
 
+        const treatmentLinkPath = path.join(artifactDir, 'treatment-link.json');
+    writeFileSync(treatmentLinkPath, JSON.stringify({
+        kind: 'pathfinder-research-enrichment-link',
+        researchEnrichmentKind: 'treatment',
+        populationIdentity,
+        researchBlock: block,
+        sourceArtifact: 'tmp/treatment-result.json',
+    }));
+
     const artifactModel = buildResearchRelations(process.cwd(), {
-        artifactPaths: [capturePath, annotationPath],
+        artifactPaths: [capturePath, annotationPath, treatmentLinkPath],
         eligibility: {
             questionId: block.questionId,
             evidenceRole: 'confirmation',
@@ -102,6 +111,7 @@ try {
     assert.equal(blockRow.consumptionCount, 1);
     assert.equal(blockRow.enrichments.observation.length, 1);
     assert.equal(blockRow.enrichments.exact.length, 1);
+    assert.equal(blockRow.enrichments.treatment.length, 1);
     assert.equal(blockRow.eligibility.eligible, false);
     assert.deepEqual(
         artifactModel.relations.researchParents.map(row => row.parentId),

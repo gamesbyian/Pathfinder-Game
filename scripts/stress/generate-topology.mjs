@@ -50,7 +50,11 @@ import { stringifyCorpusJson } from '../level-json-format.mjs';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
-import { getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
+import { getLevelFingerprint, getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
+import { stableHash } from '../solver-experiment-contract.mjs';
+import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
+import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
+import { generatorImplementationProvenance } from '../generator-implementation-provenance.mjs';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 import { makeLevelProvenance, makeProvenanceEntry } from '../../modules/domain/level-provenance-types.js';
 
@@ -74,11 +78,19 @@ const MASTER_SEED = Number(args.get('--master-seed') ?? 20260827);
 const OUT_FILE = args.get('--out') || 'tmp/stress-levels-topology.json';
 const ID_PREFIX = args.get('--id-prefix') || 'T';
 const VERBOSE = args.has('--verbose');
+const QUESTION_ID = args.get('--question-id') || null;
+const EVIDENCE_ROLE = args.get('--evidence-role') || 'development';
+const BLOCK_ID = args.get('--block-id') || null;
 const MAX_ATTEMPTS = 80;
 
 if (!Number.isInteger(COUNT) || COUNT < 1) throw new Error('--count must be a positive integer');
 if (!Number.isFinite(MASTER_SEED)) throw new Error('--master-seed must be numeric');
 if (!/^[A-Za-z]+$/.test(ID_PREFIX)) throw new Error('--id-prefix must contain letters only');
+if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
+if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
+    throw new Error(`unknown --question-id=${QUESTION_ID}`);
+}
 
 const SIDES = [
     { name: 'N', dx: 0, dy: -1 },
@@ -583,7 +595,7 @@ function acceptLevel(i, built, levelSeed, raw, generatedAt) {
     };
 }
 
-function main() {
+async function main() {
     const generatedAt = new Date().toISOString();
     const known = loadKnownFingerprints();
     const fingerprints = known.set;
@@ -702,6 +714,41 @@ function main() {
         levels,
     };
 
+    if (QUESTION_ID) {
+        const parentIds = levels.map(level => String(level.id));
+        const parentContentIdentities = await Promise.all(levels.map(level => getLevelFingerprint(level)));
+        const generatorImplementation = generatorImplementationProvenance(ROOT, 'scripts/stress/generate-topology.mjs');
+        const sourceRevision = stableHash({
+            producer: 'scripts/stress/generate-topology.mjs',
+            generatorImplementation: {
+                sourcePath: generatorImplementation.sourcePath,
+                sourceSha256: generatorImplementation.sourceSha256 ?? null,
+                gitCommit: generatorImplementation.gitCommit ?? null,
+            },
+            generatorVersion: GENERATOR_VERSION,
+            corpusName: CORPUS_NAME,
+            masterSeed: MASTER_SEED,
+            count: COUNT,
+            idPrefix: ID_PREFIX,
+        });
+        const derivedBlockId = BLOCK_ID || `${QUESTION_ID}:${stableHash({ sourceRevision, evidenceRole: EVIDENCE_ROLE, parentIds, parentContentIdentities }).slice('sha256:'.length, 'sha256:'.length + 12)}`;
+        const lineage = buildResearchBlock({
+            blockId: derivedBlockId,
+            questionId: QUESTION_ID,
+            sourceRegime: CORPUS_NAME,
+            sourceRevision,
+            evidenceRole: EVIDENCE_ROLE,
+            parentIds,
+            parentContentIdentities,
+            sourceArtifactRefs: [OUT_FILE],
+            producer: 'scripts/stress/generate-topology.mjs',
+            manifestRef: OUT_FILE,
+            generationRef: OUT_FILE,
+        });
+        out.populationIdentity = lineage.populationIdentity;
+        out.researchBlock = lineage.researchBlock;
+    }
+
     const absOut = path.resolve(ROOT, OUT_FILE);
     mkdirSync(path.dirname(absOut), { recursive: true });
     writeFileSync(absOut, stringifyCorpusJson(out));
@@ -715,4 +762,4 @@ function main() {
     console.log('Generation stats: ' + JSON.stringify(stats));
 }
 
-main();
+main().catch(error => { console.error(error); process.exit(1); });

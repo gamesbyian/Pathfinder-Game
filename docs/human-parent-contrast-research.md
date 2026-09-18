@@ -33,7 +33,7 @@ node scripts/human-parent-contrast-pilot.mjs \
 
 The wrapper delegates all mutation mechanics, witness preservation/transformation, schema/referee validation, fingerprint deduplication, and variant provenance to `scripts/family-generate.mjs`. It adds the research contract that the generic family generator cannot infer:
 
-- the question being tested;
+- the human-readable question being tested plus a validated stable registry ID when supplied (or when `--question` itself is a registered ID);
 - development/confirmation/transfer role;
 - parent exposure status;
 - the parent family as the independence unit;

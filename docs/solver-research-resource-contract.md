@@ -129,7 +129,7 @@ This rule does not require committing every raw artifact. Preserve the smallest 
 When a resource repeatedly loses information that later research needs, fix the producer prospectively rather than fabricating history. The four audited resources currently nominate these producer improvements:
 
 - **Stress/managed populations:** record selection/conditioning events separately from generation ancestry, including which side/outcome conditioned membership and which descendant decisions consumed the population.
-- **Variant families:** retain invocation-local requested/attempted/accepted/budget counters inside each generation-run record rather than relying on mixed cumulative/latest top-level counters.
+- **Variant families:** current `family-generate.mjs` now retains invocation-local requested/attempted/accepted/budget counters inside each generation-run record; historical generation runs that omitted them remain irrecoverably unknown. The remaining producer gap is preserving per-technique outcome/context when a family evaluation is intended to support technique counterfactuals.
 - **Hint provenance:** wherever practical, reference the originating run/experiment manifest so attempted denominator, failures, protocol identity, and work semantics are recoverable for performance claims.
 - **Solution profiles:** keep mechanics-applicability/support distinct from statistical sample/stability support; do not let one nominal coverage number imply both.
 

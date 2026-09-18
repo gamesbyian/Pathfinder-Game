@@ -26,6 +26,7 @@ import {
     frontierAncestryKey,
     reconstructBeamPath,
     sampleDistinctIndices,
+    resolveInheritedResearchBlock,
 } from './production-search-frontier-sampler-lib.mjs';
 
 const ROOT = process.cwd();
@@ -47,6 +48,7 @@ const question = arg('question', null);
 const evidenceRole = arg('evidence-role', 'development');
 const casesOut = arg('cases-out', null);
 const populationOut = arg('population-out', null);
+const blockArtifact = arg('block-artifact', null);
 
 if (!levelIds.length) throw new Error('--levels must contain at least one level id');
 if (!(depthFraction > 0 && depthFraction < 1)) throw new Error('--depth-fraction must be in (0, 1)');
@@ -54,6 +56,17 @@ if (!Number.isInteger(picksRequested) || picksRequested < 1) throw new Error('--
 if (!Number.isFinite(width) || width < 1) throw new Error('--width must be positive');
 if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
 if (!casesOut && !populationOut) throw new Error('at least one of --cases-out or --population-out is required');
+
+let inheritedLineage = null;
+if (blockArtifact) {
+    const blockDoc = JSON.parse(readFileSync(path.resolve(ROOT, blockArtifact), 'utf8'));
+    inheritedLineage = resolveInheritedResearchBlock(blockDoc, {
+        levelIds,
+        question,
+        artifactRef: blockArtifact,
+    });
+}
+const resolvedQuestion = inheritedLineage?.resolvedQuestion ?? question ?? null;
 
 installBrowserStubs();
 const Solver = createSolver();
@@ -135,7 +148,7 @@ const population = {
     schemaVersion: 1,
     kind: 'pathfinder-production-search-frontier-sample',
     generatedAt: new Date().toISOString(),
-    question,
+    question: resolvedQuestion,
     evidenceRole,
     independenceUnit: 'parent-level',
     freezeBoundary: 'candidate rows selected from production beam frontier before downstream labels',
@@ -152,6 +165,11 @@ const population = {
     },
     parentSummaries,
     rows,
+    ...(inheritedLineage ? {
+        populationIdentity: inheritedLineage.populationIdentity,
+        researchBlock: inheritedLineage.researchBlock,
+        sourceBlockArtifact: inheritedLineage.blockArtifact,
+    } : {}),
 };
 
 function writeJson(relative, payload) {
@@ -165,6 +183,11 @@ if (casesOut) {
         schemaVersion: 1,
         corpus: corpusFile,
         freezeBoundary: population.freezeBoundary,
+        ...(inheritedLineage ? {
+            populationIdentity: inheritedLineage.populationIdentity,
+            researchBlock: inheritedLineage.researchBlock,
+            sourceBlockArtifact: inheritedLineage.blockArtifact,
+        } : {}),
         cases: rows.map(row => ({
             id: `${row.levelId}:frontier-${row.frontierIndex}`,
             levelId: row.levelId,

@@ -117,6 +117,40 @@ export function researchPopulationIdentity(parentIds, parentContentIdentities) {
     return stableHash({ kind: 'research-parent-block', parents });
 }
 
+export function buildResearchBlock({
+    blockId,
+    questionId,
+    sourceRegime,
+    sourceRevision,
+    evidenceRole = 'development',
+    independentUnit = 'parent-level',
+    parentIds,
+    parentContentIdentities,
+    sourceArtifactRefs,
+    producer,
+    manifestRef,
+    runRef = null,
+    generationRef = null,
+    consumptionEvents = [],
+} = {}) {
+    const populationIdentity = researchPopulationIdentity(parentIds, parentContentIdentities);
+    const researchBlock = assertResearchBlock({
+        blockId,
+        questionId,
+        sourceRegime,
+        sourceRevision,
+        evidenceRole,
+        independentUnit,
+        parentIds: [...parentIds],
+        parentContentIdentities: [...parentContentIdentities],
+        sourceArtifactRefs: [...sourceArtifactRefs],
+        createdBy: { producer, manifestRef, runRef },
+        generationRef,
+        consumptionEvents: [...consumptionEvents],
+    }, { populationIdentity });
+    return { populationIdentity, researchBlock };
+}
+
 export function researchBlockIdentity(block, populationIdentity) {
     assertResearchBlock(block, { populationIdentity });
     return stableHash({

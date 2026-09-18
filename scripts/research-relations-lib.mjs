@@ -47,6 +47,9 @@ function artifactBlockPayload(document) {
 }
 
 function artifactEnrichmentKind(document) {
+    if (['observation', 'exact', 'treatment', 'artifact'].includes(document?.researchEnrichmentKind)) {
+        return document.researchEnrichmentKind;
+    }
     if (document?.kind === 'd1-production-inert-decision-capture') return 'observation';
     if (document?.kind === 'd1-production-inert-decision-annotation') return 'exact';
     if (document?.experiment) return 'treatment';

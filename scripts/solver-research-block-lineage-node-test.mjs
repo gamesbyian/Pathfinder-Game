@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
     appendResearchConsumption,
+    buildResearchBlock,
     assertResearchBlock,
     researchBlockEligibility,
     researchBlockIdentity,
@@ -14,6 +15,24 @@ const derivedPopulationIdentityB = researchPopulationIdentity(['P1', 'P2'], ['v2
 assert.equal(derivedPopulationIdentityA, derivedPopulationIdentityB, 'population identity is order-invariant');
 assert.match(derivedPopulationIdentityA, /^sha256:[0-9a-f]{64}$/u);
 assert.throws(() => researchPopulationIdentity(['P1', 'P1'], ['v2:a', 'v2:a']), /duplicate parent ids/);
+
+const built = buildResearchBlock({
+    blockId: 'BLOCK-BUILDER-TEST',
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    sourceRegime: 'test-source',
+    sourceRevision: `sha256:${'b'.repeat(64)}`,
+    evidenceRole: 'development',
+    parentIds: ['P1', 'P2'],
+    parentContentIdentities: ['v2:a', 'v2:b'],
+    sourceArtifactRefs: ['tmp/levels.json'],
+    producer: 'test-producer',
+    manifestRef: 'tmp/levels.json',
+    generationRef: 'tmp/levels.json',
+});
+assert.match(built.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
+assert.equal(built.researchBlock.blockId, 'BLOCK-BUILDER-TEST');
+assert.deepEqual(built.researchBlock.parentIds, ['P1', 'P2']);
+
 
 const populationIdentity = `sha256:${'a'.repeat(64)}`;
 const block = {
