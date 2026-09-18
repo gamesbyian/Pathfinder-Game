@@ -5,7 +5,7 @@
 > **Priority:** `solver-optimization-workstreams.md`.
 > **Method:** `solver-research-operating-model.md`, `solver-evaluation-evidence.md`, `solver-research-resource-contract.md`.
 > **Goal:** make existing population, family, frontier/state, exact/reference, observation, and evidence resources compose as one progressive workflow without a second evidence warehouse.
-> **Progress (2026-09-17):** Phases 0-5 are complete. Post-Phase-5 hardening adds a derived question dossier, active-premise relations, bounded block/durable-evidence discovery, contract-aware acquisition hints, selection-consumption sidecars, and a CI integration audit, without a warehouse or persistent index. Phase 6's two live pilots remain required; D1 stays governed by its queue/preflight. See the Phases 3-5 report and `../reports/2026-09-17-research-infrastructure-composition-integration-001.md`.
+> **Progress (2026-09-17):** Phases 0-5 are complete. Post-Phase-5 hardening now includes a derived question dossier, active-premise relations, stable question/premise/MO joins where earned, authored multi-asset relationship discovery, bounded block/durable-evidence discovery, contract-aware acquisition hints, independent-unit opportunity sizing, selection-consumption sidecars, and a CI integration audit, without a warehouse or persistent index. Phase 6's two live pilots remain required; D1 stays governed by its queue/preflight. See `../reports/2026-09-17-research-infrastructure-composition-integration-001.md` and `../reports/2026-09-17-research-infrastructure-second-order-composition-002.md`.
 
 ## 0. Target workflow
 
