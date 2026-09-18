@@ -202,6 +202,7 @@ This is especially useful for MO-005 and MO-007, where conceptual coverage can o
 10. **MO operational coverage is dispersed.** Registry, tools, resources, consumers, and durable paths are individually documented but not available as one read-only coverage view.
 11. **Selection pressure is recorded incompletely across layers.** Candidate/config search, residual selection, thresholds, exact exposure, family exploration, and source matching are not summarized prospectively at confirmation planning time.
 12. **Independent-unit semantics are still declarative.** Preserving `parent-level` prevents one silent loss, but a future audit must still prove which row field actually maps each state/variant/decision back to that parent.
+13. **The checked-in evidence-integrity index was stale against current canonical baselines.** The dedicated freshness guard rebuilt successfully and exposed outcome drift (Corpus 1 100→101 solved; Corpus 2 1048→1169 solved). The index was refreshed in this tranche. This is exactly the kind of authority/consumer seam that ordinary green definitions would not reveal.
 
 ## Repairs landed in this tranche
 
@@ -225,6 +226,10 @@ The integration audit now:
 `research-acquisition-preflight-lib.mjs` surfaces a bounded integrity summary beside Resource Contract signals. It does not compute a global evidence grade or authorization.
 
 Tests exercise both integration boundaries.
+
+### Evidence-integrity authority refresh
+
+The dedicated evidence-integrity CI guard exposed that the checked-in derived integrity authority no longer matched current canonical baseline outcomes. The audit itself rebuilt successfully; the freshness comparison failed. The regenerated index is now committed, restoring parity with the current baseline artifacts.
 
 ## Larger follow-on designs, deliberately not implemented
 
