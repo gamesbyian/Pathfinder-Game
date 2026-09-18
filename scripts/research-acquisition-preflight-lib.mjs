@@ -66,3 +66,60 @@ export function chooseAcquisitionRoute({ question, eligibleBlocks = [], requeste
 
 export const acquisitionRoutes = () => Object.values(ROUTES);
 export const acquisitionNeeds = () => Object.keys(NEED_TO_ROUTE);
+
+
+function searchTerms(question) {
+    return [
+        question?.id,
+        question?.question,
+        ...(question?.aliases ?? []),
+        ...(question?.constrains ?? []),
+        question?.reopensOn,
+    ].filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/gu, ' ')
+        .split(/\s+/u)
+        .filter(term => term.length >= 4);
+}
+
+export function rankCandidateAssets(question, assets, { limit = 8 } = {}) {
+    const terms = [...new Set(searchTerms(question))];
+    return (assets ?? [])
+        .map(asset => {
+            const haystack = JSON.stringify({
+                id: asset.id,
+                name: asset.name,
+                grain: asset.grain,
+                evidenceRoles: asset.evidenceRoles,
+                joinKeys: asset.joinKeys,
+                queryEntryPoints: asset.queryEntryPoints,
+                affordances: asset.affordances,
+                caveats: asset.caveats,
+            }).toLowerCase();
+            const matchedTerms = terms.filter(term => haystack.includes(term));
+            return {
+                id: asset.id,
+                name: asset.name,
+                score: matchedTerms.length,
+                matchedTerms,
+                queryEntryPoints: asset.queryEntryPoints ?? [],
+                independentUnit: asset.auditedResourceContract?.independentUnit ?? null,
+            };
+        })
+        .filter(row => row.score > 0)
+        .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
+        .slice(0, limit);
+}
+
+export function acquisitionStopRule(route) {
+    const rules = {
+        REUSE_EXISTING: 'stop if supplied material is mechanically ineligible, lineage-ambiguous, or lacks the decision-bearing opportunity; do not generate merely because reuse is inconvenient',
+        FRESH_SAME_SOURCE: 'pilot first; stop if opportunity prevalence is negligible or the fresh block cannot express the prespecified discriminator',
+        CROSS_SOURCE_TRANSFER: 'stop if the alternate source does not actually change the construction/distribution dimension required by the claim',
+        CONTROLLED_FAMILY: 'stop if the prespecified perturbation cannot change the ranked decision or descendants cease to isolate the intended contrast',
+        HUMAN_EDITOR: 'stop if human/editor origin is not required by the claim or suitable parents cannot be locked before outcome inspection',
+        NO_LEVEL_GENERATION: 'stop before generation; resolve the telemetry, representation, exact/reference, candidate, dose, work, or economics blocker first',
+    };
+    return rules[route] ?? null;
+}
