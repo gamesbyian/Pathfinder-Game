@@ -15,10 +15,10 @@ import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { captureSolverGitState } from '../experiment-manifest-lib.mjs';
 import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
-import { assertResearchBlock, researchPopulationIdentity } from '../solver-research-block-lineage.mjs';
 import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.js';
 import { beamResearchRecordToDecisionObservation } from '../solver-decision-observation-lib.mjs';
 import {
+    buildD1ResearchBlock,
     freezeD1Eligibility,
     pathIdentity,
 } from './d1-production-observation-lib.mjs';
@@ -195,26 +195,17 @@ if (listConfiguredBeams) {
     process.exit(0);
 }
 
-const populationIdentity = researchPopulationIdentity(levelIds, parentContentIdentities);
-const blockId = requestedBlockId || `${questionId}:${populationIdentity.slice('sha256:'.length, 'sha256:'.length + 12)}`;
-const researchBlock = assertResearchBlock({
-    blockId,
+const { populationIdentity, researchBlock } = buildD1ResearchBlock({
+    blockId: requestedBlockId,
     questionId,
-    sourceRegime: corpusFile,
+    corpus: corpusFile,
     sourceRevision,
     evidenceRole,
-    independentUnit: 'parent-level',
     parentIds: levelIds,
     parentContentIdentities,
-    sourceArtifactRefs: [corpusFile, outFile],
-    createdBy: {
-        producer: 'scripts/stress/capture-d1-production-decisions.mjs',
-        manifestRef: outFile,
-        runRef: solver.commit,
-    },
-    generationRef: null,
-    consumptionEvents: [],
-}, { populationIdentity });
+    captureArtifact: outFile,
+    runRef: solver.commit,
+});
 
 const document = {
     schemaVersion: 1,
