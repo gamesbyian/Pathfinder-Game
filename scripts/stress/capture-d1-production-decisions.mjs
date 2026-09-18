@@ -41,7 +41,7 @@ const cutoffRadius = Number(arg('cutoff-radius', 2));
 const evidenceRole = arg('evidence-role', 'development');
 const outFile = arg('out', null);
 
-if (!outFile) throw new Error('--out is required');
+if (!outFile && !listConfiguredBeams) throw new Error('--out is required unless --list-configured-beams is used');
 if (!levelIds.length) throw new Error('--levels must contain at least one level id');
 if (!Number.isFinite(width) || width < 1) throw new Error('--width must be positive');
 if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
@@ -50,10 +50,8 @@ if (pauseAfterPhases !== undefined && (!Number.isInteger(pauseAfterPhases) || pa
     throw new Error('--pause-after-phases must be a positive integer');
 }
 if (!Number.isInteger(cutoffRadius) || cutoffRadius < 0) throw new Error('--cutoff-radius must be a non-negative integer');
-if (!['development', 'independent-confirmation'].includes(evidenceRole)) throw new Error('--evidence-role must be development or independent-confirmation');
-if (evidenceRole === 'independent-confirmation') {
-    const contaminated = levelIds.filter(id => D1_DEVELOPMENT_PARENT_IDS.includes(id));
-    if (contaminated.length) throw new Error(`independent-confirmation excludes D1 development parents: ${contaminated.join(',')}`);
+if (evidenceRole !== 'development') {
+    throw new Error('this capture currently supports development evidence only; independent confirmation requires orchestration-aware production reach');
 }
 
 installBrowserStubs();
@@ -188,6 +186,7 @@ const document = {
     levelIds,
     evidenceRole,
     independentUnit: 'parent-level',
+    executionBoundary: 'isolated current-policy beam configuration; policy membership verified, full orchestration reach/allocation not reproduced',
     freezeBoundary: 'all D1 eligibility fixed from unchanged beam decision records before exact D1 annotation',
     policy: {
         profile: profileName,
