@@ -78,7 +78,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Execution gate:** run the bounded D1 production-inert observation preflight next: [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md). It authorizes shadow observation only, with parity, pilot, expansion and stop gates before any ranking change.
 
-**Post-D1 diagnostic routing:** do not mechanically fall through to A/F3 when D1 closes. Use the smallest live discriminator: bounded work-ladder response when absent capability vs underdose remains confounded; operational/retention divergence when two failing regimes may reach different basins; counterfactual rejection opportunity when a concrete retention boundary is implicated; a 2x2 interaction residual only when one mechanism plausibly creates opportunity for another. Lane A still reopens only from a compact dynamic-interface contract; F3 only from fresh independent evidence of reliable decision-bearing discordance.
+**Post-D1:** do not automatically fall through to A/F3. Use the smallest live discriminator: work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or 2x2 interaction only for a plausible producer/consumer pair. A/F3 retain their existing reopen gates.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -88,7 +88,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute production-inert D1 preflight; then route by the smallest live discriminator / explicit A-F3 reopen gates |
+| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute D1 observation; then use the smallest live discriminator / explicit A-F3 gates |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
