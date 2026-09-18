@@ -18,6 +18,7 @@ For a named concept, use compact/queryable front doors before `package.json` or 
 - corpora: `node scripts/corpus-query.mjs --corpus=stress2`; filters/list/sample stay compact, `--full` emits exact levels;
 - hint/provenance: `npx tsx scripts/hint-query.mjs --id=<ID> [--levels=<corpus>]`; use `--full` only for exact paths/provenance;
 - controlled human/editor contrast pilot: `node scripts/human-parent-contrast-pilot.mjs --question=<id> --evidence-role=<development|confirmation|transfer> --parent=<id> --mode=<family-mode>`; see [`../docs/human-parent-contrast-research.md`](../docs/human-parent-contrast-research.md);
+- full-level research generation: `npm run research:generate-levels -- --list`; source/suite/matching/origin-audit guidance: [`../docs/solver-research-generation.md`](../docs/solver-research-generation.md);
 - tracked raw artifacts: `node scripts/artifact-query.mjs [--query=...] [--role=...]`;
 - completed GHA runs: `npm run gha:fetch-result -- --run=<run-id>` or `--workflow=<name>`; enumerate shards only when standard retrieval is incomplete;
 - tool lookup: `node scripts/tooling-census.mjs --compact --query=<term>`;

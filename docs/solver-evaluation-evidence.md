@@ -28,7 +28,8 @@ Keep these separate.
 
 A new seed from `generate-random.mjs` can provide sample independence. It does not provide
 distributional independence from Corpus 2 because it shares the same witness-first random-walk
-construction family.
+construction family. Likewise, the targeted and random generators differ materially in selection
+philosophy but remain in the broad witness-first construction family. Use [`solver-research-generation.md`](solver-research-generation.md) for current source/suite and matched-cross-construction guidance.
 
 ## Evidence roles
 
