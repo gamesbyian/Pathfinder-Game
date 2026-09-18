@@ -59,7 +59,7 @@ const ranked = rankCandidateAssets(
 assert.deepEqual(ranked.map(row => row.id), ['exact-reference-labels', 'operational-traces']);
 assert.match(acquisitionStopRule('NO_LEVEL_GENERATION'), /stop before generation/u);
 assert.match(acquisitionStopRule('FRESH_SAME_SOURCE'), /pilot first/u);
-assert.deepEqual(generationGuidanceForRoute('FRESH_SAME_SOURCE').candidateMethods.map(row => row.id), ['random']);
+assert.deepEqual(generationGuidanceForRoute('FRESH_SAME_SOURCE').candidateMethods.map(row => row.id), ['targeted', 'random', 'topology']);
 assert.deepEqual(generationGuidanceForRoute('CROSS_SOURCE_TRANSFER').candidateMethods.map(row => row.id), ['random', 'topology']);
 assert.equal(generationGuidanceForRoute('NO_LEVEL_GENERATION').automaticGeneration, false);
 
