@@ -48,16 +48,19 @@ export const GENERATION_SUITES = Object.freeze({
     id: 'triangulation',
     methods: ['targeted', 'random', 'topology'],
     use: 'construction-triangulation development: compare a hypothesis-driven source, a solver-blind witness-first source, and an independent topology-composition source without pooling their evidence identities',
+    defaultEvidenceRoles: { targeted: 'development', random: 'development', topology: 'development' },
   }),
   'transfer-pair': Object.freeze({
     id: 'transfer-pair',
     methods: ['random', 'topology'],
     use: 'same-question confirmation/transfer pair: solver-blind witness-first material plus a materially different topology-composition challenge source',
+    defaultEvidenceRoles: { random: 'confirmation', topology: 'transfer' },
   }),
   'witness-contrast': Object.freeze({
     id: 'witness-contrast',
     methods: ['targeted', 'random'],
     use: 'test whether an apparent effect depends on hypothesis-driven witness/decoration shaping while holding the broad witness-first construction family constant',
+    defaultEvidenceRoles: { targeted: 'development', random: 'development' },
   }),
 });
 
