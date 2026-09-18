@@ -203,6 +203,8 @@ The family index checks shard completeness and attaches provenance to evidence. 
 
 Generation provenance does not make old solver results current. A current re-evaluation of selected historical cliffs should record how those cliffs were selected; it is forensic/confirmation evidence for the mechanism, not an unbiased estimate of cliff prevalence.
 
+Current `family-generate.mjs` generation-run records preserve invocation-local requested/accepted/attempt/budget counters. Decision-bearing expansion from a prospectively frozen research block should pass `--origin-block-artifact=<path>`; the generator validates question ID, parent membership, population identity, and canonical parent content identity before recording that ancestry. Historical runs that lack these fields remain unknown rather than being reconstructed from cumulative top-level totals.
+
 ## Tools
 
 | Need | Entry point |
