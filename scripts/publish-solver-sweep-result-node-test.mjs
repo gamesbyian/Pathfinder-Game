@@ -21,7 +21,20 @@ try {
       workflowFamily: 'fixture-family', producer: 'fixture-producer', entrypoint: 'fixture.mjs',
       configurationHash: hashConfiguration({ budget: 1 }), resolvedSha: 'b'.repeat(40),
     },
-    population: { kind: 'explicit-ids', identityBasis: 'stable-level-id' },
+    researchQuestion: {
+      questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+      liveAmbiguity: 'rank disagreement versus no opportunity',
+      discriminatingObservable: 'production-inert cutoff disagreement',
+      outcomeInterpretation: { disagreement: 'economics gate earned' },
+      measurementOpportunity: 'MO-002',
+    },
+    population: {
+      kind: 'explicit-ids', identityBasis: 'stable-level-id',
+      researchBlock: {
+        blockId: 'BLOCK-001', questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        evidenceRole: 'development', independentUnit: 'parent-level',
+      },
+    },
     execution: { levelBlind: true, historyAware: false, historicalInputs: [], reproducibilityExpected: true, producerFamily: 'fixture-family', schedulerMode: 'production' },
     limits: { cumulativeNodeCeiling: 1, initialWorkAllocation: 1, totalWorkCeiling: 1, wallSafetyDeadlineMs: 1000, wallDeadlineBinding: false },
     sideEffects: { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' },
@@ -37,6 +50,10 @@ try {
   assert.match(manifest.experiment.configurationHash, /^sha256:[0-9a-f]{64}$/);
   assert.equal(manifest.experiment.resolvedSha, 'b'.repeat(40));
   assert.equal(manifest.execution.levelBlind, true);
+  assert.equal(manifest.researchQuestion.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
+  assert.equal(manifest.researchQuestion.measurementOpportunity, 'MO-002');
+  assert.equal(manifest.population.researchBlock.blockId, 'BLOCK-001');
+  assert.equal(manifest.population.researchBlock.evidenceRole, 'development');
   assert.equal(manifest.decisionBearing, true);
   assert.deepEqual(manifest.decisionContractIssues, []);
   assert.deepEqual(manifest.sideEffects, { hints: 'none', canonicalBaseline: 'none', telemetry: 'none', reports: 'artifact-only' });
