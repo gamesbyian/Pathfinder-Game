@@ -12,6 +12,7 @@
  *     "configuration": { ... arbitrary, hashed for experiment.configurationHash ... },
  *     "workflowFamily": "...", "producer": "...", "entrypoint": "...",
  *     "experiment": { ... optional provenance, refs, or paired arms ... },
+ *     "researchQuestion": { ... optional stable question/discriminator/MO metadata ... },
  *     "population": { ... }, "execution": { ... }, "limits": { ... }, "sideEffects": { ... }
  *   }
  *
@@ -57,6 +58,27 @@ function inferredPairedArms(configuration) {
   };
 }
 
+function validateResearchQuestionReference(researchQuestion) {
+  if (researchQuestion == null) return null;
+  if (!researchQuestion || typeof researchQuestion !== 'object' || Array.isArray(researchQuestion)) {
+    throw new Error('researchQuestion must be an object');
+  }
+  const registry = loadResearchQuestionRegistry(process.cwd());
+  if (!registry.questions.some(question => question.id === researchQuestion.questionId)) {
+    throw new Error(`researchQuestion.questionId is not present in solver-research-question-relations.json: ${researchQuestion.questionId}`);
+  }
+  if (researchQuestion.measurementOpportunity != null) {
+    const measurementRegistry = JSON.parse(fs.readFileSync(
+      path.join(process.cwd(), 'docs', 'solver-premise-map-measurement-opportunities.json'),
+      'utf8',
+    ));
+    if (!(measurementRegistry.opportunities ?? []).some(opportunity => opportunity.id === researchQuestion.measurementOpportunity)) {
+      throw new Error(`researchQuestion.measurementOpportunity is not present in solver-premise-map-measurement-opportunities.json: ${researchQuestion.measurementOpportunity}`);
+    }
+  }
+  return researchQuestion;
+}
+
 function populationWithSeal(population, populationSeal) {
   const identityHash = populationSeal?.identityHash ?? population?.corpusIdentity ?? null;
   if (populationSeal && !SHA256_RE.test(String(identityHash ?? ''))) {
@@ -77,7 +99,7 @@ function populationWithSeal(population, populationSeal) {
 }
 
 export function buildContract(spec, { resolvedSha = null, populationSeal = null } = {}) {
-  const { configuration, workflowFamily, producer, entrypoint, experiment = {}, population, execution, limits, sideEffects } = spec;
+  const { configuration, workflowFamily, producer, entrypoint, experiment = {}, researchQuestion = null, population, execution, limits, sideEffects } = spec;
   const inferredArms = experiment.arms ?? inferredPairedArms(configuration);
   const executionIdentity = inferredArms != null
     ? { arms: inferredArms }
@@ -91,6 +113,7 @@ export function buildContract(spec, { resolvedSha = null, populationSeal = null 
       entrypoint,
       configurationHash: hashConfiguration(configuration ?? {}),
     },
+    ...(researchQuestion ? { researchQuestion: validateResearchQuestionReference(researchQuestion) } : {}),
     population: populationWithSeal(population, populationSeal), execution, limits, sideEffects,
   };
 }
