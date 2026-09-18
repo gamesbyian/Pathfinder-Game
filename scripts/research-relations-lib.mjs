@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { buildResearchStatusIndex } from './research-status-index-lib.mjs';
@@ -11,6 +11,7 @@ import {
     researchBlockEligibility,
 } from './solver-research-block-lineage.mjs';
 import { stableHash } from './solver-experiment-contract.mjs';
+import { loadPremiseMap } from './research-premise-map-lib.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     questions: { identity: 'id', source: 'docs/solver-research-question-relations.json' },
@@ -22,8 +23,11 @@ export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     experiments: { identity: 'experimentId', source: 'docs/solver-opt-in-experiment-ledger.md via research-status-index' },
     premiseSnapshots: { identity: 'snapshotId', source: 'docs/solver-premise-map-snapshot-v*.json' },
     premiseAdmissions: { identity: 'premiseId', source: 'docs/solver-premise-map-v2-admissions.json' },
-    researchBlocks: { identity: 'blockId', source: 'explicit --artifact research manifests/captures' },
-    researchParents: { identity: 'blockId + parentId', source: 'derived from explicit research blocks' },
+    premises: { identity: 'premiseId', source: 'active solver-premise-map snapshot canonicalPremiseFiles' },
+    premiseEdges: { identity: 'from + type + to + sourceIndex', source: 'active solver-premise-map snapshot relationFiles' },
+    durableEvidence: { identity: 'bundlePath', source: 'reports/stress/experiment-evidence/**/bundle.json' },
+    researchBlocks: { identity: 'blockId', source: 'explicit/discovered research manifests/captures' },
+    researchParents: { identity: 'blockId + parentId', source: 'derived from research blocks' },
 });
 
 function readJson(root, relative, { optional = false } = {}) {
@@ -66,6 +70,58 @@ function mergeConsumptionEvents(left = [], right = []) {
     const byValue = new Map();
     for (const event of [...left, ...right]) byValue.set(stableHash(event), event);
     return [...byValue.values()];
+}
+
+function walkFiles(root, relative, predicate, out = []) {
+    const absolute = path.join(root, relative);
+    if (!existsSync(absolute)) return out;
+    const stat = statSync(absolute);
+    if (stat.isDirectory()) {
+        for (const name of readdirSync(absolute).sort()) {
+            walkFiles(root, path.join(relative, name), predicate, out);
+        }
+    } else if (predicate(relative, stat)) out.push(relative);
+    return out;
+}
+
+export function discoverResearchArtifactPaths(root = process.cwd()) {
+    const candidates = [
+        ...walkFiles(root, 'tmp', (relative, stat) => relative.endsWith('.json') && stat.size <= 32 * 1024 * 1024),
+        ...walkFiles(root, 'reports/stress/experiment-evidence',
+            (relative, stat) => path.basename(relative) === 'manifest.json' && stat.size <= 32 * 1024 * 1024),
+    ];
+    const discovered = [];
+    for (const relative of candidates) {
+        try {
+            const document = JSON.parse(readFileSync(path.join(root, relative), 'utf8'));
+            const { researchBlock, populationIdentity } = artifactBlockPayload(document);
+            if (researchBlock && populationIdentity && Array.isArray(researchBlock.parentIds)) {
+                discovered.push(relative);
+            }
+        } catch {
+            // Discovery is intentionally best-effort over mixed temporary/artifact directories.
+        }
+    }
+    return [...new Set(discovered)].sort();
+}
+
+function buildDurableEvidenceRelations(root) {
+    const bundles = walkFiles(root, 'reports/stress/experiment-evidence',
+        relative => path.basename(relative) === 'bundle.json');
+    return bundles.map(bundlePath => {
+        const bundle = JSON.parse(readFileSync(path.join(root, bundlePath), 'utf8'));
+        const manifestPath = path.join(path.dirname(bundlePath), 'manifest.json');
+        const hasManifest = existsSync(path.join(root, manifestPath));
+        return {
+            ...bundle,
+            bundlePath,
+            manifestPath: hasManifest ? manifestPath : null,
+            questionId: bundle?.researchQuestion?.questionId ?? bundle?.researchBlock?.questionId ?? null,
+            measurementOpportunity: bundle?.researchQuestion?.measurementOpportunity ?? null,
+            blockId: bundle?.researchBlock?.blockId ?? null,
+            _researchSource: { relation: 'durableEvidence', source: bundlePath },
+        };
+    });
 }
 
 function buildResearchArtifactRelations(root, artifactPaths, eligibility = null) {
@@ -152,7 +208,7 @@ function normalizePremiseAdmissions(doc) {
     return [];
 }
 
-export function buildResearchRelations(root = process.cwd(), { artifactPaths = [], eligibility = null } = {}) {
+export function buildResearchRelations(root = process.cwd(), { artifactPaths = [], eligibility = null, discoverArtifacts = false } = {}) {
     const questions = loadResearchQuestionRegistry(root);
     const questionErrors = validateResearchQuestionRegistry(questions);
     if (questionErrors.length) {
@@ -178,8 +234,14 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
     const v1 = readJson(root, 'docs/solver-premise-map-snapshot-v1.json', { optional: true });
     const v2 = readJson(root, 'docs/solver-premise-map-snapshot-v2.json', { optional: true });
     const admissions = readJson(root, 'docs/solver-premise-map-v2-admissions.json', { optional: true });
+    const premiseMap = loadPremiseMap(root);
+    const durableEvidence = buildDurableEvidenceRelations(root);
+    const resolvedArtifactPaths = [...new Set([
+        ...artifactPaths,
+        ...(discoverArtifacts ? discoverResearchArtifactPaths(root) : []),
+    ])];
 
-    const artifactRelations = buildResearchArtifactRelations(root, artifactPaths, eligibility);
+    const artifactRelations = buildResearchArtifactRelations(root, resolvedArtifactPaths, eligibility);
 
     const relations = {
         questions: questions.questions.map(row => withSource(row, 'questions', RESEARCH_RELATION_CONTRACTS.questions.source)),
@@ -203,6 +265,9 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
             const premiseId = row.premiseId ?? row.id ?? row.propositionId ?? null;
             return withSource({ ...row, premiseId }, 'premiseAdmissions', RESEARCH_RELATION_CONTRACTS.premiseAdmissions.source);
         }),
+        premises: premiseMap.premises.map(row => withSource(row, 'premises', row._premiseSource)),
+        premiseEdges: premiseMap.edges.map(row => withSource(row, 'premiseEdges', row.sourceFile)),
+        durableEvidence,
     };
 
     return {
