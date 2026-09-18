@@ -80,6 +80,8 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **Execution gate now:** do not automatically fall through to A/F3. Use the smallest live discriminator: work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or 2x2 interaction only for a plausible producer/consumer pair. A/F3 retain their existing reopen gates.
 
+**Work-ladder instrument in progress (2026-09-18):** zero-compute reuse of the 2026-07-29 high-budget sweep finds 0/483 current-residual overlap solved at up to 1.2B nodes (~5x production's typical ceiling), 449 cleanly budget-exhausted -- suggestive but confounded (7-week-old commit, history-aware `--resume`/`--save-hints`). A precommitted 20-id, 2-tier, level-blind confirmation slice is frozen and pending dispatch. [`preflight/discovery`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
+
 ### 2. Workstream 1: automatic solver action selection
 
 **State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed. Do not restart the completed structural-response ladder. H3 remaining-length ordering is a one-population nomination only; one prespecified independent shared-budget transfer is required before a WS1 gate.
