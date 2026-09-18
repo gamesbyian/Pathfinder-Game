@@ -173,7 +173,7 @@ assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must r
 assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
     'WS2 active gate must remain discoverable through the research-status queue relation');
 assert.equal(repositoryIndex.queue.find(row => String(row.workstreamId) === '2')?.questionRef,
-    'WS2-POST-D1-DISCRIMINATOR',
+    'WS2-WORK-LADDER-ECONOMICS',
     'active WS2 gate must carry the stable question reference');
 assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
     'composite workstream identities must survive indexing without numeric coercion');
@@ -194,8 +194,8 @@ assert.deepEqual(idsFor({ query: 'topology', status: 'mixed' }), ['WS2-OPEN-PATH
     'topology discovery must route to the qualified F3 descriptor disposition after its microscope ran');
 assert(idsFor({ query: 'topology', status: 'concluded-positive' }).includes('WS2-OPEN-PATH-TOPOLOGY-SIGNATURE'),
     'the open-path topology signature question must remain discoverable as the concluded premise upstream of F3');
-assert.deepEqual(idsFor({ query: 'D1', status: 'active' }), ['WS2-POST-D1-DISCRIMINATOR'],
-    'D1 production-inert observation is closed; the post-D1 discriminator question is the sole active D1-referencing research gate');
+assert.deepEqual(idsFor({ query: 'D1', status: 'active' }), ['WS2-WORK-LADDER-ECONOMICS'],
+    'D1 production-inert observation and its post-D1 discriminator selection are both closed; the work-ladder economics follow-on is the sole active D1-referencing research gate');
 assert(idsFor({ query: 'must turn', status: 'closed' }).includes('WS2-MUST-TURN-LATE-ADDITIVE'),
     'ordinary must-turn vocabulary must find the closed-negative economics result');
 
