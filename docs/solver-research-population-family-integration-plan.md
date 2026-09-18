@@ -101,140 +101,22 @@ Minimum shared facts, reusing canonical names where present:
 
 Historical absence remains unknown.
 
-## 4. Phase 0 — gap audit
+## 4-9. Phases 0-5 — complete
 
-**Do this before any schema/code design.**
+Phases 0-5 are implemented. Historical implementation detail belongs in the dated reports rather than this live handoff plan:
 
-1. Query current assets/relations/tooling.
-2. Inspect stress-generation output, family run/sidecar records, experiment manifests, frontier sampler output, decision-observation records, and any open PR changing those contracts (especially an in-flight observation/enrichment implementation).
-3. Treat current experiment-manifest research-question fields (`liveAmbiguity`, `discriminatingObservable`, `outcomeInterpretation`, optional `measurementOpportunity`) as existing canonical candidates, not fields to recreate.
-4. Build a matrix of the shared facts above.
-5. Classify every field: **canonical / stable join / hidden from normal query / prospectively missing / historically irrecoverable**.
-6. Test whether current registry + relations can expose the chain without new persistent storage.
-7. Write one dated audit with the matrix and minimal-delta recommendation.
+- Phase 0 gap audit: `../reports/solver-research-population-family-phase0-audit-2026-09-17.md`.
+- Phases 1-2 block/consumption contract + explicit-artifact relations + D1 adoption: `../reports/solver-research-population-family-phase1-implementation-2026-09-17.md` and `../reports/solver-research-population-family-phase2-d1-adoption-2026-09-17.md`.
+- Phases 3-5 producer lineage + progressive enrichment joins + acquisition routing: `../reports/solver-research-population-family-phases3-5-2026-09-17.md`.
 
-**Stop:** if existing manifests + registry + relations already carry the chain, add only query/documentation glue.
+Durable completed contracts:
 
-**Deliverable:** report only. No new registry/schema.
-
-## 5. Phase 1 — block and consumption contract
-
-Implement only gaps proven by Phase 0.
-
-### Frozen block
-
-A prospectively reusable block must preserve or reference:
-
-- block ID;
-- source regime/revision;
-- literal parent population/content fingerprints;
-- generation seed/config if generated;
-- role/partition at creation;
-- independent-unit semantics;
-- seal/hash where supported;
-- creation manifest/source artifact;
-- later conditioning/consumption events.
-
-Prefer extending existing population-plan/experiment-manifest structures.
-
-Implementation constraints established by Phase 0:
-
-- reuse the existing population content seal / `population.corpusIdentity` as the integrity primitive;
-- keep `blockId` separate from the content seal: block identity is research lineage, the seal is content integrity;
-- use a validated stable `questionId` from `solver-research-question-relations.json` while preserving the existing experiment-manifest `researchQuestion` fields;
-- use one prospective `independentUnit` spelling in the shared block contract without mass-renaming historical/local producer fields;
-- keep later consumption separate from generation provenance;
-- do not backfill absent historical exposure, conditioning, question, source-revision, or independence facts.
-
-### Consumption event
-
-Represent evidence use as an append-only fact/reference:
-
-```text
-questionId
-decision/report ref
-unit scope: block | parent | family
-role at use
-conditioning
-opened outcome kinds
-run/time ref
-```
-
-It is not a contamination flag.
-
-### Eligibility
-
-Provide one shared conservative helper/query answering:
-
-> What facts affect whether block/parent X can serve development, confirmation, or transfer for question Y?
-
-Return reasons. Mechanize facts, not ambiguous scientific judgment. Unknown remains unknown.
-
-**Tests:** identity, consumption lineage, independent-unit preservation, unknown handling.
-
-## 6. Phase 2 — compact query surface
-
-Prefer extending `research:relations` or `research-asset-query`; add a CLI only if ownership is wrong.
-
-Required queries:
-
-1. **Question:** candidate populations/assets, source regimes, independent-unit counts, conditioning, family/state/exact coverage.
-2. **Block/parent:** source, consumption lineage, descendants, state samples, exact/reference and treatment/report refs.
-3. **Eligibility:** usable/untouched blocks grouped by source/role with reasons.
-4. **Enrichment:** parent counts with family/state/exact/trace/work-response material; never count child rows as independent support.
-5. **Generation need:** surface suitable existing material before recommending generation.
-
-Compact by default; `--full` for provenance.
-
-## 7. Phase 3 — family-ready producers
-
-Do not generate a new standing corpus yet. Harden front doors first.
-
-### Witness-first / topology generation
-
-Locked/persistent research output should preserve/reference block ID, source revision/config, parent content identity, witness/provenance, manifest, question, and intended evidence role where decision-bearing.
-
-### Family generation
-
-Expansion from a block parent must preserve original block/parent identity, operator, invocation-local requested/attempted/accepted counts, family run identity, question, role, parent exposure state, and parent-family independent unit.
-
-Reuse `family-generate.mjs`; no second mutation engine.
-
-### Human/editor
-
-Historical published parents are not globally untouched. Preserve exposure; use prospectively frozen new editor parents when strong untouched human-source confirmation is required.
-
-**Acceptance:** a generated parent can later be family-expanded without reconstructing provenance manually.
-
-## 8. Phase 4 — progressive enrichment joins
-
-Connect existing outputs by reference.
-
-- **parent -> production state:** frontier sampler retains block/parent/run ancestry.
-- **state/event -> exact:** exact output retains source state/run; unsupported/time-limited = unknown.
-- **state/event -> observation/trace:** join to frozen decision context without changing production execution. Preserve canonical `workSpent` separately from node-progress telemetry; never infer/fallback one from the other.
-- **parent/family -> treatment:** manifests retain block/family selection and actual participation; siblings grouped by parent.
-- **response -> ladder/covariance:** derived analyses retain source run/ancestry and mint no new independent units.
-
-**Acceptance example:** one query reconstructs
-`block -> parent -> frontier state -> D1 observation -> exact annotation -> report`, while preserving the frozen-capture -> offline-annotation boundary and canonical work accounting.
-
-## 9. Phase 5 — acquisition routing preflight
-
-Given a question ID, compose existing status/assets/opportunity tooling and emit **one primary acquisition route** plus rationale, evidence role, independent unit, opportunity estimate, pilot/expansion/stop rule, and existing eligible assets. Reuse manifest research-question metadata for ambiguity/observable/outcome/MO identity.
-
-| Route | Choose when | Normal instrument |
-|---|---|---|
-| `REUSE_EXISTING` | suitable independent opportunities already exist | query/join current assets |
-| `FRESH_SAME_SOURCE` | sample-independent confirmation or more independent parents is the blocker | frozen witness-first/source-matched block |
-| `CROSS_SOURCE_TRANSFER` | claim requires distribution shift or current generator cannot express needed structure | topology composition or other genuinely different source |
-| `CONTROLLED_FAMILY` | blocker is causal contrast, invariance, local boundary, matched perturbation, or adversarial falsification | family generator; parent is independent unit |
-| `HUMAN_EDITOR` | human-origin transfer, externally designed topology, or omitted mechanics are required | locked human/editor parents + optional controlled descendants |
-| `NO_LEVEL_GENERATION` | blocker is telemetry/dose, representation, exact semantics, candidate construction, economics, or an already-closed tested form | observation/trace/exact/work-ladder/implementation work instead |
-
-The preflight may name a later secondary route, e.g. family microscope after broad parents or cross-source transfer after confirmation, but must not collapse distinct evidence roles into one population.
-
-**Hard default:** `REUSE_EXISTING` or `NO_LEVEL_GENERATION` unless the current gate identifies a population/contrast/transfer deficit. Output is a plan/manifest, never automatic generation.
+1. A prospective frozen block has a stable `blockId`, stable question ID, source regime/revision, sealed literal parent/content population, evidence role, independent unit, creation refs, and append-only consumption events. Content seal and research-lineage identity remain distinct.
+2. `research:relations` composes explicitly supplied block/enrichment artifacts read-only. Historical absence remains unknown; child rows never mint independent support.
+3. Witness-first/random and topology generation can emit frozen research blocks. Decision-bearing family expansion records per-run question/role/exposure, invocation-local generation counters, and validated originating-block ancestry.
+4. Production-frontier capture can inherit a frozen block. Existing observation/exact/treatment outputs can join by reference through `research:link-enrichment`; source artifacts remain authoritative.
+5. `research:acquisition-preflight` emits one conservative primary route: `REUSE_EXISTING`, `FRESH_SAME_SOURCE`, `CROSS_SOURCE_TRANSFER`, `CONTROLLED_FAMILY`, `HUMAN_EDITOR`, or `NO_LEVEL_GENERATION`. It can surface candidate assets and existing opportunity sizing, but never generates automatically.
+6. Current front doors are exposed through `AGENTS.md` and `tooling-catalog.md`. Do not rebuild a registry, warehouse, global freshness flag, second mutation engine, or alternate lineage schema.
 
 ## 10. Phase 6 — two end-to-end pilots
 
@@ -318,21 +200,4 @@ Do not stack all phases on one branch.
 
 ## 15. Next agent handoff
 
-Do **not** restart Phases 0-5. Return to the canonical solver queue. Begin Phase 6 only when a live ranked question actually requires one of its end-to-end pilots.
-
-Historical first-handoff instructions follow for provenance only:
-
-Execute **Phase 0 only**.
-
-Read this plan plus:
-
-1. `AGENTS.md`;
-2. `solver-research-data-assets.md`;
-3. `solver-research-resource-contract.md`;
-4. `solver-evaluation-evidence.md`;
-5. `variant-level-research.md`;
-6. `human-parent-contrast-research.md`;
-7. current manifest/population/frontier/observation implementations discovered through tooling census;
-8. any open PR touching those contracts before declaring a gap.
-
-Produce the gap matrix + dated report. Do **not** add a registry/schema. Every proposed persistent field must be justified as neither already canonical nor stably derivable.
+Do not restart Phases 0-5. Return to the canonical solver queue. Begin Phase 6 only when a live ranked question actually requires one of its end-to-end pilots. Read the relevant completed-phase report only when changing that substrate.
