@@ -7,18 +7,7 @@ Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-op
 
 ## Promoted out of future work
 
-The following are no longer merely deferred ideas; bounded premise-acquisition gates now live in `solver-optimization-workstreams.md`:
-
-- **solve-local typed knowledge rediscovery/reuse** via [`solver-solve-local-rediscovery-preflight.md`](solver-solve-local-rediscovery-preflight.md);
-- **per-instance relational feasibility**, including future-intersection commitments, constrained-event feasibility, and actual residual-interface commutativity, via [`solver-per-instance-relational-feasibility-preflight.md`](solver-per-instance-relational-feasibility-preflight.md);
-- **dependency-defined causal revision** via [`solver-dependency-defined-revision-preflight.md`](solver-dependency-defined-revision-preflight.md);
-- **fresh exact LIVE/DEAD siblings / DEAD-core continuation**;
-- **topology per-instance microscope**;
-- **separator/interface-contract sizing after the pending census result**;
-- **complete-path LNS cheapest falsifier**;
-- **Class-3 exact-action dose reconciliation** and the bounded Card-E quotient discovery pass.
-
-Do not duplicate those here. One exception worth flagging explicitly: the fresh exact sibling harvest produced a large exact-DEAD population (75 states/25 parents) but **no trustworthy LIVE contrast** — its naive goal-distance-greedy constructor cannot reach LIVE states even shallow, confirmed a construction-method artifact rather than a residual-structure finding. DEAD-core size/"spares LIVE" testing and Lane D/E work that needs matched LIVE/DEAD Class-5 siblings stay blocked until a production-search-quality sibling constructor exists (see [`solver-fresh-dead-sibling-harvest-preflight.md`](solver-fresh-dead-sibling-harvest-preflight.md)).
+Do not duplicate concluded/active lanes here; `solver-optimization-workstreams.md` owns them. Since this file's prior state: A is a bounded positive stopped at dynamic representation; D1 is positive with an existing ranking consumer but stopped at multi-parent economics observation; F3 is qualified positive stopped at decision-bearing discordance. C and E were negative, DEAD-core size-1 was negative, Class-3 dose is an evidence gap, and G1 LNS is constructor-method-limited. Multi-pick production-search construction did find two referee-verified LIVE siblings, so the old blanket D/E block from "no LIVE contrast" is obsolete. A production-quality constructor remains a local prerequisite only where a future test specifically needs one, notably G1.
 
 ## Deferred descendants of active premises
 
@@ -28,11 +17,11 @@ These become eligible only after the active premise gate immediately above them 
 |---|---|
 | General solve-local proof store / blackboard | One concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
-| Production bounded exact-query service | One Lane-D query demonstrates decision-useful SAT/UNSAT-style answers at bounded cost with a concrete consumer that saves more work or gains solves |
-| Region/AND-OR decomposition engine | Narrow separators are confirmed and the exact/conservative interface contract stays compact under path/mechanic history |
-| Production topology-aware state relation | A microscope yields a sound actionable consequence beyond raw phase, such as path-conditioned accessibility, side commitment, equivalence, or impossibility |
-| Targeted local surgery / causal backjump operator | Dependency-defined revision observer finds compact actionable causal interfaces materially smaller than ordinary rollback/prefix difference |
-| Full complete-path LNS | Cheapest falsifier shows relaxed complete paths are locally repairable to accepted solutions often enough to justify implementation |
+| Production bounded exact-query service | D1 first passes production-inert multi-parent observation with eligibility, rank/cutoff, work ancestry, information cost and independent-unit provenance; then test whether exact/cheap-proxy answers pay at the ranking consumer |
+| Region/AND-OR decomposition engine | Lane A demonstrates a compact dynamic interface contract preserving crossing/history/length/intersection obligations on a frozen legal-prefix population |
+| Production topology-aware state relation | Fresh independent parents show a reliable compact descriptor with non-zero decision-bearing discordance; then seek a sound actionable consequence beyond raw phase |
+| Targeted local surgery / causal backjump operator | New independent evidence finds an actionable causal interface materially smaller than naive divergence/ordinary rollback; Lane E's tested form stays closed |
+| Full complete-path LNS | A fair production-search-quality candidate constructor removes the Stage-2 method limit, then relaxed paths prove locally repairable often enough to justify implementation |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
 ## Other deferred architectural questions
@@ -89,6 +78,12 @@ Important distinctions:
 - closing historical blueprint implementations does not close future-intersection realizability;
 - closing positional/prefix repair does not close dependency-defined causal revision;
 - closing H1's compact recurring vocabulary does not close bounded per-instance joint feasibility.
+
+## Premise-map-derived research gates
+
+Replication earned no queue expansion. Robust regions strengthen provenance only: decision state exceeds puzzle state; allocation is part of capability; evidence is process-conditioned; historical negatives are scope-bound. Qualify raw graph/topology claims by representation history. Reopen the fourth replication cell only when a concrete decision cannot otherwise separate ontology artifact, mining-method artifact and robust concept; do not reopen broad mining for its own sake.
+
+The measurement overlay is non-queue. MO-005 residual distance/progress and MO-007 research-process yield remain observables, not solver tasks. Promote one only for a live mapped ambiguity with a discriminating observable, valid population/cost/authority contract and decision-changing outcomes.
 
 ## Research hygiene
 
