@@ -50,8 +50,8 @@ const model = buildResearchRelations(process.cwd(), {
 const question = model.relations.questions.find(row => row.id === questionId);
 if (!question) throw new Error(`unknown question id: ${questionId}`);
 
-const suppliedBlocks = model.relations.researchBlocks.filter(row => row.questionId === questionId);
-const eligibleBlocks = suppliedBlocks.filter(row => row.eligibility?.eligible === true);
+const knownBlocks = model.relations.researchBlocks.filter(row => row.questionId === questionId);
+const eligibleBlocks = knownBlocks.filter(row => row.eligibility?.eligible === true);
 const decision = chooseAcquisitionRoute({ question, eligibleBlocks, requestedNeed });
 const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
 const generationGuidance = generationGuidanceForRoute(decision.route);
@@ -81,7 +81,7 @@ console.log(JSON.stringify({
     existing: {
         explicitArtifactInputs: artifactPaths.length,
         discoveryEnabled: discoverArtifacts,
-        knownQuestionBlocks: suppliedBlocks.length,
+        knownQuestionBlocks: knownBlocks.length,
         mechanicallyEligibleBlocks: eligibleBlocks.length,
         blockIds: eligibleBlocks.map(row => row.blockId),
     },
@@ -94,7 +94,7 @@ console.log(JSON.stringify({
         estimate: null,
         requiredInput: '--control=<control-side combined report> when a control-side opportunity audit is meaningful',
         rule: decision.route === 'REUSE_EXISTING'
-            ? 'size analysis from the supplied eligible block(s)'
+            ? 'size analysis from the eligible existing block(s)'
             : decision.route === 'NO_LEVEL_GENERATION'
                 ? 'size the relevant observation/exact/work opportunity before any generation'
                 : 'run opportunity sizing before any broad generation; generation is never automatic',
