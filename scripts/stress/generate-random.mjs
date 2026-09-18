@@ -81,6 +81,10 @@ import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 import { makeLevelProvenance, makeProvenanceEntry } from '../../modules/domain/level-provenance-types.js';
+import { getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
+import { stableHash } from '../solver-experiment-contract.mjs';
+import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
+import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
 
 import {
     mulberry32, hashSeed, randInt, pick,
@@ -100,6 +104,9 @@ const MASTER_SEED = Number(args.get('--master-seed') ?? 20260709);
 const OUT_FILE = args.get('--out') || 'data/stress/stress-levels-random.json';
 const VERBOSE = args.has('--verbose');
 const APPEND = args.has('--append');
+const QUESTION_ID = args.get('--question-id') || null;
+const EVIDENCE_ROLE = args.get('--evidence-role') || 'development';
+const BLOCK_ID = args.get('--block-id') || null;
 // 2026-08-06: reports/2026-08-06-game-rules-solver-alignment-plan.md Section 4 — corpus-2's
 // deliberately-raised (+4) caps make "solver solve rate on corpus-2" a statement about how far
 // outside the shipped game's own complexity envelope the corpus reaches, not about player-facing
@@ -113,6 +120,13 @@ const APPEND = args.has('--append');
 // "S" prefix for its own non-migrated batches).
 const ENVELOPE_CAPS = args.has('--envelope-caps');
 const ID_PREFIX = args.get('--id-prefix') || 'R';
+
+if (!['development', 'confirmation', 'transfer'].includes(EVIDENCE_ROLE)) throw new Error('--evidence-role must be development, confirmation, or transfer');
+if (BLOCK_ID && !QUESTION_ID) throw new Error('--block-id requires --question-id');
+if (QUESTION_ID && APPEND) throw new Error('research-block generation is frozen; --append cannot be combined with --question-id');
+if (QUESTION_ID && !loadResearchQuestionRegistry(ROOT).questions.some(question => question.id === QUESTION_ID)) {
+    throw new Error(`unknown --question-id=${QUESTION_ID}`);
+}
 
 const MIN_GRID = 11, MAX_GRID = 15;
 const MIN_NOVELTY = 0.08;   // lower bar than the hypothesis-driven corpus — duplicate REJECTION
@@ -602,6 +616,36 @@ function main() {
         }] } : {}),
         levels: [...existingLevels, ...accepted],
     };
+
+    if (QUESTION_ID) {
+        const parentIds = out.levels.map(level => String(level.id));
+        const parentContentIdentities = out.levels.map(level => stableHash(getLevelFingerprintSource(level)));
+        const sourceRevision = stableHash({
+            producer: 'scripts/stress/generate-random.mjs',
+            generatorVersion: GENERATOR_VERSION,
+            corpusName: CORPUS_NAME,
+            masterSeed: MASTER_SEED,
+            count: COUNT,
+            idPrefix: ID_PREFIX,
+            envelopeCaps: ENVELOPE_CAPS,
+        });
+        const derivedBlockId = BLOCK_ID || `${QUESTION_ID}:${stableHash({ parentIds, parentContentIdentities }).slice('sha256:'.length, 'sha256:'.length + 12)}`;
+        const lineage = buildResearchBlock({
+            blockId: derivedBlockId,
+            questionId: QUESTION_ID,
+            sourceRegime: CORPUS_NAME,
+            sourceRevision,
+            evidenceRole: EVIDENCE_ROLE,
+            parentIds,
+            parentContentIdentities,
+            sourceArtifactRefs: [OUT_FILE],
+            producer: 'scripts/stress/generate-random.mjs',
+            manifestRef: OUT_FILE,
+            generationRef: OUT_FILE,
+        });
+        out.populationIdentity = lineage.populationIdentity;
+        out.researchBlock = lineage.researchBlock;
+    }
 
     mkdirSync(path.dirname(path.resolve(ROOT, OUT_FILE)), { recursive: true });
     // One level per line — the enforced format for all 3 local corpora; see
