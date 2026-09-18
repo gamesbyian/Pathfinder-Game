@@ -143,6 +143,15 @@ The common dispatcher is intentionally thin enough that a genuinely new producer
 
 ## Generator recognizability as a diagnostic
 
+Use:
+
+```bash
+npm run research:audit-generation-origin -- \
+  --source=random=tmp/.../random.json \
+  --source=topology=tmp/.../topology.json \
+  --folds=5 --out=tmp/.../origin-audit.json
+```
+
 A useful development analysis is to ask whether static descriptors can predict which generator produced a level. High recognizability identifies dimensions on which source populations differ. Low-recognizability rows are good candidates for matched cross-source comparison.
 
 This is an offline research diagnostic only. Generator/source identity is forbidden as cold production steering and must never become a runtime solver feature.
