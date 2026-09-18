@@ -27,6 +27,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { spawnSync } from 'node:child_process';
+import { loadResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 
 const argv = process.argv.slice(2);
 const values = new Map();
@@ -46,6 +47,13 @@ const required = key => {
 };
 
 const question = required('--question');
+const explicitQuestionId = values.get('--question-id') || null;
+const registry = loadResearchQuestionRegistry(process.cwd());
+const questionId = explicitQuestionId || (registry.questions.some(entry => entry.id === question) ? question : null);
+if (explicitQuestionId && !registry.questions.some(entry => entry.id === explicitQuestionId)) {
+    console.error(`unknown --question-id=${explicitQuestionId}`);
+    process.exit(2);
+}
 const evidenceRole = required('--evidence-role');
 const parent = required('--parent');
 const mode = required('--mode');
@@ -87,18 +95,26 @@ const manifestOut = values.get('--manifest-out') || out.replace(/\.json$/i, '-ma
 const contextOut = values.get('--context-out') || path.join(contextDir, `family-${safeParent}-${safeMode}-seed-${safeSeed}-research-context.json`);
 
 const wrapperOnly = new Set([
-    '--question', '--evidence-role', '--parent-exposure', '--context-out', '--dry-run',
+    '--question', '--question-id', '--evidence-role', '--parent-exposure', '--context-out', '--dry-run',
 ]);
 const delegatedArgs = argv.filter(arg => {
     const key = arg.split('=')[0];
     return !wrapperOnly.has(key) && key !== '--out' && key !== '--manifest-out' && key !== '--parent-corpus';
 });
-delegatedArgs.push(`--parent-corpus=${parentCorpus}`, `--out=${out}`, `--manifest-out=${manifestOut}`);
+delegatedArgs.push(
+    `--parent-corpus=${parentCorpus}`,
+    `--out=${out}`,
+    `--manifest-out=${manifestOut}`,
+    `--evidence-role=${evidenceRole}`,
+    `--parent-exposure=${parentExposure}`,
+);
+if (questionId) delegatedArgs.push(`--question-id=${questionId}`);
 
 const context = {
     schemaVersion: 1,
     apparatus: 'human-editor-parent-controlled-contrast',
     question,
+    questionId,
     evidenceRole,
     parentExposure,
     independentUnit: 'parent-family',
