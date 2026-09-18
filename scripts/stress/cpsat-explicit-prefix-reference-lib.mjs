@@ -70,6 +70,16 @@ export function extractExplicitPrefixCases(document, { format = 'cases', corpus 
             // passed through verbatim to cpsat-reference-probe.py's own --pin=<json>. null/absent
             // runs the plain prefix-feasibility query exactly as before this field existed.
             pin: row.pin ?? null,
+            // Optional future-intersection-commitment hook (D1, docs/solver-per-instance-relational-
+            // feasibility-preflight.md Lane D / docs/solver-d1-production-inert-evidence-preflight.md):
+            // a non-empty array of already-visited cells passed verbatim to cpsat-reference-probe.py's
+            // own --pin-revisit=<json>, which commits the model to revisiting each named cell at least
+            // twice. Distinct from `pin`: this can name several cells, all pinned simultaneously, so a
+            // per-cell D1 query must supply exactly one cell per case rather than batching a candidate's
+            // whole revisit set into one case. null/absent/empty runs the plain query unchanged.
+            pinRevisit: Array.isArray(row.pinRevisit) && row.pinRevisit.length > 0
+                ? row.pinRevisit.map(normalizeCoordinate)
+                : null,
         };
     });
 }

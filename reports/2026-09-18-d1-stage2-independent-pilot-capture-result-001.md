@@ -1,9 +1,9 @@
 # D1 Stage 2 independent pilot: capture complete, annotation blocked on tractable exact-query execution
 
 > **Status:** inconclusive
-> **Last evidence:** 2026-09-18 — Stage 1 canary at scale plus an 8-parent Stage 2 capture, both under `docs/solver-d1-production-inert-evidence-preflight.md`.
-> **Decision:** the D1 production-inert observation infrastructure (merged in #1880) is now validated end-to-end through capture. A clean, frozen, independent 8-parent confirmation-role population exists with 1,339 eligible decisions and exact OFF/ON parity. Full exact annotation of that population is not tractable on a single local machine; it requires GHA sharding. No D1 disagreement/economics conclusion can be drawn yet.
-> **Remaining gate:** execute exact annotation of the committed capture population via a sharded GHA job (extend `cpsat-explicit-prefix-reference.yml`'s case format to carry `pinRevisit`, or an equivalent shard-per-decision job), then apply the preflight's advancement/stop gates to the complete result.
+> **Last evidence:** 2026-09-18 — Stage 1 canary at scale, an 8-parent Stage 2 capture, and a GHA-execution seam for exact annotation, all under `docs/solver-d1-production-inert-evidence-preflight.md`.
+> **Decision:** the D1 production-inert observation infrastructure (merged in #1880) is now validated end-to-end through capture, and a working, tested GHA execution path for exact annotation now exists (`cpsat-explicit-prefix-reference.yml` extended with a `pinRevisit` case field, plus a converter/reconciler pair). But the frozen confirmation-role population's true per-cell query volume is now precisely known and is too large to responsibly dispatch as one CI campaign without an explicit sizing decision: **220,841 independent CP-SAT queries** (6,663 eligible candidates x an average ~33 revisit cells each) across the 1,339 eligible decisions. At the ~15-30s/query cost measured locally, that is on the rough order of 1,000-1,800 CPU-hours. No D1 disagreement/economics conclusion is drawn from this report; a mechanical smoke test on one real candidate (6 cells) did complete and is reported below only as pipeline validation, not as population evidence.
+> **Remaining gate:** decide and run a deliberately bounded exact-annotation case population (see Reopen/next gate) through the now-working GHA path, sized well below 220,841 cases, before any Stage 2/3 disagreement or economics verdict.
 
 > **Research question:** `WS2-D1-PRODUCTION-INERT-OBSERVATION`
 > **Premise refs:** `P091`, `P065`, `P206`
@@ -65,23 +65,52 @@ With `ortools` present, genuine CP-SAT solving was confirmed (subprocess CPU-bou
 
 This is exactly the preflight's own anticipated risk ("the exact observer may be expensive because it is research instrumentation... sound support is too sparse and `UNKNOWN` dominates" and "exact information cost dominates plausible displaced work") but the *measurement of that cost* is itself new evidence: the cost is structural (linear in path length via independent per-cell queries), not merely a matter of raising the time-limit.
 
-### Why this is not run through GHA in this report
+### A GHA execution seam now exists
 
-`cpsat-explicit-prefix-reference.yml` already exists as exactly the right execution seam — round-robin-sharded, independent-case execution of `cpsat-reference-probe.py` across up to 20 Actions runners with full case-population integrity checking. It currently passes `--pin=<json>` (a single must-pass-through cell) per case, not `--pin-revisit=<json>` (revisit-at-least-twice) — D1's actual query shape. Converting the 1,339 frozen eligible decisions' candidate/revisit-cell triples into that workflow's case format is a small, well-scoped extension (new `pinRevisit` case field threaded through `cpsat-explicit-prefix-reference-lib.mjs` and `cpsat-explicit-prefix-reference.mjs`'s probe invocation), not a new framework. It was not implemented in this session for lack of remaining time to also validate it properly (parity/schema tests, a real dispatch, and watching a multi-shard run that this workflow itself budgets up to 350 minutes per shard for). Attempting it hastily risked a defect in shared exact-reference tooling other consumers rely on.
+`cpsat-explicit-prefix-reference.yml` is exactly the right execution seam — round-robin-sharded, independent-case execution of `cpsat-reference-probe.py` across up to 20 Actions runners with full case-population integrity checking. It previously passed `--pin=<json>` (a single must-pass-through cell) per case, not `--pin-revisit=<json>` (revisit-at-least-twice) — D1's actual query shape. This report adds:
+
+- a `pinRevisit` case field threaded through `cpsat-explicit-prefix-reference-lib.mjs` (normalizes an array of cells) and `cpsat-explicit-prefix-reference.mjs` (passes `--pin-revisit=` to the probe), plus a per-case `informationCostMs` timing field the executor previously did not record;
+- `scripts/stress/d1-decisions-to-explicit-prefix-cases.mjs`, which converts frozen D1 capture(s) into that workflow's generic `cases` document — one case per (decision, eligible candidate, revisit cell) triple, with a stable `${parentId}:${decisionId}:c<candidateIndex>:r<cellIndex>` id and a `d1` reconciliation-key block;
+- `scripts/stress/reconcile-d1-explicit-prefix-cases.mjs`, which recombines a completed run's per-cell results back into the exact decision-level shape `annotate-d1-production-decisions.mjs` produces (classification is order-independent — `classifyD1CandidateQueryResults` only checks "any live+refereeValid" / "all dead" — so cells queried independently and in parallel reach the same verdict a serial early-break query would have), so `summarizeD1AnnotatedDecisions` and downstream tooling need no GHA-specific code path;
+- new unit tests (`test:cpsat-explicit-prefix-reference-lib`) covering `pin`/`pinRevisit` normalization, which had no direct test coverage before.
+
+A hand-verified 3-case run and a 67-case single-candidate smoke run (below) confirm the pipeline is mechanically correct end to end with `ortools` present: genuine `dead`/`timeout-abstain` CP-SAT results, not the earlier no-`ortools` instant-abstain artifact.
+
+### The real cost driver, now measured exactly
+
+Annotation cost is dominated by **candidate revisit-cell count**, not the per-query time limit: the annotator queries CP-SAT once per already-visited non-gate cell on a candidate's path, and a `ZERO` classification requires every one of them to resolve. Counting exactly (`candidateRevisitCells` over every eligible candidate in the committed captures, no CP-SAT run needed) gives:
+
+| Parent | Eligible decisions | Eligible candidates | Revisit-cell queries |
+|---|---:|---:|---:|
+| R02270 | 14 | 70 | 1,152 |
+| R02399 | 67 | 335 | 12,733 |
+| R02408 | 223 | 1,115 | 39,252 |
+| R02425 | 208 | 1,022 | 30,122 |
+| R02551 | 59 | 295 | 8,925 |
+| R02666 | 6 | 30 | 639 |
+| R02676 | 552 | 2,752 | 91,311 |
+| R03191 | 210 | 1,044 | 36,707 |
+| **Total** | **1,339** | **6,663** | **220,841** |
+
+That is ~33 revisit-cell queries per eligible candidate on average. At the 15-51s/query wall time measured locally (single query, `--time-limit=15`), the full population is on the order of **1,000-1,800 CPU-hours** — tractable in principle via wide-enough GHA sharding (hundreds of shards, well within Actions' per-workflow matrix limits), but not something to dispatch without a deliberate sizing decision given the CI-minutes cost, so this report does not dispatch it.
+
+### Mechanical smoke test (not population evidence)
+
+To validate the new tooling, `R02270`'s `score-width-culled@14#0` decision (5 eligible candidates, 67 revisit-cell cases) was converted and run through the real executor with `ortools` present: every result observed is genuine `dead`/`timeout-abstain` CP-SAT output (no `live`), confirming the pipeline reproduces exactly the behavior already confirmed in the isolated 3-case check above rather than the earlier no-`ortools` artifact. The first candidate's full 13-cell set completed (6 `dead`, 7 `timeout-abstain`); feeding those genuine labels into `reconcile-d1-explicit-prefix-cases.mjs` correctly reconstructed the `annotate-d1-production-decisions.mjs`-shaped output (`support: UNKNOWN` via `classifyD1CandidateQueryResults`, matching field-for-field what the local annotator would have produced). This is pipeline/mechanism validation on one candidate out of 6,663, not a disagreement-rate or support-rate finding.
 
 ## Disposition
 
 - Stage 1 (canary): **concluded-positive.** Instrumentation is sound at scale under the production-orchestration boundary.
 - Stage 2 capture: **concluded-positive.** Frozen, independent, parity-clean, committed population of 1,339 eligible decisions across 8 parents.
-- Stage 2 annotation: **inconclusive — blocked on execution, not on a negative result.** No `SUPPORTED` D1 classification exists in bulk yet; the one contaminated (pre-`ortools`) pass is discarded, and the one genuine-but-partial pass was stopped deliberately rather than left to run for many hours locally.
-- No advancement or stop verdict is reached on `WS2-D1-PRODUCTION-INERT-OBSERVATION`. The premise, consumer, and population all remain exactly as previously stated; only the annotation execution path is now better understood.
+- GHA execution seam: **concluded-positive.** `pinRevisit` extension, converter, and reconciler are implemented, tested, and mechanically validated end to end.
+- Stage 2 annotation at population scale: **inconclusive — blocked on a sizing decision, not on a negative result or an unsolved engineering problem.** The full 220,841-case population is technically executable but was deliberately not dispatched pending an explicit scope decision (see next gate). No `SUPPORTED`/disagreement-rate finding exists yet.
+- No advancement or stop verdict is reached on `WS2-D1-PRODUCTION-INERT-OBSERVATION`. The premise and consumer are unchanged; the population, its exact query cost, and the execution path are now precisely known.
 
 ## Reopen / next gate
 
-1. Extend `cpsat-explicit-prefix-reference.mjs`/`-lib.mjs` to accept a `pinRevisit` case field that maps to the probe's `--pin-revisit=`, with its own test coverage alongside the existing `--pin=` path.
-2. Write a converter from the committed `pilot-capture-*.json` files (`context.d1Eligibility.candidates`/`eligibleCandidateIds`) to that workflow's `cases` document shape, preserving stable per-(decision, candidate, revisit-cell) case IDs for the workflow's existing population-integrity check.
-3. Dispatch `cpsat-explicit-prefix-reference.yml` (or a close variant) against the full 1,339-decision population with a bounded per-case time limit (this report suggests starting near 15-30s; the workflow already treats timeout as neutral `UNKNOWN`), sharded generously (the workflow defaults to 20).
-4. Recombine into the shape `summarizeD1AnnotatedDecisions` expects (or extend that summarizer to read the sharded case-result format) and apply the preflight's Stage 2/3 advancement and stop gates verbatim.
-5. If real-world exact-query cost at GHA scale is still judged to dominate plausible displaced work once genuine SUPPORTED-rate data exists, that is a legitimate stop per the preflight's own cost criterion — but that verdict needs real supported/unknown-rate data, which this report does not yet have.
+1. **Size a bounded first case population deliberately**, before inspecting any further outcomes beyond the single smoke candidate above (which is excluded from whatever population is chosen, to avoid re-using peeked evidence). A reasonable starting point: a fixed, small number of eligible decisions per parent (e.g. 3-5), chosen by decision-ordinal order (mechanical, not outcome-selected), run through `d1-decisions-to-explicit-prefix-cases.mjs` -> `cpsat-explicit-prefix-reference.yml` -> `reconcile-d1-explicit-prefix-cases.mjs`. Label this honestly: a decision-ordinal-truncated subsample of a confirmation-role capture is discovery/development-tier evidence for the disagreement question, not full confirmation, until the whole frozen population is annotated.
+2. Only if that bounded run shows non-trivial eligibility-conditional disagreement and a plausible positive information-value envelope, size and dispatch progressively larger slices toward the full 220,841-case population — this is exactly the preflight's own staged-expansion discipline, now applied to the annotation step itself rather than only to parent selection.
+3. If even a small bounded slice shows negligible disagreement or overwhelmingly `UNKNOWN`/timeout support, that is informative on its own and should be weighed against the measured per-query cost under the preflight's stop criteria before requesting a larger allocation.
+4. Independently, consider whether a cheaper proxy (e.g. a shorter time-limit tier, or a graph-reachability pre-filter before invoking CP-SAT) could reduce the ~33-cells/candidate cost without weakening the ZERO/NONZERO/UNKNOWN semantics — but treat that as a separately justified investigation, not a prerequisite for step 1.
 
-Do not repeat the discarded 30-second-timeout, no-`ortools` local run, and do not report its 100%-`UNKNOWN` numbers anywhere as evidence.
+Do not repeat the discarded 30-second-timeout, no-`ortools` local run from earlier in this session, and do not report its 100%-`UNKNOWN` numbers anywhere as evidence.

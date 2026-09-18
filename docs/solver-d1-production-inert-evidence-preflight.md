@@ -111,6 +111,14 @@ The capture must use the full production orchestration boundary, not a standalon
 For confirmation/transfer evidence, offline annotation must cover every frozen eligible decision; the
 development-only `--max-eligible-decisions` cap is rejected.
 
+Local per-cell serial annotation (`annotate-d1-production-decisions.mjs`) does not scale past a
+handful of decisions: a candidate's revisit-cell count (measured ~33/candidate on the 2026-09-18
+8-parent capture) each costs one independent CP-SAT query. Use the GHA seam instead:
+`d1-decisions-to-explicit-prefix-cases.mjs` -> `cpsat-explicit-prefix-reference.yml` (`pinRevisit`
+case field) -> `reconcile-d1-explicit-prefix-cases.mjs`, which reconstructs the same decision-level
+shape the local annotator produces. See [`report`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
+for exact case-volume/cost figures and why the full frozen population was not dispatched outright.
+
 Measure:
 
 - parent-level eligibility prevalence;
