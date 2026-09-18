@@ -77,6 +77,11 @@ export function auditResearchIntegration(root = process.cwd()) {
     if (!model.relations.queue.some(row => String(row.workstreamId) === '2')) {
         errors.push('research-status queue relation does not expose WS2 from current workstream authority');
     }
+    for (const question of questionRegistry.questions.filter(row => String(row.state ?? '').startsWith('active'))) {
+        if (!model.relations.queue.some(row => row.questionRef === question.id)) {
+            errors.push(`active question ${question.id} is not linked from the structured workstream queue relation`);
+        }
+    }
     for (const evidence of model.relations.evidence) {
         if (evidence.researchQuestion && !questionIds.has(evidence.researchQuestion)) {
             errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown research question ${evidence.researchQuestion}`);
