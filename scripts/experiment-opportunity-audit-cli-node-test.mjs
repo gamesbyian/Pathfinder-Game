@@ -11,6 +11,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { analyzeOpportunity } from './experiment-opportunity-audit.mjs';
 
 let passed = 0;
 function test(name, fn) {
@@ -69,6 +70,28 @@ test('--fail-on with a code that never triggers leaves the run passing', () => {
 
 test('without --check=true, no --fail-on code ever affects the exit code', () => {
     assert.equal(run([`--control=${zeroOpportunity}`, '--fail-on=ZERO_OPPORTUNITY']), 0, '--check must be explicitly opted into');
+});
+
+
+test('independent-unit sizing separates detection rows from between-parent support', () => {
+    const grouped = analyzeOpportunity({
+        levels: [
+            { id: 'A1', parentId: 'P1', ok: false, attempts: [] },
+            { id: 'A2', parentId: 'P1', ok: false, attempts: [] },
+            { id: 'B1', parentId: 'P2', ok: true, attempts: [] },
+            { id: 'C1', parentId: 'P3', ok: false, attempts: [] },
+        ],
+        mode: 'control-fail',
+        independentUnitField: 'parentId',
+        sizingBasis: 'independent-unit',
+        targetOpportunities: 2,
+    });
+    assert.equal(grouped.opportunities, 3);
+    assert.equal(grouped.independentUnits.total, 3);
+    assert.equal(grouped.independentUnits.opportunities, 2);
+    assert.equal(grouped.sizing.basis, 'independent-unit');
+    assert.equal(grouped.sizing.pointTotal, 3);
+    assert.ok(grouped.warnings.some(warning => warning.startsWith('PSEUDOREPLICATION:')));
 });
 
 console.log(`\nexperiment-opportunity-audit CLI tests: ${passed} passed, ${process.exitCode ? 'some failed' : '0 failed'}`);
