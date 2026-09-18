@@ -545,6 +545,101 @@ Existing lifecycle maps, D1 captures, frontier captures, and operational traces 
 
 Do not manufacture missing capsule fields or pretend old artifacts were produced under the new capture contract.
 
+
+### 5.4 GHA collection, transport, and durability
+
+Compact failure evidence must be **automatic-by-construction** across supported solver workflows.
+
+The target user/agent experience is the same one the repository now has for hint/provenance retention: an agent should not need to remember a special failure-telemetry flag, add one-off artifact plumbing, or manually invoke a post-run importer merely to preserve the standard cheap failure-response layer.
+
+#### Collection happens at the producer
+
+Information that only exists during search must be observed in the shard/process that runs the solver.
+
+Examples:
+
+- progress-over-work checkpoints;
+- rejection-reason counts;
+- candidate-flow counts;
+- frontier summaries;
+- recurrence counters;
+- selected rich capsules.
+
+A later harvester may **persist** or **reconcile** recorded observations. It cannot reconstruct observations that the source solve never emitted.
+
+Therefore:
+
+- shared solver/tooling entry points should emit the standard compact failure-response layer by default;
+- supported workflow wrappers should not require agents to remember an opt-in flag for that standard layer;
+- expensive rich capsule profiles remain explicit/question-driven.
+
+#### Shard transport is automatic
+
+For sharded GHA workflows:
+
+1. the shard computes normal solver output plus the standard compact failure-response projection;
+2. the shard stages that evidence with its normal result artifact;
+3. shard upload includes the evidence in the existing partial-result/always-upload path where practical;
+4. the combine job validates shard coverage and combines/reduces the failure evidence;
+5. the standard sweep/result publisher declares the telemetry side effect and source artifacts.
+
+Do not create a separate post-run job to recompute cheap summaries from giant raw traces.
+
+Prefer:
+
+`observe locally -> aggregate locally -> upload compactly -> combine semantically`
+
+over:
+
+`upload full trace -> reduce later`.
+
+#### Rich capsules travel separately when needed
+
+Rich path/state capsules may use a sibling shard artifact/subdirectory so ordinary result matrices stay compact.
+
+The combine job should normally produce:
+
+- a small run-wide manifest/index;
+- parent/shard coverage;
+- selector observed/retained/truncated counts;
+- event-kind summaries;
+- source artifact references.
+
+It should not concatenate arbitrarily large detailed capsule sets into one monolithic JSON document merely for convenience.
+
+#### Post-run harvester role
+
+The existing solver-evidence harvesting pattern is the preferred durability rail.
+
+A future extension of `harvest-solver-evidence.yml` may:
+
+- discover valid search-loss/failure-response bundles in source-run artifacts;
+- preserve source run/workflow/SHA and artifact coverage;
+- retain the minimal reconstructable bundle when a research block, decision-bearing result, or explicit retention rule requires durability;
+- preserve useful evidence from partially failed/cancelled workflows while recording incomplete coverage.
+
+It must **not** merge all historical failure observations into one mutable canonical per-level failure database.
+
+Hints are canonical reusable positive facts. Failure observations are normally run/protocol-conditioned historical evidence and should remain run-scoped.
+
+#### Retention classes
+
+Use three retention classes:
+
+1. **routine compact telemetry** - automatic in normal result artifacts; may expire with ordinary GHA retention when not consumed;
+2. **exploratory rich capsules** - automatic transport when an explicit rich capture profile is enabled, but ephemeral by default;
+3. **decision-bearing/research-consumed failure evidence** - automatically promoted to the durable evidence topology with the minimal reconstructable bundle.
+
+Agents should choose research questions and rich-capture profiles. They should not have to remember basic failure-evidence plumbing.
+
+#### Partial/red workflow semantics
+
+A partially failed/cancelled GHA sweep may still contain valid completed-shard observations.
+
+Preserve them when uploaded, but carry explicit coverage such as expected shards, observed shards, complete/incomplete state, and parent/cell coverage where known.
+
+Incomplete evidence may remain useful for forensic/development work but must not masquerade as a complete population.
+
 ## 6. Integration with existing research resources
 
 ### 6.1 Lifecycle telemetry
