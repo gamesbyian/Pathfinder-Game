@@ -2,6 +2,10 @@
 /**
  * Uniform-random stress corpus generator — builds data/stress/stress-levels-random.json.
  *
+ * Research front door: `npm run research:generate-levels -- --method=random ...`.
+ * Sibling source regimes are `targeted` and `topology`; see docs/solver-research-generation.md.
+ * Direct invocation remains supported for native producer options.
+ *
  * DIFFERENT PHILOSOPHY from generate.mjs's batches A-F: that corpus was deliberately
  * hypothesis-driven (witness geometry and mechanic placement chosen to target specific
  * solver routingRegimes/policy thresholds). This one is deliberately NOT — it exists to
