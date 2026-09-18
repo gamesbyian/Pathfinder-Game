@@ -86,7 +86,10 @@ export function buildResearchStatusIndex(root) {
     const workstreamsSource = existsSync(path.join(root, workstreamsPath)) ? readFileSync(path.join(root, workstreamsPath), 'utf8') : '';
     // Preserve the public `queue` collection name for index consumers, but source it from the
     // current authority. Workstream IDs are stable identifiers, explicitly not execution ranks.
-    const queue = tableRows(workstreamsSource, '## Active workstreams').map(([id, question, state, gate]) => ({
+    const workstreamRows = tableRows(workstreamsSource, '## Workstream state').length
+        ? tableRows(workstreamsSource, '## Workstream state')
+        : tableRows(workstreamsSource, '## Active workstreams');
+    const queue = workstreamRows.map(([id, question, state, gate]) => ({
         topicId: `workstream-${id}`, workstreamId: Number(id), question,
         status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
         state, remainingGate: gate,
