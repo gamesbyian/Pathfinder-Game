@@ -87,6 +87,28 @@ It deliberately does **not** read solver outcomes, exact labels, historical diff
 
 The output is a **selection artifact**, not a corpus. It references parent IDs, source artifacts, and source block identities; source blocks stay authoritative. Matching adds selection provenance and does not create new independent units.
 
+When matched membership becomes part of a decision-bearing study, persist that use against each source block rather than leaving selection pressure only in prose. The generic sidecar can derive the selected parent scopes directly from the matcher artifact:
+
+```bash
+npm run research:record-consumption -- \
+  --block-artifact=tmp/.../random.json \
+  --question-id=<id> \
+  --selection-artifact=tmp/.../matched.json \
+  --selection-source=random \
+  --opened-outcome-kind=solver-outcome \
+  --out=tmp/research-blocks/<id>/random-matched-consumption.json
+
+npm run research:record-consumption -- \
+  --block-artifact=tmp/.../topology.json \
+  --question-id=<id> \
+  --selection-artifact=tmp/.../matched.json \
+  --selection-source=topology \
+  --opened-outcome-kind=solver-outcome \
+  --out=tmp/research-blocks/<id>/topology-matched-consumption.json
+```
+
+The sidecars append parent-scope consumption events with `outcome-blind-static-descriptor-match` conditioning while leaving the frozen source blocks unchanged. They record evidence-use ancestry; they do not create a new population, change the source evidence role, or imply that semantic question ancestry equals exposure ancestry.
+
 Use a caliper (`--max-distance`) when a scientific claim requires genuinely close static analogues. If the matcher cannot form enough groups under the prespecified caliper, report acquisition/matching starvation rather than relaxing the threshold after seeing solver outcomes.
 
 ### What matched cohorts can diagnose
