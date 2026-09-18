@@ -1,4 +1,4 @@
-<!-- agent-context-budget: warn=76000 max=90000 -->
+<!-- agent-context-budget: warn=90000 max=105000 -->
 # Search-loss evidence implementation plan
 
 > **Status:** implementation plan; no production solver behavior is authorized by this document.
