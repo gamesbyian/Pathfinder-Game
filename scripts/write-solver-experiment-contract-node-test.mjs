@@ -55,4 +55,49 @@ assert.throws(() => buildContract({
   population: { kind: 'sealed-stratified-sample', identityBasis: 'stable-level-id', corpusIdentity: `sha256:${'8'.repeat(64)}` },
 }, { resolvedSha, populationSeal: { identityHash: populationIdentity } }), /disagrees with population seal/);
 
+
+const researchBlock = {
+  blockId: 'WS2-PORTAL-TRANSFER-001',
+  questionId: 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION',
+  sourceRegime: 'topology-composition',
+  sourceRevision: '0.1',
+  evidenceRole: 'transfer',
+  independentUnit: 'parent-level',
+  parentIds: ['T00001'],
+  parentContentIdentities: ['v2:example'],
+  sourceArtifactRefs: ['tmp/portal-transfer/levels.json'],
+  createdBy: {
+    producer: 'solver-routing-regime-sample-ab.yml',
+    manifestRef: 'tmp/portal-transfer/experiment-contract.json',
+    runRef: null,
+  },
+  generationRef: 'tmp/portal-transfer/generation.json',
+  consumptionEvents: [],
+};
+const withResearchBlock = buildContract({
+  configuration: { baselineRef: 'd'.repeat(40), treatmentRef: 'e'.repeat(40), nodeBudget: 1 },
+  workflowFamily: 'routing-regime-sample-ab',
+  producer: 'solver-routing-regime-sample-ab.yml',
+  entrypoint: 'solver.mjs',
+  population: { kind: 'sealed-stratified-sample', identityBasis: 'stable-level-id', researchBlock },
+}, { resolvedSha, populationSeal: { identityHash: populationIdentity, count: 1 } });
+assert.equal(withResearchBlock.population.researchBlock.blockId, researchBlock.blockId);
+assert.equal(withResearchBlock.population.corpusIdentity, populationIdentity);
+
+assert.throws(() => buildContract({
+  configuration: { nodeBudget: 1 },
+  workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+  population: { kind: 'explicit-ids', identityBasis: 'stable-level-id', researchBlock },
+}, { resolvedSha }), /populationIdentity/);
+
+assert.throws(() => buildContract({
+  configuration: { nodeBudget: 1 },
+  workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+  population: {
+    kind: 'explicit-ids',
+    identityBasis: 'stable-level-id',
+    researchBlock: { ...researchBlock, questionId: 'NOT-A-REAL-QUESTION' },
+  },
+}, { resolvedSha, populationSeal: { identityHash: populationIdentity, count: 1 } }), /not present in solver-research-question-relations/);
+
 console.log('write solver experiment contract tests passed');

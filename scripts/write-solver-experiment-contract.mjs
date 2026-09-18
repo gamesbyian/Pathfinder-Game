@@ -23,6 +23,8 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { hashConfiguration, isImmutableCommitSha } from './solver-experiment-contract.mjs';
+import { assertResearchBlock } from './solver-research-block-lineage.mjs';
+import { loadResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 
@@ -56,13 +58,22 @@ function inferredPairedArms(configuration) {
 }
 
 function populationWithSeal(population, populationSeal) {
-  if (!populationSeal) return population;
-  const identityHash = populationSeal?.identityHash;
-  if (!SHA256_RE.test(String(identityHash ?? ''))) throw new Error('population seal identityHash must be sha256:<64 hex>');
-  if (population?.corpusIdentity && population.corpusIdentity !== identityHash) {
+  const identityHash = populationSeal?.identityHash ?? population?.corpusIdentity ?? null;
+  if (populationSeal && !SHA256_RE.test(String(identityHash ?? ''))) {
+    throw new Error('population seal identityHash must be sha256:<64 hex>');
+  }
+  if (populationSeal && population?.corpusIdentity && population.corpusIdentity !== identityHash) {
     throw new Error(`declared population.corpusIdentity disagrees with population seal: ${population.corpusIdentity} vs ${identityHash}`);
   }
-  return { ...(population ?? {}), corpusIdentity: identityHash };
+  const resolved = populationSeal ? { ...(population ?? {}), corpusIdentity: identityHash } : population;
+  if (resolved?.researchBlock) {
+    assertResearchBlock(resolved.researchBlock, { populationIdentity: resolved.corpusIdentity });
+    const registry = loadResearchQuestionRegistry(process.cwd());
+    if (!registry.questions.some(question => question.id === resolved.researchBlock.questionId)) {
+      throw new Error(`researchBlock.questionId is not present in solver-research-question-relations.json: ${resolved.researchBlock.questionId}`);
+    }
+  }
+  return resolved;
 }
 
 export function buildContract(spec, { resolvedSha = null, populationSeal = null } = {}) {

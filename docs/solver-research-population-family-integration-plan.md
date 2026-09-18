@@ -5,6 +5,7 @@
 > **Priority:** `solver-optimization-workstreams.md`.
 > **Method:** `solver-research-operating-model.md`, `solver-evaluation-evidence.md`, `solver-research-resource-contract.md`.
 > **Goal:** make existing population, family, frontier/state, exact/reference, observation, and evidence resources compose as one progressive workflow without a second evidence warehouse.
+> **Progress (2026-09-17):** Phase 0 audit complete in `reports/solver-research-population-family-phase0-audit-2026-09-17.md`; Phase 1 implements the prospective block/consumption contract by extending the existing experiment-population seam. Phase 2 remains intentionally deferred until real block instances exist to query.
 
 ## 0. Target workflow
 
@@ -135,6 +136,15 @@ A prospectively reusable block must preserve or reference:
 - later conditioning/consumption events.
 
 Prefer extending existing population-plan/experiment-manifest structures.
+
+Implementation constraints established by Phase 0:
+
+- reuse the existing population content seal / `population.corpusIdentity` as the integrity primitive;
+- keep `blockId` separate from the content seal: block identity is research lineage, the seal is content integrity;
+- use a validated stable `questionId` from `solver-research-question-relations.json` while preserving the existing experiment-manifest `researchQuestion` fields;
+- use one prospective `independentUnit` spelling in the shared block contract without mass-renaming historical/local producer fields;
+- keep later consumption separate from generation provenance;
+- do not backfill absent historical exposure, conditioning, question, source-revision, or independence facts.
 
 ### Consumption event
 
