@@ -11,6 +11,7 @@ import {
   hybridGuidance,
   normalizeMethodSelection,
   sanitizeStem,
+  suiteDescriptor,
 } from './research-level-generation-lib.mjs';
 
 function parseArgs(argv) {
@@ -55,6 +56,7 @@ Common options:
   --envelope-caps                  random only
   --append                         random only
   --verbose
+  --overwrite                     allow replacement of existing output/manifest files
   --dry-run
   -- <producer-specific flags>     single-method only
 
@@ -101,7 +103,7 @@ function main() {
   const count = Number(values.get('--count') || 30);
   const masterSeed = Number(values.get('--master-seed') ?? 20260917);
   const questionId = values.get('--question-id') || null;
-  const evidenceRole = values.get('--evidence-role') || (questionId ? 'development' : null);
+  const explicitEvidenceRole = values.get('--evidence-role') || null;
   const explicitOut = values.get('--out') || null;
   const explicitPrefix = values.get('--id-prefix') || null;
   const explicitBlockId = values.get('--block-id') || null;
@@ -111,6 +113,7 @@ function main() {
   const envelopeCaps = flags.has('--envelope-caps');
   const append = flags.has('--append');
   const dryRun = flags.has('--dry-run');
+  const overwrite = flags.has('--overwrite');
 
   if (!Number.isInteger(count) || count < 1) throw new Error('--count must be a positive integer');
   if (selected.length > 1 && explicitOut) throw new Error('--out is single-method only; use --out-dir for multi-source runs');
@@ -120,17 +123,22 @@ function main() {
   if (selected.length > 1 && (append || envelopeCaps)) {
     throw new Error('--append/--envelope-caps are single-method options; run the random source separately when needed');
   }
-  if (questionId && !['development', 'confirmation', 'transfer'].includes(evidenceRole)) {
+  if (explicitEvidenceRole && !['development', 'confirmation', 'transfer'].includes(explicitEvidenceRole)) {
     throw new Error('--evidence-role must be development, confirmation, or transfer');
   }
 
-  const outDir = values.get('--out-dir') || path.posix.join('tmp', 'research-generation', sanitizeStem(questionId || suite || selected.join('-')));
+  const suiteRoles = suite ? (suiteDescriptor(suite).defaultEvidenceRoles || {}) : {};
+  const evidenceRolesByMethod = Object.fromEntries(selected.map(id => [
+    id,
+    explicitEvidenceRole || suiteRoles[id] || (questionId ? 'development' : null),
+  ]));
+  const outDir = values.get('--out-dir') || path.posix.join('tmp', 'research-generation', sanitizeStem(questionId || suite || selected.join('-')), `seed-${masterSeed}`);
   const invocations = selected.map((id, index) => compileGeneratorInvocation({
     method: id,
     count,
     masterSeed: masterSeed + index,
     questionId,
-    evidenceRole,
+    evidenceRole: evidenceRolesByMethod[id],
     blockId: explicitBlockId,
     out: explicitOut,
     outDir,
@@ -154,7 +162,8 @@ function main() {
     schemaVersion: 1,
     kind: 'research-level-generation-plan',
     questionId,
-    evidenceRole,
+    evidenceRole: explicitEvidenceRole,
+    evidenceRolesByMethod,
     requestedParentsPerMethod: count,
     suite,
     methods: selected,
@@ -166,6 +175,15 @@ function main() {
   if (dryRun) {
     console.log(JSON.stringify(plan, null, 2));
     return;
+  }
+
+  for (const invocation of invocations) {
+    if (existsSync(invocation.output) && !(append && invocation.method === 'random') && !overwrite) {
+      throw new Error(`output already exists: ${invocation.output} (use --overwrite or choose a new seed/out-dir)`);
+    }
+  }
+  if (existsSync(manifestPath) && !overwrite) {
+    throw new Error(`manifest already exists: ${manifestPath} (use --overwrite or choose a new seed/out-dir)`);
   }
 
   mkdirSync(path.dirname(path.resolve(manifestPath)), { recursive: true });
