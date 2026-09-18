@@ -67,6 +67,9 @@ assert.equal(adapted.decisionId, 'score-width-culled@5#7');
 assert.deepEqual(adapted.retainedCandidateIds, ['[1]', '[2]']);
 assert.equal(adapted.context.cutoffScore, 9);
 assert.equal(adapted.context.nodeProgress, 42);
+assert.deepEqual(adapted.context.rankedCandidates.map(row => [row.rank, row.ints, row.retained]), [
+    [1, 0, true], [2, 1, true], [3, 1, false],
+]);
 assert.equal(adapted.workSpentBefore, 420);
 assert.equal(adapted.workSpentAfter, 420);
 assert.equal(beamResearchRecordToDecisionObservation({
