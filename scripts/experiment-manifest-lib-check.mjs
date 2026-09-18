@@ -38,6 +38,7 @@ assert.equal(validateExperimentManifest(control), control);
 const discriminatingControl = {
     ...control,
     researchQuestion: {
+        questionId: 'WS2-CLASS3-DOSE-EXPOSURE',
         liveAmbiguity: 'capability absent versus underdosed',
         discriminatingObservable: 'solve response across a bounded work ladder',
         outcomeInterpretation: { flat: 'absent-or-wrong-basin', threshold: 'underdosed' },
@@ -51,6 +52,9 @@ assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
 assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
     liveAmbiguity: 'x', discriminatingObservable: 'y', outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'M4',
 } }), /MO-NNN/);
+assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
+    questionId: '', liveAmbiguity: 'x', discriminatingObservable: 'y', outcomeInterpretation: { yes: 'z' },
+} }), /questionId/);
 assert.deepEqual(compareExperimentArms(control, treatment, 'TARGET'), {
     matched: true, targetFlag: 'TARGET', levels: 2, allowedWorkflowInputDifferences: [],
 });
@@ -120,12 +124,33 @@ const questionRun = spawnSync(process.execPath, ['--import', 'tsx',
     'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=question',
     `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
     '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${questionOut}`,
+    '--question-id=WS2-CLASS3-DOSE-EXPOSURE',
     '--live-ambiguity=capability absent vs underdosed', '--discriminating-observable=bounded work response',
     '--outcome-interpretation-json={"flat":"stop","threshold":"allocation"}', '--measurement-opportunity=MO-004',
     '--allow-dirty',
 ], { encoding: 'utf8' });
 assert.equal(questionRun.status, 0, `${questionRun.stdout}${questionRun.stderr}`);
-assert.equal(JSON.parse(readFileSync(questionOut, 'utf8')).researchQuestion.measurementOpportunity, 'MO-004');
+const questionManifest = JSON.parse(readFileSync(questionOut, 'utf8'));
+assert.equal(questionManifest.researchQuestion.questionId, 'WS2-CLASS3-DOSE-EXPOSURE');
+assert.equal(questionManifest.researchQuestion.measurementOpportunity, 'MO-004');
+const unknownQuestionRun = spawnSync(process.execPath, ['--import', 'tsx',
+    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=unknown-question',
+    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
+    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${path.join(temp, 'unknown-question.json')}`,
+    '--question-id=WS2-NOT-A-REAL-QUESTION', '--live-ambiguity=x', '--discriminating-observable=y',
+    '--outcome-interpretation-json={"yes":"z"}', '--allow-dirty',
+], { encoding: 'utf8' });
+assert.notEqual(unknownQuestionRun.status, 0);
+assert.match(`${unknownQuestionRun.stdout}${unknownQuestionRun.stderr}`, /unknown research question id/);
+const unknownMoRun = spawnSync(process.execPath, ['--import', 'tsx',
+    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=unknown-mo',
+    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
+    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${path.join(temp, 'unknown-mo.json')}`,
+    '--question-id=WS2-CLASS3-DOSE-EXPOSURE', '--live-ambiguity=x', '--discriminating-observable=y',
+    '--outcome-interpretation-json={"yes":"z"}', '--measurement-opportunity=MO-999', '--allow-dirty',
+], { encoding: 'utf8' });
+assert.notEqual(unknownMoRun.status, 0);
+assert.match(`${unknownMoRun.stdout}${unknownMoRun.stderr}`, /unknown measurement opportunity/);
 const inconsistent = runPreflight({ runId: 'bad-on', flagValue: 'true', inputs: workflowInputs });
 assert.notEqual(inconsistent.status, 0);
 assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);
