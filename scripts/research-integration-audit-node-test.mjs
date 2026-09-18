@@ -8,6 +8,8 @@ assert.equal(result.errorCount, 0, JSON.stringify(result.errors, null, 2));
 assert.equal(result.premiseCount, 148);
 assert.equal(result.premiseRelationCount, 184);
 assert.ok(result.questionCount >= 27);
+assert.ok(result.errorCount === 0);
+
 
 const run = spawnSync(process.execPath, ['scripts/research-integration-audit.mjs'], {
     cwd: process.cwd(),
