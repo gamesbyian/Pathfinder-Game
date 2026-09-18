@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chooseAcquisitionRoute, inferAcquisitionNeed } from './research-acquisition-preflight-lib.mjs';
+import { acquisitionStopRule, chooseAcquisitionRoute, inferAcquisitionNeed, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
 
 const d1 = {
     id: 'D1',
@@ -35,3 +35,16 @@ assert.equal(chooseAcquisitionRoute({
 }).route, 'CROSS_SOURCE_TRANSFER');
 
 console.log('research acquisition preflight tests passed');
+
+
+const ranked = rankCandidateAssets(
+    { id: 'Q', question: 'exact prefix feasibility and production frontier observation' },
+    [
+        { id: 'unrelated', name: 'Unrelated archive', affordances: ['weather'] },
+        { id: 'exact-reference-labels', name: 'Exact/reference feasibility labels', affordances: ['prefix feasibility'], queryEntryPoints: ['query exact'] },
+        { id: 'operational-traces', name: 'Operational traces', affordances: ['production frontier observation'], queryEntryPoints: ['query trace'] },
+    ],
+);
+assert.deepEqual(ranked.map(row => row.id), ['exact-reference-labels', 'operational-traces']);
+assert.match(acquisitionStopRule('NO_LEVEL_GENERATION'), /stop before generation/u);
+assert.match(acquisitionStopRule('FRESH_SAME_SOURCE'), /pilot first/u);
