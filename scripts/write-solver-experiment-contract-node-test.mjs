@@ -123,5 +123,12 @@ assert.throws(() => buildContract({
     outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'MO-999',
   },
 }, { resolvedSha }), /researchQuestion\.measurementOpportunity is not present/);
+assert.throws(() => buildContract({
+  configuration: { nodeBudget: 1 }, workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+  researchQuestion: {
+    questionId: 'WS2-CLASS3-DOSE-EXPOSURE', liveAmbiguity: 'x', discriminatingObservable: 'y',
+    outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'MO-002',
+  },
+}, { resolvedSha }), /not mapped to researchQuestion\.questionId/);
 
 console.log('write solver experiment contract tests passed');
