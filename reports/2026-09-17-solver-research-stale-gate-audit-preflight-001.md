@@ -1,9 +1,9 @@
 # Solver research stale-gate / reopen audit preflight 001
 
-> **Status:** active
+> **Status:** superseded
 > **Last evidence:** 2026-09-17 — current `main` after research-integration PRs #1864 and #1865.
-> **Decision:** audit the machine-readable question registry and live queue for gates whose stated blocker/reopen condition has been overtaken by later evidence or tooling; distinguish hard consistency failures from semantic review candidates.
-> **Remaining gate:** reconcile confirmed stale states into their owning authorities and add a reusable audit that reports future candidates without automatically reopening research.
+> **Decision:** completed by `reports/2026-09-17-solver-research-stale-gate-audit-result-001.md`; four authority drifts were repaired and a conservative reusable audit was added.
+> **Remaining gate:** none for this preflight; future semantic reopen decisions remain evidence-based judgments.
 
 ## Rules
 
