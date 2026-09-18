@@ -181,8 +181,7 @@ npm run research:relations -- \
 
 For conservative eligibility facts, also supply `--eligibility-question=<question-id>`,
 `--eligibility-role=<development|confirmation|transfer>`, and, when known,
-`--related-questions=<comma-separated-question-ids>`. Omitted question-lineage context must remain
-unknown for confirmation/transfer rather than being treated as proof of freshness.
+`--related-questions=<comma-separated-question-ids>`. Use an explicit empty `--related-questions=` when the known lineage contains no additional related questions. Omitted question-lineage context must remain unknown for confirmation/transfer rather than being treated as proof of freshness.
 
 ## Handoff
 
