@@ -1,12 +1,10 @@
-import { createHash } from 'node:crypto';
+import { stableHash } from './solver-experiment-contract.mjs';
 
 const SHA256_RE = /^sha256:[0-9a-f]{64}$/iu;
 const EVIDENCE_ROLES = new Set(['development', 'confirmation', 'transfer']);
 const SCOPE_KINDS = new Set(['block', 'parent', 'family']);
 
 const nonEmpty = value => typeof value === 'string' && value.trim().length > 0;
-const hash = value => `sha256:${createHash('sha256').update(JSON.stringify(value)).digest('hex')}`;
-
 function stringArrayIssues(value, path, { allowEmpty = true } = {}) {
     if (!Array.isArray(value) || (!allowEmpty && value.length === 0)) return [path];
     return value.some(item => !nonEmpty(item)) ? [path] : [];
@@ -103,7 +101,7 @@ export function researchBlockEligibility(block, {
 
 export function researchBlockIdentity(block, populationIdentity) {
     assertResearchBlock(block, { populationIdentity });
-    return hash({
+    return stableHash({
         blockId: block.blockId,
         questionId: block.questionId,
         populationIdentity,
