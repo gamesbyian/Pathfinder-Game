@@ -48,8 +48,8 @@ const solver = captureSolverGitState();
 const inputBytes = readFileSync(path.resolve(ROOT, inputFile));
 const capture = JSON.parse(inputBytes);
 if (capture.kind !== 'd1-production-inert-decision-capture') throw new Error('input is not a D1 production decision capture');
-if (capture.evidenceRole === 'independent-confirmation' && Number.isFinite(maxEligibleDecisions)) {
-    throw new Error('independent-confirmation may not cap eligible decisions after the capture is frozen');
+if (capture.evidenceRole !== 'development') {
+    throw new Error('this annotator currently accepts development captures only; independent confirmation awaits orchestration-aware capture');
 }
 const corpusDoc = JSON.parse(readFileSync(path.resolve(ROOT, capture.corpus), 'utf8'));
 const corpusRows = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
