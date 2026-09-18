@@ -52,9 +52,9 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
 | Independent transfer / human-editor-envelope niches | A broad claim needs independent construction/locked parents or a stable omitted geometry is independently nominated |
-| Residual budget-response characterization | A live residual question cannot distinguish absent capability from underdose/threshold/non-monotone displacement; use a prespecified bounded work ladder rather than a standing full-corpus sweep |
-| Mechanism interaction residual | Specific evidence indicates one mechanism changes the opportunity population consumed by another; test control/A/B/A+B under matched total work rather than broad pairwise flag search |
-| Latent response-cluster follow-up | The offline ancestry-aware gain/loss analyzer finds a response cluster that survives protocol/ancestry controls and lacks an existing capability explanation; treat the cluster as a nomination only |
+| Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
+| Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
+| Latent response cluster | Reopen only for an unexplained ancestry/protocol-controlled covariance nomination; clustering alone is not capability evidence |
 
 ## Closed forms that stay closed
 
@@ -86,7 +86,7 @@ Important distinctions:
 
 Replication earned no queue expansion. Robust regions strengthen provenance only: decision state exceeds puzzle state; allocation is part of capability; evidence is process-conditioned; historical negatives are scope-bound. Qualify raw graph/topology claims by representation history. Reopen the fourth replication cell only when a concrete decision cannot otherwise separate ontology artifact, mining-method artifact and robust concept; do not reopen broad mining for its own sake.
 
-The measurement overlay is non-queue. MO-005 residual distance/progress and MO-007 research-process yield remain observables, not solver tasks. Promote one only for a live mapped ambiguity with a discriminating observable, valid population/cost/authority contract and decision-changing outcomes.
+Measurement opportunities are non-queue. Promote one only for a live ambiguity with a valid discriminator/population/cost/authority contract and decision-changing outcomes; MO-005/MO-007 remain observables.
 
 ## Research hygiene
 
