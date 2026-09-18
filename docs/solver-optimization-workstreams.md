@@ -17,7 +17,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / POST-MINING GATE CONCLUDED; no immediate implementation earned. Reopen by explicit evidence gates, not backlog pressure.
+**State:** ACTIVE / D1 EVIDENCE ACQUISITION NEXT; no implementation earned.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
@@ -76,7 +76,7 @@ The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only 
 
 No immediate post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from the lane triggers above; do not recursively mine mining outputs merely to keep the program active.
 
-**Conditional reopen priority:** D1 first if its production-inert multi-parent observation contract can be satisfied, because an existing ranking consumer already exists; Lane A next if a compact dynamic interface contract is available to test; F3 only after fresh independent data demonstrates reliable decision-bearing discordance. This orders discriminating gates, not production treatments, and authorizes no standalone instrumentation campaign.
+**Execution gate:** run the bounded D1 production-inert observation preflight next: [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md). It authorizes shadow observation only, with parity, pilot, expansion and stop gates before any ranking change. Lane A follows only if a compact dynamic interface contract becomes testable; F3 only after fresh independent data can test reliable decision-bearing discordance.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -86,7 +86,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / POST-MINING GATE CONCLUDED** | Conditional gates: D1 -> A -> F3; none active |
+| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute production-inert D1 preflight; then A -> F3 conditionally |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
