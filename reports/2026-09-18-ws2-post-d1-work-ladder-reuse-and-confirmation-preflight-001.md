@@ -1,11 +1,11 @@
-# WS2 post-D1 discriminator: work-ladder zero-compute reuse, and a confirmation-slice preflight
+# WS2 post-D1 discriminator: work-ladder zero-compute reuse, and a confirmation-slice result
 
-> **Status:** active
-> **Last evidence:** 2026-09-18 — zero-new-compute reconciliation of already-committed artifacts against the current production boundary (`35066677597` @ `16114b80`, current HEAD). No new solver compute in this pass.
-> **Decision:** reusing the already-committed 2026-07-29 high-budget sweep (`reports/stress/highbudget-unsolved-sweep-corpus2-2026-07-24.json`, commit `d0f29e93`) against the current 531-row residual finds **0/483 solved** even at up to 1.2B nodes (~5x current production's typical per-level ceiling), with 449/483 cleanly exhausting that budget (`node-budget-reached`, not a wall-clock/infra timeout). This is real, decision-relevant evidence against "simply underdosed" for the bulk of the current residual, but it is confounded by a ~7-week-old commit and by that sweep's own history-aware (`--resume`/`--save-hints`) execution mode -- neither clean enough to close the work-ladder question on its own.
-> **Remaining gate:** a small, level-blind, current-commit confirmation slice (precommitted below, not yet dispatched as of this report) is required before the work-ladder instrument can be called closed or positive for WS2-POST-D1-DISCRIMINATOR.
-> **Evidence role:** discovery (reuse of a pre-existing, differently-purposed artifact) for the reuse finding; the confirmation slice below is precommitted (population/budgets/decision rule fixed before dispatch) and will be confirmation once run.
-> **Population identity:** current 531-row Class 1-5 residual, production run `35066677597` @ `16114b80` (`docs/solver-optimization-workstreams.md`'s boundary). The confirmation slice further narrows to a deterministic 20-id sample (below).
+> **Status:** concluded-positive
+> **Last evidence:** 2026-09-18 — the precommitted 20-id, 2-tier, level-blind confirmation slice ran to completion on GHA (current commit `4ed64bf0`/`c29047d9`): **0/20 solved at 300M nodes; 3/20 solved at 1.2B nodes** (R00044, R01000, R02974). See "Confirmation slice: result" below.
+> **Decision:** work-ladder is a genuine, narrow discriminator: at the current commit, level-blind, 4x node-budget escalation (300M -> 1.2B) recovers 3/20 (15%) of a sample drawn from levels that were unsolved at both the current production ceiling and (per the zero-compute reuse below) a 7-week-old commit's own 1.2B-node attempt. This is a real positive that the earlier confounded zero-compute reuse (0/483) understated -- the confounds disclosed below (commit drift, history-aware execution) were masking real recoverable capacity, not merely adding noise. **Not simply "absent capability"** for at least this slice. Does not by itself earn a production budget change: per standing rule, a positive premise nominates a matched-work economics test, it does not authorize one. See `WS2-WORK-LADDER-ECONOMICS` for the follow-on.
+> **Remaining gate:** none for this confirmation slice itself (complete, decision rule's middle branch triggered). The follow-on matched-work economics question is a new, separately gated question.
+> **Evidence role:** discovery (zero-compute reuse) superseded by confirmation (the dispatched slice: precommitted population/budgets/decision rule, current commit, level-blind, complete population coverage).
+> **Population identity:** current 531-row Class 1-5 residual, production run `35066677597` @ `16114b80` (`docs/solver-optimization-workstreams.md`'s boundary). The confirmation slice narrows to the deterministic 20-id sample below, run at current commit `c29047d9` (tier 1, tier 2 first pass) / `4ed64bf0` (tier 2 recovery pass; an intervening automated hint-store maintenance commit, no solver-logic change).
 
 ## Why this ran
 
@@ -70,10 +70,30 @@ R02473,R02588,R02661,R02774,R02880,R02974,R03046,R03129,R03194,R03276
 - If **any id solves at tier 2 but not tier 1**: genuine underdose signal at this scale on at least this population; nominates (not yet earns) a bounded production node-budget increase as a separately justified follow-on, contingent on how many ids respond and their downstream `workSpent`/wall-cost.
 - If **any id solves at tier 1** (near-parity with normal production): would indicate the July high-budget snapshot's confound (commit drift or resume/hints) was masking an already-recoverable level, and requires investigating why current production itself has not already found it (a routing/dose question, not a pure budget question) -- see `docs/solver-first-loss-causal-taxonomy.md` F8.
 
-No outcome has been inspected before this precommitment; the workflow has not been dispatched as of this report.
+No outcome was inspected before this precommitment; both dispatches below ran after it was written and committed.
+
+## Confirmation slice: result
+
+**Tier 1 (300,000,000 nodes):** dispatched as run [35335885011](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35335885011), complete on the first pass (20/20 shards, no recovery needed). **0/20 solved**, all `node-budget-reached` (workSpent 740M-1.14B; additive retry tiers routinely spend several times the nominal node-derived work budget once the main ladder is exhausted, consistent with `solver-level-blind-targeted-sweep.yml`'s own documented `node_budget_advisory_only` caveat -- `workSpent` and raw node count are different cost currencies here, not a discrepancy).
+
+**Tier 2 (1,200,000,000 nodes):** dispatched as run [35335905251](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35335905251). 15/20 ids completed on the first pass; 5 (`R00512`, `R01380`, `R02309`, `R02880`, `R03046`) hit a GHA job-level timeout cancellation ("The operation was canceled" after ~89 minutes) -- the shard planner's wall-time prediction, calibrated from the July run's telemetry, badly underestimated real cost at this escalated budget under level-blind (non-resumed) execution. This is an infrastructure censoring, not a genuine solver outcome (same category the repo's own gap-fill convention exists for), so the 5 missing ids were redispatched as run [35352629524](https://github.com/gamesbyian/Pathfinder-Game/actions/runs/35352629524) with a generous fixed per-id timeout (`target_wall_minutes=60`, `min_timeout_minutes=240`, `fixed_group_size=1`) rather than accepted as absence. All 5 completed cleanly within the new ceiling (16-83 minutes each).
+
+Combined tier-2 population (20/20, complete):
+
+| Outcome | ids | Count |
+|---|---|---:|
+| Solved | R00044, R01000, R02974 | **3** |
+| Unsolved (`node-budget-reached`) | the remaining 17 | 17 |
+
+**3/20 (15%) solved at 1.2B that were unsolved at 300M.** All three solved well under the 1.2B ceiling itself -- `workSpent` 335M/588M/882M via `main-search` (R01000, R02974) or `admissible-order-fallback` (R00044, `stageNodesExpanded=219,802,423` at the solving stage) -- markedly cheaper than the 17 unsolved-at-1.2B rows' workSpent (2.8B-4.1B, reflecting additive retry tiers burning the full ceiling without success). Per-level wall time at the 1.2B tier ranged roughly 4 minutes to just over 2 hours across the sampled population (single-level, not cross-level-parallel cost).
+
+This triggers the precommitted decision rule's middle branch: **genuine underdose signal**, not absent capability, for at least this slice. It also corrects the zero-compute reuse finding above: the earlier confounded 0/483 result was not simply "extra noise on a real negative" -- under a clean level-blind current-commit test, real recoverable capacity exists at this budget scale. The confounds (commit drift, history-aware `--resume`) were masking a positive, not merely adding uncertainty to a negative.
+
+Per standing program rule ("positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned"), this **nominates, and does not by itself earn**, a bounded production node-budget change. The open question -- whether spending ~4x node budget on a level that's already near production's ceiling is a better use of total compute than spending that same work elsewhere (more levels at normal budget, or a different technique entirely) -- is a matched-work economics question, not a raw recovery-rate question. See `WS2-WORK-LADDER-ECONOMICS`.
 
 ## Handoff
 
-- If dispatched and closed negative, update `docs/solver-optimization-workstreams.md`'s "Execution gate now" text to record work-ladder closed and point at the first-loss class-prevalence survey as the next candidate instrument, and update `WS2-POST-D1-DISCRIMINATOR` in `docs/solver-research-question-relations.json` accordingly.
-- If positive (either branch above), do not promote a production change from this alone; the advancement bar is the same as every other lane here (positive premise -> smallest consumer -> matched-work economics -> broader architecture only if earned).
-- Preserve this report's zero-compute reuse method (cross-referencing `logs/solver-stress-refresh/corpus2-runtime-telemetry.json` against a current residual boundary) as reusable practice: check already-committed high-budget telemetry before proposing new escalation experiments elsewhere in the program.
+- `docs/solver-optimization-workstreams.md`'s "Execution gate now" text and workstream-state table updated: work-ladder branch concluded positive-narrow; `WS2-WORK-LADDER-ECONOMICS` is the new active WS2 gate.
+- `docs/solver-research-question-relations.json`: `WS2-POST-D1-DISCRIMINATOR` marked `concluded-positive` (work-ladder was the justified next instrument and produced a decision-bearing result); `WS2-WORK-LADDER-ECONOMICS` added as the follow-on question.
+- The other three candidate instruments (operational divergence / first-loss class survey, rejection counterfactuals, 2x2 interaction) remain untested and available; nothing here closes them. The first-loss taxonomy (`docs/solver-first-loss-causal-taxonomy.md`) remains the most mature of the three if the economics test closes negative.
+- Preserve this report's zero-compute reuse method (cross-referencing `logs/solver-stress-refresh/corpus2-runtime-telemetry.json` against a current residual boundary) as reusable practice, with the caveat now on record: a confounded historical negative can understate a real current positive, so treat it as a prior to update from, not a substitute for a clean confirmation slice.

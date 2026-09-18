@@ -17,7 +17,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / POST-D1 DISCRIMINATOR NEXT; no implementation earned.
+**State:** ACTIVE / WORK-LADDER POSITIVE-NARROW, ECONOMICS NEXT; no implementation earned.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
@@ -78,9 +78,9 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 **D1 closed (2026-09-18):** [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md) Stages 1-2 ran to completion: parity canary, an 8-parent frozen capture, a GHA exact-annotation seam (`cpsat-explicit-prefix-reference.yml` + `pinRevisit`), and a 1,960-case independent confirmation slice — 0/120 candidates disagreed with production retention. **Closed-negative**, no ranking change earned. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
 
-**Execution gate now:** do not automatically fall through to A/F3. Use the smallest live discriminator: work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or 2x2 interaction only for a plausible producer/consumer pair. A/F3 retain their existing reopen gates.
+**Work-ladder instrument: CONCLUDED POSITIVE-NARROW (2026-09-18).** A precommitted 20-id, 2-tier (300M/1.2B node), level-blind confirmation slice at the current commit found 0/20 solved at 300M and 3/20 (15%) solved at 1.2B -- genuine underdose signal, not absent capability, correcting an earlier confounded zero-compute finding. Nominates, does not earn, a bounded production node-budget change. [`result`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
 
-**Work-ladder instrument in progress (2026-09-18):** zero-compute reuse of the 2026-07-29 high-budget sweep finds 0/483 current-residual overlap solved at up to 1.2B nodes (~5x production's typical ceiling), 449 cleanly budget-exhausted -- suggestive but confounded (7-week-old commit, history-aware `--resume`/`--save-hints`). A precommitted 20-id, 2-tier, level-blind confirmation slice is frozen and pending dispatch. [`preflight/discovery`](../reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md)
+**Execution gate now:** `WS2-WORK-LADDER-ECONOMICS` -- a matched-work counterfactual (extra budget on ceiling-bound levels vs. the same total work spent elsewhere), not a raw recovery-rate read. Do not fall through to A/F3 automatically. If that closes negative, the remaining candidates are operational divergence / first-loss class survey, rejection counterfactuals, and 2x2 interaction; A/F3 retain their existing reopen gates.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -90,7 +90,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / D1 CLOSED, POST-D1 DISCRIMINATOR NEXT** | Smallest live discriminator (work-ladder/operational-divergence/rejection-counterfactual/2x2) or explicit A-F3 gates | `WS2-POST-D1-DISCRIMINATOR` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / WORK-LADDER POSITIVE-NARROW, ECONOMICS NEXT** | Matched-work node-budget economics, or remaining discriminators (operational-divergence/rejection-counterfactual/2x2), or explicit A-F3 gates | `WS2-WORK-LADDER-ECONOMICS` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |

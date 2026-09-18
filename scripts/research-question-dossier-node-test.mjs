@@ -10,14 +10,14 @@ assert.equal(dossier.question.id, questionId);
 assert.ok(dossier.conceptualContext.explicitPremises.some(row => row.premiseId === 'P091'));
 assert.ok(dossier.conceptualContext.measurementOpportunities.some(row => row.id === 'MO-002'));
 assert.ok(dossier.acquisition.route);
-assert.ok(dossier.currentAuthorityMatches.queue.some(row => row.state.includes('D1')));
+assert.ok(Array.isArray(dossier.currentAuthorityMatches.queue));
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
 assert.ok(Array.isArray(dossier.resources.candidateAssets));
 assert.ok(Array.isArray(dossier.resources.candidateJoins));
 assert.equal(dossier.conceptualContext.premiseDiscoveryHints.authority, 'lexical-discovery-only');
 assert.ok(dossier.conceptualContext.premiseDiscoveryHints.rows.length > 0);
 
-const activeQuestionId = 'WS2-POST-D1-DISCRIMINATOR';
+const activeQuestionId = 'WS2-WORK-LADDER-ECONOMICS';
 const activeDossier = buildQuestionDossier(process.cwd(), { questionId: activeQuestionId });
 assert.ok(activeDossier.currentAuthorityMatches.queue.some(row => row.questionRef === activeQuestionId),
     'the current WS2 active gate must resolve to the queue row that names it as the stable question ref');

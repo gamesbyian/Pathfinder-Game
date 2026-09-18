@@ -669,18 +669,42 @@
       "id": "WS2-POST-D1-DISCRIMINATOR",
       "question": "With D1 exact-query ranking closed negative, which smallest live discriminator (work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or a 2x2 interaction for a plausible producer/consumer pair) is justified next for WS2, if any?",
       "owner": "WS2",
-      "state": "active-diagnostic",
+      "state": "concluded-positive",
       "aliases": [
         "post-D1 discriminator",
         "smallest live discriminator"
       ],
-      "answeredBy": [],
-      "result": null,
+      "answeredBy": [
+        "reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md"
+      ],
+      "result": "Work-ladder was the smallest justified instrument to test first. A precommitted 20-id, 2-tier (300M/1.2B node budget), level-blind confirmation slice at the current commit found 0/20 solved at 300M and 3/20 (15%) solved at 1.2B (R00044, R01000, R02974) -- a genuine underdose signal, not absent capability, for at least this slice. Corrects an earlier confounded zero-compute reuse finding (0/483 at a 7-week-old commit, history-aware execution) that understated real recoverable capacity. Nominates, does not earn, a bounded production node-budget change; see WS2-WORK-LADDER-ECONOMICS for the matched-work economics follow-on. The other three candidate instruments (operational divergence, rejection counterfactuals, 2x2 interaction) remain untested.",
       "constrainedBy": [
         "docs/solver-optimization-workstreams.md"
       ],
       "constrains": [
         "Do not fall through to Lane A/F3 automatically; use the smallest discriminating instrument first."
+      ],
+      "reopensOn": "Not applicable to this selection question; see WS2-WORK-LADDER-ECONOMICS and the three untested candidate instruments for further work.",
+      "premiseRefs": [],
+      "measurementOpportunities": []
+    },
+    {
+      "id": "WS2-WORK-LADDER-ECONOMICS",
+      "question": "Given a 15% (3/20) recovery rate at 4x node-budget escalation (300M->1.2B) on a level-blind current-commit sample, does a matched-work counterfactual show spending that extra budget on already-ceiling-bound levels beats spending the same total work elsewhere (more levels at normal budget, or a different technique), enough to justify a bounded production node-budget change?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "aliases": [
+        "work-ladder economics",
+        "node-budget matched-work economics"
+      ],
+      "answeredBy": [],
+      "result": null,
+      "constrainedBy": [
+        "reports/2026-09-18-ws2-post-d1-work-ladder-reuse-and-confirmation-preflight-001.md",
+        "docs/solver-optimization-workstreams.md"
+      ],
+      "constrains": [
+        "No production node-budget change before a matched-work economics comparison, not a raw recovery-rate comparison."
       ],
       "reopensOn": null,
       "premiseRefs": [],
