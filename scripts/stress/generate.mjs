@@ -2,6 +2,10 @@
 /**
  * Stress-corpus generator — builds data/stress/stress-levels.json.
  *
+ * Research front door: `npm run research:generate-levels -- --method=targeted ...`.
+ * Sibling source regimes are `random` and `topology`; see docs/solver-research-generation.md.
+ * Direct invocation remains supported for native producer options.
+ *
  * Run via the esbuild wrapper (imports TS domain modules):
  *   node scripts/run-bundled.mjs scripts/stress/generate.mjs [--count-per-batch=25]
  *       [--master-seed=20260708] [--out=data/stress/stress-levels.json] [--verbose]
