@@ -69,6 +69,15 @@ if (selectionArtifact) {
     ])];
 }
 if (!scopes.length) scopes = [{ kind: 'block', id: researchBlock.blockId }];
+const parentIds = new Set(researchBlock.parentIds.map(String));
+for (const scope of scopes) {
+    if (scope.kind === 'block' && scope.id !== researchBlock.blockId) {
+        throw new Error(`block scope ${scope.id} does not match source block ${researchBlock.blockId}`);
+    }
+    if (scope.kind === 'parent' && !parentIds.has(String(scope.id))) {
+        throw new Error(`parent scope ${scope.id} is not present in source block ${researchBlock.blockId}`);
+    }
+}
 if (!conditioning.length) throw new Error('at least one --conditioning=... value is required');
 
 const evidenceRole = value('evidence-role') || researchBlock.evidenceRole;
