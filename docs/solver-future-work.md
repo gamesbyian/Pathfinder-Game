@@ -1,13 +1,13 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active priority/state; [`solver-research-operating-model.md`](solver-research-operating-model.md) owns method. [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) owns the semantic-gap map; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) owns the distinction between a closed tested form and a closed premise.
+Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) semantic gaps; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) tested-form vs premise closure.
 
 **Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, decompositions, topology state, canonical forms, or search plans from current puzzle/current invocation inputs. Cross-parent recurrence is required for a fixed reusable descriptor claim, not for every generic per-instance derivation procedure.
 
 ## Promoted out of future work
 
-Do not duplicate concluded/active lanes here; `solver-optimization-workstreams.md` owns them. Since this file's prior state: A is a bounded positive stopped at dynamic representation; D1 is positive with an existing ranking consumer but stopped at multi-parent economics observation; F3 is qualified positive stopped at decision-bearing discordance. C and E were negative, DEAD-core size-1 was negative, Class-3 dose is an evidence gap, and G1 LNS is constructor-method-limited. Multi-pick production-search construction did find two referee-verified LIVE siblings, so the old blanket D/E block from "no LIVE contrast" is obsolete. A production-quality constructor remains a local prerequisite only where a future test specifically needs one, notably G1.
+Do not duplicate active/concluded lanes here. Current dispositions: A bounded-positive/representation-stopped; D1 positive/economics-observation-stopped; F3 qualified-positive/discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose evidence-gap; G1 constructor-limited. Multi-pick found two referee-verified LIVE siblings, so the old no-LIVE D/E block is obsolete; a production-quality constructor remains local prerequisite only where required, notably G1.
 
 ## Deferred descendants of active premises
 
