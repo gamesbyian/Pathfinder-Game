@@ -3,7 +3,7 @@ import { acquisitionStopRule, chooseAcquisitionRoute, inferAcquisitionNeed, rank
 
 const d1 = {
     id: 'D1',
-    question: 'Does the observer disagree with production ranking?',
+    question: 'Does the observer disagree with production ranking across independent parents?',
     constrains: ['measure information cost and workSpent before any exact-query production mechanism'],
     reopensOn: null,
 };
@@ -16,6 +16,13 @@ const fresh = {
     reopensOn: 'Fresh independent parents produce non-zero decision-bearing discordance.',
 };
 assert.equal(chooseAcquisitionRoute({ question: fresh }).route, 'FRESH_SAME_SOURCE');
+
+const lengthTransfer = {
+    id: 'LEN',
+    question: 'Does remaining length transfer?',
+    reopensOn: 'An independent shared-budget population exposes the same signal.',
+};
+assert.equal(chooseAcquisitionRoute({ question: lengthTransfer }).route, 'FRESH_SAME_SOURCE');
 
 const family = {
     id: 'CF',
