@@ -66,6 +66,10 @@ const stableObject = value => JSON.stringify(Object.fromEntries(Object.entries(v
 function validateResearchQuestion(question) {
     if (question == null) return;
     if (!question || typeof question !== 'object' || Array.isArray(question)) throw new Error('researchQuestion must be an object');
+    if ('questionId' in question && question.questionId != null &&
+        (typeof question.questionId !== 'string' || !question.questionId.trim())) {
+        throw new Error('researchQuestion.questionId must be a non-empty string when present');
+    }
     for (const field of ['liveAmbiguity', 'discriminatingObservable', 'outcomeInterpretation']) {
         if (!(field in question)) throw new Error(`researchQuestion missing ${field}`);
     }
