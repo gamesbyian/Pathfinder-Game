@@ -55,9 +55,9 @@ writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example inves
 > **Last evidence:** 2026-08-21 — Synthetic fixture passed.
 > **Decision:** Continue measurement.
 > **Remaining gate:** Run the held-out corpus.
-> **Research question:** `WS2-CURRENT`
-> **Premise refs:** `P032`, `P204`
-> **Measurement opportunity:** `MO-002`
+> **Research question:** \`WS2-CURRENT\`
+> **Premise refs:** \`P032\`, \`P204\`
+> **Measurement opportunity:** \`MO-002\`
 > **Evidence role:** confirmation
 > **Selection:** prespecified
 > **Population identity:** fixture-population
