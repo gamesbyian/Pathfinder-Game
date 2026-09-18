@@ -10,6 +10,7 @@ assert.equal(dossier.question.id, questionId);
 assert.ok(dossier.conceptualContext.explicitPremises.some(row => row.premiseId === 'P091'));
 assert.ok(dossier.conceptualContext.measurementOpportunities.some(row => row.id === 'MO-002'));
 assert.ok(dossier.acquisition.route);
+assert.ok(dossier.currentAuthorityMatches.queue.some(row => row.questionRef === questionId));
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
 assert.ok(Array.isArray(dossier.resources.candidateAssets));
 assert.ok(Array.isArray(dossier.resources.candidateJoins));
