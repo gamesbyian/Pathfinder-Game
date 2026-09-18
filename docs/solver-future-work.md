@@ -7,7 +7,7 @@ Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-op
 
 ## Promoted out of future work
 
-Do not duplicate active/concluded lanes here. Current dispositions: A bounded-positive/representation-stopped; D1 positive/economics-observation-stopped; F3 qualified-positive/discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose evidence-gap; G1 constructor-limited. Multi-pick found two referee-verified LIVE siblings, so the old no-LIVE D/E block is obsolete; a production-quality constructor remains local prerequisite only where required, notably G1.
+Do not duplicate active/concluded lanes here. Current dispositions: A representation-stopped; D1 economics-observation-stopped; F3 discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose gap; G1 candidate-completion-limited. Multi-pick removed the old no-LIVE and generic-constructor blocks.
 
 ## Deferred descendants of active premises
 
@@ -18,10 +18,10 @@ These become eligible only after the active premise gate immediately above them 
 | General solve-local proof store / blackboard | One concrete fact family shows material rediscovery across branches/attempts/stages, admits a sound cheap lookup/certificate, and pays economically in a typed handoff pilot |
 | Conflict-driven backjumping / clause learning | Fresh DEAD-core or relational-feasibility work derives sound current-instance conflicts that recur usefully inside one solve and identify a cheaper backjump/rejection target |
 | Production bounded exact-query service | D1 first passes production-inert multi-parent observation with eligibility, rank/cutoff, work ancestry, information cost and independent-unit provenance; then test whether exact/cheap-proxy answers pay at the ranking consumer |
-| Region/AND-OR decomposition engine | Lane A demonstrates a compact dynamic interface contract preserving crossing/history/length/intersection obligations on a frozen legal-prefix population |
+| Region/AND-OR decomposition engine | A/D3/F3 reconciliation nominates a bounded dynamic interface signature, then a frozen legal-prefix test validates it |
 | Production topology-aware state relation | Fresh independent parents show a reliable compact descriptor with non-zero decision-bearing discordance; then seek a sound actionable consequence beyond raw phase |
 | Targeted local surgery / causal backjump operator | New independent evidence finds an actionable causal interface materially smaller than naive divergence/ordinary rollback; Lane E's tested form stays closed |
-| Full complete-path LNS | A fair production-search-quality candidate constructor removes the Stage-2 method limit, then relaxed paths prove locally repairable often enough to justify implementation |
+| Full complete-path LNS | Frozen production-frontier partials yield fair full relaxed candidates that prove close/local-repairable enough |
 | Per-level search-plan compiler | At least two genuinely different solver architectures have predictable current-input niches and the compiler can choose/compose them without historical identity |
 
 ## Other deferred architectural questions
@@ -44,7 +44,7 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 
 | Question | Reopen condition |
 |---|---|
-| Automatic selector/profile calibration | A new legal current-input relation predicts differentiated response among genuinely different actions under supported evidence |
+| Automatic selector/profile calibration | A legal current-input relation predicts differentiated response; remaining length first needs one independent shared-budget transfer |
 | Cross-attempt basin overlap | A real handoff/allocation question exists; measure canonical action participation and solve-local rediscovery simultaneously |
 | Stability-aware portfolios / beam continuation / cross-policy handoff | A new typed fact/interface or current-input descriptor creates a concrete handoff value proposition |
 | Admissible-order retry repricing | Residual again isolates ordered-systemic loss and a canary proves differentiated target-stage work |

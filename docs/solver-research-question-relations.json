@@ -350,6 +350,123 @@
       "result": "No current determinism defect earned replay. Most collisions are legitimate replay/multi-output semantics; the 160 isolated-technique tail is historical technique-census source-cell under-resolution already repaired in current provenance.",
       "constrains": ["Repeated paths sharing one event identity are dependent evidence unless producer semantics establish independence."],
       "reopensOn": "A current one-output producer yields a same-event/multiple-path collision after exact source/config context is present."
+    },
+    {
+      "id": "WS2-D1-PRODUCTION-INERT-OBSERVATION",
+      "question": "Does D1 future-intersection commitment realizability disagree with actual production beam rank/cutoff decisions often enough, across independent parents, to justify an economics test at the existing ranking consumer?",
+      "owner": "WS2",
+      "state": "active-diagnostic",
+      "aliases": [
+        "D1",
+        "future-intersection commitment realizability",
+        "D1 observation"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md",
+        "reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md"
+      ],
+      "result": "Premise positive, consumer known, economics unresolved. Exact realizability cleanly separates the retained matched states, but the multi-pick evidence is one-parent and lacks production eligibility frequency, actual rank/cutoff disagreement, descendant workSpent and measured information cost. PR #1863 added the shared bounded decision-observation seam needed to collect these quantities without changing ranking.",
+      "constrainedBy": [
+        "docs/solver-d1-production-inert-evidence-preflight.md",
+        "reports/solver-premise-map-consumer-contract/03-d1-retained-evidence-economics.md"
+      ],
+      "constrains": [
+        "No exact-query production mechanism or ranking change before multi-parent production-inert opportunity and economics evidence.",
+        "Count decision opportunities and independent parents separately from raw observation rows."
+      ],
+      "reopensOn": null
+    },
+    {
+      "id": "WS2-SEPARATOR-DYNAMIC-INTERFACE",
+      "question": "Can the separator/decomposition positive be upgraded into a compact dynamic interface contract that preserves the future-relevant history needed for safe composition?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "aliases": [
+        "Lane A",
+        "separator interface",
+        "dynamic decomposition interface"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-separator-decomposition-census-result-001.md"
+      ],
+      "result": "Static/mechanic-aware narrow interfaces exist on 121/390 Class-5 residual levels, but no dynamic contract is earned. D3 shows apparently swappable segments can fail composition on history-dependent mechanics, while F3 shows endpoint-equivalent paths can differ topologically and the cheap descriptor fails on decision-relevant tied cases. These are candidate interface-state constraints, not yet a representation.",
+      "constrainedBy": [
+        "reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md",
+        "reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md",
+        "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md"
+      ],
+      "constrains": [
+        "Before new decomposition compute, reconcile retained A/D3/F3 evidence to nominate the smallest candidate state signature.",
+        "Do not treat raw separator geometry or raw topology phase as a sufficient interface."
+      ],
+      "reopensOn": "A retained-evidence reconciliation nominates a bounded candidate interface signature, followed by a frozen legal-prefix test of whether that signature preserves relevant crossing/history/length/intersection/mechanic/topology behavior."
+    },
+    {
+      "id": "WS2-G1-COMPLETE-PATH-LNS",
+      "question": "Are production-search-derived relaxed candidates close enough to the accepted-solution manifold, and locally repairable often enough, to justify a complete-path LNS implementation?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "aliases": [
+        "G1",
+        "complete-path LNS",
+        "local neighborhood search"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md",
+        "reports/2026-09-17-production-search-sibling-construction-result-001.md"
+      ],
+      "result": "Stage 1 is positive: accepted solutions cluster. Stage 2 was method-limited because three naive complete-path constructors failed. The later production-search multi-pick work established that real beam frontiers can yield rare exact-LIVE states and that one-pick sampling was the deeper statistical failure. The old generic 'production-quality constructor missing' blocker is therefore too broad; the remaining gap is converting frozen real-search partials into a fair complete relaxed candidate and measuring local repairability.",
+      "constrains": [
+        "Reuse production-search-derived frontier states rather than inventing another heuristic pseudo-state generator.",
+        "Do not build full LNS until the repaired Stage-2 falsifier is positive under a frozen candidate-construction method."
+      ],
+      "reopensOn": "A production-search-derived frontier/partial-state construction can be completed or relaxed into a fair full candidate without answer leakage, after which distance-to-solution and local repairability can be measured."
+    },
+    {
+      "id": "WS1-REMAINING-LENGTH-ALLOCATION",
+      "question": "Does remaining path length provide transferable current-input allocation value under a shared fixed work budget beyond the Card-E completion-search population?",
+      "owner": "WS1",
+      "state": "deferred-reopen",
+      "aliases": [
+        "remaining length allocation",
+        "H3 allocation",
+        "length-first scheduling"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-h3-length-allocation-value-simulation-result-001.md"
+      ],
+      "result": "Strong one-population positive: on Card-E completion searches, ascending remaining length captures 16/17 achievable rescues at 20% of full-cap-for-all budget. This establishes practical allocation value for that population/search model, not general scheduler value.",
+      "triggeredBy": [
+        "WS2-H3-REPAIR-COMMITMENT-INTERFACE"
+      ],
+      "constrains": [
+        "Do not promote remaining length into a production selector from Card-E alone.",
+        "The next test should be one independent shared-budget completion/repair population, preferably with a bounded work ladder, before opening a WS1 policy gate."
+      ],
+      "reopensOn": "An independent shared-budget population exposes the same legal current-input signal and a prespecified length-first order materially improves fixed-work outcome versus an unprioritized control."
+    },
+    {
+      "id": "WS2-CLASS3-DOSE-EXPOSURE",
+      "question": "Did the Class-3 residual receive enough exact-action work from its historically implicated techniques to support any negative capability inference?",
+      "owner": "WS2",
+      "state": "deferred-reopen",
+      "aliases": [
+        "Class-3 dose",
+        "Class 3 exposure",
+        "dose reconciliation"
+      ],
+      "answeredBy": [
+        "reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md"
+      ],
+      "result": "No current conclusion is possible: 23 Class-3 rows lack committed per-technique work-tranche telemetry. The bounded work-ladder reducer now exists, but analysis tooling cannot reconstruct dose that the producer never recorded.",
+      "triggeredBy": [
+        "WS2-CLASS123-CHEAP-HARVEST"
+      ],
+      "constrains": [
+        "Do not treat Class-3 as exposed-and-failed or rerun broad capability work from atlas membership alone.",
+        "A future producer must record exact-action participation/work dose prospectively; the work-ladder reducer can analyze it once it exists."
+      ],
+      "reopensOn": "A prospective run records per-technique exact-action participation/work tranche on the Class-3 question population under a comparable protocol."
     }
   ]
 }
