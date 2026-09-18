@@ -27,16 +27,21 @@ function textOf(question) {
 }
 
 export function inferAcquisitionNeed(question) {
-    const text = textOf(question);
-    if (/human|editor/u.test(text)) return 'human-origin';
-    if (/cross[- ]source|distribution shift|transfer data|different source/u.test(text)) return 'cross-source-transfer';
-    if (/controlled family|family neighborhood|family expansion|causal contrast|perturb|invariance/u.test(text)) return 'causal-contrast';
-    if (/fresh independent parent|independent .*parent|independent .*population|shared-budget population|fresh .*population/u.test(text)) {
+    const reopen = String(question?.reopensOn ?? '').toLowerCase();
+    if (/human|editor/u.test(reopen)) return 'human-origin';
+    if (/cross[- ]source|distribution shift|transfer data|different source/u.test(reopen)) return 'cross-source-transfer';
+    if (/controlled family|family neighborhood|family expansion|causal contrast|perturb|invariance/u.test(reopen)) return 'causal-contrast';
+    if (/fresh independent parent|independent .*parent|independent .*population|shared-budget population|fresh .*population/u.test(reopen)) {
         return 'fresh-independent-parents';
     }
+
+    const text = textOf(question);
     if (/telemetry|work dose|workspent|economics|information cost|candidate construction|representation|exact semantics|observer|instrumentation/u.test(text)) {
         return 'telemetry-or-economics';
     }
+    if (/human|editor/u.test(text)) return 'human-origin';
+    if (/cross[- ]source|distribution shift|transfer data|different source/u.test(text)) return 'cross-source-transfer';
+    if (/controlled family|family neighborhood|family expansion|causal contrast|perturb|invariance/u.test(text)) return 'causal-contrast';
     return 'representation-or-candidate';
 }
 
