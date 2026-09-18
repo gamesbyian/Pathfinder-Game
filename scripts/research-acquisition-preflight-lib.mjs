@@ -149,6 +149,14 @@ export function rankCandidateAssets(question, assets, { limit = 8, evidenceRole 
                     : null,
                 contractGrade: asset.contractGrade ?? (audit ? 'audited' : 'catalogue'),
                 independentUnit: audit?.independentUnit ?? null,
+                evidenceIntegrity: (asset.evidenceIntegrityRecords ?? []).map(record => ({
+                    evidenceId: record.evidenceId,
+                    decisionBearing: record.decisionBearing ?? null,
+                    reliability: record.reliability ?? null,
+                    reconstructability: record.reconstructability ?? null,
+                    rerunDisposition: record.rerunDisposition ?? null,
+                    sourcePaths: record.sourcePaths ?? [],
+                })),
                 contractSignals: audit ? {
                     selectionConditioning: audit.selectionConditioning ?? [],
                     admissibleEvidencePurposes: audit.admissibleEvidencePurposes ?? [],
