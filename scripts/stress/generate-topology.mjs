@@ -50,7 +50,7 @@ import { stringifyCorpusJson } from '../level-json-format.mjs';
 import { PACK, UNPACK } from '../../modules/domain/cell-key.js';
 import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
-import { getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
+import { getLevelFingerprint, getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
 import { stableHash } from '../solver-experiment-contract.mjs';
 import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
@@ -594,7 +594,7 @@ function acceptLevel(i, built, levelSeed, raw, generatedAt) {
     };
 }
 
-function main() {
+async function main() {
     const generatedAt = new Date().toISOString();
     const known = loadKnownFingerprints();
     const fingerprints = known.set;
@@ -715,7 +715,7 @@ function main() {
 
     if (QUESTION_ID) {
         const parentIds = levels.map(level => String(level.id));
-        const parentContentIdentities = levels.map(level => stableHash(getLevelFingerprintSource(level)));
+        const parentContentIdentities = await Promise.all(levels.map(level => getLevelFingerprint(level)));
         const sourceRevision = stableHash({
             producer: 'scripts/stress/generate-topology.mjs',
             generatorVersion: GENERATOR_VERSION,
@@ -755,4 +755,4 @@ function main() {
     console.log('Generation stats: ' + JSON.stringify(stats));
 }
 
-main();
+main().catch(error => { console.error(error); process.exit(1); });
