@@ -7,7 +7,17 @@ import {
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
-const model = buildResearchRelations(process.cwd());
+const values = name => args.filter(arg => arg.startsWith(`--${name}=`)).map(arg => arg.slice(name.length + 3)).filter(Boolean);
+const artifactPaths = values('artifact');
+const eligibilityQuestion = value('eligibility-question');
+const eligibilityRole = value('eligibility-role') || 'development';
+const relatedQuestionRaw = value('related-questions');
+const eligibility = eligibilityQuestion ? {
+    questionId: eligibilityQuestion,
+    evidenceRole: eligibilityRole,
+    relatedQuestionIds: relatedQuestionRaw ? relatedQuestionRaw.split(',').map(value => value.trim()).filter(Boolean) : null,
+} : null;
+const model = buildResearchRelations(process.cwd(), { artifactPaths, eligibility });
 
 if (args.includes('--list') || !value('relation')) {
     console.log(JSON.stringify({
