@@ -914,6 +914,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         const generatedForResearch: BeamNode[] | null = research ? [] : null;
         const hardPrunedForResearch: BeamNode[] | null = research ? [] : null;
         const hardPruneContexts: Record<string, unknown>[] | null = research ? [] : null;
+        const parentExpansionsForResearch: Record<string, unknown>[] | null =
+            research?.includeParentExpansionWork ? [] : null;
         if (research) emit('incoming-frontier', frontier);
         if (_BEAM_DEBUG) _dbgPhases++;
 
@@ -990,9 +992,17 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
             }
             if (_BEAM_DEBUG) { _dbgReplayNs += _hrtNow() - _t0; _dbgReplaySteps += _replaySteps; }
 
+            // Snapshot after replaying the frontier node into ws. This deliberately excludes the
+            // tree-order replay overhead and measures only work causally spent expanding this
+            // retained node for one generation.
+            const _researchExpansionWorkStart = parentExpansionsForResearch ? prep._workMeter.units : 0;
+            const _researchParentPath = parentExpansionsForResearch ? [..._reconstructBeamPath(node, [])] : null;
             const pos = node.key;
             if (pos === level.goalKey) {
                 if (isSolutionState(ws, level)) { if (prep._metrics) prep._metrics.nodesExpanded += nodesExpandedTotal + frontierIndex; _dbgFlush('solved-frontier'); return _scratch.slice(); }
+                if (parentExpansionsForResearch) parentExpansionsForResearch.push({
+                    path: _researchParentPath, workSpent: 0, generatedCandidates: 0,
+                });
                 continue;
             }
 
@@ -1106,9 +1116,15 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 undoMove(undo, ws);
             }
             if (_BEAM_DEBUG) _dbgCandGenNs += _hrtNow() - _t1;
+            if (parentExpansionsForResearch) parentExpansionsForResearch.push({
+                path: _researchParentPath,
+                workSpent: prep._workMeter.units - _researchExpansionWorkStart,
+                generatedCandidates: _childIdx,
+            });
         }
         if (_BEAM_DEBUG) _dbgCandCount += cands.length;
-        if (generatedForResearch) emit('generated', generatedForResearch);
+        if (generatedForResearch) emit('generated', generatedForResearch,
+            parentExpansionsForResearch ? { parentExpansions: parentExpansionsForResearch } : undefined);
         if (hardPrunedForResearch) emit('hard-pruned', hardPrunedForResearch, { rejections: hardPruneContexts });
         if (research) emit('post-hard-prune', cands);
 
@@ -1224,9 +1240,12 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
                 // Observation-only forensic context. The lineage observer immediately reduces this
                 // to supported ranks/families, so compact artifacts do not retain the whole pool.
                 rankedPool: pool.map((c, rank) => ({ path: [..._reconstructBeamPath(c, [])],
-                    rank: rank + 1, score: c.score, insertionOrder: c.insOrd })),
+                    rank: rank + 1, score: c.score, insertionOrder: c.insOrd, ints: c.ints,
+                    mustCrossMask: c.mustCrossMask, flipperUsedMask: c.flipperUsedMask >>> 0 })),
                 culled: actuallyCulled.map(c => ({ path: [..._reconstructBeamPath(c, [])], rank: pool.indexOf(c) + 1,
-                    score: c.score, scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
+                    score: c.score, ints: c.ints, mustCrossMask: c.mustCrossMask,
+                    flipperUsedMask: c.flipperUsedMask >>> 0,
+                    scoreMarginToCutoff: (pool[beamWidth - 1]?.score ?? c.score) - c.score })),
             });
             if (research) emit(effectiveMechanicBucketRetention ? 'post-mechanic-bucket-selection'
                 : effectiveIntsBucketRetention ? 'post-ints-bucket-selection' : 'post-score-width-cull', frontier);
