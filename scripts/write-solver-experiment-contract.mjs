@@ -95,6 +95,10 @@ function populationWithSeal(population, populationSeal) {
   const resolved = populationSeal ? { ...(population ?? {}), corpusIdentity: identityHash } : population;
   if (resolved?.researchBlock) {
     assertResearchBlock(resolved.researchBlock, { populationIdentity: resolved.corpusIdentity });
+    if (resolved.independentUnit != null && resolved.independentUnit !== resolved.researchBlock.independentUnit) {
+      throw new Error(`population.independentUnit disagrees with researchBlock.independentUnit: ${resolved.independentUnit} vs ${resolved.researchBlock.independentUnit}`);
+    }
+    resolved.independentUnit = resolved.researchBlock.independentUnit;
     const registry = loadResearchQuestionRegistry(process.cwd());
     if (!registry.questions.some(question => question.id === resolved.researchBlock.questionId)) {
       throw new Error(`researchBlock.questionId is not present in solver-research-question-relations.json: ${resolved.researchBlock.questionId}`);
