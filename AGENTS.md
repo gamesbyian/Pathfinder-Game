@@ -71,7 +71,6 @@ Detailed method/stop/promotion rules: [`docs/solver-research-operating-model.md`
 Optimize docs for **decision density**: state contracts/state/gates directly; keep chronology/debugging in dated reports/archive; replace stale claims instead of appending; give mutable facts one owner; consolidate overlapping live docs; preserve useful history before destructive consolidation.
 
 ## Context budget
-
 `docs/agent-context-routes.json` budgets representative required orientation separately from optional drill-down. Individual authority documents declare their own `warn` and `max` byte budgets in the opening comment. Run:
 
 ```bash
