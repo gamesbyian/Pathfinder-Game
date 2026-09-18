@@ -49,7 +49,7 @@ This is an ephemeral read-time census, not a persistent block registry. Explicit
 
 Acquisition preflight still returns exactly one conservative route and never launches generation. Candidate assets now carry audit-grade Resource Contract facts where those contracts actually exist: independent unit, selection conditioning, admissible purposes, dependence, missingness, freshness/revision requirements, known information loss, and prospective producer fixes.
 
-Generator guidance reuses the existing generation-method registry. Fresh same-source acquisition nominates solver-blind random witness-first material; cross-construction transfer nominates the existing random+topology transfer pair; family/human routes point to their existing owners. These are source-capability hints, not evidence-role authorization.
+Generator guidance reuses the existing generation-method registry. Fresh same-source acquisition exposes the available producers but requires the claim's owning source regime to be preserved; cross-construction transfer nominates the existing random+topology pair as one clean candidate contrast; family/human routes point to their existing owners. These are source-capability hints, not evidence-role authorization.
 
 ### Selection / consumption lineage
 
