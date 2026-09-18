@@ -21,6 +21,8 @@ if (requestedNeed && !acquisitionNeeds().includes(requestedNeed)) {
 const controlFile = value('control');
 const opportunityMode = value('opportunity-mode') || 'rescue';
 const stageId = value('stage') || null;
+const independentUnitField = value('independent-unit-field') || null;
+const sizingBasis = value('sizing-basis') || 'rows';
 const numberValue = (name, { min = -Infinity, max = Infinity, integer = false } = {}) => {
     const raw = value(name);
     if (!raw) return null;
@@ -70,6 +72,8 @@ if (controlFile) {
         proposedTotal,
         conditionalEventRate,
         detectionProbability,
+        independentUnitField,
+        sizingBasis,
     });
 }
 
