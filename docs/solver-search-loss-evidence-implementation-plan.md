@@ -891,6 +891,76 @@ The resource is particularly relevant to current premises/questions including:
 
 Do not mark any of these premise-positive merely because the resource exists.
 
+### 6.19 Work-response and budget economics
+
+Failure-response telemetry should feed the existing work-response machinery rather than create a second dose-analysis authority.
+
+Current work-ladder analysis tracks solve acquisition across budgets. Extend or complement it with parent-level observational response dimensions such as:
+
+- best badness by budget;
+- last-improvement work point;
+- work after plateau;
+- censoring/exhaustion transitions;
+- optional loss-signature transition.
+
+This lets a work ladder say not only which parents eventually solve, but which unsolved parents continue to move versus saturate.
+
+### 6.20 Experiment covariance and interaction mining
+
+Experiment-response covariance may consume derived parent-level failure-response changes as additional offline features.
+
+Examples:
+
+- two treatments move the same parents from early plateau to late progress;
+- one changes retention loss while another changes dose censoring;
+- weak treatments affect complementary failure loci.
+
+Reduce to parent-level observations before covariance analysis. Raw capsule multiplicity is never independent evidence.
+
+### 6.21 Level generation
+
+Generation infrastructure may consume **derived, validated failure phenomena** as target definitions.
+
+Useful cases include:
+
+- generating more examples exposing a rare observed loss locus;
+- matched structural contrasts around a recurring loss signature;
+- families where one controlled mutation moves the observed loss boundary;
+- levels near a measured work-response phase transition.
+
+Generated targets must be defined from generic observable structure, not exact historical level identity. Generation provenance and parent/family grouping remain mandatory.
+
+### 6.22 Regression and longitudinal solver archaeology
+
+Failure-response summaries can expose meaningful changes before solved-set changes appear.
+
+Compare revisions on fixed populations for:
+
+- progress curve;
+- work-to-best;
+- rejection mix;
+- candidate-flow balance;
+- frontier diversity;
+- terminal signature;
+- recurrence/repeated-work;
+- handoff behavior.
+
+A same-solve-count revision can still improve or regress mechanism behavior. These are diagnostics, not promotion evidence by themselves.
+
+### 6.23 Runtime-mechanism nomination
+
+Only after offline prevalence/economics evidence may failure information nominate runtime mechanisms such as:
+
+- solve-local reason reuse;
+- adaptive restart;
+- dynamic width/retention;
+- failure-aware dose steering;
+- typed handoff;
+- causal repair/backjumping.
+
+Stored historical failure identity, exact labels, hints, or level-specific outcomes may never become cold production inputs.
+
+
 ## 7. Resource Contract for `search-loss-evidence`
 
 The asset should begin catalogue-grade and be promoted to audited-resource grade before recurring broad decision-bearing use.
