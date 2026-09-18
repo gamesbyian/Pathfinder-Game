@@ -85,7 +85,7 @@ export function buildQuestionDossier(root = process.cwd(), {
     const measurementOpportunities = model.relations.measurementOpportunities.filter(row => measurementIds.has(row.id));
 
     const premiseIds = new Set([
-        ...explicitIds(question, ['premiseId', 'premiseIds', 'mappedPremises']),
+        ...explicitIds(question, ['premiseId', 'premiseIds', 'mappedPremises', 'premiseRefs']),
         ...measurementOpportunities.flatMap(row => row.mappedPremises ?? []),
         ...exactTaggedEvidence.flatMap(row => row.premiseRefs ?? []),
     ]);
