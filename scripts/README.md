@@ -9,8 +9,8 @@ For a named concept, use compact/queryable front doors before `package.json` or 
 
 - solver priority/state: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md);
 - research status: `node scripts/research-status-index.mjs --compact [--query=...] [--status=...] [--kind=...]`;
-- research composition: `research:dossier -- --question-id=<id>` is the read-only question join; `research:relations -- --list [--discover]` exposes lower-level premise/evidence/block relations;
-- research lineage/integrity: `research:record-consumption -- ...` records evidence-use sidecars (`--selection-artifact` supported); `research:integration-audit` checks cross-system references without changing state;
+- research composition: `research:dossier -- --question-id=<id>`; lower-level `research:relations -- --list [--discover]`;
+- lineage/integrity: `research:record-consumption -- ...` (`--selection-artifact` supported); `research:integration-audit`; all are non-authoritative;
 - question/queue consistency: `npm run research:question-authority-audit`; hard-fails broken structured references/gate shape and emits conservative review warnings without auto-reopening research;
 - repeated-state/signature falsifiers should reuse `scripts/signature-collision-analysis-lib.mjs` for mixed-label and independent-unit accounting instead of reimplementing grouping logic;
 - solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`; add `--id=<asset-id>` or `--full` only when needed;
