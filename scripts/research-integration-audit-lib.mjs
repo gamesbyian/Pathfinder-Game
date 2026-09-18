@@ -146,6 +146,19 @@ export function auditResearchIntegration(root = process.cwd()) {
         if ((bundle.blockId ?? null) !== manifestBlockId) {
             errors.push(`durable evidence block summary disagrees with manifest: ${bundle.bundlePath}`);
         }
+        if (manifest?.population?.researchBlock) {
+            const blockIndependentUnit = manifest.population.researchBlock.independentUnit ?? null;
+            const contractIndependentUnit = manifest.population.independentUnit ?? null;
+            if (contractIndependentUnit == null) {
+                warnings.push({
+                    kind: 'legacy-missing-independent-unit-propagation',
+                    path: bundle.manifestPath,
+                    detail: 'Research block declares an independent unit, but the experiment population does not carry it explicitly. New contracts propagate this field; treat legacy evidence conservatively.',
+                });
+            } else if (contractIndependentUnit !== blockIndependentUnit) {
+                errors.push(`durable evidence independent-unit summary disagrees with research block: ${bundle.manifestPath}`);
+            }
+        }
         if (manifest?.researchQuestion?.questionId && manifest?.population?.researchBlock?.questionId &&
             manifest.researchQuestion.questionId !== manifest.population.researchBlock.questionId) {
             warnings.push({
@@ -180,6 +193,12 @@ export function auditResearchIntegration(root = process.cwd()) {
             evidenceReportsWithStableQuestion: model.relations.evidence.filter(evidence => evidence.researchQuestion).length,
             evidenceReportsWithPremiseRefs: model.relations.evidence.filter(evidence => (evidence.premiseRefs ?? []).length > 0).length,
             evidenceReportsWithMeasurementOpportunities: model.relations.evidence.filter(evidence => (evidence.measurementOpportunities ?? []).length > 0).length,
+            researchBlocksWithIndependentUnit: model.relations.researchBlocks.filter(block => Boolean(block.independentUnit)).length,
+            durableEvidenceWithExplicitIndependentUnit: model.relations.durableEvidence.filter(bundle => {
+                if (!bundle.manifestPath) return false;
+                const manifest = JSON.parse(readFileSync(path.join(root, bundle.manifestPath), 'utf8'));
+                return Boolean(manifest?.population?.independentUnit);
+            }).length,
         },
         errorCount: errors.length,
         warningCount: warnings.length,
