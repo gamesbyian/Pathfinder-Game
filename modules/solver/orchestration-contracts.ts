@@ -5,7 +5,7 @@
 // every other extracted module — and orchestration.ts itself — can depend on this one without a
 // cycle. See modules/solver/orchestration.ts's own header for the split this file is part of.
 import type { NormalizedLevel } from '../domain/types.js';
-import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver } from './types.js';
+import type { PrepLevel, AttemptConfig, AblationConfig, ForcedPortalExit, ConnectivityRejectionObserver, JointObligationObserver, BeamResearchObserver } from './types.js';
 import type { runAttemptSearch } from './attempt-dispatch.js';
 import { canonicalAblationFeatureName, OPT_IN_FEATURES } from './ablation-config.js';
 import { normalizeSolverStageId } from './stage-policy.js';
@@ -308,6 +308,10 @@ export interface SolveOpts {
     };
     /** Unit-test-only per-solve dispatch override. Never persisted or exposed by Solver's facade. */
     attemptSearchForTesting?: AttemptSearchDispatch;
+    /** Research-only beam observer attached to the real solveLevel orchestration. It receives
+     *  copied search records plus stable attempt identity/ordinal and cannot affect search.
+     *  Functions are intentionally direct/on-thread only and are not worker-serializable. */
+    beamResearchObserver?: BeamResearchObserver;
     /** Research-only isConnected() rejection observer (see ConnectivityRejectionObserver's doc in
      *  types.ts and docs/solver-optimization-workstreams.md item #0's learned-failure Stage A).
      *  Never persisted or exposed by Solver's facade; absent in every production caller. */
