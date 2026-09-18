@@ -86,15 +86,15 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 ## Workstream state
 
-| ID | Workstream | State | Next gate |
-|---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute D1 observation; then use the smallest live discriminator / explicit A-F3 gates |
-| 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal |
-| 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling |
-| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
-| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement |
-| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence |
-| 5 | Exact/reference model | **ON DEMAND / BUSIER** | Truth/query service for microscopes |
+| ID | Workstream | State | Next gate | Stable question ref |
+|---:|---|---|---|---|
+| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute D1 observation; then use the smallest live discriminator / explicit A-F3 gates | `WS2-D1-PRODUCTION-INERT-OBSERVATION` |
+| 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
+| 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
+| 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
+| 8 | Isolated capability | **SUBSUMED BY WS1** | Isolated winners are selection evidence, not entitlement | — |
+| 0/4 | Restart/randomization / beam retention | **CLOSED IN TESTED FORMS** | Reopen only for changed-mechanism evidence | — |
+| 5 | Exact/reference model | **ON DEMAND / BUSIER** | Truth/query service for microscopes | — |
 
 ## Standing research rules
 
