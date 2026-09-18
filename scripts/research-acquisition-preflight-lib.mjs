@@ -162,9 +162,9 @@ export function generationGuidanceForRoute(route) {
     if (route === ROUTES.fresh) {
         return {
             automaticGeneration: false,
-            candidateMethods: [compactMethod('random')],
+            candidateMethods: Object.keys(GENERATION_METHODS).map(compactMethod),
             candidateSuites: [],
-            note: 'Random witness-first generation is the default candidate for fresh solver-blind parents; source-role entitlement still comes from the question/evidence plan, not the generator name.',
+            note: 'Fresh-same-source requires the source regime named by the claim/population plan. These are available producers, not interchangeable candidates: preserve the owning construction regime and its mechanic support.',
         };
     }
     if (route === ROUTES.transfer) {
