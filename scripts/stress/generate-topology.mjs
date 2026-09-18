@@ -2,6 +2,10 @@
 /**
  * Topology-composition stress generator.
  *
+ * Research front door: `npm run research:generate-levels -- --method=topology ...`.
+ * Sibling source regimes are `targeted` and `random`; see docs/solver-research-generation.md.
+ * Direct invocation remains supported for native producer options.
+ *
  * Purpose: provide a solver-blind generated distribution whose witness geometry does NOT come
  * from witness.mjs's stochastic walk used by Corpus 1 and Corpus 2. This generator first builds
  * a randomized perfect maze on a coarse 4x4 or 5x5 macro grid, takes the maze diameter, and
