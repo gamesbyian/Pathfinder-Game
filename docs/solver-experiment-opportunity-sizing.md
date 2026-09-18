@@ -6,7 +6,7 @@
 
 ## Core rule
 
-Do not size an experiment from raw row count. Size it from the **opportunity population**: rows on which the treatment can actually change the primary outcome under the tested execution contract.
+Do not size an experiment from raw row count. Size it from the **opportunity population**: observations on which the treatment can actually change the primary outcome under the tested execution contract. When several observations share one parent/family/other independent unit, keep **detection depth** (rows/states) separate from **between-unit support**.
 
 Examples:
 
@@ -26,7 +26,7 @@ For every expensive decision-bearing run, answer these in order:
 1. **What exact event can differ?** State the causal opportunity condition before looking at treatment outcomes.
 2. **Can existing evidence estimate it?** Prefer current lifecycle, census, provenance, control runs, traces, profiles, or prior sealed control-side evidence.
 3. **What fraction of rows are opportunities?** Report numerator and denominator. Treat nominal reach with zero work/nodes as non-participation.
-4. **How many opportunity rows are actually needed?** Choose this from the decision: rare-rescue visibility, precision, no-harm coverage, or generalization scope.
+4. **How many opportunity rows or independent opportunity units are actually needed?** Choose the basis from the decision: repeated states within one parent can improve phenomenon detection, while confirmation/generalization normally requires independent parents/families.
 5. **What total N buys that many opportunities?** Derive total N from the observed opportunity rate, with uncertainty. Do not choose a round number first and rationalize it later.
 6. **What separate safety population is needed?** A benefit-enriched sample and a representative no-harm sample answer different questions. Do not force one population to do both jobs.
 7. **What is the escalation rule?** Start with the smallest block that can estimate participation/headroom. Expand only if the observed opportunity count leaves the decision unresolved.
@@ -61,7 +61,7 @@ These are warning thresholds, not universal rejection thresholds. A representati
 
 ## Sample-size discipline
 
-Prefer reasoning in **informative rows**, not total rows.
+Prefer reasoning in **informative opportunities**, not total rows. State whether the sizing basis is raw opportunity rows or independent opportunity units.
 
 If independent control evidence estimates opportunity rate `q`, then a target of `K` opportunity rows has point estimate:
 
@@ -109,6 +109,8 @@ This rule directly blocks several recently observed waste modes:
 - `--proposed-total=<N>`;
 - `--conditional-event-rate=<p>`;
 - `--detection-probability=<d>`;
+- `--independent-unit-field=<field>` to collapse repeated rows/states by an explicit parent/family/unit identity;
+- `--sizing-basis=rows|independent-unit` (default `rows` for backwards compatibility); use `independent-unit` when K/N is meant to support a between-parent/family claim;
 - `--check` to fail on the code(s) named by `--fail-on` (default `ZERO_OPPORTUNITY`, preserving the original behavior exactly for every existing caller);
 - `--fail-on=<CODE>[,<CODE>...]` (2026-09-09): selects which warning code(s) `--check` treats as a hard failure — `ZERO_OPPORTUNITY`, `CEILING`, `OVERPROVISIONED`, or `UNDERPOWERED_OPPORTUNITY`. Before this, every warning besides the zero-opportunity case was permanently advisory-only, even for a caller that opted into `--check` — this tool's own sizing/ceiling logic could never actually gate a run on anything but the single most degenerate case;
 - `--json` for machine-readable output.
