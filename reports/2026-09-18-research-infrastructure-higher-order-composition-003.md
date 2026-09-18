@@ -211,7 +211,7 @@ This is especially useful for MO-005 and MO-007, where conceptual coverage can o
 - copies `researchBlock.independentUnit` to `population.independentUnit`;
 - rejects an explicit conflicting population unit.
 
-`decisionContractIssues()` now requires agreement when a research block exists.
+`decisionContractIssues()` now rejects disagreement when an explicit population unit is present, while retained legacy contracts without the newly propagated field remain readable.
 
 The integration audit now:
 - errors when durable evidence carries a population unit that disagrees with its research block;
@@ -290,7 +290,7 @@ Compose generator support, source construction class, P190/P191 witness-selectio
 | Resource Contract | remains owner of independence/conditioning semantics; do not fold evidence-integrity grading into it |
 | capability memory | preserve solve capability role; design separate phenotype layer rather than weakening capability semantics |
 | archaeology | expose tested-form/portability facts to reopen view; remain historical memory, not priority |
-| experiment contracts | independent-unit propagation now required for research-block populations; future selection summary/reuse basis can be optional prospective extensions |
+| experiment contracts | the canonical writer now propagates the research-block independent unit and rejects conflicts; legacy absence remains an audit warning; future selection summary/reuse basis can be optional prospective extensions |
 | family/generation | preserve parent unit and source ancestry; source adequacy should consume existing provenance rather than rewrite generators |
 | evidence integrity | expose exact-source records in resource planning; do not become a universal score |
 | agent guidance | dossier remains first front door; agents should inspect unit, conditioning, integrity, and support/abstention before broad acquisition |
