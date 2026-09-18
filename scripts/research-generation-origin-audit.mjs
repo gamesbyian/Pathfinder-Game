@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { DEFAULT_MATCH_DIMENSIONS } from './research-generation-match-lib.mjs';
@@ -33,6 +33,8 @@ Usage:
     --source=topology=tmp/topology.json \
     --folds=5 --out=tmp/origin-audit.json
 
+Add --overwrite only when deliberately replacing a non-authoritative diagnostic artifact.
+
 Uses only static puzzle descriptors and grouped deterministic cross-validation. It never reads
 solver outcomes. High accuracy means the supplied descriptors already make source origin easy to
 recognize; low accuracy makes cross-source matched comparison more informative.
@@ -59,6 +61,7 @@ function main() {
   if (specs.length < 2) throw new Error('repeat --source at least twice');
   const out = values.get('--out');
   if (!out) throw new Error('--out is required');
+  if (existsSync(out) && !values.has('--overwrite')) throw new Error(`output already exists: ${out} (use --overwrite or choose a new path)`);
   const dimensions = values.get('--dimensions')
     ? values.get('--dimensions').split(',').map(x => x.trim()).filter(Boolean)
     : DEFAULT_MATCH_DIMENSIONS;
