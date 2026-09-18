@@ -9,7 +9,10 @@ For a named concept, use compact/queryable front doors before `package.json` or 
 
 - solver priority/state: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md);
 - research status: `node scripts/research-status-index.mjs --compact [--query=...] [--status=...] [--kind=...]`;
-- cross-authority research relations: `npm run research:relations -- --list` or `--relation=<name> [--query=...]`; this is a read-only projection over existing authorities, not a new evidence store;
+- question-first joined view: `npm run research:dossier -- --question-id=<id>`; this is derived/read-only and never owns priority, evidence disposition, or premise admission;
+- cross-authority research relations: `npm run research:relations -- --list` or `--relation=<name> [--query=...] [--discover]`; active premise rows/edges, durable evidence summaries and optional known-block discovery live here without becoming a new evidence store;
+- evidence-use lineage: `npm run research:record-consumption -- --block-artifact=<path> --question-id=<id> --decision-ref=<ref> --conditioning=<name> --out=<sidecar>`; use `--selection-artifact=<matched.json>` for outcome-blind generation matching;
+- cross-system integrity: `npm run research:integration-audit`; this checks references/joins and never changes question state;
 - question/queue consistency: `npm run research:question-authority-audit`; hard-fails broken structured references/gate shape and emits conservative review warnings without auto-reopening research;
 - repeated-state/signature falsifiers should reuse `scripts/signature-collision-analysis-lib.mjs` for mixed-label and independent-unit accounting instead of reimplementing grouping logic;
 - solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`; add `--id=<asset-id>` or `--full` only when needed;
