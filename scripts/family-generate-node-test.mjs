@@ -132,6 +132,8 @@ async function main() {
         const result = await runGenerate([
             `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
             `--parent=${parent.id}`, '--count=3', '--seed=42',
+            '--question-id=WS2-D1-PRODUCTION-INERT-OBSERVATION', '--evidence-role=development',
+            '--origin-block-id=TEST-BLOCK', `--origin-population-identity=sha256:${'1'.repeat(64)}`,
             `--out=${rel(outPath)}`, `--manifest-out=${rel(manifestPath)}`,
         ]);
         assert.match(result.stdout, /movable object instance\(s\)/);
@@ -149,6 +151,13 @@ async function main() {
         assert.ok(!Object.hasOwn(manifest, 'parentNavDensity'), 'new manifests single-write the canonical parent coverage field');
         assert.ok(manifest.variants.every(v => Number.isFinite(v.requiredPathCoverageRatio)));
         assert.ok(manifest.variants.every(v => !Object.hasOwn(v, 'navDensity')), 'new variant rows single-write canonical coverage fields');
+
+        const researchContext = manifest.generationRuns.at(-1).researchContext;
+        assert.equal(researchContext.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
+        assert.equal(researchContext.evidenceRole, 'development');
+        assert.equal(researchContext.independentUnit, 'parent-family');
+        assert.equal(researchContext.originResearchBlock.blockId, 'TEST-BLOCK');
+        assert.match(researchContext.originResearchBlock.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
 
         const witnessPath = parent.hints[0];
         const seenIds = new Set();
