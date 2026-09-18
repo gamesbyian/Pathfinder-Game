@@ -35,6 +35,11 @@ Before any broad collection:
 3. freeze the literal parent selection and D1 eligibility predicate;
 4. record development versus independent-confirmation roles.
 
+For Stage 2, use `--execution-boundary=production-orchestration`. This attaches the generic
+research-only beam observer to the real `solveLevel` ladder, tags every record with an attempt
+ordinal/config/gate identity, and joins that ordinal back to the authoritative `SolveResult.attempts`
+stage telemetry. Confirmation/transfer capture is rejected on the older isolated-beam boundary.
+
 ## Required observation record
 
 Use the shared bounded record contract in `scripts/solver-decision-observation-lib.mjs` for the common decision identity/order/retention/work fields rather than creating a D1-private event envelope. D1-specific exact-query output belongs in that record's optional annotation, with unsupported/time-limited queries represented as `UNKNOWN`.
@@ -102,6 +107,7 @@ No inference uses this stage.
 ### Stage 2 — independent pilot
 
 Run the frozen observer on a small deterministic multi-parent sample selected before D1 outcomes are seen.
+The capture must use the full production orchestration boundary, not a standalone beam attempt.
 
 Measure:
 
