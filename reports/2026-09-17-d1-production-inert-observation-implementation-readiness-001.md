@@ -1,6 +1,6 @@
 # D1 production-inert observation implementation readiness 001
 
-> **Status:** superseded by orchestration-observer bridge
+> **Status:** superseded
 > **Last evidence:** 2026-09-17 — branch implementation on top of the canonical-work correction from PR #1867.
 > **Decision:** the D1 gate now has a two-phase execution path that freezes real beam decisions and eligibility before exact annotation. No D1 result is visible to search. The next legitimate action is a bounded development canary, not an independent pilot.
 > **Remaining gate:** execute the development canary below. The previously missing full-orchestration observer bridge is now implemented prospectively; after canary acceptance, Stage 2 can use `--execution-boundary=production-orchestration` for independent multi-parent capture.
