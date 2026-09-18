@@ -43,6 +43,7 @@ const { witnessFromLevelAndPath } = await import('./stress/witness-adapter.mjs')
 const { inheritedWitnessHint, transformedWitnessHint } = await import('./stress/witness-provenance.mjs');
 const { readLevelsWithHints, writeLevelsWithHints, hintsDirFor } = await import('./level-data-io.mjs');
 const { generatorImplementationProvenance } = await import('./generator-implementation-provenance.mjs');
+const { loadResearchQuestionRegistry } = await import('./research-question-relations-lib.mjs');
 
 const GENERATOR_VERSION = '0.1.0';
 
@@ -64,6 +65,11 @@ const BLOCK_DELTA_MAX = Number(args.get('--block-delta-max') ?? 3);
 const GROUP_ARG = args.get('--group');
 const REEMBED_GRID_ARG = args.get('--re-embed-grid');
 const REEMBED_OFFSET_ARG = args.get('--re-embed-offset');
+const QUESTION_ID = args.get('--question-id') || null;
+const EVIDENCE_ROLE = args.get('--evidence-role') || 'development';
+const PARENT_EXPOSURE = args.get('--parent-exposure') || 'unknown';
+const ORIGIN_BLOCK_ID = args.get('--origin-block-id') || null;
+const ORIGIN_POPULATION_IDENTITY = args.get('--origin-population-identity') || null;
 
 const VALID_MODES = ['local-mutant', 'density-sweep', 'symmetry', 'swap', 'group-reshuffle', 'constrained-shuffle', 're-embed'];
 if (!VALID_MODES.includes(MODE)) {
@@ -76,6 +82,36 @@ if (MODE === 'group-reshuffle' && !GROUP_ARG) {
 }
 if (MODE === 're-embed' && !REEMBED_GRID_ARG) {
     console.error('--mode=re-embed requires --re-embed-grid=<W>x<H> (>= the parent grid in both dimensions)');
+    process.exit(2);
+}
+
+const EVIDENCE_ROLES = new Set(['development', 'confirmation', 'transfer']);
+const PARENT_EXPOSURES = new Set(['unknown', 'development', 'locked-untouched']);
+if (!EVIDENCE_ROLES.has(EVIDENCE_ROLE)) {
+    console.error('--evidence-role must be development, confirmation, or transfer');
+    process.exit(2);
+}
+if (!PARENT_EXPOSURES.has(PARENT_EXPOSURE)) {
+    console.error('--parent-exposure must be unknown, development, or locked-untouched');
+    process.exit(2);
+}
+if ((ORIGIN_BLOCK_ID || ORIGIN_POPULATION_IDENTITY) && !QUESTION_ID) {
+    console.error('--origin-block-id/--origin-population-identity require --question-id');
+    process.exit(2);
+}
+if (!!ORIGIN_BLOCK_ID !== !!ORIGIN_POPULATION_IDENTITY) {
+    console.error('--origin-block-id and --origin-population-identity must be supplied together');
+    process.exit(2);
+}
+if (QUESTION_ID) {
+    const registry = loadResearchQuestionRegistry(process.cwd());
+    if (!registry.questions.some(question => question.id === QUESTION_ID)) {
+        console.error(`unknown --question-id=${QUESTION_ID}`);
+        process.exit(2);
+    }
+}
+if (EVIDENCE_ROLE !== 'development' && PARENT_EXPOSURE !== 'locked-untouched') {
+    console.error(`${EVIDENCE_ROLE} family generation requires --parent-exposure=locked-untouched`);
     process.exit(2);
 }
 
@@ -863,6 +899,20 @@ async function main() {
         createdTimestamp: new Date().toISOString(), randomSeed: SEED,
         generatorVersion: GENERATOR_VERSION, generatorImplementation,
         variantIds: variantManifests.map(variant => variant.variantId),
+        ...(QUESTION_ID ? {
+            researchContext: {
+                questionId: QUESTION_ID,
+                evidenceRole: EVIDENCE_ROLE,
+                parentExposure: PARENT_EXPOSURE,
+                independentUnit: 'parent-family',
+                parentId,
+                parentContentIdentity: parentContentHash,
+                originResearchBlock: ORIGIN_BLOCK_ID ? {
+                    blockId: ORIGIN_BLOCK_ID,
+                    populationIdentity: ORIGIN_POPULATION_IDENTITY,
+                } : null,
+            },
+        } : {}),
     };
     const manifest = {
         schemaVersion: 2,
