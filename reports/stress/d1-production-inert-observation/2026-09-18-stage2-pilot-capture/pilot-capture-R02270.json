@@ -1,0 +1,1911 @@
+{
+  "schemaVersion": 1,
+  "kind": "d1-production-inert-decision-capture",
+  "generatedAt": "2026-09-18T07:01:09.235Z",
+  "solver": {
+    "commit": "6d89f57720f89eec03655a3b3a3f407f1c52521b",
+    "ref": "claude/pathfinder-solver-queue-uk9bvs",
+    "dirty": true
+  },
+  "corpus": "data/stress/stress-levels-random.json",
+  "sourceRevision": "sha256:89cd0b6380a6d585e43411139a0805078e78f883d02f37e7ae3513f4be55b414",
+  "levelIds": [
+    "R02270"
+  ],
+  "populationIdentity": "sha256:fd0835688115d53abd9eb0e5a0569988f6ad6b328046691c5f15f9619c8a0ecc",
+  "researchBlock": {
+    "blockId": "WS2-D1-PRODUCTION-INERT-OBSERVATION:fd0835688115",
+    "questionId": "WS2-D1-PRODUCTION-INERT-OBSERVATION",
+    "sourceRegime": "data/stress/stress-levels-random.json",
+    "sourceRevision": "sha256:89cd0b6380a6d585e43411139a0805078e78f883d02f37e7ae3513f4be55b414",
+    "evidenceRole": "confirmation",
+    "independentUnit": "parent-level",
+    "parentIds": [
+      "R02270"
+    ],
+    "parentContentIdentities": [
+      "v2:e1e887e4489e813d87d0802f7262922e87d47c4241e43421bdd667cfc11689bc"
+    ],
+    "sourceArtifactRefs": [
+      "data/stress/stress-levels-random.json",
+      "/tmp/claude-0/-home-user-Pathfinder-Game/c47eb8f3-b0cf-5b29-ad51-c0244e8590eb/scratchpad/d1/pilot-capture-R02270.json"
+    ],
+    "createdBy": {
+      "producer": "scripts/stress/capture-d1-production-decisions.mjs",
+      "manifestRef": "/tmp/claude-0/-home-user-Pathfinder-Game/c47eb8f3-b0cf-5b29-ad51-c0244e8590eb/scratchpad/d1/pilot-capture-R02270.json",
+      "runRef": null
+    },
+    "generationRef": null,
+    "consumptionEvents": []
+  },
+  "evidenceRole": "confirmation",
+  "independentUnit": "parent-level",
+  "executionBoundary": "full current production solveLevel orchestration with observer OFF/ON parity; beam records joined to actual attempt telemetry by attempt ordinal",
+  "freezeBoundary": "all D1 eligibility fixed from unchanged beam decision records before exact D1 annotation",
+  "policy": {
+    "executionBoundary": "production-orchestration",
+    "profile": null,
+    "width": null,
+    "mechanicBucketRetention": null,
+    "budgetMs": 1200000,
+    "nodeBudget": 200000,
+    "pauseAfterPhases": null
+  },
+  "eligibility": {
+    "cutoffRadius": 2,
+    "requirements": [
+      "actual cull decision",
+      "candidate rank within fixed cutoff window",
+      "positive remaining intersection deficit",
+      "at least one nontrivial already-visited revisit candidate",
+      "at least one eligible retained and one eligible culled candidate in the same decision"
+    ]
+  },
+  "parents": [
+    {
+      "parentId": "R02270",
+      "parentContentIdentity": "v2:e1e887e4489e813d87d0802f7262922e87d47c4241e43421bdd667cfc11689bc",
+      "evidenceRole": "confirmation",
+      "gate": 524288,
+      "configuredAttempt": null,
+      "solved": false,
+      "nodesExpanded": 900129,
+      "workSpent": 1645805,
+      "controlNodesExpanded": 900129,
+      "controlWorkSpent": 1645805,
+      "behaviorIdentical": true,
+      "pausedAtPhaseBoundary": null,
+      "orchestrationAttemptCount": 58,
+      "cullDecisions": 14,
+      "eligibleDecisions": 14
+    }
+  ],
+  "decisions": [
+    {
+      "decisionId": "score-width-culled@14#0",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 846274,
+      "workSpentAfter": 846274,
+      "context": {
+        "depth": 14,
+        "nodeProgress": 6224,
+        "beamWidth": 2000,
+        "cutoffScore": -490.59865319865315,
+        "firstCulledScore": -491.17584175084176,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,458758,393222,327686,262150,196614,131078,131079,131080]",
+              "rank": 1998,
+              "score": -486.0559764309764,
+              "insertionOrder": 444,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 13,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+              "rank": 1999,
+              "score": -490.59865319865315,
+              "insertionOrder": 896,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+              "rank": 2000,
+              "score": -490.59865319865315,
+              "insertionOrder": 1448,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,458757,458758,393222,327686,262150,196614,131078,131079,65543]",
+              "rank": 2001,
+              "score": -491.17584175084176,
+              "insertionOrder": 674,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 13,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,458758,458757,458756,458755,524291,589827,655363,655364]",
+              "rank": 2002,
+              "score": -493.8232323232324,
+              "insertionOrder": 360,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 13,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,524294,458758,393222,327686,262150,196614,131078,131079,131080]",
+            "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+            "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+            "[524288,524289,524290,524291,524292,524293,458757,458758,393222,327686,262150,196614,131078,131079,65543]",
+            "[524288,524289,524290,524291,524292,524293,524294,458758,458757,458756,458755,524291,589827,655363,655364]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,524294,458758,393222,327686,262150,196614,131078,131079,131080]",
+            "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+            "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,458757,458758,393222,327686,262150,196614,131078,131079,65543]",
+            "[524288,524289,524290,524291,524292,524293,524294,458758,458757,458756,458755,524291,589827,655363,655364]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 43,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 149477,
+          "attemptNodesExpanded": 19760
+        },
+        "immediateExpansionWork": {
+          "[524288,524289,524290,524291,524292,524293,524294,458758,393222,327686,262150,196614,131078,131079,131080]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          },
+          "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          },
+          "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          }
+        }
+      },
+      "candidateCount": 2052,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@15#1",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 856032,
+      "workSpentAfter": 856032,
+      "context": {
+        "depth": 15,
+        "nodeProgress": 8224,
+        "beamWidth": 2000,
+        "cutoffScore": -235.74437229437228,
+        "firstCulledScore": -236.1973905723905,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,655363,655364,655365,589829,589828,524292,524293,524294,524295,589831,655367]",
+              "rank": 1998,
+              "score": -235.30824915824917,
+              "insertionOrder": 5053,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,524292,524293,524294,524295,524296,589832,589833,655369]",
+              "rank": 1999,
+              "score": -235.53585858585856,
+              "insertionOrder": 4701,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,589825,655361,655360,589824,589825,589826,589827,524291,524292,524293,524294,589830,655366,720902]",
+              "rank": 2000,
+              "score": -235.74437229437228,
+              "insertionOrder": 5350,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,524295,589831,589830,524294,458758,458759,393223,327687,262151]",
+              "rank": 2001,
+              "score": -236.1973905723905,
+              "insertionOrder": 5649,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,524290,524291,524292,458756,458757,393221,327685,262149,196613,196614]",
+              "rank": 2002,
+              "score": -237.15673400673398,
+              "insertionOrder": 5464,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,589825,589826,589827,655363,655364,655365,589829,589828,524292,524293,524294,524295,589831,655367]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,524292,524293,524294,524295,524296,589832,589833,655369]",
+            "[524288,524289,589825,655361,655360,589824,589825,589826,589827,524291,524292,524293,524294,589830,655366,720902]",
+            "[524288,524289,524290,524291,524292,524293,524294,524295,589831,589830,524294,458758,458759,393223,327687,262151]",
+            "[524288,458752,393216,393217,458753,524289,524290,524291,524292,458756,458757,393221,327685,262149,196613,196614]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,589825,589826,589827,655363,655364,655365,589829,589828,524292,524293,524294,524295,589831,655367]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,524292,524293,524294,524295,524296,589832,589833,655369]",
+            "[524288,524289,589825,655361,655360,589824,589825,589826,589827,524291,524292,524293,524294,589830,655366,720902]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,524294,524295,589831,589830,524294,458758,458759,393223,327687,262151]",
+            "[524288,458752,393216,393217,458753,524289,524290,524291,524292,458756,458757,393221,327685,262149,196613,196614]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 43,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 149477,
+          "attemptNodesExpanded": 19760
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,589825,589826,589827,655363,655364,655365,589829,589828,524292,524293,524294,524295,589831,655367]": {
+            "status": "observed",
+            "workSpent": 26,
+            "generatedCandidates": 2
+          },
+          "[524288,589824,655360,655361,655362,655363,655364,589828,524292,524293,524294,524295,524296,589832,589833,655369]": {
+            "status": "observed",
+            "workSpent": 26,
+            "generatedCandidates": 2
+          },
+          "[524288,524289,589825,655361,655360,589824,589825,589826,589827,524291,524292,524293,524294,589830,655366,720902]": {
+            "status": "observed",
+            "workSpent": 13,
+            "generatedCandidates": 0
+          }
+        }
+      },
+      "candidateCount": 2808,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@16#2",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 912152,
+      "workSpentAfter": 912152,
+      "context": {
+        "depth": 16,
+        "nodeProgress": 10224,
+        "beamWidth": 2000,
+        "cutoffScore": -162.87962962962956,
+        "firstCulledScore": -163.05008417508412,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,393221,327685,262149,262150,327686,393222]",
+              "rank": 1998,
+              "score": -162.55765993265987,
+              "insertionOrder": 4624,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,589827,524291,524292,458756,458757,458758,393222,327686,262150,196614,196615]",
+              "rank": 1999,
+              "score": -162.87962962962956,
+              "insertionOrder": 5772,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,458758,393222,327686,262150,196614,196615]",
+              "rank": 2000,
+              "score": -162.87962962962956,
+              "insertionOrder": 5776,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,589830,589829,589828,589827,589826,589825,589824,655360,655361,655362]",
+              "rank": 2001,
+              "score": -163.05008417508412,
+              "insertionOrder": 7208,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,589829,589830,589831,589832,589833,589834,524298,458762,393226,393225,458761]",
+              "rank": 2002,
+              "score": -163.0748316498316,
+              "insertionOrder": 5733,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,393221,327685,262149,262150,327686,393222]",
+            "[524288,589824,655360,655361,655362,655363,589827,524291,524292,458756,458757,458758,393222,327686,262150,196614,196615]",
+            "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,458758,393222,327686,262150,196614,196615]",
+            "[524288,524289,524290,524291,524292,524293,524294,589830,589829,589828,589827,589826,589825,589824,655360,655361,655362]",
+            "[524288,589824,589825,589826,589827,589828,589829,589830,589831,589832,589833,589834,524298,458762,393226,393225,458761]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,393221,327685,262149,262150,327686,393222]",
+            "[524288,589824,655360,655361,655362,655363,589827,524291,524292,458756,458757,458758,393222,327686,262150,196614,196615]",
+            "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,458758,393222,327686,262150,196614,196615]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,524294,589830,589829,589828,589827,589826,589825,589824,655360,655361,655362]",
+            "[524288,589824,589825,589826,589827,589828,589829,589830,589831,589832,589833,589834,524298,458762,393226,393225,458761]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 43,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 149477,
+          "attemptNodesExpanded": 19760
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,393221,327685,262149,262150,327686,393222]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          },
+          "[524288,589824,655360,655361,655362,655363,589827,524291,524292,458756,458757,458758,393222,327686,262150,196614,196615]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          },
+          "[524288,589824,655360,655361,655362,655363,589827,524291,458755,458756,458757,458758,393222,327686,262150,196614,196615]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          }
+        }
+      },
+      "candidateCount": 2604,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@17#3",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 922916,
+      "workSpentAfter": 922916,
+      "context": {
+        "depth": 17,
+        "nodeProgress": 12224,
+        "beamWidth": 2000,
+        "cutoffScore": -93.54219576719575,
+        "firstCulledScore": -93.55328282828279,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,589830,589829,589828,589827,589826,589825,524289,458753,393217,327681,262145]",
+              "rank": 1998,
+              "score": -93.295707070707,
+              "insertionOrder": 7056,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,458757,458758,524294,524295,524296,589832]",
+              "rank": 1999,
+              "score": -93.48341750841747,
+              "insertionOrder": 3821,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,524290,524291,524292,524293,524294,589830,655366,720902,720903,720904,720905,720906]",
+              "rank": 2000,
+              "score": -93.54219576719575,
+              "insertionOrder": 6152,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,458757,458758,524294,589830,655366,655367]",
+              "rank": 2001,
+              "score": -93.55328282828279,
+              "insertionOrder": 5644,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,524292,524293,524294,524295,524296,524297,524298,589834,589833,589832]",
+              "rank": 2002,
+              "score": -93.76363636363635,
+              "insertionOrder": 7448,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,524294,589830,589829,589828,589827,589826,589825,524289,458753,393217,327681,262145]",
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,458757,458758,524294,524295,524296,589832]",
+            "[524288,458752,393216,393217,458753,524289,524290,524291,524292,524293,524294,589830,655366,720902,720903,720904,720905,720906]",
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,458757,458758,524294,589830,655366,655367]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,524292,524293,524294,524295,524296,524297,524298,589834,589833,589832]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,524294,589830,589829,589828,589827,589826,589825,524289,458753,393217,327681,262145]",
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,458757,458758,524294,524295,524296,589832]",
+            "[524288,458752,393216,393217,458753,524289,524290,524291,524292,524293,524294,589830,655366,720902,720903,720904,720905,720906]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,458757,458758,524294,589830,655366,655367]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,524292,524293,524294,524295,524296,524297,524298,589834,589833,589832]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 43,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 149477,
+          "attemptNodesExpanded": 19760
+        },
+        "immediateExpansionWork": {
+          "[524288,524289,524290,524291,524292,524293,524294,589830,589829,589828,589827,589826,589825,524289,458753,393217,327681,262145]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          },
+          "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,458757,458758,524294,524295,524296,589832]": {
+            "status": "observed",
+            "workSpent": 2,
+            "generatedCandidates": 2
+          },
+          "[524288,458752,393216,393217,458753,524289,524290,524291,524292,524293,524294,589830,655366,720902,720903,720904,720905,720906]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          }
+        }
+      },
+      "candidateCount": 2966,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@18#4",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 933855,
+      "workSpentAfter": 933855,
+      "context": {
+        "depth": 18,
+        "nodeProgress": 14224,
+        "beamWidth": 2000,
+        "cutoffScore": -30.87165704665704,
+        "firstCulledScore": -31.126370851370837,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,655364,655365,655366,720902,720903,655367,589831,524295,524294,458758,458757,458756,393220]",
+              "rank": 1998,
+              "score": -30.70313852813848,
+              "insertionOrder": 4694,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 18,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,458753,524289,589825,655361,655360,589824,589825,589826,589827,589828,589829,524293,524292,458756,393220,393221,327685]",
+              "rank": 1999,
+              "score": -30.848063973063915,
+              "insertionOrder": 4286,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,524292,524293,458757,393221,327685,262149,262150]",
+              "rank": 2000,
+              "score": -30.87165704665704,
+              "insertionOrder": 4648,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,458753,524289,524290,524291,589827,655363,655364,655365,655366,720902,720903,655367,589831,524295,524296,524297,458761]",
+              "rank": 2001,
+              "score": -31.126370851370837,
+              "insertionOrder": 6921,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 18,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,589825,524289,524290,589826,655362,655363,655364,655365,589829,524293,458757,458758,393222,327686,262150]",
+              "rank": 2002,
+              "score": -31.41111111111112,
+              "insertionOrder": 4352,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,720902,720903,655367,589831,524295,524294,458758,458757,458756,393220]",
+            "[524288,458752,458753,524289,589825,655361,655360,589824,589825,589826,589827,589828,589829,524293,524292,458756,393220,393221,327685]",
+            "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,524292,524293,458757,393221,327685,262149,262150]",
+            "[524288,458752,458753,524289,524290,524291,589827,655363,655364,655365,655366,720902,720903,655367,589831,524295,524296,524297,458761]",
+            "[524288,589824,655360,655361,589825,524289,524290,589826,655362,655363,655364,655365,589829,524293,458757,458758,393222,327686,262150]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,720902,720903,655367,589831,524295,524294,458758,458757,458756,393220]",
+            "[524288,458752,458753,524289,589825,655361,655360,589824,589825,589826,589827,589828,589829,524293,524292,458756,393220,393221,327685]",
+            "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,524292,524293,458757,393221,327685,262149,262150]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,458752,458753,524289,524290,524291,589827,655363,655364,655365,655366,720902,720903,655367,589831,524295,524296,524297,458761]",
+            "[524288,589824,655360,655361,589825,524289,524290,589826,655362,655363,655364,655365,589829,524293,458757,458758,393222,327686,262150]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 43,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 149477,
+          "attemptNodesExpanded": 19760
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,589825,589826,589827,589828,655364,655365,655366,720902,720903,655367,589831,524295,524294,458758,458757,458756,393220]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          },
+          "[524288,458752,458753,524289,589825,655361,655360,589824,589825,589826,589827,589828,589829,524293,524292,458756,393220,393221,327685]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          },
+          "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,524292,524293,458757,393221,327685,262149,262150]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          }
+        }
+      },
+      "candidateCount": 3115,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@19#5",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 945133,
+      "workSpentAfter": 945133,
+      "context": {
+        "depth": 19,
+        "nodeProgress": 16224,
+        "beamWidth": 2000,
+        "cutoffScore": 1.1095719095719119,
+        "firstCulledScore": 1.1044372294372806,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,655360,655361,589825,589826,589827,589828,589829,655365,655366,589830,524294,524293,524292,524291,524290,524289,458753,393217]",
+              "rank": 1998,
+              "score": 1.649326599326617,
+              "insertionOrder": 7937,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,524294,589830,655366,655367,589831,589832,524296,524297]",
+              "rank": 1999,
+              "score": 1.6132154882154879,
+              "insertionOrder": 4128,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,655363,655364,655365,655366,720902,720903,655367,589831,589832,524296,524295,524294,589830,589829,655365]",
+              "rank": 2000,
+              "score": 1.1095719095719119,
+              "insertionOrder": 4305,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 18,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,589829,655365,655366,720902,720903,655367,589831,589832,524296,524295,458759,393223,327687,262151]",
+              "rank": 2001,
+              "score": 1.1044372294372806,
+              "insertionOrder": 5321,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458756,524292,524291,524290,524289]",
+              "rank": 2002,
+              "score": 0.9884680134680295,
+              "insertionOrder": 5768,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 18,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,655365,655366,589830,524294,524293,524292,524291,524290,524289,458753,393217]",
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,524294,589830,655366,655367,589831,589832,524296,524297]",
+            "[524288,589824,589825,589826,589827,655363,655364,655365,655366,720902,720903,655367,589831,589832,524296,524295,524294,589830,589829,655365]",
+            "[524288,589824,589825,589826,589827,589828,589829,655365,655366,720902,720903,655367,589831,589832,524296,524295,458759,393223,327687,262151]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458756,524292,524291,524290,524289]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,655365,655366,589830,524294,524293,524292,524291,524290,524289,458753,393217]",
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,524294,589830,655366,655367,589831,589832,524296,524297]",
+            "[524288,589824,589825,589826,589827,655363,655364,655365,655366,720902,720903,655367,589831,589832,524296,524295,524294,589830,589829,655365]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,589825,589826,589827,589828,589829,655365,655366,720902,720903,655367,589831,589832,524296,524295,458759,393223,327687,262151]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458756,524292,524291,524290,524289]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 43,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 149477,
+          "attemptNodesExpanded": 19760
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,655360,655361,589825,589826,589827,589828,589829,655365,655366,589830,524294,524293,524292,524291,524290,524289,458753,393217]": {
+            "status": "observed",
+            "workSpent": 2,
+            "generatedCandidates": 2
+          },
+          "[524288,589824,655360,655361,655362,655363,655364,655365,589829,589828,524292,524293,524294,589830,655366,655367,589831,589832,524296,524297]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 2
+          },
+          "[524288,589824,589825,589826,589827,655363,655364,655365,655366,720902,720903,655367,589831,589832,524296,524295,524294,589830,589829,655365]": {
+            "status": "observed",
+            "workSpent": 0,
+            "generatedCandidates": 0
+          }
+        }
+      },
+      "candidateCount": 2876,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@20#6",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 956727,
+      "workSpentAfter": 956727,
+      "context": {
+        "depth": 20,
+        "nodeProgress": 18224,
+        "beamWidth": 2000,
+        "cutoffScore": 57.981060606060595,
+        "firstCulledScore": 57.88970658970665,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,655365,655366,655367,589831,589832,589833,524297,458761,393225,327689]",
+              "rank": 1998,
+              "score": 58.048460798460766,
+              "insertionOrder": 6030,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,589833,589834,655370,655369,589833,524297,458761,393225,393226]",
+              "rank": 1999,
+              "score": 58.02929292929294,
+              "insertionOrder": 4208,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,655365,589829,524293,458757,458756,524292,589828,589827,589826,589825,524289,458753,393217,327681]",
+              "rank": 2000,
+              "score": 57.981060606060595,
+              "insertionOrder": 6473,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 20,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,589825,589826,589827,589828,589829,589830,655366,720902,720903,655367,655366,655365,655364,655363,655362]",
+              "rank": 2001,
+              "score": 57.88970658970665,
+              "insertionOrder": 6172,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,589826,524290,524289,589825,589826,589827,655363,655364,655365,655366,589830,524294,524293,524292,458756,458757]",
+              "rank": 2002,
+              "score": 57.59785954785958,
+              "insertionOrder": 6800,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,655365,655366,655367,589831,589832,589833,524297,458761,393225,327689]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,589833,589834,655370,655369,589833,524297,458761,393225,393226]",
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,524293,458757,458756,524292,589828,589827,589826,589825,524289,458753,393217,327681]",
+            "[524288,458752,393216,393217,458753,524289,589825,589826,589827,589828,589829,589830,655366,720902,720903,655367,655366,655365,655364,655363,655362]",
+            "[524288,589824,655360,655361,655362,589826,524290,524289,589825,589826,589827,655363,655364,655365,655366,589830,524294,524293,524292,458756,458757]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,655365,655366,655367,589831,589832,589833,524297,458761,393225,327689]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,589833,589834,655370,655369,589833,524297,458761,393225,393226]",
+            "[524288,589824,655360,655361,655362,655363,655364,655365,589829,524293,458757,458756,524292,589828,589827,589826,589825,524289,458753,393217,327681]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,458752,393216,393217,458753,524289,589825,589826,589827,589828,589829,589830,655366,720902,720903,655367,655366,655365,655364,655363,655362]",
+            "[524288,589824,655360,655361,655362,589826,524290,524289,589825,589826,589827,655363,655364,655365,655366,589830,524294,524293,524292,458756,458757]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 43,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 149477,
+          "attemptNodesExpanded": 19760
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,655365,655366,655367,589831,589832,589833,524297,458761,393225,327689]": {
+            "status": "not-observed-before-termination",
+            "workSpent": null,
+            "generatedCandidates": null
+          },
+          "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,589833,589834,655370,655369,589833,524297,458761,393225,393226]": {
+            "status": "not-observed-before-termination",
+            "workSpent": null,
+            "generatedCandidates": null
+          },
+          "[524288,589824,655360,655361,655362,655363,655364,655365,589829,524293,458757,458756,524292,589828,589827,589826,589825,524289,458753,393217,327681]": {
+            "status": "not-observed-before-termination",
+            "workSpent": null,
+            "generatedCandidates": null
+          }
+        }
+      },
+      "candidateCount": 3231,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@14#7",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 995685,
+      "workSpentAfter": 995685,
+      "context": {
+        "depth": 14,
+        "nodeProgress": 6214,
+        "beamWidth": 2000,
+        "cutoffScore": -491.17584175084176,
+        "firstCulledScore": -493.8232323232324,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+              "rank": 1998,
+              "score": -490.59865319865315,
+              "insertionOrder": 888,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+              "rank": 1999,
+              "score": -490.59865319865315,
+              "insertionOrder": 1428,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,458757,458758,393222,327686,262150,196614,131078,131079,65543]",
+              "rank": 2000,
+              "score": -491.17584175084176,
+              "insertionOrder": 662,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 13,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,458758,458757,458756,458755,524291,589827,655363,655364]",
+              "rank": 2001,
+              "score": -493.8232323232324,
+              "insertionOrder": 348,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 13,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,589830,655366,655367,589831,589832,589833,589834,655370]",
+              "rank": 2002,
+              "score": -494.1997474747475,
+              "insertionOrder": 256,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+            "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+            "[524288,524289,524290,524291,524292,524293,458757,458758,393222,327686,262150,196614,131078,131079,65543]",
+            "[524288,524289,524290,524291,524292,524293,524294,458758,458757,458756,458755,524291,589827,655363,655364]",
+            "[524288,524289,524290,524291,524292,524293,524294,589830,655366,655367,589831,589832,589833,589834,655370]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+            "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]",
+            "[524288,524289,524290,524291,524292,524293,458757,458758,393222,327686,262150,196614,131078,131079,65543]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,524289,524290,524291,524292,524293,524294,458758,458757,458756,458755,524291,589827,655363,655364]",
+            "[524288,524289,524290,524291,524292,524293,524294,589830,655366,655367,589831,589832,589833,589834,655370]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 44,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 150778,
+          "attemptNodesExpanded": 20006
+        },
+        "immediateExpansionWork": {
+          "[524288,524289,524290,524291,524292,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          },
+          "[524288,524289,524290,524291,458755,458756,458757,458758,458759,393223,327687,327688,327689,327690,393226]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          },
+          "[524288,524289,524290,524291,524292,524293,458757,458758,393222,327686,262150,196614,131078,131079,65543]": {
+            "status": "observed",
+            "workSpent": 2,
+            "generatedCandidates": 2
+          }
+        }
+      },
+      "candidateCount": 2053,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@15#8",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 1005427,
+      "workSpentAfter": 1005427,
+      "context": {
+        "depth": 15,
+        "nodeProgress": 8214,
+        "beamWidth": 2000,
+        "cutoffScore": -242.60370370370367,
+        "firstCulledScore": -242.96717171717174,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,524292,458756,458757,458758,524294,524295]",
+              "rank": 1998,
+              "score": -242.16649831649832,
+              "insertionOrder": 4960,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,458755,458756,458757,458758,524294,524295]",
+              "rank": 1999,
+              "score": -242.16649831649832,
+              "insertionOrder": 4964,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,524293,524294,524295,589831,589830,524294,458758,458757,393221,327685,262149]",
+              "rank": 2000,
+              "score": -242.60370370370367,
+              "insertionOrder": 5624,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 14,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,524292,458756,458757,458758,524294,589830,655366,655365]",
+              "rank": 2001,
+              "score": -242.96717171717174,
+              "insertionOrder": 5845,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,524291,524292,458756,458757,524293,589829,655365,655364,655363,655362,655361,655360,589824]",
+              "rank": 2002,
+              "score": -242.9792929292929,
+              "insertionOrder": 7724,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,524292,458756,458757,458758,524294,524295]",
+            "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,458755,458756,458757,458758,524294,524295]",
+            "[524288,524289,524290,524291,524292,524293,524294,524295,589831,589830,524294,458758,458757,393221,327685,262149]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,524292,458756,458757,458758,524294,589830,655366,655365]",
+            "[524288,524289,524290,524291,524292,458756,458757,524293,589829,655365,655364,655363,655362,655361,655360,589824]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,524292,458756,458757,458758,524294,524295]",
+            "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,458755,458756,458757,458758,524294,524295]",
+            "[524288,524289,524290,524291,524292,524293,524294,524295,589831,589830,524294,458758,458757,393221,327685,262149]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,655364,589828,524292,458756,458757,458758,524294,589830,655366,655365]",
+            "[524288,524289,524290,524291,524292,458756,458757,524293,589829,655365,655364,655363,655362,655361,655360,589824]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 44,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 150778,
+          "attemptNodesExpanded": 20006
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,524292,458756,458757,458758,524294,524295]": {
+            "status": "observed",
+            "workSpent": 39,
+            "generatedCandidates": 3
+          },
+          "[524288,589824,589825,589826,589827,589828,655364,655363,589827,524291,458755,458756,458757,458758,524294,524295]": {
+            "status": "observed",
+            "workSpent": 39,
+            "generatedCandidates": 3
+          },
+          "[524288,524289,524290,524291,524292,524293,524294,524295,589831,589830,524294,458758,458757,393221,327685,262149]": {
+            "status": "observed",
+            "workSpent": 39,
+            "generatedCandidates": 0
+          }
+        }
+      },
+      "candidateCount": 2798,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@16#9",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 1061425,
+      "workSpentAfter": 1061425,
+      "context": {
+        "depth": 16,
+        "nodeProgress": 10214,
+        "beamWidth": 2000,
+        "cutoffScore": -184.0401515151515,
+        "firstCulledScore": -184.04015151515154,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,524290,524291,524292,458756,458757,458758,393222,327686,262150,262151,327687]",
+              "rank": 1998,
+              "score": -183.8654882154882,
+              "insertionOrder": 5477,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,524290,524291,458755,458756,458757,458758,393222,327686,262150,262151,327687]",
+              "rank": 1999,
+              "score": -183.8654882154882,
+              "insertionOrder": 5481,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,655364,655365,655366,589830,524294,458758,458757,458756,524292,524291,524290]",
+              "rank": 2000,
+              "score": -184.0401515151515,
+              "insertionOrder": 6408,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,655364,655365,655366,589830,524294,458758,458757,458756,458755,524291,524290]",
+              "rank": 2001,
+              "score": -184.04015151515154,
+              "insertionOrder": 6413,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,589827,524291,524292,589828,655364,655365,589829,589830,589831,589832,589833]",
+              "rank": 2002,
+              "score": -184.09671717171716,
+              "insertionOrder": 4972,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,458752,393216,393217,458753,524289,524290,524291,524292,458756,458757,458758,393222,327686,262150,262151,327687]",
+            "[524288,458752,393216,393217,458753,524289,524290,524291,458755,458756,458757,458758,393222,327686,262150,262151,327687]",
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,589830,524294,458758,458757,458756,524292,524291,524290]",
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,589830,524294,458758,458757,458756,458755,524291,524290]",
+            "[524288,589824,655360,655361,655362,655363,589827,524291,524292,589828,655364,655365,589829,589830,589831,589832,589833]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,458752,393216,393217,458753,524289,524290,524291,524292,458756,458757,458758,393222,327686,262150,262151,327687]",
+            "[524288,458752,393216,393217,458753,524289,524290,524291,458755,458756,458757,458758,393222,327686,262150,262151,327687]",
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,589830,524294,458758,458757,458756,524292,524291,524290]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,589830,524294,458758,458757,458756,458755,524291,524290]",
+            "[524288,589824,655360,655361,655362,655363,589827,524291,524292,589828,655364,655365,589829,589830,589831,589832,589833]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 44,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 150778,
+          "attemptNodesExpanded": 20006
+        },
+        "immediateExpansionWork": {
+          "[524288,458752,393216,393217,458753,524289,524290,524291,524292,458756,458757,458758,393222,327686,262150,262151,327687]": {
+            "status": "observed",
+            "workSpent": 2,
+            "generatedCandidates": 2
+          },
+          "[524288,458752,393216,393217,458753,524289,524290,524291,458755,458756,458757,458758,393222,327686,262150,262151,327687]": {
+            "status": "observed",
+            "workSpent": 2,
+            "generatedCandidates": 2
+          },
+          "[524288,589824,589825,589826,589827,589828,655364,655365,655366,589830,524294,458758,458757,458756,524292,524291,524290]": {
+            "status": "observed",
+            "workSpent": 2,
+            "generatedCandidates": 2
+          }
+        }
+      },
+      "candidateCount": 2538,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@17#10",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 1072184,
+      "workSpentAfter": 1072184,
+      "context": {
+        "depth": 17,
+        "nodeProgress": 12214,
+        "beamWidth": 2000,
+        "cutoffScore": -119.45438311688306,
+        "firstCulledScore": -119.60626503126507,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,458752,458753,524289,589825,589826,589827,589828,655364,655365,655366,589830,589831,589832,589833,589834,524298,458762]",
+              "rank": 1998,
+              "score": -119.24747474747475,
+              "insertionOrder": 7109,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,589829,589830,589831,655367,720903,720904]",
+              "rank": 1999,
+              "score": -119.34633237133238,
+              "insertionOrder": 5940,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,524289,524290,589826,655362,655361,589825,589826,589827,589828,589829,589830,655366,655365,589829,524293,458757,458756]",
+              "rank": 2000,
+              "score": -119.45438311688306,
+              "insertionOrder": 2961,
+              "retained": true,
+              "ints": 2,
+              "remainingIntersectionDeficit": 4,
+              "revisitCandidateCount": 15,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,655363,655362,589826,524290,524291,524292,524293,524294,524295,458759,393223,393224,327688]",
+              "rank": 2001,
+              "score": -119.60626503126507,
+              "insertionOrder": 6089,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 16,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,589825,589826,589827,589828,589829,655365,655366,589830,524294,458758,458757,393221,327685,262149]",
+              "rank": 2002,
+              "score": -119.73097643097643,
+              "insertionOrder": 5208,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,458752,458753,524289,589825,589826,589827,589828,655364,655365,655366,589830,589831,589832,589833,589834,524298,458762]",
+            "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,589829,589830,589831,655367,720903,720904]",
+            "[524288,524289,524290,589826,655362,655361,589825,589826,589827,589828,589829,589830,655366,655365,589829,524293,458757,458756]",
+            "[524288,589824,589825,589826,589827,655363,655362,589826,524290,524291,524292,524293,524294,524295,458759,393223,393224,327688]",
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,655365,655366,589830,524294,458758,458757,393221,327685,262149]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,458752,458753,524289,589825,589826,589827,589828,655364,655365,655366,589830,589831,589832,589833,589834,524298,458762]",
+            "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,589829,589830,589831,655367,720903,720904]",
+            "[524288,524289,524290,589826,655362,655361,589825,589826,589827,589828,589829,589830,655366,655365,589829,524293,458757,458756]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,589825,589826,589827,655363,655362,589826,524290,524291,524292,524293,524294,524295,458759,393223,393224,327688]",
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,655365,655366,589830,524294,458758,458757,393221,327685,262149]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 44,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 150778,
+          "attemptNodesExpanded": 20006
+        },
+        "immediateExpansionWork": {
+          "[524288,458752,458753,524289,589825,589826,589827,589828,655364,655365,655366,589830,589831,589832,589833,589834,524298,458762]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 2
+          },
+          "[524288,589824,589825,589826,589827,524291,524290,589826,655362,655363,655364,589828,589829,589830,589831,655367,720903,720904]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          },
+          "[524288,524289,524290,589826,655362,655361,589825,589826,589827,589828,589829,589830,655366,655365,589829,524293,458757,458756]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          }
+        }
+      },
+      "candidateCount": 3031,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@18#11",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 1083093,
+      "workSpentAfter": 1083093,
+      "context": {
+        "depth": 18,
+        "nodeProgress": 14214,
+        "beamWidth": 2000,
+        "cutoffScore": -52.60886243386239,
+        "firstCulledScore": -52.62575757575754,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,524292,458756,393220]",
+              "rank": 1998,
+              "score": -52.60589225589224,
+              "insertionOrder": 4658,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,458755,458756,393220]",
+              "rank": 1999,
+              "score": -52.60589225589225,
+              "insertionOrder": 4662,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,589829,655365,655366,655367,720903,720902,655366,589830,524294,458758,458757,393221,327685]",
+              "rank": 2000,
+              "score": -52.60886243386239,
+              "insertionOrder": 3910,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,524296,524295,524294,458758,393222,327686,262150]",
+              "rank": 2001,
+              "score": -52.62575757575754,
+              "insertionOrder": 4580,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,458753,524289,589825,655361,655362,655363,655364,655365,589829,589830,589831,589832,524296,524295,524294,458758,458757]",
+              "rank": 2002,
+              "score": -52.83501683501683,
+              "insertionOrder": 4053,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 18,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,524292,458756,393220]",
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,458755,458756,393220]",
+            "[524288,589824,589825,589826,589827,589828,589829,655365,655366,655367,720903,720902,655366,589830,524294,458758,458757,393221,327685]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,524296,524295,524294,458758,393222,327686,262150]",
+            "[524288,458752,458753,524289,589825,655361,655362,655363,655364,655365,589829,589830,589831,589832,524296,524295,524294,458758,458757]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,524292,458756,393220]",
+            "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,458755,458756,393220]",
+            "[524288,589824,589825,589826,589827,589828,589829,655365,655366,655367,720903,720902,655366,589830,524294,458758,458757,393221,327685]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,524296,524295,524294,458758,393222,327686,262150]",
+            "[524288,458752,458753,524289,589825,655361,655362,655363,655364,655365,589829,589830,589831,589832,524296,524295,524294,458758,458757]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 44,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 150778,
+          "attemptNodesExpanded": 20006
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,524292,458756,393220]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          },
+          "[524288,589824,655360,655361,589825,589826,589827,589828,589829,589830,655366,655365,655364,655363,589827,524291,458755,458756,393220]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          },
+          "[524288,589824,589825,589826,589827,589828,589829,655365,655366,655367,720903,720902,655366,589830,524294,458758,458757,393221,327685]": {
+            "status": "observed",
+            "workSpent": 1,
+            "generatedCandidates": 1
+          }
+        }
+      },
+      "candidateCount": 3209,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@19#12",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 1094213,
+      "workSpentAfter": 1094213,
+      "context": {
+        "depth": 19,
+        "nodeProgress": 16214,
+        "beamWidth": 2000,
+        "cutoffScore": -29.064057239057185,
+        "firstCulledScore": -29.12376142376142,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,458752,458753,524289,524290,524291,589827,655363,655364,655365,655366,720902,720903,720904,720905,720906,655370,589834,589833,655369]",
+              "rank": 1998,
+              "score": -28.85069745069741,
+              "insertionOrder": 3045,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,589829,589830,655366,720902,720903,655367,589831,589832,524296,524295,524294,458758,458757,393221]",
+              "rank": 1999,
+              "score": -28.970562770562708,
+              "insertionOrder": 5630,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458758,393222,327686,262150,262149]",
+              "rank": 2000,
+              "score": -29.064057239057185,
+              "insertionOrder": 4825,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 17,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,655363,655364,655365,655366,720902,720903,655367,589831,589832,524296,524295,524294,589830,589829,589828]",
+              "rank": 2001,
+              "score": -29.12376142376142,
+              "insertionOrder": 6264,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,589825,589826,589827,589828,655364,655365,655366,655367,720903,720902,655366,589830,524294,524293,524292,458756,458757,458758]",
+              "rank": 2002,
+              "score": -29.483441558441527,
+              "insertionOrder": 4544,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 18,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,458752,458753,524289,524290,524291,589827,655363,655364,655365,655366,720902,720903,720904,720905,720906,655370,589834,589833,655369]",
+            "[524288,589824,589825,589826,589827,589828,589829,589830,655366,720902,720903,655367,589831,589832,524296,524295,524294,458758,458757,393221]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458758,393222,327686,262150,262149]",
+            "[524288,589824,589825,589826,589827,655363,655364,655365,655366,720902,720903,655367,589831,589832,524296,524295,524294,589830,589829,589828]",
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,655367,720903,720902,655366,589830,524294,524293,524292,458756,458757,458758]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,458752,458753,524289,524290,524291,589827,655363,655364,655365,655366,720902,720903,720904,720905,720906,655370,589834,589833,655369]",
+            "[524288,589824,589825,589826,589827,589828,589829,589830,655366,720902,720903,655367,589831,589832,524296,524295,524294,458758,458757,393221]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458758,393222,327686,262150,262149]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,589825,589826,589827,655363,655364,655365,655366,720902,720903,655367,589831,589832,524296,524295,524294,589830,589829,589828]",
+            "[524288,589824,589825,589826,589827,589828,655364,655365,655366,655367,720903,720902,655366,589830,524294,524293,524292,458756,458757,458758]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 44,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 150778,
+          "attemptNodesExpanded": 20006
+        },
+        "immediateExpansionWork": {
+          "[524288,458752,458753,524289,524290,524291,589827,655363,655364,655365,655366,720902,720903,720904,720905,720906,655370,589834,589833,655369]": {
+            "status": "observed",
+            "workSpent": 2,
+            "generatedCandidates": 2
+          },
+          "[524288,589824,589825,589826,589827,589828,589829,589830,655366,720902,720903,655367,589831,589832,524296,524295,524294,458758,458757,393221]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          },
+          "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458758,393222,327686,262150,262149]": {
+            "status": "observed",
+            "workSpent": 3,
+            "generatedCandidates": 3
+          }
+        }
+      },
+      "candidateCount": 2946,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    },
+    {
+      "decisionId": "score-width-culled@20#13",
+      "parentId": "R02270",
+      "stageId": "score-width-culled",
+      "workSpentBefore": 1105940,
+      "workSpentAfter": 1105940,
+      "context": {
+        "depth": 20,
+        "nodeProgress": 18214,
+        "beamWidth": 2000,
+        "cutoffScore": 27.56372053872058,
+        "firstCulledScore": 27.40951178451182,
+        "stableOrderAdmission": false,
+        "d1Eligibility": {
+          "eligible": true,
+          "reason": "eligible",
+          "cutoffRadius": 2,
+          "rankWindow": [
+            1998,
+            2002
+          ],
+          "candidates": [
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655367,589831,589832,524296,524295,524294,458758,458757,393221,327685]",
+              "rank": 1998,
+              "score": 27.752104377104374,
+              "insertionOrder": 4530,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 20,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,589825,589826,589827,589828,589829,589830,589831,655367,655366,655365,589829,524293,524292,524291,458755]",
+              "rank": 1999,
+              "score": 27.58602693602692,
+              "insertionOrder": 4133,
+              "retained": true,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,589825,655361,655362,655363,655364,655365,589829,589830,589831,589832,524296,524295,524294,458758,458757]",
+              "rank": 2000,
+              "score": 27.56372053872058,
+              "insertionOrder": 4125,
+              "retained": true,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 20,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,589833,655369,655370,589834,524298,458762,393226,393227,458763]",
+              "rank": 2001,
+              "score": 27.40951178451182,
+              "insertionOrder": 7320,
+              "retained": false,
+              "ints": 0,
+              "remainingIntersectionDeficit": 6,
+              "revisitCandidateCount": 20,
+              "eligible": true
+            },
+            {
+              "candidateId": "[524288,458752,393216,393217,458753,524289,589825,589826,589827,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458758,524294]",
+              "rank": 2002,
+              "score": 26.782491582491545,
+              "insertionOrder": 3601,
+              "retained": false,
+              "ints": 1,
+              "remainingIntersectionDeficit": 5,
+              "revisitCandidateCount": 19,
+              "eligible": true
+            }
+          ],
+          "eligibleCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655367,589831,589832,524296,524295,524294,458758,458757,393221,327685]",
+            "[524288,458752,393216,393217,458753,524289,589825,589826,589827,589828,589829,589830,589831,655367,655366,655365,589829,524293,524292,524291,458755]",
+            "[524288,458752,393216,393217,458753,524289,589825,655361,655362,655363,655364,655365,589829,589830,589831,589832,524296,524295,524294,458758,458757]",
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,589833,655369,655370,589834,524298,458762,393226,393227,458763]",
+            "[524288,458752,393216,393217,458753,524289,589825,589826,589827,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458758,524294]"
+          ],
+          "eligibleRetainedCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655367,589831,589832,524296,524295,524294,458758,458757,393221,327685]",
+            "[524288,458752,393216,393217,458753,524289,589825,589826,589827,589828,589829,589830,589831,655367,655366,655365,589829,524293,524292,524291,458755]",
+            "[524288,458752,393216,393217,458753,524289,589825,655361,655362,655363,655364,655365,589829,589830,589831,589832,524296,524295,524294,458758,458757]"
+          ],
+          "eligibleCulledCandidateIds": [
+            "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,589831,589832,589833,655369,655370,589834,524298,458762,393226,393227,458763]",
+            "[524288,458752,393216,393217,458753,524289,589825,589826,589827,655363,655364,589828,589829,589830,655366,655365,589829,524293,458757,458758,524294]"
+          ]
+        },
+        "orchestrationAttempt": {
+          "attemptOrdinal": 44,
+          "gateKey": 524288,
+          "configKey": "beam|score=perimeterSweep|bias=perimeterCCW|width=2000|retention=plain",
+          "scoringProfileId": "perimeterSweep",
+          "beamWidth": 2000,
+          "mechanicBucketRetention": false,
+          "stageId": "must-cross-neighbor-prune-disabled-retry",
+          "outcome": "timed-out",
+          "attemptWorkSpent": 150778,
+          "attemptNodesExpanded": 20006
+        },
+        "immediateExpansionWork": {
+          "[524288,589824,655360,655361,655362,655363,655364,589828,589829,589830,655366,655367,589831,589832,524296,524295,524294,458758,458757,393221,327685]": {
+            "status": "not-observed-before-termination",
+            "workSpent": null,
+            "generatedCandidates": null
+          },
+          "[524288,458752,393216,393217,458753,524289,589825,589826,589827,589828,589829,589830,589831,655367,655366,655365,589829,524293,524292,524291,458755]": {
+            "status": "not-observed-before-termination",
+            "workSpent": null,
+            "generatedCandidates": null
+          },
+          "[524288,458752,393216,393217,458753,524289,589825,655361,655362,655363,655364,655365,589829,589830,589831,589832,524296,524295,524294,458758,458757]": {
+            "status": "not-observed-before-termination",
+            "workSpent": null,
+            "generatedCandidates": null
+          }
+        }
+      },
+      "candidateCount": 3301,
+      "retainedCount": 2000,
+      "evidenceRole": "confirmation",
+      "corpus": "data/stress/stress-levels-random.json"
+    }
+  ],
+  "summary": {
+    "parents": 1,
+    "parityPass": 1,
+    "cullDecisions": 14,
+    "eligibleDecisions": 14
+  }
+}
