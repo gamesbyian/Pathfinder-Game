@@ -936,6 +936,10 @@ async function main() {
     const generationRun = {
         createdTimestamp: new Date().toISOString(), randomSeed: SEED,
         generatorVersion: GENERATOR_VERSION, generatorImplementation,
+        requestedCount,
+        acceptedCount: variantManifests.length,
+        generationAttempts: attempts,
+        attemptBudget,
         variantIds: variantManifests.map(variant => variant.variantId),
         ...(QUESTION_ID ? {
             researchContext: {
