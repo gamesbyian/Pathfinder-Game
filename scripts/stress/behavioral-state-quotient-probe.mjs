@@ -34,6 +34,7 @@
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { groupRowsByKey } from '../signature-collision-analysis-lib.mjs';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => { const [k, ...v] = x.split('='); return [k, v.join('=')]; }));
 const b2File = args.get('--b2-states') ?? 'reports/stress/h1-event-feasibility-queries-2026-09-16.json';
@@ -51,19 +52,13 @@ function mulberry32(seed) {
     };
 }
 
-function groupBy(rows, sigFn) {
-    const groups = new Map();
-    for (const r of rows) { const s = sigFn(r); if (!groups.has(s)) groups.set(s, []); groups.get(s).push(r); }
-    return groups;
-}
-
 // ---- Population A: B2 exact LIVE/DEAD ----
 const b2Doc = JSON.parse(readFileSync(b2File, 'utf8'));
 const b2Rows = b2Doc.states.map(s => ({
     caseId: s.caseId, levelId: s.levelId, exactLabel: s.exactLabel,
     sig: JSON.stringify([s.pendingCounts.mustCross, s.pendingCounts.mustPass, s.pendingCounts.flippers, s.pendingCounts.portalPairs]),
 }));
-const b2Groups = groupBy(b2Rows, r => r.sig);
+const b2Groups = groupRowsByKey(b2Rows, r => r.sig);
 const b2GroupSummaries = [...b2Groups.entries()].map(([sig, members]) => {
     const labels = new Set(members.map(m => m.exactLabel));
     const parents = new Set(members.map(m => m.levelId));

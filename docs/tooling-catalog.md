@@ -44,6 +44,7 @@ Tool choice does not determine evidence quality. Decision-bearing solver work st
 | Production-search state sampling | `npm run solver:sample-production-frontiers -- --levels=... --depth-fraction=... --picks=... --seed=...` | Freeze multiple distinct states from real beam frontiers before labeling; preserve parent/frontier ancestry and distinguish within-parent detection power from between-parent confirmation |
 | Research status | `node scripts/research-status-index.mjs --compact --query=<term>` | Existing investigations, dispositions, gates, evidence pointers |
 | Research relations | `npm run research:relations -- --list`; then `--relation=<name> [--query=<term>]` | Read-only normalized access across questions, assets/resource contracts, evidence integrity, measurement opportunities, premise snapshot/admission metadata, queue and experiment authorities; reuse existing semantics rather than creating another warehouse |
+| Signature-collision analysis | `scripts/signature-collision-analysis-lib.mjs` | Reusable grouping/mixed-outcome/independent-unit accounting for behavioral quotients and nested representation falsifiers |
 | Research assets | `node scripts/research-asset-query.mjs --query=<term>` | Existing evidence families, joins, boundaries, entry points |
 | Raw artifact metadata | `node scripts/artifact-query.mjs [--query=...] [--role=...]` | Meaning/provenance of tracked raw artifacts |
 | Completed GHA result retrieval | `npm run gha:fetch-result -- --run=<run-id>` | Standard result/manifest retrieval without enumerating shards |

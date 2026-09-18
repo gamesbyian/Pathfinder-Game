@@ -10,6 +10,7 @@ For a named concept, use compact/queryable front doors before `package.json` or 
 - solver priority/state: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md);
 - research status: `node scripts/research-status-index.mjs --compact [--query=...] [--status=...] [--kind=...]`;
 - cross-authority research relations: `npm run research:relations -- --list` or `--relation=<name> [--query=...]`; this is a read-only projection over existing authorities, not a new evidence store;
+- repeated-state/signature falsifiers should reuse `scripts/signature-collision-analysis-lib.mjs` for mixed-label and independent-unit accounting instead of reimplementing grouping logic;
 - solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`; add `--id=<asset-id>` or `--full` only when needed;
 - agent-context size: `node scripts/agent-context-budget.mjs [--route=<id>]`; `--check` fails missing/over-max required routes;
 - completed naming-cleanup status/history: `npm run naming:status -- --batch=<id>` (phase/json options are also available); do not reopen the frozen plan;
