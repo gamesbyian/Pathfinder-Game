@@ -4,7 +4,7 @@ import process from 'node:process';
 
 import { buildResearchRelations } from './research-relations-lib.mjs';
 import { analyzeOpportunity } from './experiment-opportunity-audit.mjs';
-import { acquisitionNeeds, acquisitionStopRule, chooseAcquisitionRoute, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
+import { acquisitionNeeds, acquisitionStopRule, chooseAcquisitionRoute, generationGuidanceForRoute, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -36,6 +36,7 @@ const conditionalEventRate = numberValue('conditional-event-rate', { min: Number
 const detectionProbability = numberValue('detection-probability', { min: Number.EPSILON, max: 1 - Number.EPSILON }) ?? 0.8;
 
 const artifactPaths = values('artifact');
+const discoverArtifacts = !args.includes('--no-discover');
 const relatedArg = args.find(arg => arg.startsWith('--related-questions='));
 const relatedQuestionIds = relatedArg === undefined
     ? null
@@ -43,6 +44,7 @@ const relatedQuestionIds = relatedArg === undefined
 
 const model = buildResearchRelations(process.cwd(), {
     artifactPaths,
+    discoverArtifacts,
     eligibility: { questionId, evidenceRole, relatedQuestionIds },
 });
 const question = model.relations.questions.find(row => row.id === questionId);
@@ -51,7 +53,8 @@ if (!question) throw new Error(`unknown question id: ${questionId}`);
 const suppliedBlocks = model.relations.researchBlocks.filter(row => row.questionId === questionId);
 const eligibleBlocks = suppliedBlocks.filter(row => row.eligibility?.eligible === true);
 const decision = chooseAcquisitionRoute({ question, eligibleBlocks, requestedNeed });
-const candidateAssets = rankCandidateAssets(question, model.relations.assets);
+const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
+const generationGuidance = generationGuidanceForRoute(decision.route);
 
 let opportunity = null;
 if (controlFile) {
@@ -76,14 +79,17 @@ console.log(JSON.stringify({
     need: decision.need,
     rationale: decision.rationale,
     existing: {
-        suppliedBlocks: suppliedBlocks.length,
+        explicitArtifactInputs: artifactPaths.length,
+        discoveryEnabled: discoverArtifacts,
+        knownQuestionBlocks: suppliedBlocks.length,
         mechanicallyEligibleBlocks: eligibleBlocks.length,
         blockIds: eligibleBlocks.map(row => row.blockId),
     },
     candidateAssets: {
-        interpretation: 'ranked discovery hints only; inspect resource contracts before treating an asset as usable evidence',
+        interpretation: 'ranked discovery hints only; audit-grade rows expose Resource Contract conditioning/dependence/missingness signals but do not auto-authorize evidence use',
         assets: candidateAssets,
     },
+    generationGuidance,
     opportunitySizing: opportunity ?? {
         estimate: null,
         requiredInput: '--control=<control-side combined report> when a control-side opportunity audit is meaningful',
