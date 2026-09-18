@@ -81,7 +81,7 @@ import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 import { makeLevelProvenance, makeProvenanceEntry } from '../../modules/domain/level-provenance-types.js';
-import { getLevelFingerprint, getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
+import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.js';
 import { stableHash } from '../solver-experiment-contract.mjs';
 import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
