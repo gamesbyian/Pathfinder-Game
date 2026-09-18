@@ -45,7 +45,7 @@ const withSource = (row, relation, source) => ({
     _researchSource: { relation, source },
 });
 
-function exactPathIntegrityRecords(asset, records) {
+export function exactPathIntegrityRecords(asset, records) {
     const paths = new Set((asset?.locations ?? [])
         .map(location => location?.path)
         .filter(value => typeof value === 'string' && value.length > 0));
