@@ -54,6 +54,7 @@ import { getLevelFingerprint, getLevelFingerprintSource } from '../../modules/do
 import { stableHash } from '../solver-experiment-contract.mjs';
 import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
+import { generatorImplementationProvenance } from '../generator-implementation-provenance.mjs';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 import { makeLevelProvenance, makeProvenanceEntry } from '../../modules/domain/level-provenance-types.js';
 
@@ -716,8 +717,10 @@ async function main() {
     if (QUESTION_ID) {
         const parentIds = levels.map(level => String(level.id));
         const parentContentIdentities = await Promise.all(levels.map(level => getLevelFingerprint(level)));
+        const generatorImplementation = generatorImplementationProvenance(ROOT, 'scripts/stress/generate-topology.mjs');
         const sourceRevision = stableHash({
             producer: 'scripts/stress/generate-topology.mjs',
+            generatorImplementation,
             generatorVersion: GENERATOR_VERSION,
             corpusName: CORPUS_NAME,
             masterSeed: MASTER_SEED,
