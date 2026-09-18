@@ -20,12 +20,16 @@ const node1 = { depth: 1, key: 12, prev: node0 };
 const node2 = { depth: 2, key: 13, prev: node1 };
 assert.deepEqual(reconstructBeamPath(node2), [11, 12, 13]);
 
+assert.throws(() => frontierAncestryKey({
+    corpus: 'c2', levelId: 'R00001', profile: 'intersectionHarvest', width: 5000, depth: 12,
+}), /solverCommit/);
+
 assert.equal(
     frontierAncestryKey({
         corpus: 'c2', levelId: 'R00001', profile: 'intersectionHarvest',
-        width: 5000, depth: 12, seed: 's',
+        width: 5000, depth: 12, solverCommit: 'abc123',
     }),
-    'c2|R00001|beam-frontier|intersectionHarvest|width=5000|depth=12|seed=s',
+    'c2|R00001|beam-frontier|intersectionHarvest|width=5000|depth=12|solver=abc123',
 );
 
 console.log('production-search-frontier-sampler-node-test: ok');
