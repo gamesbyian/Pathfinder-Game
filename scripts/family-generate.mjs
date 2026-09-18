@@ -44,6 +44,7 @@ const { inheritedWitnessHint, transformedWitnessHint } = await import('./stress/
 const { readLevelsWithHints, writeLevelsWithHints, hintsDirFor } = await import('./level-data-io.mjs');
 const { generatorImplementationProvenance } = await import('./generator-implementation-provenance.mjs');
 const { loadResearchQuestionRegistry } = await import('./research-question-relations-lib.mjs');
+const { assertResearchBlock } = await import('./solver-research-block-lineage.mjs');
 
 const GENERATOR_VERSION = '0.1.0';
 
@@ -68,8 +69,9 @@ const REEMBED_OFFSET_ARG = args.get('--re-embed-offset');
 const QUESTION_ID = args.get('--question-id') || null;
 const EVIDENCE_ROLE = args.get('--evidence-role') || 'development';
 const PARENT_EXPOSURE = args.get('--parent-exposure') || 'unknown';
-const ORIGIN_BLOCK_ID = args.get('--origin-block-id') || null;
-const ORIGIN_POPULATION_IDENTITY = args.get('--origin-population-identity') || null;
+let ORIGIN_BLOCK_ID = args.get('--origin-block-id') || null;
+let ORIGIN_POPULATION_IDENTITY = args.get('--origin-population-identity') || null;
+const ORIGIN_BLOCK_ARTIFACT = args.get('--origin-block-artifact') || null;
 
 const VALID_MODES = ['local-mutant', 'density-sweep', 'symmetry', 'swap', 'group-reshuffle', 'constrained-shuffle', 're-embed'];
 if (!VALID_MODES.includes(MODE)) {
@@ -95,8 +97,8 @@ if (!PARENT_EXPOSURES.has(PARENT_EXPOSURE)) {
     console.error('--parent-exposure must be unknown, development, or locked-untouched');
     process.exit(2);
 }
-if ((ORIGIN_BLOCK_ID || ORIGIN_POPULATION_IDENTITY) && !QUESTION_ID) {
-    console.error('--origin-block-id/--origin-population-identity require --question-id');
+if ((ORIGIN_BLOCK_ID || ORIGIN_POPULATION_IDENTITY || ORIGIN_BLOCK_ARTIFACT) && !QUESTION_ID) {
+    console.error('--origin-block-id/--origin-population-identity/--origin-block-artifact require --question-id');
     process.exit(2);
 }
 if (!!ORIGIN_BLOCK_ID !== !!ORIGIN_POPULATION_IDENTITY) {
@@ -139,6 +141,38 @@ if (parentIndex === -1) {
 }
 const rawParent = parentLevels[parentIndex];
 const parentId = rawParent.id || `pos${parentIndex + 1}`;
+
+if (ORIGIN_BLOCK_ARTIFACT) {
+    const blockAbs = resolveFromRoot(ORIGIN_BLOCK_ARTIFACT);
+    if (!existsSync(blockAbs)) {
+        console.error(`missing --origin-block-artifact: ${ORIGIN_BLOCK_ARTIFACT}`);
+        process.exit(2);
+    }
+    const blockDoc = JSON.parse(readFileSync(blockAbs, 'utf8'));
+    const block = blockDoc?.researchBlock ?? blockDoc?.population?.researchBlock ?? null;
+    const populationIdentity = blockDoc?.populationIdentity ?? blockDoc?.population?.corpusIdentity ?? null;
+    assertResearchBlock(block, { populationIdentity });
+    if (block.questionId !== QUESTION_ID) {
+        console.error(`origin block questionId=${block.questionId} conflicts with --question-id=${QUESTION_ID}`);
+        process.exit(2);
+    }
+    if (ORIGIN_BLOCK_ID && ORIGIN_BLOCK_ID !== block.blockId) {
+        console.error('--origin-block-id conflicts with --origin-block-artifact');
+        process.exit(2);
+    }
+    if (ORIGIN_POPULATION_IDENTITY && ORIGIN_POPULATION_IDENTITY !== populationIdentity) {
+        console.error('--origin-population-identity conflicts with --origin-block-artifact');
+        process.exit(2);
+    }
+    const parentOffset = block.parentIds.indexOf(parentId);
+    if (parentOffset < 0) {
+        console.error(`parent ${parentId} is not a member of origin block ${block.blockId}`);
+        process.exit(2);
+    }
+    ORIGIN_BLOCK_ID = block.blockId;
+    ORIGIN_POPULATION_IDENTITY = populationIdentity;
+    globalThis.__familyOriginExpectedContentIdentity = block.parentContentIdentities[parentOffset];
+}
 
 // Defaults are MODE-qualified (not just parent-qualified): two different modes run against the
 // same parent with no explicit --out would otherwise silently overwrite each other's output file
@@ -643,6 +677,10 @@ async function main() {
     const ctx = { witness, cell: witnessCellData(witness), rng: mulberry32(SEED) };
     const parentFingerprintSource = getLevelFingerprintSource(rawParent);
     const parentContentHash = await getLevelFingerprint(rawParent);
+    if (globalThis.__familyOriginExpectedContentIdentity
+        && globalThis.__familyOriginExpectedContentIdentity !== parentContentHash) {
+        throw new Error(`origin block parent content identity mismatch for ${parentId}`);
+    }
 
     const availableInstances = listInstances(baseExtras, mutationTypes);
     console.log(`Parent ${parentId}: witness ${witnessSelection.source} (len ${witness.path.length - witness.jumps.size}, ${witness.jumps.size} jump(s)), ${availableInstances.length} movable object instance(s) under strict inventory.`);
