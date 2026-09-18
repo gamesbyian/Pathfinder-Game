@@ -68,6 +68,19 @@ export async function runAttempt(
         : Math.max(0, prep._workCap - prep._workMeter.units);
     let path: number[] | null = null;
     let attemptError: Attempt['error'] | undefined;
+    const previousBeamResearchAttemptContext = prep._beamResearchAttemptContext ?? null;
+    if (prep._beamResearchObserver) {
+        const attemptOrdinal = prep._beamResearchAttemptOrdinal ?? 0;
+        prep._beamResearchAttemptOrdinal = attemptOrdinal + 1;
+        prep._beamResearchAttemptContext = {
+            attemptOrdinal,
+            gateKey,
+            configKey: attemptConfigKey(attemptConfig),
+            scoringProfileId,
+            beamWidth: beamWidth ?? null,
+            mechanicBucketRetention: !!mechanicBucketRetention,
+        };
+    }
     try {
         const dispatch = testAttemptDispatches.get(prep) ?? runAttemptSearch;
         path = await dispatch(attemptConfig, gateKey, level, prep, profile, attBudget, attStart, yieldFn, nodeBudget, searchOut, seedSalt, enforceAdmissibleOrderWorkCap, beamResumeFrom, captureBeamContinuationOnBudgetExit);
@@ -91,6 +104,8 @@ export async function runAttempt(
             scoringProfileId: bounded(scoringProfileId, 'unknown', 120),
             orderingBiasId: orderingBias?.id == null ? null : bounded(orderingBias.id, 'unknown', 120),
         };
+    } finally {
+        prep._beamResearchAttemptContext = previousBeamResearchAttemptContext;
     }
     const attMs = Date.now() - attStart;
     const nodesAfter = prep._metrics ? prep._metrics.nodesExpanded : 0;
