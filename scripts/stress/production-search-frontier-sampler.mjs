@@ -26,8 +26,8 @@ import {
     frontierAncestryKey,
     reconstructBeamPath,
     sampleDistinctIndices,
+    resolveInheritedResearchBlock,
 } from './production-search-frontier-sampler-lib.mjs';
-import { assertResearchBlock } from '../solver-research-block-lineage.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -60,18 +60,13 @@ if (!casesOut && !populationOut) throw new Error('at least one of --cases-out or
 let inheritedLineage = null;
 if (blockArtifact) {
     const blockDoc = JSON.parse(readFileSync(path.resolve(ROOT, blockArtifact), 'utf8'));
-    const researchBlock = blockDoc?.researchBlock ?? blockDoc?.population?.researchBlock ?? null;
-    const populationIdentity = blockDoc?.populationIdentity ?? blockDoc?.population?.corpusIdentity ?? null;
-    assertResearchBlock(researchBlock, { populationIdentity });
-    const parentSet = new Set(researchBlock.parentIds.map(String));
-    const missing = levelIds.filter(levelId => !parentSet.has(String(levelId)));
-    if (missing.length) throw new Error(`--block-artifact does not contain sampled parent(s): ${missing.join(', ')}`);
-    if (question && question !== researchBlock.questionId) {
-        throw new Error(`--question=${question} conflicts with block questionId=${researchBlock.questionId}`);
-    }
-    inheritedLineage = { researchBlock, populationIdentity, blockArtifact };
+    inheritedLineage = resolveInheritedResearchBlock(blockDoc, {
+        levelIds,
+        question,
+        artifactRef: blockArtifact,
+    });
 }
-const resolvedQuestion = question || inheritedLineage?.researchBlock?.questionId || null;
+const resolvedQuestion = inheritedLineage?.resolvedQuestion ?? question ?? null;
 
 installBrowserStubs();
 const Solver = createSolver();
