@@ -73,6 +73,7 @@ let ORIGIN_BLOCK_ID = args.get('--origin-block-id') || null;
 let ORIGIN_POPULATION_IDENTITY = args.get('--origin-population-identity') || null;
 const ORIGIN_BLOCK_ARTIFACT = args.get('--origin-block-artifact') || null;
 let originExpectedContentIdentity = null;
+let originQuestionId = null;
 
 const VALID_MODES = ['local-mutant', 'density-sweep', 'symmetry', 'swap', 'group-reshuffle', 'constrained-shuffle', 're-embed'];
 if (!VALID_MODES.includes(MODE)) {
@@ -153,10 +154,6 @@ if (ORIGIN_BLOCK_ARTIFACT) {
     const block = blockDoc?.researchBlock ?? blockDoc?.population?.researchBlock ?? null;
     const populationIdentity = blockDoc?.populationIdentity ?? blockDoc?.population?.corpusIdentity ?? null;
     assertResearchBlock(block, { populationIdentity });
-    if (block.questionId !== QUESTION_ID) {
-        console.error(`origin block questionId=${block.questionId} conflicts with --question-id=${QUESTION_ID}`);
-        process.exit(2);
-    }
     if (ORIGIN_BLOCK_ID && ORIGIN_BLOCK_ID !== block.blockId) {
         console.error('--origin-block-id conflicts with --origin-block-artifact');
         process.exit(2);
@@ -172,6 +169,7 @@ if (ORIGIN_BLOCK_ARTIFACT) {
     }
     ORIGIN_BLOCK_ID = block.blockId;
     ORIGIN_POPULATION_IDENTITY = populationIdentity;
+    originQuestionId = block.questionId;
     originExpectedContentIdentity = block.parentContentIdentities[parentOffset];
 }
 
@@ -952,6 +950,7 @@ async function main() {
                 originResearchBlock: ORIGIN_BLOCK_ID ? {
                     blockId: ORIGIN_BLOCK_ID,
                     populationIdentity: ORIGIN_POPULATION_IDENTITY,
+                    questionId: originQuestionId,
                 } : null,
             },
         } : {}),
