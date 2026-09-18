@@ -135,6 +135,14 @@ export function beamResearchRecordToDecisionObservation(record, { parentId, deci
             cutoffScore: record.details?.cutoffScore ?? null,
             firstCulledScore: record.details?.firstCulledScore ?? null,
             stableOrderAdmission: record.details?.stableOrderAdmission ?? null,
+            rankedCandidates: rankedPool.map((row, index) => ({
+                candidateId: candidateIds[index],
+                rank: row.rank ?? index + 1,
+                score: row.score ?? null,
+                insertionOrder: row.insertionOrder ?? null,
+                ints: Number.isFinite(row.ints) ? row.ints : null,
+                retained: !culledIds.has(candidateIds[index]),
+            })),
         },
     });
 }
