@@ -10,6 +10,8 @@ import {
   declaredDecisionContractIssues,
   hashPopulation,
 } from './solver-experiment-contract.mjs';
+import { FAILURE_RESPONSE_SCHEMA_VERSION } from './solver-failure-response-lib.mjs';
+import { SEARCH_LOSS_CAPTURE_KIND } from './solver-search-loss-evidence-lib.mjs';
 
 const args = process.argv.slice(2);
 const values = new Map();
@@ -36,6 +38,7 @@ const shardsObserved = numberArg('shards-observed');
 const shardsBasis = values.get('shards-basis') || null;
 const provenanceOut = values.get('provenance-out') || null;
 const outcomeFile = values.get('outcome-file') || null;
+const failureResponseFile = values.get('failure-response-file') || null;
 const integrityFile = values.get('integrity-file') || null;
 const contractFile = values.get('contract-file') || null;
 let declaredContract = null;
@@ -75,6 +78,25 @@ const entries = [copyRequested(primary, 'primary'), ...includes.map(p => copyReq
 let primaryDocument = null;
 if (!entries[0].missing && entries[0].published?.endsWith('.json')) {
   try { primaryDocument = JSON.parse(fs.readFileSync(path.join(outDir, entries[0].published), 'utf8')); } catch { /* Non-JSON evidence still gets a manifest. */ }
+}
+
+function entryDocument(entry) {
+  if (entry.missing || !entry.published?.endsWith('.json')) return null;
+  try { return JSON.parse(fs.readFileSync(path.join(outDir, entry.published), 'utf8')); } catch { return null; }
+}
+// Generic and forward-compatible: any producer that later includes a rich search-loss capture
+// (docs/solver-search-loss-evidence-implementation-plan.md Phase 4+) as one of its --include=
+// entries is detected here for free, with no per-producer wiring.
+const richCapturePresent = entries.some(entry => entryDocument(entry)?.kind === SEARCH_LOSS_CAPTURE_KIND);
+
+let failureResponseSummary = null;
+if (failureResponseFile) {
+  if (fs.existsSync(failureResponseFile)) {
+    try { failureResponseSummary = JSON.parse(fs.readFileSync(failureResponseFile, 'utf8')); }
+    catch (error) { console.warn(`publish-solver-sweep-result: invalid --failure-response-file=${failureResponseFile}: ${error.message}`); }
+  } else {
+    console.warn(`publish-solver-sweep-result: --failure-response-file=${failureResponseFile} does not exist`);
+  }
 }
 
 function collectJsonFiles(root, limit = 24) {
@@ -298,6 +320,14 @@ const manifest = {
   populationIdentityHash: populationIdentity,
   decisionContractIssues: contractIssues,
   decisionBearing: Boolean(contractDecisionEligible && integrityDecisionValid && !populationIntegrity?.inferredExpectedPopulation && outcomeDecisionBearing),
+  failureEvidence: {
+    schemaVersion: FAILURE_RESPONSE_SCHEMA_VERSION,
+    disposition: contract.sideEffects.telemetry,
+    compactPresent: Boolean(failureResponseSummary),
+    sourceArtifact: failureResponseFile,
+    summary: failureResponseSummary,
+    richCapturePresent,
+  },
   ...contract,
   researchOutcome,
   entries,
@@ -329,6 +359,7 @@ if (populationIntegrity) {
   lines.push(`- Decision-valid observations: ${integrityDecisionValid ? 'complete' : '**INCOMPLETE / NON-DECISION-BEARING**'}`);
 } else lines.push('- Population integrity: **unknown / non-decision-bearing** (no validated intended population supplied)');
 lines.push(`- Decision contract: ${contractDecisionEligible ? 'complete' : `**INCOMPLETE / NON-DECISION-BEARING** (${contractIssues.join(', ')})`}`);
+lines.push(`- Failure-evidence disposition: \`${manifest.failureEvidence.disposition}\`${failureResponseSummary ? ` (compact summary: ${failureResponseSummary.observed} row(s), ${JSON.stringify(failureResponseSummary.outcomes)})` : ''}${richCapturePresent ? '; rich search-loss capture present' : ''}`);
 lines.push('- Standard artifact: `solver-sweep-result`');
 lines.push(`- Primary result: ${entries[0].missing ? '**missing**' : `\`${entries[0].published}\``}`);
 

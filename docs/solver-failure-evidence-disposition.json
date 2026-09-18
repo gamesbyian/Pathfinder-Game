@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "scope": "Machine-readable failure-evidence disposition for every solver-running GitHub Actions workflow (docs/solver-search-loss-evidence-implementation-plan.md Phase 3). Validated by scripts/check-failure-evidence-disposition.mjs, which also enumerates .github/workflows/*.yml so a new solver-running workflow with no entry here fails validation.",
+  "catalogDocument": "docs/solver-search-loss-evidence-implementation-plan.md",
+  "producers": [
+    {
+      "id": "technique-census",
+      "workflow": ".github/workflows/technique-census.yml",
+      "disposition": "standard",
+      "reason": null
+    },
+    {
+      "id": "solver-stress-refresh",
+      "workflow": ".github/workflows/solver-stress-refresh.yml",
+      "disposition": "standard",
+      "reason": null
+    },
+    {
+      "id": "method-probe-sweep",
+      "workflow": ".github/workflows/method-probe-sweep.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Isolated single-method diagnostic probe; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "solver-combine-sweep-runs",
+      "workflow": ".github/workflows/solver-combine-sweep-runs.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Cross-run reconciliation glue that merges already-published solver-sweep-result artifacts; it inherits whatever disposition its source runs declared rather than declaring its own."
+    },
+    {
+      "id": "solver-highbudget-unsolved-sweep",
+      "workflow": ".github/workflows/solver-highbudget-unsolved-sweep.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Production-path high-budget sweep over currently-unsolved levels; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "solver-level-blind-targeted-sweep",
+      "workflow": ".github/workflows/solver-level-blind-targeted-sweep.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "On-demand targeted sweep sharing solver-stress-refresh's row shape; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "solver-production-replay-baseline",
+      "workflow": ".github/workflows/solver-production-replay-baseline.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "solver-residual-confirmation",
+      "workflow": ".github/workflows/solver-residual-confirmation.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "solver-routing-regime-sample-ab",
+      "workflow": ".github/workflows/solver-routing-regime-sample-ab.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "static-portfolio-confirmation",
+      "workflow": ".github/workflows/static-portfolio-confirmation.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "solver-broad-confirmation",
+      "workflow": ".github/workflows/solver-broad-confirmation.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "collect-variant-family-dataset",
+      "workflow": ".github/workflows/collect-variant-family-dataset.yml",
+      "disposition": "specialized-opt-out",
+      "reason": "Runs real solver attempts across generated structural variants; not yet migrated to the shared compact failure-response layer (tracked: Phase 3 follow-up)."
+    },
+    {
+      "id": "cpsat-explicit-prefix-reference",
+      "workflow": ".github/workflows/cpsat-explicit-prefix-reference.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT exact/reference tooling has no comparable node/work-budget attempt-response shape; it is a downstream annotator, not a search-attempt producer this layer covers."
+    },
+    {
+      "id": "cpsat-hint-harvest-sweep",
+      "workflow": ".github/workflows/cpsat-hint-harvest-sweep.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT --forced-grid hint harvest; not a node/work-budget search-attempt producer this layer covers."
+    },
+    {
+      "id": "collect-prune-gap-labels",
+      "workflow": ".github/workflows/collect-prune-gap-labels.yml",
+      "disposition": "unsupported",
+      "reason": "CP-SAT-oracle branch labelling; not a node/work-budget search-attempt producer this layer covers."
+    },
+    {
+      "id": "solver-evidence-integrity-guard",
+      "workflow": ".github/workflows/solver-evidence-integrity-guard.yml",
+      "disposition": "unsupported",
+      "reason": "Audits already-published evidence integrity on pull requests; it does not run new solver attempts of its own."
+    }
+  ]
+}
