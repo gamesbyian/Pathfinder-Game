@@ -62,7 +62,7 @@ export function auditResearchIntegration(root = process.cwd()) {
     }
 
     for (const question of questionRegistry.questions) {
-        for (const premiseId of refIds(question, ['premiseId', 'premiseIds', 'mappedPremises'])) {
+        for (const premiseId of refIds(question, ['premiseId', 'premiseIds', 'mappedPremises', 'premiseRefs'])) {
             if (!premiseIds.has(premiseId)) errors.push(`${question.id} references unknown premise ${premiseId}`);
         }
         for (const moId of refIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds'])) {
