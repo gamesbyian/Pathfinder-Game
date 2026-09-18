@@ -21,17 +21,19 @@ if (requestedNeed && !acquisitionNeeds().includes(requestedNeed)) {
 const controlFile = value('control');
 const opportunityMode = value('opportunity-mode') || 'rescue';
 const stageId = value('stage') || null;
-const numberValue = name => {
+const numberValue = (name, { min = -Infinity, max = Infinity, integer = false } = {}) => {
     const raw = value(name);
     if (!raw) return null;
     const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) throw new Error(`--${name} must be numeric`);
+    if (!Number.isFinite(parsed) || parsed < min || parsed > max || (integer && !Number.isInteger(parsed))) {
+        throw new Error(`--${name} must be ${integer ? 'an integer' : 'a number'} in [${min}, ${max}]`);
+    }
     return parsed;
 };
-const targetOpportunities = numberValue('target-opportunities');
-const proposedTotal = numberValue('proposed-total');
-const conditionalEventRate = numberValue('conditional-event-rate');
-const detectionProbability = numberValue('detection-probability') ?? 0.8;
+const targetOpportunities = numberValue('target-opportunities', { min: 1, integer: true });
+const proposedTotal = numberValue('proposed-total', { min: 1, integer: true });
+const conditionalEventRate = numberValue('conditional-event-rate', { min: Number.EPSILON, max: 1 });
+const detectionProbability = numberValue('detection-probability', { min: Number.EPSILON, max: 1 - Number.EPSILON }) ?? 0.8;
 
 const artifactPaths = values('artifact');
 const relatedArg = args.find(arg => arg.startsWith('--related-questions='));
