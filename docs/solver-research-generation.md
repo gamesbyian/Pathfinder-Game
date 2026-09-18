@@ -59,7 +59,7 @@ The dispatcher offsets the supplied master seed by source position so a suite do
 
 ## Normalized count semantics
 
-`--count=N` means requested independent parents **per method**. Default outputs are namespaced under the question/suite and master seed. The front door refuses to replace an existing output or run manifest unless `--overwrite` is explicit; random's legacy `--append` remains a single-source, non-frozen-block operation.
+`--count=N` means requested independent parents **per method**. Default outputs are namespaced under the question/suite and master seed. The front door refuses to replace an existing output or run manifest unless `--overwrite` is explicit, and `--overwrite` is forbidden for question-bound frozen generation. Random's legacy mutable `--append` operation remains available only through the direct `stress:generate-random` producer.
 
 The random and topology producers emit exactly N parents. The targeted producer emits six fixed hypothesis batches, so its native unit is `--count-per-batch`. The dispatcher rounds upward to the nearest multiple of six unless `--targeted-count-per-batch` is supplied. The dry-run plan records both requested and planned parent counts.
 
