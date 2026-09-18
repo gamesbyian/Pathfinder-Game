@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=10500 max=13000 -->
 # Pathfinder agent guide
 
-Compact router for coding/research agents. Load task-specific material, not accumulated repository history. [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) is optional detail for rare rules, solver gotchas, level facts, or provenance.
+Compact router. Load task-specific material, not repository history. [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) is optional detail.
 
 ## Route by task
 
@@ -10,14 +10,14 @@ Compact router for coding/research agents. Load task-specific material, not accu
 | Product/code change | [`docs/architecture.md`](docs/architecture.md), then changed files |
 | Cross-cutting schema/state/telemetry | [`docs/change-recipes.md`](docs/change-recipes.md), then owning topic doc |
 | Periodic repository hygiene / “periodic hygiene check plan” | Execute [`docs/periodic-repository-hygiene.md`](docs/periodic-repository-hygiene.md) end-to-end from current `main`; it owns the recurring hygiene procedure |
-| Naming / future rename | The repository-wide naming cleanup is complete through Phase 15. Current authority: [`docs/naming-and-vocabulary.md`](docs/naming-and-vocabulary.md) + [`docs/change-recipes.md`](docs/change-recipes.md). Historical/status entry point: `npm run naming:status`. Do not reopen the completed sequence or invent Phase 16. |
+| Naming / future rename | Cleanup is complete through Phase 15. Use [`docs/naming-and-vocabulary.md`](docs/naming-and-vocabulary.md) + [`docs/change-recipes.md`](docs/change-recipes.md); history: `npm run naming:status`. Do not reopen it. |
 | UI/input/accessibility/rendering | [`docs/architecture.md`](docs/architecture.md), [`docs/ui-accessibility.md`](docs/ui-accessibility.md), [`docs/testing.md`](docs/testing.md) |
 | Solver implementation | [`docs/solver-architecture.md`](docs/solver-architecture.md), [`modules/solver/README.md`](modules/solver/README.md), [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
 | Solver correctness/cache/prune | [`docs/solver-correctness-hardening.md`](docs/solver-correctness-hardening.md), [`docs/solver-architecture.md`](docs/solver-architecture.md) |
 | Solver optimization/research | [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md), then [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md) and the specialist doc for the current gate |
-| Solver workflow/evidence maintenance | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md), then the workflow/scripts being changed; the September 11 remediation is completed history in [`docs/solver-workflow-remediation-review-handoff.md`](docs/solver-workflow-remediation-review-handoff.md) |
+| Solver workflow/evidence maintenance | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md), then changed workflow/scripts |
 | Solver experiment population / sample sizing | [`docs/solver-experiment-opportunity-sizing.md`](docs/solver-experiment-opportunity-sizing.md); use `node scripts/experiment-opportunity-audit.mjs` before broad/sharded compute |
-| Solver research acquisition / whether to generate | `npm run research:acquisition-preflight -- --question-id=<id>` after current queue/status/assets are known; it may route to reuse, observation/exact/work, fresh same-source, transfer, family, or human/editor evidence, but never generates automatically |
+| Solver research acquisition / whether to generate | `npm run research:acquisition-preflight -- --question-id=<id>` after queue/status/assets; it routes evidence acquisition but never generates automatically |
 | Solver research data / cross-evidence | `node scripts/research-asset-query.mjs --query=<term>`; cross-authority: `npm run research:relations -- --list`; topology: [`docs/solver-research-data-assets.md`](docs/solver-research-data-assets.md) |
 | Solver budgets/allocation | Workstreams, then [`docs/solver-scheduling-policy.md`](docs/solver-scheduling-policy.md); add [`docs/solver-budget-determinism.md`](docs/solver-budget-determinism.md) when work/budget semantics matter |
 | Solver evaluation/generalization | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), then [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
@@ -31,7 +31,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 | Validation choice | [`docs/testing.md`](docs/testing.md) |
 | Push/PR finish line or red CI | [`docs/ci-preflight.md`](docs/ci-preflight.md), then the failing validator/owning authority |
 
-[`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post-naming-resumption.md) is conditional: use it when executing or translating frozen pre-cleanup solver evidence with historical names/contracts, not for ordinary current-head orientation.
+Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post-naming-resumption.md) only for frozen pre-cleanup evidence.
 
 ## Working rules
 
@@ -41,7 +41,7 @@ Compact router for coding/research agents. Load task-specific material, not accu
 4. Use cheap discovery before broad context: `tooling-census --compact`, `research-status-index --compact`, `research-asset-query.mjs`.
 5. Audit cross-boundary propagation with [`docs/change-recipes.md`](docs/change-recipes.md).
 6. Prefer branch/PR validation; do not use `main` as experiment scratch space unless the required execution path cannot exercise a branch and the reason is recorded.
-7. Before treating work as push-ready, run the applicable local finish line from [`docs/ci-preflight.md`](docs/ci-preflight.md); ordinary work is `npm run ci:fast && npm run build`, and deep solver work is `npm run ci && npm run build`. GitHub Actions should not be the first discovery point for deterministic repository failures.
+7. Before push, follow [`docs/ci-preflight.md`](docs/ci-preflight.md): ordinary `npm run ci:fast && npm run build`; deep solver `npm run ci && npm run build`. Do not use GHA as first deterministic feedback.
 8. Do not weaken validation to pass. Root-cause unexpected invariant, CSP, architecture, referee, or type failures.
 9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
 10. Honor visible file-size declarations before editing: stay below `warn` when practical and never cross `max`. If already over a hard limit, make one coherent reduction with margin (default: remove at least `max(2 × excess, 1 KB)`), then re-measure.
@@ -51,14 +51,14 @@ Compact router for coding/research agents. Load task-specific material, not accu
 - [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md) owns priority/state/gates. Specialist docs/reports refine a gate but do not reprioritize it.
 - Use the smallest evidence that can decide the next gate. A clear negative closes the tested form unless materially new evidence changes the premise.
 - Inventory existing provenance, census/capability, profiles, variants, lifecycle, traces, manifests, exact labels, and other evidence before generating more. Materially searched joins add selection pressure.
-- Before a broad or sharded decision-bearing run, define the **opportunity population** that can actually express the treatment, estimate its rate from control-side/existing evidence, and size total N from the informative-row requirement. A benefit-enriched population and a representative no-harm population are separate design jobs.
-- When opportunity/exposure is uncertain, run the smallest control-only or shadow pilot first. High control solve ceilings, low real target-stage participation, or zero opportunity block scale-up until the design changes.
-- Before a large matrix, run one representative **execution-family canary** under the exact cap/flags/selector semantics and verify the expected stop/accounting behavior. A static input value is not proof that the runtime honors it.
-- Resolve the experiment population once. Planning should emit literal IDs/positions and execution should consume that exact plan; do not let count-only/planning and execution independently reconstruct sampling semantics.
-- Persist resolved arm/config provenance at the point that actually invokes the solver. For A/B work, control and treatment must prove their semantic difference and all unintended dimensions must match; a treatment label or matrix key alone is not evidence.
-- Existing runtime telemetry may steer GHA shard packing/timeouts but never cold solver policy. Prefer it over uniform shard estimates when available, and persist which telemetry/fallback informed the plan.
-- Derived level/research features must come from their canonical helper/schema owner. Do not silently read guessed fields from normalized levels or report rows; assert required row shape before filtering/stratifying.
-- Level-blindness is not generalization. Cold policy cannot use exact identity, saved hints, known winners, historical per-level outcomes/cost, persistent per-level state from prior invocations, or variant outcomes. Solve-local caches, proofs, conflicts, canonical forms, decompositions, and search plans derived only from the current puzzle/current invocation are legal in principle; soundness and economics are separate gates.
+- Before broad/sharded decision work, define the **opportunity population**, estimate its control-side rate, and size N from informative rows. Benefit-enriched and representative no-harm populations are separate.
+- When opportunity/exposure is uncertain, run the smallest control-only/shadow pilot. Ceiling, low real participation, or zero opportunity blocks scale-up.
+- Before a large matrix, run one representative **execution-family canary** under exact cap/flags/selector semantics and verify stop/accounting behavior.
+- Resolve populations once: planning emits literal IDs/positions and execution consumes that exact plan.
+- Persist arm/config provenance at solver invocation. A/B arms must prove semantic difference with unintended dimensions matched.
+- Runtime telemetry may steer GHA packing/timeouts, never cold policy; persist the telemetry/fallback used.
+- Derived features come from canonical helpers/schemas; assert row shape before filtering/stratifying.
+- Level-blindness is not generalization. Cold policy cannot use identity, hints, known winners, historical per-level outcomes/cost, prior persistent per-level state, or variant outcomes. Solve-local derivations from current inputs are legal in principle; soundness/economics are separate.
 - Use `workSpent` for cross-technique allocation. Raw nodes are within-technique diagnostics; wall time is implementation cost. New actions/configurations do not get free additive budget.
 - Treat weights/profiles/widths/directions/seeds/thresholds/budgets as configurations until evidence shows a distinct mechanism.
 - Preserve provenance/evidence classes and independent units. Report population, unit, work envelope, selection procedure, and evidence role precisely.
@@ -68,14 +68,7 @@ Detailed method/stop/promotion rules: [`docs/solver-research-operating-model.md`
 
 ## Documentation hygiene
 
-Current documentation should optimize for **decision density**, not historical completeness.
-
-- **Concise prose:** state the contract, current state, gate, or instruction directly. Prefer compact tables/bullets when they carry more information per token.
-- **Minimal narrative:** current authorities describe what is true now. Put chronology, debugging stories, and “then we tried…” sequences in dated reports or archive snapshots.
-- **Staleness resistance:** when state changes, **replace** the obsolete statement. Do not append a newer paragraph beneath stale guidance.
-- **No redundant authority:** a mutable fact should have one owner. Other docs link to it instead of restating numbers, gates, defaults, or long rationale.
-- **Consolidate:** if two live docs no longer have distinct ownership, merge their useful content and leave at most a tiny compatibility pointer at the old path.
-- Preserve useful history before destructive consolidation by snapshotting it under `docs/archive/` or keeping the dated report that already owns it.
+Optimize current docs for **decision density**: state contracts/state/gates directly; keep chronology/debugging in dated reports/archive; replace stale claims instead of appending; give mutable facts one owner; consolidate overlapping live docs; preserve useful history before destructive consolidation.
 
 ## Context budget
 
