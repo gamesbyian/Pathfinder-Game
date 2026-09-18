@@ -125,6 +125,24 @@ export function buildD1ResearchBlock({
     return { populationIdentity, researchBlock };
 }
 
+
+export function validateD1AnnotationPlan(capture, { maxEligibleDecisions = Number.POSITIVE_INFINITY } = {}) {
+    const evidenceRole = capture?.evidenceRole ?? 'development';
+    const boundary = capture?.policy?.executionBoundary ?? 'isolated-beam';
+    if (!['development', 'confirmation', 'transfer'].includes(evidenceRole)) {
+        throw new Error(`unsupported D1 evidence role: ${evidenceRole}`);
+    }
+    if (evidenceRole !== 'development') {
+        if (boundary !== 'production-orchestration') {
+            throw new Error('confirmation/transfer D1 annotation requires a production-orchestration capture');
+        }
+        if (Number.isFinite(maxEligibleDecisions)) {
+            throw new Error('confirmation/transfer D1 annotation must cover every frozen eligible decision; --max-eligible-decisions is development-only');
+        }
+    }
+    return { evidenceRole, executionBoundary: boundary, completeFrozenEligibilityRequired: evidenceRole !== 'development' };
+}
+
 export function summarizeD1AnnotatedDecisions(records) {
     let eligibleDecisions = 0;
     let fullySupportedDecisions = 0;
