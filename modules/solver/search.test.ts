@@ -160,15 +160,21 @@ test('beam research observation is behaviorally inert and sees real boundaries',
   const level = makeLevel();
   const off = prepLevel(level); off._cfg = null; off._metrics = { nodesExpanded: 0 };
   const offPath = await beamSearchFromGate(PACK(0, 0), level, off, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
-  const records: Array<{ stage: string; paths: number[][] }> = [];
+  const records: Array<{ stage: string; paths: number[][]; work: number; workSpent: number }> = [];
   const on = prepLevel(level); on._cfg = null; on._metrics = { nodesExpanded: 0 };
-  on._beamResearchObserver = { observe: record => records.push({ stage: record.stage, paths: record.paths }) };
+  on._beamResearchObserver = { observe: record => records.push({
+    stage: record.stage, paths: record.paths, work: record.work, workSpent: record.workSpent,
+  }) };
   const onPath = await beamSearchFromGate(PACK(0, 0), level, on, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   assert.deepEqual(onPath, offPath);
   assert.equal(on._metrics.nodesExpanded, off._metrics.nodesExpanded);
   assert.ok(records.some(record => record.stage === 'incoming-frontier'));
   assert.ok(records.some(record => record.stage === 'generated'));
   assert.ok(records.every(record => record.paths.every(path => path[0] === PACK(0, 0))));
+  assert.ok(records.every(record => Number.isFinite(record.workSpent) && record.workSpent >= 0));
+  assert.ok(records.every(record => record.workSpent <= on._workMeter.units));
+  assert.ok(records.some(record => record.work !== record.workSpent),
+    'node-progress and canonical workSpent should remain distinct metrics');
 });
 
 test('beam reconstruction scratch handles long, tiny, shifted, then long paths like fresh invariants', async () => {
