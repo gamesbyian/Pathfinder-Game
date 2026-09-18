@@ -43,6 +43,7 @@ import { installBrowserStubs } from './test-lib/browser-stubs.mjs';
 import { selectLevelsBySpec } from './level-data-io.mjs';
 import { makeAttemptConfigKeyParser } from './attempt-config-key.mjs';
 import { compareSiblingRankings } from './operational-similarity-lib.mjs';
+import { beamResearchRecordToDecisionObservation, createDecisionObservationCollector } from './solver-decision-observation-lib.mjs';
 
 const ROOT = process.cwd();
 const argv = process.argv.slice(2);
@@ -110,6 +111,8 @@ const SUMMARY_OUT_FILE = args.get('--summary-out') || null;
 const ORDERING_PROFILES = (args.get('--ordering-profiles') || '').split(',').map(value => value.trim()).filter(Boolean);
 const ORDERING_LIMIT = Number(args.get('--ordering-limit') || 4096);
 const BEAM_TRACE_LIMIT = Number(args.get('--beam-trace-limit') || 0);
+const BEAM_DECISION_LIMIT = Number(args.get('--beam-decision-limit') || 0);
+if (!Number.isSafeInteger(BEAM_DECISION_LIMIT) || BEAM_DECISION_LIMIT < 0) { console.error('--beam-decision-limit must be a non-negative integer'); process.exit(1); }
 for (const profile of ORDERING_PROFILES) if (profile !== 'none' && !SCORING_PROFILES[profile]) {
     console.error(`--ordering-profiles: unknown profile ${profile}`); process.exit(1);
 }
@@ -223,6 +226,8 @@ async function probeLevel(entry) {
     };
 
     const attempts = [];
+    const beamDecisions = BEAM_DECISION_LIMIT > 0 ? createDecisionObservationCollector(BEAM_DECISION_LIMIT) : null;
+    let beamDecisionOrdinal = 0;
     let solution = null;
     let winningKey = null;
     let winningGate = null;
@@ -236,7 +241,21 @@ async function probeLevel(entry) {
             if (prep._metrics.nodesExpanded >= NODE_BUDGET || workSpentBefore >= WORK_BUDGET) break outer;
             const remaining = NODE_BUDGET === Infinity ? Infinity : Math.max(0, NODE_BUDGET - prep._metrics.nodesExpanded);
             const beamTrace = BEAM_TRACE_LIMIT > 0 ? createBeamTraceCollector(BEAM_TRACE_LIMIT) : null;
-            prep._beamResearchObserver = beamTrace;
+            const beamObserver = beamTrace || beamDecisions ? {
+                observe(record) {
+                    beamTrace?.observe(record);
+                    if (!beamDecisions) return;
+                    const decision = beamResearchRecordToDecisionObservation(record, {
+                        parentId: String(id ?? 'UNKNOWN'),
+                        decisionOrdinal: beamDecisionOrdinal,
+                    });
+                    if (decision) {
+                        beamDecisions.observe(decision);
+                        beamDecisionOrdinal++;
+                    }
+                },
+            } : null;
+            prep._beamResearchObserver = beamObserver;
             const r = await runAttempt(gateKey, level, prep, config, BUDGET_MS, Date.now(), null, remaining);
             prep._beamResearchObserver = null;
             attempts.push({ configKey: key, gateKey, ...r.attempt,
@@ -277,6 +296,7 @@ async function probeLevel(entry) {
         deadlineTruncated,
         validDeterministicEvidence: Number.isFinite(WORK_BUDGET) ? !deadlineTruncated : false,
         attempts,
+        ...(beamDecisions ? { beamDecisionObservations: beamDecisions.snapshot() } : {}),
         ...(ORDERING_PROFILES.length ? { orderingResearch: summarizeOrdering(orderingRecords, orderingObserved) } : {}),
     };
 }
