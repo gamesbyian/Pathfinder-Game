@@ -10,6 +10,7 @@ import {
     assertResearchBlock,
     researchBlockEligibility,
 } from './solver-research-block-lineage.mjs';
+import { stableHash } from './solver-experiment-contract.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     questions: { identity: 'id', source: 'docs/solver-research-question-relations.json' },
@@ -77,7 +78,7 @@ function buildResearchArtifactRelations(root, artifactPaths, eligibility = null)
         const existing = blocks.get(researchBlock.blockId);
         if (existing) {
             if (existing.populationIdentity !== populationIdentity
-                || JSON.stringify(withoutConsumption(existing.researchBlock)) !== JSON.stringify(withoutConsumption(researchBlock))) {
+                || stableHash(withoutConsumption(existing.researchBlock)) !== stableHash(withoutConsumption(researchBlock))) {
                 throw new Error(`conflicting research block definitions for ${researchBlock.blockId}`);
             }
             existing.researchBlock = {
@@ -153,6 +154,16 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
     const questionErrors = validateResearchQuestionRegistry(questions);
     if (questionErrors.length) {
         throw new Error(`Invalid solver research question registry:\n- ${questionErrors.join('\n- ')}`);
+    }
+
+    if (eligibility?.questionId) {
+        const knownQuestionIds = new Set(questions.questions.map(question => question.id));
+        if (!knownQuestionIds.has(eligibility.questionId)) {
+            throw new Error(`unknown eligibility question: ${eligibility.questionId}`);
+        }
+        for (const related of eligibility.relatedQuestionIds ?? []) {
+            if (!knownQuestionIds.has(related)) throw new Error(`unknown related eligibility question: ${related}`);
+        }
     }
 
     const assets = readJson(root, 'docs/solver-research-data-assets.json');
