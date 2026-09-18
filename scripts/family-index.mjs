@@ -17,7 +17,7 @@ const load = () => {
     if (!existsSync(indexPath)) throw new Error(`index not found: ${indexPath}; run family:index first`);
     return JSON.parse(readFileSync(indexPath, 'utf8'));
 };
-const filters = Object.fromEntries(['corpus', 'parentCorpus', 'parentId', 'familyId', 'variantId', 'mode', 'relation', 'operator', 'objectType', 'evaluated', 'solved']
+const filters = Object.fromEntries(['corpus', 'parentCorpus', 'parentId', 'familyId', 'variantId', 'mode', 'relation', 'operator', 'objectType', 'questionId', 'evidenceRole', 'originBlockId', 'evaluated', 'solved']
     .map(key => [key, filterValue(arg(key.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)))])
     .filter(([, value]) => value != null));
 
