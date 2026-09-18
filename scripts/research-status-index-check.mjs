@@ -15,7 +15,7 @@ const root = mkdtempSync(path.join(tmpdir(), 'research-status-'));
 mkdirSync(path.join(root, 'reports')); mkdirSync(path.join(root, 'docs'));
 writeFileSync(path.join(root, 'docs/topic.md'), '# Topic\n');
 writeFileSync(path.join(root, 'docs/solver-optimization-workstreams.md'), `# Solver optimization workstreams
-## Active workstreams
+## Workstream state
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
 | 2 | Current question | **ACTIVE** | Run current gate. |
@@ -145,6 +145,11 @@ invalidSupersession.questions[0].supersedes = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidSupersession), [
     'questions[0].supersedes references unknown question WS2-MISSING',
 ]);
+
+const repositoryIndex = buildResearchStatusIndex(process.cwd());
+assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
+assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
+    'WS2 active gate must remain discoverable through the research-status queue relation');
 
 const repositoryRegistry = loadResearchQuestionRegistry(process.cwd());
 assert.deepEqual(validateResearchQuestionRegistry(repositoryRegistry), [],
