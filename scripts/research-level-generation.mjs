@@ -35,7 +35,7 @@ function help() {
 
 Usage:
   npm run research:generate-levels -- --method=random --count=40 --master-seed=123
-  npm run research:generate-levels -- --suite=transfer-pair --count=40 --master-seed=123 --question-id=<id> --evidence-role=confirmation
+  npm run research:generate-levels -- --suite=transfer-pair --count=40 --master-seed=123 --question-id=<id>
   npm run research:generate-levels -- --methods=targeted,random,topology --count=60 --master-seed=123 --dry-run
   npm run research:generate-levels -- --list
   npm run research:generate-levels -- --hybrids
@@ -50,11 +50,10 @@ Common options:
   --question-id=<stable research question id>
   --evidence-role=<development|confirmation|transfer>
   --out=<file>                     single-method only
-  --out-dir=<dir>                  defaults under tmp/research-generation/<question>
+  --out-dir=<dir>                  defaults under tmp/research-generation/<question-or-suite>/seed-<seed>
   --manifest=<file>                suite/run manifest; default <out-dir>/generation-manifest.json
   --id-prefix=<letters>            single-method only
   --envelope-caps                  random only
-  --append                         random only
   --verbose
   --overwrite                     allow replacement of existing output/manifest files
   --dry-run
@@ -120,9 +119,11 @@ function main() {
   if (selected.length > 1 && explicitPrefix) throw new Error('--id-prefix is single-method only so source namespaces stay obvious');
   if (selected.length > 1 && explicitBlockId) throw new Error('--block-id is single-method only; each source requires its own block identity');
   if (selected.length > 1 && passthrough.length) throw new Error('producer-specific passthrough flags are single-method only');
-  if (selected.length > 1 && (append || envelopeCaps)) {
-    throw new Error('--append/--envelope-caps are single-method options; run the random source separately when needed');
+  if (append) throw new Error('--append is not supported by the research front door; use stress:generate-random directly for legacy mutable corpus top-ups');
+  if (selected.length > 1 && envelopeCaps) {
+    throw new Error('--envelope-caps is single-method only; run the random source separately when needed');
   }
+  if (questionId && overwrite) throw new Error('--overwrite is forbidden for question-bound frozen research generation; choose a new seed or output directory');
   if (explicitEvidenceRole && !['development', 'confirmation', 'transfer'].includes(explicitEvidenceRole)) {
     throw new Error('--evidence-role must be development, confirmation, or transfer');
   }
@@ -178,7 +179,7 @@ function main() {
   }
 
   for (const invocation of invocations) {
-    if (existsSync(invocation.output) && !(append && invocation.method === 'random') && !overwrite) {
+    if (existsSync(invocation.output) && !overwrite) {
       throw new Error(`output already exists: ${invocation.output} (use --overwrite or choose a new seed/out-dir)`);
     }
   }
