@@ -55,6 +55,14 @@ writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example inves
 > **Last evidence:** 2026-08-21 — Synthetic fixture passed.
 > **Decision:** Continue measurement.
 > **Remaining gate:** Run the held-out corpus.
+> **Research question:** `WS2-CURRENT`
+> **Premise refs:** `P032`, `P204`
+> **Measurement opportunity:** `MO-002`
+> **Evidence role:** confirmation
+> **Selection:** prespecified
+> **Population identity:** fixture-population
+> **Selection history:** solver-blind fixture
+> **Inference scope:** fixture-only
 
 Authority: [topic](../docs/topic.md). Artifact: \`logs/example/run.json\`.
 `);
@@ -87,6 +95,14 @@ const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
+const taggedEvidence = index.evidence.find(row => row.topicId === 'example');
+assert.equal(taggedEvidence.researchQuestion, 'WS2-CURRENT');
+assert.deepEqual(taggedEvidence.premiseRefs, ['P032', 'P204']);
+assert.deepEqual(taggedEvidence.measurementOpportunities, ['MO-002']);
+assert.equal(taggedEvidence.evidenceRole, 'confirmation');
+assert.equal(taggedEvidence.selection, 'prespecified');
+assert.equal(taggedEvidence.populationIdentity, 'fixture-population');
+assert.equal(taggedEvidence.inferenceScope, 'fixture-only');
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'orientation anomaly' }).map(x => x.id), ['legacy']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'early-repair-search' }).map(x => x.id), ['legacy'],
     'canonical stage query must discover reports written only with the historical repair-probe name');
