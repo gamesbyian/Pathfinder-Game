@@ -160,11 +160,15 @@ test('beam research observation is behaviorally inert and sees real boundaries',
   const level = makeLevel();
   const off = prepLevel(level); off._cfg = null; off._metrics = { nodesExpanded: 0 };
   const offPath = await beamSearchFromGate(PACK(0, 0), level, off, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
-  const records: Array<{ stage: string; paths: number[][]; work: number; workSpent: number }> = [];
+  const records: Array<{ stage: string; paths: number[][]; work: number; workSpent: number; details?: Record<string, unknown> }> = [];
   const on = prepLevel(level); on._cfg = null; on._metrics = { nodesExpanded: 0 };
-  on._beamResearchObserver = { observe: record => records.push({
-    stage: record.stage, paths: record.paths, work: record.work, workSpent: record.workSpent,
-  }) };
+  on._beamResearchObserver = {
+    includeParentExpansionWork: true,
+    observe: record => records.push({
+      stage: record.stage, paths: record.paths, work: record.work, workSpent: record.workSpent,
+      details: record.details,
+    }),
+  };
   const onPath = await beamSearchFromGate(PACK(0, 0), level, on, SCORING_PROFILES.default, 1000, Date.now(), null, 8, null, false);
   assert.deepEqual(onPath, offPath);
   assert.equal(on._metrics.nodesExpanded, off._metrics.nodesExpanded);
@@ -175,6 +179,14 @@ test('beam research observation is behaviorally inert and sees real boundaries',
   assert.ok(records.every(record => record.workSpent <= on._workMeter.units));
   assert.ok(records.some(record => record.work !== record.workSpent),
     'node-progress and canonical workSpent should remain distinct metrics');
+  const expansionRows = records.filter(record => record.stage === 'generated')
+    .flatMap(record => (record.details?.parentExpansions as any[] | undefined) ?? []);
+  assert.ok(expansionRows.length > 0, 'opt-in observer should receive parent expansion work');
+  assert.ok(expansionRows.every(row => Array.isArray(row.path)
+    && Number.isFinite(row.workSpent) && row.workSpent >= 0
+    && Number.isInteger(row.generatedCandidates) && row.generatedCandidates >= 0));
+  assert.equal(on._workMeter.units, off._workMeter.units,
+    'opt-in expansion observation must not change canonical work');
 });
 
 test('beam reconstruction scratch handles long, tiny, shifted, then long paths like fresh invariants', async () => {
