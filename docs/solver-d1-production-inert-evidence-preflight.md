@@ -108,6 +108,8 @@ No inference uses this stage.
 
 Run the frozen observer on a small deterministic multi-parent sample selected before D1 outcomes are seen.
 The capture must use the full production orchestration boundary, not a standalone beam attempt.
+For confirmation/transfer evidence, offline annotation must cover every frozen eligible decision; the
+development-only `--max-eligible-decisions` cap is rejected.
 
 Measure:
 
