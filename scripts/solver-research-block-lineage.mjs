@@ -99,6 +99,24 @@ export function researchBlockEligibility(block, {
     return { eligible, evidenceRole, questionId, matchedConsumptionEvents: matching.length, reasons };
 }
 
+export function researchPopulationIdentity(parentIds, parentContentIdentities) {
+    if (!Array.isArray(parentIds) || !Array.isArray(parentContentIdentities)
+        || parentIds.length === 0 || parentIds.length !== parentContentIdentities.length) {
+        throw new Error('research population requires aligned non-empty parentIds and parentContentIdentities');
+    }
+    const parents = parentIds.map((id, index) => ({
+        id: String(id),
+        contentIdentity: String(parentContentIdentities[index]),
+    })).sort((a, b) => a.id.localeCompare(b.id) || a.contentIdentity.localeCompare(b.contentIdentity));
+    if (parents.some(row => !nonEmpty(row.id) || !nonEmpty(row.contentIdentity))) {
+        throw new Error('research population parent identities must be non-empty');
+    }
+    if (new Set(parents.map(row => row.id)).size !== parents.length) {
+        throw new Error('research population contains duplicate parent ids');
+    }
+    return stableHash({ kind: 'research-parent-block', parents });
+}
+
 export function researchBlockIdentity(block, populationIdentity) {
     assertResearchBlock(block, { populationIdentity });
     return stableHash({
