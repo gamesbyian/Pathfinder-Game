@@ -42,6 +42,7 @@ const pauseAfterPhasesRaw = arg('pause-after-phases', null);
 const pauseAfterPhases = pauseAfterPhasesRaw == null ? undefined : Number(pauseAfterPhasesRaw);
 const cutoffRadius = Number(arg('cutoff-radius', 2));
 const evidenceRole = arg('evidence-role', 'development');
+const executionBoundary = arg('execution-boundary', 'isolated-beam');
 const questionId = arg('question-id', 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
 const requestedBlockId = arg('block-id', null);
 const outFile = arg('out', null);
@@ -56,8 +57,11 @@ if (pauseAfterPhases !== undefined && (!Number.isInteger(pauseAfterPhases) || pa
     throw new Error('--pause-after-phases must be a positive integer');
 }
 if (!Number.isInteger(cutoffRadius) || cutoffRadius < 0) throw new Error('--cutoff-radius must be a non-negative integer');
-if (evidenceRole !== 'development') {
-    throw new Error('this capture currently supports development evidence only; independent confirmation requires orchestration-aware production reach');
+if (!['isolated-beam', 'production-orchestration'].includes(executionBoundary)) {
+    throw new Error('--execution-boundary must be isolated-beam or production-orchestration');
+}
+if (evidenceRole !== 'development' && executionBoundary !== 'production-orchestration') {
+    throw new Error('confirmation/transfer capture requires --execution-boundary=production-orchestration');
 }
 const questionRegistry = loadResearchQuestionRegistry(ROOT);
 if (!questionRegistry.questions.some(question => question.id === questionId)) {
@@ -109,30 +113,20 @@ for (const levelId of levelIds) {
         && config.beamWidth === width
         && config.mechanicBucketRetention === mechanicBucketRetention
         && config.orderingBias === null);
-    if (!matchingAttempt) {
+    if (executionBoundary === 'isolated-beam' && !matchingAttempt) {
         throw new Error(`${levelId}: requested beam is not in current production attempt policy; configured beams=${JSON.stringify(configuredBeams)}`);
     }
 
-    const offPrep = prepLevel(level);
-    offPrep._cfg = null;
-    offPrep._metrics = { nodesExpanded: 0 };
-    const offPath = await beamSearchFromGate(
-        gate, level, offPrep, profile, budgetMs, Date.now(), null, width,
-        null, mechanicBucketRetention, {}, nodeBudget, undefined, pauseAfterPhases,
-    );
-
     const cullRecords = [];
-    const expansionByParentPath = new Map();
-    const onPrep = prepLevel(level);
-    onPrep._cfg = null;
-    onPrep._metrics = { nodesExpanded: 0 };
-    onPrep._beamResearchObserver = {
+    const expansionByAttemptAndParentPath = new Map();
+    const observer = {
         includeParentExpansionWork: true,
         observe(record) {
+            const attemptOrdinal = record.attemptContext?.attemptOrdinal ?? -1;
             if (record.stage === 'generated') {
                 for (const row of record.details?.parentExpansions ?? []) {
                     if (!Array.isArray(row.path)) continue;
-                    expansionByParentPath.set(pathIdentity(row.path), {
+                    expansionByAttemptAndParentPath.set(`${attemptOrdinal}:${pathIdentity(row.path)}`, {
                         workSpent: Number(row.workSpent ?? 0),
                         generatedCandidates: Number(row.generatedCandidates ?? 0),
                     });
@@ -142,30 +136,107 @@ for (const levelId of levelIds) {
             }
         },
     };
-    const onPath = await beamSearchFromGate(
-        gate, level, onPrep, profile, budgetMs, Date.now(), null, width,
-        null, mechanicBucketRetention, {}, nodeBudget, undefined, pauseAfterPhases,
-    );
 
-    const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath)
-        && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded
-        && offPrep._workMeter.units === onPrep._workMeter.units;
-    if (!behaviorIdentical) throw new Error(`${levelId}: observation changed path, nodes, or canonical work`);
+    let behaviorIdentical;
+    let solved;
+    let nodesExpanded;
+    let workSpent;
+    let controlNodesExpanded;
+    let controlWorkSpent;
+    let attemptTelemetry = [];
+    let eligibilityPrep;
+
+    if (executionBoundary === 'production-orchestration') {
+        const commonOpts = {
+            timeBudgetMs: budgetMs,
+            nodeBudget,
+            lifecycleTelemetry: true,
+        };
+        const offResult = await Solver.solveLevel(level, commonOpts);
+        const onResult = await Solver.solveLevel(level, { ...commonOpts, beamResearchObserver: observer });
+        const stableAttempts = result => (result.attempts ?? []).map(attempt => ({
+            gateKey: attempt.gateKey,
+            stageId: attempt.stageId,
+            scoringProfileId: attempt.scoringProfileId,
+            orderingBiasId: attempt.orderingBiasId ?? null,
+            beamWidth: attempt.beamWidth ?? null,
+            mechanicBucketRetention: !!attempt.mechanicBucketRetention,
+            ok: attempt.ok,
+            outcome: attempt.outcome,
+            nodesExpanded: attempt.nodesExpanded,
+            workSpent: attempt.workSpent ?? null,
+        }));
+        behaviorIdentical = JSON.stringify(offResult.solution) === JSON.stringify(onResult.solution)
+            && offResult.nodesExpanded === onResult.nodesExpanded
+            && offResult.workSpent === onResult.workSpent
+            && JSON.stringify(stableAttempts(offResult)) === JSON.stringify(stableAttempts(onResult));
+        if (!behaviorIdentical) throw new Error(`${levelId}: orchestration observation changed path, attempt outcomes, nodes, or canonical work`);
+        solved = onResult.ok;
+        nodesExpanded = onResult.nodesExpanded;
+        workSpent = onResult.workSpent ?? null;
+        controlNodesExpanded = offResult.nodesExpanded;
+        controlWorkSpent = offResult.workSpent ?? null;
+        attemptTelemetry = onResult.attempts ?? [];
+        eligibilityPrep = prepLevel(level);
+        eligibilityPrep._cfg = null;
+        eligibilityPrep._metrics = { nodesExpanded: 0 };
+    } else {
+        const offPrep = prepLevel(level);
+        offPrep._cfg = null;
+        offPrep._metrics = { nodesExpanded: 0 };
+        const offPath = await beamSearchFromGate(
+            gate, level, offPrep, profile, budgetMs, Date.now(), null, width,
+            null, mechanicBucketRetention, {}, nodeBudget, undefined, pauseAfterPhases,
+        );
+
+        const onPrep = prepLevel(level);
+        onPrep._cfg = null;
+        onPrep._metrics = { nodesExpanded: 0 };
+        onPrep._beamResearchObserver = observer;
+        const onPath = await beamSearchFromGate(
+            gate, level, onPrep, profile, budgetMs, Date.now(), null, width,
+            null, mechanicBucketRetention, {}, nodeBudget, undefined, pauseAfterPhases,
+        );
+
+        behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath)
+            && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded
+            && offPrep._workMeter.units === onPrep._workMeter.units;
+        if (!behaviorIdentical) throw new Error(`${levelId}: observation changed path, nodes, or canonical work`);
+        solved = !!onPath;
+        nodesExpanded = onPrep._metrics.nodesExpanded;
+        workSpent = onPrep._workMeter.units;
+        controlNodesExpanded = offPrep._metrics.nodesExpanded;
+        controlWorkSpent = offPrep._workMeter.units;
+        eligibilityPrep = onPrep;
+    }
 
     let eligibleDecisions = 0;
     for (let ordinal = 0; ordinal < cullRecords.length; ordinal++) {
-        const decision = beamResearchRecordToDecisionObservation(cullRecords[ordinal], { parentId: levelId, decisionOrdinal: ordinal });
+        const record = cullRecords[ordinal];
+        const decision = beamResearchRecordToDecisionObservation(record, { parentId: levelId, decisionOrdinal: ordinal });
         if (!decision) continue;
-        const eligibility = freezeD1Eligibility(decision, level, onPrep, { cutoffRadius });
+        const eligibility = freezeD1Eligibility(decision, level, eligibilityPrep, { cutoffRadius });
+        const attemptOrdinal = record.attemptContext?.attemptOrdinal ?? -1;
+        const attempt = attemptOrdinal >= 0 ? attemptTelemetry[attemptOrdinal] ?? null : null;
         decision.context = {
             ...decision.context,
             d1Eligibility: eligibility,
-            immediateExpansionWork: Object.fromEntries(decision.retainedCandidateIds.map(id => [
-                id,
-                expansionByParentPath.has(id)
-                    ? { status: 'observed', ...expansionByParentPath.get(id) }
-                    : { status: 'not-observed-before-termination', workSpent: null, generatedCandidates: null },
-            ])),
+            orchestrationAttempt: record.attemptContext ? {
+                ...record.attemptContext,
+                stageId: attempt?.stageId ?? null,
+                outcome: attempt?.outcome ?? null,
+                attemptWorkSpent: attempt?.workSpent ?? null,
+                attemptNodesExpanded: attempt?.nodesExpanded ?? null,
+            } : null,
+            immediateExpansionWork: Object.fromEntries(decision.retainedCandidateIds.map(id => {
+                const key = `${attemptOrdinal}:${id}`;
+                return [
+                    id,
+                    expansionByAttemptAndParentPath.has(key)
+                        ? { status: 'observed', ...expansionByAttemptAndParentPath.get(key) }
+                        : { status: 'not-observed-before-termination', workSpent: null, generatedCandidates: null },
+                ];
+            })),
         };
         decision.evidenceRole = evidenceRole;
         decision.corpus = corpusFile;
@@ -178,14 +249,15 @@ for (const levelId of levelIds) {
         parentContentIdentity,
         evidenceRole,
         gate,
-        configuredAttempt: matchingAttempt,
-        solved: !!onPath,
-        nodesExpanded: onPrep._metrics.nodesExpanded,
-        workSpent: onPrep._workMeter.units,
-        controlNodesExpanded: offPrep._metrics.nodesExpanded,
-        controlWorkSpent: offPrep._workMeter.units,
+        configuredAttempt: executionBoundary === 'isolated-beam' ? matchingAttempt : null,
+        solved,
+        nodesExpanded,
+        workSpent,
+        controlNodesExpanded,
+        controlWorkSpent,
         behaviorIdentical,
-        pausedAtPhaseBoundary: pauseAfterPhases ?? null,
+        pausedAtPhaseBoundary: executionBoundary === 'isolated-beam' ? (pauseAfterPhases ?? null) : null,
+        orchestrationAttemptCount: attemptTelemetry.length,
         cullDecisions: cullRecords.length,
         eligibleDecisions,
     });
@@ -220,12 +292,15 @@ const document = {
     researchBlock,
     evidenceRole,
     independentUnit: 'parent-level',
-    executionBoundary: 'isolated current-policy beam configuration; policy membership verified, full orchestration reach/allocation not reproduced',
+    executionBoundary: executionBoundary === 'production-orchestration'
+        ? 'full current production solveLevel orchestration with observer OFF/ON parity; beam records joined to actual attempt telemetry by attempt ordinal'
+        : 'isolated current-policy beam configuration; policy membership verified, full orchestration reach/allocation not reproduced',
     freezeBoundary: 'all D1 eligibility fixed from unchanged beam decision records before exact D1 annotation',
     policy: {
-        profile: profileName,
-        width,
-        mechanicBucketRetention,
+        executionBoundary,
+        profile: executionBoundary === 'isolated-beam' ? profileName : null,
+        width: executionBoundary === 'isolated-beam' ? width : null,
+        mechanicBucketRetention: executionBoundary === 'isolated-beam' ? mechanicBucketRetention : null,
         budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         pauseAfterPhases: pauseAfterPhases ?? null,

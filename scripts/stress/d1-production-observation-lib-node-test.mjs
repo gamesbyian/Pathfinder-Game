@@ -7,6 +7,7 @@ import {
     freezeD1Eligibility,
     isPathPrefix,
     summarizeD1AnnotatedDecisions,
+    validateD1AnnotationPlan,
 } from './d1-production-observation-lib.mjs';
 
 const d1Block = buildD1ResearchBlock({
@@ -80,5 +81,30 @@ const summary = summarizeD1AnnotatedDecisions([{
 }]);
 assert.equal(summary.cutoffCrossingDisagreements, 1);
 assert.equal(summary.informationCostMs, 9);
+
+assert.deepEqual(validateD1AnnotationPlan({
+    evidenceRole: 'development',
+    policy: { executionBoundary: 'isolated-beam' },
+}, { maxEligibleDecisions: 3 }), {
+    evidenceRole: 'development',
+    executionBoundary: 'isolated-beam',
+    completeFrozenEligibilityRequired: false,
+});
+assert.deepEqual(validateD1AnnotationPlan({
+    evidenceRole: 'confirmation',
+    policy: { executionBoundary: 'production-orchestration' },
+}), {
+    evidenceRole: 'confirmation',
+    executionBoundary: 'production-orchestration',
+    completeFrozenEligibilityRequired: true,
+});
+assert.throws(() => validateD1AnnotationPlan({
+    evidenceRole: 'confirmation',
+    policy: { executionBoundary: 'isolated-beam' },
+}), /production-orchestration capture/);
+assert.throws(() => validateD1AnnotationPlan({
+    evidenceRole: 'confirmation',
+    policy: { executionBoundary: 'production-orchestration' },
+}, { maxEligibleDecisions: 3 }), /must cover every frozen eligible decision/);
 
 console.log('d1-production-observation-lib-node-test: ok');

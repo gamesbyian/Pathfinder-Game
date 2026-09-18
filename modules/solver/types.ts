@@ -290,6 +290,11 @@ export interface PrepLevel {
     /** Research-only beam observer. Absent in every production call. The observer receives copied
      * replay-complete paths and may label them, but cannot affect search decisions. */
     _beamResearchObserver?: BeamResearchObserver | null;
+    /** Research-only orchestration context for the currently executing attempt. Search only copies
+     *  this into observer records; no solver policy reads it. The ordinal is aligned with
+     *  SolveResult.attempts insertion order for ordinary ladder execution. */
+    _beamResearchAttemptContext?: BeamResearchAttemptContext | null;
+    _beamResearchAttemptOrdinal?: number;
     /** Research-only isConnected() rejection observer — see ConnectivityRejectionObserver's doc. */
     _connectivityRejectionObserver?: ConnectivityRejectionObserver | null;
     /** Research-only joint-obligation propagation observer — see JointObligationObserver's own doc
@@ -380,6 +385,15 @@ export type BeamResearchStage = 'incoming-frontier' | 'generated' | 'hard-pruned
     | 'score-width-culled' | 'mechanic-bucket-culled' | 'ints-bucket-culled'
     | 'post-score-width-cull' | 'post-mechanic-bucket-selection' | 'post-ints-bucket-selection';
 
+export interface BeamResearchAttemptContext {
+    attemptOrdinal: number;
+    gateKey: number;
+    configKey: string;
+    scoringProfileId: string;
+    beamWidth: number | null;
+    mechanicBucketRetention: boolean;
+}
+
 export interface BeamResearchRecord {
     stage: BeamResearchStage;
     depth: number;
@@ -390,6 +404,9 @@ export interface BeamResearchRecord {
     paths: number[][];
     /** Present for removals/culls; indices refer to score-sorted pool order. */
     details?: Record<string, unknown>;
+    /** Present when observation is attached at solveLevel orchestration. Enables exact joining back
+     *  to the attempt telemetry without making search depend on scheduler metadata. */
+    attemptContext?: BeamResearchAttemptContext;
 }
 
 export interface BeamResearchObserver {

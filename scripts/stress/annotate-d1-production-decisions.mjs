@@ -19,6 +19,7 @@ import {
     candidateRevisitCells,
     classifyD1CandidateQueryResults,
     summarizeD1AnnotatedDecisions,
+    validateD1AnnotationPlan,
 } from './d1-production-observation-lib.mjs';
 
 const ROOT = process.cwd();
@@ -48,9 +49,7 @@ const solver = captureSolverGitState();
 const inputBytes = readFileSync(path.resolve(ROOT, inputFile));
 const capture = JSON.parse(inputBytes);
 if (capture.kind !== 'd1-production-inert-decision-capture') throw new Error('input is not a D1 production decision capture');
-if (capture.evidenceRole !== 'development') {
-    throw new Error('this annotator currently accepts development captures only; independent confirmation awaits orchestration-aware capture');
-}
+validateD1AnnotationPlan(capture, { maxEligibleDecisions });
 const corpusDoc = JSON.parse(readFileSync(path.resolve(ROOT, capture.corpus), 'utf8'));
 const corpusRows = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
 const byId = new Map(corpusRows.map(row => [String(row.id), row]));

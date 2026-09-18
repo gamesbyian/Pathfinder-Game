@@ -20,6 +20,31 @@ test('solveLevel solves a simple prepared level', async () => {
     assert.equal(typeof result.nodesExpanded, 'number');
 });
 
+
+
+test('solveLevel can attach a production-inert beam observer with attempt identity', async () => {
+    const level = makeLineLevel();
+    const records: any[] = [];
+    const result = await solveLevel(level, {
+        timeBudgetMs: 1000,
+        beamResearchObserver: { observe: record => records.push(record) },
+        attemptSearchForTesting: async (...args: Parameters<typeof runAttemptSearch>) =>
+            args[0].beamWidth ? runAttemptSearch(...args) : null,
+    });
+    assert.equal(result.attempts.some(attempt => attempt.beamWidth != null), true, 'fixture must reach a beam attempt');
+    const observed = records.find(record => record.attemptContext);
+    assert.ok(observed, 'at least one configured beam attempt should emit an orchestration-tagged record');
+    assert.equal(Number.isInteger(observed.attemptContext.attemptOrdinal), true);
+    assert.equal(observed.attemptContext.gateKey, level.gateKeys[0]);
+    assert.equal(typeof observed.attemptContext.configKey, 'string');
+    assert.equal(typeof observed.attemptContext.scoringProfileId, 'string');
+    assert.equal(
+        result.attempts[observed.attemptContext.attemptOrdinal]?.gateKey,
+        observed.attemptContext.gateKey,
+        'observer attempt ordinal must join to SolveResult.attempts',
+    );
+});
+
 test('primeAttempt: a matching winner config solves via the winner-first pre-attempt', async () => {
     const level = makeLineLevel();
     // Use a real config key from this level's own configured list (the same source solveLevel

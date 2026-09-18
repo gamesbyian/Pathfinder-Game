@@ -1,9 +1,9 @@
 # D1 production-inert observation implementation readiness 001
 
-> **Status:** active
+> **Status:** superseded
 > **Last evidence:** 2026-09-17 — branch implementation on top of the canonical-work correction from PR #1867.
 > **Decision:** the D1 gate now has a two-phase execution path that freezes real beam decisions and eligibility before exact annotation. No D1 result is visible to search. The next legitimate action is a bounded development canary, not an independent pilot.
-> **Remaining gate:** execute the canary below, inspect parity/eligibility/query support/work attribution, and only then decide whether an independent multi-parent pilot is warranted.
+> **Remaining gate:** execute the development canary below. The previously missing full-orchestration observer bridge is now implemented prospectively; after canary acceptance, Stage 2 can use `--execution-boundary=production-orchestration` for independent multi-parent capture.
 
 ## What is implemented
 
@@ -99,7 +99,7 @@ A canary with zero eligible decisions is a valid tooling result but does not jus
 
 Do not start Stage 2 merely because the tooling works.
 
-Before an independent pilot, this implementation needs one more execution-layer extension: D1 observation must be attached to full production orchestration, or joined to authoritative stage-reach/allocation telemetry strongly enough to establish that the observed beam decisions were actually reached under the production budget ladder. Only then should the program select multiple parents deterministically, exclude prior D1 development parents, freeze the exact population/protocol, annotate all frozen eligible decisions, and cluster inference by parent.
+The execution-layer extension is now available: the generic beam research observer can be attached to full production `solveLevel` orchestration, with each record carrying attempt ordinal/config/gate identity and the capture joining that ordinal to authoritative attempt stage telemetry. An independent pilot still requires the Stage-1 canary to pass first; after that, select multiple parents deterministically, exclude prior D1 development parents, freeze the exact population/protocol, annotate all frozen eligible decisions, and cluster inference by parent. The offline annotator now accepts confirmation/transfer only for full-orchestration captures and rejects any post-capture eligible-decision cap for those roles.
 
 The Stage-2 advancement question remains the one in `docs/solver-d1-production-inert-evidence-preflight.md`: whether D1 repeatedly disagrees with real production retention near the cutoff and whether the resulting capability/work envelope can plausibly pay for the information.
 

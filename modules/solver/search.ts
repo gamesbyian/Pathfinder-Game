@@ -721,7 +721,9 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
         if (!research) return;
         research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted,
             work: nodesExpandedTotal + frontierIndex, workSpent: prep._workMeter.units,
-            paths: nodes.map(node => [..._reconstructBeamPath(node, [])]), ...(details ? { details } : {}) });
+            paths: nodes.map(node => [..._reconstructBeamPath(node, [])]),
+            ...(details ? { details } : {}),
+            ...(prep._beamResearchAttemptContext ? { attemptContext: { ...prep._beamResearchAttemptContext } } : {}) });
     };
     // Coarse state merge. Portal-free: default-ON, STRATEGY_COARSE_STATE_MERGE can disable it.
     // Portal-bearing: default-OFF opt-in via STRATEGY_PORTAL_COARSE_STATE_MERGE — the merge key
