@@ -55,9 +55,9 @@ const adapted = beamResearchRecordToDecisionObservation({
         firstCulledScore: 8,
         stableOrderAdmission: false,
         rankedPool: [
-            { path: [1], rank: 1, score: 10 },
-            { path: [2], rank: 2, score: 9 },
-            { path: [3], rank: 3, score: 8 },
+            { path: [1], rank: 1, score: 10, insertionOrder: 0, ints: 0 },
+            { path: [2], rank: 2, score: 9, insertionOrder: 1, ints: 1 },
+            { path: [3], rank: 3, score: 8, insertionOrder: 2, ints: 1 },
         ],
         culled: [{ path: [3], rank: 3, score: 8 }],
     },
