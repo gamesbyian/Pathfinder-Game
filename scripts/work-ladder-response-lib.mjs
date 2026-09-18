@@ -11,6 +11,21 @@ export function analyzeWorkLadder(cells) {
     if (budgets.some(value => !Number.isFinite(value) || value <= 0) || new Set(budgets).size !== budgets.length) {
         throw new Error('work ladder budgets must be unique positive numbers');
     }
+    const rowIds = sorted.map(cell => {
+        const rows = cell.rows ?? cell.levels ?? [];
+        const ids = rows.map(row => String(row.id ?? row.levelId));
+        if (ids.some(id => id === 'undefined')) throw new Error('work ladder rows require id or levelId');
+        if (new Set(ids).size !== ids.length) throw new Error('work ladder cells cannot contain duplicate row ids');
+        return new Set(ids);
+    });
+    const referenceIds = rowIds[0];
+    for (let index = 1; index < rowIds.length; index++) {
+        const current = rowIds[index];
+        if (current.size !== referenceIds.size
+            || [...referenceIds].some(id => !current.has(id))) {
+            throw new Error('work ladder cells must contain the identical row population at every budget');
+        }
+    }
     const sets = sorted.map(solvedSet);
     const steps = sorted.map((cell, index) => {
         if (index === 0) return {
