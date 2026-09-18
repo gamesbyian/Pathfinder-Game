@@ -64,6 +64,7 @@ export function buildMatchedGroups(sources, {
     level,
     id: String(level.id),
     features: featureRow(level),
+    contentIdentity: source.contentIdentityById?.[String(level.id)] ?? null,
   }))]));
   const used = new Map(sources.map(source => [source.name, new Set()]));
   const groups = [];
@@ -104,6 +105,7 @@ export function buildMatchedGroups(sources, {
         source: member.source,
         id: member.row.id,
         distanceFromAnchor: member.distanceFromAnchor,
+        contentIdentity: member.row.contentIdentity,
         matchedFeatures: Object.fromEntries(dimensions.map(key => [key, member.row.features[key]])),
       })),
     });
