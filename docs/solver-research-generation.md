@@ -87,7 +87,7 @@ It deliberately does **not** read solver outcomes, exact labels, historical diff
 
 The output is a **selection artifact**, not a corpus. It references parent IDs, source artifacts, and source block identities; source blocks stay authoritative. Matching adds selection provenance and does not create new independent units.
 
-When matched membership becomes decision-bearing, record it against each source block with `research:record-consumption -- --block-artifact=<source> --question-id=<id> --selection-artifact=<matched.json> --selection-source=<name> --out=tmp/research-blocks/<id>/<name>-match.json`. The sidecar derives parent scopes/conditioning without mutating blocks or evidence roles.
+When matched membership becomes decision-bearing, record it per source block with `research:record-consumption -- --block-artifact=<source> --question-id=<id> --selection-artifact=<matched.json> --selection-source=<name> --out=tmp/research-blocks/<id>/<name>.json`. The sidecar derives parent scopes/conditioning without mutating blocks or roles.
 
 Use a caliper (`--max-distance`) when a scientific claim requires genuinely close static analogues. If the matcher cannot form enough groups under the prespecified caliper, report acquisition/matching starvation rather than relaxing the threshold after seeing solver outcomes.
 
