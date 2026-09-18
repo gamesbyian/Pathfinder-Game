@@ -55,9 +55,9 @@ const adapted = beamResearchRecordToDecisionObservation({
         firstCulledScore: 8,
         stableOrderAdmission: false,
         rankedPool: [
-            { path: [1], rank: 1, score: 10, insertionOrder: 0, ints: 0 },
-            { path: [2], rank: 2, score: 9, insertionOrder: 1, ints: 1 },
-            { path: [3], rank: 3, score: 8, insertionOrder: 2, ints: 1 },
+            { path: [1], rank: 1, score: 10, insertionOrder: 0, ints: 0, mustCrossMask: 3, flipperUsedMask: 0 },
+            { path: [2], rank: 2, score: 9, insertionOrder: 1, ints: 1, mustCrossMask: 1, flipperUsedMask: 2 },
+            { path: [3], rank: 3, score: 8, insertionOrder: 2, ints: 1, mustCrossMask: 1, flipperUsedMask: 2 },
         ],
         culled: [{ path: [3], rank: 3, score: 8 }],
     },
@@ -69,6 +69,9 @@ assert.equal(adapted.context.cutoffScore, 9);
 assert.equal(adapted.context.nodeProgress, 42);
 assert.deepEqual(adapted.context.rankedCandidates.map(row => [row.rank, row.ints, row.retained]), [
     [1, 0, true], [2, 1, true], [3, 1, false],
+]);
+assert.deepEqual(adapted.context.rankedCandidates.map(row => [row.mustCrossMask, row.flipperUsedMask]), [
+    [3, 0], [1, 2], [1, 2],
 ]);
 assert.equal(adapted.workSpentBefore, 420);
 assert.equal(adapted.workSpentAfter, 420);
