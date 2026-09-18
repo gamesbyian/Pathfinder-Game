@@ -392,7 +392,15 @@ export interface BeamResearchRecord {
     details?: Record<string, unknown>;
 }
 
-export interface BeamResearchObserver { observe(record: BeamResearchRecord): void; }
+export interface BeamResearchObserver {
+    observe(record: BeamResearchRecord): void;
+    /**
+     * Opt-in one-generation expansion accounting. When true, generated-stage records include
+     * parentExpansions with canonical work spent expanding each incoming frontier node. Off by
+     * default because reconstructing/retaining this per-parent context has research overhead.
+     */
+    includeParentExpansionWork?: boolean;
+}
 
 export interface RepairEliteResearchRecord {
     producer: 'repair'; path: number[]; badness: number; arrivalNodes: number; restart: number;
