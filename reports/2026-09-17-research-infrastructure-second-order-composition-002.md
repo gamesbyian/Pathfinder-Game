@@ -137,6 +137,23 @@ Together with independent-unit opportunity sizing, MO-004 now has two separate p
 - the experiment is sized on the correct unit for the claim;
 - the work-response ladder compares the same observations at every dose.
 
+
+### 9. Priority authority -> stable question -> dossier
+
+The workstream table previously said “D1 EVIDENCE GATE” without carrying the stable D1 question ID, while the status index represented only that top-level table. The active question was therefore discoverable by human-readable alias but not exactly joinable through the queue relation.
+
+The WS2 priority row now carries `WS2-D1-PRODUCTION-INERT-OBSERVATION`; the status index exposes it as `questionRef`; active question authority auditing requires the stable ID to appear in the priority authority; and the integration audit verifies that the structured queue relation reaches every active question.
+
+This keeps priority ownership where it belongs while making `priority × question × dossier` exact.
+
+### 10. Mixed `constrainedBy` references -> evidence refs + question edges
+
+The question registry historically uses `constrainedBy` for two legitimate identity domains: another question or a repository evidence/preflight path. Path refs were reaching the dossier, but question-valued constraints were not represented in its question graph.
+
+The read boundary now classifies both forms, validates that every value is either a known question or repository path, and preserves question-valued `constrainedBy` edges as semantic relations while evidence paths remain evidence refs.
+
+The field remains backward-compatible; the integration layer no longer silently drops half its meaning.
+
 ## Second-order seams worth exploiting next
 
 The items below are deliberately **not** all implemented here. They vary in semantic risk and should be earned by a live consumer or a general evidence-integrity need.
