@@ -83,13 +83,17 @@ for (const raw of selected) {
     const onPrep = api.prepLevel(level); onPrep._cfg = null; onPrep._metrics = { nodesExpanded: 0 }; onPrep._beamResearchObserver = observer;
     const onPath = await api.beamSearchFromGate(gateKey, level, onPrep, api.SCORING_PROFILES.default,
         120000, Date.now(), null, beamWidth, null, false, {}, nodeBudget);
-    const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath) && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded;
-    if (!behaviorIdentical) throw new Error(`${raw.id}: observer changed path or nodes`);
+    const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath)
+        && offPrep._metrics.nodesExpanded === onPrep._metrics.nodesExpanded
+        && offPrep._workMeter.units === onPrep._workMeter.units;
+    if (!behaviorIdentical) throw new Error(`${raw.id}: observer changed path, nodes, or canonical work`);
     const survival = observer.summary(level.requiredLength);
     rows.push({ runId, solverRef, levelId: raw.id, coldSolved: metadataColdById?.get(String(raw.id)) ?? null,
         gateKey, validLabels: labels.length, requiredLength: level.requiredLength, beamWidth, nodeBudget,
         producer: 'beam', scoringProfileId: 'default', seed: null, controlTreatment: 'observation-on',
-        solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded, behaviorIdentical, survival });
+        solved: !!onPath, nodesExpanded: onPrep._metrics.nodesExpanded,
+        workSpent: onPrep._workMeter.units, controlWorkSpent: offPrep._workMeter.units,
+        behaviorIdentical, survival });
     console.error(`${raw.id}: labels=${labels.length} solved=${!!onPath} nodes=${onPrep._metrics.nodesExpanded}`);
 }
 const forensic = rows.map(row => {
@@ -124,11 +128,12 @@ const forensic = rows.map(row => {
         canonicalWorkAfterExtinction: row.survival.workAfterFinalKnownSupport, classification };
 }).filter(Boolean);
 for (const row of rows) if (!includeStages && row.survival.stages) delete row.survival.stages;
-const document = { schemaVersion: 4, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
+const document = { schemaVersion: 5, runId, solverRef, generatedAt: new Date().toISOString(), levelsFile,
     corpus: levelsFile, selection, retainAllRemovalDetails, retainRankedPoolDetails,
     familyDefinition: 'portal usage + crossing placement + must-cross first-entry/completion order; local edge detours ignored',
     familyDefinitionVersion, technique: 'beam known-solution-prefix survival observation', scoringProfileId: 'default', seed: null,
-    workBudget: nodeBudget, limitLevels: limit, beamWidth, nodeBudget, levels: rows, scoreWidthForensics: forensic,
+    workBudget: null, workBudgetNote: 'uncapped canonical work; this run is bounded by nodeBudget', 
+    limitLevels: limit, beamWidth, nodeBudget, levels: rows, scoreWidthForensics: forensic,
     summary: { levels: rows.length, solved: rows.filter(x => x.solved).length,
         behaviorIdentical: rows.filter(x => x.behaviorIdentical).length,
         correctnessAlarms: rows.reduce((n, x) => n + x.survival.correctnessAlarms.length, 0) } };

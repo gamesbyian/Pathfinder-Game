@@ -719,7 +719,8 @@ export async function beamSearchFromGate(startKey: number, level: NormalizedLeve
     const research = prep._beamResearchObserver;
     const emit = (stage: import('./types.js').BeamResearchStage, nodes: BeamNode[], details?: Record<string, unknown>): void => {
         if (!research) return;
-        research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted, work: nodesExpandedTotal + frontierIndex,
+        research.observe({ stage, depth: nodes[0]?.depth ?? phasesCompleted,
+            work: nodesExpandedTotal + frontierIndex, workSpent: prep._workMeter.units,
             paths: nodes.map(node => [..._reconstructBeamPath(node, [])]), ...(details ? { details } : {}) });
     };
     // Coarse state merge. Portal-free: default-ON, STRATEGY_COARSE_STATE_MERGE can disable it.

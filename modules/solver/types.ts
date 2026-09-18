@@ -383,7 +383,10 @@ export type BeamResearchStage = 'incoming-frontier' | 'generated' | 'hard-pruned
 export interface BeamResearchRecord {
     stage: BeamResearchStage;
     depth: number;
+    /** Legacy beam node-progress counter (nodesExpandedTotal + frontierIndex), not canonical workSpent. */
     work: number;
+    /** Canonical machine-independent per-solve work meter at observation time. */
+    workSpent: number;
     paths: number[][];
     /** Present for removals/culls; indices refer to score-sorted pool order. */
     details?: Record<string, unknown>;

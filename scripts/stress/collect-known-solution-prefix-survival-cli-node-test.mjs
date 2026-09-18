@@ -53,5 +53,11 @@ assert.equal('profile' in result, false, 'the legacy profile key must not appear
 assert.equal(result.levels[0].scoringProfileId, 'default',
     'per-row scoring-profile field must be scoringProfileId, not the legacy profile key');
 assert.equal('profile' in result.levels[0], false, 'the legacy profile key must not appear in fresh per-row output');
+assert.equal(result.schemaVersion, 5);
+assert.equal(result.workBudget, null, 'nodeBudget must not be relabeled as canonical workBudget');
+assert.equal(result.nodeBudget, 50000);
+assert.equal(result.levels[0].workSpent, result.levels[0].controlWorkSpent,
+    'observer OFF/ON parity must include canonical workSpent');
+assert.ok(Number.isFinite(result.levels[0].workSpent) && result.levels[0].workSpent >= 0);
 
 console.log('collect-known-solution-prefix-survival CLI: all tests passed');
