@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 import {
     frontierAncestryKey,
+    resolveInheritedResearchBlock,
     reconstructBeamPath,
     sampleDistinctIndices,
 } from './production-search-frontier-sampler-lib.mjs';
@@ -33,3 +34,36 @@ assert.equal(
 );
 
 console.log('production-search-frontier-sampler-node-test: ok');
+
+
+const populationIdentity = `sha256:${'5'.repeat(64)}`;
+const inherited = resolveInheritedResearchBlock({
+    populationIdentity,
+    researchBlock: {
+        blockId: 'FRONTIER-BLOCK',
+        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        sourceRegime: 'test',
+        sourceRevision: 'test-revision',
+        evidenceRole: 'development',
+        independentUnit: 'parent-level',
+        parentIds: ['R00001', 'R00002'],
+        parentContentIdentities: ['v2:a', 'v2:b'],
+        sourceArtifactRefs: ['tmp/block.json'],
+        createdBy: { producer: 'test', manifestRef: 'tmp/block.json', runRef: null },
+        generationRef: null,
+        consumptionEvents: [],
+    },
+}, {
+    levelIds: ['R00002'],
+    artifactRef: 'tmp/block.json',
+});
+assert.equal(inherited.populationIdentity, populationIdentity);
+assert.equal(inherited.resolvedQuestion, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
+assert.throws(() => resolveInheritedResearchBlock({
+    populationIdentity,
+    researchBlock: inherited.researchBlock,
+}, { levelIds: ['R99999'] }), /does not contain sampled parent/u);
+assert.throws(() => resolveInheritedResearchBlock({
+    populationIdentity,
+    researchBlock: inherited.researchBlock,
+}, { levelIds: ['R00001'], question: 'OTHER' }), /conflicts with block questionId/u);
