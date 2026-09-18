@@ -12,6 +12,7 @@
     "check:documentation-links": "node scripts/check-documentation-links.mjs",
     "research:index": "node scripts/research-status-index.mjs",
     "research:relations": "node scripts/research-relations.mjs",
+    "research:link-enrichment": "node scripts/research-enrichment-link.mjs",
     "naming:status": "node scripts/naming-cleanup-status.mjs",
     "check:csp": "node scripts/check-csp.mjs",
     "check:modal-a11y": "node scripts/check-modal-a11y.mjs",
