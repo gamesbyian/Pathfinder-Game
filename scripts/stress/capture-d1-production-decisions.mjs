@@ -31,6 +31,8 @@ const corpusFile = arg('corpus', 'data/stress/stress-levels-random.json');
 const levelIds = String(arg('levels', 'R03147')).split(',').map(value => value.trim()).filter(Boolean);
 const profileName = arg('profile', 'intersectionHarvest');
 const width = Number(arg('width', 5000));
+const mechanicBucketRetention = String(arg('mechanic-bucket-retention', 'false')).toLowerCase() === 'true';
+const listConfiguredBeams = argv.includes('--list-configured-beams');
 const budgetMs = Number(arg('budget-ms', 600_000));
 const nodeBudget = Number(arg('node-budget', Number.POSITIVE_INFINITY));
 const pauseAfterPhasesRaw = arg('pause-after-phases', null);
@@ -56,7 +58,7 @@ if (evidenceRole === 'independent-confirmation') {
 
 installBrowserStubs();
 const Solver = createSolver();
-const { prepLevel, beamSearchFromGate, SCORING_PROFILES } = SOLVER_TESTING_API;
+const { prepLevel, beamSearchFromGate, SCORING_PROFILES, getAttemptConfigs, attemptConfigKey } = SOLVER_TESTING_API;
 const profile = SCORING_PROFILES[profileName];
 if (!profile) throw new Error(`unknown scoring profile: ${profileName}`);
 const solver = captureSolverGitState();
@@ -74,13 +76,36 @@ for (const levelId of levelIds) {
     const { id: _id, stressMeta: _stressMeta, ...rawLevel } = raw;
     const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
     const gate = level.gateKeys[0];
+    const configuredBeams = getAttemptConfigs(level, null)
+        .filter(config => Number.isFinite(config.beamWidth))
+        .map((config, index) => ({
+            index,
+            key: attemptConfigKey(config),
+            scoringProfileId: config.scoringProfileId,
+            beamWidth: config.beamWidth,
+            mechanicBucketRetention: !!config.mechanicBucketRetention,
+            orderingBias: config.orderingBias?.id ?? null,
+            minBudgetFraction: config.minBudgetFraction ?? null,
+        }));
+    if (listConfiguredBeams) {
+        parents.push({ parentId: levelId, configuredBeams });
+        continue;
+    }
+    const matchingAttempt = configuredBeams.find(config =>
+        config.scoringProfileId === profileName
+        && config.beamWidth === width
+        && config.mechanicBucketRetention === mechanicBucketRetention
+        && config.orderingBias === null);
+    if (!matchingAttempt) {
+        throw new Error(`${levelId}: requested beam is not in current production attempt policy; configured beams=${JSON.stringify(configuredBeams)}`);
+    }
 
     const offPrep = prepLevel(level);
     offPrep._cfg = null;
     offPrep._metrics = { nodesExpanded: 0 };
     const offPath = await beamSearchFromGate(
         gate, level, offPrep, profile, budgetMs, Date.now(), null, width,
-        null, false, {}, nodeBudget, undefined, pauseAfterPhases,
+        null, mechanicBucketRetention, {}, nodeBudget, undefined, pauseAfterPhases,
     );
 
     const cullRecords = [];
@@ -106,7 +131,7 @@ for (const levelId of levelIds) {
     };
     const onPath = await beamSearchFromGate(
         gate, level, onPrep, profile, budgetMs, Date.now(), null, width,
-        null, false, {}, nodeBudget, undefined, pauseAfterPhases,
+        null, mechanicBucketRetention, {}, nodeBudget, undefined, pauseAfterPhases,
     );
 
     const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath)
@@ -136,6 +161,7 @@ for (const levelId of levelIds) {
         parentId: levelId,
         evidenceRole,
         gate,
+        configuredAttempt: matchingAttempt,
         solved: !!onPath,
         nodesExpanded: onPrep._metrics.nodesExpanded,
         workSpent: onPrep._workMeter.units,
@@ -146,6 +172,11 @@ for (const levelId of levelIds) {
         cullDecisions: cullRecords.length,
         eligibleDecisions,
     });
+}
+
+if (listConfiguredBeams) {
+    console.log(JSON.stringify({ corpus: corpusFile, levelIds, parents }, null, 2));
+    process.exit(0);
 }
 
 const document = {
@@ -161,6 +192,7 @@ const document = {
     policy: {
         profile: profileName,
         width,
+        mechanicBucketRetention,
         budgetMs,
         nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
         pauseAfterPhases: pauseAfterPhases ?? null,
