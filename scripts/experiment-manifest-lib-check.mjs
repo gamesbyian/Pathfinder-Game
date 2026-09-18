@@ -35,6 +35,22 @@ assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRunV1, schema
 assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRunV2, shard: { count: 2, index: 3 } }), /shard/);
 assert.throws(() => validateFamilyEvaluationRunManifest({ ...familyRunV2, solver: { commit: 'abc' } }), /solver/);
 assert.equal(validateExperimentManifest(control), control);
+const discriminatingControl = {
+    ...control,
+    researchQuestion: {
+        liveAmbiguity: 'capability absent versus underdosed',
+        discriminatingObservable: 'solve response across a bounded work ladder',
+        outcomeInterpretation: { flat: 'absent-or-wrong-basin', threshold: 'underdosed' },
+        measurementOpportunity: 'MO-004',
+    },
+};
+assert.equal(validateExperimentManifest(discriminatingControl), discriminatingControl);
+assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
+    liveAmbiguity: 'x', discriminatingObservable: 'y', outcomeInterpretation: {},
+} }), /outcomeInterpretation/);
+assert.throws(() => validateExperimentManifest({ ...control, researchQuestion: {
+    liveAmbiguity: 'x', discriminatingObservable: 'y', outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'M4',
+} }), /MO-NNN/);
 assert.deepEqual(compareExperimentArms(control, treatment, 'TARGET'), {
     matched: true, targetFlag: 'TARGET', levels: 2, allowedWorkflowInputDifferences: [],
 });
@@ -99,6 +115,17 @@ const runPreflight = ({ runId, flagValue, inputs }) => spawnSync(process.execPat
 assert.equal(runPreflight({ runId: 'off', flagValue: 'false', inputs: workflowInputs }).status, 0);
 const preflightManifest = JSON.parse(readFileSync(path.join(temp, 'off.json'), 'utf8'));
 assert.equal(preflightManifest.budgetProtocol, 'production-additive');
+const questionOut = path.join(temp, 'question.json');
+const questionRun = spawnSync(process.execPath, ['--import', 'tsx',
+    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=question',
+    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
+    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${questionOut}`,
+    '--live-ambiguity=capability absent vs underdosed', '--discriminating-observable=bounded work response',
+    '--outcome-interpretation-json={"flat":"stop","threshold":"allocation"}', '--measurement-opportunity=MO-004',
+    '--allow-dirty',
+], { encoding: 'utf8' });
+assert.equal(questionRun.status, 0, `${questionRun.stdout}${questionRun.stderr}`);
+assert.equal(JSON.parse(readFileSync(questionOut, 'utf8')).researchQuestion.measurementOpportunity, 'MO-004');
 const inconsistent = runPreflight({ runId: 'bad-on', flagValue: 'true', inputs: workflowInputs });
 assert.notEqual(inconsistent.status, 0);
 assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);

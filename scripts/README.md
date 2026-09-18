@@ -35,6 +35,18 @@ node scripts/run-bundled.mjs scripts/paired-deterministic-trace.mjs -- \
 
 It runs fresh matched arms and reports retained multi-child decision-prefix agreement, first candidate/order/traversal divergence, and bounded post-divergence overlap. It rejects beam/repair; use their frontier/retention and restart-native instrumentation. No observed divergence does not prove every one-child/prune state matched. See [`../docs/solver-technique-operational-taxonomy.md`](../docs/solver-technique-operational-taxonomy.md).
 
+
+For beam rank/retention questions, `method-probe.mjs` can preserve the existing bounded beam frontier trace and, with `--beam-decision-limit=<N>`, also reduce cull events into the shared production-inert decision-observation contract. This records actual ranked pools and retained/cut candidates without changing solver policy.
+
+Two offline measurement reducers are also available when a live ambiguity earns them:
+
+```text
+npm run solver:analyze-work-ladder -- --inputs=/tmp/b10.json,/tmp/b20.json,/tmp/b40.json --work-budgets=10,20,40 --out=/tmp/work-response.json
+npm run solver:analyze-response-covariance -- --input=/tmp/experiment-responses.json --out=/tmp/response-covariance.json
+```
+
+The work-ladder reducer implements bounded MO-004 response analysis; it does not authorize standing full-corpus sweeps. The covariance reducer consumes experiments shaped as `{id, ancestryKey, rows:[{id,outcome}]}` with outcomes `gain|loss|unchanged`; shared ancestry is explicitly ineligible as independent support.
+
 ## Directory map
 
 - `stress/`: corpus generation, benchmarks, diagnostics, reducers, profiles, provenance, oracle/research tools.

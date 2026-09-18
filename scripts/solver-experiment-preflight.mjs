@@ -49,6 +49,26 @@ const workflow = args.get('--workflow') ?? 'direct';
 const workflowInputs = parseWorkflowInputs();
 const solverFlags = { ...productionFlags, ...flags };
 const budgetProtocol = args.get('--budget-protocol') ?? 'production-additive';
+const researchQuestionInputs = {
+    liveAmbiguity: args.get('--live-ambiguity'),
+    discriminatingObservable: args.get('--discriminating-observable'),
+    outcomeInterpretation: args.get('--outcome-interpretation-json'),
+    measurementOpportunity: args.get('--measurement-opportunity'),
+};
+const hasResearchQuestionInput = Object.values(researchQuestionInputs).some(value => value != null);
+let researchQuestion;
+if (hasResearchQuestionInput) {
+    for (const key of ['liveAmbiguity', 'discriminatingObservable', 'outcomeInterpretation']) {
+        if (!researchQuestionInputs[key]) throw new Error(`incomplete research question metadata: missing --${key.replace(/[A-Z]/gu, c => `-${c.toLowerCase()}`)}`);
+    }
+    researchQuestion = {
+        liveAmbiguity: researchQuestionInputs.liveAmbiguity,
+        discriminatingObservable: researchQuestionInputs.discriminatingObservable,
+        outcomeInterpretation: JSON.parse(researchQuestionInputs.outcomeInterpretation),
+        ...(researchQuestionInputs.measurementOpportunity
+            ? { measurementOpportunity: researchQuestionInputs.measurementOpportunity } : {}),
+    };
+}
 if (!EXPERIMENT_BUDGET_PROTOCOLS.includes(budgetProtocol)) {
     throw new Error(`--budget-protocol must be one of: ${EXPERIMENT_BUDGET_PROTOCOLS.join(', ')}`);
 }
@@ -76,6 +96,7 @@ const manifest = validateExperimentManifest({
     seeds: (args.get('--seeds') ?? '').split(',').filter(Boolean).map(Number),
     canonicalWorkBudget: Number(required('--work-budget')), wallDeadlineMs: Number(required('--wall-deadline-ms')),
     budgetProtocol,
+    ...(researchQuestion ? { researchQuestion } : {}),
     profile: required('--profile'), instrumentation: args.get('--instrumentation') ?? 'off', output,
     createdAt: new Date().toISOString(),
 });

@@ -134,3 +134,76 @@ export function compareDeterministicDecisionTraces(leftTrace, rightTrace) {
         censored,
     };
 }
+
+
+/**
+ * Compare bounded beam rank/retain decision streams.
+ *
+ * Alignment is authoritative only while both arms report the same decision key and candidate set.
+ * After the first divergence the result is diagnostic only; this reducer does not claim semantic
+ * reconvergence without a shared state identity.
+ */
+export function compareBeamRetentionDecisions(leftTrace, rightTrace) {
+    const leftEvents = leftTrace.events ?? [];
+    const rightEvents = rightTrace.events ?? [];
+    const shared = Math.min(leftEvents.length, rightEvents.length);
+    let commonDecisionPrefix = 0;
+    while (commonDecisionPrefix < shared) {
+        const left = leftEvents[commonDecisionPrefix];
+        const right = rightEvents[commonDecisionPrefix];
+        if (left.decisionKey !== right.decisionKey ||
+            !arraysEqual(left.candidateIds ?? [], right.candidateIds ?? []) ||
+            !arraysEqual(left.orderedCandidateIds ?? [], right.orderedCandidateIds ?? []) ||
+            !arraysEqual(left.retainedCandidateIds ?? [], right.retainedCandidateIds ?? [])) break;
+        commonDecisionPrefix++;
+    }
+
+    let firstDivergence = null;
+    if (commonDecisionPrefix < shared) {
+        const left = leftEvents[commonDecisionPrefix], right = rightEvents[commonDecisionPrefix];
+        let reason = 'decision-context';
+        if (left.decisionKey === right.decisionKey) {
+            if (!arraysEqual(left.candidateIds ?? [], right.candidateIds ?? [])) reason = 'candidate-set';
+            else if (!arraysEqual(left.orderedCandidateIds ?? [], right.orderedCandidateIds ?? [])) reason = 'ranking';
+            else if (!arraysEqual(left.retainedCandidateIds ?? [], right.retainedCandidateIds ?? [])) reason = 'retention';
+        }
+        firstDivergence = { retainedIndex: commonDecisionPrefix, reason, left, right };
+    } else if (leftEvents.length !== rightEvents.length) {
+        firstDivergence = {
+            retainedIndex: commonDecisionPrefix,
+            reason: 'trace-length',
+            left: leftEvents[commonDecisionPrefix] ?? null,
+            right: rightEvents[commonDecisionPrefix] ?? null,
+        };
+    }
+
+    const retentionJaccard = (left, right) => {
+        const a = new Set(left), b = new Set(right);
+        const intersection = [...a].filter(id => b.has(id)).length;
+        const union = new Set([...a, ...b]).size;
+        return union ? intersection / union : null;
+    };
+    const alignedRetention = [];
+    for (let index = 0; index < shared; index++) {
+        const left = leftEvents[index], right = rightEvents[index];
+        if (left.decisionKey !== right.decisionKey) break;
+        alignedRetention.push({
+            retainedIndex: index,
+            decisionKey: left.decisionKey,
+            retentionJaccard: retentionJaccard(left.retainedCandidateIds ?? [], right.retainedCandidateIds ?? []),
+        });
+    }
+    const censored = !!leftTrace.truncated || !!rightTrace.truncated;
+    return {
+        status: firstDivergence ? 'diverged-within-retained-bound'
+            : censored ? 'no-divergence-observed-within-censored-bound'
+                : 'identical-retained-trace',
+        commonDecisionPrefix,
+        firstDivergence,
+        alignedRetention,
+        left: { observed: leftTrace.observed ?? leftEvents.length, retained: leftEvents.length, truncated: !!leftTrace.truncated },
+        right: { observed: rightTrace.observed ?? rightEvents.length, retained: rightEvents.length, truncated: !!rightTrace.truncated },
+        censored,
+        caveat: 'Post-divergence retention overlap is diagnostic only unless a shared state identity proves reconvergence.',
+    };
+}

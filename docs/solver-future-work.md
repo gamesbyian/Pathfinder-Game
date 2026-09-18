@@ -1,13 +1,13 @@
 <!-- agent-context-budget: warn=7500 max=10000 -->
 # Solver future work
 
-Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active priority/state; [`solver-research-operating-model.md`](solver-research-operating-model.md) owns method. [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) owns the semantic-gap map; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) owns the distinction between a closed tested form and a closed premise.
+Deferred/reopen questions only. [`solver-optimization-workstreams.md`](solver-optimization-workstreams.md) owns active state; [`solver-research-operating-model.md`](solver-research-operating-model.md) method; [`solver-reasoning-capability-atlas.md`](solver-reasoning-capability-atlas.md) semantic gaps; [`solver-capability-gap-stop-condition-reconciliation.md`](solver-capability-gap-stop-condition-reconciliation.md) tested-form vs premise closure.
 
 **Level-blindness constrains provenance, not specificity.** A generic cold procedure may derive exact, board-specific facts, proofs, conflicts, decompositions, topology state, canonical forms, or search plans from current puzzle/current invocation inputs. Cross-parent recurrence is required for a fixed reusable descriptor claim, not for every generic per-instance derivation procedure.
 
 ## Promoted out of future work
 
-Do not duplicate concluded/active lanes here; `solver-optimization-workstreams.md` owns them. Since this file's prior state: A is a bounded positive stopped at dynamic representation; D1 is positive with an existing ranking consumer but stopped at multi-parent economics observation; F3 is qualified positive stopped at decision-bearing discordance. C and E were negative, DEAD-core size-1 was negative, Class-3 dose is an evidence gap, and G1 LNS is constructor-method-limited. Multi-pick production-search construction did find two referee-verified LIVE siblings, so the old blanket D/E block from "no LIVE contrast" is obsolete. A production-quality constructor remains a local prerequisite only where a future test specifically needs one, notably G1.
+Do not duplicate active/concluded lanes here. Current dispositions: A bounded-positive/representation-stopped; D1 positive/economics-observation-stopped; F3 qualified-positive/discordance-stopped; C/E and DEAD-core size-1 negative; Class-3 dose evidence-gap; G1 constructor-limited. Multi-pick found two referee-verified LIVE siblings, so the old no-LIVE D/E block is obsolete; a production-quality constructor remains local prerequisite only where required, notably G1.
 
 ## Deferred descendants of active premises
 
@@ -52,6 +52,9 @@ Keep these dormant unless an active acquisition lane produces a changed premise.
 | Non-portal coarse-state-merge recurrence | A mechanism-specific current premise independently nominates it; do not reopen from historical Card-E recurrence alone |
 | Richer static placement selectors | A recurring mechanism-specific trace or exact structural preprocessing result creates a selector premise |
 | Independent transfer / human-editor-envelope niches | A broad claim needs independent construction/locked parents or a stable omitted geometry is independently nominated |
+| Budget-response characterization | Reopen only to distinguish absent capability from underdose/threshold/displacement; use a bounded work ladder, not standing sweeps |
+| Mechanism interaction | Reopen when one mechanism plausibly creates another's opportunities; test control/A/B/A+B at matched work, not broad flag matrices |
+| Latent response cluster | Reopen only for an unexplained ancestry/protocol-controlled covariance nomination; clustering alone is not capability evidence |
 
 ## Closed forms that stay closed
 
@@ -83,7 +86,7 @@ Important distinctions:
 
 Replication earned no queue expansion. Robust regions strengthen provenance only: decision state exceeds puzzle state; allocation is part of capability; evidence is process-conditioned; historical negatives are scope-bound. Qualify raw graph/topology claims by representation history. Reopen the fourth replication cell only when a concrete decision cannot otherwise separate ontology artifact, mining-method artifact and robust concept; do not reopen broad mining for its own sake.
 
-The measurement overlay is non-queue. MO-005 residual distance/progress and MO-007 research-process yield remain observables, not solver tasks. Promote one only for a live mapped ambiguity with a discriminating observable, valid population/cost/authority contract and decision-changing outcomes.
+Measurement opportunities are non-queue. Promote one only for a live ambiguity with a valid discriminator/population/cost/authority contract and decision-changing outcomes; MO-005/MO-007 remain observables.
 
 ## Research hygiene
 

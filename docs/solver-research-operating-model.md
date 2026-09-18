@@ -37,7 +37,8 @@ These are gates, not aspirations.
 15. **Frameworks must earn implementation.** Scheduler/configurator/reference/analytics/shadow/learning infrastructure starts with a value-of-information pilot and a stop condition. Prefer a simple rule/helper when it answers the question.
 16. **Prefer branch/PR evidence.** Merge before decision-bearing validation only when the required execution/data path cannot exercise the branch; record why. Do not use `main` as experiment scratch space.
 17. **External best practices are hypotheses, not authority.** Literature can nominate methods; Pathfinder still needs a problem-specific comparable-work/correctness pilot.
-18. **Separate promotion disposition from demonstrated capability.** A treatment can be correctly closed while still proving complementary capability, and a promoted treatment can displace old capability. Preserve material gain/loss/cost/mechanism evidence as offline capability memory without retaining failed code or turning exact historical outcomes into runtime routing. See [`solver-capability-memory.md`](solver-capability-memory.md).
+18. **State the ambiguity before buying measurement.** When discrimination is the point, record live rivals, the discriminating observable, and outcome interpretations. Preflight may carry this contract; MO IDs confer no queue authority.
+19. **Separate promotion disposition from demonstrated capability.** A treatment can be correctly closed while still proving complementary capability, and a promoted treatment can displace old capability. Preserve material gain/loss/cost/mechanism evidence as offline capability memory without retaining failed code or turning exact historical outcomes into runtime routing. See [`solver-capability-memory.md`](solver-capability-memory.md).
 
 ## Capability and evidence roles
 
@@ -138,7 +139,7 @@ Use [`investigation-report-conventions.md`](investigation-report-conventions.md)
 5. **Resolved treatment provenance:** persist the actual arm/config/flags/workflow inputs at the solver invocation boundary, not only a matrix label. Confirm that control and treatment differ only on declared dimensions.
 6. **Budget and wall scale:** size enforced solver-side caps from representative production/control evidence. Use existing per-level runtime telemetry for shard packing/timeouts when available; scheduling telemetry is infrastructure metadata and must not steer cold solver policy.
 7. **Schema/feature assertions:** use canonical helpers for derived level features and assert required report-row fields before filtering or stratifying. Missing/undefined derived inputs are configuration errors, not false predicates.
-8. **Decision contract:** record treatment/control/ref; evidence role; primary outcome and cost envelope; material candidate search; success, stop, and escalation gates; and any framework-expansion gate.
+8. **Decision contract:** record treatment/control/ref, evidence role, outcome/cost, candidate search, success/stop/escalation and framework gates. If live rivals remain, add ambiguity, discriminator and outcome interpretation; available telemetry alone is not a reason to collect it.
 
 If a cheap preflight invalidates any of these, fix the design before scaling. A successful large workflow does not repair a non-informative population, a semantically identical A/B, a non-binding treatment, or a mismatched budget contract.
 
