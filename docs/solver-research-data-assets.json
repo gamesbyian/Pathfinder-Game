@@ -180,7 +180,7 @@
       "queryEntryPoints": ["node scripts/analyze-technique-census.mjs reports/stress/technique-census/33717910218", "node scripts/analyze-technique-niches.mjs"],
       "joinKeys": ["corpus", "levelId", "canonical technique/configuration identity"],
       "evidenceRoles": ["development", "capability-map", "routing-nomination"],
-      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "solution-space-profiles", "variant-family-data", "operational-traces", "static-level-descriptors", "solver-capability-memory"],
+      "relatedAssets": ["production-benchmarks", "lifecycle-telemetry", "solution-space-profiles", "variant-family-data", "operational-traces", "static-level-descriptors", "solver-capability-memory", "search-loss-evidence"],
       "affordances": [
         "Expose rare/exclusive capability, substitutions, inversions, multiplicity, cap/tranche economics, and oracle-frontier headroom.",
         "Define response vectors that can be joined to solution structure, provenance, geometry, variants, or live production behavior.",
@@ -231,7 +231,7 @@
       "queryEntryPoints": ["node scripts/solver-capability-memory.mjs --manifest=<manifest.json>", "reports/stress/solver-health-timeline.jsonl"],
       "joinKeys": ["levelId", "baseline population/solved-set hash", "solver run/ref", "candidate evidence provenance"],
       "evidenceRoles": ["development", "capability-map", "historical-nomination", "regression-churn"],
-      "relatedAssets": ["production-benchmarks", "raw-logs-and-baselines", "experiment-manifests", "technique-census", "lifecycle-telemetry", "operational-traces", "variant-family-data", "static-level-descriptors"],
+      "relatedAssets": ["production-benchmarks", "raw-logs-and-baselines", "experiment-manifests", "technique-census", "lifecycle-telemetry", "operational-traces", "variant-family-data", "static-level-descriptors", "search-loss-evidence"],
       "affordances": [
         "Preserve complementary gain/loss capability separately from an experiment's promotion disposition.",
         "Measure overlap, unique current-residual nominations, confirmed current-baseline gains, and capability churn without adding solver compute.",
@@ -256,7 +256,7 @@
       "queryEntryPoints": ["npm run stress:lifecycle-failure-map", "solver-stress-refresh.yml with lifecycle_telemetry=true"],
       "joinKeys": ["corpus", "levelId", "stage/action identity", "attempt/configuration identity", "run/solver ref"],
       "evidenceRoles": ["routing", "allocation", "forensic"],
-      "relatedAssets": ["technique-census", "production-benchmarks", "operational-traces", "experiment-manifests", "solver-capability-memory"],
+      "relatedAssets": ["technique-census", "production-benchmarks", "operational-traces", "experiment-manifests", "solver-capability-memory", "search-loss-evidence"],
       "affordances": [
         "Show which actions were reached, skipped, starved, exhausted, or continued and how much comparable work they received.",
         "Separate routing/allocation failures from true isolated search-quality failures.",
@@ -302,7 +302,7 @@
       "queryEntryPoints": ["scripts/method-probe.mjs", "node scripts/run-bundled.mjs scripts/paired-deterministic-trace.mjs", "node scripts/compare-operational-beam-traces.mjs"],
       "joinKeys": ["levelId", "attempt/configuration identity", "state/decision depth", "solver ref"],
       "evidenceRoles": ["mechanism", "forensic", "operational-similarity"],
-      "relatedAssets": ["technique-census", "lifecycle-telemetry", "known-solution-prefix-survival", "exact-reference-labels", "solver-determinism-fingerprints", "variant-family-data", "solver-capability-memory"],
+      "relatedAssets": ["technique-census", "lifecycle-telemetry", "known-solution-prefix-survival", "exact-reference-labels", "solver-determinism-fingerprints", "variant-family-data", "solver-capability-memory", "search-loss-evidence"],
       "affordances": [
         "Explain why two configurations with similar outcomes are operationally different or vice versa.",
         "Locate first deterministic divergence in ordering, pruning, retention, dedup, or branch choice.",
@@ -325,7 +325,7 @@
       "queryEntryPoints": ["python3 scripts/stress/cpsat-reference-probe.py <levelId> <seconds> [--prefix=...] [--check-witness]"],
       "joinKeys": ["corpus", "levelId", "explicit prefix/state encoding", "model/support version"],
       "evidenceRoles": ["exact-control", "correctness", "mechanism"],
-      "relatedAssets": ["known-solution-prefix-survival", "operational-traces", "offline-replay-atlas", "variant-family-data"],
+      "relatedAssets": ["known-solution-prefix-survival", "operational-traces", "offline-replay-atlas", "variant-family-data", "search-loss-evidence"],
       "affordances": [
         "Label selected prefixes/states live or dead when the model supports the mechanics and terminates decisively.",
         "Distinguish a ranking/retention mistake from genuine infeasibility.",
@@ -376,7 +376,7 @@
       "queryEntryPoints": ["npm run family:index -- --variant-family-dataset-root=<worktree>", "npm run family:show", "npm run family:query", "npm run family:coverage"],
       "joinKeys": ["parentCorpus", "parentId", "mode", "variantId", "normalized evidence payload", "run manifest"],
       "evidenceRoles": ["causal-discovery", "family-confirmation", "forensic"],
-      "relatedAssets": ["stress-corpora", "technique-census", "solution-space-profiles", "operational-traces", "exact-reference-labels", "experiment-manifests", "solver-capability-memory"],
+      "relatedAssets": ["stress-corpora", "technique-census", "solution-space-profiles", "operational-traces", "exact-reference-labels", "experiment-manifests", "solver-capability-memory", "search-loss-evidence"],
       "affordances": [
         "Use controlled transformations to localize structural causes of solver cliffs.",
         "Study orientation, density, mechanic, repair, retention, and action-value changes while holding ancestry comparatively fixed.",
@@ -508,6 +508,31 @@
         "Curated cohorts are selected evidence; they cannot estimate population prevalence without a separate sampling design.",
         "Triage state is workflow metadata, not a solver capability label."
       ]
+    },
+    {
+      "id": "search-loss-evidence",
+      "name": "Search-loss observation capsules for unsolved solver attempts",
+      "status": "contract-only",
+      "grain": ["solver-run", "parent-level", "attempt/stage", "selected search event", "annotation event"],
+      "locations": [
+        { "kind": "pattern", "path": "reports/stress/search-loss-evidence/**/*.json" }
+      ],
+      "authorities": ["docs/solver-search-loss-evidence-implementation-plan.md", "scripts/solver-search-loss-evidence-lib.mjs"],
+      "queryEntryPoints": ["node scripts/research-asset-query.mjs --id=search-loss-evidence"],
+      "joinKeys": ["levelId", "run/solver/protocol identity", "attempt/stage identity", "capsuleId"],
+      "evidenceRoles": ["forensic", "mechanism-nomination", "development"],
+      "relatedAssets": ["lifecycle-telemetry", "exact-reference-labels", "operational-traces", "solver-capability-memory", "variant-family-data", "technique-census"],
+      "affordances": [
+        "Localize where/why an unsolved attempt lost search without a bespoke rerun, once a producer emits captures.",
+        "Nominate concrete states/decisions for exact annotation or richer operational-trace replay.",
+        "Preserve selector observed/retained/truncated denominators alongside any retained capsule."
+      ],
+      "caveats": [
+        "Contract- and registry-only as of this entry: no capsule producer is wired yet and no captures exist.",
+        "A bounded selector intentionally drops most frontier/event material; absence of a capsule is unknown, not a negative observation.",
+        "Independent unit is parent level; within-parent capsules are repeated measures.",
+        "Offline capsules/annotations are forensic evidence and may not steer production solving."
+      ]
     }
   ],
   "relationships": [
@@ -622,6 +647,48 @@
       "join": "selected corpus + levelId with recorded selection provenance",
       "questions": ["What is the cheapest next instrument for a recurring failure class?", "Can a selected anomaly or displaced capability be converted into a controlled family, trace, or exact-label question?"],
       "boundary": "Preserve the selected nature of the cohort; do not use it as prevalence evidence."
+    },
+    {
+      "id": "search-loss-to-lifecycle",
+      "assets": ["search-loss-evidence", "lifecycle-telemetry"],
+      "join": "levelId + solver/run ref + stage/attempt identity",
+      "questions": ["Did a failed level receive work at the stage where the capsule was observed?", "Is a promising capsule merely a side effect of a stage that received negligible work?"],
+      "boundary": "Lifecycle describes allocation/reach. Search-loss capsules describe selected within-search observations. Neither alone establishes causal first loss."
+    },
+    {
+      "id": "search-loss-to-exact-labels",
+      "assets": ["search-loss-evidence", "exact-reference-labels"],
+      "join": "capsule state/path identity + exact query prefix identity",
+      "questions": ["Is a captured state/prefix feasible (LIVE) or infeasible (DEAD)?", "Did a generic cull coincide with loss of exact feasibility?"],
+      "boundary": "Exact annotation is a downstream, question-driven adapter; timeout/unsupported resolves to UNKNOWN/UNSUPPORTED and is never forced to a label."
+    },
+    {
+      "id": "search-loss-to-operational-traces",
+      "assets": ["search-loss-evidence", "operational-traces"],
+      "join": "levelId + decision/state identity",
+      "questions": ["Why did two policies diverge around a recurring capsule phenotype?"],
+      "boundary": "Trace-selected examples remain development/forensic evidence unless separately sampled."
+    },
+    {
+      "id": "search-loss-to-capability-memory",
+      "assets": ["search-loss-evidence", "solver-capability-memory"],
+      "join": "policy/baseline identity + loss-signature/phenotype",
+      "questions": ["Do two policies fail the same level in different observable basins?", "Does a treatment move failures from one phenotype to another rather than removing them?"],
+      "boundary": "Exact level identities remain offline research labels and may not steer production; a loss-signature comparison is a derived view built only after the base resource exists."
+    },
+    {
+      "id": "search-loss-to-variants",
+      "assets": ["search-loss-evidence", "variant-family-data"],
+      "join": "parent/variant identity + solver protocol",
+      "questions": ["Does a controlled transformation move the observed loss earlier/later?", "Does the same capsule phenotype recur across unrelated parents?"],
+      "boundary": "Family siblings remain dependent. Independent unit is parent family for cross-family claims."
+    },
+    {
+      "id": "search-loss-to-technique-census",
+      "assets": ["search-loss-evidence", "technique-census"],
+      "join": "levelId + technique/configuration identity + cell identity",
+      "questions": ["Do failed technique-census cells preserve compact work/progress/censoring response instead of collapsing to solve/no-solve?"],
+      "boundary": "The technique census is both a consumer and a primary prospective producer; complete cell denominator remains the census's own responsibility."
     }
   ]
 }

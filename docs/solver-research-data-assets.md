@@ -31,7 +31,7 @@ Before broad compute or a new dataset:
 6. Prefer an existing evidence join over generation when it answers the gate.
 7. Record materially relevant rejected assets when that prevents rediscovery.
 
-Mining many assets/features or historical regimes creates selection pressure; discovered relationships are development evidence until independently checked as appropriate.
+Mining many assets/features or historical regimes creates selection pressure; discovered relationships are development evidence until independently checked.
 
 ## Evidence topology
 
@@ -54,6 +54,7 @@ Mining many assets/features or historical regimes creates selection pressure; di
 | Raw logs/baselines | raw run/snapshot | What happened before interpretation? |
 | Research-status index | report/workstream/experiment | Has this been tested/renamed? |
 | Static descriptors | level × legal feature | Which geometry/mechanics stratify an effect? |
+| Search-loss evidence | run × parent × selected event | Where/why did search fail? |
 
 ## High-value joins
 
@@ -63,7 +64,7 @@ Useful joins include census × lifecycle/profiles/variants/traces, benchmark × 
 
 For corpus × family × provenance × profile questions, treat the join as one causal lineage: corpus selection defines the population; family identity the intervention; provenance how paths entered the sample; the Solution Profile summarizes that sample. A replayed parent path may therefore appear as family evidence, provenance, and profile support without becoming three observations.
 
-The September 14 census found every current published/C1/C2 parent replay-touched and replay as the earliest dated discovery for roughly three quarters of stored paths. When family effects are the question, distinguish **replay-touched** from **replay-first** and prefer non-replay-first profile evidence, or label the full profile downstream/dependent. Full profiles remain valid descriptions of the current known sample.
+The September 14 census found every current published/C1/C2 parent replay-touched and replay as the earliest dated discovery for ~75% of stored paths. When family effects are the question, distinguish **replay-touched** from **replay-first** and prefer non-replay-first profile evidence, or label the full profile downstream/dependent. Full profiles remain valid descriptions of the current known sample.
 
 Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters. Missing or partial family mounts remain unavailable, not negative evidence. See the [`audit`](../reports/2026-09-13-cross-resource-observability-and-ancestry-audit-001.md) and [`machine summary`](../reports/2026-09-14-cross-resource-observability-summary-001.json).
 
@@ -73,13 +74,13 @@ Use `scripts/cross-resource-observability-audit.mjs` when this ancestry matters.
 2. **Solution-space profile/fingerprint** (`solver-solution-profile.md`): offline summary of sampled accepted paths.
 3. **Solver determinism fingerprint** (`scripts/solver-fingerprint.mjs`): execution/search-behavior regression signature.
 
-Solver fingerprints are schema-bound; v1/v2 are not interchangeable. Only structural fingerprints identify puzzle structure. None permits per-level production steering from historical results.
+Solver fingerprints are schema-bound (v1/v2 differ); only structural fingerprints identify puzzle structure; none permits per-level production steering.
 
 ## Scientific boundaries
 
 ### Offline evidence is not runtime policy
 
-Hints, known solutions, exact labels, census winners, historical costs, family outcomes, traces, profiles, capability-memory signatures, and historical gain/loss IDs are offline evidence. They may not become exact-level lookup/hidden steering in the cold solver. Historical capability intersecting today's residual is a **nomination**, not current proof. See [`solver-level-blindness.md`](solver-level-blindness.md) and [`solver-capability-memory.md`](solver-capability-memory.md).
+Hints, known solutions, exact labels, census winners, historical costs, family outcomes, traces, profiles, capability-memory signatures, search-loss capsules, and historical gain/loss IDs are offline evidence. They may not become exact-level lookup/hidden steering in the cold solver. Historical capability intersecting today's residual is a **nomination**, not current proof. See [`solver-level-blindness.md`](solver-level-blindness.md) and [`solver-capability-memory.md`](solver-capability-memory.md).
 
 ### Generation provenance is not selection provenance
 
@@ -111,6 +112,6 @@ When a durable evidence family changes, update [`solver-research-data-assets.jso
 
 When a focused resource audit changes scientific semantics, also update its audit-grade declaration under [`solver-research-resource-contract-audits.json`](solver-research-resource-contract-audits.json) and satisfy the closeout gate in [`solver-research-resource-contract.md`](solver-research-resource-contract.md). Do not mark unaudited resources “audited” by filling unknown fields with guesses.
 
-Capability memory is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the current question.
+Capability memory is a generated/derived interface, not another authoritative outcome database. Keep source reports/manifests as provenance and rebuild the view against the baseline relevant to the question.
 
 Add prose here only for a cross-asset rule that cannot be expressed clearly in the registry or resource contract.

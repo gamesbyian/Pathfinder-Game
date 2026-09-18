@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import {
     buildResearchRelations,
+    discoverResearchArtifactPaths,
     exactPathIntegrityRecords,
     indexBy,
     leftJoin,
@@ -138,6 +139,52 @@ try {
     assert.equal(JSON.parse(knownEmptyLineageRun.stdout).rows[0].eligibility.eligible, true);
 } finally {
     rmSync(artifactDir, { recursive: true, force: true });
+}
+
+// search-loss-evidence (docs/solver-search-loss-evidence-implementation-plan.md, Phase 2): a
+// capture discovered from its own transient root, using its native population.populationIdentity
+// field rather than the D1 fixture's top-level populationIdentity/corpusIdentity spellings.
+const searchLossRoot = path.join(process.cwd(), 'tmp', 'search-loss-evidence');
+mkdirSync(searchLossRoot, { recursive: true });
+try {
+    const searchLossPopulationIdentity = `sha256:${'4'.repeat(64)}`;
+    const searchLossBlock = {
+        blockId: 'SEARCH-LOSS-BLOCK-TEST',
+        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        sourceRegime: 'test-source',
+        sourceRevision: `sha256:${'5'.repeat(64)}`,
+        evidenceRole: 'development',
+        independentUnit: 'parent-level',
+        parentIds: ['R1'],
+        parentContentIdentities: ['v2:a'],
+        sourceArtifactRefs: ['capture.json'],
+        createdBy: { producer: 'search-loss-capture-test', manifestRef: 'capture.json', runRef: 'run-1' },
+        generationRef: null,
+        consumptionEvents: [],
+    };
+    const searchLossCapturePath = path.join(searchLossRoot, 'capture.json');
+    writeFileSync(searchLossCapturePath, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'pathfinder-search-loss-capture',
+        researchEnrichmentKind: 'observation',
+        population: { source: 'test-population.json', populationIdentity: searchLossPopulationIdentity, parentCount: 1 },
+        researchBlock: searchLossBlock,
+        capsules: [],
+    }));
+
+    assert.ok(discoverResearchArtifactPaths(process.cwd()).some(p => p.endsWith(path.join('tmp', 'search-loss-evidence', 'capture.json'))),
+        'search-loss capture under its own transient root is discoverable');
+
+    const searchLossModel = buildResearchRelations(process.cwd(), { discoverArtifacts: true });
+    const searchLossRow = searchLossModel.relations.researchBlocks.find(row => row.blockId === 'SEARCH-LOSS-BLOCK-TEST');
+    assert.ok(searchLossRow, 'discovered search-loss capture appears as a research block');
+    assert.equal(searchLossRow.enrichments.observation.length, 1);
+
+    assert.ok(searchLossModel.relations.assets.some(row => row.id === 'search-loss-evidence'
+        && row._researchSource?.relation === 'assets'), 'search-loss-evidence asset is discoverable with source provenance retained');
+    assert.ok(searchLossModel.relations.assetRelationships.some(row => row.id === 'search-loss-to-lifecycle'));
+} finally {
+    rmSync(searchLossRoot, { recursive: true, force: true });
 }
 
 const real = buildResearchRelations(process.cwd());
