@@ -18,7 +18,11 @@ const eligibility = eligibilityQuestion ? {
     evidenceRole: eligibilityRole,
     relatedQuestionIds: relatedQuestionArg === undefined ? null : relatedQuestionRaw.split(',').map(value => value.trim()).filter(Boolean),
 } : null;
-const model = buildResearchRelations(process.cwd(), { artifactPaths, eligibility });
+const model = buildResearchRelations(process.cwd(), {
+    artifactPaths,
+    eligibility,
+    discoverArtifacts: args.includes('--discover'),
+});
 
 if (args.includes('--list') || !value('relation')) {
     console.log(JSON.stringify({

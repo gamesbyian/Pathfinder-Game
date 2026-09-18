@@ -143,6 +143,11 @@ const real = buildResearchRelations(process.cwd());
 assert.ok(real.relations.questions.some(row => row.id === 'WS2-D1-PRODUCTION-INERT-OBSERVATION'));
 assert.ok(real.relations.measurementOpportunities.some(row => row.id === 'MO-005'));
 assert.ok(real.relations.premiseAdmissions.some(row => row.premiseId === 'P201'));
+assert.equal(real.relations.premises.length, 148);
+assert.equal(real.relations.premiseEdges.length, 184);
+assert.ok(real.relations.premises.some(row => row.premiseId === 'P204'));
+assert.ok(real.relations.premiseEdges.some(row => row.from === 'P204' && row.to === 'P183'));
+assert.ok(Array.isArray(real.relations.durableEvidence));
 assert.ok(real.relations.assets.some(row => row.id === 'experiment-manifests'));
 assert.ok(real.relations.questions.every(row => row._researchSource?.relation === 'questions'));
 
