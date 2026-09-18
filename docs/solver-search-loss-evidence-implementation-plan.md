@@ -2067,28 +2067,31 @@ Any unexplained OFF/ON behavior/work difference blocks rollout.
 
 The implementation is successful when all of the following are true:
 
-1. solver-running workflows preserve a compact failure-response view for failed attempts, including failed attempts inside ultimately solved runs;
-2. optional progress/rejection/flow telemetry is bounded, production-inert, and purposefully scoped;
-3. a failed solver run can optionally emit a compact, bounded, versioned search-loss capture;
-4. every retained capsule has structural, execution, stage, work, state/event, and selection provenance;
-5. capsules intended for later reconstruction declare and validate a replay basis;
-6. every selector reports observed/retained/truncated denominator semantics;
-7. capture is production-inert under tested parity;
-8. the resource is discoverable through normal research asset/relation tooling;
-9. a later exact/reference run can annotate a replayable historical capsule without rerunning the original search;
-10. selected studies inherit normal research-block/consumption lineage;
-11. parent-level dependence and failure-conditioning are visible through the Resource Contract;
-12. technique-census failed cells preserve compact work/progress/censoring response instead of collapsing to solve/no-solve;
-13. production refresh, benchmark, and solver-evaluated family workflows have an explicit compact-failure-data disposition and reuse common semantics;
-14. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
-15. no production policy consumes stored historical capsule identity or annotations.
+1. supported solver-running tools/workflows emit and transport the standard compact failure-response layer automatically, without requiring agents to remember a special flag;
+2. new solver-running workflows have a machine-checked failure-evidence disposition rather than silently omitting the layer;
+3. sharded GHA workflows preserve compact failure evidence through shard upload, combine, standard result publication, and partial-run coverage accounting;
+4. routine compact telemetry, exploratory rich capsules, and decision-bearing durable evidence have distinct retention semantics;
+5. optional progress/rejection/flow telemetry is bounded, production-inert, and purposefully scoped;
+6. a failed solver run can optionally emit a compact, bounded, versioned rich search-loss capture;
+7. every retained capsule has structural, execution, stage, work, state/event, and selection provenance;
+8. capsules intended for later reconstruction declare and validate a replay basis;
+9. every selector reports observed/retained/truncated denominator semantics;
+10. capture is production-inert under tested parity;
+11. the resource is discoverable through normal research asset/relation tooling;
+12. a later exact/reference run can annotate a replayable historical capsule without rerunning the original search;
+13. selected studies inherit normal research-block/consumption lineage;
+14. parent-level dependence and failure-conditioning are visible through the Resource Contract;
+15. technique-census failed cells preserve compact work/progress/censoring response instead of collapsing to solve/no-solve;
+16. production refresh, benchmark, and solver-evaluated family workflows have an explicit compact-failure-data disposition and reuse common semantics;
+17. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
+18. no production policy consumes stored historical capsule identity or annotations.
 
 ## 19. Intended end state
 
 The intended architecture is:
 
 ```text
-ordinary solver run
+ordinary solver run / GHA shard
     |
     +--> production outcome / benchmark
     |
@@ -2100,7 +2103,20 @@ ordinary solver run
     |
     +--> lifecycle telemetry
     |
-    +--> bounded search-loss capture
+    +--> optional bounded rich search-loss capture
+    |
+    +--> normal shard/result artifact
+              |
+              +--> combine / standard sweep publisher
+              |       |
+              |       +--> coverage + failure-evidence manifest/index
+              |
+              +--> post-run evidence harvester
+                      |
+                      +--> routine telemetry may remain ephemeral
+                      +--> consumed/decision-bearing bundle becomes durable
+
+selected rich search-loss evidence
               |
               +--> research asset registry / relations
               |
@@ -2125,4 +2141,4 @@ The search-loss layer should stay deliberately thin.
 
 Lifecycle owns where work went. Decision observation owns decision shape. Exact/reference owns feasibility labels. First-loss taxonomy owns causal classification. Research blocks own selection/consumption lineage. Resource Contract owns evidentiary semantics. Research relations own read-time integration. Capability memory owns cross-policy capability history. Workstreams own priority.
 
-Search-loss evidence contributes two missing layers: cheap durable response telemetry describing how attempts fail or progress, plus bounded replayable observations of what search actually did. Together they let future research start from evidence instead of reconstructing every failure from scratch.
+Search-loss evidence contributes two missing layers: automatically emitted cheap response telemetry describing how attempts fail or progress, plus bounded replayable observations of what search actually did. GHA transport, combine, coverage, and durability are infrastructure responsibilities. Agents choose research questions and rich-capture profiles; they should not have to remember basic failure-evidence plumbing.
