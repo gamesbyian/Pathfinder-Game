@@ -172,7 +172,12 @@ async function main() {
         assert.ok(manifest.variants.every(v => Number.isFinite(v.requiredPathCoverageRatio)));
         assert.ok(manifest.variants.every(v => !Object.hasOwn(v, 'navDensity')), 'new variant rows single-write canonical coverage fields');
 
-        const researchContext = manifest.generationRuns.at(-1).researchContext;
+        const latestRun = manifest.generationRuns.at(-1);
+        assert.equal(latestRun.requestedCount, 3);
+        assert.equal(latestRun.acceptedCount, latestRun.variantIds.length);
+        assert.ok(Number.isInteger(latestRun.generationAttempts));
+        assert.ok(Number.isInteger(latestRun.attemptBudget));
+        const researchContext = latestRun.researchContext;
         assert.equal(researchContext.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
         assert.equal(researchContext.evidenceRole, 'development');
         assert.equal(researchContext.independentUnit, 'parent-family');
