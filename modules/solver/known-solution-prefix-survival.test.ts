@@ -41,12 +41,14 @@ describe('known-solution-prefix survival research instrumentation', () => {
 
     test('accounts for support loss and canonical work after loss', () => {
         const observer = new KnownSolutionPrefixSurvivalObserver(new KnownSolutionPrefixIndex([{ path: [1, 2, 3], provenance: 'fixture' }]));
-        observer.observe({ stage: 'incoming-frontier', depth: 1, work: 2, paths: [[1, 2]] });
-        observer.observe({ stage: 'post-hard-prune', depth: 2, work: 3, paths: [[1, 9]] });
-        observer.observe({ stage: 'post-score-width-cull', depth: 3, work: 10, paths: [[1, 9, 8]] });
+        observer.observe({ stage: 'incoming-frontier', depth: 1, work: 20, workSpent: 2, paths: [[1, 2]] });
+        observer.observe({ stage: 'post-hard-prune', depth: 2, work: 30, workSpent: 3, paths: [[1, 9]] });
+        observer.observe({ stage: 'post-score-width-cull', depth: 3, work: 100, workSpent: 10, paths: [[1, 9, 8]] });
         const summary = observer.summary(3);
         expect(summary.firstSupportLoss).toMatchObject({ stage: 'post-hard-prune' });
         expect(summary.workAfterFinalKnownSupport).toBe(8);
+        expect(observer.stages.map(stage => stage.work)).toEqual([20, 30, 100]);
+        expect(observer.stages.map(stage => stage.workSpent)).toEqual([2, 3, 10]);
     });
 
     test('unions support across candidates and raises a hard-prune correctness alarm', () => {
@@ -54,23 +56,23 @@ describe('known-solution-prefix survival research instrumentation', () => {
             { path: [1, 2, 3], provenance: 'a', family: 'one' },
             { path: [1, 4, 5], provenance: 'b', family: 'two' },
         ]));
-        observer.observe({ stage: 'generated', depth: 1, work: 1, paths: [[1, 2], [1, 4]] });
-        observer.observe({ stage: 'hard-pruned', depth: 1, work: 1, paths: [[1, 2]] });
+        observer.observe({ stage: 'generated', depth: 1, work: 1, workSpent: 1, paths: [[1, 2], [1, 4]] });
+        observer.observe({ stage: 'hard-pruned', depth: 1, work: 1, workSpent: 1, paths: [[1, 2]] });
         expect(observer.stages[0]).toMatchObject({ supportedPaths: 2, supportedFamilies: 2 });
         expect(observer.summary(3).correctnessAlarms).toHaveLength(1);
     });
 
     test('attributes extinction to the supported removal event at that depth', () => {
         const observer = new KnownSolutionPrefixSurvivalObserver(new KnownSolutionPrefixIndex([{ path: [1, 2], provenance: 'x' }]));
-        observer.observe({ stage: 'incoming-frontier', depth: 0, work: 0, paths: [[1]] });
-        observer.observe({ stage: 'hard-pruned', depth: 1, work: 1, paths: [[1, 2]], details: { rejections: [{ cause: 'PRUNE_DISTANCE_BOUND' }] } });
-        observer.observe({ stage: 'post-hard-prune', depth: 1, work: 1, paths: [[1, 3]] });
+        observer.observe({ stage: 'incoming-frontier', depth: 0, work: 0, workSpent: 0, paths: [[1]] });
+        observer.observe({ stage: 'hard-pruned', depth: 1, work: 1, workSpent: 1, paths: [[1, 2]], details: { rejections: [{ cause: 'PRUNE_DISTANCE_BOUND' }] } });
+        observer.observe({ stage: 'post-hard-prune', depth: 1, work: 1, workSpent: 1, paths: [[1, 3]] });
         expect(observer.summary(2).firstSupportLoss).toMatchObject({ lossCause: 'hard-pruned' });
     });
 
     test('retains only known-supported removal context by default', () => {
         const observer = new KnownSolutionPrefixSurvivalObserver(new KnownSolutionPrefixIndex([{ path: [1, 2], provenance: 'x' }]));
-        observer.observe({ stage: 'score-width-culled', depth: 1, work: 2, paths: [[1, 2], [1, 9]],
+        observer.observe({ stage: 'score-width-culled', depth: 1, work: 2, workSpent: 2, paths: [[1, 2], [1, 9]],
             details: { culled: [{ path: [1, 2], rank: 3 }, { path: [1, 9], rank: 4 }], beamWidth: 2 } });
         expect(observer.stages[0].details).toEqual({ culled: [{ path: [1, 2], rank: 3 }], beamWidth: 2 });
     });
@@ -82,7 +84,7 @@ describe('known-solution-prefix survival research instrumentation', () => {
             { path: [1, 2], rank: 2, score: 9, insertionOrder: 1 },
             { path: [1, 8], rank: 3, score: 8, insertionOrder: 2 },
         ];
-        const record = { stage: 'score-width-culled' as const, depth: 1, work: 3, paths: [[1, 2]],
+        const record = { stage: 'score-width-culled' as const, depth: 1, work: 3, workSpent: 3, paths: [[1, 2]],
             details: { rankedPool, beamWidth: 1 } };
 
         const compact = new KnownSolutionPrefixSurvivalObserver(index);
