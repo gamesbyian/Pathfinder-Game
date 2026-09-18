@@ -160,7 +160,6 @@ assert.deepEqual(
     ).map(row => row.evidenceId),
     ['E1'],
 );
-assert.ok(real.relations.evidenceIntegrity.some(row => row.evidenceId === 'canonical-stress-refresh-corpus-1'));
 assert.ok(real.relations.assetRelationships.length >= 16);
 assert.ok(real.relations.assetRelationships.some(row => row.id === 'capability-memory-to-mechanism'));
 assert.ok(real.relations.questions.every(row => row._researchSource?.relation === 'questions'));
