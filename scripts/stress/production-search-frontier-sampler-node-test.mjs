@@ -33,9 +33,6 @@ assert.equal(
     'c2|R00001|beam-frontier|intersectionHarvest|width=5000|depth=12|solver=abc123',
 );
 
-console.log('production-search-frontier-sampler-node-test: ok');
-
-
 const populationIdentity = `sha256:${'5'.repeat(64)}`;
 const inherited = resolveInheritedResearchBlock({
     populationIdentity,
@@ -67,3 +64,5 @@ assert.throws(() => resolveInheritedResearchBlock({
     populationIdentity,
     researchBlock: inherited.researchBlock,
 }, { levelIds: ['R00001'], question: 'OTHER' }), /conflicts with block questionId/u);
+
+console.log('production-search-frontier-sampler-node-test: ok');
