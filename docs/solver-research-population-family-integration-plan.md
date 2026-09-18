@@ -5,7 +5,7 @@
 > **Priority:** `solver-optimization-workstreams.md`.
 > **Method:** `solver-research-operating-model.md`, `solver-evaluation-evidence.md`, `solver-research-resource-contract.md`.
 > **Goal:** make existing population, family, frontier/state, exact/reference, observation, and evidence resources compose as one progressive workflow without a second evidence warehouse.
-> **Progress (2026-09-17):** Phase 0 audit and Phase 1 block/consumption contract are complete. The active D1 production-inert observer now adopts that contract prospectively, and Phase 2 provides read-only composition for explicitly supplied research artifacts through `research:relations`; no persistent block index or warehouse exists. Scientific D1 execution remains governed by its preflight and queue gate.
+> **Progress (2026-09-17):** Phases 0-5 are complete. Frozen-block/consumption lineage, explicit-artifact relations, producer/family lineage, reference-only enrichment joins, and conservative acquisition routing are implemented without a warehouse or persistent block index. Phase 6 remains intentionally deferred to live ranked questions; scientific D1 execution remains governed by its preflight and queue gate. See `../reports/solver-research-population-family-phases3-5-2026-09-17.md`.
 
 ## 0. Target workflow
 
@@ -316,7 +316,11 @@ Do not stack all phases on one branch.
 - [ ] Durable discovery docs/tooling expose the final front door.
 - [ ] No production solver behavior changes merely because the substrate exists.
 
-## 15. First agent handoff
+## 15. Next agent handoff
+
+Do **not** restart Phases 0-5. Return to the canonical solver queue. Begin Phase 6 only when a live ranked question actually requires one of its end-to-end pilots.
+
+Historical first-handoff instructions follow for provenance only:
 
 Execute **Phase 0 only**.
 
