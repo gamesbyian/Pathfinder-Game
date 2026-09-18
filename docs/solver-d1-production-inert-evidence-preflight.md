@@ -39,6 +39,21 @@ Before any broad collection:
 
 Use the shared bounded record contract in `scripts/solver-decision-observation-lib.mjs` for the common decision identity/order/retention/work fields rather than creating a D1-private event envelope. D1-specific exact-query output belongs in that record's optional annotation, with unsupported/time-limited queries represented as `UNKNOWN`.
 
+The capture artifact is also the first prospective consumer of the shared research-block lineage contract. It must retain:
+
+- stable question ID `WS2-D1-PRODUCTION-INERT-OBSERVATION`;
+- a block ID distinct from its content seal;
+- SHA-256 source-corpus revision;
+- canonical structural content identity for every selected parent;
+- `independentUnit: parent-level`;
+- development evidence role under the current isolated-attempt capture boundary;
+- source/capture artifact references;
+- no consumption event at capture time.
+
+The offline annotation inherits the exact `populationIdentity` and `researchBlock` from the frozen capture. Do not mint a second block for annotation. Append a consumption event only when labelled outcomes are actually opened for a decision/report.
+
+For ordinary execution, `solver:capture-d1-decisions` defaults the stable D1 question ID and derives a deterministic block ID from the sealed parent population; `--block-id` may be supplied when an external plan already assigned one.
+
 For each eligible opportunity retain enough information to reconstruct the actual decision and its economics:
 
 - parent/protocol/run identity and evidence ancestry;
@@ -151,6 +166,23 @@ Close the D1 production path, in its present form, if representative multi-paren
 - sound support is too sparse and `UNKNOWN` dominates.
 
 A stop here closes this D1 consumer path, not all per-instance relational feasibility.
+
+## Lineage query
+
+The capture and annotation artifacts can be composed without a persistent evidence warehouse:
+
+```bash
+npm run research:relations -- \
+  --artifact=<capture.json> \
+  --artifact=<annotation.json> \
+  --relation=researchBlocks \
+  --query=WS2-D1-PRODUCTION-INERT-OBSERVATION
+```
+
+For conservative eligibility facts, also supply `--eligibility-question=<question-id>`,
+`--eligibility-role=<development|confirmation|transfer>`, and, when known,
+`--related-questions=<comma-separated-question-ids>`. Omitted question-lineage context must remain
+unknown for confirmation/transfer rather than being treated as proof of freshness.
 
 ## Handoff
 
