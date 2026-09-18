@@ -96,4 +96,4 @@ Use the cheapest check that answers the iteration question, then the relevant fi
 
 `solver:regression --check` protects outcomes, not performance. GitHub Actions is execution infrastructure, not research evidence unless the exact run/protocol is reported.
 
-Current-reference inventory: [`docs/README.md`](docs/README.md). Research-report navigation: [`reports/README.md`](reports/README.md). Runtime-flow glossary: [`docs/command-glossary.md`](docs/command-glossary.md).
+References: [`docs/README.md`](docs/README.md). Research-report navigation: [`reports/README.md`](reports/README.md). Runtime-flow glossary: [`docs/command-glossary.md`](docs/command-glossary.md).
