@@ -144,9 +144,12 @@ for (const levelId of levelIds) {
         decision.context = {
             ...decision.context,
             d1Eligibility: eligibility,
-            immediateExpansionWork: Object.fromEntries(decision.retainedCandidateIds
-                .filter(id => expansionByParentPath.has(id))
-                .map(id => [id, expansionByParentPath.get(id)])),
+            immediateExpansionWork: Object.fromEntries(decision.retainedCandidateIds.map(id => [
+                id,
+                expansionByParentPath.has(id)
+                    ? { status: 'observed', ...expansionByParentPath.get(id) }
+                    : { status: 'not-observed-before-termination', workSpent: null, generatedCandidates: null },
+            ])),
         };
         decision.evidenceRole = evidenceRole;
         decision.corpus = corpusFile;
