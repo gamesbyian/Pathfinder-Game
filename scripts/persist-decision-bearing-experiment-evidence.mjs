@@ -126,6 +126,13 @@ export function persistDecisionBearingExperimentEvidence({ stagingDir, outRoot, 
       resolvedSha: manifest?.experiment?.resolvedSha ?? null,
       configurationHash: manifest?.experiment?.configurationHash ?? null,
       populationIdentityHash: manifest?.population?.identityHash ?? manifest?.populationIdentityHash ?? null,
+      researchQuestion: manifest?.researchQuestion ?? null,
+      researchBlock: manifest?.population?.researchBlock ? {
+        blockId: manifest.population.researchBlock.blockId ?? null,
+        questionId: manifest.population.researchBlock.questionId ?? null,
+        evidenceRole: manifest.population.researchBlock.evidenceRole ?? null,
+        independentUnit: manifest.population.researchBlock.independentUnit ?? null,
+      } : null,
       researchOutcome: manifest?.researchOutcome ?? null,
       sourceArtifact: manifest?.sourceArtifact ?? null,
       runUrl: manifest?.runUrl ?? null,
@@ -156,7 +163,20 @@ function selfTest() {
       runId: '123',
       runAttempt: '2',
       experiment: { experimentId: 'fixture/experiment', workflowFamily: 'fixture', workflowRunId: '123', workflowRunAttempt: '2', resolvedSha: 'a'.repeat(40), configurationHash: `sha256:${'b'.repeat(64)}` },
-      population: { identityHash: `sha256:${'c'.repeat(64)}` },
+      population: {
+        identityHash: `sha256:${'c'.repeat(64)}`,
+        researchBlock: {
+          blockId: 'BLOCK-001', questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+          evidenceRole: 'development', independentUnit: 'parent-level',
+        },
+      },
+      researchQuestion: {
+        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        liveAmbiguity: 'rank disagreement versus no decision opportunity',
+        discriminatingObservable: 'production-inert cutoff disagreement',
+        outcomeInterpretation: { disagreement: 'economics gate earned' },
+        measurementOpportunity: 'MO-002',
+      },
       researchOutcome: { outcome: 'completed-positive' },
       entries: [{ role: '../primary', source: 'fixture', published: 'result.json', missing: false }],
     };
@@ -168,6 +188,10 @@ function selfTest() {
     const destination = path.join(output, 'fixture-experiment__run-123__attempt-2');
     const bundle = JSON.parse(fs.readFileSync(path.join(destination, 'bundle.json'), 'utf8'));
     assert.equal(bundle.decisionBearing, true);
+    assert.equal(bundle.researchQuestion.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
+    assert.equal(bundle.researchQuestion.measurementOpportunity, 'MO-002');
+    assert.equal(bundle.researchBlock.blockId, 'BLOCK-001');
+    assert.equal(bundle.researchBlock.evidenceRole, 'development');
     assert.equal(bundle.files.length, 2);
     const manifestRecord = bundle.files.find(file => file.source === 'manifest.json');
     assert.ok(manifestRecord);
