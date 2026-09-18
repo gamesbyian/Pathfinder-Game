@@ -26,6 +26,18 @@ This is **not** a C0 signature-collision result. Two problems, both by construct
 1. **Redundant grouping.** `R00046`'s three "interfaces" (`goal:65546`, `mustPass:1`, `mustPass:65545`) were populated by the *same* 5 crossing prefixes (two of the three share identical `cutCells`, and the third's crossing prefixes happened to coincide). Testing the same 5 raw prefixes three times under three interface labels is not three independent signature groups -- whole-prefix feasibility is a property of the prefix, not of which interface motivated selecting it. The resulting "0 mixing" is trivial, not evidence toward C0's stop rule.
 2. **No contrast within a genuine group yet.** No single true (level, interface, side) signature group in this pilot contains both a LIVE and a DEAD outcome, so nothing here bears on whether C0 (bare interface identity) is sufficient or insufficient -- the preflight's actual question.
 
+## Addendum: crossing adjacency (C1 planning input, zero new compute)
+
+`scripts/stress/lane-a-crossing-adjacency-check.mjs` re-analyzes the already-frozen 2,012-row crossing population (no new solver compute, no new labels): for each crossing, does the transition from `gateSideCells` to `remainderSideCells` membership happen over a single grid-adjacent step, or a non-adjacent recorded waypoint pair (a multi-cell macro-move or portal jump)?
+
+| | Count | Rate |
+|---|---:|---:|
+| Adjacent (single-step) crossing | 1,074 | 53.4% |
+| Non-adjacent (macro-move/portal) crossing | 709 | 35.2% |
+| No clean single transition found (e.g. side flips back and forth) | 229 | 11.4% |
+
+Over a third of crossings in this population are non-adjacent. This directly bears on C1 ("incoming/outgoing direction or equivalent heading continuity... portal-jump boundary state only when the crossing itself requires it"): a C1 encoding cannot assume the crossing point has a simple single-step heading, and needs an explicit portal-jump-aware boundary representation for a large minority of real cases, not a rare edge case. The 229 no-clean-transition rows likely reflect a prefix that touches a side-membership cell, leaves the recognized sides, and returns before crossing (or a `gate`/`remainder` cell classification gap at the interface's own target/cut cells) -- worth resolving before C1 implementation, not before this population-feasibility pass.
+
 ## Handoff
 
 - Population-construction and exact-labelling are both now proven cheap and correct at small scale. The blocking gap is **designing a non-redundant, adequately-sized signature-collision batch** from the 485 (level, interface) pairs / 2,012 crossing rows already frozen, then dispatching its exact-labelling at whatever scale (local vs. GHA) its total estimated cost warrants -- likely GHA, given 485 pairs x a handful of queries each x up to ~45s/query at the larger boards.
