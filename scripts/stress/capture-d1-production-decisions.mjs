@@ -122,7 +122,7 @@ for (const levelId of levelIds) {
                     });
                 }
             } else if (['score-width-culled', 'mechanic-bucket-culled', 'ints-bucket-culled'].includes(record.stage)) {
-                cullRecords.push(structuredClone(record));
+                cullRecords.push(JSON.parse(JSON.stringify(record)));
             }
         },
     };
