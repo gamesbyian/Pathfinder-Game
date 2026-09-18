@@ -1,8 +1,9 @@
 # Solver measurement substrate pre-development tranche
 
-> **Status:** bootstrap / implementation pending
-> **Base:** `main` @ `370973e34fc014241b2613f3f3ae2fd4e39f4f1b`
-> **Date:** 2026-09-17
+> **Status:** active
+> **Last evidence:** 2026-09-17 — implementation branch opened from `main` @ `370973e34fc014241b2613f3f3ae2fd4e39f4f1b`.
+> **Decision:** implement the bounded non-behavioral measurement substrate before ordinary solver development resumes.
+> **Remaining gate:** merge only after exact-head CI/review; D1 production-inert evidence acquisition remains the next solver-research gate.
 
 ## Purpose
 
