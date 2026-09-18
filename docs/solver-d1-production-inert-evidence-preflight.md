@@ -37,6 +37,8 @@ Before any broad collection:
 
 ## Required observation record
 
+Use the shared bounded record contract in `scripts/solver-decision-observation-lib.mjs` for the common decision identity/order/retention/work fields rather than creating a D1-private event envelope. D1-specific exact-query output belongs in that record's optional annotation, with unsupported/time-limited queries represented as `UNKNOWN`.
+
 For each eligible opportunity retain enough information to reconstruct the actual decision and its economics:
 
 - parent/protocol/run identity and evidence ancestry;
@@ -74,7 +76,7 @@ Any parity failure stops the experiment and is an instrumentation defect, not D1
 
 ### Stage 0 — retained-evidence and tooling audit
 
-Confirm the missing fields remain genuinely absent and extend existing trace/observer plumbing rather than creating a parallel research store when possible.
+Confirm the missing fields remain genuinely absent and extend existing trace/observer plumbing rather than creating a parallel research store when possible. Reuse the shared decision-observation contract and existing beam operational trace surfaces; if those cannot carry one of the required D1 fields, extend the shared seam rather than inventing a D1-only store.
 
 ### Stage 1 — execution-family canary
 
