@@ -15,7 +15,6 @@ import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { captureSolverGitState } from '../experiment-manifest-lib.mjs';
 import { beamResearchRecordToDecisionObservation } from '../solver-decision-observation-lib.mjs';
 import {
-    D1_DEVELOPMENT_PARENT_IDS,
     freezeD1Eligibility,
     pathIdentity,
 } from './d1-production-observation-lib.mjs';
