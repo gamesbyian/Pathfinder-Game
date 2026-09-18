@@ -156,10 +156,14 @@ assert.deepEqual(idsFor({ query: 'admissible order', status: 'deferred-reopen' }
     'plumbing availability must not make admissible-order repricing active or falsely closed');
 assert(idsFor({ query: 'full pool', status: 'closed' }).includes('WS2-CATEGORICAL-FULL-POOL'),
     'ordinary full-pool vocabulary must find the already-run categorical projection');
-assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), ['WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR'],
-    'the current topology query must route to the earned microscope/descriptor successor now that the open-path signature question is concluded-positive');
+assert.deepEqual(idsFor({ query: 'topology', status: 'active' }), [],
+    'the topology microscope is no longer active after the F3 descriptor/expansion closeout');
+assert.deepEqual(idsFor({ query: 'topology', status: 'mixed' }), ['WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR'],
+    'topology discovery must route to the qualified F3 descriptor disposition after its microscope ran');
 assert(idsFor({ query: 'topology', status: 'concluded-positive' }).includes('WS2-OPEN-PATH-TOPOLOGY-SIGNATURE'),
-    'the open-path topology signature question must be discoverable as the concluded premise that the descriptor question succeeds');
+    'the open-path topology signature question must remain discoverable as the concluded premise upstream of F3');
+assert.deepEqual(idsFor({ query: 'D1', status: 'active' }), ['WS2-D1-PRODUCTION-INERT-OBSERVATION'],
+    'D1 production-inert observation must be the sole active D1 research gate');
 assert(idsFor({ query: 'must turn', status: 'closed' }).includes('WS2-MUST-TURN-LATE-ADDITIVE'),
     'ordinary must-turn vocabulary must find the closed-negative economics result');
 
