@@ -45,6 +45,20 @@ const withSource = (row, relation, source) => ({
     _researchSource: { relation, source },
 });
 
+export function exactPathIntegrityRecords(asset, records) {
+    const paths = new Set((asset?.locations ?? [])
+        .map(location => location?.path)
+        .filter(value => typeof value === 'string' && value.length > 0));
+    if (paths.size === 0) return [];
+    const seen = new Set();
+    return (records ?? []).filter(record => {
+        if (!record?.evidenceId || seen.has(record.evidenceId)) return false;
+        if (!(record.sourcePaths ?? []).some(sourcePath => paths.has(sourcePath))) return false;
+        seen.add(record.evidenceId);
+        return true;
+    });
+}
+
 function artifactBlockPayload(document) {
     const researchBlock = document?.researchBlock ?? document?.population?.researchBlock ?? null;
     const populationIdentity = document?.populationIdentity ?? document?.population?.corpusIdentity ?? null;
@@ -241,6 +255,7 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
     const auditedById = new Map((audits.auditedResources ?? []).map(row => [row.assetId, row]));
     const measurement = readJson(root, 'docs/solver-premise-map-measurement-opportunities.json');
     const evidenceIntegrity = readJson(root, 'reports/stress/solver-evidence-integrity-index.json', { optional: true });
+    const integrityRecords = evidenceIntegrity?.records ?? [];
     const status = buildResearchStatusIndex(root);
     const v1 = readJson(root, 'docs/solver-premise-map-snapshot-v1.json', { optional: true });
     const v2 = readJson(root, 'docs/solver-premise-map-snapshot-v2.json', { optional: true });
@@ -260,6 +275,7 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
             ...row,
             contractGrade: auditedById.has(row.id) ? 'audited' : 'catalogue',
             auditedResourceContract: auditedById.get(row.id) ?? null,
+            evidenceIntegrityRecords: exactPathIntegrityRecords(row, integrityRecords),
         }, 'assets', RESEARCH_RELATION_CONTRACTS.assets.source)),
         assetRelationships: (assets.relationships ?? []).map(row =>
             withSource(row, 'assetRelationships', RESEARCH_RELATION_CONTRACTS.assetRelationships.source)),

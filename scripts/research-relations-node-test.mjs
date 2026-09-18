@@ -6,6 +6,7 @@ import path from 'node:path';
 
 import {
     buildResearchRelations,
+    exactPathIntegrityRecords,
     indexBy,
     leftJoin,
     queryRelation,
@@ -149,6 +150,16 @@ assert.ok(real.relations.premises.some(row => row.premiseId === 'P204'));
 assert.ok(real.relations.premiseEdges.some(row => row.from === 'P204' && row.to === 'P183'));
 assert.ok(Array.isArray(real.relations.durableEvidence));
 assert.ok(real.relations.assets.some(row => row.id === 'experiment-manifests'));
+assert.deepEqual(
+    exactPathIntegrityRecords(
+        { locations: [{ path: 'data/example.json' }, { path: 'data/other.json' }] },
+        [
+            { evidenceId: 'E1', sourcePaths: ['data/example.json'] },
+            { evidenceId: 'E2', sourcePaths: ['data/unrelated.json'] },
+        ],
+    ).map(row => row.evidenceId),
+    ['E1'],
+);
 assert.ok(real.relations.assetRelationships.length >= 16);
 assert.ok(real.relations.assetRelationships.some(row => row.id === 'capability-memory-to-mechanism'));
 assert.ok(real.relations.questions.every(row => row._researchSource?.relation === 'questions'));
