@@ -122,12 +122,9 @@ export function decisionContractIssues(contract) {
     if (!isNonEmptyString(population?.[field])) issues.push(`population.${field}`);
   }
   if (!SHA256_RE.test(String(population?.identityHash ?? ''))) issues.push('population.identityHash');
-  if (population?.researchBlock != null) {
-    if (!isNonEmptyString(population?.independentUnit)) issues.push('population.independentUnit');
-    if (isNonEmptyString(population?.independentUnit) &&
-        population.independentUnit !== population?.researchBlock?.independentUnit) {
-      issues.push('population.independentUnit(researchBlock-mismatch)');
-    }
+  if (population?.researchBlock != null && isNonEmptyString(population?.independentUnit) &&
+      population.independentUnit !== population?.researchBlock?.independentUnit) {
+    issues.push('population.independentUnit(researchBlock-mismatch)');
   }
 
   for (const field of ['levelBlind', 'historyAware', 'reproducibilityExpected']) {
