@@ -61,7 +61,12 @@ export function exactPathIntegrityRecords(asset, records) {
 
 function artifactBlockPayload(document) {
     const researchBlock = document?.researchBlock ?? document?.population?.researchBlock ?? null;
-    const populationIdentity = document?.populationIdentity ?? document?.population?.corpusIdentity ?? null;
+    const populationIdentity = document?.populationIdentity
+        ?? document?.population?.corpusIdentity
+        // search-loss-evidence captures (docs/solver-search-loss-evidence-implementation-plan.md)
+        // carry their own run/population envelope and name this field populationIdentity, not corpusIdentity.
+        ?? document?.population?.populationIdentity
+        ?? null;
     return { researchBlock, populationIdentity };
 }
 
@@ -105,6 +110,7 @@ export function discoverResearchArtifactPaths(root = process.cwd()) {
         'tmp/research-populations',
         'tmp/research-blocks',
         'tmp/d1-research',
+        'tmp/search-loss-evidence',
     ];
     const candidates = [
         ...transientRoots.flatMap(relativeRoot => walkFiles(
