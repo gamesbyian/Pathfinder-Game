@@ -21,6 +21,7 @@ import process from 'node:process';
 
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
+import { captureSolverGitState } from '../experiment-manifest-lib.mjs';
 import {
     frontierAncestryKey,
     reconstructBeamPath,
@@ -59,6 +60,7 @@ const Solver = createSolver();
 const { prepLevel, beamSearchFromGate, SCORING_PROFILES } = SOLVER_TESTING_API;
 const profile = SCORING_PROFILES[profileName];
 if (!profile) throw new Error(`unknown scoring profile: ${profileName}`);
+const solver = captureSolverGitState();
 
 const corpusDoc = JSON.parse(readFileSync(path.resolve(ROOT, corpusFile), 'utf8'));
 const corpusRows = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
@@ -101,7 +103,7 @@ for (const levelId of levelIds) {
         profile: profileName,
         width,
         depth: pauseAfterPhases,
-        seed,
+        solverCommit: solver.commit,
     });
     for (const frontierIndex of selected) {
         const node = frontier[frontierIndex];
@@ -110,6 +112,7 @@ for (const levelId of levelIds) {
             parentId: levelId,
             independentUnit: levelId,
             ancestryKey,
+            selectionSeed: seed,
             frontierIndex,
             frontierSize: frontier.length,
             depth: pauseAfterPhases,
@@ -124,6 +127,7 @@ for (const levelId of levelIds) {
         frontierSize: frontier.length,
         sampled: selected.length,
         ancestryKey,
+        selectionSeed: seed,
     });
 }
 
@@ -137,6 +141,7 @@ const population = {
     freezeBoundary: 'candidate rows selected from production beam frontier before downstream labels',
     corpus: corpusFile,
     levelIds,
+    solver,
     sampler: {
         profile: profileName,
         width,
