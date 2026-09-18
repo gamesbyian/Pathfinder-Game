@@ -197,6 +197,33 @@ The implementation does **not** initially authorize:
 
 ## 4. Conceptual data model
 
+The overall failure-information architecture has **three evidence layers**, not one.
+
+1. **Failure response** - cheap, ubiquitous, comparable attempt/search summaries.
+2. **Failure observations** - bounded selected state/decision/event capsules.
+3. **Failure annotations** - exact, known-support, counterfactual, or causal interpretation added later.
+
+The first layer should become broadly available across solver-running workflows. The second is selective. The third is expensive and question-driven.
+
+### 4.0 Failure-response layer
+
+A compact failure-response record should preserve cheap facts that already exist or can be aggregated with negligible cost.
+
+Common fields may include:
+
+- action/config/stage identity;
+- success/failure/indeterminate outcome;
+- node/work allocation and consumption;
+- best/final badness;
+- censoring/exhaustion;
+- progress-over-work summary when enabled;
+- aggregate rejection/candidate-flow counts when the search family exposes them;
+- recurrence counters where a typed native identity already exists.
+
+This layer is not path/state evidence and does not require a capsule per event.
+
+Search-family-specific extensions are allowed. Do not force DFS, beam, repair, and admissible-order into a fake common frontier model.
+
 The durable artifact has three separable layers:
 
 1. **run envelope** - execution/protocol/population identity and capture configuration;
@@ -373,6 +400,124 @@ Initial annotation kinds should be adapters to existing evidence, not new solver
 - `first-loss-classification`: only from an explicit first-loss study and with unresolved-earlier-class state.
 
 Do not force all annotation kinds into one scalar confidence field.
+
+## 4.7 Additional telemetry questions and current-repo answers
+
+### Progress over work
+
+**Current state:** the repo records best/final badness and has work-ladder tooling, but the general work-ladder reducer currently observes solved/not-solved at each budget, not the within-attempt trajectory between budgets. Historical badness analyses prove that best-badness magnitude is useful, but they do not tell whether improvement occurred early, late, or continuously.
+
+**Plan:** add an optional cheap progress summary rather than a full trace.
+
+Candidate v1 summary:
+
+- best badness at fixed logarithmic work checkpoints;
+- work point of each new best, capped to a small number of retained transitions;
+- last improvement work point;
+- best badness;
+- final badness;
+- work after last improvement;
+- number of best-improvement events.
+
+Use it to distinguish still-improving censoring, early plateau, late breakthrough, and no meaningful movement. Do not assume more semantic meaning for badness than the solver metric actually has.
+
+### Candidate-flow accounting
+
+**Current state:** beam research instrumentation already exposes incoming frontier, generated candidates, hard-pruned candidates, coarse-state merge removals, width/diversity culls, and surviving frontier. Other search families do not share this exact topology.
+
+**Plan:** add a beam-specific compact flow summary first:
+
+`incoming -> generated -> hard-pruned -> merge-removed -> score/diversity-culled -> retained`
+
+Aggregate by depth/phase and whole attempt. Do not persist full candidate arrays in ordinary capture.
+
+For DFS/admissible-order/repair, define native compact flow only after source inspection proves useful counters exist. Shared semantics should stay broad rather than inventing beam analogies.
+
+### Rejection-reason composition
+
+**Current state:** connectivity and joint-obligation observers prove the pattern: reason subtype/family can often be recorded exactly where a computation already knows why it rejected. Existing collectors already aggregate counts and keep only bounded path samples.
+
+**Plan:** conduct a reason-seam audit of current prune/reject/terminal paths.
+
+For each candidate reason family classify:
+
+- already computed and trivially observable;
+- observable with cheap counter only;
+- requires additional state copying;
+- requires expensive recomputation;
+- unsuitable because semantics are unstable or ambiguous.
+
+Default persistence should be aggregate counts by typed reason, with bounded specimen rows only for later study.
+
+### Recurrence and repeated work
+
+**Current state:** the repo has strong precedents but no single universal recurrence metric: exact DFS/state recurrence, coarse beam merge identity, repair-local failed-experience recurrence, connectivity exact-state and boundary recurrence, frontier ancestry, and compact exact dead-cause recurrence.
+
+**Plan:** preserve typed recurrence counters whenever the search already computes a stable identity cheaply.
+
+Possible counters:
+
+- exact-state repeats;
+- coarse-state repeats;
+- same typed rejection-reason repeats;
+- same ancestry/signature repeats;
+- restart overlap with prior signatures.
+
+Every recurrence metric must state its identity basis. Cross-parent and within-parent recurrence must be reported separately.
+
+### Frontier diversity
+
+**Current state:** beam already materializes ranked pools, merge keys, retention buckets, scores, ancestry, and frontier size in research mode. Rich traces demonstrate these values but ordinary runs do not retain compact diversity summaries.
+
+**Plan:** evaluate cheap beam-frontier summaries such as frontier size, score spread, unique coarse-state keys, unique endpoint cells/regions where cheap, unique mechanic/constraint buckets, ancestry concentration where cheap, cutoff margin, and fraction removed by each retention mechanism.
+
+These are observational descriptors, not proof that a frontier is healthy or doomed.
+
+### Handoff loss and continuation context
+
+**Current state:** resumability has a precise continuation contract and proves that frontier-only handoff can omit essential mutable state. Beam-to-DFS work also proves that a technically valid inherited state can be worse than fresh search.
+
+**Plan:** failure telemetry at stage/attempt handoffs should distinguish:
+
+- natural exhaustion;
+- censored state with continuation available;
+- continuation/context discarded;
+- restart from gate;
+- inherited continuation;
+- changed-policy continuation;
+- consumer unable to accept producer state.
+
+Where available, record producer/consumer stage and action, work at boundary, continuation available/retained/consumed, context identity/ownership, whether the consumer restarted fresh, and any typed context deliberately not transferred.
+
+Do not serialize production continuations merely for telemetry.
+
+### Replayability of historical observations
+
+**Current state:** witness-replay work established a fail-closed rule: exact labels bound to one path must carry witness identity, and replay must resolve that exact witness. Frontier sampling likewise preserves ancestry keys and exact prefixes.
+
+**Plan:** every capsule intended for later reconstruction must state its replay basis:
+
+- full selected prefix/path;
+- exact state fingerprint plus reconstructable source path;
+- frontier ancestry plus selected prefix;
+- source artifact ref that owns the reconstructable row.
+
+A hash with no reconstructable source is sufficient for dedup/comparison but not later exact annotation.
+
+Expose whether a capsule is `replayable`, `identity-only`, or `historical-unverified`.
+
+### Solved-run controls
+
+**Current state:** T1 census already covers solved and unsolved levels, and production result rows preserve failed attempts before later success. Specialist observers can also run unchanged on solved parents.
+
+**Plan:** compact failure-response collection should include solved parent runs by default. For rich event prevalence studies, explicitly sample matched solved controls where feasible.
+
+### Terminal-near-success causes
+
+**Current state:** bestBadness/finalBadness capture proximity only through one aggregate solver metric. Referee-invalid outcomes are explicit, but there is no common terminal-near-miss vocabulary.
+
+**Plan:** inspect terminal/acceptance code for already-known cheap reason classes before adding telemetry. Only add classes that map to canonical acceptance semantics. Do not reverse-engineer terminal causes from badness after the fact.
+
 
 ## 5. Storage topology
 
