@@ -149,6 +149,10 @@ assert.ok(real.relations.premises.some(row => row.premiseId === 'P204'));
 assert.ok(real.relations.premiseEdges.some(row => row.from === 'P204' && row.to === 'P183'));
 assert.ok(Array.isArray(real.relations.durableEvidence));
 assert.ok(real.relations.assets.some(row => row.id === 'experiment-manifests'));
+const stressCorpora = real.relations.assets.find(row => row.id === 'stress-corpora');
+assert.ok(stressCorpora?.evidenceIntegrityRecords?.some(
+    row => row.evidenceId === 'canonical-stress-refresh-corpus-1',
+), 'exact source-path evidence-integrity records should join to catalogued assets');
 assert.ok(real.relations.assetRelationships.length >= 16);
 assert.ok(real.relations.assetRelationships.some(row => row.id === 'capability-memory-to-mechanism'));
 assert.ok(real.relations.questions.every(row => row._researchSource?.relation === 'questions'));
