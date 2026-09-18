@@ -137,10 +137,10 @@ export function compileGeneratorInvocation({
   const descriptor = methodDescriptor(method);
   if (!Number.isFinite(masterSeed)) throw new Error('--master-seed must be numeric');
   if (blockId && !questionId) throw new Error('--block-id requires --question-id');
-  if (blockId && !out) {
-    // A shared explicit block id is dangerous in multi-source mode; caller may still pass
-    // an explicit per-method out and block id for a single invocation.
+  if (evidenceRole && !['development', 'confirmation', 'transfer'].includes(evidenceRole)) {
+    throw new Error('--evidence-role must be development, confirmation, or transfer');
   }
+  if (append && questionId) throw new Error('--append cannot be combined with frozen question-bound generation');
   if (envelopeCaps && descriptor.unsupportedCommonFlags.includes('envelopeCaps')) {
     throw new Error(`--envelope-caps is not supported by ${method}`);
   }
