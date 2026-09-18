@@ -28,8 +28,10 @@ test('solveLevel can attach a production-inert beam observer with attempt identi
     const result = await solveLevel(level, {
         timeBudgetMs: 1000,
         beamResearchObserver: { observe: record => records.push(record) },
+        attemptSearchForTesting: async (...args: Parameters<typeof runAttemptSearch>) =>
+            args[0].beamWidth ? runAttemptSearch(...args) : null,
     });
-    assert.equal(result.ok, true);
+    assert.equal(result.attempts.some(attempt => attempt.beamWidth != null), true, 'fixture must reach a beam attempt');
     const observed = records.find(record => record.attemptContext);
     assert.ok(observed, 'at least one configured beam attempt should emit an orchestration-tagged record');
     assert.equal(Number.isInteger(observed.attemptContext.attemptOrdinal), true);
