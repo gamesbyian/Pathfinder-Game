@@ -95,6 +95,10 @@ export async function solveLevel(level: NormalizedLevel, opts: SolveOpts = {}): 
     prep._attemptBudgetTelemetry = opts.attemptBudgetTelemetry === true || opts.lifecycleTelemetry === true
         || opts.strictTotalWorkBudget === true;
     if (opts.attemptSearchForTesting) testAttemptDispatches.set(prep, opts.attemptSearchForTesting);
+    if (opts.beamResearchObserver) {
+        prep._beamResearchObserver = opts.beamResearchObserver;
+        prep._beamResearchAttemptOrdinal = 0;
+    }
     if (opts.connectivityRejectionObserver) prep._connectivityRejectionObserver = opts.connectivityRejectionObserver;
     if (opts.jointObligationObserver) prep._jointObligationObserver = opts.jointObligationObserver;
     const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
