@@ -16,9 +16,9 @@ mkdirSync(path.join(root, 'reports')); mkdirSync(path.join(root, 'docs'));
 writeFileSync(path.join(root, 'docs/topic.md'), '# Topic\n');
 writeFileSync(path.join(root, 'docs/solver-optimization-workstreams.md'), `# Solver optimization workstreams
 ## Workstream state
-| ID | Workstream | State | Next gate |
-|---:|---|---|---|
-| 2 | Current question | **ACTIVE** | Run current gate. |
+| ID | Workstream | State | Next gate | Stable question ref |
+|---:|---|---|---|---|
+| 2 | Current question | **ACTIVE** | Run current gate. | `WS2-CURRENT` |
 `);
 writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Ledger
 ## Current production-default-OFF flags
@@ -93,6 +93,7 @@ A canonical attempt identity must not be rewritten as though its search-family t
 `);
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
+assert.equal(index.queue[0].questionRef, 'WS2-CURRENT');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
 const taggedEvidence = index.evidence.find(row => row.topicId === 'example');
@@ -171,6 +172,9 @@ const repositoryIndex = buildResearchStatusIndex(process.cwd());
 assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
 assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
     'WS2 active gate must remain discoverable through the research-status queue relation');
+assert.equal(repositoryIndex.queue.find(row => String(row.workstreamId) === '2')?.questionRef,
+    'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    'active WS2 gate must carry the stable question reference');
 assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
     'composite workstream identities must survive indexing without numeric coercion');
 
