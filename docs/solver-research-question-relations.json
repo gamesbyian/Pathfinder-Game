@@ -146,16 +146,25 @@
       "id": "WS2-DEAD-CORE-RELAXATION",
       "question": "Does single-commitment constraint relaxation (per Moonshot A's cheapest falsifier) find small, board-independent-recurring causal cores for exact-DEAD states?",
       "owner": "WS2",
-      "state": "deferred-reopen",
-      "aliases": ["DEAD-core", "minimum-relaxation", "moonshot A"],
-      "answeredBy": ["reports/2026-09-17-dead-core-relaxation-pilot-001.md"],
-      "result": "Discovery only, population-limited. A single-commitment relaxation (cpsat-reference-probe.py's new --relax hook) flips 3/4 exact-DEAD B2 states to feasible (2 via a mustCross axis, 1 via a mustPass cell); the 4th needs a joint/larger core. The 4-state B2 population is exhausted, too small to call type-recurrence, and the moonshot's own 'spares LIVE siblings' half is untested.",
-      "triggeredBy": ["WS2-H1-EVENT-FEASIBILITY"],
-      "constrains": [
-        "Do not build runtime conflict-driven pruning/nogood machinery from this pilot alone -- neither the recurring-type nor the spares-LIVE-siblings half of the moonshot's own falsifier is confirmed.",
-        "A fresh independently-labelled DEAD population is required before re-testing, not a re-derivation from this same 4-state set."
+      "state": "closed-tested-form",
+      "aliases": [
+        "DEAD-core",
+        "minimum-relaxation",
+        "moonshot A"
       ],
-      "reopensOn": "A fresh, larger exact-labelled DEAD population (e.g. a new B2-style sibling harvest on the current Class-4/5 residual) becomes available."
+      "answeredBy": [
+        "reports/2026-09-17-dead-core-relaxation-pilot-001.md",
+        "reports/2026-09-17-dead-core-spares-live-multi-pick-result-001.md"
+      ],
+      "result": "The fresh-population reopen condition occurred and the size-1 form was cleanly retested on the strongest matched asset: 23 exact-DEAD siblings plus 2 held-out LIVE siblings from one real production beam frontier. Across 215 single-commitment relaxations, 0/215 flipped to feasible and 0 correctness alarms occurred. Size-1 causal cores are therefore closed negative on this tested form; size-2 remains merely technically possible and is not justified by the size-1 result.",
+      "triggeredBy": [
+        "WS2-H1-EVENT-FEASIBILITY"
+      ],
+      "constrains": [
+        "Do not build runtime conflict/nogood machinery from size-1 commitment cores; the fresh matched population found none.",
+        "Do not escalate automatically to pairwise size-2 relaxation. Reopen only if a smaller signal or materially different core family specifically justifies that cost."
+      ],
+      "reopensOn": "New evidence specifically nominates a bounded size-2 or materially different causal-core family with enough expected information value to justify the larger exact-query cost."
     },
     {
       "id": "WS2-H3-REPAIR-COMMITMENT-INTERFACE",
@@ -245,17 +254,33 @@
       "question": "Does the rigorous fixed-endpoint homotopy/winding formulation distinguish exact-LIVE from exact-DEAD frontier material?",
       "owner": "WS2",
       "state": "closed-tested-form",
-      "aliases": ["homotopy", "fixed endpoint topology", "winding"],
-      "answeredBy": ["reports/2026-09-13-class5-homotopy-prefix-census-result-001.md"],
-      "result": "Coverage null, not premise failure. The current exact-labelled population contains 28 prefixes across 14 levels but zero same-level/same-start/same-endpoint LIVE/DEAD groups, so the fixed-endpoint winding comparison cannot adjudicate topology. The correct successor is an independently defined open-path signature/reference question, not an arbitrary endpoint closure.",
-      "triggeredBy": ["WS2-COMPACT-DEAD-CAUSE-RECURRENCE", "WS2-CATEGORICAL-FULL-POOL"],
-      "implies": ["WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"],
-      "constrainedBy": ["docs/solver-archaeology-register.md"],
+      "aliases": [
+        "homotopy",
+        "fixed endpoint topology",
+        "winding"
+      ],
+      "answeredBy": [
+        "reports/2026-09-13-class5-homotopy-prefix-census-result-001.md"
+      ],
+      "result": "The original natural B2 population was coverage-null: 28 prefixes across 14 levels contained no same-level/same-start/same-endpoint LIVE/DEAD groups, so the prespecified fixed-endpoint winding comparison could not run. That population limitation was later overtaken by the controlled same-endpoint topology-fork program, which established exact LIVE/DEAD topological contrast through the successor open-path formulation. Do not rerun the old census merely because controlled contrast now exists; its semantic purpose has been superseded by WS2-OPEN-PATH-TOPOLOGY-SIGNATURE and the F3 microscope.",
+      "triggeredBy": [
+        "WS2-COMPACT-DEAD-CAUSE-RECURRENCE",
+        "WS2-CATEGORICAL-FULL-POOL"
+      ],
+      "implies": [
+        "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"
+      ],
+      "constrainedBy": [
+        "docs/solver-archaeology-register.md"
+      ],
       "constrains": [
         "Do not weaken the fixed-endpoint contract by drawing ad hoc closures merely to manufacture contrast.",
         "Complete-solution class diversity does not itself license an in-loop topology feature or retention quota."
       ],
-      "reopensOn": "A future exact-labelled population contains same-level/same-start/same-endpoint LIVE/DEAD groups sufficient for the prespecified winding comparison."
+      "reopensOn": null,
+      "calibratedBy": [
+        "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"
+      ]
     },
     {
       "id": "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE",
@@ -284,17 +309,27 @@
       "id": "WS2-OPEN-PATH-TOPOLOGY-DESCRIPTOR",
       "question": "Which generic current-input topology successor is useful after the earned open-path contrast: a compact reusable puncture-side descriptor, a richer per-instance topology derivation, or neither?",
       "owner": "WS2",
-      "state": "active-diagnostic",
-      "aliases": ["topology descriptor", "puncture-side descriptor", "per-instance topology", "topology reasoning"],
-      "answeredBy": [],
-      "result": "Not yet tested. The current earned evidence is 4 discordant single-puncture cases across 2 parents. Microscope those cases without assuming that the only legitimate successor is one recurring compact descriptor: compare a reusable descriptor route with generic per-instance winding/phase, separator-side, region-accessibility, topology-aware canonicalization, or exact-impossibility reasoning derived solely from the current puzzle/current invocation.",
-      "triggeredBy": ["WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"],
-      "constrains": [
-        "Do not route production directly on raw phase. Any hard use requires an appropriate soundness/invariance argument; any soft use still needs predictive value beyond generic difficulty/work.",
-        "A reusable fixed descriptor must recur and confirm on independent parents. A generic per-instance derivation procedure may emit board-specific outputs that never recur, but the procedure must generalize across independent evaluation levels.",
-        "For either route, bound construction/use cost and prove end-to-end solve/work economics before promotion."
+      "state": "mixed",
+      "aliases": [
+        "topology descriptor",
+        "puncture-side descriptor",
+        "per-instance topology",
+        "topology reasoning"
       ],
-      "reopensOn": null
+      "answeredBy": [
+        "reports/2026-09-17-lane-f3-topology-cheap-side-descriptor-result-001.md",
+        "reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md"
+      ],
+      "result": "The microscope ran and produced a qualified answer. A cheap closest-approach side descriptor is 8/8 on untied rows, but that sound subset has zero decision-relevant discordance. All 9 discordant decisive-puncture rows in the expanded 14-pair/7-parent population are tied; tied-case agreement is 7/9 and a local tie-aware refinement does not improve it. The full topology observer remains informative research state, but no compact sound decision-bearing consumer is earned.",
+      "triggeredBy": [
+        "WS2-OPEN-PATH-TOPOLOGY-SIGNATURE"
+      ],
+      "constrains": [
+        "Do not route production directly on raw phase or the tied-case cheap descriptor.",
+        "The untied cheap descriptor is a sound fast path only on the tested non-decision-bearing subset; it is not evidence of useful coverage.",
+        "Any successor needs either a reliable compact descriptor with non-zero decision-bearing discordance on fresh independent parents or a bounded sound per-instance topology consequence with measured cost."
+      ],
+      "reopensOn": "Fresh independent parents produce non-zero decision-bearing discordance for a sound compact descriptor, or a bounded current-input per-instance topology derivation yields a sound actionable consequence without effectively replaying the full path observer."
     },
     {
       "id": "WS2-MECHANIC-COMPOSITION-CAUSALITY",
