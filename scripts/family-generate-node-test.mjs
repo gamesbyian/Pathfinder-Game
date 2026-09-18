@@ -182,6 +182,7 @@ async function main() {
         assert.equal(researchContext.evidenceRole, 'development');
         assert.equal(researchContext.independentUnit, 'parent-family');
         assert.equal(researchContext.originResearchBlock.blockId, 'TEST-BLOCK');
+        assert.equal(researchContext.originResearchBlock.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
         assert.equal(researchContext.originResearchBlock.populationIdentity, originPopulationIdentity);
 
         const witnessPath = parent.hints[0];
