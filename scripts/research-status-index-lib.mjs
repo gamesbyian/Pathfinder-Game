@@ -117,7 +117,7 @@ export function buildResearchStatusIndex(root) {
         ? tableRows(workstreamsSource, '## Workstream state')
         : tableRows(workstreamsSource, '## Active workstreams');
     const queue = workstreamRows.map(([id, question, state, gate]) => ({
-        topicId: `workstream-${id}`, workstreamId: Number(id), question,
+        topicId: `workstream-${id}`, workstreamId: /^\d+$/u.test(id) ? Number(id) : id, question,
         status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
         state, remainingGate: gate,
     }));
