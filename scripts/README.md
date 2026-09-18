@@ -49,6 +49,20 @@ npm run solver:sample-production-frontiers -- --levels=R01600,R03147 --depth-fra
 
 It freezes multi-pick candidates before downstream labels, records frontier ancestry, and declares the parent level as the independence unit. Multiple rows from one parent improve sparse-phenomenon detection but do not become independent confirmation.
 
+For the current D1 production-inert gate, use the two-phase decision observer rather than the frontier sampler. Capture first, with no exact oracle available to search:
+
+```text
+npm run solver:capture-d1-decisions -- --levels=R03147 --evidence-role=development --cutoff-radius=2 --out=/tmp/d1-capture.json
+```
+
+Then annotate that frozen artifact offline:
+
+```text
+npm run solver:annotate-d1-decisions -- --input=/tmp/d1-capture.json --time-limit=45 --max-eligible-decisions=3 --out=/tmp/d1-annotated.json
+```
+
+The development cap is a canary convenience only. Independent-confirmation annotation rejects post-capture decision caps, and development parents used by prior D1 work are rejected when capture is declared independent confirmation. Exact-query wall time is information-production cost, not solver `workSpent`.
+
 Two offline measurement reducers are also available when a live ambiguity earns them:
 
 ```text
