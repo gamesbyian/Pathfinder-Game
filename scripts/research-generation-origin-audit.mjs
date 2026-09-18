@@ -43,7 +43,14 @@ function load(spec) {
   const parsed = JSON.parse(readFileSync(spec.file, 'utf8'));
   const levels = Array.isArray(parsed) ? parsed : parsed.levels;
   if (!Array.isArray(levels)) throw new Error(`${spec.file}: expected level array or {levels}`);
-  return { name: spec.name, file: spec.file, levels };
+  return {
+    name: spec.name,
+    file: spec.file,
+    levels,
+    blockId: parsed.researchBlock?.blockId ?? null,
+    populationIdentity: parsed.populationIdentity ?? null,
+    sourceRegime: parsed.researchBlock?.sourceRegime ?? parsed.corpusName ?? null,
+  };
 }
 
 function main() {
