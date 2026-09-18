@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { compareExperimentArms, EXPERIMENT_BUDGET_PROTOCOLS, levelSelectionHash, validateExperimentManifest } from './experiment-manifest-lib.mjs';
+import { loadResearchQuestionRegistry } from './research-question-relations-lib.mjs';
 import { defaultConfig } from '../modules/solver/ablation-config.js';
 
 const args = new Map(process.argv.slice(2).filter(x => x.startsWith('--')).map(x => {
@@ -50,6 +51,7 @@ const workflowInputs = parseWorkflowInputs();
 const solverFlags = { ...productionFlags, ...flags };
 const budgetProtocol = args.get('--budget-protocol') ?? 'production-additive';
 const researchQuestionInputs = {
+    questionId: args.get('--question-id'),
     liveAmbiguity: args.get('--live-ambiguity'),
     discriminatingObservable: args.get('--discriminating-observable'),
     outcomeInterpretation: args.get('--outcome-interpretation-json'),
@@ -58,10 +60,24 @@ const researchQuestionInputs = {
 const hasResearchQuestionInput = Object.values(researchQuestionInputs).some(value => value != null);
 let researchQuestion;
 if (hasResearchQuestionInput) {
-    for (const key of ['liveAmbiguity', 'discriminatingObservable', 'outcomeInterpretation']) {
+    for (const key of ['questionId', 'liveAmbiguity', 'discriminatingObservable', 'outcomeInterpretation']) {
         if (!researchQuestionInputs[key]) throw new Error(`incomplete research question metadata: missing --${key.replace(/[A-Z]/gu, c => `-${c.toLowerCase()}`)}`);
     }
+    const questionRegistry = loadResearchQuestionRegistry(process.cwd());
+    if (!questionRegistry.questions.some(question => question.id === researchQuestionInputs.questionId)) {
+        throw new Error(`unknown research question id: ${researchQuestionInputs.questionId}`);
+    }
+    if (researchQuestionInputs.measurementOpportunity) {
+        const measurementRegistry = JSON.parse(readFileSync(
+            path.join(process.cwd(), 'docs', 'solver-premise-map-measurement-opportunities.json'),
+            'utf8',
+        ));
+        if (!(measurementRegistry.opportunities ?? []).some(opportunity => opportunity.id === researchQuestionInputs.measurementOpportunity)) {
+            throw new Error(`unknown measurement opportunity: ${researchQuestionInputs.measurementOpportunity}`);
+        }
+    }
     researchQuestion = {
+        questionId: researchQuestionInputs.questionId,
         liveAmbiguity: researchQuestionInputs.liveAmbiguity,
         discriminatingObservable: researchQuestionInputs.discriminatingObservable,
         outcomeInterpretation: JSON.parse(researchQuestionInputs.outcomeInterpretation),
