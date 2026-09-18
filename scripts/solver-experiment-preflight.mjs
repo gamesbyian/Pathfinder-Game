@@ -64,7 +64,8 @@ if (hasResearchQuestionInput) {
         if (!researchQuestionInputs[key]) throw new Error(`incomplete research question metadata: missing --${key.replace(/[A-Z]/gu, c => `-${c.toLowerCase()}`)}`);
     }
     const questionRegistry = loadResearchQuestionRegistry(process.cwd());
-    if (!questionRegistry.questions.some(question => question.id === researchQuestionInputs.questionId)) {
+    const registeredQuestion = questionRegistry.questions.find(question => question.id === researchQuestionInputs.questionId);
+    if (!registeredQuestion) {
         throw new Error(`unknown research question id: ${researchQuestionInputs.questionId}`);
     }
     if (researchQuestionInputs.measurementOpportunity) {
@@ -74,6 +75,10 @@ if (hasResearchQuestionInput) {
         ));
         if (!(measurementRegistry.opportunities ?? []).some(opportunity => opportunity.id === researchQuestionInputs.measurementOpportunity)) {
             throw new Error(`unknown measurement opportunity: ${researchQuestionInputs.measurementOpportunity}`);
+        }
+        if ((registeredQuestion.measurementOpportunities ?? []).length
+            && !registeredQuestion.measurementOpportunities.includes(researchQuestionInputs.measurementOpportunity)) {
+            throw new Error(`measurement opportunity ${researchQuestionInputs.measurementOpportunity} is not mapped to research question ${registeredQuestion.id}`);
         }
     }
     researchQuestion = {

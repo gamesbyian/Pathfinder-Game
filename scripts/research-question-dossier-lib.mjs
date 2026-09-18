@@ -2,6 +2,7 @@ import { buildResearchRelations } from './research-relations-lib.mjs';
 import {
     chooseAcquisitionRoute,
     generationGuidanceForRoute,
+    rankCandidateAssetRelationships,
     rankCandidateAssets,
 } from './research-acquisition-preflight-lib.mjs';
 
@@ -40,12 +41,20 @@ function questionRelations(question, allQuestions) {
         'implies', 'triggeredBy', 'negativeControlFor', 'calibratedBy', 'calibrates',
         'supersedes', 'duplicateOf',
     ];
-    const outgoing = relationFields.flatMap(field => (question[field] ?? []).map(id => ({ field, id })));
+    const knownIds = new Set(allQuestions.map(row => row.id));
+    const constrainedByQuestions = (question.constrainedBy ?? []).filter(value => knownIds.has(value));
+    const outgoing = [
+        ...relationFields.flatMap(field => (question[field] ?? []).map(id => ({ field, id }))),
+        ...constrainedByQuestions.map(id => ({ field: 'constrainedBy', id })),
+    ];
     const incoming = [];
     for (const candidate of allQuestions) {
         if (candidate.id === question.id) continue;
         for (const field of relationFields) {
             if ((candidate[field] ?? []).includes(question.id)) incoming.push({ field, id: candidate.id });
+        }
+        if ((candidate.constrainedBy ?? []).includes(question.id)) {
+            incoming.push({ field: 'constrainedBy', id: candidate.id });
         }
     }
     return { outgoing, incoming };
@@ -75,15 +84,18 @@ export function buildQuestionDossier(root = process.cwd(), {
     const blocks = model.relations.researchBlocks.filter(row => row.questionId === questionId);
     const eligibleBlocks = blocks.filter(row => row.eligibility?.eligible === true);
     const durableEvidence = model.relations.durableEvidence.filter(row => row.questionId === questionId);
+    const exactTaggedEvidence = model.relations.evidence.filter(row => row.researchQuestion === questionId);
     const measurementIds = new Set([
         ...explicitIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds']),
         ...durableEvidence.map(row => row.measurementOpportunity).filter(Boolean),
+        ...exactTaggedEvidence.flatMap(row => row.measurementOpportunities ?? []),
     ]);
     const measurementOpportunities = model.relations.measurementOpportunities.filter(row => measurementIds.has(row.id));
 
     const premiseIds = new Set([
-        ...explicitIds(question, ['premiseId', 'premiseIds', 'mappedPremises']),
+        ...explicitIds(question, ['premiseId', 'premiseIds', 'mappedPremises', 'premiseRefs']),
         ...measurementOpportunities.flatMap(row => row.mappedPremises ?? []),
+        ...exactTaggedEvidence.flatMap(row => row.premiseRefs ?? []),
     ]);
     const premises = model.relations.premises.filter(row => premiseIds.has(row.premiseId));
     const premiseEdges = model.relations.premiseEdges.filter(row => premiseIds.has(row.from) || premiseIds.has(row.to));
@@ -95,9 +107,14 @@ export function buildQuestionDossier(root = process.cwd(), {
         const haystack = flatten(row).join(' ').toLowerCase();
         return authorityTerms.some(term => term && haystack.includes(term));
     };
+    const lexicalEvidenceMatches = model.relations.evidence.filter(authorityMatch);
+    const evidenceMatches = exactTaggedEvidence.length ? exactTaggedEvidence : lexicalEvidenceMatches;
 
     const acquisition = chooseAcquisitionRoute({ question, eligibleBlocks });
     const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
+    const candidateJoins = rankCandidateAssetRelationships(question, model.relations.assetRelationships, {
+        candidateAssetIds: candidateAssets.map(asset => asset.id),
+    });
     const evidenceRefs = [...new Set([
         ...(question.answeredBy ?? []),
         ...(question.constrainedBy ?? []),
@@ -116,7 +133,8 @@ export function buildQuestionDossier(root = process.cwd(), {
         questionRelations: questionRelations(question, model.relations.questions),
         currentAuthorityMatches: {
             queue: model.relations.queue.filter(authorityMatch),
-            evidence: model.relations.evidence.filter(authorityMatch),
+            evidence: evidenceMatches,
+            evidenceMatchMode: exactTaggedEvidence.length ? 'stable-question-id' : 'lexical-fallback',
             experiments: model.relations.experiments.filter(authorityMatch),
         },
         evidenceRefs,
@@ -136,7 +154,8 @@ export function buildQuestionDossier(root = process.cwd(), {
         },
         resources: {
             candidateAssets,
-            interpretation: 'Relevance ranking is a discovery aid. Audit-grade Resource Contract signals travel with each row and remain claim-specific rather than automatic authorization.',
+            candidateJoins,
+            interpretation: 'Asset and authored multi-asset-join rankings are discovery aids. Join boundaries remain authoritative caveats; audit-grade Resource Contract signals remain claim-specific rather than automatic authorization.',
         },
         acquisition: {
             route: acquisition.route,

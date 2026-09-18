@@ -15,10 +15,10 @@ const root = mkdtempSync(path.join(tmpdir(), 'research-status-'));
 mkdirSync(path.join(root, 'reports')); mkdirSync(path.join(root, 'docs'));
 writeFileSync(path.join(root, 'docs/topic.md'), '# Topic\n');
 writeFileSync(path.join(root, 'docs/solver-optimization-workstreams.md'), `# Solver optimization workstreams
-## Active workstreams
-| ID | Workstream | State | Next gate |
-|---:|---|---|---|
-| 2 | Current question | **ACTIVE** | Run current gate. |
+## Workstream state
+| ID | Workstream | State | Next gate | Stable question ref |
+|---:|---|---|---|---|
+| 2 | Current question | **ACTIVE** | Run current gate. | \`WS2-CURRENT\` |
 `);
 writeFileSync(path.join(root, 'docs/solver-opt-in-experiment-ledger.md'), `# Ledger
 ## Current production-default-OFF flags
@@ -55,6 +55,14 @@ writeFileSync(path.join(root, 'reports/2026-08-21-example.md'), `# Example inves
 > **Last evidence:** 2026-08-21 — Synthetic fixture passed.
 > **Decision:** Continue measurement.
 > **Remaining gate:** Run the held-out corpus.
+> **Research question:** \`WS2-CURRENT\`
+> **Premise refs:** \`P032\`, \`P204\`
+> **Measurement opportunity:** \`MO-002\`
+> **Evidence role:** confirmation
+> **Selection:** prespecified
+> **Population identity:** fixture-population
+> **Selection history:** solver-blind fixture
+> **Inference scope:** fixture-only
 
 Authority: [topic](../docs/topic.md). Artifact: \`logs/example/run.json\`.
 `);
@@ -85,8 +93,17 @@ A canonical attempt identity must not be rewritten as though its search-family t
 `);
 const index = buildResearchStatusIndex(root);
 assert.equal(index.queue[0].authorityKind, 'workstreams', 'dated evidence cannot override the current workstreams authority');
+assert.equal(index.queue[0].questionRef, 'WS2-CURRENT');
 assert.deepEqual(queryResearchStatusIndex(index, { kind: 'experiment' }).map(x => x.id), ['FLAG_ONE']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'held-out' }).map(x => x.id), ['example']);
+const taggedEvidence = index.evidence.find(row => row.topicId === 'example');
+assert.equal(taggedEvidence.researchQuestion, 'WS2-CURRENT');
+assert.deepEqual(taggedEvidence.premiseRefs, ['P032', 'P204']);
+assert.deepEqual(taggedEvidence.measurementOpportunities, ['MO-002']);
+assert.equal(taggedEvidence.evidenceRole, 'confirmation');
+assert.equal(taggedEvidence.selection, 'prespecified');
+assert.equal(taggedEvidence.populationIdentity, 'fixture-population');
+assert.equal(taggedEvidence.inferenceScope, 'fixture-only');
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'orientation anomaly' }).map(x => x.id), ['legacy']);
 assert.deepEqual(queryResearchStatusIndex(index, { query: 'early-repair-search' }).map(x => x.id), ['legacy'],
     'canonical stage query must discover reports written only with the historical repair-probe name');
@@ -145,6 +162,21 @@ invalidSupersession.questions[0].supersedes = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidSupersession), [
     'questions[0].supersedes references unknown question WS2-MISSING',
 ]);
+const invalidConstraint = JSON.parse(JSON.stringify(questionRegistry));
+invalidConstraint.questions[0].constrainedBy = ['WS2-MISSING'];
+assert.deepEqual(validateResearchQuestionRegistry(invalidConstraint), [
+    'questions[0].constrainedBy references neither a known question nor a repository path: WS2-MISSING',
+]);
+
+const repositoryIndex = buildResearchStatusIndex(process.cwd());
+assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
+assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
+    'WS2 active gate must remain discoverable through the research-status queue relation');
+assert.equal(repositoryIndex.queue.find(row => String(row.workstreamId) === '2')?.questionRef,
+    'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    'active WS2 gate must carry the stable question reference');
+assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
+    'composite workstream identities must survive indexing without numeric coercion');
 
 const repositoryRegistry = loadResearchQuestionRegistry(process.cwd());
 assert.deepEqual(validateResearchQuestionRegistry(repositoryRegistry), [],

@@ -16,6 +16,7 @@ import { loadPremiseMap } from './research-premise-map-lib.mjs';
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     questions: { identity: 'id', source: 'docs/solver-research-question-relations.json' },
     assets: { identity: 'id', source: 'docs/solver-research-data-assets.json' },
+    assetRelationships: { identity: 'id', source: 'docs/solver-research-data-assets.json#relationships' },
     measurementOpportunities: { identity: 'id', source: 'docs/solver-premise-map-measurement-opportunities.json' },
     evidenceIntegrity: { identity: 'evidenceId', source: 'reports/stress/solver-evidence-integrity-index.json' },
     evidence: { identity: 'topicId', source: 'reports/*.md via research-status-index' },
@@ -260,6 +261,8 @@ export function buildResearchRelations(root = process.cwd(), { artifactPaths = [
             contractGrade: auditedById.has(row.id) ? 'audited' : 'catalogue',
             auditedResourceContract: auditedById.get(row.id) ?? null,
         }, 'assets', RESEARCH_RELATION_CONTRACTS.assets.source)),
+        assetRelationships: (assets.relationships ?? []).map(row =>
+            withSource(row, 'assetRelationships', RESEARCH_RELATION_CONTRACTS.assetRelationships.source)),
         measurementOpportunities: (measurement.opportunities ?? []).map(row =>
             withSource(row, 'measurementOpportunities', RESEARCH_RELATION_CONTRACTS.measurementOpportunities.source)),
         evidenceIntegrity: (evidenceIntegrity?.records ?? []).map(row =>

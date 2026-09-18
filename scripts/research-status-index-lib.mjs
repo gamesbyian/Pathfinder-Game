@@ -9,6 +9,25 @@ const METADATA = /^# (.+)\r?\n\r?\n> \*\*Status:\*\* ([a-z-]+)\r?\n> \*\*Last ev
 const MARKDOWN_LINK = /\[[^\]]*\]\(([^)#]+)(?:#[^)]+)?\)/g;
 const ARTIFACT_PATH = /`((?:data|logs|reports)\/[A-Za-z0-9_./*{}<>-]+)`/g;
 
+function reportMetadataValue(source, label) {
+    const prefix = `> **${label}:** `;
+    const line = source.split(/\r?\n/u).find(candidate =>
+        candidate.toLowerCase().startsWith(prefix.toLowerCase()));
+    return line ? line.slice(prefix.length).trim() : null;
+}
+
+function metadataScalar(source, label) {
+    const value = reportMetadataValue(source, label);
+    if (!value || /^none$/iu.test(value)) return null;
+    return value.replaceAll('`', '').trim();
+}
+
+function metadataList(source, label) {
+    const value = reportMetadataValue(source, label);
+    if (!value || /^none$/iu.test(value)) return [];
+    return value.split(',').map(item => item.replaceAll('`', '').trim()).filter(Boolean);
+}
+
 function tableRows(source, heading) {
     const start = source.indexOf(heading);
     if (start < 0) return [];
@@ -80,16 +99,28 @@ export function buildResearchStatusIndex(root) {
             authorities: [...new Set(currentAuthorities)].sort(),
             latestEvidence: { date: metadata[3], summary: metadata[4], report: reportPath },
             decision: metadata[5], remainingGate: metadata[6], artifacts: [...artifacts].sort(),
+            researchQuestion: metadataScalar(source, 'Research question'),
+            premiseRefs: metadataList(source, 'Premise refs'),
+            measurementOpportunities: metadataList(source, 'Measurement opportunity'),
+            evidenceRole: metadataScalar(source, 'Evidence role'),
+            selection: metadataScalar(source, 'Selection'),
+            populationIdentity: metadataScalar(source, 'Population identity'),
+            selectionHistory: metadataScalar(source, 'Selection history'),
+            inferenceScope: metadataScalar(source, 'Inference scope'),
         });
     }
     const workstreamsPath = 'docs/solver-optimization-workstreams.md';
     const workstreamsSource = existsSync(path.join(root, workstreamsPath)) ? readFileSync(path.join(root, workstreamsPath), 'utf8') : '';
     // Preserve the public `queue` collection name for index consumers, but source it from the
     // current authority. Workstream IDs are stable identifiers, explicitly not execution ranks.
-    const queue = tableRows(workstreamsSource, '## Active workstreams').map(([id, question, state, gate]) => ({
-        topicId: `workstream-${id}`, workstreamId: Number(id), question,
+    const workstreamRows = tableRows(workstreamsSource, '## Workstream state').length
+        ? tableRows(workstreamsSource, '## Workstream state')
+        : tableRows(workstreamsSource, '## Active workstreams');
+    const queue = workstreamRows.map(([id, question, state, gate, questionRef]) => ({
+        topicId: `workstream-${id}`, workstreamId: /^\d+$/u.test(id) ? Number(id) : id, question,
         status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
         state, remainingGate: gate,
+        questionRef: questionRef && questionRef !== '—' ? questionRef.replaceAll('`', '').trim() : null,
     }));
     const ledgerPath = 'docs/solver-opt-in-experiment-ledger.md';
     const ledgerSource = existsSync(path.join(root, ledgerPath)) ? readFileSync(path.join(root, ledgerPath), 'utf8') : '';
@@ -105,14 +136,21 @@ export function buildResearchStatusIndex(root) {
 
 function compactEntry(kind, entry) {
     if (kind === 'queue') return { kind, id: entry.topicId, workstreamId: entry.workstreamId ?? null, status: entry.status,
-        question: entry.question, gate: entry.remainingGate, authority: entry.authority };
+        question: entry.question, questionRef: entry.questionRef ?? null, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
         decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };
     if (kind === 'legacy-evidence') return { kind, id: entry.topicId, date: entry.date, title: entry.title,
         headings: entry.headings, report: entry.report };
     return { kind, id: entry.topicId, status: entry.status, title: entry.title,
         date: entry.latestEvidence.date, decision: entry.decision, gate: entry.remainingGate,
-        report: entry.latestEvidence.report, authorities: entry.authorities };
+        report: entry.latestEvidence.report, authorities: entry.authorities,
+        researchQuestion: entry.researchQuestion ?? null,
+        premiseRefs: entry.premiseRefs ?? [],
+        measurementOpportunities: entry.measurementOpportunities ?? [],
+        evidenceRole: entry.evidenceRole ?? null,
+        selection: entry.selection ?? null,
+        populationIdentity: entry.populationIdentity ?? null,
+        inferenceScope: entry.inferenceScope ?? null };
 }
 
 const ATTEMPT_IDENTITY_PATTERNS = Object.freeze([

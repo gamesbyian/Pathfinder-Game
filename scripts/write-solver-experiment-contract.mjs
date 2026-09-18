@@ -64,7 +64,8 @@ function validateResearchQuestionReference(researchQuestion) {
     throw new Error('researchQuestion must be an object');
   }
   const registry = loadResearchQuestionRegistry(process.cwd());
-  if (!registry.questions.some(question => question.id === researchQuestion.questionId)) {
+  const registeredQuestion = registry.questions.find(question => question.id === researchQuestion.questionId);
+  if (!registeredQuestion) {
     throw new Error(`researchQuestion.questionId is not present in solver-research-question-relations.json: ${researchQuestion.questionId}`);
   }
   if (researchQuestion.measurementOpportunity != null) {
@@ -74,6 +75,10 @@ function validateResearchQuestionReference(researchQuestion) {
     ));
     if (!(measurementRegistry.opportunities ?? []).some(opportunity => opportunity.id === researchQuestion.measurementOpportunity)) {
       throw new Error(`researchQuestion.measurementOpportunity is not present in solver-premise-map-measurement-opportunities.json: ${researchQuestion.measurementOpportunity}`);
+    }
+    if ((registeredQuestion.measurementOpportunities ?? []).length
+        && !registeredQuestion.measurementOpportunities.includes(researchQuestion.measurementOpportunity)) {
+      throw new Error(`researchQuestion.measurementOpportunity ${researchQuestion.measurementOpportunity} is not mapped to researchQuestion.questionId ${registeredQuestion.id}`);
     }
   }
   return researchQuestion;

@@ -4,7 +4,7 @@ import process from 'node:process';
 
 import { buildResearchRelations } from './research-relations-lib.mjs';
 import { analyzeOpportunity } from './experiment-opportunity-audit.mjs';
-import { acquisitionNeeds, acquisitionStopRule, chooseAcquisitionRoute, generationGuidanceForRoute, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
+import { acquisitionNeeds, acquisitionStopRule, chooseAcquisitionRoute, generationGuidanceForRoute, rankCandidateAssetRelationships, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
 
 const args = process.argv.slice(2);
 const value = name => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3) ?? '';
@@ -21,6 +21,8 @@ if (requestedNeed && !acquisitionNeeds().includes(requestedNeed)) {
 const controlFile = value('control');
 const opportunityMode = value('opportunity-mode') || 'rescue';
 const stageId = value('stage') || null;
+const independentUnitField = value('independent-unit-field') || null;
+const sizingBasis = value('sizing-basis') || 'rows';
 const numberValue = (name, { min = -Infinity, max = Infinity, integer = false } = {}) => {
     const raw = value(name);
     if (!raw) return null;
@@ -54,6 +56,9 @@ const knownBlocks = model.relations.researchBlocks.filter(row => row.questionId 
 const eligibleBlocks = knownBlocks.filter(row => row.eligibility?.eligible === true);
 const decision = chooseAcquisitionRoute({ question, eligibleBlocks, requestedNeed });
 const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
+const candidateJoins = rankCandidateAssetRelationships(question, model.relations.assetRelationships, {
+    candidateAssetIds: candidateAssets.map(asset => asset.id),
+});
 const generationGuidance = generationGuidanceForRoute(decision.route);
 
 let opportunity = null;
@@ -67,6 +72,8 @@ if (controlFile) {
         proposedTotal,
         conditionalEventRate,
         detectionProbability,
+        independentUnitField,
+        sizingBasis,
     });
 }
 
@@ -88,6 +95,7 @@ console.log(JSON.stringify({
     candidateAssets: {
         interpretation: 'ranked discovery hints only; audit-grade rows expose Resource Contract conditioning/dependence/missingness signals but do not auto-authorize evidence use',
         assets: candidateAssets,
+        authoredJoins: candidateJoins,
     },
     generationGuidance,
     opportunitySizing: opportunity ?? {

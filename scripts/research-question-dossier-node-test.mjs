@@ -7,9 +7,13 @@ const questionId = 'WS2-D1-PRODUCTION-INERT-OBSERVATION';
 const dossier = buildQuestionDossier(process.cwd(), { questionId });
 assert.equal(dossier.authority.kind, 'derived-read-only');
 assert.equal(dossier.question.id, questionId);
+assert.ok(dossier.conceptualContext.explicitPremises.some(row => row.premiseId === 'P091'));
+assert.ok(dossier.conceptualContext.measurementOpportunities.some(row => row.id === 'MO-002'));
 assert.ok(dossier.acquisition.route);
+assert.ok(dossier.currentAuthorityMatches.queue.some(row => row.questionRef === questionId));
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
 assert.ok(Array.isArray(dossier.resources.candidateAssets));
+assert.ok(Array.isArray(dossier.resources.candidateJoins));
 assert.equal(dossier.conceptualContext.premiseDiscoveryHints.authority, 'lexical-discovery-only');
 assert.ok(dossier.conceptualContext.premiseDiscoveryHints.rows.length > 0);
 
@@ -21,5 +25,9 @@ assert.equal(run.status, 0, run.stderr);
 const cli = JSON.parse(run.stdout);
 assert.equal(cli.question.id, questionId);
 assert.equal(cli.authority.kind, 'derived-read-only');
+
+const constrained = buildQuestionDossier(process.cwd(), { questionId: 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION' });
+assert.ok(constrained.questionRelations.outgoing.some(edge =>
+    edge.field === 'constrainedBy' && edge.id === 'WS2-PORTAL-COARSE-GLOBAL-MERGE'));
 
 console.log('research-question-dossier-node-test: ok');

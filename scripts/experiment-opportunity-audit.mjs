@@ -65,6 +65,37 @@ function realStageParticipation(row, stageId) {
     ((Number(attempt?.workSpent) || 0) > 0 || (Number(attempt?.nodesExpanded) || 0) > 0));
 }
 
+function fieldValue(row, field) {
+  if (!field) return null;
+  let value = row;
+  for (const segment of String(field).split('.')) value = value?.[segment];
+  return value == null || value === '' ? null : String(value);
+}
+
+function summarizeIndependentUnits(levels, opportunities, controlFailed, stageParticipated, field) {
+  if (!field) return null;
+  const rows = levels.map(row => ({ row, unit: fieldValue(row, field) }));
+  const missing = rows.filter(entry => entry.unit == null);
+  if (missing.length) throw new Error(`independent-unit field ${field} missing on ${missing.length}/${levels.length} rows`);
+  const units = new Set(rows.map(entry => entry.unit));
+  const idsFor = selected => new Set(selected.map(row => fieldValue(row, field)));
+  const opportunityUnits = idsFor(opportunities);
+  const controlFailedUnits = idsFor(controlFailed);
+  const stageParticipatedUnits = idsFor(stageParticipated);
+  const rate = opportunityUnits.size / units.size;
+  return {
+    field,
+    total: units.size,
+    controlFailed: controlFailedUnits.size,
+    stageParticipated: stageParticipatedUnits.size,
+    opportunities: opportunityUnits.size,
+    opportunityRate: rate,
+    opportunityRateWilson95: wilsonInterval(opportunityUnits.size, units.size),
+    opportunityIds: [...opportunityUnits].sort(),
+    rowsPerUnit: levels.length / units.size,
+  };
+}
+
 export function analyzeOpportunity({
   levels,
   stageId = null,
@@ -73,10 +104,16 @@ export function analyzeOpportunity({
   proposedTotal = null,
   conditionalEventRate = null,
   detectionProbability = 0.8,
+  independentUnitField = null,
+  sizingBasis = 'rows',
 }) {
   if (!Array.isArray(levels) || levels.length === 0) throw new Error('control evidence must contain a non-empty levels array');
   if (!['rescue', 'stage-impact', 'control-fail'].includes(mode)) throw new Error(`unsupported opportunity mode ${mode}`);
   if (mode === 'stage-impact' && !stageId) throw new Error('stage-impact mode requires --stage');
+  if (!['rows', 'independent-unit'].includes(sizingBasis)) throw new Error('sizingBasis must be rows or independent-unit');
+  if (sizingBasis === 'independent-unit' && !independentUnitField) {
+    throw new Error('independent-unit sizing requires independentUnitField');
+  }
 
   const controlFailed = levels.filter(row => !row?.ok);
   const stageParticipated = stageId ? levels.filter(row => realStageParticipation(row, stageId)) : [];
@@ -89,7 +126,13 @@ export function analyzeOpportunity({
   const opportunityCount = opportunities.length;
   const rate = opportunityCount / total;
   const interval = wilsonInterval(opportunityCount, total);
+  const independentUnits = summarizeIndependentUnits(levels, opportunities, controlFailed, stageParticipated, independentUnitField);
+  const sizingRate = sizingBasis === 'independent-unit' ? independentUnits.opportunityRate : rate;
+  const sizingInterval = sizingBasis === 'independent-unit' ? independentUnits.opportunityRateWilson95 : interval;
   const warnings = [];
+  if (independentUnits && independentUnits.total < total) {
+    warnings.push(`PSEUDOREPLICATION: ${total} rows collapse to ${independentUnits.total} independent units by ${independentUnitField}; row count is detection depth, not between-unit support.`);
+  }
   if (opportunityCount === 0) warnings.push('ZERO_OPPORTUNITY: this evidence shows no rows on which the proposed effect could be observed.');
   if (controlFailed.length / total < 0.05 && (mode === 'rescue' || mode === 'control-fail')) {
     warnings.push(`CEILING: control solves ${(100 * (1 - controlFailed.length / total)).toFixed(1)}%; rescue headroom is under 5%.`);
@@ -100,11 +143,11 @@ export function analyzeOpportunity({
 
   let sizing = null;
   if (targetOpportunities != null) {
-    const pointTotal = rate > 0 ? Math.ceil(targetOpportunities / rate) : null;
-    const conservativeTotal = interval.low > 0 ? Math.ceil(targetOpportunities / interval.low) : null;
-    sizing = { targetOpportunities, pointTotal, conservativeTotal };
+    const pointTotal = sizingRate > 0 ? Math.ceil(targetOpportunities / sizingRate) : null;
+    const conservativeTotal = sizingInterval.low > 0 ? Math.ceil(targetOpportunities / sizingInterval.low) : null;
+    sizing = { basis: sizingBasis, targetOpportunities, pointTotal, conservativeTotal };
     if (proposedTotal != null && pointTotal != null) {
-      const expectedAtProposed = proposedTotal * rate;
+      const expectedAtProposed = proposedTotal * sizingRate;
       sizing.proposedTotal = proposedTotal;
       sizing.expectedOpportunitiesAtProposed = expectedAtProposed;
       const reference = conservativeTotal ?? pointTotal;
@@ -124,8 +167,9 @@ export function analyzeOpportunity({
       conditionalEventRate,
       detectionProbability,
       opportunityRowsForAtLeastOneEvent: neededOpportunityRows,
-      pointTotalRows: rate > 0 ? Math.ceil(neededOpportunityRows / rate) : null,
-      conservativeTotalRows: interval.low > 0 ? Math.ceil(neededOpportunityRows / interval.low) : null,
+      basis: sizingBasis,
+      pointTotalRows: sizingRate > 0 ? Math.ceil(neededOpportunityRows / sizingRate) : null,
+      conservativeTotalRows: sizingInterval.low > 0 ? Math.ceil(neededOpportunityRows / sizingInterval.low) : null,
     };
   }
 
@@ -140,6 +184,8 @@ export function analyzeOpportunity({
     opportunityRate: rate,
     opportunityRateWilson95: interval,
     opportunityIds: opportunities.map(row => row?.id ?? row?.levelId ?? row?.level).filter(Boolean),
+    independentUnits,
+    sizingBasis,
     sizing,
     detection,
     warnings,
@@ -163,14 +209,19 @@ function main() {
     proposedTotal,
     conditionalEventRate,
     detectionProbability,
+    independentUnitField: args.get('independent-unit-field') || null,
+    sizingBasis: args.get('sizing-basis') || 'rows',
   });
 
   console.log(`Opportunity audit: ${result.opportunities}/${result.total} (${(100 * result.opportunityRate).toFixed(2)}%) rows can demonstrate mode=${result.mode}${result.stageId ? ` at stage=${result.stageId}` : ''}.`);
   console.log(`Control: ${result.controlSolved}/${result.total} solved; ${result.controlFailed}/${result.total} failed.`);
   if (result.stageId) console.log(`Real stage participation: ${result.stageParticipated}/${result.total}.`);
   console.log(`Opportunity-rate Wilson 95% interval: ${(100 * result.opportunityRateWilson95.low).toFixed(2)}%..${(100 * result.opportunityRateWilson95.high).toFixed(2)}%.`);
+  if (result.independentUnits) {
+    console.log(`Independent units (${result.independentUnits.field}): ${result.independentUnits.opportunities}/${result.independentUnits.total} opportunity-bearing; ${result.total} rows / ${result.independentUnits.total} units.`);
+  }
   if (result.sizing) {
-    console.log(`For ${result.sizing.targetOpportunities} opportunity rows: point N=${result.sizing.pointTotal ?? 'unbounded'}, conservative N=${result.sizing.conservativeTotal ?? 'unbounded'}.`);
+    console.log(`For ${result.sizing.targetOpportunities} opportunity ${result.sizing.basis === 'independent-unit' ? 'units' : 'rows'}: point N=${result.sizing.pointTotal ?? 'unbounded'}, conservative N=${result.sizing.conservativeTotal ?? 'unbounded'}.`);
     if (result.sizing.proposedTotal) console.log(`Proposed N=${result.sizing.proposedTotal}: expected opportunity rows ≈${result.sizing.expectedOpportunitiesAtProposed.toFixed(1)}.`);
   }
   if (result.detection) {

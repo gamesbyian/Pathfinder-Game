@@ -238,6 +238,27 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
         const corpus = corpusDir || manifest.parentCorpus || 'root';
         const generationRuns = Array.isArray(manifest.generationRuns) ? manifest.generationRuns : [];
         const latestGeneration = generationRuns.at(-1)?.generatorImplementation ?? manifest.generatorImplementation;
+        const researchContexts = generationRuns
+            .filter(run => run?.researchContext?.questionId)
+            .map(run => ({
+                ...run.researchContext,
+                generationTimestamp: run.createdTimestamp ?? null,
+                variantIds: Array.isArray(run.variantIds) ? [...run.variantIds] : [],
+            }));
+        const uniqueContextValues = key => [...new Set(researchContexts
+            .map(context => context?.[key]).filter(value => value != null && value !== ''))].sort();
+        const questionIds = uniqueContextValues('questionId');
+        const evidenceRoles = uniqueContextValues('evidenceRole');
+        const originBlockIds = [...new Set(researchContexts
+            .map(context => context?.originResearchBlock?.blockId).filter(Boolean))].sort();
+        const contextsByVariantId = new Map();
+        for (const context of researchContexts) {
+            for (const variantId of context.variantIds) {
+                const rows = contextsByVariantId.get(String(variantId)) ?? [];
+                rows.push(context);
+                contextsByVariantId.set(String(variantId), rows);
+            }
+        }
         families.push({
             familyId: manifest.familyId, parentId: manifest.parentLevelId, corpus,
             parentCorpus: manifest.parentCorpus ?? null, mode: manifest.familyMode ?? null,
@@ -246,16 +267,34 @@ export function buildFamilyIndex(variantFamilyDatasetRoot) {
             generation: { schemaVersion: manifest.schemaVersion ?? 1, generatorVersion: manifest.generatorVersion ?? null,
                 gitCommit: latestGeneration?.gitCommit ?? null,
                 implementationHash: latestGeneration?.sourceSha256 ?? null },
+            researchContexts,
+            questionIds,
+            evidenceRoles,
+            originBlockIds,
         });
-        for (const variant of manifest.variants) variants.push({
-            parentId: manifest.parentLevelId, parentCorpus: manifest.parentCorpus ?? null,
-            familyId: manifest.familyId, corpus,
-            variantId: variant.variantId, mode: manifest.familyMode ?? null,
-            relation: variant.relation ?? null,
-            operator: variant.mutationManifest?.operation ?? variant.mutationManifest?.objectType ?? null,
-            objectType: variant.mutationManifest?.objectType ?? null,
-            manifestPath,
-        });
+        for (const variant of manifest.variants) {
+            const variantResearchContexts = contextsByVariantId.get(String(variant.variantId)) ?? [];
+            const oneValue = getter => {
+                const values = [...new Set(variantResearchContexts.map(getter).filter(Boolean))];
+                return values.length === 1 ? values[0] : null;
+            };
+            variants.push({
+                parentId: manifest.parentLevelId, parentCorpus: manifest.parentCorpus ?? null,
+                familyId: manifest.familyId, corpus,
+                variantId: variant.variantId, mode: manifest.familyMode ?? null,
+                relation: variant.relation ?? null,
+                operator: variant.mutationManifest?.operation ?? variant.mutationManifest?.objectType ?? null,
+                objectType: variant.mutationManifest?.objectType ?? null,
+                manifestPath,
+                researchContexts: variantResearchContexts,
+                questionId: oneValue(context => context.questionId),
+                evidenceRole: oneValue(context => context.evidenceRole),
+                parentExposure: oneValue(context => context.parentExposure),
+                independentUnit: oneValue(context => context.independentUnit),
+                originBlockId: oneValue(context => context.originResearchBlock?.blockId),
+                originPopulationIdentity: oneValue(context => context.originResearchBlock?.populationIdentity),
+            });
+        }
     }
     const runManifestFiles = filesBelow(roots.census, file => path.basename(file) === 'manifest.json');
     const runManifestDiagnostics = [];
@@ -405,8 +444,20 @@ export function queryFamilyIndex(index, filters = {}) {
     const matchesExpected = (actual, expected) => Array.isArray(expected)
         ? expected.some(candidate => String(actual) === String(candidate))
         : String(actual) === String(expected);
+    const actualFor = (value, key) => {
+        if (key === 'questionId' && Array.isArray(value.questionIds)) return value.questionIds;
+        if (key === 'evidenceRole' && Array.isArray(value.evidenceRoles)) return value.evidenceRoles;
+        if (key === 'originBlockId' && Array.isArray(value.originBlockIds)) return value.originBlockIds;
+        return value[key];
+    };
+    const matchesValue = (actual, expected) => {
+        if (Array.isArray(actual)) return Array.isArray(expected)
+            ? expected.some(candidate => actual.some(value => String(value) === String(candidate)))
+            : actual.some(value => String(value) === String(expected));
+        return matchesExpected(actual, expected);
+    };
     const matches = value => Object.entries(filters)
-        .every(([key, expected]) => expected == null || matchesExpected(value[key], expected));
+        .every(([key, expected]) => expected == null || matchesValue(actualFor(value, key), expected));
     const families = index.families.filter(matches);
     const variants = index.variants.filter(matches);
     return {

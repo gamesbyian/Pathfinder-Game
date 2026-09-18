@@ -48,6 +48,12 @@ export function validateResearchQuestionRegistry(registry) {
         if (!String(question?.question ?? '').trim()) errors.push(`${prefix}.question is required`);
         if (!String(question?.owner ?? '').trim()) errors.push(`${prefix}.owner is required`);
         if (!String(question?.state ?? '').trim()) errors.push(`${prefix}.state is required`);
+        for (const field of ['premiseRefs', 'measurementOpportunities']) {
+            if (question?.[field] != null && (!Array.isArray(question[field])
+                || question[field].some(value => typeof value !== 'string' || !value.trim()))) {
+                errors.push(`${prefix}.${field} must be a string array when present`);
+            }
+        }
     }
 
     for (const [index, question] of questions.entries()) {
@@ -60,6 +66,19 @@ export function validateResearchQuestionRegistry(registry) {
             }
             for (const target of targets) {
                 if (!ids.has(target)) errors.push(`questions[${index}].${field} references unknown question ${target}`);
+            }
+        }
+        if (question?.constrainedBy != null) {
+            if (!Array.isArray(question.constrainedBy)) {
+                errors.push(`questions[${index}].constrainedBy must be an array when present`);
+            } else {
+                for (const target of question.constrainedBy) {
+                    const value = String(target ?? '');
+                    const pathReference = /^(?:docs|reports|scripts)\//u.test(value);
+                    if (!pathReference && !ids.has(value)) {
+                        errors.push(`questions[${index}].constrainedBy references neither a known question nor a repository path: ${value}`);
+                    }
+                }
             }
         }
     }

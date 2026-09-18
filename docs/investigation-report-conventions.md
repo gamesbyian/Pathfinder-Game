@@ -15,6 +15,17 @@ Place immediately after the title:
 
 Use those status values exactly. Put implementation detail in `Decision` or the body, not free-form status text.
 
+When a report is materially about an entry in an existing structured research registry, add the corresponding stable join metadata immediately below the core status block:
+
+```markdown
+> **Research question:** `WS2-...` | none
+> **Premise refs:** `P032`, `P204` | none
+> **Measurement opportunity:** `MO-002` | none
+```
+
+Use only IDs that already exist in their owning registries. These fields are **join metadata, not authority**: they do not change question state, admit a premise, or promote a measurement opportunity. Omit or use `none` when no exact structured relation is intended; do not guess a semantic link merely to improve discoverability. The research-status index preserves these tags so question-centric tooling can prefer exact joins over lexical matching.
+
+
 For **decision-bearing solver research**, also state near the status block:
 
 ```markdown

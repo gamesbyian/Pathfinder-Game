@@ -62,7 +62,7 @@ export function auditResearchIntegration(root = process.cwd()) {
     }
 
     for (const question of questionRegistry.questions) {
-        for (const premiseId of refIds(question, ['premiseId', 'premiseIds', 'mappedPremises'])) {
+        for (const premiseId of refIds(question, ['premiseId', 'premiseIds', 'mappedPremises', 'premiseRefs'])) {
             if (!premiseIds.has(premiseId)) errors.push(`${question.id} references unknown premise ${premiseId}`);
         }
         for (const moId of refIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds'])) {
@@ -71,6 +71,28 @@ export function auditResearchIntegration(root = process.cwd()) {
     }
 
     const model = buildResearchRelations(root, { discoverArtifacts: true });
+    if (model.relations.queue.length === 0) {
+        errors.push('research-status queue relation is empty; current workstream authority is not reaching research relations');
+    }
+    if (!model.relations.queue.some(row => String(row.workstreamId) === '2')) {
+        errors.push('research-status queue relation does not expose WS2 from current workstream authority');
+    }
+    for (const question of questionRegistry.questions.filter(row => String(row.state ?? '').startsWith('active'))) {
+        if (!model.relations.queue.some(row => row.questionRef === question.id)) {
+            errors.push(`active question ${question.id} is not linked from the structured workstream queue relation`);
+        }
+    }
+    for (const evidence of model.relations.evidence) {
+        if (evidence.researchQuestion && !questionIds.has(evidence.researchQuestion)) {
+            errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown research question ${evidence.researchQuestion}`);
+        }
+        for (const premiseId of evidence.premiseRefs ?? []) {
+            if (!premiseIds.has(premiseId)) errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown premise ${premiseId}`);
+        }
+        for (const moId of evidence.measurementOpportunities ?? []) {
+            if (!measurementIds.has(moId)) errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown measurement opportunity ${moId}`);
+        }
+    }
 
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
     const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
@@ -150,6 +172,15 @@ export function auditResearchIntegration(root = process.cwd()) {
         questionCount: questionRegistry.questions.length,
         researchBlockCount: model.relations.researchBlocks.length,
         durableEvidenceCount: model.relations.durableEvidence.length,
+        semanticJoinCoverage: {
+            queueEntries: model.relations.queue.length,
+            authoredAssetRelationships: model.relations.assetRelationships.length,
+            questionsWithPremiseRefs: questionRegistry.questions.filter(question => (question.premiseRefs ?? []).length > 0).length,
+            questionsWithMeasurementOpportunities: questionRegistry.questions.filter(question => (question.measurementOpportunities ?? []).length > 0).length,
+            evidenceReportsWithStableQuestion: model.relations.evidence.filter(evidence => evidence.researchQuestion).length,
+            evidenceReportsWithPremiseRefs: model.relations.evidence.filter(evidence => (evidence.premiseRefs ?? []).length > 0).length,
+            evidenceReportsWithMeasurementOpportunities: model.relations.evidence.filter(evidence => (evidence.measurementOpportunities ?? []).length > 0).length,
+        },
         errorCount: errors.length,
         warningCount: warnings.length,
         errors,

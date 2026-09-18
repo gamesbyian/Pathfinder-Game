@@ -17,7 +17,25 @@ mkdirSync(path.join(root, 'reports/families'), { recursive: true });
 writeFileSync(path.join(root, 'data/families/corpus-a/family-P1-sym.json'), '[]\n');
 writeFileSync(path.join(root, 'data/families/corpus-a/family-P1-sym-manifest.json'), JSON.stringify({
     familyId: 'family-P1-w0-symmetry', parentLevelId: 'P1', parentCorpus: 'data/levels.json', familyMode: 'symmetry',
-    generatorVersion: 'old', variants: [
+    generatorVersion: 'old',
+    generationRuns: [{
+        createdTimestamp: '2026-09-17T00:00:00Z',
+        variantIds: ['V1', 'V2'],
+        researchContext: {
+            questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+            evidenceRole: 'development',
+            parentExposure: 'development',
+            independentUnit: 'parent-family',
+            parentId: 'P1',
+            parentContentIdentity: 'v2:p1',
+            originResearchBlock: {
+                blockId: 'BLOCK-P1',
+                populationIdentity: `sha256:${'a'.repeat(64)}`,
+                questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+            },
+        },
+    }],
+    variants: [
         { variantId: 'V1', relation: 'symmetry', mutationManifest: { operation: 'transform', objectType: 'whole-level' } },
         { variantId: 'V2', relation: 'symmetry', mutationManifest: { operation: 'transform', objectType: 'whole-level' } },
     ],
@@ -87,6 +105,11 @@ assert.equal(normalizedEvidence.solverCommit, 'def');
 assert.equal(normalizedEvidence.budget, 500);
 assert.equal(normalizedEvidence.runManifestPath, 'logs/family-census/runs/run-2/shard-1/manifest.json');
 assert.equal(queryFamilyIndex(index, { mode: 'symmetry' }).families.length, 2);
+assert.deepEqual(queryFamilyIndex(index, { questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION' }).counts,
+    { families: 1, variants: 2, parents: 1, variantsWithEvidence: 2 });
+assert.deepEqual(queryFamilyIndex(index, { originBlockId: 'BLOCK-P1' }).variants.map(row => row.variantId), ['V1', 'V2']);
+assert.equal(queryFamilyIndex(index, { questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION', variantId: 'V1' }).variants[0].independentUnit,
+    'parent-family');
 assert.equal(queryFamilyIndex(index, { operator: 'transform' }).variants.length, 3);
 assert.deepEqual(queryFamilyIndex(index, { objectType: 'whole-level' }).counts,
     { families: 0, variants: 2, parents: 1, variantsWithEvidence: 2 });
