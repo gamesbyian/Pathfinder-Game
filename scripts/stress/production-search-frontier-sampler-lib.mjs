@@ -58,7 +58,8 @@ export function frontierAncestryKey({
     profile,
     width,
     depth,
-    seed,
+    solverCommit,
 }) {
-    return [corpus, levelId, 'beam-frontier', profile, `width=${width}`, `depth=${depth}`, `seed=${seed}`].join('|');
+    if (!solverCommit) throw new Error('frontierAncestryKey requires solverCommit');
+    return [corpus, levelId, 'beam-frontier', profile, `width=${width}`, `depth=${depth}`, `solver=${solverCommit}`].join('|');
 }
