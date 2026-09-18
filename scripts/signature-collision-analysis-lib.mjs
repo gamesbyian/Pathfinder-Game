@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+
 function valueOf(row, selector) {
     return typeof selector === 'function' ? selector(row) : row?.[selector];
 }
