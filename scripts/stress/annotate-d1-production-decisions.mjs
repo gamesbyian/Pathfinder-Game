@@ -173,6 +173,8 @@ const result = {
     solver,
     sourceCapture: inputFile,
     sourceCaptureSha256: createHash('sha256').update(inputBytes).digest('hex'),
+    populationIdentity: capture.populationIdentity ?? null,
+    researchBlock: capture.researchBlock ?? null,
     evidenceRole: capture.evidenceRole,
     independentUnit: capture.independentUnit,
     annotationBoundary: 'exact D1 queries run only after production decisions and D1 eligibility were frozen',
