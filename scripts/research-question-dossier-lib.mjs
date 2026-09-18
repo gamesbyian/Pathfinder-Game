@@ -2,6 +2,7 @@ import { buildResearchRelations } from './research-relations-lib.mjs';
 import {
     chooseAcquisitionRoute,
     generationGuidanceForRoute,
+    rankCandidateAssetRelationships,
     rankCandidateAssets,
 } from './research-acquisition-preflight-lib.mjs';
 
@@ -98,6 +99,9 @@ export function buildQuestionDossier(root = process.cwd(), {
 
     const acquisition = chooseAcquisitionRoute({ question, eligibleBlocks });
     const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
+    const candidateJoins = rankCandidateAssetRelationships(question, model.relations.assetRelationships, {
+        candidateAssetIds: candidateAssets.map(asset => asset.id),
+    });
     const evidenceRefs = [...new Set([
         ...(question.answeredBy ?? []),
         ...(question.constrainedBy ?? []),
@@ -136,7 +140,8 @@ export function buildQuestionDossier(root = process.cwd(), {
         },
         resources: {
             candidateAssets,
-            interpretation: 'Relevance ranking is a discovery aid. Audit-grade Resource Contract signals travel with each row and remain claim-specific rather than automatic authorization.',
+            candidateJoins,
+            interpretation: 'Asset and authored multi-asset-join rankings are discovery aids. Join boundaries remain authoritative caveats; audit-grade Resource Contract signals remain claim-specific rather than automatic authorization.',
         },
         acquisition: {
             route: acquisition.route,
