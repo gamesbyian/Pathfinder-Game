@@ -48,6 +48,7 @@ const outFile = arg('out', null);
 
 if (!outFile && !listConfiguredBeams) throw new Error('--out is required unless --list-configured-beams is used');
 if (!levelIds.length) throw new Error('--levels must contain at least one level id');
+if (new Set(levelIds).size !== levelIds.length) throw new Error('--levels contains duplicate level ids');
 if (!Number.isFinite(width) || width < 1) throw new Error('--width must be positive');
 if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
 if (!(Number.isFinite(nodeBudget) || nodeBudget === Number.POSITIVE_INFINITY) || nodeBudget <= 0) throw new Error('--node-budget must be positive');
@@ -204,7 +205,7 @@ const { populationIdentity, researchBlock } = buildD1ResearchBlock({
     parentIds: levelIds,
     parentContentIdentities,
     captureArtifact: outFile,
-    runRef: solver.commit,
+    runRef: null,
 });
 
 const document = {
