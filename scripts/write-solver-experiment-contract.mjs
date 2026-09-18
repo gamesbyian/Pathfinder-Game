@@ -92,7 +92,9 @@ function populationWithSeal(population, populationSeal) {
   if (populationSeal && population?.corpusIdentity && population.corpusIdentity !== identityHash) {
     throw new Error(`declared population.corpusIdentity disagrees with population seal: ${population.corpusIdentity} vs ${identityHash}`);
   }
-  const resolved = populationSeal ? { ...(population ?? {}), corpusIdentity: identityHash } : population;
+  const resolved = populationSeal
+    ? { ...(population ?? {}), corpusIdentity: identityHash }
+    : (population == null ? population : { ...population });
   if (resolved?.researchBlock) {
     assertResearchBlock(resolved.researchBlock, { populationIdentity: resolved.corpusIdentity });
     if (resolved.independentUnit != null && resolved.independentUnit !== resolved.researchBlock.independentUnit) {
