@@ -1125,15 +1125,21 @@ Read/inspect:
 
 Produce a short implementation record or plan amendment that freezes:
 
-1. v1 capsule fields;
-2. v1 event kinds;
-3. v1 selector reasons;
-4. producer path selected for Phase 3;
-5. exact run/protocol identity helpers to reuse;
-6. storage path pattern;
-7. consumer/query path;
-8. compatibility policy: no historical backfill;
-9. parity observable.
+1. v1 compact failure-response fields and search-family-specific extensions;
+2. whether v1 includes progress-over-work checkpoints;
+3. cheap rejection-reason seams and reason vocabularies;
+4. beam candidate-flow/frontier-summary fields;
+5. solved-run control collection semantics;
+6. replayability classification and identity sources;
+7. v1 capsule fields;
+8. v1 event kinds;
+9. v1 selector reasons;
+10. producer path selected for rich-capture Phase 4;
+11. exact run/protocol identity helpers to reuse;
+12. storage path pattern;
+13. consumer/query path;
+14. compatibility policy: no historical backfill;
+15. parity observable.
 
 **Exit gate:** no unresolved duplicate authority/schema and one clear low-cost producer exists.
 
@@ -1272,7 +1278,44 @@ Ensure EW1 preserves canonical work semantics and T1 remains clearly node-depth 
 
 Project the same compact semantics from existing production-sweep and benchmark rows without duplicating source fields.
 
+Include failed attempts inside ultimately solved parents.
+
 Where the underlying row already contains the canonical data, the adapter should be derived/read-time rather than write a second copy unless durable reconstructability requires it.
+
+#### Progress-over-work pilot
+
+Before making progress checkpoints universal, instrument the smallest representative sample across at least two materially different search families.
+
+Measure observer overhead, checkpoint count, whether best-progress transitions add information beyond final `bestBadness`, whether fixed work checkpoints are sufficient, and artifact size.
+
+If a simple checkpoint/transition summary cannot distinguish plateaued from still-improving failures at negligible cost, keep it specialist rather than universal.
+
+#### Reason-seam audit
+
+Inventory cheap rejection/termination reasons across:
+
+- hard-prune pipeline;
+- connectivity;
+- joint-obligation propagation;
+- beam merge/cull;
+- terminal/acceptance;
+- repair-local failure/restart paths.
+
+Implement aggregate counts only for reason families with stable semantics and negligible observation cost.
+
+#### Beam flow summary
+
+Add a compact reducer over existing BeamResearch stages or equivalent zero-policy-effect counters.
+
+It must not require retaining ranked pools/full paths.
+
+Desired outputs include per-attempt and optionally bounded per-depth incoming, generated, hard-pruned, merge-removed, score-width culled, mechanic/ints-bucket culled, and retained counts.
+
+#### Replayability flags
+
+The shared response/capsule contract should distinguish whether a retained observation can later be reconstructed exactly.
+
+A capsule intended for exact annotation must carry a verified replay basis, not only a digest.
 
 #### Producer contract audit
 
@@ -1287,12 +1330,15 @@ Inspect at least:
 Record for each:
 
 - which compact fields are already computed;
-- which are currently persisted;
+- which progress/rejection/flow summaries are already available at negligible cost;
+- whether solved-run controls naturally exist;
+- what typed state/ancestry/replay identities already exist;
+- which fields are currently persisted;
 - which are lost;
 - whether adding retention changes artifact size materially;
 - whether the workflow contract's telemetry side-effect declaration must change.
 
-**Exit gate:** technique-census failed cells no longer collapse to solve/no-solve when richer attempt response was already computed, and all major solver-running producer families have an explicit disposition.
+**Exit gate:** technique-census failed cells no longer collapse to solve/no-solve when richer attempt response was already computed; failed attempts inside solved parents remain visible; all major solver-running producer families have an explicit disposition; and progress, reason counts, beam flow, typed recurrence identity, handoff context, and replayability each have an explicit implemented/deferred/not-worth-it outcome.
 
 ### Phase 4 - first production-inert rich capsule producer
 
@@ -1451,12 +1497,18 @@ Support filters such as:
 Provide parent-level summaries:
 
 - parents observed;
+- solved-parent vs unsolved-parent controls where available;
 - capsules/event;
 - selector opportunity rate;
 - annotation support rate;
 - event-kind prevalence conditional on sampled parent population;
 - within-parent repeated phenotype count;
-- policy/config overlap where two captures are compared.
+- policy/config overlap where two captures are compared;
+- progress-curve/plateau summaries;
+- rejection-reason composition;
+- candidate-flow composition for supported search families;
+- typed recurrence counts by identity basis;
+- replayable vs identity-only capsule counts.
 
 Never default to raw capsule count as prevalence.
 
@@ -1843,18 +1895,21 @@ Any unexplained OFF/ON behavior/work difference blocks rollout.
 
 The implementation is successful when all of the following are true:
 
-1. a failed solver run can optionally emit a compact, bounded, versioned search-loss capture;
-2. every retained capsule has structural, execution, stage, work, state/event, and selection provenance;
-3. every selector reports observed/retained/truncated denominator semantics;
-4. capture is production-inert under tested parity;
-5. the resource is discoverable through normal research asset/relation tooling;
-6. a later exact/reference run can annotate a historical capsule without rerunning the original search;
-7. selected studies inherit normal research-block/consumption lineage;
-8. parent-level dependence and failure-conditioning are visible through the Resource Contract;
-9. technique-census failed cells preserve compact work/progress/censoring response instead of collapsing to solve/no-solve;
-10. production refresh, benchmark, and solver-evaluated family workflows have an explicit compact-failure-data disposition and reuse common semantics;
-11. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
-12. no production policy consumes stored historical capsule identity or annotations.
+1. solver-running workflows preserve a compact failure-response view for failed attempts, including failed attempts inside ultimately solved runs;
+2. optional progress/rejection/flow telemetry is bounded, production-inert, and purposefully scoped;
+3. a failed solver run can optionally emit a compact, bounded, versioned search-loss capture;
+4. every retained capsule has structural, execution, stage, work, state/event, and selection provenance;
+5. capsules intended for later reconstruction declare and validate a replay basis;
+6. every selector reports observed/retained/truncated denominator semantics;
+7. capture is production-inert under tested parity;
+8. the resource is discoverable through normal research asset/relation tooling;
+9. a later exact/reference run can annotate a replayable historical capsule without rerunning the original search;
+10. selected studies inherit normal research-block/consumption lineage;
+11. parent-level dependence and failure-conditioning are visible through the Resource Contract;
+12. technique-census failed cells preserve compact work/progress/censoring response instead of collapsing to solve/no-solve;
+13. production refresh, benchmark, and solver-evaluated family workflows have an explicit compact-failure-data disposition and reuse common semantics;
+14. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
+15. no production policy consumes stored historical capsule identity or annotations.
 
 ## 19. Intended end state
 
