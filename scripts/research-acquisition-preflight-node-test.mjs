@@ -52,11 +52,13 @@ const ranked = rankCandidateAssets(
     { id: 'Q', question: 'exact prefix feasibility and production frontier observation' },
     [
         { id: 'unrelated', name: 'Unrelated archive', affordances: ['weather'] },
-        { id: 'exact-reference-labels', name: 'Exact/reference feasibility labels', affordances: ['prefix feasibility'], queryEntryPoints: ['query exact'] },
+        { id: 'exact-reference-labels', name: 'Exact/reference feasibility labels', affordances: ['prefix feasibility'], queryEntryPoints: ['query exact'], evidenceIntegrityRecords: [{ evidenceId: 'E-EXACT', decisionBearing: true, reliability: 'valid', reconstructability: 'full', rerunDisposition: 'none-required', sourcePaths: ['exact.json'] }] },
         { id: 'operational-traces', name: 'Operational traces', affordances: ['production frontier observation'], queryEntryPoints: ['query trace'] },
     ],
 );
 assert.deepEqual(ranked.map(row => row.id), ['exact-reference-labels', 'operational-traces']);
+assert.equal(ranked[0].evidenceIntegrity[0].evidenceId, 'E-EXACT');
+assert.equal(ranked[0].evidenceIntegrity[0].reconstructability, 'full');
 const joinRanked = rankCandidateAssetRelationships(
     { id: 'Q', question: 'exact prefix feasibility and production frontier observation' },
     [
