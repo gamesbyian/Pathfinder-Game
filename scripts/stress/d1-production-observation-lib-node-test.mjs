@@ -1,12 +1,28 @@
 import assert from 'node:assert/strict';
 
 import {
+    buildD1ResearchBlock,
     candidateRevisitCells,
     classifyD1CandidateQueryResults,
     freezeD1Eligibility,
     isPathPrefix,
     summarizeD1AnnotatedDecisions,
 } from './d1-production-observation-lib.mjs';
+
+const d1Block = buildD1ResearchBlock({
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    corpus: 'data/stress/stress-levels-random.json',
+    sourceRevision: `sha256:${'1'.repeat(64)}`,
+    parentIds: ['R00002', 'R00001'],
+    parentContentIdentities: ['v2:b', 'v2:a'],
+    captureArtifact: 'reports/stress/d1-capture.json',
+    runRef: 'abc123',
+});
+assert.match(d1Block.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
+assert.equal(d1Block.researchBlock.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
+assert.deepEqual(d1Block.researchBlock.parentIds, ['R00002', 'R00001']);
+assert.deepEqual(d1Block.researchBlock.consumptionEvents, []);
+assert.equal(d1Block.researchBlock.independentUnit, 'parent-level');
 
 const level = {
     goalKey: 9,

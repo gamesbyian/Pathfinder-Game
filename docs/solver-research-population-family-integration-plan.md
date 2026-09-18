@@ -5,7 +5,7 @@
 > **Priority:** `solver-optimization-workstreams.md`.
 > **Method:** `solver-research-operating-model.md`, `solver-evaluation-evidence.md`, `solver-research-resource-contract.md`.
 > **Goal:** make existing population, family, frontier/state, exact/reference, observation, and evidence resources compose as one progressive workflow without a second evidence warehouse.
-> **Progress (2026-09-17):** Phase 0 audit complete in `reports/solver-research-population-family-phase0-audit-2026-09-17.md`; Phase 1 implements the prospective block/consumption contract by extending the existing experiment-population seam. Phase 2 remains intentionally deferred until real block instances exist to query.
+> **Progress (2026-09-17):** Phase 0 audit and Phase 1 block/consumption contract are complete. The active D1 production-inert observer now adopts that contract prospectively, and Phase 2 provides read-only composition for explicitly supplied research artifacts through `research:relations`; no persistent block index or warehouse exists. Scientific D1 execution remains governed by its preflight and queue gate.
 
 ## 0. Target workflow
 

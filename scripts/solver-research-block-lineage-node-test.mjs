@@ -6,7 +6,14 @@ import {
     researchBlockEligibility,
     researchBlockIdentity,
     researchBlockIssues,
+    researchPopulationIdentity,
 } from './solver-research-block-lineage.mjs';
+
+const derivedPopulationIdentityA = researchPopulationIdentity(['P2', 'P1'], ['v2:b', 'v2:a']);
+const derivedPopulationIdentityB = researchPopulationIdentity(['P1', 'P2'], ['v2:a', 'v2:b']);
+assert.equal(derivedPopulationIdentityA, derivedPopulationIdentityB, 'population identity is order-invariant');
+assert.match(derivedPopulationIdentityA, /^sha256:[0-9a-f]{64}$/u);
+assert.throws(() => researchPopulationIdentity(['P1', 'P1'], ['v2:a', 'v2:a']), /duplicate parent ids/);
 
 const populationIdentity = `sha256:${'a'.repeat(64)}`;
 const block = {

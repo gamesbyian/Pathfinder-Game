@@ -6,6 +6,7 @@
  * same beam attempt with research observation enabled. Eligibility is frozen from the observed
  * production decision before any exact D1 result exists.
  */
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -13,8 +14,11 @@ import process from 'node:process';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { createSolver, SOLVER_TESTING_API } from '../../modules/solver.js';
 import { captureSolverGitState } from '../experiment-manifest-lib.mjs';
+import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
+import { getLevelFingerprint } from '../../modules/domain/level-fingerprint.js';
 import { beamResearchRecordToDecisionObservation } from '../solver-decision-observation-lib.mjs';
 import {
+    buildD1ResearchBlock,
     freezeD1Eligibility,
     pathIdentity,
 } from './d1-production-observation-lib.mjs';
@@ -38,10 +42,13 @@ const pauseAfterPhasesRaw = arg('pause-after-phases', null);
 const pauseAfterPhases = pauseAfterPhasesRaw == null ? undefined : Number(pauseAfterPhasesRaw);
 const cutoffRadius = Number(arg('cutoff-radius', 2));
 const evidenceRole = arg('evidence-role', 'development');
+const questionId = arg('question-id', 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
+const requestedBlockId = arg('block-id', null);
 const outFile = arg('out', null);
 
 if (!outFile && !listConfiguredBeams) throw new Error('--out is required unless --list-configured-beams is used');
 if (!levelIds.length) throw new Error('--levels must contain at least one level id');
+if (new Set(levelIds).size !== levelIds.length) throw new Error('--levels contains duplicate level ids');
 if (!Number.isFinite(width) || width < 1) throw new Error('--width must be positive');
 if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
 if (!(Number.isFinite(nodeBudget) || nodeBudget === Number.POSITIVE_INFINITY) || nodeBudget <= 0) throw new Error('--node-budget must be positive');
@@ -52,6 +59,10 @@ if (!Number.isInteger(cutoffRadius) || cutoffRadius < 0) throw new Error('--cuto
 if (evidenceRole !== 'development') {
     throw new Error('this capture currently supports development evidence only; independent confirmation requires orchestration-aware production reach');
 }
+const questionRegistry = loadResearchQuestionRegistry(ROOT);
+if (!questionRegistry.questions.some(question => question.id === questionId)) {
+    throw new Error(`unknown --question-id: ${questionId}`);
+}
 
 installBrowserStubs();
 const Solver = createSolver();
@@ -60,16 +71,21 @@ const profile = SCORING_PROFILES[profileName];
 if (!profile) throw new Error(`unknown scoring profile: ${profileName}`);
 const solver = captureSolverGitState();
 
-const corpusDoc = JSON.parse(readFileSync(path.resolve(ROOT, corpusFile), 'utf8'));
+const corpusBytes = readFileSync(path.resolve(ROOT, corpusFile));
+const corpusDoc = JSON.parse(corpusBytes.toString('utf8'));
+const sourceRevision = `sha256:${createHash('sha256').update(corpusBytes).digest('hex')}`;
 const rows = Array.isArray(corpusDoc) ? corpusDoc : corpusDoc.levels;
 if (!Array.isArray(rows)) throw new Error('corpus must be an array or {levels:[...]}');
 const byId = new Map(rows.map(row => [String(row.id), row]));
 
 const parents = [];
+const parentContentIdentities = [];
 const decisions = [];
 for (const levelId of levelIds) {
     const raw = byId.get(levelId);
     if (!raw) throw new Error(`level ${levelId} missing from ${corpusFile}`);
+    const parentContentIdentity = await getLevelFingerprint(raw);
+    parentContentIdentities.push(parentContentIdentity);
     const { id: _id, stressMeta: _stressMeta, ...rawLevel } = raw;
     const level = Solver.prepareLevelForSolver(rawLevel, { source: 'raw' });
     const gate = level.gateKeys[0];
@@ -159,6 +175,7 @@ for (const levelId of levelIds) {
 
     parents.push({
         parentId: levelId,
+        parentContentIdentity,
         evidenceRole,
         gate,
         configuredAttempt: matchingAttempt,
@@ -179,13 +196,28 @@ if (listConfiguredBeams) {
     process.exit(0);
 }
 
+const { populationIdentity, researchBlock } = buildD1ResearchBlock({
+    blockId: requestedBlockId,
+    questionId,
+    corpus: corpusFile,
+    sourceRevision,
+    evidenceRole,
+    parentIds: levelIds,
+    parentContentIdentities,
+    captureArtifact: outFile,
+    runRef: null,
+});
+
 const document = {
     schemaVersion: 1,
     kind: 'd1-production-inert-decision-capture',
     generatedAt: new Date().toISOString(),
     solver,
     corpus: corpusFile,
+    sourceRevision,
     levelIds,
+    populationIdentity,
+    researchBlock,
     evidenceRole,
     independentUnit: 'parent-level',
     executionBoundary: 'isolated current-policy beam configuration; policy membership verified, full orchestration reach/allocation not reproduced',
