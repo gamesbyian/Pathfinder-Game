@@ -85,6 +85,7 @@ import { getLevelFingerprint, getLevelFingerprintSource } from '../../modules/do
 import { stableHash } from '../solver-experiment-contract.mjs';
 import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
+import { generatorImplementationProvenance } from '../generator-implementation-provenance.mjs';
 
 import {
     mulberry32, hashSeed, randInt, pick,
@@ -620,8 +621,10 @@ async function main() {
     if (QUESTION_ID) {
         const parentIds = out.levels.map(level => String(level.id));
         const parentContentIdentities = await Promise.all(out.levels.map(level => getLevelFingerprint(level)));
+        const generatorImplementation = generatorImplementationProvenance(ROOT, 'scripts/stress/generate-random.mjs');
         const sourceRevision = stableHash({
             producer: 'scripts/stress/generate-random.mjs',
+            generatorImplementation,
             generatorVersion: GENERATOR_VERSION,
             corpusName: CORPUS_NAME,
             masterSeed: MASTER_SEED,
