@@ -9,6 +9,25 @@ const METADATA = /^# (.+)\r?\n\r?\n> \*\*Status:\*\* ([a-z-]+)\r?\n> \*\*Last ev
 const MARKDOWN_LINK = /\[[^\]]*\]\(([^)#]+)(?:#[^)]+)?\)/g;
 const ARTIFACT_PATH = /`((?:data|logs|reports)\/[A-Za-z0-9_./*{}<>-]+)`/g;
 
+function reportMetadataValue(source, label) {
+    const prefix = `> **${label}:** `;
+    const line = source.split(/\r?\n/u).find(candidate =>
+        candidate.toLowerCase().startsWith(prefix.toLowerCase()));
+    return line ? line.slice(prefix.length).trim() : null;
+}
+
+function metadataScalar(source, label) {
+    const value = reportMetadataValue(source, label);
+    if (!value || /^none$/iu.test(value)) return null;
+    return value.replaceAll('`', '').trim();
+}
+
+function metadataList(source, label) {
+    const value = reportMetadataValue(source, label);
+    if (!value || /^none$/iu.test(value)) return [];
+    return value.split(',').map(item => item.replaceAll('`', '').trim()).filter(Boolean);
+}
+
 function tableRows(source, heading) {
     const start = source.indexOf(heading);
     if (start < 0) return [];
@@ -80,6 +99,14 @@ export function buildResearchStatusIndex(root) {
             authorities: [...new Set(currentAuthorities)].sort(),
             latestEvidence: { date: metadata[3], summary: metadata[4], report: reportPath },
             decision: metadata[5], remainingGate: metadata[6], artifacts: [...artifacts].sort(),
+            researchQuestion: metadataScalar(source, 'Research question'),
+            premiseRefs: metadataList(source, 'Premise refs'),
+            measurementOpportunities: metadataList(source, 'Measurement opportunity'),
+            evidenceRole: metadataScalar(source, 'Evidence role'),
+            selection: metadataScalar(source, 'Selection'),
+            populationIdentity: metadataScalar(source, 'Population identity'),
+            selectionHistory: metadataScalar(source, 'Selection history'),
+            inferenceScope: metadataScalar(source, 'Inference scope'),
         });
     }
     const workstreamsPath = 'docs/solver-optimization-workstreams.md';
@@ -115,7 +142,14 @@ function compactEntry(kind, entry) {
         headings: entry.headings, report: entry.report };
     return { kind, id: entry.topicId, status: entry.status, title: entry.title,
         date: entry.latestEvidence.date, decision: entry.decision, gate: entry.remainingGate,
-        report: entry.latestEvidence.report, authorities: entry.authorities };
+        report: entry.latestEvidence.report, authorities: entry.authorities,
+        researchQuestion: entry.researchQuestion ?? null,
+        premiseRefs: entry.premiseRefs ?? [],
+        measurementOpportunities: entry.measurementOpportunities ?? [],
+        evidenceRole: entry.evidenceRole ?? null,
+        selection: entry.selection ?? null,
+        populationIdentity: entry.populationIdentity ?? null,
+        inferenceScope: entry.inferenceScope ?? null };
 }
 
 const ATTEMPT_IDENTITY_PATTERNS = Object.freeze([
