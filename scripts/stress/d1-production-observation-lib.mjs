@@ -1,3 +1,5 @@
+import { assertResearchBlock, researchPopulationIdentity } from '../solver-research-block-lineage.mjs';
+
 export const D1_DEVELOPMENT_PARENT_IDS = Object.freeze(['S00030', 'R00104', 'R03147']);
 
 export function pathIdentity(path) {
@@ -87,6 +89,40 @@ export function classifyD1CandidateQueryResults({ candidateCount, outcomes }) {
         return { support: 'SUPPORTED', value: 'ZERO', queried: list.length };
     }
     return { support: 'UNKNOWN', value: null, queried: list.length };
+}
+
+export function buildD1ResearchBlock({
+    blockId = null,
+    questionId,
+    corpus,
+    sourceRevision,
+    evidenceRole = 'development',
+    parentIds,
+    parentContentIdentities,
+    captureArtifact,
+    runRef = null,
+} = {}) {
+    const populationIdentity = researchPopulationIdentity(parentIds, parentContentIdentities);
+    const resolvedBlockId = blockId || `${questionId}:${populationIdentity.slice('sha256:'.length, 'sha256:'.length + 12)}`;
+    const researchBlock = assertResearchBlock({
+        blockId: resolvedBlockId,
+        questionId,
+        sourceRegime: corpus,
+        sourceRevision,
+        evidenceRole,
+        independentUnit: 'parent-level',
+        parentIds,
+        parentContentIdentities,
+        sourceArtifactRefs: [corpus, captureArtifact],
+        createdBy: {
+            producer: 'scripts/stress/capture-d1-production-decisions.mjs',
+            manifestRef: captureArtifact,
+            runRef,
+        },
+        generationRef: null,
+        consumptionEvents: [],
+    }, { populationIdentity });
+    return { populationIdentity, researchBlock };
 }
 
 export function summarizeD1AnnotatedDecisions(records) {
