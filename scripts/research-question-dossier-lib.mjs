@@ -76,15 +76,18 @@ export function buildQuestionDossier(root = process.cwd(), {
     const blocks = model.relations.researchBlocks.filter(row => row.questionId === questionId);
     const eligibleBlocks = blocks.filter(row => row.eligibility?.eligible === true);
     const durableEvidence = model.relations.durableEvidence.filter(row => row.questionId === questionId);
+    const exactTaggedEvidence = model.relations.evidence.filter(row => row.researchQuestion === questionId);
     const measurementIds = new Set([
         ...explicitIds(question, ['measurementOpportunity', 'measurementOpportunities', 'measurementOpportunityIds']),
         ...durableEvidence.map(row => row.measurementOpportunity).filter(Boolean),
+        ...exactTaggedEvidence.flatMap(row => row.measurementOpportunities ?? []),
     ]);
     const measurementOpportunities = model.relations.measurementOpportunities.filter(row => measurementIds.has(row.id));
 
     const premiseIds = new Set([
         ...explicitIds(question, ['premiseId', 'premiseIds', 'mappedPremises']),
         ...measurementOpportunities.flatMap(row => row.mappedPremises ?? []),
+        ...exactTaggedEvidence.flatMap(row => row.premiseRefs ?? []),
     ]);
     const premises = model.relations.premises.filter(row => premiseIds.has(row.premiseId));
     const premiseEdges = model.relations.premiseEdges.filter(row => premiseIds.has(row.from) || premiseIds.has(row.to));
@@ -96,6 +99,8 @@ export function buildQuestionDossier(root = process.cwd(), {
         const haystack = flatten(row).join(' ').toLowerCase();
         return authorityTerms.some(term => term && haystack.includes(term));
     };
+    const lexicalEvidenceMatches = model.relations.evidence.filter(authorityMatch);
+    const evidenceMatches = exactTaggedEvidence.length ? exactTaggedEvidence : lexicalEvidenceMatches;
 
     const acquisition = chooseAcquisitionRoute({ question, eligibleBlocks });
     const candidateAssets = rankCandidateAssets(question, model.relations.assets, { evidenceRole });
@@ -120,7 +125,8 @@ export function buildQuestionDossier(root = process.cwd(), {
         questionRelations: questionRelations(question, model.relations.questions),
         currentAuthorityMatches: {
             queue: model.relations.queue.filter(authorityMatch),
-            evidence: model.relations.evidence.filter(authorityMatch),
+            evidence: evidenceMatches,
+            evidenceMatchMode: exactTaggedEvidence.length ? 'stable-question-id' : 'lexical-fallback',
             experiments: model.relations.experiments.filter(authorityMatch),
         },
         evidenceRefs,
