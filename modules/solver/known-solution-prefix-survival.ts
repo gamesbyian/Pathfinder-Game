@@ -52,7 +52,12 @@ export class KnownSolutionPrefixIndex {
 }
 
 export interface KnownSolutionPrefixStageSummary {
-    stage: string; depth: number; work: number; candidateCount: number;
+    stage: string; depth: number;
+    /** Legacy node-progress counter retained for trace diagnostics. */
+    work: number;
+    /** Canonical machine-independent work meter at this observation. */
+    workSpent: number;
+    candidateCount: number;
     supportedCandidates: number; supportedPaths: number; supportedFamilies: number;
     details?: Record<string, unknown>;
     correctnessAlarm?: boolean;
@@ -93,7 +98,7 @@ export class KnownSolutionPrefixSurvivalObserver implements BeamResearchObserver
             if ('culled' in details) details.culled = filter(details.culled, 'path');
         }
         this.stages.push({
-            stage: record.stage, depth: record.depth, work: record.work,
+            stage: record.stage, depth: record.depth, work: record.work, workSpent: record.workSpent,
             candidateCount: record.paths.length,
             supportedCandidates: supports.filter(s => s.paths > 0).length,
             supportedPaths: solutionIds.size,
@@ -126,7 +131,9 @@ export class KnownSolutionPrefixSurvivalObserver implements BeamResearchObserver
             firstSupportLoss: losses[0] ?? null, finalSupportLoss: losses.at(-1) ?? null,
             lastSupportDepth: last?.depth ?? null,
             normalizedLastSupportDepth: last ? last.depth / Math.max(1, requiredLength) : null,
-            workAfterFinalKnownSupport: last ? Math.max(0, (this.stages.at(-1)?.work ?? last.work) - last.work) : null,
+            workAfterFinalKnownSupport: last
+                ? Math.max(0, (this.stages.at(-1)?.workSpent ?? last.workSpent) - last.workSpent)
+                : null,
             correctnessAlarms: this.stages.filter(s => s.correctnessAlarm),
             caution: 'Known support extinction does not prove that no valid solution remains.',
         };
