@@ -49,17 +49,17 @@ Each underlying generator remains directly callable. Its own CLI is the authorit
 
 The dispatcher exposes named suites because some experiments need coordinated acquisition without collapsing source semantics.
 
-- `transfer-pair`: random + topology. Use when a fixed candidate needs solver-blind same-family confirmation plus a materially different procedural challenge source.
+- `transfer-pair`: random + topology. Use when a fixed candidate needs solver-blind same-family confirmation plus a materially different procedural challenge source. With a question ID and no explicit suite-wide role override, random defaults to `confirmation` and topology to `transfer`.
 - `witness-contrast`: targeted + random. Use to test whether an effect depends on hypothesis-driven shaping while retaining witness-first construction.
 - `triangulation`: targeted + random + topology. Use for development questions where construction dependence itself is informative.
 
-A suite is a coordination convenience, not a statistical pooling rule. Report source-specific effects first. Any combined estimate must explicitly justify its weighting and independence assumptions.
+A suite is a coordination convenience, not a statistical pooling rule. Report source-specific effects first. Any combined estimate must explicitly justify its weighting and independence assumptions. `--evidence-role=<role>` explicitly overrides all suite defaults when a campaign intentionally assigns the same role to every source.
 
 The dispatcher offsets the supplied master seed by source position so a suite does not reuse an identical numeric seed as if it implied semantic coupling across different generators.
 
 ## Normalized count semantics
 
-`--count=N` means requested independent parents **per method**.
+`--count=N` means requested independent parents **per method**. Default outputs are namespaced under the question/suite and master seed. The front door refuses to replace an existing output or run manifest unless `--overwrite` is explicit; random's legacy `--append` remains a single-source, non-frozen-block operation.
 
 The random and topology producers emit exactly N parents. The targeted producer emits six fixed hypothesis batches, so its native unit is `--count-per-batch`. The dispatcher rounds upward to the nearest multiple of six unless `--targeted-count-per-batch` is supplied. The dry-run plan records both requested and planned parent counts.
 
