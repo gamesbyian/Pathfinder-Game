@@ -72,6 +72,7 @@ const PARENT_EXPOSURE = args.get('--parent-exposure') || 'unknown';
 let ORIGIN_BLOCK_ID = args.get('--origin-block-id') || null;
 let ORIGIN_POPULATION_IDENTITY = args.get('--origin-population-identity') || null;
 const ORIGIN_BLOCK_ARTIFACT = args.get('--origin-block-artifact') || null;
+let originExpectedContentIdentity = null;
 
 const VALID_MODES = ['local-mutant', 'density-sweep', 'symmetry', 'swap', 'group-reshuffle', 'constrained-shuffle', 're-embed'];
 if (!VALID_MODES.includes(MODE)) {
@@ -171,7 +172,7 @@ if (ORIGIN_BLOCK_ARTIFACT) {
     }
     ORIGIN_BLOCK_ID = block.blockId;
     ORIGIN_POPULATION_IDENTITY = populationIdentity;
-    globalThis.__familyOriginExpectedContentIdentity = block.parentContentIdentities[parentOffset];
+    originExpectedContentIdentity = block.parentContentIdentities[parentOffset];
 }
 
 // Defaults are MODE-qualified (not just parent-qualified): two different modes run against the
@@ -677,8 +678,7 @@ async function main() {
     const ctx = { witness, cell: witnessCellData(witness), rng: mulberry32(SEED) };
     const parentFingerprintSource = getLevelFingerprintSource(rawParent);
     const parentContentHash = await getLevelFingerprint(rawParent);
-    if (globalThis.__familyOriginExpectedContentIdentity
-        && globalThis.__familyOriginExpectedContentIdentity !== parentContentHash) {
+    if (originExpectedContentIdentity && originExpectedContentIdentity !== parentContentHash) {
         throw new Error(`origin block parent content identity mismatch for ${parentId}`);
     }
 
