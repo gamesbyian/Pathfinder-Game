@@ -17,9 +17,9 @@ Compact router. Load task-specific material, not history. [`DEVELOPER_REFERENCE.
 | Solver optimization/research | [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md), then [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md) and the specialist doc for the current gate |
 | Solver workflow/evidence maintenance | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md), then changed workflow/scripts |
 | Solver experiment population / sample sizing | [`docs/solver-experiment-opportunity-sizing.md`](docs/solver-experiment-opportunity-sizing.md); use `node scripts/experiment-opportunity-audit.mjs` before broad/sharded compute |
-| Solver research question / acquisition | `npm run research:dossier -- --question-id=<id>` for the read-only joined view, then `npm run research:acquisition-preflight -- --question-id=<id>` when acquisition is unresolved; neither surface owns priority/state or generates automatically |
+| Solver research question / acquisition | `research:dossier -- --question-id=<id>` for the read-only join; then `research:acquisition-preflight` if acquisition is unresolved; neither owns priority/state or auto-generates |
 | Solver research level generation / source choice | [`docs/solver-research-generation.md`](docs/solver-research-generation.md); `npm run research:generate-levels -- --list`; keep source blocks distinct and use `research:match-generation` only for outcome-blind matched selection |
-| Solver research data / cross-evidence | Start question-first with `npm run research:dossier -- --question-id=<id>`; lower-level joins: `npm run research:relations -- --list` (`--discover` includes known block/durable lineage), assets: `node scripts/research-asset-query.mjs --query=<term>`; topology: [`docs/solver-research-data-assets.md`](docs/solver-research-data-assets.md) |
+| Solver research data / cross-evidence | Question-first: `research:dossier`; lower-level: `research:relations -- --list [--discover]`, `research-asset-query.mjs`; topology: [`solver-research-data-assets.md`](docs/solver-research-data-assets.md) |
 | Solver budgets/allocation | Workstreams, then [`docs/solver-scheduling-policy.md`](docs/solver-scheduling-policy.md); add [`docs/solver-budget-determinism.md`](docs/solver-budget-determinism.md) when work/budget semantics matter |
 | Solver evaluation/generalization | [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md), then [`docs/solver-level-blindness.md`](docs/solver-level-blindness.md) |
 | Variant/family research | [`docs/variant-level-research.md`](docs/variant-level-research.md) |
@@ -39,7 +39,7 @@ Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post
 1. Read the current authority and implementation before editing. Reports/archive/frozen migration evidence do not define current behavior or priority.
 2. Treat the prompt as a goal, not an artificial file boundary. Do adjacent work when it materially completes the task; avoid unrelated cleanup.
 3. Close the loop: rerun invalidated evidence and update owning authority when results change.
-4. Use cheap discovery before broad context: `tooling-census --compact`, `research-status-index --compact`, `research:dossier -- --question-id=<id>` for a known stable question, and `research-asset-query.mjs` for resource search.
+4. Use cheap discovery before broad context: `tooling-census --compact`, `research-status-index --compact`, `research:dossier` for a known question, `research-asset-query.mjs` for resources.
 5. Audit cross-boundary propagation with [`docs/change-recipes.md`](docs/change-recipes.md).
 6. Prefer branch/PR validation; use `main` for experiments only when branch execution is impossible and record why.
 7. Before push, follow [`docs/ci-preflight.md`](docs/ci-preflight.md): ordinary `npm run ci:fast && npm run build`; deep solver `npm run ci && npm run build`. Do not use GHA as first deterministic feedback.
