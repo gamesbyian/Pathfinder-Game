@@ -116,10 +116,11 @@ export function buildResearchStatusIndex(root) {
     const workstreamRows = tableRows(workstreamsSource, '## Workstream state').length
         ? tableRows(workstreamsSource, '## Workstream state')
         : tableRows(workstreamsSource, '## Active workstreams');
-    const queue = workstreamRows.map(([id, question, state, gate]) => ({
+    const queue = workstreamRows.map(([id, question, state, gate, questionRef]) => ({
         topicId: `workstream-${id}`, workstreamId: /^\d+$/u.test(id) ? Number(id) : id, question,
         status: normalizedState(state), authority: workstreamsPath, authorityKind: 'workstreams',
         state, remainingGate: gate,
+        questionRef: questionRef && questionRef !== '—' ? questionRef.replaceAll('`', '').trim() : null,
     }));
     const ledgerPath = 'docs/solver-opt-in-experiment-ledger.md';
     const ledgerSource = existsSync(path.join(root, ledgerPath)) ? readFileSync(path.join(root, ledgerPath), 'utf8') : '';
@@ -135,7 +136,7 @@ export function buildResearchStatusIndex(root) {
 
 function compactEntry(kind, entry) {
     if (kind === 'queue') return { kind, id: entry.topicId, workstreamId: entry.workstreamId ?? null, status: entry.status,
-        question: entry.question, gate: entry.remainingGate, authority: entry.authority };
+        question: entry.question, questionRef: entry.questionRef ?? null, gate: entry.remainingGate, authority: entry.authority };
     if (kind === 'experiment') return { kind, id: entry.experimentId, status: entry.status,
         decision: entry.disposition, evidence: entry.latestEvidenceOrGate, authority: entry.authority };
     if (kind === 'legacy-evidence') return { kind, id: entry.topicId, date: entry.date, title: entry.title,
