@@ -19,6 +19,8 @@ export function auditResearchQuestionAuthorities(root = process.cwd()) {
     const errors = validateResearchQuestionRegistry(registry);
     const warnings = [];
 
+    const workstreamsPath = path.join(root, 'docs/solver-optimization-workstreams.md');
+    const workstreamsText = existsSync(workstreamsPath) ? readFileSync(workstreamsPath, 'utf8').toLowerCase() : '';
     const liveText = LIVE_AUTHORITY_PATHS
         .filter(relative => existsSync(path.join(root, relative)))
         .map(relative => readFileSync(path.join(root, relative), 'utf8').toLowerCase())
@@ -48,6 +50,9 @@ export function auditResearchQuestionAuthorities(root = process.cwd()) {
                 kind: 'active-with-reopen-condition',
                 detail: 'Active questions normally should describe their current gate directly rather than retain a deferred reopen condition.',
             });
+        }
+        if (state.startsWith('active') && !workstreamsText.includes(id.toLowerCase())) {
+            errors.push(`${id} is active but its stable question id is absent from solver-optimization-workstreams.md`);
         }
 
         if (state.startsWith('active') || state === 'deferred-reopen') {
