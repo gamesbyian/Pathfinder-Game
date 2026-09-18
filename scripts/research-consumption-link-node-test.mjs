@@ -71,6 +71,25 @@ try {
     assert.equal(model.relations.researchBlocks.length, 1);
     assert.equal(model.relations.researchBlocks[0].consumptionCount, 2);
     assert.equal(model.relations.researchBlocks[0].eligibility.eligible, false);
+
+    const badSelection = path.join(temp, 'bad-selection.json');
+    writeFileSync(badSelection, JSON.stringify({
+        schemaVersion: 1,
+        kind: 'research-cross-source-matched-selection',
+        selectionProcedure: { outcomeBlind: true },
+        sources: [{ name: 'random', file: blockPath, blockId: 'CONSUMPTION-TEST-BLOCK' }],
+        groups: [{ members: [{ source: 'random', id: 'NOT-IN-BLOCK' }] }],
+    }));
+    const rejected = spawnSync(process.execPath, [
+        'scripts/research-consumption-link.mjs',
+        `--block-artifact=${blockPath}`,
+        `--question-id=${questionId}`,
+        `--selection-artifact=${badSelection}`,
+        '--selection-source=random',
+        `--out=${path.join(temp, 'bad-consumption.json')}`,
+    ], { cwd: process.cwd(), encoding: 'utf8' });
+    assert.notEqual(rejected.status, 0);
+    assert.match(`${rejected.stdout}${rejected.stderr}`, /not present in source block/);
 } finally {
     rmSync(temp, { recursive: true, force: true });
 }
