@@ -117,6 +117,26 @@ The index now preserves generation-run research context at family and variant gr
 
 This is deliberately an index-boundary join. The large dataset remains off-main and the recorded evidence role remains provenance, not automatic inferential entitlement.
 
+
+### 7. Question -> mapped measurement opportunity -> experiment contract
+
+Experiment metadata already validated that a stable question ID existed and that an MO ID existed, but those two valid IDs could still be semantically unrelated.
+
+For questions with an earned `measurementOpportunities` mapping, both schema-v2 experiment preflight and the native schema-v3 contract writer now reject a supplied MO that is not mapped to that question. Questions without a curated mapping remain permissive rather than forcing guessed ontology.
+
+This closes a subtle referential-integrity gap: **existence of A and existence of B is not evidence that A×B is valid**.
+
+### 8. Work ladder -> population identity -> MO-004
+
+The work-ladder reducer previously unioned row IDs across budget cells. A row absent from one budget could therefore look exactly like an unsolved row and create false gains, losses, thresholds, or non-monotonicity.
+
+The reducer now requires every budget cell to contain the identical unique row-ID population before it computes response. Population construction/selection must happen upstream and remain fixed across the ladder.
+
+Together with independent-unit opportunity sizing, MO-004 now has two separate protections:
+
+- the experiment is sized on the correct unit for the claim;
+- the work-response ladder compares the same observations at every dose.
+
 ## Second-order seams worth exploiting next
 
 The items below are deliberately **not** all implemented here. They vary in semantic risk and should be earned by a live consumer or a general evidence-integrity need.
@@ -151,6 +171,14 @@ A stronger derived view would attach:
 Then MO-006 covariance or “policy diversity” analysis can distinguish genuinely different mechanisms from configuration clouds and weak historical evidence.
 
 Do not use this to delete actions or route production automatically.
+
+### Experiment question × source-block question × semantic relation
+
+Durable experiment contracts can legitimately evaluate a descendant question on a block originally frozen for an ancestor/related question, and the integration audit currently warns when those IDs differ. What is still missing is an explicit reason that the reuse is legitimate.
+
+A future contract extension should record the intended question relationship or reuse basis when `researchQuestion.questionId !== population.researchBlock.questionId`, then validate that relationship against the question graph or a declared no-semantic-relation reuse rule. That is preferable to either forbidding useful reuse or silently accepting every mismatch.
+
+This relationship remains distinct from contamination eligibility: a semantic ancestor/descendant relation does not itself prove that the block is exposed.
 
 ### Durable experiments × research blocks × MO-006 response covariance
 
