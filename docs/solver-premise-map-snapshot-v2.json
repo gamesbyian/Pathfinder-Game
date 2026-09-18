@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "snapshotId": "solver-premise-map-v2-2026-09-17",
+  "snapshotCommit": "ce080356a0946e1a3259168a5a4a5d403da83b22",
+  "parentSnapshotId": "solver-premise-map-v1-2026-09-17",
+  "parentSnapshotCommit": "e9601ffb8fa304d5ea91d054a9de6cb1bf8ff28e",
+  "parentCanonicalLineage": "chatgpt/phase3-premise-map-reconciliation-2026-09-17",
+  "purpose": "Separately versioned post-v1 premise inventory after reconciliation of the first preregistered mining round and the pre-mining post-v1 candidate register. The frozen v1 snapshot remains immutable.",
+  "propositionCount": 148,
+  "relationCount": 184,
+  "canonicalPremiseFiles": [
+    "docs/solver-premise-space-register.csv",
+    "docs/solver-premise-space-extension-2026-09-17.csv",
+    "docs/solver-premise-space-extension-2026-09-17b.csv",
+    "docs/solver-premise-space-extension-2026-09-17c.csv",
+    "docs/solver-premise-space-extension-2026-09-17d.csv"
+  ],
+  "relationFiles": [
+    "docs/solver-premise-space-graph.json",
+    "docs/solver-premise-space-relations-v2.json",
+    "docs/solver-premise-space-relations-v3.json",
+    "docs/solver-premise-space-relations-v4.json"
+  ],
+  "admissionProvenance": {
+    "phase1": "reports/solver-premise-map-phase1/phase1-closeout.md",
+    "phase2": "reports/solver-premise-map-phase2/06-phase2-closeout.md",
+    "phase3Reconciliation": "reports/solver-premise-map-phase3/01-candidate-reconciliation-and-admission-decisions.md",
+    "postV1CandidateRegister": "docs/solver-premise-space-post-v1-candidates-2026-09-17.csv",
+    "admitted": ["P201", "P202", "P203", "P204", "P205", "P206"],
+    "deferredCandidate": "PV1-007",
+    "scopeOnlyCandidate": "PV1-002"
+  },
+  "boundary": "This snapshot does not rewrite solver-premise-map-v1-2026-09-17. Phase-1 lens results remain evidence about v1, not evidence about v2. Any recursive mining of v2 requires a separately declared method boundary rather than reusing Phase-1 lens outputs as fresh inputs."
+}

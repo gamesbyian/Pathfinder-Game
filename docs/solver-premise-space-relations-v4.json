@@ -1,0 +1,24 @@
+{
+  "version": 4,
+  "scope": "delta relations for post-v1 Phase-3 admissions P201-P206; companions solver-premise-space-relations-v2.json/v3.json and 2026-09-17d extension",
+  "relations": [
+    {"from":"P201","type":"STRENGTHENS","to":"P199"},
+    {"from":"P201","type":"EPISTEMIC_PREREQUISITE_FOR","to":"support-volume confidence claims"},
+    {"from":"P201","type":"STRENGTHENS","to":"P188"},
+    {"from":"P202","type":"STRENGTHENS","to":"P198"},
+    {"from":"P202","type":"NARROWS","to":"reusable confirmation evidence"},
+    {"from":"P203","type":"STRENGTHENS","to":"P197"},
+    {"from":"P203","type":"STRENGTHENS","to":"P198"},
+    {"from":"P203","type":"EPISTEMIC_PREREQUISITE_FOR","to":"downstream closure and priority claims"},
+    {"from":"P204","type":"STRENGTHENS","to":"P183"},
+    {"from":"P204","type":"EPISTEMIC_PREREQUISITE_FOR","to":"causal research conclusions"},
+    {"from":"P204","type":"STRENGTHENS","to":"P137"},
+    {"from":"P205","type":"SPECIALIZATION_OF","to":"P196"},
+    {"from":"P205","type":"EPISTEMIC_PREREQUISITE_FOR","to":"premise-space completeness claims"},
+    {"from":"P206","type":"STRENGTHENS","to":"P151"},
+    {"from":"P206","type":"STRENGTHENS","to":"P153"},
+    {"from":"P206","type":"EPISTEMIC_PREREQUISITE_FOR","to":"matched-work null and detectability claims"},
+    {"from":"P201","type":"ALTERNATIVE_EXPLANATION_FOR","to":"raw multi-lens replication count"},
+    {"from":"P203","type":"ALTERNATIVE_EXPLANATION_FOR","to":"apparent downstream authority broadening"}
+  ]
+}

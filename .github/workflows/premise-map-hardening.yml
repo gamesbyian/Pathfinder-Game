@@ -14,10 +14,11 @@ on:
       - 'docs/solver-premise-space-relations*.json'
       - 'docs/solver-premise-map-hardening*.json'
       - 'docs/solver-premise-map-hardening*.md'
+      - 'docs/solver-premise-map-snapshot*.json'
       - 'docs/solver-premise-map-source-coverage*'
       - 'data/stress/README.*'
       - 'modules/solver/README.md'
-      - 'scripts/audit-solver-premise-map.mjs'
+      - 'scripts/audit-solver-premise-map*.mjs'
       - 'scripts/audit-solver-premise-source-coverage.mjs'
       - '.github/workflows/premise-map-hardening.yml'
   workflow_dispatch:
@@ -42,12 +43,16 @@ jobs:
             /.github/workflows/README.md
             /reports/2026-09-13-stress-corpus-population-validity-audit.md
             /reports/2026-09-10-solver-system-audit.md
+            /reports/solver-premise-map-phase3/
             /scripts/audit-solver-premise-map.mjs
+            /scripts/audit-solver-premise-map-v2.mjs
             /scripts/audit-solver-premise-source-coverage.mjs
       - uses: actions/setup-node@v7
         with:
           node-version: 20
-      - name: Audit premise-map structure
+      - name: Audit frozen v1 premise-map structure
         run: node scripts/audit-solver-premise-map.mjs
+      - name: Audit reconciled v2 premise-map structure
+        run: node scripts/audit-solver-premise-map-v2.mjs
       - name: Audit reciprocal premise-source coverage
         run: node scripts/audit-solver-premise-source-coverage.mjs
