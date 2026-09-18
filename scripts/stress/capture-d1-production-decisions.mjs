@@ -33,6 +33,8 @@ const profileName = arg('profile', 'intersectionHarvest');
 const width = Number(arg('width', 5000));
 const budgetMs = Number(arg('budget-ms', 600_000));
 const nodeBudget = Number(arg('node-budget', Number.POSITIVE_INFINITY));
+const pauseAfterPhasesRaw = arg('pause-after-phases', null);
+const pauseAfterPhases = pauseAfterPhasesRaw == null ? undefined : Number(pauseAfterPhasesRaw);
 const cutoffRadius = Number(arg('cutoff-radius', 2));
 const evidenceRole = arg('evidence-role', 'development');
 const outFile = arg('out', null);
@@ -42,6 +44,9 @@ if (!levelIds.length) throw new Error('--levels must contain at least one level 
 if (!Number.isFinite(width) || width < 1) throw new Error('--width must be positive');
 if (!Number.isFinite(budgetMs) || budgetMs <= 0) throw new Error('--budget-ms must be positive');
 if (!(Number.isFinite(nodeBudget) || nodeBudget === Number.POSITIVE_INFINITY) || nodeBudget <= 0) throw new Error('--node-budget must be positive');
+if (pauseAfterPhases !== undefined && (!Number.isInteger(pauseAfterPhases) || pauseAfterPhases < 1)) {
+    throw new Error('--pause-after-phases must be a positive integer');
+}
 if (!Number.isInteger(cutoffRadius) || cutoffRadius < 0) throw new Error('--cutoff-radius must be a non-negative integer');
 if (!['development', 'independent-confirmation'].includes(evidenceRole)) throw new Error('--evidence-role must be development or independent-confirmation');
 if (evidenceRole === 'independent-confirmation') {
@@ -75,7 +80,7 @@ for (const levelId of levelIds) {
     offPrep._metrics = { nodesExpanded: 0 };
     const offPath = await beamSearchFromGate(
         gate, level, offPrep, profile, budgetMs, Date.now(), null, width,
-        null, false, {}, nodeBudget,
+        null, false, {}, nodeBudget, undefined, pauseAfterPhases,
     );
 
     const cullRecords = [];
@@ -101,7 +106,7 @@ for (const levelId of levelIds) {
     };
     const onPath = await beamSearchFromGate(
         gate, level, onPrep, profile, budgetMs, Date.now(), null, width,
-        null, false, {}, nodeBudget,
+        null, false, {}, nodeBudget, undefined, pauseAfterPhases,
     );
 
     const behaviorIdentical = JSON.stringify(offPath) === JSON.stringify(onPath)
@@ -137,6 +142,7 @@ for (const levelId of levelIds) {
         controlNodesExpanded: offPrep._metrics.nodesExpanded,
         controlWorkSpent: offPrep._workMeter.units,
         behaviorIdentical,
+        pausedAtPhaseBoundary: pauseAfterPhases ?? null,
         cullDecisions: cullRecords.length,
         eligibleDecisions,
     });
@@ -152,7 +158,13 @@ const document = {
     evidenceRole,
     independentUnit: 'parent-level',
     freezeBoundary: 'all D1 eligibility fixed from unchanged beam decision records before exact D1 annotation',
-    policy: { profile: profileName, width, budgetMs, nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null },
+    policy: {
+        profile: profileName,
+        width,
+        budgetMs,
+        nodeBudget: Number.isFinite(nodeBudget) ? nodeBudget : null,
+        pauseAfterPhases: pauseAfterPhases ?? null,
+    },
     eligibility: {
         cutoffRadius,
         requirements: [
