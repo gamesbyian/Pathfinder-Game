@@ -130,6 +130,25 @@ Observation cost is implementation cost, not solver `workSpent`.
 
 Missing exact labels, incomplete ancestry, unsupported mechanics, timeout, truncated selection, and unavailable historical fields remain unknown.
 
+### 2.8 Use solved runs as controls where the phenomenon is not failure-exclusive
+
+A cull, prune, repeated state, expensive failed attempt, or temporary loss of one branch can occur inside a run that ultimately solves.
+
+Therefore:
+
+- compact attempt/failure-response telemetry should cover **all attempts**, including failed attempts inside solved parent runs;
+- aggregate search-process telemetry should be collectible on solved and unsolved runs under the same observer contract;
+- rich failure capsules may remain failure-focused initially, but selected solved-run controls should be available for prevalence/contrast studies;
+- a phenomenon should not be called failure-specific merely because it was first observed on terminally-unsolved parents.
+
+The technique census already provides a strong solved/unsolved control frame because T1 covers solved and unsolved levels. Production rows also preserve failed attempts preceding a later winner.
+
+### 2.9 Do not invent one universal basin identity
+
+The repo already has several valid but different identity layers: structural level fingerprints, exact path/prefix identity, specialist exact-state fingerprints, beam frontier ancestry keys, attempt/action identity, coarse-state/merge keys, connectivity reached-set/boundary fingerprints, and witness-path identity for replay-bound exact evidence.
+
+These answer different questions. The search-loss resource must preserve typed identities rather than collapse them into one `basinId`. A later derived basin/signature must declare exactly which identity/feature basis it uses and for which purpose.
+
 Do not convert:
 
 - no exact label -> DEAD;
