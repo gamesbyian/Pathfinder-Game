@@ -9,6 +9,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { installBrowserStubs } from '../test-lib/browser-stubs.mjs';
 import { classifyProbeProcess, extractExplicitPrefixCases, parseEmittedPath } from './cpsat-explicit-prefix-reference-lib.mjs';
 
@@ -106,15 +107,19 @@ for (const item of cases) {
     const prefixJson = JSON.stringify(item.prefix);
     const probeArgs = [probePath, item.levelId, String(timeLimit), '--emit-path', `--corpus=${item.corpus}`, `--prefix=${prefixJson}`];
     if (item.pin) probeArgs.push(`--pin=${JSON.stringify(item.pin)}`);
+    if (item.pinRevisit) probeArgs.push(`--pin-revisit=${JSON.stringify(item.pinRevisit)}`);
+    const probeStarted = performance.now();
     const result = spawnSync('python3', probeArgs, {
         encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
     });
+    const informationCostMs = performance.now() - probeStarted;
     const exitCode = result.status ?? (result.error ? -1 : 0);
     const classified = classifyProbeProcess({ stdout: result.stdout ?? '', stderr: result.stderr ?? '', exitCode });
     const row = {
         schemaVersion: 2, caseId: item.id, levelId: item.levelId, corpus: item.corpus, prefix: item.prefix, pin: item.pin ?? null,
+        pinRevisit: item.pinRevisit ?? null,
         depth: item.depth, sourceLabel: item.sourceLabel, referenceLabel: classified.label, referenceReason: classified.reason,
-        cpSatStatus: classified.status ?? null, timeLimitSec: timeLimit, exitCode,
+        cpSatStatus: classified.status ?? null, timeLimitSec: timeLimit, exitCode, informationCostMs,
     };
     if (classified.label === 'live') {
         const emitted = parseEmittedPath(result.stdout ?? '');
