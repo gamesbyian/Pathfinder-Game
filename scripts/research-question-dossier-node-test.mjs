@@ -26,7 +26,7 @@ const cli = JSON.parse(run.stdout);
 assert.equal(cli.question.id, questionId);
 assert.equal(cli.authority.kind, 'derived-read-only');
 
-const constrained = buildQuestionDossier(process.cwd(), { questionId: 'WS2-CLASS4-PORTAL-COARSE-FRESHNESS' });
+const constrained = buildQuestionDossier(process.cwd(), { questionId: 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION' });
 assert.ok(constrained.questionRelations.outgoing.some(edge =>
     edge.field === 'constrainedBy' && edge.id === 'WS2-PORTAL-COARSE-GLOBAL-MERGE'));
 
