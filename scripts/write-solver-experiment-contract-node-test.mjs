@@ -74,6 +74,7 @@ const researchBlock = {
   generationRef: 'tmp/portal-transfer/generation.json',
   consumptionEvents: [],
 };
+const researchPopulation = { kind: 'sealed-stratified-sample', identityBasis: 'stable-level-id', researchBlock };
 const withResearchBlock = buildContract({
   configuration: { baselineRef: 'd'.repeat(40), treatmentRef: 'e'.repeat(40), nodeBudget: 1 },
   workflowFamily: 'routing-regime-sample-ab',
@@ -86,13 +87,14 @@ const withResearchBlock = buildContract({
     outcomeInterpretation: { positive: 'retain successor', negative: 'close allocation form' },
     measurementOpportunity: 'MO-004',
   },
-  population: { kind: 'sealed-stratified-sample', identityBasis: 'stable-level-id', researchBlock },
+  population: researchPopulation,
 }, { resolvedSha, populationSeal: { identityHash: populationIdentity, count: 1 } });
 assert.equal(withResearchBlock.researchQuestion.questionId, 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION');
 assert.equal(withResearchBlock.researchQuestion.measurementOpportunity, 'MO-004');
 assert.equal(withResearchBlock.population.researchBlock.blockId, researchBlock.blockId);
 assert.equal(withResearchBlock.population.corpusIdentity, populationIdentity);
 assert.equal(withResearchBlock.population.independentUnit, 'parent-level');
+assert.equal(researchPopulation.independentUnit, undefined, 'contract construction must not mutate the caller population declaration');
 
 assert.throws(() => buildContract({
   configuration: { nodeBudget: 1 },
