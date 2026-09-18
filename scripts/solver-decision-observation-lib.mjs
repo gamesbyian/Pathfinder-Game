@@ -141,6 +141,8 @@ export function beamResearchRecordToDecisionObservation(record, { parentId, deci
                 score: row.score ?? null,
                 insertionOrder: row.insertionOrder ?? null,
                 ints: Number.isFinite(row.ints) ? row.ints : null,
+                mustCrossMask: Number.isFinite(row.mustCrossMask) ? row.mustCrossMask : null,
+                flipperUsedMask: Number.isFinite(row.flipperUsedMask) ? row.flipperUsedMask : null,
                 retained: !culledIds.has(candidateIds[index]),
             })),
         },
