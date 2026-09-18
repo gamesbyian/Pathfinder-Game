@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { acquisitionStopRule, chooseAcquisitionRoute, generationGuidanceForRoute, inferAcquisitionNeed, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
+import { acquisitionStopRule, chooseAcquisitionRoute, generationGuidanceForRoute, inferAcquisitionNeed, rankCandidateAssetRelationships, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
 
 const d1 = {
     id: 'D1',
@@ -57,6 +57,16 @@ const ranked = rankCandidateAssets(
     ],
 );
 assert.deepEqual(ranked.map(row => row.id), ['exact-reference-labels', 'operational-traces']);
+const joinRanked = rankCandidateAssetRelationships(
+    { id: 'Q', question: 'exact prefix feasibility and production frontier observation' },
+    [
+        { id: 'exact-to-trace', assets: ['exact-reference-labels', 'operational-traces'], questions: ['prefix feasibility observation'], boundary: 'offline only' },
+        { id: 'weather', assets: ['unrelated'], questions: ['weather'], boundary: 'none' },
+    ],
+    { candidateAssetIds: ranked.map(row => row.id) },
+);
+assert.deepEqual(joinRanked.map(row => row.id), ['exact-to-trace']);
+assert.equal(joinRanked[0].candidateAssetOverlap.length, 2);
 assert.match(acquisitionStopRule('NO_LEVEL_GENERATION'), /stop before generation/u);
 assert.match(acquisitionStopRule('FRESH_SAME_SOURCE'), /pilot first/u);
 assert.deepEqual(generationGuidanceForRoute('FRESH_SAME_SOURCE').candidateMethods.map(row => row.id), ['targeted', 'random', 'topology']);
@@ -110,6 +120,7 @@ try {
     assert.equal(output.opportunitySizing.opportunities, 1);
     assert.equal(output.opportunitySizing.total, 2);
     assert.ok(output.candidateAssets.assets.length > 0);
+    assert.ok(Array.isArray(output.candidateAssets.authoredJoins));
     assert.match(output.evidencePlan.stopRule, /existing material/u);
 } finally {
     rmSync(tempDir, { recursive: true, force: true });
