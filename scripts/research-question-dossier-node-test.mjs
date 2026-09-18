@@ -10,6 +10,7 @@ assert.equal(dossier.question.id, questionId);
 assert.ok(dossier.acquisition.route);
 assert.equal(dossier.acquisition.generationGuidance.automaticGeneration, false);
 assert.ok(Array.isArray(dossier.resources.candidateAssets));
+assert.ok(Array.isArray(dossier.resources.candidateJoins));
 assert.equal(dossier.conceptualContext.premiseDiscoveryHints.authority, 'lexical-discovery-only');
 assert.ok(dossier.conceptualContext.premiseDiscoveryHints.rows.length > 0);
 
