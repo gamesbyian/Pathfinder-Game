@@ -71,6 +71,23 @@ export function auditResearchIntegration(root = process.cwd()) {
     }
 
     const model = buildResearchRelations(root, { discoverArtifacts: true });
+    if (model.relations.queue.length === 0) {
+        errors.push('research-status queue relation is empty; current workstream authority is not reaching research relations');
+    }
+    if (!model.relations.queue.some(row => String(row.workstreamId) === '2')) {
+        errors.push('research-status queue relation does not expose WS2 from current workstream authority');
+    }
+    for (const evidence of model.relations.evidence) {
+        if (evidence.researchQuestion && !questionIds.has(evidence.researchQuestion)) {
+            errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown research question ${evidence.researchQuestion}`);
+        }
+        for (const premiseId of evidence.premiseRefs ?? []) {
+            if (!premiseIds.has(premiseId)) errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown premise ${premiseId}`);
+        }
+        for (const moId of evidence.measurementOpportunities ?? []) {
+            if (!measurementIds.has(moId)) errors.push(`report ${evidence.latestEvidence?.report ?? evidence.topicId} references unknown measurement opportunity ${moId}`);
+        }
+    }
 
     const assetsDocument = JSON.parse(readFileSync(path.join(root, 'docs/solver-research-data-assets.json'), 'utf8'));
     const assetIds = new Set((assetsDocument.assets ?? []).map(asset => asset.id));
