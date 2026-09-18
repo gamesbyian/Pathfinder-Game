@@ -37,20 +37,20 @@ Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post
 
 1. Read the current authority and implementation before editing. Reports/archive/frozen migration evidence do not define current behavior or priority.
 2. Treat the prompt as a goal, not an artificial file boundary. Do adjacent work when it materially completes the task; avoid unrelated cleanup.
-3. Close the loop. If a bug invalidated evidence, rerun it; if a result changes guidance, update the owning authority.
+3. Close the loop: rerun invalidated evidence and update owning authority when results change.
 4. Use cheap discovery before broad context: `tooling-census --compact`, `research-status-index --compact`, `research-asset-query.mjs`.
 5. Audit cross-boundary propagation with [`docs/change-recipes.md`](docs/change-recipes.md).
-6. Prefer branch/PR validation; do not use `main` as experiment scratch space unless the required execution path cannot exercise a branch and the reason is recorded.
+6. Prefer branch/PR validation; use `main` for experiments only when branch execution is impossible and record why.
 7. Before push, follow [`docs/ci-preflight.md`](docs/ci-preflight.md): ordinary `npm run ci:fast && npm run build`; deep solver `npm run ci && npm run build`. Do not use GHA as first deterministic feedback.
-8. Do not weaken validation to pass. Root-cause unexpected invariant, CSP, architecture, referee, or type failures.
+8. Do not weaken validation; root-cause invariant, CSP, architecture, referee, or type failures.
 9. Source is TypeScript; `domain/`, `runtime/`, and `solver/` stay browser-free; `engineState` mutations use state actions.
-10. Honor visible file-size declarations before editing: stay below `warn` when practical and never cross `max`. If already over a hard limit, make one coherent reduction with margin (default: remove at least `max(2 × excess, 1 KB)`), then re-measure.
+10. Honor file-size declarations: stay below `warn` when practical, never cross `max`; if already over, reduce with margin and re-measure.
 
 ## Solver research invariants
 
 - [`docs/solver-optimization-workstreams.md`](docs/solver-optimization-workstreams.md) owns priority/state/gates. Specialist docs/reports refine a gate but do not reprioritize it.
 - Use the smallest evidence that can decide the next gate. A clear negative closes the tested form unless materially new evidence changes the premise.
-- Inventory existing provenance, census/capability, profiles, variants, lifecycle, traces, manifests, exact labels, and other evidence before generating more. Materially searched joins add selection pressure.
+- Inventory existing provenance/capability/profile/variant/trace/manifest/exact evidence before generating more; searched joins add selection pressure.
 - Before broad/sharded decision work, define the **opportunity population**, estimate its control-side rate, and size N from informative rows. Benefit-enriched and representative no-harm populations are separate.
 - When opportunity/exposure is uncertain, run the smallest control-only/shadow pilot. Ceiling, low real participation, or zero opportunity blocks scale-up.
 - Before a large matrix, run one representative **execution-family canary** under exact cap/flags/selector semantics and verify stop/accounting behavior.
@@ -59,9 +59,9 @@ Use [`docs/solver-research-post-naming-resumption.md`](docs/solver-research-post
 - Runtime telemetry may steer GHA packing/timeouts, never cold policy; persist the telemetry/fallback used.
 - Derived features come from canonical helpers/schemas; assert row shape before filtering/stratifying.
 - Level-blindness is not generalization. Cold policy cannot use identity, hints, known winners, historical per-level outcomes/cost, prior persistent per-level state, or variant outcomes. Solve-local derivations from current inputs are legal in principle; soundness/economics are separate.
-- Use `workSpent` for cross-technique allocation. Raw nodes are within-technique diagnostics; wall time is implementation cost. New actions/configurations do not get free additive budget.
+- Use `workSpent` for cross-technique allocation; nodes are diagnostics, wall time is implementation cost, and new actions get no free additive budget.
 - Treat weights/profiles/widths/directions/seeds/thresholds/budgets as configurations until evidence shows a distinct mechanism.
-- Preserve provenance/evidence classes and independent units. Report population, unit, work envelope, selection procedure, and evidence role precisely.
+- Preserve provenance/evidence classes and independent units; report population, work envelope, selection, and role precisely.
 - The large variant-family dataset stays off-main on `claude/variant-levels-solver-insights-tpk4qg`; use current `main` code with it mounted separately.
 
 Detailed method/stop/promotion rules: [`docs/solver-research-operating-model.md`](docs/solver-research-operating-model.md). Evaluation/holdouts: [`docs/solver-evaluation-evidence.md`](docs/solver-evaluation-evidence.md).
