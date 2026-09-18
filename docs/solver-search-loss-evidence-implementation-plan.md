@@ -1442,6 +1442,36 @@ The shared response/capsule contract should distinguish whether a retained obser
 
 A capsule intended for exact annotation must carry a verified replay basis, not only a digest.
 
+#### Automatic workflow plumbing
+
+After the shared projection is stable, wire it through the standard workflow/tooling surfaces rather than adding per-experiment flags.
+
+At minimum inspect and update as applicable:
+
+- `solver-stress-refresh.yml` shard staging, combine, and standard result publication;
+- `technique-census.yml` shard output, combine, and standard result publication;
+- level-blind/targeted sweep wrappers that reuse the same row/result shape;
+- benchmark and family-evaluation publishers;
+- `publish-solver-sweep-result.mjs`;
+- experiment contract/result helpers;
+- `harvest-solver-evidence.yml` durability path.
+
+The compact layer should be produced and transported automatically whenever the underlying producer supports it.
+
+#### Future-workflow guardrail
+
+Add or extend a checker/tooling census so new solver-running workflows cannot silently omit failure-evidence disposition.
+
+The check should distinguish:
+
+- standard producer;
+- justified specialized opt-out;
+- unsupported producer.
+
+It should also catch stale experiment contracts that still declare telemetry `none` while their workflow emits compact failure evidence.
+
+Migration may temporarily allow explicit legacy exceptions, but the end state must not depend on agent memory.
+
 #### Producer contract audit
 
 Inspect at least:
@@ -1557,6 +1587,23 @@ Tests:
 - stable ordering;
 - research block validation;
 - source manifest/run identity.
+
+
+#### GHA durability integration
+
+Extend the existing solver-evidence harvesting/durable-evidence path rather than inventing an independent persistence service.
+
+Requirements:
+
+- discover source-run failure bundles automatically;
+- verify schema and source-run identity;
+- preserve artifact/population coverage;
+- persist only under the documented retention rule;
+- retain run-scoped provenance;
+- tolerate partial source runs without laundering them into complete evidence;
+- avoid a mutable global failure database.
+
+Add a manual/backfill path analogous to existing evidence re-harvest where useful, so an existing GHA run can be re-imported without rerunning the solver when its artifacts already contain valid failure evidence.
 
 ### Phase 6 - annotation adapters
 
