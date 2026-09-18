@@ -49,6 +49,9 @@ function loadSource(spec) {
   const parsed = JSON.parse(readFileSync(spec.file, 'utf8'));
   const levels = Array.isArray(parsed) ? parsed : parsed.levels;
   if (!Array.isArray(levels)) throw new Error(`${spec.file}: expected level array or {levels}`);
+  const parentIds = parsed.researchBlock?.parentIds || [];
+  const parentContentIdentities = parsed.researchBlock?.parentContentIdentities || [];
+  const contentIdentityById = Object.fromEntries(parentIds.map((id, index) => [String(id), parentContentIdentities[index] ?? null]));
   return {
     name: spec.name,
     file: spec.file,
@@ -56,6 +59,7 @@ function loadSource(spec) {
     blockId: parsed.researchBlock?.blockId ?? null,
     populationIdentity: parsed.populationIdentity ?? null,
     sourceRegime: parsed.researchBlock?.sourceRegime ?? parsed.corpusName ?? null,
+    contentIdentityById,
   };
 }
 
@@ -93,7 +97,7 @@ function main() {
       tieBreak: 'lexicographic level id',
     },
     evidenceBoundary: 'This artifact records selection provenance only. Source blocks remain authoritative and separate; matched rows are not a new independent population and solver outcomes must not be used to revise this selection without reclassifying evidence.',
-    sources: sources.map(({ levels, ...source }) => ({ ...source, parentCount: levels.length })),
+    sources: sources.map(({ levels, contentIdentityById, ...source }) => ({ ...source, parentCount: levels.length, hasContentIdentities: Object.keys(contentIdentityById).length > 0 })),
     ...matched,
   };
   mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
