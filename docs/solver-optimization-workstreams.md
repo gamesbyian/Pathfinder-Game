@@ -33,7 +33,7 @@ Cheap retained/offline premise tests may run in parallel. Expensive treatments r
 
 #### Lane A — separator / decomposition
 
-**BOUNDED POSITIVE; CONSUMER GATE STOPS AT REPRESENTATION.** 121/390 Class-5 levels have a non-trivial balanced width<=4 static/mechanic-aware interface; portal mediation is negative. Puzzle state exists, but no compact dynamic contract preserving crossing/history/length/intersection obligations has been demonstrated. D3's history-dependent composition failures and F3's endpoint-equivalent topology contrast now bound what such a contract may need to preserve. Do not feed raw separator geometry directly into ranking. **Next cheap step:** reconcile retained A/D3/F3 evidence to nominate the smallest candidate interface signature before new compute. **Reopen:** only when a bounded candidate contract can be tested on a frozen legal-prefix population. [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md) · [`census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
+**BOUNDED POSITIVE; REPRESENTATION-STOPPED.** 121/390 Class-5 levels have a balanced width<=4 interface; no compact dynamic contract is known. D3/F3 now constrain that contract. **Next:** retained A/D3/F3 reconciliation, then only a bounded frozen-prefix contract test. [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md) · [`census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
@@ -58,13 +58,13 @@ See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
 #### Lane F — bounded exposure / representation
 
-1. **Class-3 dose: EVIDENCE GAP.** No committed per-technique work-tranche telemetry. The MO-004 work-ladder reducer now exists, but cannot reconstruct dose the producer never recorded; do not re-check until a prospective producer captures exact-action participation/work tranche. [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
+1. **Class-3 dose: EVIDENCE GAP.** MO-004 analysis exists, but historical per-technique dose telemetry does not. Reopen only from prospective exact-action participation/work data. [`result`](../reports/2026-09-17-class3-dose-reconciliation-evidence-gap-001.md)
 2. **Card-E quotient: MIXED.** Board-independent signal survives Card-E permutation tests but is insufficient for canonicalization/classifier. [`result`](../reports/2026-09-17-behavioral-state-quotient-probe-result-001.md)
 3. **F3 topology microscope: QUALIFIED POSITIVE; CONSUMER GATE STOPS AT DECISION-BEARING COVERAGE.** Cheap descriptor is 8/8 when closest point unique, but that subset has zero decision-relevant discordance. All 9 decisive-puncture discordant rows are tied; tied reliability is 7/9 and cheap tie refinement does not improve it. No selector/prune consumer earned. **Reopen:** fresh independent parents only if a reliable compact descriptor has non-zero decision-bearing discordance. [`result`](../reports/2026-09-17-lane-f3-topology-fork-population-expansion-result-001.md) · [`census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
 
 #### Lane G — independent search-object nursery
 
-**G1 complete-path LNS:** Stage 1 positive, Stage 2 method-limited. Solutions cluster (median Jaccard 0.11; 25 levels/2,235 pairs), but 3 naive complete-path constructions failed. The later production-search multi-pick result removes the broad 'production-quality constructor missing' blocker: real beam frontiers can yield rare LIVE states, and the reusable frontier sampler now freezes multi-pick states with ancestry. The remaining gate is narrower: turn production-search-derived partials into a fair complete relaxed candidate, then measure distance/local repairability. No LNS implementation earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
+**G1 complete-path LNS:** Stage 1 positive; naive Stage 2 method-limited. Real production-frontier sampling now exists, so the remaining gate is a fair full candidate derived from frozen real-search partials, then distance/local-repairability. No LNS earned. [`result`](../reports/2026-09-17-lane-g-complete-path-lns-falsifier-result-001.md)
 
 **G2 backward/bidirectional abstraction:** deferred until A/D/topology yields a compact sound signature; do not reopen full MITM.
 
@@ -82,7 +82,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 ### 2. Workstream 1: automatic solver action selection
 
-**State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed using capability/lifecycle/provenance/family/trace evidence. The September structural-response ladder already ran through first divergence; **do not restart earlier stages**. H3's remaining-length ordering is a strong legal one-population allocation signal, but needs one prespecified independent shared-budget transfer before it opens a WS1 policy gate. Otherwise reopen only from a cheap legal current-input signal predicting allocation, never exact offline labels or historical family membership.
+**State:** SUPPORTING / NO ACTIVE SELECTOR GATE. Distinguish not-exposed from exposed-and-failed. Do not restart the completed structural-response ladder. H3 remaining-length ordering is a one-population nomination only; one prespecified independent shared-budget transfer is required before a WS1 gate.
 
 ## Workstream state
 
