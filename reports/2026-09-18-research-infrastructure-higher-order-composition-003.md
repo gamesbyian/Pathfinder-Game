@@ -5,7 +5,7 @@
 > **Last evidence:** 2026-09-18 — fresh composition audit of current `main` at `7a7fd3734766e8ca40c40dea575337b183544672` (merged PR #1878), plus bounded integration repairs on this branch.
 > **Decision:** the research architecture is substantially coherent, but several important semantics still disappear at composition boundaries. Land the low-risk propagation and read-only join repairs now; keep reopen semantics, phenotype memory, selection-impact semantics, source-adequacy modelling, and process metrology as bounded follow-on designs until a live consumer earns them.
 > **Remaining gate:** do not delay the current scientific queue merely to complete infrastructure. Before the next broad solver push, close the independent-unit propagation seam, make integrity visible at resource selection, and use the current D1/active-question workflow as an end-to-end canary for the remaining composition chain.
-> **Research question:** none; infrastructure/metrology audit
+> **Research question:** none
 > **Premise refs:** `P123`, `P133`, `P190`, `P191`, `P201`, `P204`, `P206`
 > **Measurement opportunity:** `MO-002`, `MO-004`, `MO-005`, `MO-006`, `MO-007`
 > **Evidence role:** forensic / research-infrastructure hardening
