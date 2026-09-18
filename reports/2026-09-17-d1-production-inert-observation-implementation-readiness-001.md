@@ -99,7 +99,7 @@ A canary with zero eligible decisions is a valid tooling result but does not jus
 
 Do not start Stage 2 merely because the tooling works.
 
-The execution-layer extension is now available: the generic beam research observer can be attached to full production `solveLevel` orchestration, with each record carrying attempt ordinal/config/gate identity and the capture joining that ordinal to authoritative attempt stage telemetry. An independent pilot still requires the Stage-1 canary to pass first; after that, select multiple parents deterministically, exclude prior D1 development parents, freeze the exact population/protocol, annotate all frozen eligible decisions, and cluster inference by parent.
+The execution-layer extension is now available: the generic beam research observer can be attached to full production `solveLevel` orchestration, with each record carrying attempt ordinal/config/gate identity and the capture joining that ordinal to authoritative attempt stage telemetry. An independent pilot still requires the Stage-1 canary to pass first; after that, select multiple parents deterministically, exclude prior D1 development parents, freeze the exact population/protocol, annotate all frozen eligible decisions, and cluster inference by parent. The offline annotator now accepts confirmation/transfer only for full-orchestration captures and rejects any post-capture eligible-decision cap for those roles.
 
 The Stage-2 advancement question remains the one in `docs/solver-d1-production-inert-evidence-preflight.md`: whether D1 repeatedly disagrees with real production retention near the cutoff and whether the resulting capability/work envelope can plausibly pay for the information.
 
