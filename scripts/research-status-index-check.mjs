@@ -166,6 +166,8 @@ const repositoryIndex = buildResearchStatusIndex(process.cwd());
 assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
 assert.ok(repositoryIndex.queue.some(row => String(row.workstreamId) === '2' && row.status === 'active'),
     'WS2 active gate must remain discoverable through the research-status queue relation');
+assert.ok(repositoryIndex.queue.some(row => row.workstreamId === '6/7'),
+    'composite workstream identities must survive indexing without numeric coercion');
 
 const repositoryRegistry = loadResearchQuestionRegistry(process.cwd());
 assert.deepEqual(validateResearchQuestionRegistry(repositoryRegistry), [],
