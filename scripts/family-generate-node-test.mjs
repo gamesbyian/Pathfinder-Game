@@ -26,7 +26,7 @@ const { writeLevelsWithHints } = await import('./level-data-io.mjs');
 const { validateRawLevel } = await import('../modules/domain/level-schema.js');
 const { validateCandidatePath } = await import('../modules/domain/path-validator.js');
 const { parseRawLevel } = await import('../modules/domain/level-codec.js');
-const { getLevelFingerprintSource } = await import('../modules/domain/level-fingerprint.js');
+const { getLevelFingerprint, getLevelFingerprintSource } = await import('../modules/domain/level-fingerprint.js');
 
 async function runGenerate(args) {
     return execFile('node', [FAMILY_GENERATE_BUNDLE, ...args], {
@@ -128,12 +128,32 @@ async function main() {
         const fixtureLevelsPathAbs = await writeFixtureCorpus(fixtureDir, parent);
         const outPath = path.join(tempDir, 'movable', 'out.json');
         const manifestPath = path.join(tempDir, 'movable', 'manifest.json');
+        const originBlockPath = path.join(tempDir, 'movable', 'origin-block.json');
+        const parentContentIdentity = await getLevelFingerprint(parent);
+        const originPopulationIdentity = `sha256:${'1'.repeat(64)}`;
+        await writeFile(originBlockPath, JSON.stringify({
+            populationIdentity: originPopulationIdentity,
+            researchBlock: {
+                blockId: 'TEST-BLOCK',
+                questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+                sourceRegime: 'test-fixture',
+                sourceRevision: 'test-revision',
+                evidenceRole: 'development',
+                independentUnit: 'parent-level',
+                parentIds: [parent.id],
+                parentContentIdentities: [parentContentIdentity],
+                sourceArtifactRefs: [path.relative(ROOT, fixtureLevelsPathAbs)],
+                createdBy: { producer: 'test', manifestRef: path.relative(ROOT, originBlockPath), runRef: null },
+                generationRef: path.relative(ROOT, fixtureLevelsPathAbs),
+                consumptionEvents: [],
+            },
+        }));
 
         const result = await runGenerate([
             `--parent-corpus=${path.relative(ROOT, fixtureLevelsPathAbs)}`,
             `--parent=${parent.id}`, '--count=3', '--seed=42',
             '--question-id=WS2-D1-PRODUCTION-INERT-OBSERVATION', '--evidence-role=development',
-            '--origin-block-id=TEST-BLOCK', `--origin-population-identity=sha256:${'1'.repeat(64)}`,
+            `--origin-block-artifact=${rel(originBlockPath)}`,
             `--out=${rel(outPath)}`, `--manifest-out=${rel(manifestPath)}`,
         ]);
         assert.match(result.stdout, /movable object instance\(s\)/);
@@ -157,7 +177,7 @@ async function main() {
         assert.equal(researchContext.evidenceRole, 'development');
         assert.equal(researchContext.independentUnit, 'parent-family');
         assert.equal(researchContext.originResearchBlock.blockId, 'TEST-BLOCK');
-        assert.match(researchContext.originResearchBlock.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
+        assert.equal(researchContext.originResearchBlock.populationIdentity, originPopulationIdentity);
 
         const witnessPath = parent.hints[0];
         const seenIds = new Set();
