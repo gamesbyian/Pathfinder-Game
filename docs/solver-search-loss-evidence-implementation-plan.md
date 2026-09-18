@@ -153,6 +153,8 @@ Do not convert:
 8. Provide query/reduction tooling for parent-level studies.
 9. Use the resource in one bounded first-loss-oriented scientific consumer.
 10. Audit the resource under the Resource Contract once it becomes a recurring decision-bearing input.
+11. Add a shared compact failure-response projection for solver-running workflows so unsuccessful attempts preserve comparable work/progress/censoring data even when rich capsules are disabled.
+12. Treat the technique census, equal-work census, production refresh, benchmark tooling, and selected family-evaluation workflows as prospective producers where they already compute useful failure-side data.
 
 ### Explicit non-goals
 
@@ -485,15 +487,191 @@ Family siblings remain dependent. Independent unit is parent family for cross-fa
 
 ### 6.9 Technique census
 
-Join by level and normalized action/config.
+The technique census is both a **consumer** and a **primary prospective producer** of search-loss evidence.
 
-Question:
+Its experimental framing is unusually valuable:
 
-> Does isolated capability exist for a level whose production loss capsule shows that the corresponding regime was never reached, was under-retained, or was starved?
+- explicit technique/configuration identity;
+- explicit level;
+- explicit cell identity;
+- fixed node or work ceiling;
+- complete attempted denominator;
+- clear terminal status;
+- isolated technique execution rather than mixed production routing.
 
-This can separate acquisition from exposure/placement hypotheses.
+That makes a failed technique-census cell more informative than a generic "solver failed this level" row.
 
-### 6.10 Hint provenance and solution profiles
+#### Current producer gap
+
+`scripts/technique-census-cell.mjs` already computes rich attempt-side data, including canonical technique identity, outcome, nodes, work where work-mode is active, allocated ceilings, `bestBadness`, `finalBadness`, and censoring/termination state.
+
+However, failed cells normally persist `attempts[]` only when `cell.collectAttemptTelemetry === true`; successful cells retain enough attempt information for hint provenance. The normal plan does not currently make failure-side attempt retention a standard property.
+
+Do not solve this by blindly persisting full attempts or full search traces in every cell.
+
+Instead add two evidence tiers.
+
+##### Tier A - compact failure-response telemetry for every completed cell
+
+Every completed census cell should expose a shared compact failure-response projection with, as applicable:
+
+- cell/technique/action identity;
+- success/failure/indeterminate status;
+- attempt outcome;
+- node ceiling and nodes consumed;
+- work ceiling and canonical `workSpent`;
+- per-technique allocated ceiling where relevant;
+- `bestBadness`;
+- `finalBadness`;
+- exhausted vs node-budget-reached vs work-budget-reached;
+- deadline truncation;
+- referee-invalid/error;
+- participation/reach facts already known by the cell runner.
+
+This is not a rich capsule. It is the durable response vector for the cell.
+
+It should be small enough to preserve for the full census matrix.
+
+##### Tier B - bounded rich search-loss capsules for selected cells
+
+Only an explicitly selected research subset should retain path/state/decision-bearing capsules such as:
+
+- near-cutoff retained/culled states;
+- terminal-best partials;
+- bounded frontier samples;
+- progress-transition states.
+
+Selection must be frozen independently of the later exact/counterfactual outcome being studied.
+
+#### Technique-census joins
+
+Join by level plus normalized action/config and protocol.
+
+Questions include:
+
+> Does isolated capability exist for a level whose production search never reaches, under-retains, or underdoses the corresponding regime?
+
+> When an isolated technique fails, is it exhausted, still improving at the cap, stagnant, or merely deadline-truncated?
+
+> Do two techniques both fail the same level while ending in materially different search-loss basins?
+
+> Does equal work buy different progress/loss behavior even when neither arm solves?
+
+These distinctions separate capability acquisition from exposure, routing, retention, and dose hypotheses.
+
+#### Equal-work census
+
+EW-style cells are the strongest census substrate for cross-technique failure-response comparisons because `workBudget`/`workSpent` are already the machine-independent comparison currency.
+
+Use T1 node-depth failures primarily for within-technique depth/capability characterization.
+
+Use equal-work cells for claims comparing the value or response shape of different techniques under comparable compute.
+
+#### Matrix interpretation
+
+The useful matrix becomes:
+
+`level × technique × budget -> success | exhausted | censored | error + work + progress + optional loss observations`
+
+rather than:
+
+`level × technique × budget -> solved?`
+
+That permits distinctions such as:
+
+- production miss + isolated solve -> routing/exposure/placement candidate;
+- production low dose + isolated high-dose solve -> allocation/underdose candidate;
+- production miss + isolated capped progress -> acquisition may exist but needs deeper work;
+- production miss + isolated clean exhaustion -> tested isolated form lacks capability;
+- multiple failed techniques + different terminal basins -> complementary latent capability;
+- multiple failed techniques + same recurring basin -> shared representation/source/architecture candidate.
+
+Do not convert any of these patterns directly into a causal F-class without downstream evidence.
+
+### 6.10 Production refresh and ordinary capability sweeps
+
+`solver-stress-refresh.yml` / `level-blind-capability-sweep.mjs` are the main production-search producer family.
+
+They already retain substantially more failure-side information than the technique census:
+
+- production ladder outcome;
+- full persisted attempt projection through `buildRow()`;
+- failed action/config identities;
+- nodes and canonical `workSpent`;
+- lifecycle telemetry by default for ordinary refreshes;
+- best/final badness where attempts expose it;
+- deadline/error semantics.
+
+Therefore the first integration should **reuse and normalize existing fields**, not duplicate them in a parallel payload.
+
+The production refresh should eventually emit:
+
+1. the shared compact failure-response view for every completed unsolved row;
+2. bounded rich search-loss capsules only when an explicit capture profile is enabled.
+
+The compact view may become standard after parity/storage validation because most of its source fields are already produced and persisted.
+
+The rich capture remains opt-in until its overhead is characterized.
+
+The highest-value downstream join is:
+
+`production refresh × technique census × search-loss evidence`
+
+because it can distinguish actual production exposure from isolated capability.
+
+### 6.11 Benchmark tooling
+
+`scripts/stress/benchmark.mjs` already persists attempts, failed strategies, nodes, work, deadline truncation, and best/final badness through the shared attempt projection.
+
+It should consume the same compact failure-response helper rather than inventing benchmark-specific negative semantics.
+
+Default behavior:
+
+- compact failure-response: yes once schema is stable;
+- rich capsules: opt-in only;
+- no exact/reference work during benchmark execution.
+
+### 6.12 Variant/family evaluation
+
+Family evaluation should eventually preserve the same compact response shape when solver outcomes are materialized.
+
+This enables analysis where parent and child are both unsolved but the failure locus/search basin changes materially.
+
+Rules:
+
+- parent family remains the independent unit;
+- child count is not independent support;
+- rich capsules only for selected family studies;
+- generated family metadata remains selection/generation provenance, not a runtime feature.
+
+### 6.13 Capability memory as consumer
+
+Capability memory should eventually consume derived failure-response/loss-signature comparisons in addition to solved-set gain/loss churn.
+
+A zero-solve treatment may still be valuable mechanism evidence if it reproducibly changes:
+
+- progress depth;
+- terminal basin;
+- earliest observed loss locus;
+- retention/routing exposure;
+- work-response shape.
+
+This does not earn promotion. It preserves latent capability information for later composition/acquisition research.
+
+### 6.14 Residual atlas as consumer
+
+Residual/capability atlas views may add observational failure dimensions such as:
+
+- source/reach unresolved;
+- live material observed late;
+- retention-boundary opportunity observed;
+- dose-censored with progress;
+- isolated rescuer exists;
+- same-basin recurrence.
+
+These are descriptors, not causal F-class assignments.
+
+### 6.15 Hint provenance and solution profiles
 
 Offline-only joins.
 
@@ -505,7 +683,7 @@ Questions:
 
 Never route production by stored hints/profile similarity.
 
-### 6.11 Research blocks and consumption lineage
+### 6.16 Research blocks and consumption lineage
 
 Do not put every ordinary capture into a special confirmation/tuning regime.
 
@@ -521,7 +699,7 @@ When a scientific study selects capsules, create or inherit a normal research bl
 
 A selected cohort becomes development evidence for descendants once outcomes/annotations are opened.
 
-### 6.12 Research relations
+### 6.17 Research relations
 
 Extend the read-only relation layer so `research:relations` can discover search-loss captures/annotations and connect them to:
 
@@ -533,7 +711,7 @@ Extend the read-only relation layer so `research:relations` can discover search-
 
 Do not move scientific admissibility logic into the relation layer. It remains a discovery/join substrate.
 
-### 6.13 Premise map and question registry
+### 6.18 Premise map and question registry
 
 The resource is particularly relevant to current premises/questions including:
 
@@ -644,6 +822,52 @@ A bounded capture intentionally drops most frontier/event material. Store enough
 - premise-map acquisition.
 
 ## 8. Phased implementation
+
+## 8.1 Producer integration matrix
+
+Before rich capture scales, every major solver-running workflow should have an explicit failure-data disposition.
+
+| Producer family | Compact failure response | Rich capsules | Expected default | Notes |
+|---|---|---|---|---|
+| production refresh / level-blind capability sweep | required | bounded, opt-in initially | compact yes | primary production-search view; lifecycle already standard |
+| technique census T1/T3/T4 | required | selected cells only | compact yes | complete cell denominator; node-depth semantics |
+| technique census EW1/equal-work | required | selected cells only | compact yes | strongest cross-technique failure-response comparison |
+| stress benchmark | required/derived | opt-in | compact yes | reuse shared attempt projection |
+| variant/family evaluation | required when solver-evaluated | selected families | compact yes where evaluation is durable | parent family is independent unit |
+| decision-observation studies | native rich source | native | question-specific | do not down-convert away decision semantics |
+| production-frontier sampler | not ordinary outcome producer | native rich source | question-specific | deliberate within-parent expansion |
+| exact/reference workflows | annotation only | annotation only | never ordinary capture | expensive, downstream |
+| known-prefix survival | specialist observation/annotation | native | question-specific | known-path-conditioned |
+| failure inbox | link/consumer only | no | no | workflow triage, not evidence store |
+
+### Shared producer rule
+
+Every producer does **not** need to emit the same physical artifact.
+
+They do need common semantics for the overlapping cheap response fields.
+
+Prefer:
+
+- one shared projection;
+- producer-native primary rows;
+- read-time adapters where durability is already sufficient;
+- explicit side-effect/artifact declarations when a workflow emits additional search-loss material.
+
+Avoid duplicating the same attempt response in multiple nested payloads merely for schema uniformity.
+
+### Experiment/result side effects
+
+When a workflow deliberately emits failure-response/search-loss telemetry, update its experiment/result contract rather than leaving `sideEffects.telemetry: "none"`.
+
+The declaration should distinguish at least:
+
+- compact observational telemetry;
+- rich search-loss capture;
+- exact/reference annotation;
+- report-only derived summaries.
+
+This is provenance/reconstructability metadata. It does not make the telemetry decision-bearing by itself.
+
 
 Each phase is independently reviewable. Do not skip ahead because later steps look straightforward.
 
@@ -766,9 +990,79 @@ Tests:
 
 **Exit gate:** a fresh agent can discover the resource through normal asset/relation tooling before any real capture exists.
 
-### Phase 3 - first production-inert producer
+### Phase 3 - shared compact failure-response projection
 
-**Goal:** prove cheap observation against real solver execution while preserving exact behavior.
+**Goal:** stop major solver-running workflows from discarding cheap failure-side information before adding rich path/state capture.
+
+Add one shared projection/helper for unsuccessful attempt/cell response semantics.
+
+Recommended home:
+
+- a new small plain-Node helper beside existing solver result/research projection tooling, or;
+- an extension of an existing shared result projection only if ownership remains clear.
+
+The helper should normalize, as available:
+
+- action/config/stage identity;
+- outcome/status;
+- node ceiling / nodes consumed;
+- work ceiling / canonical work consumed;
+- best/final badness;
+- exhausted/capped/deadline-truncated/error/referee-invalid;
+- participation/reach;
+- producer/run/cell identity.
+
+It must preserve unknown fields rather than synthesize false/zero.
+
+#### Technique census first
+
+Update `technique-census-cell.mjs`, result canonicalization, combine tooling, plan/workflow contracts, and tests so every completed cell retains the compact response vector.
+
+Do not require `collectAttemptTelemetry=true` merely to obtain the compact failure summary.
+
+Keep full `attempts[]` opt-in unless a specific consumer requires them.
+
+Update census summaries/reducers so failure rows can be stratified by:
+
+- exhausted;
+- node-budget reached;
+- work-budget reached;
+- deadline-truncated;
+- error/referee-invalid;
+- progress bands;
+- work bands.
+
+Ensure EW1 preserves canonical work semantics and T1 remains clearly node-depth evidence.
+
+#### Production refresh and benchmark adapters
+
+Project the same compact semantics from existing production-sweep and benchmark rows without duplicating source fields.
+
+Where the underlying row already contains the canonical data, the adapter should be derived/read-time rather than write a second copy unless durable reconstructability requires it.
+
+#### Producer contract audit
+
+Inspect at least:
+
+- technique census;
+- level-blind capability sweep / solver-stress-refresh;
+- stress benchmark;
+- variant/family evaluation producer(s);
+- generic experiment-result publisher.
+
+Record for each:
+
+- which compact fields are already computed;
+- which are currently persisted;
+- which are lost;
+- whether adding retention changes artifact size materially;
+- whether the workflow contract's telemetry side-effect declaration must change.
+
+**Exit gate:** technique-census failed cells no longer collapse to solve/no-solve when richer attempt response was already computed, and all major solver-running producer families have an explicit disposition.
+
+### Phase 4 - first production-inert rich capsule producer
+
+**Goal:** prove cheap path/state observation against real solver execution while preserving exact behavior.
 
 Choose the narrowest existing seam from Phase 0. Preference order:
 
@@ -825,7 +1119,7 @@ Measure:
 
 **Exit gate:** parity clean, bounded size, useful rows on more than one parent.
 
-### Phase 4 - capture CLI/publisher and durable bundle
+### Phase 5 - capture CLI/publisher and durable bundle
 
 **Goal:** make captures reproducible and safe to retain when decision-bearing.
 
@@ -859,7 +1153,7 @@ Tests:
 - research block validation;
 - source manifest/run identity.
 
-### Phase 5 - annotation adapters
+### Phase 6 - annotation adapters
 
 **Goal:** allow existing evidence systems to enrich capsules without mutating the original observation.
 
@@ -897,7 +1191,7 @@ Tests:
 
 **Exit gate:** one historical search capsule can be exact-annotated after the fact with auditable provenance.
 
-### Phase 6 - query/reducer surface
+### Phase 7 - query/reducer surface
 
 **Goal:** answer common research questions without bespoke JSON surgery.
 
@@ -932,7 +1226,7 @@ Provide parent-level summaries:
 
 Never default to raw capsule count as prevalence.
 
-### Phase 7 - resource audit
+### Phase 8 - resource audit
 
 **Goal:** promote from catalogue-grade to audited-resource grade before broad recurring decision use.
 
@@ -965,7 +1259,7 @@ Add mechanical checks where practical.
 
 **Exit gate:** a fresh researcher sees the conditioning/dependence/missingness caveats before using the rows.
 
-### Phase 8 - first scientific consumer: bounded first-loss survey
+### Phase 9 - first scientific consumer: bounded first-loss survey
 
 **Goal:** prove that the resource changes research decisions.
 
@@ -1232,25 +1526,33 @@ Recommended PR boundaries:
 - Phase 2;
 - no solver execution changes.
 
-### PR B - production-inert producer + parity tests
+### PR B - compact failure-response producers
 
 - Phase 3;
-- selected capture profile only.
+- technique census first;
+- production refresh/benchmark adapters;
+- workflow/experiment side-effect semantics;
+- no rich path/state capture required yet.
 
-### PR C - CLI/durable capture + annotation adapter
+### PR C - production-inert rich capsule producer + parity tests
 
 - Phase 4;
+- selected capture profile only.
+
+### PR D - CLI/durable capture + annotation adapter
+
 - Phase 5;
+- Phase 6;
 - small real canary artifact only if needed for contract evidence.
 
-### PR D - reducer/query + resource audit
+### PR E - reducer/query + resource audit
 
-- Phase 6;
-- Phase 7.
+- Phase 7;
+- Phase 8.
 
 ### Scientific run/report
 
-- Phase 8 only when live queue authorizes it.
+- Phase 9 only when live queue authorizes it.
 
 Avoid one giant PR that simultaneously changes solver instrumentation, persistence, exact annotation, research relations, resource semantics, and a scientific conclusion.
 
@@ -1315,8 +1617,10 @@ The implementation is successful when all of the following are true:
 6. a later exact/reference run can annotate a historical capsule without rerunning the original search;
 7. selected studies inherit normal research-block/consumption lineage;
 8. parent-level dependence and failure-conditioning are visible through the Resource Contract;
-9. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
-10. no production policy consumes stored historical capsule identity or annotations.
+9. technique-census failed cells preserve compact work/progress/censoring response instead of collapsing to solve/no-solve;
+10. production refresh, benchmark, and solver-evaluated family workflows have an explicit compact-failure-data disposition and reuse common semantics;
+11. one authorized first-loss study can reuse the resource and spend fewer bespoke search reruns to localize causal uncertainty;
+12. no production policy consumes stored historical capsule identity or annotations.
 
 ## 19. Intended end state
 
