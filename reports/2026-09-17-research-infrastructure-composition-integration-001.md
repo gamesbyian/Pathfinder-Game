@@ -1,10 +1,10 @@
 <!-- agent-context-budget: warn=9000 max=12000 -->
 # Research infrastructure composition integration 001
 
-> **Status:** implementation complete; no solver-priority or scientific-disposition change.
+> **Status:** concluded-positive
 > **Last evidence:** 2026-09-17 — current main after PRs #1874-#1876 plus this integration branch; active premise snapshot declares 148 propositions / 184 relations.
 > **Decision:** compose the recently added research-support systems through derived read-only joins and append-only lineage facts rather than a warehouse, automatic planner, global freshness flag, or new priority authority.
-> **Remaining gate:** normal repository validation and merge; the population/family plan's Phase 6 still requires two materially different live-question pilots and is not satisfied by infrastructure integration alone.
+> **Remaining gate:** the population/family plan's Phase 6 still requires two materially different live-question pilots; infrastructure integration does not satisfy them.
 > **Evidence role:** research-infrastructure implementation / contract hardening.
 
 ## Why this tranche exists
