@@ -161,6 +161,11 @@ invalidSupersession.questions[0].supersedes = ['WS2-MISSING'];
 assert.deepEqual(validateResearchQuestionRegistry(invalidSupersession), [
     'questions[0].supersedes references unknown question WS2-MISSING',
 ]);
+const invalidConstraint = JSON.parse(JSON.stringify(questionRegistry));
+invalidConstraint.questions[0].constrainedBy = ['WS2-MISSING'];
+assert.deepEqual(validateResearchQuestionRegistry(invalidConstraint), [
+    'questions[0].constrainedBy references neither a known question nor a repository path: WS2-MISSING',
+]);
 
 const repositoryIndex = buildResearchStatusIndex(process.cwd());
 assert.ok(repositoryIndex.queue.length > 0, 'current workstream authority must remain visible through the research-status queue relation');
