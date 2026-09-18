@@ -151,6 +151,15 @@ const unknownMoRun = spawnSync(process.execPath, ['--import', 'tsx',
 ], { encoding: 'utf8' });
 assert.notEqual(unknownMoRun.status, 0);
 assert.match(`${unknownMoRun.stdout}${unknownMoRun.stderr}`, /unknown measurement opportunity/);
+const mismatchedMoRun = spawnSync(process.execPath, ['--import', 'tsx',
+    'scripts/solver-experiment-preflight.mjs', '--experiment-id=cli-question', '--run-id=mismatched-mo',
+    `--corpus=${corpus}`, '--arm=control', '--workflow=direct', '--seeds=', '--work-budget=10',
+    '--wall-deadline-ms=100', '--profile=default', '--instrumentation=off', `--output=${path.join(temp, 'mismatched-mo.json')}`,
+    '--question-id=WS2-CLASS3-DOSE-EXPOSURE', '--live-ambiguity=x', '--discriminating-observable=y',
+    '--outcome-interpretation-json={"yes":"z"}', '--measurement-opportunity=MO-002', '--allow-dirty',
+], { encoding: 'utf8' });
+assert.notEqual(mismatchedMoRun.status, 0);
+assert.match(`${mismatchedMoRun.stdout}${mismatchedMoRun.stderr}`, /not mapped to research question/);
 const inconsistent = runPreflight({ runId: 'bad-on', flagValue: 'true', inputs: workflowInputs });
 assert.notEqual(inconsistent.status, 0);
 assert.match(`${inconsistent.stdout}${inconsistent.stderr}`, /solverFlags disagree/);
