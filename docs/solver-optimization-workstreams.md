@@ -76,7 +76,9 @@ The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only 
 
 No immediate post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from the lane triggers above; do not recursively mine mining outputs merely to keep the program active.
 
-**Execution gate:** run the bounded D1 production-inert observation preflight next: [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md). It authorizes shadow observation only, with parity, pilot, expansion and stop gates before any ranking change. Lane A follows only if a compact dynamic interface contract becomes testable; F3 only after fresh independent data can test reliable decision-bearing discordance.
+**Execution gate:** run the bounded D1 production-inert observation preflight next: [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md). It authorizes shadow observation only, with parity, pilot, expansion and stop gates before any ranking change.
+
+**Post-D1 diagnostic routing:** do not mechanically fall through to A/F3 when D1 closes. Use the smallest live discriminator: bounded work-ladder response when absent capability vs underdose remains confounded; operational/retention divergence when two failing regimes may reach different basins; counterfactual rejection opportunity when a concrete retention boundary is implicated; a 2x2 interaction residual only when one mechanism plausibly creates opportunity for another. Lane A still reopens only from a compact dynamic-interface contract; F3 only from fresh independent evidence of reliable decision-bearing discordance.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -86,7 +88,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate |
 |---:|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute production-inert D1 preflight; then A -> F3 conditionally |
+| 2 | Residual capability + premise acquisition | **ACTIVE / D1 EVIDENCE GATE** | Execute production-inert D1 preflight; then route by the smallest live discriminator / explicit A-F3 reopen gates |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure |
