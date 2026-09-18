@@ -1,9 +1,9 @@
 # Solver research integration fresh-start bootstrap 001
 
-> **Status:** active implementation bootstrap
-> **Date:** 2026-09-17
-> **Base:** current `main` after PR #1863
-> **Scope:** integrate the recent premise-map, measurement, evidence, sampling, and queue lessons through existing repository authorities before the next broad solver-development round.
+> **Status:** active
+> **Last evidence:** 2026-09-17 — fresh integration branch opened from current `main` after PR #1863.
+> **Decision:** begin with a read-only research relation substrate, reusable production-frontier sampling, and evidence-earned gate reconciliation; no production solver behavior change.
+> **Remaining gate:** validate the first tranche through ordinary CI, then use the landed substrate for bounded cross-lineage analyses.
 
 ## Initial contract
 
