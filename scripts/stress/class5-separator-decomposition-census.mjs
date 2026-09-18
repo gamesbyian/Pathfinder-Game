@@ -54,6 +54,15 @@ const OUT_FILE = arg('out', null);
 const SUMMARY_OUT_FILE = arg('summary-out', null);
 const LEVEL_LIMIT = Number(arg('limit', Infinity));
 const OBLIGATION_TARGET_CAP = Number(arg('obligation-target-cap', 8));
+// Additive, opt-in: serializes the raw cut-cell keys and side-cell membership (already computed by
+// minVertexCut, previously discarded before output) for interfaces whose smaller side is >=10% of
+// the board's free-space cells -- the "balanced" subpopulation the Lane-A dynamic-interface-contract
+// preflight (docs/solver-separator-dynamic-interface-contract-preflight.md) needs to identify which
+// frozen production-frontier states actually cross a candidate interface. Zero new solver compute:
+// same minVertexCut calls, just retaining fields the original census intentionally dropped. Off by
+// default so the original 2026-09-17 census artifact's exact shape stays reproducible.
+const EMIT_CUT_GEOMETRY = arg('emit-cut-geometry', 'false') === 'true';
+const BALANCED_FRACTION = Number(arg('balanced-fraction', 0.1));
 
 installBrowserStubs();
 const Solver = createSolver();
@@ -177,6 +186,14 @@ function measureLevel(id) {
             || (Number.isFinite(plain.width) && Number.isFinite(withPortals.width) && withPortals.width < plain.width)
         );
 
+        const sideCounts = Number.isFinite(plain.width)
+            ? { gateSide: plain.reachableSide.length, remainderSide: plain.otherSide.length }
+            : null;
+        // "Balanced" mirrors the report's own retained threshold: the smaller side is >=10% of the
+        // board's free-space cells (a real bisection, not a last-mile cul-de-sac cut).
+        const balanced = sideCounts != null
+            && Math.min(sideCounts.gateSide, sideCounts.remainderSide) >= BALANCED_FRACTION * allCells.length;
+
         interfaces.push({
             target: t.label,
             targetKey: t.key,
@@ -189,9 +206,11 @@ function measureLevel(id) {
             // `gateSide` is the max-flow source partition (contains the gate; may be a small foyer
             // if the cut sits immediately in front of it), `remainderSide` is everything else,
             // including the target itself (excluded from both counts).
-            sideCounts: Number.isFinite(plain.width)
-                ? { gateSide: plain.reachableSide.length, remainderSide: plain.otherSide.length }
-                : null,
+            sideCounts,
+            balanced,
+            ...(EMIT_CUT_GEOMETRY && balanced
+                ? { cutCells: plain.cutCells, gateSideCells: plain.reachableSide, remainderSideCells: plain.otherSide }
+                : {}),
         });
     }
 
@@ -234,6 +253,8 @@ const widthHistogram = {};
 for (const f of finiteWidths) widthHistogram[f.width] = (widthHistogram[f.width] || 0) + 1;
 const mechanicAwareCount = allInterfaces.filter((f) => f.mechanicAware).length;
 const portalMediatedCount = allInterfaces.filter((f) => f.portalMediated).length;
+const balancedInterfaces = allInterfaces.filter((f) => f.balanced);
+const levelsWithBalancedInterface = new Set(balancedInterfaces.map((f) => f.id));
 
 const totalConstructionMs = perLevel.reduce((a, r) => a + (r.constructionMs || 0), 0);
 
@@ -260,6 +281,12 @@ const summary = {
     family4PortalMediated: {
         interfacesPortalMediated: portalMediatedCount,
         rate: allInterfaces.length ? portalMediatedCount / allInterfaces.length : null,
+    },
+    balancedInterfaces: {
+        threshold: BALANCED_FRACTION,
+        interfaceCount: balancedInterfaces.length,
+        levelCount: levelsWithBalancedInterface.size,
+        cutGeometryEmitted: EMIT_CUT_GEOMETRY,
     },
     family3PathHistoryConditioned: 'DEFERRED — requires the fresh exact LIVE/DEAD sibling harvest\'s frozen legal prefixes; not computed by this pass.',
     totalConstructionMs,
