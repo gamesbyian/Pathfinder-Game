@@ -624,7 +624,11 @@ async function main() {
         const generatorImplementation = generatorImplementationProvenance(ROOT, 'scripts/stress/generate-random.mjs');
         const sourceRevision = stableHash({
             producer: 'scripts/stress/generate-random.mjs',
-            generatorImplementation,
+            generatorImplementation: {
+                sourcePath: generatorImplementation.sourcePath,
+                sourceSha256: generatorImplementation.sourceSha256 ?? null,
+                gitCommit: generatorImplementation.gitCommit ?? null,
+            },
             generatorVersion: GENERATOR_VERSION,
             corpusName: CORPUS_NAME,
             masterSeed: MASTER_SEED,
