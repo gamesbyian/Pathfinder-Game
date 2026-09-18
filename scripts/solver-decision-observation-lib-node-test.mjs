@@ -47,6 +47,7 @@ const adapted = beamResearchRecordToDecisionObservation({
     stage: 'score-width-culled',
     depth: 5,
     work: 42,
+    workSpent: 420,
     paths: [[3]],
     details: {
         beamWidth: 2,
@@ -65,6 +66,16 @@ assert.equal(adapted.parentId, 'P9');
 assert.equal(adapted.decisionId, 'score-width-culled@5#7');
 assert.deepEqual(adapted.retainedCandidateIds, ['[1]', '[2]']);
 assert.equal(adapted.context.cutoffScore, 9);
+assert.equal(adapted.context.nodeProgress, 42);
+assert.equal(adapted.workSpentBefore, 420);
+assert.equal(adapted.workSpentAfter, 420);
+assert.equal(beamResearchRecordToDecisionObservation({
+    stage: 'score-width-culled',
+    depth: 5,
+    work: 42,
+    paths: [[3]],
+    details: { rankedPool: [{ path: [3] }], culled: [{ path: [3] }] },
+}, { parentId: 'P9' }), null);
 assert.equal(beamResearchRecordToDecisionObservation({ stage: 'generated' }, { parentId: 'P9' }), null);
 
 console.log('solver-decision-observation-lib-node-test: ok');
