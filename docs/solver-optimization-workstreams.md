@@ -33,7 +33,7 @@ Cheap retained/offline premise tests may run in parallel. Expensive treatments r
 
 #### Lane A — separator / decomposition
 
-**BOUNDED POSITIVE; REPRESENTATION-STOPPED.** 121/390 Class-5 levels have a balanced width<=4 interface; no compact dynamic contract is known. D3/F3 now constrain that contract. **Next:** retained A/D3/F3 reconciliation, then only a bounded frozen-prefix contract test. [`result`](../reports/2026-09-17-separator-decomposition-census-result-001.md) · [`census`](../reports/solver-premise-map-consumer-contract/01-consumer-contract-census.md)
+**BOUNDED POSITIVE; CONTRACT-FALSIFIER READY.** 121/390 Class-5 levels have balanced width<=4 interfaces. A×D3×F3 reconciliation now defines nested C0-C4 interface signatures; existing evidence already falsifies simpler contracts. **Next:** frozen-prefix exact signature-collision test only. [`reconciliation`](../reports/2026-09-17-a-d3-f3-dynamic-interface-reconciliation-result-001.md) · [`preflight`](solver-separator-dynamic-interface-contract-preflight.md)
 
 #### Lane B — fresh exact LIVE/DEAD asset + causal cores
 
