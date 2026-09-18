@@ -1,7 +1,7 @@
 <!-- agent-context-budget: warn=10500 max=13000 -->
 # Pathfinder agent guide
 
-Compact router. Load task-specific material, not repository history. [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) is optional detail.
+Compact router. Load task-specific material, not history. [`DEVELOPER_REFERENCE.md`](DEVELOPER_REFERENCE.md) is optional.
 
 ## Route by task
 
