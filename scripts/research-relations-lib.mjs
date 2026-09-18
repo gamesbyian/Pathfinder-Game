@@ -6,6 +6,10 @@ import {
     loadResearchQuestionRegistry,
     validateResearchQuestionRegistry,
 } from './research-question-relations-lib.mjs';
+import {
+    assertResearchBlock,
+    researchBlockEligibility,
+} from './solver-research-block-lineage.mjs';
 
 export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     questions: { identity: 'id', source: 'docs/solver-research-question-relations.json' },
@@ -17,6 +21,8 @@ export const RESEARCH_RELATION_CONTRACTS = Object.freeze({
     experiments: { identity: 'experimentId', source: 'docs/solver-opt-in-experiment-ledger.md via research-status-index' },
     premiseSnapshots: { identity: 'snapshotId', source: 'docs/solver-premise-map-snapshot-v*.json' },
     premiseAdmissions: { identity: 'premiseId', source: 'docs/solver-premise-map-v2-admissions.json' },
+    researchBlocks: { identity: 'blockId', source: 'explicit --artifact research manifests/captures' },
+    researchParents: { identity: 'blockId + parentId', source: 'derived from explicit research blocks' },
 });
 
 function readJson(root, relative, { optional = false } = {}) {
@@ -33,6 +39,106 @@ const withSource = (row, relation, source) => ({
     _researchSource: { relation, source },
 });
 
+function artifactBlockPayload(document) {
+    const researchBlock = document?.researchBlock ?? document?.population?.researchBlock ?? null;
+    const populationIdentity = document?.populationIdentity ?? document?.population?.corpusIdentity ?? null;
+    return { researchBlock, populationIdentity };
+}
+
+function artifactEnrichmentKind(document) {
+    if (document?.kind === 'd1-production-inert-decision-capture') return 'observation';
+    if (document?.kind === 'd1-production-inert-decision-annotation') return 'exact';
+    if (document?.experiment) return 'treatment';
+    return 'artifact';
+}
+
+function withoutConsumption(block) {
+    if (!block) return block;
+    const { consumptionEvents: _events, ...rest } = block;
+    return rest;
+}
+
+function mergeConsumptionEvents(left = [], right = []) {
+    const byValue = new Map();
+    for (const event of [...left, ...right]) byValue.set(JSON.stringify(event), event);
+    return [...byValue.values()];
+}
+
+function buildResearchArtifactRelations(root, artifactPaths, eligibility = null) {
+    const blocks = new Map();
+    for (const artifactPath of artifactPaths) {
+        const absolute = path.isAbsolute(artifactPath) ? artifactPath : path.join(root, artifactPath);
+        if (!existsSync(absolute)) throw new Error(`missing research artifact: ${artifactPath}`);
+        const document = JSON.parse(readFileSync(absolute, 'utf8'));
+        const { researchBlock, populationIdentity } = artifactBlockPayload(document);
+        if (!researchBlock) throw new Error(`research artifact has no researchBlock: ${artifactPath}`);
+        assertResearchBlock(researchBlock, { populationIdentity });
+
+        const existing = blocks.get(researchBlock.blockId);
+        if (existing) {
+            if (existing.populationIdentity !== populationIdentity
+                || JSON.stringify(withoutConsumption(existing.researchBlock)) !== JSON.stringify(withoutConsumption(researchBlock))) {
+                throw new Error(`conflicting research block definitions for ${researchBlock.blockId}`);
+            }
+            existing.researchBlock = {
+                ...existing.researchBlock,
+                consumptionEvents: mergeConsumptionEvents(
+                    existing.researchBlock.consumptionEvents,
+                    researchBlock.consumptionEvents,
+                ),
+            };
+            existing.artifactRefs.push(artifactPath);
+            existing.enrichments[artifactEnrichmentKind(document)].push(artifactPath);
+        } else {
+            const enrichments = { observation: [], exact: [], treatment: [], artifact: [] };
+            enrichments[artifactEnrichmentKind(document)].push(artifactPath);
+            blocks.set(researchBlock.blockId, {
+                blockId: researchBlock.blockId,
+                questionId: researchBlock.questionId,
+                populationIdentity,
+                researchBlock: { ...researchBlock },
+                artifactRefs: [artifactPath],
+                enrichments,
+            });
+        }
+    }
+
+    const blockRows = [...blocks.values()].map(row => {
+        const block = row.researchBlock;
+        const eligibilityResult = eligibility?.questionId
+            ? researchBlockEligibility(block, eligibility)
+            : null;
+        return {
+            ...row,
+            sourceRegime: block.sourceRegime,
+            sourceRevision: block.sourceRevision,
+            evidenceRole: block.evidenceRole,
+            independentUnit: block.independentUnit,
+            parentCount: block.parentIds.length,
+            consumptionCount: block.consumptionEvents.length,
+            eligibility: eligibilityResult,
+            _researchSource: { relation: 'researchBlocks', source: [...row.artifactRefs] },
+        };
+    }).sort((a, b) => a.blockId.localeCompare(b.blockId));
+
+    const parentRows = blockRows.flatMap(row => row.researchBlock.parentIds.map((parentId, index) => ({
+        blockId: row.blockId,
+        questionId: row.questionId,
+        parentId,
+        parentContentIdentity: row.researchBlock.parentContentIdentities[index],
+        sourceRegime: row.sourceRegime,
+        sourceRevision: row.sourceRevision,
+        evidenceRole: row.evidenceRole,
+        independentUnit: row.independentUnit,
+        artifactRefs: [...row.artifactRefs],
+        enrichments: row.enrichments,
+        eligibility: row.eligibility,
+        _researchSource: { relation: 'researchParents', source: [...row.artifactRefs] },
+    })));
+
+    return { blockRows, parentRows };
+}
+
 function normalizePremiseAdmissions(doc) {
     if (!doc) return [];
     if (Array.isArray(doc)) return doc;
@@ -42,7 +148,7 @@ function normalizePremiseAdmissions(doc) {
     return [];
 }
 
-export function buildResearchRelations(root = process.cwd()) {
+export function buildResearchRelations(root = process.cwd(), { artifactPaths = [], eligibility = null } = {}) {
     const questions = loadResearchQuestionRegistry(root);
     const questionErrors = validateResearchQuestionRegistry(questions);
     if (questionErrors.length) {
@@ -58,6 +164,8 @@ export function buildResearchRelations(root = process.cwd()) {
     const v1 = readJson(root, 'docs/solver-premise-map-snapshot-v1.json', { optional: true });
     const v2 = readJson(root, 'docs/solver-premise-map-snapshot-v2.json', { optional: true });
     const admissions = readJson(root, 'docs/solver-premise-map-v2-admissions.json', { optional: true });
+
+    const artifactRelations = buildResearchArtifactRelations(root, artifactPaths, eligibility);
 
     const relations = {
         questions: questions.questions.map(row => withSource(row, 'questions', RESEARCH_RELATION_CONTRACTS.questions.source)),
@@ -75,6 +183,8 @@ export function buildResearchRelations(root = process.cwd()) {
         experiments: status.experiments.map(row => withSource(row, 'experiments', RESEARCH_RELATION_CONTRACTS.experiments.source)),
         premiseSnapshots: [v1, v2].filter(Boolean).map(row =>
             withSource(row, 'premiseSnapshots', 'docs/solver-premise-map-snapshot-v*.json')),
+        researchBlocks: artifactRelations.blockRows,
+        researchParents: artifactRelations.parentRows,
         premiseAdmissions: normalizePremiseAdmissions(admissions).map(row => {
             const premiseId = row.premiseId ?? row.id ?? row.propositionId ?? null;
             return withSource({ ...row, premiseId }, 'premiseAdmissions', RESEARCH_RELATION_CONTRACTS.premiseAdmissions.source);
