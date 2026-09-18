@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { acquisitionStopRule, chooseAcquisitionRoute, inferAcquisitionNeed, rankCandidateAssets } from './research-acquisition-preflight-lib.mjs';
 
 const d1 = {
@@ -55,3 +59,53 @@ const ranked = rankCandidateAssets(
 assert.deepEqual(ranked.map(row => row.id), ['exact-reference-labels', 'operational-traces']);
 assert.match(acquisitionStopRule('NO_LEVEL_GENERATION'), /stop before generation/u);
 assert.match(acquisitionStopRule('FRESH_SAME_SOURCE'), /pilot first/u);
+
+
+const tempDir = mkdtempSync(path.join(tmpdir(), 'pathfinder-acquisition-preflight-'));
+try {
+    const blockPath = path.join(tempDir, 'block.json');
+    const controlPath = path.join(tempDir, 'control.json');
+    const populationIdentity = `sha256:${'3'.repeat(64)}`;
+    writeFileSync(blockPath, JSON.stringify({
+        populationIdentity,
+        researchBlock: {
+            blockId: 'CLI-BLOCK',
+            questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+            sourceRegime: 'test',
+            sourceRevision: 'test-revision',
+            evidenceRole: 'development',
+            independentUnit: 'parent-level',
+            parentIds: ['R1'],
+            parentContentIdentities: ['v2:test'],
+            sourceArtifactRefs: [blockPath],
+            createdBy: { producer: 'test', manifestRef: blockPath, runRef: null },
+            generationRef: null,
+            consumptionEvents: [],
+        },
+    }));
+    writeFileSync(controlPath, JSON.stringify({
+        levels: [
+            { id: 'R1', ok: false, attempts: [] },
+            { id: 'R2', ok: true, attempts: [] },
+        ],
+    }));
+
+    const run = spawnSync(process.execPath, [
+        'scripts/research-acquisition-preflight.mjs',
+        '--question-id=WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        `--artifact=${blockPath}`,
+        `--control=${controlPath}`,
+        '--opportunity-mode=control-fail',
+        '--target-opportunities=1',
+    ], { cwd: process.cwd(), encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    const output = JSON.parse(run.stdout);
+    assert.equal(output.route, 'REUSE_EXISTING');
+    assert.equal(output.existing.mechanicallyEligibleBlocks, 1);
+    assert.equal(output.opportunitySizing.opportunities, 1);
+    assert.equal(output.opportunitySizing.total, 2);
+    assert.ok(output.candidateAssets.assets.length > 0);
+    assert.match(output.evidencePlan.stopRule, /supplied material/u);
+} finally {
+    rmSync(tempDir, { recursive: true, force: true });
+}
