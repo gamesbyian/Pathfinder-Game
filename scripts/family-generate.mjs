@@ -107,6 +107,10 @@ if (!!ORIGIN_BLOCK_ID !== !!ORIGIN_POPULATION_IDENTITY) {
     console.error('--origin-block-id and --origin-population-identity must be supplied together');
     process.exit(2);
 }
+if ((ORIGIN_BLOCK_ID || ORIGIN_POPULATION_IDENTITY) && !ORIGIN_BLOCK_ARTIFACT) {
+    console.error('origin ancestry requires --origin-block-artifact; explicit id/population values are cross-checks only');
+    process.exit(2);
+}
 if (QUESTION_ID) {
     const registry = loadResearchQuestionRegistry(process.cwd());
     if (!registry.questions.some(question => question.id === QUESTION_ID)) {
