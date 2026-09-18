@@ -81,7 +81,7 @@ import { validateRawLevel } from '../../modules/domain/level-schema.js';
 import { validateLevelDetailed } from '../../modules/domain/level-validation.js';
 import { normalizeRawLevel } from '../../modules/solver/normalization.js';
 import { makeLevelProvenance, makeProvenanceEntry } from '../../modules/domain/level-provenance-types.js';
-import { getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
+import { getLevelFingerprint, getLevelFingerprintSource } from '../../modules/domain/level-fingerprint.js';
 import { stableHash } from '../solver-experiment-contract.mjs';
 import { buildResearchBlock } from '../solver-research-block-lineage.mjs';
 import { loadResearchQuestionRegistry } from '../research-question-relations-lib.mjs';
@@ -531,7 +531,7 @@ function deriveTags(raw, features) {
 
 const MECH_KEYS = ['mustCross', 'mustPass', 'portalPairs', 'flippers', 'mustTurn', 'surround', 'adjacentTurn', 'decorative', 'geese', 'falseGoals', 'blocks'];
 
-function main() {
+async function main() {
     console.log(`Uniform-random stress corpus generator v${GENERATOR_VERSION} — seed ${MASTER_SEED}, count=${COUNT}${APPEND ? ' (--append)' : ''}`);
     const publishedPool = loadPublishedPool();
     const firstStressPool = loadFirstStressPool();
@@ -619,7 +619,7 @@ function main() {
 
     if (QUESTION_ID) {
         const parentIds = out.levels.map(level => String(level.id));
-        const parentContentIdentities = out.levels.map(level => stableHash(getLevelFingerprintSource(level)));
+        const parentContentIdentities = await Promise.all(out.levels.map(level => getLevelFingerprint(level)));
         const sourceRevision = stableHash({
             producer: 'scripts/stress/generate-random.mjs',
             generatorVersion: GENERATOR_VERSION,
@@ -702,4 +702,4 @@ function acceptLevel(i, candidate, accepted, noveltyPool, mechCounts, gridSizes,
     }
 }
 
-main();
+main().catch(error => { console.error(error); process.exit(1); });
