@@ -731,7 +731,7 @@ async function main() {
             count: COUNT,
             idPrefix: ID_PREFIX,
         });
-        const derivedBlockId = BLOCK_ID || `${QUESTION_ID}:${stableHash({ parentIds, parentContentIdentities }).slice('sha256:'.length, 'sha256:'.length + 12)}`;
+        const derivedBlockId = BLOCK_ID || `${QUESTION_ID}:${stableHash({ sourceRevision, evidenceRole: EVIDENCE_ROLE, parentIds, parentContentIdentities }).slice('sha256:'.length, 'sha256:'.length + 12)}`;
         const lineage = buildResearchBlock({
             blockId: derivedBlockId,
             questionId: QUESTION_ID,
