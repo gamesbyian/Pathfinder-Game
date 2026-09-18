@@ -18,7 +18,8 @@
 - freezes D1 eligibility before any exact label/query is available;
 - records exact one-generation canonical expansion work for retained candidates when observed in the next frontier expansion;
 - uses parent level as the independent unit;
-- rejects known D1 development parents if a capture is falsely declared `independent-confirmation`.
+- verifies the selected beam tuple is present in the current production attempt policy for the parent;
+- is intentionally development-only because isolated beam execution does not reproduce full orchestration reach/allocation.
 
 The frozen eligibility predicate is:
 
@@ -57,10 +58,16 @@ This is intentionally a bounded lower-horizon economics measure. It does not cla
 
 Use `R03147` only as development/schema material, consistent with the existing preflight.
 
-Capture:
+First inspect the currently configured beam choices for the development parent:
 
 ```text
-npm run solver:capture-d1-decisions -- --levels=R03147 --evidence-role=development --profile=intersectionHarvest --width=5000 --cutoff-radius=2 --out=/tmp/d1-r03147-capture.json
+npm run solver:capture-d1-decisions -- --levels=R03147 --list-configured-beams
+```
+
+Choose one returned tuple and capture a deterministic bounded slice:
+
+```text
+npm run solver:capture-d1-decisions -- --levels=R03147 --evidence-role=development --profile=<profile> --width=<width> --mechanic-bucket-retention=<true|false> --cutoff-radius=2 --pause-after-phases=<N> --out=/tmp/d1-r03147-capture.json
 ```
 
 Annotate at most the first three already-frozen eligible decisions:
@@ -92,14 +99,7 @@ A canary with zero eligible decisions is a valid tooling result but does not jus
 
 Do not start Stage 2 merely because the tooling works.
 
-Before an independent pilot:
-
-1. select multiple parents deterministically and without D1 outcome knowledge;
-2. exclude `S00030`, `R00104`, and `R03147` from independent support;
-3. freeze the exact parent list and execution parameters;
-4. run the ordinary experiment preflight/opportunity sizing;
-5. annotate **all** frozen eligible decisions for those parents, not a convenient subset;
-6. cluster inference by parent.
+Before an independent pilot, this implementation needs one more execution-layer extension: D1 observation must be attached to full production orchestration, or joined to authoritative stage-reach/allocation telemetry strongly enough to establish that the observed beam decisions were actually reached under the production budget ladder. Only then should the program select multiple parents deterministically, exclude prior D1 development parents, freeze the exact population/protocol, annotate all frozen eligible decisions, and cluster inference by parent.
 
 The Stage-2 advancement question remains the one in `docs/solver-d1-production-inert-evidence-preflight.md`: whether D1 repeatedly disagrees with real production retention near the cutoff and whether the resulting capability/work envelope can plausibly pay for the information.
 
@@ -108,6 +108,7 @@ The Stage-2 advancement question remains the one in `docs/solver-d1-production-i
 - no live D1 ranking;
 - no D1 pruning;
 - no proxy fitting;
+- no orchestration-reach claim;
 - no independent-support claim;
 - no claim that one-generation expansion work equals full descendant work;
 - no automatic Stage-2 expansion.
