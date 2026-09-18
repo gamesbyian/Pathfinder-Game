@@ -53,7 +53,7 @@ export function chooseAcquisitionRoute({ question, eligibleBlocks = [], requeste
         return {
             route: ROUTES.existing,
             need: 'reuse-existing',
-            rationale: `${eligibleBlocks.length} mechanically eligible existing research block(s) were supplied for this question`,
+            rationale: `${eligibleBlocks.length} mechanically eligible existing research block(s) are available for this question`,
         };
     }
 
@@ -136,7 +136,7 @@ export function rankCandidateAssets(question, assets, { limit = 8, evidenceRole 
 
 export function acquisitionStopRule(route) {
     const rules = {
-        REUSE_EXISTING: 'stop if supplied material is mechanically ineligible, lineage-ambiguous, or lacks the decision-bearing opportunity; do not generate merely because reuse is inconvenient',
+        REUSE_EXISTING: 'stop if existing material is mechanically ineligible, lineage-ambiguous, or lacks the decision-bearing opportunity; do not generate merely because reuse is inconvenient',
         FRESH_SAME_SOURCE: 'pilot first; stop if opportunity prevalence is negligible or the fresh block cannot express the prespecified discriminator',
         CROSS_SOURCE_TRANSFER: 'stop if the alternate source does not actually change the construction/distribution dimension required by the claim',
         CONTROLLED_FAMILY: 'stop if the prespecified perturbation cannot change the ranked decision or descendants cease to isolate the intended contrast',
