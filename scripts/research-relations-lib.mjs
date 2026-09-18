@@ -85,8 +85,18 @@ function walkFiles(root, relative, predicate, out = []) {
 }
 
 export function discoverResearchArtifactPaths(root = process.cwd()) {
+    const transientRoots = [
+        'tmp/research-generation',
+        'tmp/research-populations',
+        'tmp/research-blocks',
+        'tmp/d1-research',
+    ];
     const candidates = [
-        ...walkFiles(root, 'tmp', (relative, stat) => relative.endsWith('.json') && stat.size <= 32 * 1024 * 1024),
+        ...transientRoots.flatMap(relativeRoot => walkFiles(
+            root,
+            relativeRoot,
+            (relative, stat) => relative.endsWith('.json') && stat.size <= 32 * 1024 * 1024,
+        )),
         ...walkFiles(root, 'reports/stress/experiment-evidence',
             (relative, stat) => path.basename(relative) === 'manifest.json' && stat.size <= 32 * 1024 * 1024),
     ];
