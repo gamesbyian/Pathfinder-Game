@@ -68,7 +68,7 @@ Detailed method/stop/promotion rules: [`docs/solver-research-operating-model.md`
 
 ## Documentation hygiene
 
-Optimize current docs for **decision density**: state contracts/state/gates directly; keep chronology/debugging in dated reports/archive; replace stale claims instead of appending; give mutable facts one owner; consolidate overlapping live docs; preserve useful history before destructive consolidation.
+Optimize docs for **decision density**: state contracts/state/gates directly; keep chronology/debugging in dated reports/archive; replace stale claims instead of appending; give mutable facts one owner; consolidate overlapping live docs; preserve useful history before destructive consolidation.
 
 ## Context budget
 
