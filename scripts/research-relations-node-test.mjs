@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 import {
     buildResearchRelations,
@@ -38,6 +41,74 @@ assert.deepEqual(summarizeIndependentSupport([
     largestUnitRows: 2,
     units: { P1: 2, P2: 1 },
 });
+
+const artifactDir = mkdtempSync(path.join(tmpdir(), 'pathfinder-research-relations-'));
+try {
+    const populationIdentity = `sha256:${'2'.repeat(64)}`;
+    const block = {
+        blockId: 'D1-BLOCK-TEST',
+        questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        sourceRegime: 'data/stress/stress-levels-random.json',
+        sourceRevision: `sha256:${'3'.repeat(64)}`,
+        evidenceRole: 'development',
+        independentUnit: 'parent-level',
+        parentIds: ['R1', 'R2'],
+        parentContentIdentities: ['v2:a', 'v2:b'],
+        sourceArtifactRefs: ['capture.json'],
+        createdBy: { producer: 'capture-d1', manifestRef: 'capture.json', runRef: 'run-1' },
+        generationRef: null,
+        consumptionEvents: [],
+    };
+    const capturePath = path.join(artifactDir, 'capture.json');
+    const annotationPath = path.join(artifactDir, 'annotation.json');
+    writeFileSync(capturePath, JSON.stringify({
+        kind: 'd1-production-inert-decision-capture',
+        populationIdentity,
+        researchBlock: block,
+    }));
+    writeFileSync(annotationPath, JSON.stringify({
+        kind: 'd1-production-inert-decision-annotation',
+        populationIdentity,
+        sourceCapture: capturePath,
+        researchBlock: {
+            ...block,
+            consumptionEvents: [{
+                questionId: block.questionId,
+                decisionRef: 'reports/d1-decision.md',
+                scope: { kind: 'block', id: block.blockId },
+                evidenceRole: 'development',
+                conditioning: ['stage-reach'],
+                openedOutcomeKinds: ['exact-d1'],
+                runRef: 'run-2',
+                consumedAt: '2026-09-18T03:20:00.000Z',
+            }],
+        },
+    }));
+
+    const artifactModel = buildResearchRelations(process.cwd(), {
+        artifactPaths: [capturePath, annotationPath],
+        eligibility: {
+            questionId: block.questionId,
+            evidenceRole: 'confirmation',
+            relatedQuestionIds: [],
+        },
+    });
+    assert.equal(artifactModel.relations.researchBlocks.length, 1);
+    assert.equal(artifactModel.relations.researchParents.length, 2);
+    const blockRow = artifactModel.relations.researchBlocks[0];
+    assert.equal(blockRow.blockId, block.blockId);
+    assert.equal(blockRow.parentCount, 2);
+    assert.equal(blockRow.consumptionCount, 1);
+    assert.equal(blockRow.enrichments.observation.length, 1);
+    assert.equal(blockRow.enrichments.exact.length, 1);
+    assert.equal(blockRow.eligibility.eligible, false);
+    assert.deepEqual(
+        artifactModel.relations.researchParents.map(row => row.parentId),
+        ['R1', 'R2'],
+    );
+} finally {
+    rmSync(artifactDir, { recursive: true, force: true });
+}
 
 const real = buildResearchRelations(process.cwd());
 assert.ok(real.relations.questions.some(row => row.id === 'WS2-D1-PRODUCTION-INERT-OBSERVATION'));
