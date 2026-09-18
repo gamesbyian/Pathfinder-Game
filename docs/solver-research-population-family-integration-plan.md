@@ -5,7 +5,7 @@
 > **Priority:** `solver-optimization-workstreams.md`.
 > **Method:** `solver-research-operating-model.md`, `solver-evaluation-evidence.md`, `solver-research-resource-contract.md`.
 > **Goal:** make existing population, family, frontier/state, exact/reference, observation, and evidence resources compose as one progressive workflow without a second evidence warehouse.
-> **Progress (2026-09-17):** Phases 0-5 are complete. Frozen-block/consumption lineage, explicit-artifact relations, producer/family lineage, reference-only enrichment joins, and conservative acquisition routing are implemented without a warehouse or persistent block index. Phase 6 remains intentionally deferred to live ranked questions; scientific D1 execution remains governed by its preflight and queue gate. See `../reports/solver-research-population-family-phases3-5-2026-09-17.md`.
+> **Progress (2026-09-17):** Phases 0-5 are complete. Frozen-block/consumption lineage, producer/family lineage, reference-only enrichment joins, and conservative acquisition routing are implemented without a warehouse or persistent block index. Post-Phase-5 integration hardening adds a derived question dossier, the full active premise graph to read-only relations, bounded discovery of research blocks/durable evidence, Resource-Contract-aware acquisition hints, selection-consumption sidecars, and a CI integration audit. These do **not** substitute for Phase 6's two live end-to-end pilots. Scientific D1 execution remains governed by its preflight and queue gate. See `../reports/solver-research-population-family-phases3-5-2026-09-17.md` and `../reports/2026-09-17-research-infrastructure-composition-integration-001.md`.
 
 ## 0. Target workflow
 
@@ -40,7 +40,7 @@ ranked question / reopen gate
 | Need | Existing owner/front door |
 |---|---|
 | priority/reopen gate | workstreams + research-question relations |
-| prior evidence/assets | `research-status-index`, `research-asset-query`, `research:relations` |
+| prior evidence/assets | `research:dossier` for a stable question; `research-status-index`, `research-asset-query`, `research:relations` for lower-level discovery |
 | evidence roles/locked blocks | `solver-evaluation-evidence.md` |
 | independence/conditioning | research resource contract + audits |
 | opportunity sizing | experiment opportunity sizing/audit |
@@ -112,11 +112,11 @@ Phases 0-5 are implemented. Historical implementation detail belongs in the date
 Durable completed contracts:
 
 1. A prospective frozen block has a stable `blockId`, stable question ID, source regime/revision, sealed literal parent/content population, evidence role, independent unit, creation refs, and append-only consumption events. Content seal and research-lineage identity remain distinct.
-2. `research:relations` composes explicitly supplied block/enrichment artifacts read-only. Historical absence remains unknown; child rows never mint independent support.
+2. `research:relations` composes explicitly supplied or bounded-discovered block/enrichment artifacts read-only and exposes the active premise rows/edges plus durable evidence summaries. Historical absence remains unknown; child rows never mint independent support.
 3. Targeted witness-first, solver-blind random witness-first, and topology generation can emit frozen research blocks. [`solver-research-generation.md`](solver-research-generation.md) is the shared source-choice/composition front door; it preserves distinct source blocks. Decision-bearing family expansion records per-run question/role/exposure, invocation-local generation counters, and validated originating-block ancestry.
 4. Production-frontier capture can inherit a frozen block. Existing observation/exact/treatment outputs can join by reference through `research:link-enrichment`; source artifacts remain authoritative.
-5. `research:acquisition-preflight` emits one conservative primary route: `REUSE_EXISTING`, `FRESH_SAME_SOURCE`, `CROSS_SOURCE_TRANSFER`, `CONTROLLED_FAMILY`, `HUMAN_EDITOR`, or `NO_LEVEL_GENERATION`. It can surface candidate assets and existing opportunity sizing, but never generates automatically.
-6. Current front doors are exposed through `AGENTS.md` and `tooling-catalog.md`. Do not rebuild a registry, warehouse, global freshness flag, second mutation engine, or alternate lineage schema.
+5. `research:acquisition-preflight` emits one conservative primary route: `REUSE_EXISTING`, `FRESH_SAME_SOURCE`, `CROSS_SOURCE_TRANSFER`, `CONTROLLED_FAMILY`, `HUMAN_EDITOR`, or `NO_LEVEL_GENERATION`. It discovers known blocks, carries audit-grade Resource Contract limitations with candidate assets, and names suitable existing generator/source families only when generation is earned; it never generates automatically.
+6. `research:dossier` is the derived question-first join over these owners, `research:record-consumption` records later selection/evidence-use ancestry without mutating source blocks, and `research:integration-audit` checks cross-system referential integrity in CI. Current front doors are exposed through `AGENTS.md` and `tooling-catalog.md`. Do not rebuild a registry, warehouse, global freshness flag, second mutation engine, or alternate lineage schema.
 
 ## 10. Phase 6 — two end-to-end pilots
 
