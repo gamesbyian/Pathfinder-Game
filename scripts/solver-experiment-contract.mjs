@@ -34,6 +34,24 @@ function isOptionalNonNegativeNumber(value) {
   return value === null || (Number.isFinite(value) && value >= 0);
 }
 
+function researchQuestionIssues(question) {
+  if (question == null) return [];
+  const issues = [];
+  if (!question || typeof question !== 'object' || Array.isArray(question)) return ['researchQuestion'];
+  for (const field of ['questionId', 'liveAmbiguity', 'discriminatingObservable']) {
+    if (!isNonEmptyString(question[field])) issues.push(`researchQuestion.${field}`);
+  }
+  if (!question.outcomeInterpretation || typeof question.outcomeInterpretation !== 'object' ||
+      Array.isArray(question.outcomeInterpretation) || Object.keys(question.outcomeInterpretation).length === 0) {
+    issues.push('researchQuestion.outcomeInterpretation');
+  }
+  if (question.measurementOpportunity != null &&
+      (!isNonEmptyString(question.measurementOpportunity) || !/^MO-\d{3}$/u.test(question.measurementOpportunity))) {
+    issues.push('researchQuestion.measurementOpportunity');
+  }
+  return issues;
+}
+
 export function canonicalizeIdentities(ids, { rejectDuplicates = true } = {}) {
   if (!Array.isArray(ids)) throw new Error('population identities must be an array');
   const normalized = ids.map(id => String(id).trim());
@@ -76,6 +94,8 @@ export function decisionContractIssues(contract) {
   const execution = contract?.execution;
   const limits = contract?.limits;
   const sideEffects = contract?.sideEffects;
+
+  issues.push(...researchQuestionIssues(contract?.researchQuestion));
 
   for (const field of ['workflowFamily', 'producer', 'entrypoint']) {
     if (!isNonEmptyString(experiment?.[field])) issues.push(`experiment.${field}`);

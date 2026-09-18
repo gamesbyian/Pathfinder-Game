@@ -235,11 +235,13 @@ const contract = {
     reconciliationRun: declaredContract?.experiment?.reconciliationRun ?? null,
     configurationHash: declaredContract?.experiment?.configurationHash ?? primaryDocument?.configurationHash ?? null,
   },
+  researchQuestion: declaredContract?.researchQuestion ?? primaryDocument?.researchQuestion ?? null,
   population: {
     kind: declaredContract?.population?.kind ?? primaryDocument?.population?.kind ?? null,
     identityBasis: declaredContract?.population?.identityBasis ?? primaryDocument?.population?.identityBasis ?? null,
     corpusIdentity: declaredContract?.population?.corpusIdentity ?? primaryDocument?.population?.corpusIdentity ?? null,
     selection: declaredContract?.population?.selection ?? primaryDocument?.population?.selection ?? null,
+    researchBlock: declaredContract?.population?.researchBlock ?? primaryDocument?.population?.researchBlock ?? null,
     identityHash: populationIdentity,
     expectedCount: populationIntegrity?.expectedCount ?? null,
     observedCount: populationIntegrity?.observedCount ?? null,

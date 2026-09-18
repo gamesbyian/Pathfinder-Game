@@ -68,6 +68,23 @@ const common = {
 const clone = value => JSON.parse(JSON.stringify(value));
 assert.deepEqual(decisionContractIssues(common), []);
 assert.deepEqual(declaredDecisionContractIssues(common), []);
+const withResearchQuestion = {
+  ...clone(common),
+  researchQuestion: {
+    questionId: 'WS2-D1-PRODUCTION-INERT-OBSERVATION',
+    liveAmbiguity: 'rank disagreement versus no opportunity',
+    discriminatingObservable: 'production-inert cutoff disagreement',
+    outcomeInterpretation: { disagreement: 'economics gate earned' },
+    measurementOpportunity: 'MO-002',
+  },
+};
+assert.deepEqual(decisionContractIssues(withResearchQuestion), []);
+assert.ok(decisionContractIssues({
+  ...clone(common), researchQuestion: { ...withResearchQuestion.researchQuestion, questionId: '' },
+}).includes('researchQuestion.questionId'));
+assert.ok(decisionContractIssues({
+  ...clone(common), researchQuestion: { ...withResearchQuestion.researchQuestion, measurementOpportunity: 'M2' },
+}).includes('researchQuestion.measurementOpportunity'));
 assert.ok(decisionContractIssues({ ...clone(common), experiment: { ...common.experiment, resolvedSha: 'main' } }).includes('experiment.resolvedSha'));
 assert.ok(decisionContractIssues({ ...clone(common), limits: { ...common.limits, totalWorkCeiling: undefined } }).includes('limits.totalWorkCeiling'));
 assert.ok(decisionContractIssues({ ...clone(common), execution: { ...common.execution, levelBlind: 'true' } }).includes('execution.levelBlind'));

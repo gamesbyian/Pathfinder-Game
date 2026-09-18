@@ -79,8 +79,17 @@ const withResearchBlock = buildContract({
   workflowFamily: 'routing-regime-sample-ab',
   producer: 'solver-routing-regime-sample-ab.yml',
   entrypoint: 'solver.mjs',
+  researchQuestion: {
+    questionId: 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION',
+    liveAmbiguity: 'retained capability versus allocation failure',
+    discriminatingObservable: 'fixed-work dead-last marginal value',
+    outcomeInterpretation: { positive: 'retain successor', negative: 'close allocation form' },
+    measurementOpportunity: 'MO-004',
+  },
   population: { kind: 'sealed-stratified-sample', identityBasis: 'stable-level-id', researchBlock },
 }, { resolvedSha, populationSeal: { identityHash: populationIdentity, count: 1 } });
+assert.equal(withResearchBlock.researchQuestion.questionId, 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION');
+assert.equal(withResearchBlock.researchQuestion.measurementOpportunity, 'MO-004');
 assert.equal(withResearchBlock.population.researchBlock.blockId, researchBlock.blockId);
 assert.equal(withResearchBlock.population.corpusIdentity, populationIdentity);
 
@@ -99,5 +108,20 @@ assert.throws(() => buildContract({
     researchBlock: { ...researchBlock, questionId: 'NOT-A-REAL-QUESTION' },
   },
 }, { resolvedSha, populationSeal: { identityHash: populationIdentity, count: 1 } }), /not present in solver-research-question-relations/);
+
+assert.throws(() => buildContract({
+  configuration: { nodeBudget: 1 }, workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+  researchQuestion: {
+    questionId: 'NOT-A-REAL-QUESTION', liveAmbiguity: 'x', discriminatingObservable: 'y',
+    outcomeInterpretation: { yes: 'z' },
+  },
+}, { resolvedSha }), /researchQuestion\.questionId is not present/);
+assert.throws(() => buildContract({
+  configuration: { nodeBudget: 1 }, workflowFamily: 'x', producer: 'y', entrypoint: 'z',
+  researchQuestion: {
+    questionId: 'WS2-PORTAL-COARSE-DEAD-LAST-ALLOCATION', liveAmbiguity: 'x', discriminatingObservable: 'y',
+    outcomeInterpretation: { yes: 'z' }, measurementOpportunity: 'MO-999',
+  },
+}, { resolvedSha }), /researchQuestion\.measurementOpportunity is not present/);
 
 console.log('write solver experiment contract tests passed');
