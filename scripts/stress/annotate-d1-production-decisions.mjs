@@ -35,8 +35,8 @@ const maxEligibleDecisions = maxEligibleDecisionsRaw == null ? Number.POSITIVE_I
 
 if (!inputFile || !outFile) throw new Error('--input and --out are required');
 if (!Number.isFinite(timeLimitSec) || timeLimitSec <= 0) throw new Error('--time-limit must be positive');
-if (!(Number.isFinite(maxEligibleDecisions) || maxEligibleDecisions === Number.POSITIVE_INFINITY)
-    || maxEligibleDecisions <= 0 || !Number.isInteger(maxEligibleDecisions)) {
+if (maxEligibleDecisions !== Number.POSITIVE_INFINITY
+    && (!Number.isInteger(maxEligibleDecisions) || maxEligibleDecisions <= 0)) {
     throw new Error('--max-eligible-decisions must be a positive integer');
 }
 
