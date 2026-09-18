@@ -218,8 +218,26 @@ for (const levelId of levelIds) {
         const eligibility = freezeD1Eligibility(decision, level, eligibilityPrep, { cutoffRadius });
         const attemptOrdinal = record.attemptContext?.attemptOrdinal ?? -1;
         const attempt = attemptOrdinal >= 0 ? attemptTelemetry[attemptOrdinal] ?? null : null;
+        // Only the eligibility-window candidates (context.d1Eligibility.candidates) are ever read by
+        // the annotator/summarizer; the full per-decision candidate/rankedPool arrays the shared
+        // beam-observer contract builds (O(beamWidth) each) are validated in-memory above and then
+        // discarded here so a full-orchestration multi-parent capture stays queryable. Counts are kept
+        // for prevalence bookkeeping.
+        const candidateCount = decision.candidateIds.length;
+        const retainedCount = decision.retainedCandidateIds.length;
+        const eligibleRetainedIds = new Set(eligibility.eligibleRetainedCandidateIds ?? []);
+        delete decision.candidateIds;
+        delete decision.orderedCandidateIds;
+        delete decision.retainedCandidateIds;
+        decision.candidateCount = candidateCount;
+        decision.retainedCount = retainedCount;
         decision.context = {
-            ...decision.context,
+            depth: decision.context.depth,
+            nodeProgress: decision.context.nodeProgress,
+            beamWidth: decision.context.beamWidth,
+            cutoffScore: decision.context.cutoffScore,
+            firstCulledScore: decision.context.firstCulledScore,
+            stableOrderAdmission: decision.context.stableOrderAdmission,
             d1Eligibility: eligibility,
             orchestrationAttempt: record.attemptContext ? {
                 ...record.attemptContext,
@@ -228,7 +246,7 @@ for (const levelId of levelIds) {
                 attemptWorkSpent: attempt?.workSpent ?? null,
                 attemptNodesExpanded: attempt?.nodesExpanded ?? null,
             } : null,
-            immediateExpansionWork: Object.fromEntries(decision.retainedCandidateIds.map(id => {
+            immediateExpansionWork: Object.fromEntries([...eligibleRetainedIds].map(id => {
                 const key = `${attemptOrdinal}:${id}`;
                 return [
                     id,
