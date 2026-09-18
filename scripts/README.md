@@ -9,6 +9,7 @@ For a named concept, use compact/queryable front doors before `package.json` or 
 
 - solver priority/state: [`../docs/solver-optimization-workstreams.md`](../docs/solver-optimization-workstreams.md);
 - research status: `node scripts/research-status-index.mjs --compact [--query=...] [--status=...] [--kind=...]`;
+- cross-authority research relations: `npm run research:relations -- --list` or `--relation=<name> [--query=...]`; this is a read-only projection over existing authorities, not a new evidence store;
 - solver evidence assets/joins: `node scripts/research-asset-query.mjs --query=<term>`; add `--id=<asset-id>` or `--full` only when needed;
 - agent-context size: `node scripts/agent-context-budget.mjs [--route=<id>]`; `--check` fails missing/over-max required routes;
 - completed naming-cleanup status/history: `npm run naming:status -- --batch=<id>` (phase/json options are also available); do not reopen the frozen plan;
@@ -37,6 +38,14 @@ It runs fresh matched arms and reports retained multi-child decision-prefix agre
 
 
 For beam rank/retention questions, `method-probe.mjs` can preserve the existing bounded beam frontier trace and, with `--beam-decision-limit=<N>`, also reduce cull events into the shared production-inert decision-observation contract. This records actual ranked pools and retained/cut candidates without changing solver policy.
+
+For population construction from the real solver search distribution, use the reusable production-frontier sampler rather than inventing heuristic pseudo-states:
+
+```text
+npm run solver:sample-production-frontiers -- --levels=R01600,R03147 --depth-fraction=0.1 --picks=25 --seed=<frozen-seed> --question=<question-id> --cases-out=/tmp/cases.json --population-out=/tmp/population.json
+```
+
+It freezes multi-pick candidates before downstream labels, records frontier ancestry, and declares the parent level as the independence unit. Multiple rows from one parent improve sparse-phenomenon detection but do not become independent confirmation.
 
 Two offline measurement reducers are also available when a live ambiguity earns them:
 
