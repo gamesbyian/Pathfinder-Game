@@ -1169,6 +1169,22 @@ Before rich capture scales, every major solver-running workflow should have an e
 | known-prefix survival | specialist observation/annotation | native | question-specific | known-path-conditioned |
 | failure inbox | link/consumer only | no | no | workflow triage, not evidence store |
 
+### Automatic-by-construction invariant
+
+For the standard compact failure-response layer, **required** means infrastructure-owned, not merely documented as something an agent should request.
+
+Supported solver-running entry points and workflows should make the standard layer the default with no special flag.
+
+A future solver-running workflow must declare one of:
+
+- `standard` - emits/transports the standard compact failure-response layer;
+- `specialized-opt-out` - intentionally omits it with a machine-readable reason;
+- `unsupported` - source execution genuinely cannot provide the standard semantics.
+
+Prefer a mechanical checker over prose convention. A solver-running workflow/result contract with no failure-evidence disposition should fail validation once migration is complete.
+
+Rich capsules remain separate and opt-in.
+
 ### Shared producer rule
 
 Every producer does **not** need to emit the same physical artifact.
@@ -1183,6 +1199,20 @@ Prefer:
 - explicit side-effect/artifact declarations when a workflow emits additional search-loss material.
 
 Avoid duplicating the same attempt response in multiple nested payloads merely for schema uniformity.
+
+### Workflow transport and publisher contract
+
+Where a workflow shards solver execution, the standard failure-response evidence must ride the same normal artifact path as its result rows. Combine/publisher code should preserve provenance and coverage automatically.
+
+Do not require a second agent-authored workflow step for ordinary compact telemetry.
+
+The generic solver sweep/result publisher should expose enough metadata for downstream tooling to discover:
+
+- failure-evidence disposition;
+- source artifact/bundle path where applicable;
+- shard/population coverage;
+- telemetry schema/version;
+- rich-capture presence/absence.
 
 ### Experiment/result side effects
 
