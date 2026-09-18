@@ -96,7 +96,6 @@ for (const scope of scopes) {
         openedOutcomeKinds,
         runRef,
         consumedAt,
-        selectionArtifact,
     }, { populationIdentity });
 }
 
@@ -116,6 +115,7 @@ const sidecar = {
         openedOutcomeKinds,
         runRef,
         consumedAt,
+        selectionArtifact,
     },
 };
 mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
