@@ -1,0 +1,263 @@
+{
+  "generatedAt": "2026-09-18T19:50:45.547Z",
+  "evidenceRole": "local exact-labeling pipeline validation and cost characterization; not a C0 signature-collision result (see report)",
+  "diversitySample": [
+    {
+      "levelId": "R00046",
+      "interfaceTarget": "goal",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.4s"
+    },
+    {
+      "levelId": "R00765",
+      "interfaceTarget": "mustPass",
+      "line": "R00765: 12x12 reqLen=104 reqInt=7 mustCross=5 landmarks=17 portalPairs=0 flippingFilters=5 -> INFEASIBLE in 2.3s"
+    },
+    {
+      "levelId": "R01154",
+      "interfaceTarget": "mustPass",
+      "line": "R01154: 11x11 reqLen=87 reqInt=6 mustCross=6 landmarks=21 portalPairs=6 flippingFilters=7 -> INFEASIBLE in 2.0s"
+    },
+    {
+      "levelId": "R02021",
+      "interfaceTarget": "mustPass",
+      "line": "R02021: 11x11 reqLen=88 reqInt=6 mustCross=5 landmarks=7 portalPairs=4 flippingFilters=8 -> INFEASIBLE in 5.8s"
+    },
+    {
+      "levelId": "R02108",
+      "interfaceTarget": "mustPass",
+      "line": "R02108: 13x13 reqLen=101 reqInt=3 mustCross=3 landmarks=10 portalPairs=0 flippingFilters=6 -> INFEASIBLE in 2.8s"
+    },
+    {
+      "levelId": "R02278",
+      "interfaceTarget": "mustPass",
+      "line": "R02278: 12x12 reqLen=102 reqInt=8 mustCross=0 landmarks=21 portalPairs=0 flippingFilters=5 -> INFEASIBLE in 1.7s"
+    },
+    {
+      "levelId": "R02392",
+      "interfaceTarget": "mustPass",
+      "line": "R02392: 11x11 reqLen=79 reqInt=5 mustCross=5 landmarks=21 portalPairs=6 flippingFilters=5 -> INFEASIBLE in 0.5s"
+    },
+    {
+      "levelId": "R02525",
+      "interfaceTarget": "mustPass",
+      "line": "R02525: 14x14 reqLen=106 reqInt=6 mustCross=5 landmarks=17 portalPairs=4 flippingFilters=0 -> OPTIMAL in 23.8s"
+    },
+    {
+      "levelId": "R02594",
+      "interfaceTarget": "goal",
+      "line": "R02594: 14x14 reqLen=133 reqInt=6 mustCross=6 landmarks=10 portalPairs=6 flippingFilters=5 -> INFEASIBLE in 44.5s"
+    }
+  ],
+  "redundantGroupSample": [
+    {
+      "key": "R00046:goal:65546",
+      "caseId": "R00046:frontier-4758",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.4s",
+      "elapsed": 3.2974987030029297
+    },
+    {
+      "key": "R00046:goal:65546",
+      "caseId": "R00046:frontier-1295",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 3.1s",
+      "elapsed": 5.080132007598877
+    },
+    {
+      "key": "R00046:goal:65546",
+      "caseId": "R00046:frontier-3359",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.8s",
+      "elapsed": 3.697570323944092
+    },
+    {
+      "key": "R00046:goal:65546",
+      "caseId": "R00046:frontier-1940",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.4s",
+      "elapsed": 3.4416797161102295
+    },
+    {
+      "key": "R00046:goal:65546",
+      "caseId": "R00046:frontier-2214",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.0s",
+      "elapsed": 2.9474844932556152
+    },
+    {
+      "key": "R00046:mustPass:1",
+      "caseId": "R00046:frontier-4758",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.5s",
+      "elapsed": 3.378610849380493
+    },
+    {
+      "key": "R00046:mustPass:1",
+      "caseId": "R00046:frontier-1295",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 3.1s",
+      "elapsed": 4.94322943687439
+    },
+    {
+      "key": "R00046:mustPass:1",
+      "caseId": "R00046:frontier-3359",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.7s",
+      "elapsed": 3.5593509674072266
+    },
+    {
+      "key": "R00046:mustPass:1",
+      "caseId": "R00046:frontier-1940",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.4s",
+      "elapsed": 3.2398149967193604
+    },
+    {
+      "key": "R00046:mustPass:1",
+      "caseId": "R00046:frontier-2214",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.0s",
+      "elapsed": 2.7822060585021973
+    },
+    {
+      "key": "R00046:mustPass:65545",
+      "caseId": "R00046:frontier-4758",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.4s",
+      "elapsed": 3.2133843898773193
+    },
+    {
+      "key": "R00046:mustPass:65545",
+      "caseId": "R00046:frontier-1295",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 3.0s",
+      "elapsed": 4.848879337310791
+    },
+    {
+      "key": "R00046:mustPass:65545",
+      "caseId": "R00046:frontier-3359",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.7s",
+      "elapsed": 3.599475145339966
+    },
+    {
+      "key": "R00046:mustPass:65545",
+      "caseId": "R00046:frontier-1940",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.3s",
+      "elapsed": 3.102540969848633
+    },
+    {
+      "key": "R00046:mustPass:65545",
+      "caseId": "R00046:frontier-2214",
+      "levelId": "R00046",
+      "line": "R00046: 11x11 reqLen=70 reqInt=1 mustCross=1 landmarks=7 portalPairs=4 flippingFilters=5 -> INFEASIBLE in 1.0s",
+      "elapsed": 2.8308603763580322
+    },
+    {
+      "key": "R00088:goal:131074",
+      "caseId": "R00088:frontier-1732",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 23.2s",
+      "elapsed": 27.196042776107788
+    },
+    {
+      "key": "R00088:goal:131074",
+      "caseId": "R00088:frontier-4546",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 19.1s",
+      "elapsed": 23.249022960662842
+    },
+    {
+      "key": "R00088:goal:131074",
+      "caseId": "R00088:frontier-1773",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 22.6s",
+      "elapsed": 26.821892023086548
+    },
+    {
+      "key": "R00088:goal:131074",
+      "caseId": "R00088:frontier-3800",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> UNKNOWN in 30.2s",
+      "elapsed": 34.191553354263306
+    },
+    {
+      "key": "R00088:goal:131074",
+      "caseId": "R00088:frontier-2970",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> UNKNOWN in 30.2s",
+      "elapsed": 34.34467029571533
+    },
+    {
+      "key": "R00088:mustPass:65541",
+      "caseId": "R00088:frontier-1732",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 23.0s",
+      "elapsed": 27.17131280899048
+    },
+    {
+      "key": "R00088:mustPass:65541",
+      "caseId": "R00088:frontier-4546",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 19.0s",
+      "elapsed": 23.05447244644165
+    },
+    {
+      "key": "R00088:mustPass:65541",
+      "caseId": "R00088:frontier-1773",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 23.0s",
+      "elapsed": 26.981404781341553
+    },
+    {
+      "key": "R00088:mustPass:65541",
+      "caseId": "R00088:frontier-3800",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> UNKNOWN in 30.2s",
+      "elapsed": 34.309492349624634
+    },
+    {
+      "key": "R00088:mustPass:65541",
+      "caseId": "R00088:frontier-2970",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> UNKNOWN in 30.2s",
+      "elapsed": 34.2001256942749
+    },
+    {
+      "key": "R00088:mustPass:262146",
+      "caseId": "R00088:frontier-1732",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 22.7s",
+      "elapsed": 26.816256761550903
+    },
+    {
+      "key": "R00088:mustPass:262146",
+      "caseId": "R00088:frontier-4546",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 19.0s",
+      "elapsed": 23.00757145881653
+    },
+    {
+      "key": "R00088:mustPass:262146",
+      "caseId": "R00088:frontier-1773",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> INFEASIBLE in 22.2s",
+      "elapsed": 26.35300588607788
+    },
+    {
+      "key": "R00088:mustPass:262146",
+      "caseId": "R00088:frontier-3800",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> UNKNOWN in 30.2s",
+      "elapsed": 34.222803831100464
+    },
+    {
+      "key": "R00088:mustPass:262146",
+      "caseId": "R00088:frontier-2970",
+      "levelId": "R00088",
+      "line": "R00088: 14x14 reqLen=122 reqInt=5 mustCross=0 landmarks=23 portalPairs=5 flippingFilters=6 -> UNKNOWN in 30.2s",
+      "elapsed": 34.18963170051575
+    }
+  ]
+}
