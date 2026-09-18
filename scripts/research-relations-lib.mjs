@@ -61,7 +61,7 @@ function withoutConsumption(block) {
 
 function mergeConsumptionEvents(left = [], right = []) {
     const byValue = new Map();
-    for (const event of [...left, ...right]) byValue.set(JSON.stringify(event), event);
+    for (const event of [...left, ...right]) byValue.set(stableHash(event), event);
     return [...byValue.values()];
 }
 
