@@ -33,6 +33,8 @@ async function generate(outFile) {
         '--count=12',
         '--master-seed=424242',
         '--id-prefix=Q',
+        '--question-id=WS2-D1-PRODUCTION-INERT-OBSERVATION',
+        '--evidence-role=development',
         '--out=' + path.relative(ROOT, outFile),
     ], {
         cwd: ROOT,
@@ -83,6 +85,13 @@ async function main() {
         assert.equal(corpusA.generatorVersion, '0.1.0');
         assert.equal(corpusA.corpusName, 'topology-composition-v1');
         assert.equal(corpusA.levels.length, 12);
+        assert.match(corpusA.populationIdentity, /^sha256:[0-9a-f]{64}$/u);
+        assert.equal(corpusA.researchBlock.questionId, 'WS2-D1-PRODUCTION-INERT-OBSERVATION');
+        assert.equal(corpusA.researchBlock.evidenceRole, 'development');
+        assert.equal(corpusA.researchBlock.independentUnit, 'parent-level');
+        assert.deepEqual(corpusA.researchBlock.parentIds, corpusA.levels.map(level => level.id));
+        assert.equal(corpusA.researchBlock.parentContentIdentities.length, corpusA.levels.length);
+        assert.ok(corpusA.researchBlock.parentContentIdentities.every(identity => /^v2:[0-9a-f]{64}$/u.test(identity)));
 
         const fingerprints = new Set();
         let zeroProfiles = 0;
