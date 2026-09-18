@@ -48,6 +48,12 @@ export function validateResearchQuestionRegistry(registry) {
         if (!String(question?.question ?? '').trim()) errors.push(`${prefix}.question is required`);
         if (!String(question?.owner ?? '').trim()) errors.push(`${prefix}.owner is required`);
         if (!String(question?.state ?? '').trim()) errors.push(`${prefix}.state is required`);
+        for (const field of ['premiseRefs', 'measurementOpportunities']) {
+            if (question?.[field] != null && (!Array.isArray(question[field])
+                || question[field].some(value => typeof value !== 'string' || !value.trim()))) {
+                errors.push(`${prefix}.${field} must be a string array when present`);
+            }
+        }
     }
 
     for (const [index, question] of questions.entries()) {
