@@ -68,6 +68,19 @@ export function validateResearchQuestionRegistry(registry) {
                 if (!ids.has(target)) errors.push(`questions[${index}].${field} references unknown question ${target}`);
             }
         }
+        if (question?.constrainedBy != null) {
+            if (!Array.isArray(question.constrainedBy)) {
+                errors.push(`questions[${index}].constrainedBy must be an array when present`);
+            } else {
+                for (const target of question.constrainedBy) {
+                    const value = String(target ?? '');
+                    const pathReference = /^(?:docs|reports|scripts)\//u.test(value);
+                    if (!pathReference && !ids.has(value)) {
+                        errors.push(`questions[${index}].constrainedBy references neither a known question nor a repository path: ${value}`);
+                    }
+                }
+            }
+        }
     }
 
     return errors;
