@@ -17,7 +17,7 @@ C1 is not cross-generator transfer; C2 is a mixed development laboratory; residu
 
 ### 1. Workstream 2: residual capability + premise acquisition
 
-**State:** ACTIVE / D1 EVIDENCE ACQUISITION NEXT; no implementation earned.
+**State:** ACTIVE / POST-D1 DISCRIMINATOR NEXT; no implementation earned.
 
 **Production boundary:** `35066677597`: **101/102 C1 + 1,169/1,700 C2**, residual 531; Classes 1-5 17/30/23/71/390. [`refresh`](../reports/2026-09-16-post-promotion-production-boundary-refresh-001.md)
 
@@ -48,7 +48,7 @@ Cheap retained/offline premise tests may run in parallel. Expensive treatments r
 
 See [`preflight`](solver-per-instance-relational-feasibility-preflight.md).
 
-1. **D1 future-intersection commitment realizability: POSITIVE / LOCAL CONSUMER EXISTS / RETAINED ECONOMICS STOPS.** B2: 2 matched DEAD zero-feasible vs 3 LIVE >=1 (107 queries). Multi-pick: 18 DEAD zero vs 2 LIVE >=1 (220 queries, 0 alarms), but all 20 states are one-parent (`R03147`) evidence. D1 maps to existing beam rank/retain state, **ranking-only**. Retained evidence lacks production eligibility frequency, actual cutoff/rank disagreements, descendant `workSpent`, and observed query-time cost, so no live prototype or production exact-query mechanism is earned. **Reopen:** production-inert, independently selected multi-parent observation retaining decision context, work ancestry, information cost and independent-unit provenance. [`B2`](../reports/2026-09-17-lane-d-intersection-commitment-realizability-result-001.md) · [`replication`](../reports/2026-09-17-lane-d1-multi-pick-realizability-result-001.md) · [`economics`](../reports/solver-premise-map-consumer-contract/03-d1-retained-evidence-economics.md)
+1. **D1 future-intersection commitment realizability: PREMISE POSITIVE, PRODUCTION CONSUMER CLOSED NEGATIVE.** Forensic replication (R03147) cleanly separates matched LIVE/DEAD states, but a production-inert multi-parent confirmation slice (24 real cull decisions, 120 candidates, 1,960 revisit-cell queries, all 8 independent Class-5 parents, 84% definitive support) found **0 disagreements** with actual beam retention: the forensic discriminator does not recur on real production retention-boundary candidates. Closes the exact-query ranking-consumer path in its tested form. **Reopen:** only a materially different eligibility predicate/decision seam/population, not more parents under the same predicate. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
 2. **Constrained-event feasibility: NARROWED POSITIVE.** H1 re-analysis: DEAD infeasibility trivial; LIVE states show within-state commitment viability, not a LIVE/DEAD classifier. [`result`](../reports/2026-09-17-lane-d-constrained-event-feasibility-result-001.md)
 3. **Residual-interface commutativity: POSITIVE, NARROW SUPPORT.** 12,277 splice pairs: 46.6% legal pooled; 0% flipper-bearing, but support is 3 levels and not explained by segment-flipper contact. [`result`](../reports/2026-09-17-lane-d-residual-interface-commutativity-result-001.md) · [`correction`](../reports/2026-09-17-lane-d3-segment-mechanic-attribution-result-001.md)
 
@@ -76,9 +76,9 @@ The A/D1/F3 common-interface hypothesis **failed its own pass condition**. Only 
 
 No immediate post-mining implementation, oracle campaign, shared signal subsystem, production treatment or premise admission is earned. Reopen only from the lane triggers above; do not recursively mine mining outputs merely to keep the program active.
 
-**Execution gate:** [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md) Stage 1 (parity, R03147, 100K-5M nodes), Stage 2 capture (frozen 8-parent confirmation population, 1,339 eligible decisions), and a GHA exact-annotation seam (`cpsat-explicit-prefix-reference.yml` + `pinRevisit`, converter/reconciler) are all done. The frozen population is 220,841 independent per-cell queries (~33/candidate); dispatching it all is a deliberate CI-cost sizing decision, not deferred for lack of tooling. Next: run a small mechanical (decision-ordinal, not outcome-selected) slice first, expand only if it shows disagreement. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md). No ranking change authorized yet.
+**D1 closed (2026-09-18):** [`D1 evidence preflight`](solver-d1-production-inert-evidence-preflight.md) Stages 1-2 ran to completion: parity canary, an 8-parent frozen capture, a GHA exact-annotation seam (`cpsat-explicit-prefix-reference.yml` + `pinRevisit`), and a 1,960-case independent confirmation slice — 0/120 candidates disagreed with production retention. **Closed-negative**, no ranking change earned. [`result`](../reports/2026-09-18-d1-stage2-independent-pilot-capture-result-001.md)
 
-**Post-D1:** do not automatically fall through to A/F3. Use the smallest live discriminator: work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or 2x2 interaction only for a plausible producer/consumer pair. A/F3 retain their existing reopen gates.
+**Execution gate now:** do not automatically fall through to A/F3. Use the smallest live discriminator: work-ladder for absent-vs-underdosed capability, operational divergence for distinct failure basins, rejection counterfactuals at implicated retention boundaries, or 2x2 interaction only for a plausible producer/consumer pair. A/F3 retain their existing reopen gates.
 
 ### 2. Workstream 1: automatic solver action selection
 
@@ -88,7 +88,7 @@ No immediate post-mining implementation, oracle campaign, shared signal subsyste
 
 | ID | Workstream | State | Next gate | Stable question ref |
 |---:|---|---|---|---|
-| 2 | Residual capability + premise acquisition | **ACTIVE / D1 ANNOTATION EXECUTION GATE** | Capture done; run GHA-sharded exact annotation on the frozen population, then use the smallest live discriminator / explicit A-F3 gates | `WS2-D1-PRODUCTION-INERT-OBSERVATION` |
+| 2 | Residual capability + premise acquisition | **ACTIVE / D1 CLOSED, POST-D1 DISCRIMINATOR NEXT** | Smallest live discriminator (work-ladder/operational-divergence/rejection-counterfactual/2x2) or explicit A-F3 gates | `WS2-POST-D1-DISCRIMINATOR` |
 | 1 | Automatic action selection | **SUPPORTING** | New legal current-input allocation signal | — |
 | 6/7 | Repair reachability / speed | **SUPPORTING** | New reachability evidence / fresh profiling | — |
 | 3 | Generalization | **METHOD COMPLETE** | Preserve independent units; scale confirmation with selection pressure | — |
